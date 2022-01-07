@@ -38,6 +38,7 @@ import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
@@ -49,6 +50,7 @@ import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -58,10 +60,12 @@ import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
-import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.pojo.isFork
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -81,6 +85,7 @@ class StreamYamlTrigger @Autowired constructor(
     private val yamlSchemaCheck: YamlSchemaCheck,
     private val yamlBuildV2: StreamYamlBuild,
     private val tokenService: StreamGitTokenService,
+    private val deleteEventService: DeleteEventService,
     private val streamStorageBean: StreamStorageBean
 ) : YamlTriggerInterface<YamlObjects> {
 
@@ -106,14 +111,14 @@ class StreamYamlTrigger @Autowired constructor(
             useAccessToken = true
         )
 
-        val (isTrigger, isTiming, startParams) = triggerMatcher.isMatch(
+        val (isTrigger, isTiming, startParams, isDelete) = triggerMatcher.isMatch(
             context = context,
             gitProjectInfo = gitProjectInfo
         )
 
         val changeSet = triggerMatcher.getChangeSet(context)
 
-        if (!isTrigger && !isTiming) {
+        if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                     "eventId: ${gitRequestEvent.id}"
@@ -154,10 +159,10 @@ class StreamYamlTrigger @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         gitBasicSettingService.updateProjectInfo(gitRequestEvent.userId, gitProjectInfo)
 
-        if (isTiming) {
-            // 有定时任务的注册定时事件
+        if (isTiming || isDelete) {
+            // 有特殊任务的注册事件
             logger.warn(
-                "Only schedules matched, only save the pipeline, " +
+                "special job register timer: $isTiming delete: $isDelete" +
                     "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
             )
             yamlBuildV2.gitStartBuild(
@@ -168,9 +173,11 @@ class StreamYamlTrigger @Autowired constructor(
                 originYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 gitBuildId = null,
-                isTimeTrigger = true,
-                // 没有触发只有定时任务的需要保存一下蓝盾流水线
                 changeSet = changeSet,
+                // 没有触发只有定时任务的需要保存一下蓝盾流水线
+                isTimeTrigger = isTiming,
+                isDeleteTrigger = isDelete,
+                // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
                 gitProjectInfo = gitProjectInfo
             )
@@ -193,7 +200,9 @@ class StreamYamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
-                objectKind = gitRequestEvent.objectKind,
+                objectKind = if (context.gitEvent.isDeleteEvent()) {
+                    TGitObjectKind.OBJECT_KIND_DELETE
+                } else gitRequestEvent.objectKind,
                 commitMsg = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
                 sourceGitProjectId = gitRequestEvent.sourceGitProjectId,

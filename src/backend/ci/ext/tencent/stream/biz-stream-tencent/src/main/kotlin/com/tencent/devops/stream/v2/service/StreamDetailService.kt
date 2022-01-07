@@ -37,16 +37,17 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.user.TXUserReportResource
+import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.user.TXUserReportResource
-import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -87,7 +88,7 @@ class StreamDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, realEvent, modelDetail)
+        return GitCIModelDetail(pipeline, GitRequestEventReq(realEvent), modelDetail)
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
@@ -109,7 +110,7 @@ class StreamDetailService @Autowired constructor(
             .getBatchBuildStatus(conf.projectCode!!, setOf(buildId), channelCode).data?.first()?.remark
         return GitCIModelDetail(
             gitProjectPipeline = pipeline,
-            gitRequestEvent = realEvent,
+            gitRequestEvent = GitRequestEventReq(realEvent),
             modelDetail = modelDetail,
             buildHistoryRemark = remark
         )

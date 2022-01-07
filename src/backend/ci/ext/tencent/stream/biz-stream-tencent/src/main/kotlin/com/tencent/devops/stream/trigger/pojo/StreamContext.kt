@@ -25,20 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.trigger.pojo
 
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
-@ApiModel("工蜂构建详情模型")
-data class GitCIModelDetail(
-    @ApiModelProperty("Stream流水线信息", required = true)
-    val gitProjectPipeline: GitProjectPipeline?,
-    @ApiModelProperty("工蜂Event事件", required = true)
-    val gitRequestEvent: GitRequestEventReq,
-    @ApiModelProperty("构建详情-构建信息", required = true)
-    val modelDetail: ModelDetail,
-    @ApiModelProperty("构建历史-备注信息")
-    val buildHistoryRemark: String? = null
-)
+// TODO:  统一的上下文参数，除了消息队列，逐步替代stream触发中的所有参数传递对象
+// Stream 触发构建时的上下文参数
+interface StreamContext {
+    // gitWebHook过来的事件原文
+    val gitEvent: GitEvent
+
+    // stream 当前对git event 做了预处理的部分数据
+    val requestEvent: GitRequestEvent
+
+    // stream 项目的设置
+    val streamSetting: GitCIBasicSetting
+}
+
+data class StreamRequestContext(
+    override val gitEvent: GitEvent,
+    override val requestEvent: GitRequestEvent,
+    override val streamSetting: GitCIBasicSetting
+) : StreamContext
+
+data class StreamTriggerContext(
+    override val gitEvent: GitEvent,
+    override val requestEvent: GitRequestEvent,
+    override val streamSetting: GitCIBasicSetting,
+    // 用来构建的流水线
+    val pipeline: GitProjectPipeline,
+    // yaml原文配置
+    val originYaml: String,
+    // 变更文件列表
+    val mrChangeSet: Set<String>?
+) : StreamContext

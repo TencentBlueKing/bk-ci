@@ -25,20 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.pojo.v2
 
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("工蜂构建详情模型")
-data class GitCIModelDetail(
-    @ApiModelProperty("Stream流水线信息", required = true)
-    val gitProjectPipeline: GitProjectPipeline?,
-    @ApiModelProperty("工蜂Event事件", required = true)
-    val gitRequestEvent: GitRequestEventReq,
-    @ApiModelProperty("构建详情-构建信息", required = true)
-    val modelDetail: ModelDetail,
-    @ApiModelProperty("构建历史-备注信息")
-    val buildHistoryRemark: String? = null
+data class StreamDeleteEvent(
+    val gitProjectId: Long,
+    val pipelineId: String,
+    val userId: String,
+    val eventId: Long,
+    val originYaml: String
 )
