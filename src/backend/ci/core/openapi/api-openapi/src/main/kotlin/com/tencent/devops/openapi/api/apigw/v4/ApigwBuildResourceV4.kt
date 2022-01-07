@@ -63,7 +63,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("启动构建", tags = ["v4_app_build_start", "v4_user_build_start"])
     @POST
-    @Path("/pipelines/{pipelineId}/builds/start")
+    @Path("/builds/start")
     fun start(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -78,8 +78,8 @@ interface ApigwBuildResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("启动参数", required = true)
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
@@ -103,6 +103,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String
@@ -124,6 +127,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
@@ -140,7 +146,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v4_app_build_status", "v4_user_build_status"])
     @GET
-    @Path("/pipelines/{pipelineId}/builds/{buildId}/status")
+    @Path("/builds/{buildId}/status")
     fun getStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -155,8 +161,8 @@ interface ApigwBuildResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String
@@ -164,7 +170,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("获取流水线构建历史", tags = ["v4_app_build_history", "v4_user_build_history"])
     @GET
-    @Path("/pipelines/{pipelineId}/builds/history")
+    @Path("/builds/history")
     fun getHistoryBuild(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -179,8 +185,8 @@ interface ApigwBuildResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
@@ -191,7 +197,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
     @GET
-    @Path("/pipelines/{pipelineId}/builds/manualStartupInfo")
+    @Path("/builds/manualStartupInfo")
     fun manualStartupInfo(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -206,8 +212,8 @@ interface ApigwBuildResourceV4 {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
+        @QueryParam("pipelineId")
+        pipelineId: String?,
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])
@@ -226,6 +232,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String
@@ -247,6 +256,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
@@ -276,6 +288,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
@@ -293,6 +308,9 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
