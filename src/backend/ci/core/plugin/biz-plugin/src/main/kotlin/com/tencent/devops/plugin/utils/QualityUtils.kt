@@ -62,7 +62,7 @@ object QualityUtils {
                 "蓝盾流水线"
         )
 
-        val ruleName = mutableListOf<String>()
+        val ruleName = mutableSetOf<String>()
 
         // key：质量红线产出插件
         // value：指标、预期、结果、状态
@@ -96,7 +96,7 @@ object QualityUtils {
             }
             ruleName.add(ruleIntercept.ruleName)
         }
-        titleData.add(ruleName.joinToString("、") ?: "")
+        titleData.add(ruleName.joinToString("、"))
         return Pair(titleData, resultMap)
     }
 
