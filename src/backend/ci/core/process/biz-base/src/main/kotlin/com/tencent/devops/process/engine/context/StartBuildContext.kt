@@ -74,6 +74,8 @@ data class StartBuildContext(
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
         return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
+        } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
+            false
         } else { // 如果失败重试的不是当前stage，并且当前stage已经是完成状态，则跳过
             BuildStatus.parse(stage.status).isFinish()
         }
