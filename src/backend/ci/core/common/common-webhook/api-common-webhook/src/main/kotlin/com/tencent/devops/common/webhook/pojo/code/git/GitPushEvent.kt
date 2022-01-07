@@ -68,6 +68,10 @@ fun GitPushEvent.isDeleteBranch(): Boolean {
 }
 
 fun GitPushEvent.isCreateBranch(): Boolean {
+    // 工蜂web端创建分支
+    if (action_kind == TGitPushActionKind.CREATE_BRANCH.value) {
+        return true
+    }
     // 发送到工蜂的客户端创建
     if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
         operation_kind == TGitPushOperationKind.CREAT.value &&
