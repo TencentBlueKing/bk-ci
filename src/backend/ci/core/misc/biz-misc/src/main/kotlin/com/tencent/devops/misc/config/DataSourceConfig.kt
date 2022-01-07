@@ -41,33 +41,11 @@ import javax.sql.DataSource
  *
  * Powered By Tencent
  */
+@Suppress("LongParameterList")
 @Configuration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @EnableTransactionManagement
 class DataSourceConfig {
-
-    @Bean
-    fun processDataSource(
-        @Value("\${spring.datasource.process.url}")
-        datasourceUrl: String,
-        @Value("\${spring.datasource.process.username}")
-        datasourceUsername: String,
-        @Value("\${spring.datasource.process.password}")
-        datasourcePassword: String,
-        @Value("\${spring.datasource.process.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.leakDetectionThreshold:#{0}}")
-        datasouceLeakDetectionThreshold: Long = 0
-    ): DataSource {
-        return hikariDataSource(
-            datasourcePoolName = "DBPool-Process",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasouceLeakDetectionThreshold = datasouceLeakDetectionThreshold
-        )
-    }
 
     @Bean
     fun projectDataSource(
