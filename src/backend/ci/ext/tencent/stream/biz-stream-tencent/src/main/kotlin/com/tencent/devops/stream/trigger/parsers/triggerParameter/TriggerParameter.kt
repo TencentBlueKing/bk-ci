@@ -31,7 +31,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -79,11 +78,6 @@ class TriggerParameter @Autowired constructor(
 
     @SuppressWarnings("ReturnCount")
     private fun pushEventFilter(event: GitPushEvent): Boolean {
-        // 去掉创建分支的触发
-        if (event.isCreateBranch()) {
-            logger.info("${event.checkout_sha} Git push web hook is create branch")
-            return false
-        }
         // 放开删除分支操作为了流水线删除功能
         if (event.isDeleteBranch()) {
             return true
