@@ -709,14 +709,14 @@ class ExperienceService @Autowired constructor(
                 projectId = projectId,
                 bundle = bundleIdentifier,
                 platform = platform
-            ).map { it.value2() }.toSet()
+            )
             logger.info("subscribeUser:$subscribeUser")
             val receivers = mutableSetOf<String>()
             receivers.addAll(extraUsers)
             receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
             // todo 返回如果为空的处理
-            if (subscribeUser.isNotEmpty()) {
-                receivers.addAll(subscribeUser)
+            if (subscribeUser.isNotEmpty) {
+                receivers.addAll(subscribeUser.map { it.value2() }.toSet())
             }
             if (receivers.isEmpty()) {
                 logger.info("empty receivers , experienceId:$experienceId")
