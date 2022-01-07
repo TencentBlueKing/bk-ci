@@ -100,7 +100,16 @@ class ExperiencePushService @Autowired constructor(
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
-        // todo  校验是否重复
+        val subscription = experiencePushDao.getSubscription(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            bundle = bundleIdentifier,
+            platform = platform
+        )
+        if (subscription.isNotEmpty) {
+            return Result("已订阅过该体验，请勿重复订阅！", true)
+        }
         experiencePushDao.subscribe(
             dslContext = dslContext,
             userId = userId,
@@ -108,7 +117,7 @@ class ExperiencePushService @Autowired constructor(
             bundle = bundleIdentifier,
             platform = platform
         )
-        return Result("订阅体验成功", true)
+        return Result("订阅体验成功！", true)
     }
 
     fun unSubscribe(

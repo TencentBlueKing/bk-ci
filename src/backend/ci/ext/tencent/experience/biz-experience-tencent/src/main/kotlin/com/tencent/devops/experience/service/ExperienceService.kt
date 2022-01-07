@@ -710,7 +710,7 @@ class ExperienceService @Autowired constructor(
                 bundle = bundleIdentifier,
                 platform = platform
             ).map { it.value2() }.toSet()
-
+            logger.info("subscribeUser:$subscribeUser")
             val receivers = mutableSetOf<String>()
             receivers.addAll(extraUsers)
             receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
