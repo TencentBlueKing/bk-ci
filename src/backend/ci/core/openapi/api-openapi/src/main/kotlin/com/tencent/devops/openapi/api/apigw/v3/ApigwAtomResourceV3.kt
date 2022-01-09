@@ -26,29 +26,29 @@
  */
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.store.pojo.common.StoreStatistic
-import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import com.tencent.devops.store.pojo.common.StoreStatistic
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.PathParam
-import javax.ws.rs.QueryParam
 import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_ATOM_V3"], description = "OPENAPI-插件资源")
@@ -57,7 +57,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwAtomResourceV3 {
-    @ApiOperation("根据插件代码获取插件详细信息")
+    @ApiOperation("根据插件代码获取插件详细信息", tags = ["v3_app_atom_get", "v3_user_atom_get"])
     @GET
     @Path("/{atomCode}")
     fun getAtomByCode(
@@ -75,7 +75,7 @@ interface ApigwAtomResourceV3 {
         userId: String
     ): Result<AtomVersion?>
 
-    @ApiOperation("根据插件代码获取插件统计信息")
+    @ApiOperation("根据插件代码获取插件统计信息", tags = ["v3_app_atom_statistic", "v3_user_atom_statistic"])
     @GET
     @Path("/{atomCode}/statistic")
     fun getAtomStatisticByCode(
@@ -93,7 +93,7 @@ interface ApigwAtomResourceV3 {
         userId: String
     ): Result<StoreStatistic>
 
-    @ApiOperation("根据插件代码获取使用的流水线详情")
+    @ApiOperation("根据插件代码获取使用的流水线详情", tags = ["v3_user_atom_pipeline_list", "v3_app_atom_pipeline_list"])
     @GET
     @Path("/{atomCode}/pipelines")
     fun getAtomPipelinesByCode(
@@ -117,7 +117,7 @@ interface ApigwAtomResourceV3 {
         pageSize: Int?
     ): Result<Page<AtomPipeline>>
 
-    @ApiOperation("安装插件到项目")
+    @ApiOperation("安装插件到项目", tags = ["v3_user_atom_install", "v3_app_atom_install"])
     @POST
     @Path("/{atomCode}/install")
     fun installAtom(

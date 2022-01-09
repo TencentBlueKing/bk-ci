@@ -49,7 +49,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwMarketTemplateResourceV3 {
 
-    @ApiOperation("安装研发商店模板到项目")
+    @ApiOperation("安装研发商店模板到项目", tags = [])
     @POST
     @Path("/template/installFromStore")
     fun installTemplateFromStore(
@@ -66,7 +66,7 @@ interface ApigwMarketTemplateResourceV3 {
         installTemplateReq: InstallTemplateReq
     ): Result<Boolean>
 
-    @ApiOperation("安装研发商店模板到项目--返回流水线模板Id")
+    @ApiOperation("安装研发商店模板到项目--返回流水线模板Id", tags = [])
     @POST
     @Path("/template/installFromStore/new")
     fun installTemplateFromStoreNew(

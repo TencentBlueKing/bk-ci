@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwPipelineWebhookResourceV3 {
 
-    @ApiOperation("获取流水线的webhook列表")
+    @ApiOperation("获取流水线的webhook列表", tags = ["v3_user_pipeline_webhook_list", "v3_app_pipeline_webhook_list"])
     @GET
     fun listScmWebhook(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -77,7 +77,10 @@ interface ApigwPipelineWebhookResourceV3 {
         pageSize: Int?
     ): Result<List<PipelineWebhook>>
 
-    @ApiOperation("获取流水线的webhook构建日志列表")
+    @ApiOperation(
+        "获取流水线的webhook构建日志列表",
+        tags = ["v3_user_pipeline_webhook_build_log", "v3_app_pipeline_webhook_build_log"]
+    )
     @GET
     @Path("/buildLog")
     fun listPipelineWebhookBuildLog(

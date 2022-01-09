@@ -61,7 +61,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwBuildResourceV3 {
 
-    @ApiOperation("启动构建")
+    @ApiOperation("启动构建", tags = ["v3_app_build_start", "v3_user_build_start"])
     @POST
     @Path("/start")
     fun start(
@@ -87,7 +87,7 @@ interface ApigwBuildResourceV3 {
         buildNo: Int? = null
     ): Result<BuildId>
 
-    @ApiOperation("停止构建")
+    @ApiOperation("停止构建", tags = ["v3_app_build_stop", "v3_user_build_stop"])
     @POST
     @Path("/{buildId}/stop")
     fun stop(
@@ -111,7 +111,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<Boolean>
 
-    @ApiOperation("重试构建-重试或者跳过失败插件")
+    @ApiOperation("重试构建-重试或者跳过失败插件", tags = ["v3_app_build_retry", "v3_user_build_retry"])
     @POST
     @Path("/{buildId}/retry")
     fun retry(
@@ -144,7 +144,7 @@ interface ApigwBuildResourceV3 {
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
-    @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
+    @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v3_app_build_status", "v3_user_build_status"])
     @GET
     @Path("/{buildId}/status")
     fun getStatus(
@@ -168,7 +168,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<BuildHistoryWithVars>
 
-    @ApiOperation("获取流水线构建历史")
+    @ApiOperation("获取流水线构建历史", tags = [])
     @GET
     @Path("/history")
     fun getHistoryBuild(
@@ -195,7 +195,7 @@ interface ApigwBuildResourceV3 {
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>>
 
-    @ApiOperation("获取流水线手动启动参数")
+    @ApiOperation("获取流水线手动启动参数", tags = ["v3_app_build_startInfo", "v3_user_build_startInfo"])
     @GET
     @Path("/manualStartupInfo")
     fun manualStartupInfo(
@@ -216,7 +216,7 @@ interface ApigwBuildResourceV3 {
         pipelineId: String
     ): Result<BuildManualStartupInfo>
 
-    @ApiOperation("构建详情")
+    @ApiOperation("构建详情", tags = ["v3_app_build_detail", "v3_user_build_detail"])
     @GET
     @Path("/{buildId}/detail")
     fun detail(
@@ -240,7 +240,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<ModelDetail>
 
-    @ApiOperation("手动审核启动阶段")
+    @ApiOperation("手动审核启动阶段", tags = ["v3_app_build_stage_start", "v3_user_build_stage_start"])
     @POST
     @Path("/{buildId}/stages/{stageId}/manualStart")
     fun manualStartStage(
@@ -272,7 +272,7 @@ interface ApigwBuildResourceV3 {
         reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
-    @ApiOperation("获取构建中的变量值")
+    @ApiOperation("获取构建中的变量值", tags = ["v3_app_build_variables_value", "v3_user_build_variables_value"])
     @POST
     @Path("/{buildId}/variables")
     fun getVariableValue(
@@ -298,7 +298,7 @@ interface ApigwBuildResourceV3 {
         variableNames: List<String>
     ): Result<Map<String, String>>
 
-    @ApiOperation("操作暂停插件")
+    @ApiOperation("操作暂停插件", tags = ["v3_app_pause_build_execute", "v3_user_pause_build_execute"])
     @POST
     @Path("/{buildId}/execute/pause")
     fun executionPauseAtom(
