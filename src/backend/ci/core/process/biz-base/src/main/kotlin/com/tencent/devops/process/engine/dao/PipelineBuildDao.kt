@@ -774,7 +774,7 @@ class PipelineBuildDao {
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(BUILD_NUM.desc()).limit(DEFAULT_PAGE_SIZE)
                 .fetch()
         }
