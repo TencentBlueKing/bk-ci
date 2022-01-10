@@ -85,7 +85,7 @@ class DataSourceConfig {
         datasouceLeakDetectionThreshold: Long = 0
     ): DataSource {
         return hikariDataSource(
-            datasourcePoolName = "DBPool-Project",
+            datasourcePoolName = "DBPool-Lambda",
             datasourceUrl = datasourceUrl,
             datasourceUsername = datasourceUsername,
             datasourcePassword = datasourcePassword,
