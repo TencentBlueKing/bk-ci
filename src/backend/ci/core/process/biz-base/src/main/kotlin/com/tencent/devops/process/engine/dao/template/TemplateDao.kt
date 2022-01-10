@@ -501,7 +501,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(templateList))
-                .orderBy(VERSION.desc())
+                .orderBy(CREATED_TIME.desc())
                 .fetch()
         }
     }
