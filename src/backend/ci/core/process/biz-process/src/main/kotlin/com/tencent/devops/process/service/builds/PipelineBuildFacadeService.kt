@@ -1972,6 +1972,7 @@ class PipelineBuildFacadeService(
         } finally {
             redisLock.unlock()
         }
+        return ""
     }
 
     private fun checkPipelineInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo {
