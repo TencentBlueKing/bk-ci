@@ -25,44 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.v2.template
+package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.template.TemplateModel
-import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.service.perm.PermFixService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-/**
- * 统计多个项目下的模板接口实现
- */
-@RestResource
-class ServiceProjectTemplateResourceImpl @Autowired constructor(
-    private val templateFacadeService: TemplateFacadeService
-) : ServiceProjectTemplateResource {
-    override fun listTemplateByProjectIds(
-        userId: String,
-        templateType: TemplateType?,
-        storeFlag: Boolean?,
-        page: Int,
-        pageSize: Int,
-        channelCode: ChannelCode?,
-        checkPermission: Boolean?,
-        projectIds: Set<String>
-    ): Result<Page<TemplateModel>> {
-        return Result(
-            templateFacadeService.listTemplateByProjectIds(
-                userId = userId,
-                templateType = templateType,
-                storeFlag = storeFlag,
-                page = page,
-                pageSize = pageSize,
-                keywords = null,
-                projectIds = projectIds
-            )
-        )
+@Service
+class TxPipelineStartUpService : SubPipelineStartUpService() {
+
+    @Autowired
+    private lateinit var permFixService: PermFixService
+
+    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        permFixService.checkPermission(userId, projectId, pipelineId)
     }
 }

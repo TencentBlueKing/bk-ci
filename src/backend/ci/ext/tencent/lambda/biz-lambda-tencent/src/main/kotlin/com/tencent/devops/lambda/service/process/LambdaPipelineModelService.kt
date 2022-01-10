@@ -56,7 +56,7 @@ class LambdaPipelineModelService @Autowired constructor(
 ) {
 
     fun onModelExchange(event: PipelineModelAnalysisEvent) {
-        pushPipelineResource2Kafka(event.pipelineId, null)
+        pushPipelineResource2Kafka(event.projectId, event.pipelineId, null)
 
         pushPipelineInfo2Kafka(
             pipelineId = event.pipelineId,
@@ -68,26 +68,31 @@ class LambdaPipelineModelService @Autowired constructor(
 
     fun syncPipelineInfo(minId: Long, maxId: Long): Boolean {
         logger.info("====================>> syncPipelineInfo startId: $minId, endId: $maxId")
-        val pipelineInfoList = lambdaPipelineInfoDao.getPipelineInfoList(
+        val pipelineInfoSet = lambdaPipelineInfoDao.getPipelineInfoList(
             dslContext = dslContext,
             maxId = maxId,
             minId = minId
-        )
+        ).toMutableSet()
         val forkJoinPool = ForkJoinPool(10)
         forkJoinPool.submit {
-            pipelineInfoList.parallelStream().forEach {
+            pipelineInfoSet.parallelStream().forEach {
                 pushPipelineInfo2Kafka(it.pipelineId, it.lastModifyUser, it.projectId, it.channel)
-                pushPipelineResource2Kafka(it.pipelineId, it.version)
+                pushPipelineResource2Kafka(it.projectId, it.pipelineId, it.version)
             }
         }
 
         return true
     }
 
-    private fun pushPipelineResource2Kafka(pipelineId: String, version: Int?) {
+    private fun pushPipelineResource2Kafka(projectId: String, pipelineId: String, version: Int?) {
         try {
             logger.info("onModelExchange sync pipeline resource, pipelineId: $pipelineId")
-            val pipelineResource = lambdaPipelineModelDao.getResModel(dslContext, pipelineId, version)
+            val pipelineResource = lambdaPipelineModelDao.getResModel(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
             if (pipelineResource != null) {
                 val dataPlatPipelineResource = DataPlatPipelineResource(
                     washTime = LocalDateTime.now().format(dateTimeFormatter),
