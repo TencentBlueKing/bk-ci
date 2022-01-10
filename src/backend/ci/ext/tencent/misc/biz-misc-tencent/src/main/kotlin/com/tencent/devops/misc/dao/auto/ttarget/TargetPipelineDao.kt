@@ -37,7 +37,6 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import org.jooq.DSLContext
-import org.jooq.InsertReturningStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
@@ -126,7 +125,6 @@ class TargetPipelineDao {
     }
 
     fun savePipelineBuildHistories(dslContext: DSLContext, histories: Collection<TPipelineBuildHistoryRecord>) {
-        val records = mutableListOf<InsertReturningStep<TPipelineBuildHistoryRecord>>()
         with(Tables.T_PIPELINE_BUILD_HISTORY) {
             histories.forEach {
                 dslContext.insertInto(this)
@@ -168,11 +166,6 @@ class TargetPipelineDao {
                     .set(BUILD_MSG, it.buildMsg)
                     .execute()
             }
-        }
-        val insert = dslContext.batch(records).execute().size
-
-        if (LOG.isDebugEnabled) {
-            LOG.debug("saveBuildHistory|s=${histories.size}|pipelineId=${histories.first().pipelineId}|insert=$insert")
         }
     }
 
