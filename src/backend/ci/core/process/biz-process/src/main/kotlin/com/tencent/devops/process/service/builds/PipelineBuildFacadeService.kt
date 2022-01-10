@@ -1918,53 +1918,60 @@ class PipelineBuildFacadeService(
         )
         // 校验是否pipeline跟buildId匹配, 防止误传参数
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        // 防止接口有并发问题
+        val redisLock = RedisLock(redisOperation, "refreshBuild$buildId", 10L)
+        try {
+            if (redisLock.tryLock()) {
+                // 同一个buildId只能有一个在refresh的请求
+                if (pipelineRedisService.getRefreshBuildValue(buildId) != null) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.BAD_REQUEST.statusCode,
+                        errorCode = ProcessMessageCode.ERROR_REFRESH_EXSIT,
+                        defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_REFRESH_EXSIT, arrayOf(buildId)),
+                        params = arrayOf(buildId)
+                    )
+                }
+                // 按原有的启动参数组装启动参数
+                val startParameters = mutableMapOf<String, String>()
+                buildInfo.buildParameters?.map {
+                    startParameters.put(it.key, it.value.toString())
+                }
+                // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
+                if (buildInfo.status.isFinish()) {
+                    // 发起新构建
+                    return buildManualStartup(
+                        userId = buildInfo.startUser,
+                        startType = StartType.MANUAL,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        values = startParameters,
+                        channelCode = ChannelCode.BS
+                    )
+                }
 
-        // 同一个buildId只能有一个在refresh的请求
-        if (pipelineRedisService.getRefreshBuildValue(buildId) != null) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = ProcessMessageCode.ERROR_REFRESH_EXSIT,
-                defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_REFRESH_EXSIT, arrayOf(buildId)),
-                params = arrayOf(buildId)
-            )
+                // 锁定当前构建refresh操作
+                pipelineRedisService.setRefreshBuildValue(buildId)
+                // 取消当次构建
+                pipelineRuntimeService.cancelBuild(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    buildStatus = BuildStatus.CANCELED
+                )
+                // 发起新构建
+                return buildManualStartup(
+                    userId = buildInfo.startUser,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = startParameters,
+                    channelCode = ChannelCode.BS
+                )
+            }
+        } finally {
+            redisLock.unlock()
         }
-        // 按原有的启动参数组装启动参数
-        val startParameters = mutableMapOf<String, String>()
-        buildInfo.buildParameters?.map {
-            startParameters.put(it.key, it.value.toString())
-        }
-        // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
-        if (buildInfo.status.isFinish()) {
-            // 发起新构建
-            return buildManualStartup(
-                userId = buildInfo.startUser,
-                startType = StartType.MANUAL,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                values = startParameters,
-                channelCode = ChannelCode.BS
-            )
-        }
-
-        // 锁定当前构建refresh操作
-        pipelineRedisService.setRefreshBuildValue(buildId)
-        // 取消当次构建
-        pipelineRuntimeService.cancelBuild(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            userId = userId,
-            buildStatus = BuildStatus.CANCELED
-        )
-        // 发起新构建
-        return buildManualStartup(
-            userId = buildInfo.startUser,
-            startType = StartType.MANUAL,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            values = startParameters,
-            channelCode = ChannelCode.BS
-        )
     }
 
     private fun checkPipelineInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo {
