@@ -212,7 +212,7 @@ class DockerHostBuildService @Autowired constructor(
             }
 
             // 只要当容器关机成功时才会更新build_history状态
-            finishBuild(record, event.buildResult)
+            finishBuild(record = record, success = event.buildResult, executeCount = event.executeCount)
         } catch (ignore: Exception) {
             LOG.warn("${event.buildId}|finishDockerFail|vmSeqId=${event.vmSeqId}|result=${event.buildResult}", ignore)
         } finally {
@@ -230,7 +230,8 @@ class DockerHostBuildService @Autowired constructor(
     private fun finishBuild(
         record: TDispatchPipelineDockerBuildRecord,
         success: Boolean,
-        buildLessFlag: Boolean = false
+        buildLessFlag: Boolean = false,
+        executeCount: Int? = null
     ) {
         LOG.info("Finish the docker build(${record.buildId}) with result($success)")
         try {
@@ -246,7 +247,7 @@ class DockerHostBuildService @Autowired constructor(
                 record.buildId,
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
 
             // 无编译环境清除redisAuth
             if (buildLessFlag) {
