@@ -58,8 +58,9 @@ class ContainerBuildDetailService(
     redisOperation
 ) {
 
-    fun containerPreparing(buildId: String, containerId: String) {
+    fun containerPreparing(projectId: String, buildId: String, containerId: String) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -85,8 +86,14 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun containerStarted(buildId: String, containerId: String, containerBuildStatus: BuildStatus) {
+    fun containerStarted(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        containerBuildStatus: BuildStatus
+    ) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -120,9 +127,16 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun updateContainerStatus(buildId: String, containerId: String, buildStatus: BuildStatus, executeCount: Int) {
+    fun updateContainerStatus(
+        projectId: String,
+        buildId: String,
+        containerId: String,
+        buildStatus: BuildStatus,
+        executeCount: Int
+    ) {
         logger.info("[$buildId]|updateContainerStatus|j($containerId)|status=$buildStatus|e=$executeCount")
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -162,6 +176,7 @@ class ContainerBuildDetailService(
     }
 
     fun updateMatrixGroupContainer(
+        projectId: String,
         buildId: String,
         stageId: String,
         matrixGroupId: String,
@@ -173,6 +188,7 @@ class ContainerBuildDetailService(
             "[$buildId]|matrix_group|j(${modelContainer?.containerId})|groupId=$matrixGroupId|status=$buildStatus"
         )
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -204,9 +220,10 @@ class ContainerBuildDetailService(
         )
     }
 
-    fun containerSkip(buildId: String, containerId: String) {
+    fun containerSkip(projectId: String, buildId: String, containerId: String) {
         logger.info("[$buildId]|container_skip|j($containerId)")
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false

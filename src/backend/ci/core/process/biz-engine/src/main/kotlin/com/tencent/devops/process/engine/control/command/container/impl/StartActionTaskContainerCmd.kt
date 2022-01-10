@@ -161,6 +161,7 @@ class StartActionTaskContainerCmd(
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
         val contextMap: Map<String, String> by lazy {
             pipelineContextService.buildContext(
+                projectId = containerContext.container.projectId,
                 buildId = containerContext.container.buildId,
                 containerId = containerContext.container.containerId,
                 variables = containerContext.variables
@@ -317,12 +318,13 @@ class StartActionTaskContainerCmd(
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                val updateTaskStatusInfo = taskBuildDetailService.taskEnd(
+                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
+                    projectId = projectId,
                     buildId = buildId,
                     taskId = taskId,
                     buildStatus = taskStatus
                 )
-                refreshTaskStatus(updateTaskStatusInfo, index, containerTasks)
+                refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 // 打印构建日志
                 buildLogPrinter.addLine(
                     executeCount = containerContext.executeCount, tag = taskId,
@@ -464,6 +466,7 @@ class StartActionTaskContainerCmd(
             // 更新排队中的post任务的构建状态
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
             taskBuildDetailService.updateTaskStatus(
+                projectId = currentTask.projectId,
                 buildId = currentTask.buildId,
                 taskId = currentTask.taskId,
                 taskStatus = taskStatus,

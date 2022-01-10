@@ -95,7 +95,7 @@ class PipelineWebhookService @Autowired constructor(
         version: Int?,
         userId: String
     ) {
-        val model = getModel(pipelineId, version)
+        val model = getModel(projectId, pipelineId, version)
         if (model == null) {
             logger.info("$pipelineId|$version|model is null")
             return
@@ -236,24 +236,26 @@ class PipelineWebhookService @Autowired constructor(
     private fun pipelineEditUrl(projectId: String, pipelineId: String) =
         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/edit"
 
-    fun deleteWebhook(pipelineId: String, userId: String): Result<Boolean> {
+    fun deleteWebhook(projectId: String, pipelineId: String, userId: String): Result<Boolean> {
         logger.info("delete $pipelineId webhook by $userId")
-        pipelineWebhookDao.delete(dslContext, pipelineId)
+        pipelineWebhookDao.deleteByPipelineId(dslContext, projectId, pipelineId)
         return Result(true)
     }
 
     fun deleteWebhook(
+        projectId: String,
         pipelineId: String,
         taskId: String,
         userId: String
     ): Result<Boolean> {
         logger.info("delete pipelineId:$pipelineId, taskId:$taskId webhook by $userId")
-        pipelineWebhookDao.delete(dslContext, pipelineId, taskId)
+        pipelineWebhookDao.deleteByTaskId(dslContext, projectId, pipelineId, taskId)
         return Result(true)
     }
 
-    fun getModel(pipelineId: String, version: Int? = null): Model? {
-        val modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
+    fun getModel(projectId: String, pipelineId: String, version: Int? = null): Model? {
+        val modelString =
+            pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, version) ?: return null
         return try {
             objectMapper.readValue(modelString, Model::class.java)
         } catch (e: Exception) {
@@ -262,12 +264,17 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
-    fun getWebhookPipelines(name: String, type: String): Set<String> {
-        return pipelineWebhookDao.getByProjectNameAndType(
+    fun getWebhookPipelines(name: String, type: String): Set<Pair<String, String>> {
+        val records = pipelineWebhookDao.getByProjectNameAndType(
             dslContext = dslContext,
             projectName = getProjectName(name),
             repositoryType = getWebhookScmType(type).name
-        )?.map { it.pipelineId }?.toSet() ?: setOf()
+        )
+        val pipelineWebhookSet = mutableSetOf<Pair<String, String>>()
+        records?.forEach {
+            pipelineWebhookSet.add(Pair(it.value1(), it.value2()))
+        }
+        return pipelineWebhookSet
     }
 
     fun getWebhookScmType(type: String) =
@@ -392,6 +399,7 @@ class PipelineWebhookService @Autowired constructor(
                 with(it) {
                     try {
                         val (elements, params) = getElementsAndParams(
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             pipelines = pipelines,
                             pipelineVariables = pipelineVariables
@@ -400,7 +408,7 @@ class PipelineWebhookService @Autowired constructor(
                         val result = matchElement(elements = elements, params = params, usedTask = usedTask)
                         if (!result) {
                             logger.warn("$id|$pipelineId|$taskId|not match element, delete webhook $it")
-                            pipelineWebhookDao.deleteById(dslContext = dslContext, id = id!!)
+                            pipelineWebhookDao.deleteById(dslContext = dslContext, projectId = projectId, id = id!!)
                         }
                     } catch (t: Throwable) {
                         logger.warn("update projectName and taskId $it exception ignore", t)
@@ -412,12 +420,13 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     private fun getElementsAndParams(
+        projectId: String,
         pipelineId: String,
         pipelines: MutableMap<String/*pipelineId*/, List<Element>/*trigger element*/>,
         pipelineVariables: MutableMap<String, Map<String, String>>
     ): Pair<List<Element>, Map<String, String>> {
         return if (pipelines[pipelineId] == null) {
-            val model = getModel(pipelineId)
+            val model = getModel(projectId, pipelineId)
             // 如果model为空,缓存空值
             val (elements, params) = if (model == null) {
                 Pair(emptyList(), emptyMap())
@@ -475,6 +484,7 @@ class PipelineWebhookService @Autowired constructor(
                 if (taskId == null) {
                     pipelineWebhookDao.updateProjectNameAndTaskId(
                         dslContext = dslContext,
+                        projectId = projectId,
                         projectName = getProjectName(repo.projectName),
                         taskId = element.id!!,
                         id = id!!
@@ -574,6 +584,7 @@ class PipelineWebhookService @Autowired constructor(
         }
         return pipelineWebhookDao.listWebhook(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             offset = limit.offset,
             limit = limit.limit
@@ -603,6 +614,7 @@ class PipelineWebhookService @Autowired constructor(
     ) {
         try {
             val (elements, params) = getElementsAndParams(
+                projectId = projectId,
                 pipelineId = pipelineId,
                 pipelines = pipelines,
                 pipelineVariables = pipelineVariables

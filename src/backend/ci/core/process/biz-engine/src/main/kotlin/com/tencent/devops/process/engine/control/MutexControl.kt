@@ -344,7 +344,7 @@ class MutexControl @Autowired constructor(
             val buildId = mutexIdList[0]
             val containerId = mutexIdList[1]
             // container结束的时候，删除lock key
-            val containerFinished = isContainerFinished(buildId, containerId)
+            val containerFinished = isContainerFinished(projectId, buildId, containerId)
             if (containerFinished) {
                 LOG.warn("[MUTEX] CLEAN LOCK KEY|buildId=$buildId|container=$containerId|projectId=$projectId")
                 val containerMutexLock = RedisLockByValue(redisOperation, lockKey, mutexLockId, 1)
@@ -365,7 +365,7 @@ class MutexControl @Autowired constructor(
                 val buildId = mutexIdList[0]
                 val containerId = mutexIdList[1]
                 // container结束的时候，删除queue中的key
-                if (isContainerFinished(buildId, containerId)) {
+                if (isContainerFinished(projectId, buildId, containerId)) {
                     redisOperation.hdelete(queueKey, mutexId)
                 }
             }
@@ -373,11 +373,16 @@ class MutexControl @Autowired constructor(
     }
 
     // 判断container是否已经结束
-    private fun isContainerFinished(buildId: String?, containerId: String?): Boolean {
+    private fun isContainerFinished(projectId: String, buildId: String?, containerId: String?): Boolean {
         if (buildId.isNullOrBlank() || containerId.isNullOrBlank()) {
             return false
         }
-        val container = pipelineContainerService.getContainer(buildId, stageId = null, containerId = containerId)
+        val container = pipelineContainerService.getContainer(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = null,
+            containerId = containerId
+        )
         return container == null || container.status.isFinish()
     }
 }
