@@ -62,6 +62,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -98,6 +99,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val projectDataSourceAssignService: ProjectDataSourceAssignService,
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
@@ -113,7 +115,8 @@ class TxProjectServiceImpl @Autowired constructor(
     client = client,
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
-    projectAuthServiceCode = projectAuthServiceCode
+    projectAuthServiceCode = projectAuthServiceCode,
+    projectDataSourceAssignService = projectDataSourceAssignService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")

@@ -24,38 +24,20 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.openapi.resources.apigw
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.api.apigw.ApigwPipelineTemplateResource
-import com.tencent.devops.process.api.service.ServicePipelineTemplateResource
-import com.tencent.devops.process.pojo.PipelineTemplate
-import org.slf4j.LoggerFactory
+package com.tencent.devops.process.service.webhook
+
+import com.tencent.devops.process.service.perm.PermFixService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ApigwPipelineTemplateResourceImpl @Autowired constructor(private val client: Client) :
-    ApigwPipelineTemplateResource {
-    override fun listTemplate(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String
-    ): Result<Map<String, PipelineTemplate>> {
-        logger.info("get project's pipeline template, projectId($projectId)")
-        val templates = client.get(ServicePipelineTemplateResource::class).listTemplate(projectId)
-        val templatesResult = mutableMapOf<String, PipelineTemplate>()
-        if (templates.data != null) {
-            (templates.data as Map<String, PipelineTemplate>).forEach {
-                templatesResult[it.value.name] = it.value
-            }
-        }
-        return Result(templatesResult)
-    }
+@Service
+class TxPipelineBuildWebhookService : PipelineBuildWebhookService() {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ApigwPipelineTemplateResourceImpl::class.java)
+    @Autowired
+    private lateinit var permFixService: PermFixService
+
+    override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
+        permFixService.checkPermission(userId, projectId, pipelineId)
     }
 }

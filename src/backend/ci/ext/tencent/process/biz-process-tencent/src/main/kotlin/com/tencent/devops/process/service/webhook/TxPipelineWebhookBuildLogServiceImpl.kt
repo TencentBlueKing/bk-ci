@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.dao.PipelineWebhookBuildLogDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookBuildLogDetailDao
 import com.tencent.devops.process.engine.service.PipelineWebhookBuildLogService
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -48,7 +47,6 @@ import org.springframework.stereotype.Service
 @Primary
 class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineWebhookBuildLogDao: PipelineWebhookBuildLogDao,
     private val pipelineWebhookBuildLogDetailDao: PipelineWebhookBuildLogDetailDao,
     private val pipelinePermissionService: PipelinePermissionService
 ) : PipelineWebhookBuildLogService {
@@ -59,28 +57,6 @@ class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
             logId = 0L,
             webhookBuildLogDetails = webhookBuildLog.detail
         )
-    }
-
-    override fun listWebhookBuildLog(
-        repoName: String,
-        commitId: String,
-        page: Int?,
-        pageSize: Int?
-    ): SQLPage<PipelineWebhookBuildLog> {
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-        val count = pipelineWebhookBuildLogDao.countByPage(
-            dslContext = dslContext, repoName = repoName, commitId = commitId
-        )
-        val records = pipelineWebhookBuildLogDao.listByPage(
-            dslContext = dslContext,
-            repoName = repoName,
-            commitId = commitId,
-            offset = limit.offset,
-            limit = limit.limit
-        )
-        return SQLPage(count = count, records = records)
     }
 
     override fun listWebhookBuildLogDetail(
@@ -109,12 +85,14 @@ class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
         }
         val count = pipelineWebhookBuildLogDetailDao.countByPage(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             repoName = repoName,
             commitId = commitId
         )
         val records = pipelineWebhookBuildLogDetailDao.listByPage(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             repoName = repoName,
             commitId = commitId,
