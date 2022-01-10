@@ -32,6 +32,7 @@ dependencies {
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":core:common:common-event"))
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-db-sharding"))
     api(project(":core:process:api-process"))
     api(project(":ext:tencent:lambda:model-lambda"))
     api(project(":core:project:api-project"))

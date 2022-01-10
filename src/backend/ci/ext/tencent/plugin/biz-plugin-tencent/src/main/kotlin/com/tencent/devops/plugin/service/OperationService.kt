@@ -57,8 +57,8 @@ class OperationService @Autowired constructor(
      * 通过process服务中的PipelineUserServiceu获取最后一次修改流水线的用户名
      * @param pipelineId 当前运行的流水线ID
      */
-    fun getUserName(pipelineId: String): String {
-        val res = client.get(ServiceOperationResource::class).getUpdateUser(pipelineId)
+    fun getUserName(projectId: String, pipelineId: String): String {
+        val res = client.get(ServiceOperationResource::class).getUpdateUser(projectId, pipelineId)
         return res.data ?: ""
     }
 
@@ -67,8 +67,8 @@ class OperationService @Autowired constructor(
      * @param id 标准运维模板ID
      * @param pipelineId 当前运行的流水线ID
      */
-    fun getParam(id: String, pipelineId: String): Result<ArrayList<SubPipelineStartUpInfo>> {
-        val username = getUserName(pipelineId)
+    fun getParam(id: String, projectId: String, pipelineId: String): Result<ArrayList<SubPipelineStartUpInfo>> {
+        val username = getUserName(projectId, pipelineId)
         val requestData = mutableMapOf<String, String>()
         requestData["app_code"] = appCode
         requestData["app_secret"] = appSecret
@@ -136,10 +136,10 @@ class OperationService @Autowired constructor(
         return Result(parameter)
     }
 
-    fun getList(ccId: String, pipelineId: String): Result<Page<Map<String, String>>> {
+    fun getList(ccId: String, projectId: String, pipelineId: String): Result<Page<Map<String, String>>> {
         if (ccId.isEmpty() || pipelineId.isEmpty())
             return Result(Page(0, -1, 0, mutableListOf()))
-        val username = getUserName(pipelineId)
+        val username = getUserName(projectId, pipelineId)
         val requestData = mutableMapOf<String, String>()
         requestData["app_code"] = appCode
         requestData["app_secret"] = appSecret
