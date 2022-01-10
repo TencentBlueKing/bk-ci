@@ -98,13 +98,21 @@ class TargetPipelineDao {
         val insert = with(Tables.T_PIPELINE_RESOURCE) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
             )
-                .values(record.pipelineId, record.version, record.model, record.creator, record.createTime)
+                .values(
+                    record.projectId,
+                    record.pipelineId,
+                    record.version,
+                    record.model,
+                    record.creator,
+                    record.createTime
+                )
                 .onDuplicateKeyUpdate()
                 .set(MODEL, record.model)
                 .set(CREATOR, record.creator)
@@ -121,45 +129,44 @@ class TargetPipelineDao {
         val records = mutableListOf<InsertReturningStep<TPipelineBuildHistoryRecord>>()
         with(Tables.T_PIPELINE_BUILD_HISTORY) {
             histories.forEach {
-                records.add(
-                    dslContext.insertInto(this)
-                        .set(BUILD_ID, it.buildId)
-                        .set(BUILD_NUM, it.buildNum)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(PARENT_BUILD_ID, it.parentBuildId)
-                        .set(PARENT_TASK_ID, it.parentTaskId)
-                        .set(START_TIME, it.startTime)
-                        .set(START_USER, it.startUser)
-                        .set(TRIGGER_USER, it.triggerUser)
-                        .set(STATUS, it.status)
-                        .set(TRIGGER, it.trigger)
-                        .set(TASK_COUNT, it.taskCount)
-                        .set(FIRST_TASK_ID, it.firstTaskId)
-                        .set(CHANNEL, it.channel)
-                        .set(VERSION, it.version)
-                        .set(QUEUE_TIME, it.queueTime)
-                        .set(WEBHOOK_TYPE, it.webhookType)
-                        .set(WEBHOOK_INFO, it.webhookInfo)
-                        .set(BUILD_MSG, it.buildMsg)
-                        .onDuplicateKeyUpdate()
-                        .set(BUILD_NUM, it.buildNum)
-                        .set(PARENT_BUILD_ID, it.parentBuildId)
-                        .set(PARENT_TASK_ID, it.parentTaskId)
-                        .set(START_TIME, it.startTime)
-                        .set(START_USER, it.startUser)
-                        .set(TRIGGER_USER, it.triggerUser)
-                        .set(STATUS, it.status)
-                        .set(TRIGGER, it.trigger)
-                        .set(TASK_COUNT, it.taskCount)
-                        .set(FIRST_TASK_ID, it.firstTaskId)
-                        .set(CHANNEL, it.channel)
-                        .set(VERSION, it.version)
-                        .set(QUEUE_TIME, it.queueTime)
-                        .set(WEBHOOK_TYPE, it.webhookType)
-                        .set(WEBHOOK_INFO, it.webhookInfo)
-                        .set(BUILD_MSG, it.buildMsg)
-                )
+                dslContext.insertInto(this)
+                    .set(BUILD_ID, it.buildId)
+                    .set(BUILD_NUM, it.buildNum)
+                    .set(PROJECT_ID, it.projectId)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(PARENT_BUILD_ID, it.parentBuildId)
+                    .set(PARENT_TASK_ID, it.parentTaskId)
+                    .set(START_TIME, it.startTime)
+                    .set(START_USER, it.startUser)
+                    .set(TRIGGER_USER, it.triggerUser)
+                    .set(STATUS, it.status)
+                    .set(TRIGGER, it.trigger)
+                    .set(TASK_COUNT, it.taskCount)
+                    .set(FIRST_TASK_ID, it.firstTaskId)
+                    .set(CHANNEL, it.channel)
+                    .set(VERSION, it.version)
+                    .set(QUEUE_TIME, it.queueTime)
+                    .set(WEBHOOK_TYPE, it.webhookType)
+                    .set(WEBHOOK_INFO, it.webhookInfo)
+                    .set(BUILD_MSG, it.buildMsg)
+                    .onDuplicateKeyUpdate()
+                    .set(BUILD_NUM, it.buildNum)
+                    .set(PARENT_BUILD_ID, it.parentBuildId)
+                    .set(PARENT_TASK_ID, it.parentTaskId)
+                    .set(START_TIME, it.startTime)
+                    .set(START_USER, it.startUser)
+                    .set(TRIGGER_USER, it.triggerUser)
+                    .set(STATUS, it.status)
+                    .set(TRIGGER, it.trigger)
+                    .set(TASK_COUNT, it.taskCount)
+                    .set(FIRST_TASK_ID, it.firstTaskId)
+                    .set(CHANNEL, it.channel)
+                    .set(VERSION, it.version)
+                    .set(QUEUE_TIME, it.queueTime)
+                    .set(WEBHOOK_TYPE, it.webhookType)
+                    .set(WEBHOOK_INFO, it.webhookInfo)
+                    .set(BUILD_MSG, it.buildMsg)
+                    .execute()
             }
         }
         val insert = dslContext.batch(records).execute().size
@@ -170,7 +177,7 @@ class TargetPipelineDao {
     }
 
     fun savePipelineSummary(dslContext: DSLContext, record: TPipelineBuildSummaryRecord) {
-        val insert = with(Tables.T_PIPELINE_BUILD_SUMMARY) {
+        with(Tables.T_PIPELINE_BUILD_SUMMARY) {
             dslContext.insertInto(
                 this,
                 PROJECT_ID,
@@ -219,10 +226,6 @@ class TargetPipelineDao {
                 .set(RUNNING_COUNT, record.runningCount)
                 .set(QUEUE_COUNT, record.queueCount)
                 .execute()
-        }
-
-        if (LOG.isDebugEnabled) {
-            LOG.debug("savePipelineSummary|num=${record.buildNum}|pipelineId=${record.pipelineId}|insert=$insert")
         }
     }
 
@@ -278,6 +281,7 @@ class TargetPipelineDao {
         with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 BUILD_ID,
                 TRIGGER,
                 BUILD_NUM,
@@ -288,6 +292,7 @@ class TargetPipelineDao {
                 END_TIME,
                 CANCEL_USER
             ).values(
+                record.projectId,
                 record.buildId,
                 record.trigger,
                 record.buildNum,
