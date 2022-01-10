@@ -176,8 +176,12 @@ open class MarketAtomTask : ITask() {
             inputMap?.forEach { (name, value) ->
                 var valueStr = JsonUtil.toJson(value)
                 valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String? {
-                        return CredentialUtils.getCredentialContextValue(key)
+                    override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                            "\${{$key}}"
+                        } else {
+                            "\${$key}"
+                        }
                     }
                 })
                 // 修复插件input环境变量替换问题 #5682

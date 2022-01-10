@@ -194,6 +194,34 @@ open class CodeccApi constructor(
         return objectMapper.readValue(result)
     }
 
+    fun getTaskInfo(taskEnName: String): Result<TaskDetailVO?> {
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/task/taskInfo?nameEn=$taskEnName",
+            method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getTransferAuthor(taskId: String): Result<AuthorTransferVO?> {
+        val result = taskExecution(
+            body = mapOf(),
+            headers = mapOf("X-DEVOPS-TASK-ID" to taskId),
+            path = "/ms/defect/api/service/transferAuthor/list",
+            method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getFilterPath(taskId: String): Result<FilterPathOutVO?> {
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/task/filter/path/$taskId",
+            method = "GET"
+        )
+        return objectMapper.readValue(result)
+    }
+
     private fun taskExecution(
         body: Map<String, Any>,
         path: String,
@@ -419,5 +447,48 @@ open class CodeccApi constructor(
     private data class ToolChecker(
         val toolName: String,
         val checkerSetId: String
+    )
+
+    data class TaskDetailVO(
+        val scanType: Int,
+        val notifyCustomInfo: NotifyCustomVO?,
+        val newDefectJudge: NewDefectJudgeVO?
+    )
+
+    data class NotifyCustomVO(
+        val rtxReceiverType: String?,
+        val rtxReceiverList: Set<String>?,
+        val botWebhookUrl: String?,
+        val botRemindSeverity: Int?,
+        val botRemaindTools: Set<String>?,
+        val botRemindRange: Int?,
+        val emailReceiverType: String?,
+        val emailReceiverList: Set<String>?,
+        val emailCCReceiverList: Set<String>?,
+        val instantReportStatus: String?,
+        val reportDate: Set<Int>?,
+        val reportTime: Int?,
+        val reportMinute: Int?,
+        val reportTools: Set<String>?
+    )
+
+    data class NewDefectJudgeVO(
+        val fromDate: String? = "",
+        val fromDateTime: Long?
+    )
+
+    data class AuthorTransferVO(
+        val taskId: Long?,
+        val transferAuthorList: List<TransferAuthorPair>?
+    )
+
+    data class TransferAuthorPair(
+        val sourceAuthor: String,
+        val targetAuthor: String
+    )
+
+    data class FilterPathOutVO(
+        val taskId: Long?,
+        val filterPaths: List<String>?
     )
 }

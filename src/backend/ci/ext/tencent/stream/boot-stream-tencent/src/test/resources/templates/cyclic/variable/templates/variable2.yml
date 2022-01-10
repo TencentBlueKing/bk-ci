@@ -1,0 +1,12 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+
+variables:
+  cyc_USERNAME2:
+    value: ${{ parameters.username }}
+#  template:
+#    - name: cyclic/variable/templates/variable2.yml
+#      parameters:
+#        username: CYC_VARIABLES2

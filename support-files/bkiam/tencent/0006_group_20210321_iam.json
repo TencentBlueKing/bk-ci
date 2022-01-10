@@ -1,0 +1,202 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_action_groups",
+      "data": [
+        {
+          "name": "项目管理",
+          "name_en": "Project Permissions",
+          "actions": [
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "project_views_manager"
+            },
+            {
+              "id": "all_action"
+            }
+          ]
+        },
+        {
+          "name": "流水线管理",
+          "name_en": "Pipeline Permissions",
+          "actions": [
+            {
+              "id": "pipeline_view"
+            },
+            {
+              "id": "pipeline_edit"
+            },
+            {
+              "id": "pipeline_create"
+            },
+            {
+              "id": "pipeline_download"
+            },
+            {
+              "id": "pipeline_delete"
+            },
+            {
+              "id": "pipeline_share"
+            },
+            {
+              "id": "pipeline_execute"
+            }
+          ]
+        },
+        {
+          "name": "代码库管理",
+          "name_en": "Repository Permissions",
+          "actions": [
+            {
+              "id": "repertory_view"
+            },
+            {
+              "id": "repertory_edit"
+            },
+            {
+              "id": "repertory_create"
+            },
+            {
+              "id": "repertory_delete"
+            },
+            {
+              "id": "repertory_use"
+            }
+          ]
+        },
+        {
+          "name": "凭证管理",
+          "name_en": "Credential Permissions",
+          "actions": [
+            {
+              "id": "credential_view"
+            },
+            {
+              "id": "credential_edit"
+            },
+            {
+              "id": "credential_create"
+            },
+            {
+              "id": "credential_delete"
+            },
+            {
+              "id": "credential_use"
+            }
+          ]
+        },
+        {
+          "name": "证书管理",
+          "name_en": "Cert Permissions",
+          "actions": [
+            {
+              "id": "cert_view"
+            },
+            {
+              "id": "cert_edit"
+            },
+            {
+              "id": "cert_create"
+            },
+            {
+              "id": "cert_delete"
+            },
+            {
+              "id": "cert_use"
+            }
+          ]
+        },
+        {
+          "name": "环境管理",
+          "name_en": "Environment Permissions",
+          "actions": [
+            {
+              "id": "environment_view"
+            },
+            {
+              "id": "environment_edit"
+            },
+            {
+              "id": "environment_create"
+            },
+            {
+              "id": "environment_delete"
+            },
+            {
+              "id": "environment_use"
+            }
+          ]
+        },
+        {
+          "name": "环境节点管理",
+          "name_en": "Node Permissions",
+          "actions": [
+            {
+              "id": "env_node_view"
+            },
+            {
+              "id": "env_node_edit"
+            },
+            {
+              "id": "env_node_create"
+            },
+            {
+              "id": "env_node_delete"
+            },
+            {
+              "id": "env_node_use"
+            }
+          ]
+        },
+        {
+          "name": "版本体验",
+          "name_en": "Experience Permissions",
+          "actions": [
+            {
+              "id": "experience_task_delete"
+            },
+            {
+              "id": "experience_task_edit"
+            },
+            {
+              "id": "experience_group_delete"
+            },
+            {
+              "id": "experience_group_edit"
+            }
+          ]
+        },
+        {
+          "name": "质量红线",
+          "name_en": "Quality Permissions",
+          "actions": [
+            {
+              "id": "rule_create"
+            },
+            {
+              "id": "rule_delete"
+            },
+            {
+              "id": "rule_edit"
+            },
+            {
+              "id": "rule_enable"
+            },
+            {
+              "id": "quality_group_create"
+            },
+            {
+              "id": "quality_group_delete"
+            },
+            {
+              "id": "quality_group_edit"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

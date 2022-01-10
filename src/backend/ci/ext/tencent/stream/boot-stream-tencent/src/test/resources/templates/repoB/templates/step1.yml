@@ -1,0 +1,11 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+
+steps:
+  - template: step6.yml
+    parameters:
+      username: STEP6
+  - run: |
+      echo "res_repoB_step_id_1 username ${{ parameters.username }}!"

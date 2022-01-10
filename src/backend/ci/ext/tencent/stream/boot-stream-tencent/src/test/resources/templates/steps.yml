@@ -1,0 +1,16 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+    values:
+      - false
+      - true
+
+steps:
+  - run: |
+      echo "template_step_id_1 username ${{ parameters.username }}!"
+  - template: cyclic/step/templates/step1.yml
+    parameters:
+      username: CYC_STEP1
+#  - run: |
+#      echo "template_step_id_2 stepname ${{ parameters.stepname }} again!"

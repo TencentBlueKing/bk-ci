@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.devops.common.kafka.KafkaAutoConfiguration,\
+com.tencent.devops.common.kafka.KafkaClient

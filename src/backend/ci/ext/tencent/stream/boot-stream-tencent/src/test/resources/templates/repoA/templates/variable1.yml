@@ -1,0 +1,22 @@
+resources:
+  repositories:
+    - repository: repoB
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+
+parameters:
+  - name: username
+    type: string
+
+variables:
+  RES_REPOA_VAR1_USERNAME:
+    value: ${{ parameters.username }}
+  template:
+    - name: variable2.yml
+      parameters:
+        username: aaa
+#    - name: variable1.yml@repoB
+#      parameters:
+#        username: RES_REPOA_VARIABLES

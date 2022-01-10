@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig,\
+com.tencent.devops.common.pipeline.init.TencentCommonPipelineAutoConfiguration

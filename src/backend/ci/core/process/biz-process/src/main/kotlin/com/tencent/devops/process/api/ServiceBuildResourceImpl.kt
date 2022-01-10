@@ -249,11 +249,11 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun serviceBasic(buildId: String): Result<BuildBasicInfo> {
+    override fun serviceBasic(projectId: String, buildId: String): Result<BuildBasicInfo> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(pipelineBuildFacadeService.serviceBuildBasicInfo(buildId))
+        return Result(pipelineBuildFacadeService.serviceBuildBasicInfo(projectId, buildId))
     }
 
     override fun getBuildStatus(

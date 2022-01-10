@@ -79,6 +79,7 @@ const (
 	FlagLocalRecord          = "local_record"
 	FlagWriteMemroMemroy     = "write_memory"
 	FlagIdleKeepSecs         = "idle_keep_secs"
+	FlagResourceTimeoutSecs  = "resource_timeout_secs"
 
 	EnvBuildIDOld  = "TURBO_PLAN_BUILD_ID"
 	EnvBuildID     = "TBS_BUILD_ID"
@@ -315,6 +316,10 @@ var (
 		commandCli.IntFlag{
 			Name:  "idle_keep_secs",
 			Usage: "max wait seconds before release idle resource",
+		},
+		commandCli.IntFlag{
+			Name:  "resource_timeout_secs",
+			Usage: "max seconds while waiting for apply resource",
 		},
 	}
 )

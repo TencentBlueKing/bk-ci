@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: environment
+    desc: DevOps Environment Service
+    version: 4.0
+    packageName: com.tencent.devops.environment
+
+server:
+  port: 21919

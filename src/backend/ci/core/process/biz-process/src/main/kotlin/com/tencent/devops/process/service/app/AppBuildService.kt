@@ -71,7 +71,7 @@ class AppBuildService @Autowired constructor(
 
         // 文件个数、版本
         val files = client.get(ServiceArtifactoryResource::class)
-            .search(null, projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
+            .search(userId, projectId, null, null, listOf(Property("pipelineId", pipelineId), Property("buildId", buildId)))
             .data
         val packageVersion = StringBuilder()
         files?.records?.forEach {
@@ -84,7 +84,7 @@ class AppBuildService @Autowired constructor(
         beginTime = System.currentTimeMillis()
 
         // 查流水线信息
-        val (name, version) = pipelineInfoFacadeService.getPipelineNameVersion(pipelineId)
+        val (name, version) = pipelineInfoFacadeService.getPipelineNameVersion(projectId, pipelineId)
         logger.info("查流水线信息: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 

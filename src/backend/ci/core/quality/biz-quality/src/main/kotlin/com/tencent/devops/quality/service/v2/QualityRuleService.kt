@@ -253,7 +253,7 @@ class QualityRuleService @Autowired constructor(
         // 过滤已删除的模板
         val templateIds = rule.templateRange.toSet()
         val templateMap = if (templateIds.isNotEmpty()) {
-            client.get(ServicePTemplateResource::class).listTemplateById(templateIds, null).data?.templates
+            client.get(ServicePTemplateResource::class).listTemplateById(templateIds, projectId, null).data?.templates
         } else {
             mapOf()
         }
@@ -411,7 +411,7 @@ class QualityRuleService @Autowired constructor(
             templateIds.addAll(it.pipelineTemplateRange.split(","))
         }
         val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServicePTemplateResource::class)
-            .listTemplateById(templateIds, null).data?.templates ?: mapOf()
+            .listTemplateById(templateIds, projectId, null).data?.templates ?: mapOf()
         else mapOf()
         val templateIdMap = mutableMapOf<String, OptionalTemplate>()
         srcTemplateIdMap.entries.forEach { templateIdMap[it.value.templateId] = it.value }

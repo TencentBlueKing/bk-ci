@@ -71,12 +71,12 @@ class MQPipelineDeleteListener @Autowired constructor(
 
             if (event.clearUpModel) {
                 watcher.start("deleteExt")
-                pipelineGroupService.deleteAllUserFavorByPipeline(userId, pipelineId) // 删除收藏该流水线上所有记录
-                pipelineGroupService.deletePipelineLabel(userId, pipelineId)
+                pipelineGroupService.deleteAllUserFavorByPipeline(userId, projectId, pipelineId) // 删除收藏该流水线上所有记录
+                pipelineGroupService.deletePipelineLabel(userId, projectId, pipelineId)
                 pipelineRuntimeService.deletePipelineBuilds(projectId, pipelineId)
             }
             watcher.start("deleteWebhook")
-            pipelineWebhookService.deleteWebhook(pipelineId, userId)
+            pipelineWebhookService.deleteWebhook(projectId, pipelineId, userId)
             watcher.stop()
             watcher.start("updateAgentPipelineRef")
             with(event) {
@@ -84,7 +84,11 @@ class MQPipelineDeleteListener @Autowired constructor(
             }
             watcher.stop()
             watcher.start("updateAtomPipelineNum")
-            pipelineAtomStatisticsService.updateAtomPipelineNum(pipelineId = event.pipelineId, deleteFlag = true)
+            pipelineAtomStatisticsService.updateAtomPipelineNum(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                deleteFlag = true
+            )
             watcher.stop()
             watcher.start("callback")
             callBackControl.pipelineDeleteEvent(projectId = event.projectId, pipelineId = event.pipelineId)

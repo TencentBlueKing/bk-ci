@@ -1,0 +1,8 @@
+parameters:
+  - name: username
+    type: string
+    default: world
+
+variables:
+  RES_REPOB_VAR2_USERNAME:
+    value: ${{ parameters.username }}

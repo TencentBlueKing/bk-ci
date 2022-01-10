@@ -64,7 +64,7 @@ class DockerService @Autowired constructor(
     private val containerCustomizedRunHandler: ContainerCustomizedRunHandler
 ) {
 
-    private val executor = Executors.newFixedThreadPool(10)
+    private val executor = Executors.newFixedThreadPool(20)
     private val buildTask = mutableMapOf<String, Future<Pair<Boolean, String?>>>()
 
     fun buildImage(

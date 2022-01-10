@@ -1,0 +1,33 @@
+version: v2.0
+
+resources:
+  repositories:
+    - repository: pcg/stream-ci-template
+      name: stream-ci-template
+
+steps:
+  - template: download-code.yml@stream-ci-template
+    parameters:
+      id: 1
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 2
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 3
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 4
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 5
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 6
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 7
+  - template: codecc.yml@stream-ci-template
+    parameters:
+      id: 9
+  - template: steps.yml

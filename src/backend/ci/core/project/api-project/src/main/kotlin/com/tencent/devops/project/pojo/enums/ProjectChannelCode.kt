@@ -41,5 +41,7 @@ enum class ProjectChannelCode {
     @ApiModelProperty("CODECC")
     CODECC,
     @ApiModelProperty("GITCI")
-    GITCI
+    GITCI,
+    @ApiModelProperty("AUTO")
+    AUTO
 }
