@@ -37,7 +37,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType

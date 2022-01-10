@@ -25,17 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo.enums
+package com.tencent.devops.common.ci.v2
+
+import com.fasterxml.jackson.annotation.JsonFilter
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
- * 模板类型，text为展示内容，content为模板在Yaml中的关键字
+ * 为了方便产生中间变量的过度类和Step一模一样
  */
-enum class TemplateType(val text: String, val content: String) {
-    VARIABLE("variable", "variables"),
-    STAGE("stage", "stages"),
-    JOB("job", "jobs"),
-    STEP("step", "steps"),
-    FINALLY("finally", "finally"),
-    EXTEND("extend", "extend"),
-    GATE("gate", "gates")
-}
+@JsonFilter(YamlMetaDataJsonFilter)
+data class PreStep(
+    val name: String?,
+    val id: String?,
+    @ApiModelProperty(name = "if")
+    @JsonProperty("if")
+    val ifFiled: String?,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
+    val uses: String?,
+    val with: Map<String, Any?>?,
+    @ApiModelProperty(name = "timeout-minutes")
+    @JsonProperty("timeout-minutes")
+    val timeoutMinutes: Int?,
+    @ApiModelProperty(name = "continue-on-error")
+    @JsonProperty("continue-on-error")
+    val continueOnError: Boolean?,
+    @ApiModelProperty(name = "retry-times")
+    @JsonProperty("retry-times")
+    val retryTimes: Int?,
+    val env: Map<String, Any?>? = emptyMap(),
+    val run: String?,
+    val checkout: String?,
+    override val yamlMetaData: MetaData?
+) : YamlMetaData

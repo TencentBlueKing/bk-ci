@@ -25,29 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+package com.tencent.devops.common.ci.v2.enums
 
 /**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ * 模板类型，text为展示内容，content为模板在Yaml中的关键字
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYaml(
-    var version: String?,
-    var name: String?,
-    var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
-    var variables: Map<String, Variable>? = null,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<PreStep>? = null,
-    var extends: Extends? = null,
-    var resources: Resources?,
-    var notices: List<GitNotices>?,
-    var finally: Map<String, PreJob>? = null
-)
+enum class TemplateType(val text: String, val content: String) {
+    VARIABLE("variable", "variables"),
+    STAGE("stage", "stages"),
+    JOB("job", "jobs"),
+    STEP("step", "steps"),
+    FINALLY("finally", "finally"),
+    EXTEND("extend", "extend"),
+    GATE("gate", "gates")
+}

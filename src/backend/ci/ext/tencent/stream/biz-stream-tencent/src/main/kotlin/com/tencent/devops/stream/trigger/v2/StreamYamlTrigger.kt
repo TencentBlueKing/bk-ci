@@ -56,7 +56,6 @@ import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
@@ -65,6 +64,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
 import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
@@ -288,23 +288,24 @@ class StreamYamlTrigger @Autowired constructor(
             val preYamlObject = YamlTemplate(
                 yamlObject = preTemplateYamlObject,
                 filePath = filePath,
-                triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
-                triggerUserId = gitRequestEvent.userId,
-                sourceProjectId = gitRequestEvent.gitProjectId,
-                triggerRef = gitRequestEvent.branch,
-                triggerToken = tokenService.getToken(gitRequestEvent.gitProjectId),
-                repo = null,
-                repoTemplateGraph = TemplateGraph(),
-                getTemplateMethod = yamlTemplateService::getTemplate,
-                forkGitToken = if (forkGitProjectId != null) {
-                    tokenService.getToken(forkGitProjectId)
-                } else null,
-                changeSet = changeSet,
-                event = event
+                projectData = TemplateProjectData(
+                    triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
+                    triggerUserId = gitRequestEvent.userId,
+                    sourceProjectId = gitRequestEvent.gitProjectId,
+                    triggerRef = gitRequestEvent.branch,
+                    triggerToken = tokenService.getToken(gitRequestEvent.gitProjectId),
+                    forkGitToken = if (forkGitProjectId != null) {
+                        tokenService.getToken(forkGitProjectId)
+                    } else null,
+                    changeSet = changeSet,
+                    event = event
+                ),
+                getTemplateMethod = yamlTemplateService::getTemplate
             ).replace()
+            val (normalYaml, _) = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
             return YamlObjects(
                 preYaml = preYamlObject,
-                normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
+                normalYaml = normalYaml
             )
         } catch (e: Throwable) {
             logger.info("event ${gitRequestEvent.id} yaml template replace error", e)

@@ -28,10 +28,8 @@
 package com.tencent.devops.common.ci.v2.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.github.fge.jackson.JsonLoader
@@ -52,7 +50,7 @@ import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.PushRule
 import com.tencent.devops.common.ci.v2.RunsOn
@@ -64,7 +62,10 @@ import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.TagRule
 import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.common.ci.v2.add
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.stageCheck.Flow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
@@ -96,8 +97,6 @@ object ScriptYmlUtils {
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
-
-    private const val MAX_SCHEDULES_BRANCHES = 3
 
     private const val PARAMETERS_PREFIX = "parameters."
 
@@ -163,7 +162,7 @@ object ScriptYmlUtils {
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String {
         if (value.isNullOrBlank()) {
             return ""
         }
@@ -269,58 +268,7 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml, yaml: String) {
-        checkTriggerOn(preScriptBuildYaml)
-        checkVariable(preScriptBuildYaml)
-        checkStage(preScriptBuildYaml)
-        checkExtend(yaml)
-    }
-
-    private fun checkTriggerOn(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
-        if (preScriptBuildYaml.triggerOn?.schedules?.branches?.size != null &&
-            preScriptBuildYaml.triggerOn.schedules.branches.size > MAX_SCHEDULES_BRANCHES
-        ) {
-            throw YamlFormatException("定时任务的最大执行分支数不能超过: $MAX_SCHEDULES_BRANCHES")
-        }
-    }
-
-    private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
-        if (preScriptBuildYaml.variables == null) {
-            return
-        }
-
-        preScriptBuildYaml.variables.forEach {
-            val keyRegex = Regex("^[0-9a-zA-Z_]+$")
-            if (!keyRegex.matches(it.key)) {
-                throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
-            }
-        }
-    }
-
-    private fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
-        if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
-            (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
-        ) {
-            throw YamlFormatException("stages, jobs, steps不能并列存在，只能存在其一")
-        }
-    }
-
-    private fun checkExtend(yaml: String) {
-        val yamlMap = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<Map<String, Any?>>() {})
-        if (yamlMap["extends"] == null) {
-            return
-        }
-        yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version" &&
-                t != "resources" && t != "name" && t != "on"
-            ) {
-                throw YamlFormatException("使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources")
-            }
-        }
-    }
-
-    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
+    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml, transferData: YamlTransferData?): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
                 listOf(
@@ -332,7 +280,7 @@ object ScriptYmlUtils {
                                 id = randomString(jobNamespace),
                                 name = "job1",
                                 runsOn = RunsOn(),
-                                steps = formatSteps(preScriptBuildYaml.steps)
+                                steps = preStepsToSteps(preScriptBuildYaml.steps, transferData)
                             )
                         ),
                         checkIn = null,
@@ -345,19 +293,19 @@ object ScriptYmlUtils {
                     Stage(
                         name = "stage_1",
                         id = randomString(stageNamespace),
-                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs),
+                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs, transferData),
                         checkIn = null,
                         checkOut = null
                     )
                 )
             }
             else -> {
-                preStages2Stages(preScriptBuildYaml.stages as List<PreStage>)
+                preStages2Stages(preScriptBuildYaml.stages as List<PreStage>, transferData)
             }
         }
     }
 
-    private fun preJobs2Jobs(preJobs: Map<String, PreJob>?): List<Job> {
+    private fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData?): List<Job> {
         if (preJobs == null) {
             return emptyList()
         }
@@ -387,7 +335,7 @@ object ScriptYmlUtils {
                     services = services,
                     ifField = preJob.ifField,
                     ifModify = preJob.ifModify,
-                    steps = formatSteps(preJob.steps),
+                    steps = preStepsToSteps(preJob.steps, transferData),
                     timeoutMinutes = preJob.timeoutMinutes,
                     env = preJob.env,
                     continueOnError = preJob.continueOnError,
@@ -395,6 +343,9 @@ object ScriptYmlUtils {
                     dependOn = preJob.dependOn
                 )
             )
+
+            // 为每个job增加可能的模板信息
+            transferData?.add(index, TemplateType.JOB, preJob.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return jobs
@@ -427,50 +378,53 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun formatSteps(oldSteps: List<Step>?): List<Step> {
+    private fun preStepsToSteps(oldSteps: List<PreStep>?, transferData: YamlTransferData?): List<Step> {
         if (oldSteps == null) {
             return emptyList()
         }
 
         val stepList = mutableListOf<Step>()
         val stepIdSet = mutableSetOf<String>()
-        oldSteps.forEach {
-            if (it.uses == null && it.run == null && it.checkout == null) {
+        oldSteps.forEach { preStep ->
+            if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
                 throw YamlFormatException("step必须包含uses或run或checkout!")
             }
 
             // 校验stepId唯一性
-            if (it.id != null && stepIdSet.contains(it.id)) {
-                throw YamlFormatException("请确保step.id唯一性!(${it.id})")
-            } else if (it.id != null && !stepIdSet.contains(it.id)) {
-                stepIdSet.add(it.id)
+            if (preStep.id != null && stepIdSet.contains(preStep.id)) {
+                throw YamlFormatException("请确保step.id唯一性!(${preStep.id})")
+            } else if (preStep.id != null && !stepIdSet.contains(preStep.id)) {
+                stepIdSet.add(preStep.id)
             }
 
             // 检测step env合法性
-            GitCIEnvUtils.checkEnv(it.env)
+            GitCIEnvUtils.checkEnv(preStep.env)
 
+            val id = preStep.id ?: randomString(stepNamespace)
             stepList.add(
                 Step(
-                    name = it.name,
-                    id = it.id ?: randomString(stepNamespace),
-                    ifFiled = it.ifFiled,
-                    ifModify = it.ifModify,
-                    uses = it.uses,
-                    with = it.with,
-                    timeoutMinutes = it.timeoutMinutes,
-                    continueOnError = it.continueOnError,
-                    retryTimes = it.retryTimes,
-                    env = it.env,
-                    run = it.run,
-                    checkout = it.checkout
+                    name = preStep.name,
+                    id = id,
+                    ifFiled = preStep.ifFiled,
+                    ifModify = preStep.ifModify,
+                    uses = preStep.uses,
+                    with = preStep.with,
+                    timeoutMinutes = preStep.timeoutMinutes,
+                    continueOnError = preStep.continueOnError,
+                    retryTimes = preStep.retryTimes,
+                    env = preStep.env,
+                    run = preStep.run,
+                    checkout = preStep.checkout
                 )
             )
+
+            transferData?.add(id, TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return stepList
     }
 
-    private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
+    private fun preStages2Stages(preStageList: List<PreStage>?, transferData: YamlTransferData?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
         }
@@ -493,7 +447,7 @@ object ScriptYmlUtils {
                     ifField = it.ifField,
                     ifModify = it.ifModify,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>),
+                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>, transferData),
                     checkIn = formatStageCheck(it.checkIn),
                     checkOut = formatStageCheck(it.checkOut)
                 )
@@ -560,28 +514,36 @@ object ScriptYmlUtils {
     /**
      * 预处理对象转化为合法对象
      */
-    fun normalizeGitCiYaml(preScriptBuildYaml: PreScriptBuildYaml, filePath: String): ScriptBuildYaml {
+    fun normalizeGitCiYaml(
+        preScriptBuildYaml: PreScriptBuildYaml,
+        filePath: String,
+        transferData: YamlTransferData = YamlTransferData()
+    ): Pair<ScriptBuildYaml, YamlTransferData> {
         val stages = formatStage(
-            preScriptBuildYaml
+            preScriptBuildYaml,
+            transferData
         )
 
         val thisTriggerOn = formatTriggerOn(preScriptBuildYaml.triggerOn)
 
-        return ScriptBuildYaml(
-            name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
-                preScriptBuildYaml.name!!
-            } else {
-                filePath
-            },
-            version = preScriptBuildYaml.version,
-            triggerOn = thisTriggerOn,
-            variables = preScriptBuildYaml.variables,
-            extends = preScriptBuildYaml.extends,
-            resource = preScriptBuildYaml.resources,
-            notices = preScriptBuildYaml.notices,
-            stages = stages,
-            finally = preJobs2Jobs(preScriptBuildYaml.finally),
-            label = preScriptBuildYaml.label ?: emptyList()
+        return Pair(
+            ScriptBuildYaml(
+                name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
+                    preScriptBuildYaml.name!!
+                } else {
+                    filePath
+                },
+                version = preScriptBuildYaml.version,
+                triggerOn = thisTriggerOn,
+                variables = preScriptBuildYaml.variables,
+                extends = preScriptBuildYaml.extends,
+                resource = preScriptBuildYaml.resources,
+                notices = preScriptBuildYaml.notices,
+                stages = stages,
+                finally = preJobs2Jobs(preScriptBuildYaml.finally, transferData),
+                label = preScriptBuildYaml.label ?: emptyList()
+            ),
+            transferData
         )
     }
 
@@ -768,30 +730,7 @@ object ScriptYmlUtils {
         return Pair(report.isSuccess, sb.toString())
     }
 
-    fun getPreScriptBuildYamlSchema(): String {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        val schema = mapper.generateJsonSchema(PreScriptBuildYaml::class.java)
-        /*schema.schemaNode.with("properties").with("steps").put("item", CiYamlUtils.getAbstractTaskSchema())
-        schema.schemaNode.with("properties").with("services").put("item", CiYamlUtils.getAbstractServiceSchema())
-        schema.schemaNode.with("properties")
-            .with("stages")
-            .with("items")
-            .with("properties")
-            .with("stage")
-            .with("items")
-            .with("properties")
-            .with("job")
-            .with("properties")
-            .with("steps")
-            .put("item", CiYamlUtils.getAbstractTaskSchema())*/
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
-    }
-
     fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)
-
-    fun validateSchema(schema: String): Boolean =
-        validateJson(schema)
 
     fun validateJson(json: String): Boolean {
         try {
@@ -847,7 +786,8 @@ object ScriptYmlUtils {
      */
     fun normalizePreCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
         val stages = formatStage(
-            preScriptBuildYaml
+            preScriptBuildYaml,
+            null
         )
 
         return ScriptBuildYaml(
@@ -859,7 +799,7 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preJobs2Jobs(preScriptBuildYaml.finally),
+            finally = preJobs2Jobs(preScriptBuildYaml.finally, null),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }

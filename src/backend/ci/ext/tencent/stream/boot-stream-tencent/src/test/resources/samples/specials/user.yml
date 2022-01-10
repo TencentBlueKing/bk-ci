@@ -19,13 +19,13 @@ on:
     types:
       - branch
 variables:
-  123_GIT_KEY: 4cd6f303222a9f4854210ac00b398da8
-  123_USERNAME: kiyachen
+  123_GIT_KEY: xxxxxx
+  123_USERNAME: xxxxxxxxxx
   123_MAKE_PATH: "./"
   123_SERVER: test
-  123_APP: kiyachen
+  123_APP: xxxxxxxxxx
   APP_NAME: myProject
-  CODELIB_ALIAS: kiyachen/myProject
+  CODELIB_ALIAS: xxxxxxxxxx/myProject
   COV_ID: ""
   DIST_DIR: ""
   EPC: "true"
@@ -284,7 +284,7 @@ stages:
           - key: mirrors.tencent.com
             value: mirrors_docker
           sourceRepoItemsStr: []
-          targetImage: mirrors.tencent.com/kiyachen/${{ variables.APP_NAME }}
+          targetImage: mirrors.tencent.com/xxxxxxxxxx/${{ variables.APP_NAME }}
           targetImageName: ""
           targetImageTag: v1.0.0
           targetRepoItemStr: []

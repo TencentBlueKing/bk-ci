@@ -25,29 +25,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.stream.trigger.template.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+class Graph<T>(
+    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
+) {
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYaml(
-    var version: String?,
-    var name: String?,
-    var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
-    var variables: Map<String, Variable>? = null,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<PreStep>? = null,
-    var extends: Extends? = null,
-    var resources: Resources?,
-    var notices: List<GitNotices>?,
-    var finally: Map<String, PreJob>? = null
-)
+    fun addEdge(fromPath: String, toPath: String) {
+        if (adj[fromPath] != null) {
+            adj[fromPath]!!.add(toPath)
+        } else {
+            adj[fromPath] = mutableListOf(toPath)
+        }
+    }
+
+    fun hasCyclic(): Boolean {
+        val visited = adj.map { it.key to false }.toMap().toMutableMap()
+        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
+
+        for (i in adj.keys) {
+            if (hasCyclicUtil(i, visited, recStack)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasCyclicUtil(
+        i: String,
+        visited: MutableMap<String, Boolean>,
+        recStack: MutableMap<String, Boolean>
+    ): Boolean {
+
+        if (recStack[i] == null || visited[i] == null) {
+            return false
+        }
+
+        if (recStack[i]!!) {
+            return true
+        }
+
+        if (visited[i]!!) {
+            return false
+        }
+
+        visited[i] = true
+
+        recStack[i] = true
+
+        val children = adj[i]!!
+
+        for (c in children) {
+            if (hasCyclicUtil(c, visited, recStack)) {
+                return true
+            }
+        }
+
+        recStack[i] = false
+
+        return false
+    }
+}

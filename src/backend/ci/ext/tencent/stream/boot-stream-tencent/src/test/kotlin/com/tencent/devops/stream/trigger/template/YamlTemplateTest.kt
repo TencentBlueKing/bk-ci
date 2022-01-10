@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.trigger.template.pojo.TemplateGraph
+import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource
@@ -43,97 +43,104 @@ import java.io.StringReader
 
 class YamlTemplateTest {
 
+    val sampleDir = "samples"
+
     @Test
     fun testAllTemplate() {
-        replace("all.yml")
+        val dir = "all"
+        check("$sampleDir/$dir/all.yml")
+    }
+
+    @Test
+    fun testStagesTemplate() {
+        val dir = "stages"
+        check("$sampleDir/$dir/stages.yml")
+    }
+
+    @Test
+    fun testJobsTemplate() {
+        val dir = "jobs"
+        check("$sampleDir/$dir/jobs.yml")
+    }
+
+    @Test
+    fun testStepsTemplate() {
+        val dir = "steps"
+        check("$sampleDir/$dir/stepss.yml")
     }
 
     @Test
     fun testExtendsTemplate() {
-        replace("extends.yml")
+        val dir = "extends"
+        check("$sampleDir/$dir/extends.yml")
     }
 
     @Test
-    fun testUserTemplate() {
-        replace("user.yml")
-        replace("stepss.yml")
-        replace("jobs.yml")
-        replace("stages.yml")
+    fun testSpecialsTemplate() {
+        val dir = "specials"
+        check("$sampleDir/$dir/longParametersTest.yml")
+
+        check("$sampleDir/$dir/user.yml")
     }
 
-    @Test
-    fun checkReplaceError() {
-        checkLongParameters()
-    }
-
-    private fun checkLongParameters() {
+    private fun check(file: String) {
         var flag = true
-        val longParametersTest = BufferedReader(
+        val sample = BufferedReader(
             StringReader(
-                replace("longParametersTest.yml", true)
+                replace(file)
             )
         )
-        val longParametersTestCompare = BufferedReader(
+        val compared = BufferedReader(
             StringReader(
-                getStrFromResource("compared/longParametersTestCompare.yml").toString()
+                getStrFromResource("compared/${file.removePrefix("samples")}")
             )
         )
-        var line = longParametersTest.readLine()
-        var lineCompare = longParametersTestCompare.readLine()
+        var line = sample.readLine()
+        var lineCompare = compared.readLine()
         while (line != null) {
+            // 随机生成的id不计入比较
+            if (line.trim().startsWith("id") || line.trim().startsWith("- id")) {
+                line = sample.readLine()
+                lineCompare = compared.readLine()
+                continue
+            }
             if (line != lineCompare) {
                 println("$line != $lineCompare")
                 flag = false
+                break
             }
-            line = longParametersTest.readLine()
-            lineCompare = longParametersTestCompare.readLine()
+            line = sample.readLine()
+            lineCompare = compared.readLine()
         }
         assert(flag)
     }
 
-    private fun replace(testYaml: String, printYaml: Boolean = false): String {
+    private fun replace(testYaml: String): String {
         val sb = getStrFromResource(testYaml)
 
-        val yaml = ScriptYmlUtils.formatYaml(sb.toString())
+        val yaml = ScriptYmlUtils.formatYaml(sb)
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
         val preScriptBuildYaml = YamlTemplate(
-            yamlObject = preTemplateYamlObject,
             filePath = testYaml,
-            triggerUserId = "ruotiantang",
-            triggerProjectId = 580280,
-            triggerToken = "",
-            triggerRef = "master",
-            repo = null,
-            repoTemplateGraph = TemplateGraph(),
-            sourceProjectId = 580280,
-            getTemplateMethod = ::getTestTemplate,
-            changeSet = null,
-            event = null,
-            forkGitToken = null
+            yamlObject = preTemplateYamlObject,
+            projectData = TemplateProjectData(
+                triggerUserId = "ruotiantang",
+                triggerProjectId = 580280,
+                triggerToken = "",
+                triggerRef = "master",
+                sourceProjectId = 580280,
+                changeSet = null,
+                event = null,
+                forkGitToken = null
+            ),
+            getTemplateMethod = ::getTestTemplate
         ).replace()
-        val aa = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
-        val result = JsonUtil.toJson(aa)
-        val cc = YamlUtil.toYaml(aa)
-        if (printYaml) {
-            println(cc)
-        } else {
-            println(result)
-        }
-        return cc
-    }
-
-    private fun getStrFromResource(testYaml: String): StringBuffer {
-        val classPathResource = ClassPathResource(testYaml)
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-        return sb
+        val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
+        val yamls = YamlUtil.toYaml(normalOb)
+        println(JsonUtil.toJson(trans))
+        println("------------------------")
+        println(yamls)
+        return yamls
     }
 
     private fun getTestTemplate(
@@ -144,7 +151,12 @@ class YamlTemplateTest {
         } else {
             "templates/${param.targetRepo}/templates/${param.fileName}"
         }
-        val classPathResource = ClassPathResource(newPath)
+        val sb = getStrFromResource(newPath)
+        return ScriptYmlUtils.formatYaml(sb)
+    }
+
+    private fun getStrFromResource(testYaml: String): String {
+        val classPathResource = ClassPathResource(testYaml)
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
 
@@ -155,6 +167,6 @@ class YamlTemplateTest {
             sb.append(str).append("\n")
         }
         inputStream.close()
-        return ScriptYmlUtils.formatYaml(sb.toString())
+        return sb.toString()
     }
 }

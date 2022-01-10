@@ -25,23 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo
+package com.tencent.devops.stream.trigger.template
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import org.yaml.snakeyaml.Yaml
 
 /**
- * 模板替换中的模板库
- * 用来保存库信息和库中的模板，供模板替换使用
+ * 部分yaml转换过程与公共的存在区别，template转换时需要保留meta信息字段
  */
-data class TemplateRepo(
-    // 代码库的命名空间
-    var repo: String,
-    // 代码库在模板中的名称
-    var repoName: String,
-    // 代码库的分支
-    var repoRef: String? = "master",
-    // 是否使用OAUTH拉取模板
-    var useOauth: Boolean,
-    // 用户自己的private.key
-    var privateKey: String?,
-    // 代码库中的模板
-    var templates: MutableMap<String, String>
-)
+object TemplateYamlMapper {
+    private val objectMapper = ObjectMapper(
+        YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
+    ).registerKotlinModule().setFilterProvider(SimpleFilterProvider().addFilter(
+        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAll()
+    ))
+
+    fun getObjectMapper() = objectMapper
+
+    fun toYaml(bean: Any): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        return getObjectMapper().writeValueAsString(bean)!!
+    }
+
+    fun <T> to(yamlStr: String): T {
+        val yaml = Yaml()
+        val obj = toYaml(yaml.load(yamlStr) as Any)
+        return getObjectMapper().readValue(obj, object : TypeReference<T>() {})
+    }
+}

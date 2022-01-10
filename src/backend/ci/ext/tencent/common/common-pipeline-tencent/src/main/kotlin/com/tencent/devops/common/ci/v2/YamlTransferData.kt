@@ -27,27 +27,48 @@
 
 package com.tencent.devops.common.ci.v2
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 /**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ * 从preYaml转向Yaml产生的内部使用而不暴露的中间数据
+ * 如：Yaml对象的模板信息,用来分享凭证
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYaml(
-    var version: String?,
-    var name: String?,
-    var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
-    var variables: Map<String, Variable>? = null,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<PreStep>? = null,
-    var extends: Extends? = null,
-    var resources: Resources?,
-    var notices: List<GitNotices>?,
-    var finally: Map<String, PreJob>? = null
+data class YamlTransferData(
+    val templateData: MutableMap<String, MutableList<TransferTemplateData>> = mutableMapOf()
 )
+
+data class TransferTemplateData(
+    val objectIds: MutableList<String>,
+    val templateType: TemplateType,
+    val remoteProjectId: String
+)
+
+fun YamlTransferData.add(objectId: String, templateType: TemplateType, remoteProjectId: String?) {
+    if (remoteProjectId == null) {
+        return
+    }
+
+    val dataList = templateData[remoteProjectId]
+    if (dataList != null) {
+        val data = dataList.filter { it.templateType == templateType }.ifEmpty { null }?.first()
+        if (data == null) {
+            dataList.add(
+                TransferTemplateData(
+                    objectIds = mutableListOf(objectId),
+                    templateType = templateType,
+                    remoteProjectId = remoteProjectId
+                )
+            )
+        } else {
+            data.objectIds.add(objectId)
+        }
+    } else {
+        templateData[remoteProjectId] = mutableListOf(
+            TransferTemplateData(
+                objectIds = mutableListOf(objectId),
+                templateType = templateType,
+                remoteProjectId = remoteProjectId
+            )
+        )
+    }
+}
