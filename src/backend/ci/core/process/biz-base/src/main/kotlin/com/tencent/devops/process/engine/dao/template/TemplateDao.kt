@@ -484,6 +484,18 @@ class TemplateDao {
         }
     }
 
+    fun listTemplateByIds(
+        dslContext: DSLContext,
+        templateList: List<String>
+    ): Result<TTemplateRecord> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(templateList))
+                .orderBy(CREATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     /**
      * 批量获取模版的最新版本
      */
