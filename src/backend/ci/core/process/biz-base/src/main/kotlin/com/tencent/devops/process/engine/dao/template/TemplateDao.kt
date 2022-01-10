@@ -290,7 +290,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(VERSION.desc())
+                .orderBy(CREATED_TIME.desc())
                 .fetch()
         }
     }
