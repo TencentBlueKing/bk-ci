@@ -43,7 +43,7 @@ import org.springframework.stereotype.Service
 class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushDao: ExperiencePushDao,
-    private val experienceNotifyService: ExperienceNotifyService
+    private val experienceNotifyService: ExperienceNotifyService,
 ) {
     fun bindDeviceToken(
         userId: String,
@@ -133,6 +133,7 @@ class ExperiencePushService @Autowired constructor(
             bundle = bundleIdentifier,
             platform = platform
         )
+
         // todo 返回如果为空的处理
         return if (subscription.isEmpty()) {
             Result("内部体验默认为已订阅状态，无法取消订阅。如需取消订阅…………", true)

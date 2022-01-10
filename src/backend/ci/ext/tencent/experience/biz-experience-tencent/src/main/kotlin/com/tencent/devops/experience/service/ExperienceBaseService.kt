@@ -55,6 +55,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -75,6 +76,10 @@ class ExperienceBaseService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceBaseService::class.java)
+    }
+
     fun list(
         userId: String,
         offset: Int,
@@ -233,6 +238,7 @@ class ExperienceBaseService @Autowired constructor(
         bundleIdentifier: String,
         projectId: String
     ): Boolean {
+        logger.info("userId:$userId,platform:$platform,bundleIdentifier:$bundleIdentifier,projectId:$projectId")
         val isSubscribe = lazy {
             experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
                 .isNotEmpty
