@@ -52,7 +52,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         return client.get(ServiceArtifactoryFileTaskResource::class).createFileTask(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             createFileTaskReq = createFileTaskReq
         )
@@ -68,7 +68,7 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         return client.get(ServiceArtifactoryFileTaskResource::class).getStatus(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             taskId = taskId
         )
@@ -86,14 +86,14 @@ class ApigwArtifactoryFileTaskResourceV4Impl @Autowired constructor(
         return client.get(ServiceArtifactoryFileTaskResource::class).clearFileTask(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             taskId = taskId
         )
     }
 
-    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+    private fun checkPipelineId(project: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(project, buildId).data
             ?: throw ParamBlankException("Invalid buildId")
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

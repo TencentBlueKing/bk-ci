@@ -77,7 +77,7 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getSignToken(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId
         )
     }
@@ -112,8 +112,8 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).downloadUrl(resignId)
     }
 
-    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+    private fun checkPipelineId(project: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(project, buildId).data
             ?: throw ParamBlankException("Invalid buildId")
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

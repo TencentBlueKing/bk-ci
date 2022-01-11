@@ -54,12 +54,12 @@ class ApigwRepositoryCommitResourceV4Impl @Autowired constructor(
         pipelineId: String?,
         buildId: String
     ): Result<List<CommitResponse>> {
-        checkPipelineId(userId, pipelineId, buildId)
+        checkPipelineId(projectId, pipelineId, buildId)
         return client.get(UserRepositoryResource::class).getCommit(buildId)
     }
 
-    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+    private fun checkPipelineId(project: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(project, buildId).data
             ?: throw ParamBlankException("Invalid buildId")
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

@@ -101,15 +101,15 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         return client.get(ServiceLogFileResource::class).getPluginLogUrl(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             elementId = elementId,
             executeCount = executeCount
         )
     }
 
-    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+    private fun checkPipelineId(project: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(project, buildId).data
             ?: throw ParamBlankException("Invalid buildId")
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

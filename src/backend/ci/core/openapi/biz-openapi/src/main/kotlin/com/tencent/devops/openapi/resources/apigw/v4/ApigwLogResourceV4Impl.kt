@@ -71,7 +71,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             tag = elementId,
             jobId = jobId,
@@ -103,7 +103,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             debug = debug,
             num = num ?: 100,
@@ -137,7 +137,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             start = start,
             debug = debug,
@@ -158,7 +158,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Response {
-        checkPipelineId(userId, pipelineId, buildId)
+        checkPipelineId(projectId, pipelineId, buildId)
         logger.info(
             "downloadLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId]" +
                 "jobId[$jobId] executeCount[$executeCount] tag[$tag] jobId[$jobId]"
@@ -196,15 +196,15 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         return client.get(ServiceLogResource::class).getLogMode(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             tag = tag,
             executeCount = executeCount
         )
     }
 
-    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+    private fun checkPipelineId(project: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(project, buildId).data
             ?: throw ParamBlankException("Invalid buildId")
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

@@ -66,12 +66,13 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : ServiceBuildResource {
-    override fun getPipelineIdFromBuildId(userId: String, buildId: String): Result<String> {
+    override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
         val pipelineBuildInfo =
-            pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: throw ParamBlankException("Invalid buildId")
+            pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+                ?: throw ParamBlankException("Invalid buildId")
         return Result(pipelineBuildInfo.pipelineId)
     }
 
@@ -89,16 +90,18 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(engineVMBuildService.setStartUpVMStatus(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            buildStatus = status,
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMsg
-        ))
+        return Result(
+            engineVMBuildService.setStartUpVMStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                buildStatus = status,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
+        )
     }
 
     override fun manualStartupInfo(
@@ -152,19 +155,23 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            failedContainer = failedContainer,
-            skipFailedTask = skipFailedTask,
-            isMobile = false,
-            channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode),
-            checkManualStartup = checkManualStartup ?: false
-        )))
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.retry(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    failedContainer = failedContainer,
+                    skipFailedTask = skipFailedTask,
+                    isMobile = false,
+                    channelCode = channelCode,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    checkManualStartup = checkManualStartup ?: false
+                )
+            )
+        )
     }
 
     override fun manualShutdown(

@@ -78,7 +78,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             channelCode = apiGatewayUtil.getChannelCode()
         )
@@ -136,7 +136,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             channelCode = apiGatewayUtil.getChannelCode()
         )
@@ -157,7 +157,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             taskId = taskId,
             failedContainer = failedContainer,
@@ -179,7 +179,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).getBuildStatus(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             channelCode = apiGatewayUtil.getChannelCode()
         )
@@ -200,7 +200,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             stageId = stageId,
             cancel = cancel ?: false,
@@ -221,7 +221,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).getBuildVariableValue(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             variableNames = variableNames
         )
@@ -238,14 +238,14 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         return client.get(ServiceBuildResource::class).executionPauseAtom(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(userId, pipelineId, buildId),
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             taskPauseExecute = taskPauseExecute
         )
     }
 
-    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+    private fun checkPipelineId(project: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(project, buildId).data
             ?: throw ParamBlankException("Invalid buildId")
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

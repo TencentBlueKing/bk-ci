@@ -75,9 +75,9 @@ interface ServiceBuildResource {
     @GET
     @Path("/getPipelineIdFromBuildId")
     fun getPipelineIdFromBuildId(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @HeaderParam("projectId")
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("buildId")
         buildId: String
