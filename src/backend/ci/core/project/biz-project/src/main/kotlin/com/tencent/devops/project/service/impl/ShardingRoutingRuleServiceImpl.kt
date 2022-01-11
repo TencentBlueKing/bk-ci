@@ -77,7 +77,6 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             val routingName = shardingRoutingRuleRecord.routingName
             // 删除redis中规则信息
             redisOperation.delete(getShardingRoutingRuleKey(routingName))
-            val routingRule = shardingRoutingRuleRecord.routingRule
         }
         return true
     }
@@ -127,6 +126,12 @@ class ShardingRoutingRuleServiceImpl @Autowired constructor(
             // redis缓存中未取到规则信息则从db查
             val record = shardingRoutingRuleDao.getByName(dslContext, routingName)
             if (record != null) {
+                // 更新redis缓存规则信息
+                redisOperation.set(
+                    key = getShardingRoutingRuleKey(routingName),
+                    value = record.routingRule,
+                    expired = false
+                )
                 ShardingRoutingRule(record.routingName, record.routingRule)
             } else {
                 null
