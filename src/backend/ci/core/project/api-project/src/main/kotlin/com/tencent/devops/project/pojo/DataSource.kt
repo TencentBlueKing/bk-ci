@@ -33,6 +33,9 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("数据源")
 data class DataSource(
+    @ApiModelProperty("集群名称")
+    @field:BkField(minLength = 1, maxLength = 64)
+    val clusterName: String,
     @ApiModelProperty("模块标识")
     val moduleCode: SystemModuleEnum,
     @ApiModelProperty("数据源名称")

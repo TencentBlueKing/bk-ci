@@ -45,6 +45,7 @@ class DataSourceDao {
             dslContext.insertInto(
                 this,
                 ID,
+                CLUSTER_NAME,
                 MODULE_CODE,
                 DATA_SOURCE_NAME,
                 FULL_FLAG,
@@ -53,6 +54,7 @@ class DataSourceDao {
             )
                 .values(
                     UUIDUtil.generate(),
+                    dataSource.clusterName,
                     dataSource.moduleCode.name,
                     dataSource.dataSourceName,
                     dataSource.fullFlag,
@@ -64,10 +66,14 @@ class DataSourceDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, moduleCode: String, dataSourceName: String): Int {
+    fun countByName(dslContext: DSLContext, clusterName: String, moduleCode: String, dataSourceName: String): Int {
         with(TDataSource.T_DATA_SOURCE) {
             return dslContext.selectCount().from(this)
-                .where(MODULE_CODE.eq(moduleCode).and(DATA_SOURCE_NAME.eq(dataSourceName)))
+                .where(
+                    CLUSTER_NAME.eq(clusterName)
+                        .and(MODULE_CODE.eq(moduleCode))
+                        .and(DATA_SOURCE_NAME.eq(dataSourceName))
+                )
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -90,11 +96,13 @@ class DataSourceDao {
 
     fun listByModule(
         dslContext: DSLContext,
+        clusterName: String,
         moduleCode: String,
         fullFlag: Boolean? = false
     ): Result<TDataSourceRecord>? {
         return with(TDataSource.T_DATA_SOURCE) {
             val conditions = mutableListOf<Condition>()
+            conditions.add(CLUSTER_NAME.eq(clusterName))
             conditions.add(MODULE_CODE.eq(moduleCode))
             if (fullFlag != null) {
                 conditions.add(FULL_FLAG.eq(fullFlag))
@@ -106,6 +114,7 @@ class DataSourceDao {
     fun update(dslContext: DSLContext, id: String, dataSource: DataSource) {
         with(TDataSource.T_DATA_SOURCE) {
             dslContext.update(this)
+                .set(CLUSTER_NAME, dataSource.clusterName)
                 .set(MODULE_CODE, dataSource.moduleCode.name)
                 .set(DATA_SOURCE_NAME, dataSource.dataSourceName)
                 .set(FULL_FLAG, dataSource.fullFlag)

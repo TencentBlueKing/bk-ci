@@ -28,8 +28,13 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 
 interface ProjectDataSourceAssignService {
 
-    fun assignDataSource(projectId: String, moduleCodes: List<SystemModuleEnum>): Boolean
+    fun assignDataSource(
+        channelCode: ProjectChannelCode,
+        projectId: String,
+        moduleCodes: List<SystemModuleEnum>
+    ): Boolean
 }
