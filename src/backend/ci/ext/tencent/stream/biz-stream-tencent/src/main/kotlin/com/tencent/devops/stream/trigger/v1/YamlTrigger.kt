@@ -45,7 +45,7 @@ import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.utils.GitCIWebHookMatcher
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

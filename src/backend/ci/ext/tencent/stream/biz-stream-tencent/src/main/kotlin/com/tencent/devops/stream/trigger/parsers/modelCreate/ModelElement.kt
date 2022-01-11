@@ -85,6 +85,7 @@ class ModelElement @Autowired constructor(
         job: Job,
         gitBasicSetting: GitCIBasicSetting,
         changeSet: Set<String>? = null,
+        jobEnable: Boolean = true,
         event: GitRequestEvent
     ): MutableList<Element> {
         // 解析service
@@ -118,7 +119,7 @@ class ModelElement @Autowired constructor(
                 customCondition = step.ifFiled
             )
 
-            additionalOptions.enable = PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
+            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
             // bash
             val element: Element = when {
                 step.run != null -> {

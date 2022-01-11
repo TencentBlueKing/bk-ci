@@ -20,7 +20,7 @@ internal class TriggerMatcherTest {
         mock(), mock(), mock()
     )
 
-    private val triggerMatcher = TriggerMatcher(streamScmService, streamTimerService)
+    private val triggerMatcher = TriggerMatcher(streamScmService, streamTimerService, mock())
 
     @Test
     fun mrTest8() {
