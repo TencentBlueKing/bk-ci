@@ -25,59 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 
-@Suppress("ALL")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class GitPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val checkout_sha: String?,
-    val user_name: String,
-    val project_id: Long,
-    val repository: GitCommitRepository,
-    val commits: List<GitCommit>?,
-    val total_commits_count: Int,
-    val operation_kind: String?,
-    val action_kind: String?,
-    val push_options: Map<String, String>?
-) : GitEvent() {
+data class DeleteRule(
+    val types: List<String>
+) {
     companion object {
-        const val classType = "push"
+        val typeSet = setOf("branch", "tag")
     }
 }
 
-fun GitPushEvent.isDeleteBranch(): Boolean {
-    // 工蜂web端删除
-    if (action_kind == TGitPushActionKind.DELETE_BRANCH.value) {
-        return true
-    }
-    // 发送到工蜂的客户端删除
-    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
-        operation_kind == TGitPushOperationKind.DELETE.value &&
-        after.filter { it != '0' }.isBlank()
-    ) {
-        return true
-    }
-    return false
+fun DeleteRule.check(): Boolean {
+    return (types.toSet() subtract DeleteRule.typeSet).isEmpty()
 }
 
-fun GitPushEvent.isCreateBranch(): Boolean {
-    // 工蜂web端创建分支
-    if (action_kind == TGitPushActionKind.CREATE_BRANCH.value) {
-        return true
+fun DeleteRule.getTypesObjectKind(): List<TGitObjectKind> {
+    return types.map {
+        when (it) {
+            "branch" -> TGitObjectKind.PUSH
+            "tag" -> TGitObjectKind.TAG_PUSH
+            else -> TGitObjectKind.PUSH
+        }
     }
-    // 发送到工蜂的客户端创建
-    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
-        operation_kind == TGitPushOperationKind.CREAT.value &&
-        before.filter { it != '0' }.isBlank()
-    ) {
-        return true
-    }
-    return false
 }
