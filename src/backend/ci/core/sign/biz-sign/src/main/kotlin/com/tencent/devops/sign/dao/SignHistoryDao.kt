@@ -237,8 +237,8 @@ class SignHistoryDao {
         }
     }
 
-    fun convert(tTPipelineBuildContainerRecord: TSignHistoryRecord): SignHistory {
-        return with(tTPipelineBuildContainerRecord) {
+    fun convert(tSignHistoryRecord: TSignHistoryRecord): SignHistory {
+        return with(tSignHistoryRecord) {
             SignHistory(
                 resignId = resignId,
                 projectId = projectId,
