@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -34,7 +35,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
-import com.tencent.devops.process.api.service.ServiceBuildV4Resource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -54,10 +55,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String?
+        pipelineId: String
     ): Result<BuildManualStartupInfo> {
         logger.info("$pipelineId|manualStartupInfo|user($userId)")
-        return client.get(ServiceBuildV4Resource::class).manualStartupInfo(
+        return client.get(ServiceBuildResource::class).manualStartupInfo(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -74,10 +75,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildId: String
     ): Result<ModelDetail> {
         logger.info("v4|$buildId|DETAIL|user($userId)")
-        return client.get(ServiceBuildV4Resource::class).getBuildDetail(
+        return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             channelCode = apiGatewayUtil.getChannelCode()
         )
@@ -88,12 +89,12 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String?,
+        pipelineId: String,
         page: Int?,
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("$pipelineId|getHistoryBuild|user($userId)")
-        return client.get(ServiceBuildV4Resource::class).getHistoryBuild(
+        return client.get(ServiceBuildResource::class).getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -108,12 +109,12 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String?,
+        pipelineId: String,
         values: Map<String, String>,
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("$pipelineId|manualStartup|user($userId)")
-        return client.get(ServiceBuildV4Resource::class).manualStartupNew(
+        return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -132,10 +133,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildId: String
     ): Result<Boolean> {
         logger.info("v4|manualShutdown|user($userId)")
-        return client.get(ServiceBuildV4Resource::class).manualShutdown(
+        return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             channelCode = apiGatewayUtil.getChannelCode()
         )
@@ -153,10 +154,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         skipFailedTask: Boolean?
     ): Result<BuildId> {
         logger.info("v4|retry|user($userId)")
-        return client.get(ServiceBuildV4Resource::class).retry(
+        return client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             taskId = taskId,
             failedContainer = failedContainer,
@@ -175,10 +176,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         buildId: String
     ): Result<BuildHistoryWithVars> {
         logger.info("v4|getBuildStatus|user($userId)|build($buildId)")
-        return client.get(ServiceBuildV4Resource::class).getBuildStatus(
+        return client.get(ServiceBuildResource::class).getBuildStatus(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             channelCode = apiGatewayUtil.getChannelCode()
         )
@@ -196,10 +197,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
         logger.info("v4|manualStartStage|user($userId)|build($buildId)")
-        return client.get(ServiceBuildV4Resource::class).manualStartStage(
+        return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             stageId = stageId,
             cancel = cancel ?: false,
@@ -217,10 +218,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         variableNames: List<String>
     ): Result<Map<String, String>> {
         logger.info("v4|getVariableValue|user($userId)|build($buildId)")
-        return client.get(ServiceBuildV4Resource::class).getBuildVariableValue(
+        return client.get(ServiceBuildResource::class).getBuildVariableValue(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             variableNames = variableNames
         )
@@ -234,13 +235,22 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean> {
         logger.info("v4|$buildId| $userId |executionPauseAtom $taskPauseExecute")
-        return client.get(ServiceBuildV4Resource::class).executionPauseAtom(
+        return client.get(ServiceBuildResource::class).executionPauseAtom(
             userId = userId,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = checkPipelineId(userId, pipelineId, buildId),
             buildId = buildId,
             taskPauseExecute = taskPauseExecute
         )
+    }
+
+    private fun checkPipelineId(userId: String, pipelineId: String?, buildId: String): String {
+        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(userId, buildId).data
+            ?: throw ParamBlankException("Invalid buildId")
+        if (pipelineId != null && pipelineId != pipelineIdFormDB) {
+            throw ParamBlankException("PipelineId is invalid ")
+        }
+        return pipelineIdFormDB
     }
 
     companion object {

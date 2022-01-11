@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -53,15 +54,26 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
 class ServiceBuildResourceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : ServiceBuildResource {
+    override fun getPipelineIdFromBuildId(userId: String, buildId: String): Result<String> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        val pipelineBuildInfo =
+            pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: throw ParamBlankException("Invalid buildId")
+        return Result(pipelineBuildInfo.pipelineId)
+    }
 
     override fun setVMStatus(
         projectId: String,

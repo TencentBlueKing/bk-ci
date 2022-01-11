@@ -32,39 +32,66 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.BuildHistoryPage
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.process.pojo.BuildHistoryWithVars
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.BuildManualStartupInfo
-import com.tencent.devops.process.pojo.BuildTaskPauseInfo
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.PipelineWithModel
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OPENAPI_BUILD_V4"], description = "OPENAPI-构建资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}")
+@Api(tags = ["OPENAPI_PIPELINE_V4"], description = "OPENAPI-流水线资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
-interface ApigwBuildResourceV4 {
+interface ApigwPipelineResourceV4 {
 
-    @ApiOperation("启动构建", tags = ["v4_app_build_start", "v4_user_build_start"])
+    @Deprecated("Replace with createPipeline")
+    @ApiOperation("新建流水线编排", tags = ["v4_app_pipeline_create", "v4_user_pipeline_create"])
     @POST
-    @Path("/builds/start")
-    fun start(
+    @Path("/")
+    fun create(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型", required = true)
+        pipeline: Model
+    ): Result<PipelineId>
+
+    @Deprecated("Replace with editPipeline")
+    @ApiOperation("编辑流水线编排", tags = ["v4_app_pipeline_edit", "v4_user_pipeline_edit"])
+    @PUT
+    @Path("/")
+    fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -80,41 +107,14 @@ interface ApigwBuildResourceV4 {
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数", required = true)
-        values: Map<String, String>,
-        @ApiParam("手动指定构建版本参数", required = false)
-        @QueryParam("buildNo")
-        buildNo: Int? = null
-    ): Result<BuildId>
-
-    @ApiOperation("停止构建", tags = ["v4_app_build_stop", "v4_user_build_stop"])
-    @POST
-    @Path("/builds/stop")
-    fun stop(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String
+        @ApiParam(value = "流水线模型", required = true)
+        pipeline: Model
     ): Result<Boolean>
 
-    @ApiOperation("重试构建-重试或者跳过失败插件", tags = ["v4_app_build_retry", "v4_user_build_retry"])
+    @ApiOperation("导入新流水线, 包含流水线编排和设置", tags = ["v4_user_pipeline_upload", "v4_app_pipeline_upload"])
     @POST
-    @Path("/builds/retry")
-    fun retry(
+    @Path("/pipeline_upload")
+    fun uploadPipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -127,51 +127,15 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
-        @QueryParam("taskId")
-        taskId: String? = null,
-        @ApiParam("仅重试所有失败Job", required = false)
-        @QueryParam("failedContainer")
-        failedContainer: Boolean? = false,
-        @ApiParam("跳过失败插件，为true时需要传taskId值（值为stageId则表示跳过Stage下所有失败插件）", required = false)
-        @QueryParam("skip")
-        skipFailedTask: Boolean? = false
-    ): Result<BuildId>
+        @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<PipelineId>
 
-    @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v4_app_build_status", "v4_user_build_status"])
-    @GET
-    @Path("/builds/status")
-    fun getStatus(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String
-    ): Result<BuildHistoryWithVars>
-
-    @ApiOperation("获取流水线构建历史", tags = ["v4_app_build_history", "v4_user_build_history"])
-    @GET
-    @Path("/builds/history")
-    fun getHistoryBuild(
+    @ApiOperation("更新流水线编排和设置", tags = ["v4_user_pipeline_update", "v4_app_pipeline_update"])
+    @PUT
+    @Path("/pipeline_update")
+    fun updatePipeline(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -187,18 +151,15 @@ interface ApigwBuildResourceV4 {
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<BuildHistoryPage<BuildHistory>>
+        @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<DeployPipelineResult>
 
-    @ApiOperation("获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
+    @ApiOperation("获取流水线编排", tags = ["v4_app_pipeline_get", "v4_user_pipeline_get"])
     @GET
-    @Path("/builds/manualStartupInfo")
-    fun manualStartupInfo(
+    @Path("/")
+    fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -213,13 +174,13 @@ interface ApigwBuildResourceV4 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String,
-    ): Result<BuildManualStartupInfo>
+        pipelineId: String
+    ): Result<Model>
 
-    @ApiOperation("构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])
-    @GET
-    @Path("/builds/detail")
-    fun detail(
+    @ApiOperation("批量获取流水线编排与配置", tags = ["v4_app_pipeline_batch_get", "v4_user_pipeline_batch_get"])
+    @POST
+    @Path("/batchGet")
+    fun getBatch(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -232,88 +193,157 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String
-    ): Result<ModelDetail>
+        @ApiParam("流水线ID列表", required = true)
+        pipelineIds: List<String>
+    ): Result<List<PipelineWithModel>>
 
-    @ApiOperation("手动审核启动阶段", tags = ["v4_app_build_stage_start", "v4_user_build_stage_start"])
+    @ApiOperation("复制流水线编排", tags = ["v4_user_pipeline_copy", "v4_app_pipeline_copy"])
     @POST
-    @Path("/builds/stages/manualStart")
-    fun manualStartStage(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam("阶段ID", required = true)
-        @QueryParam("stageId")
-        stageId: String,
-        @ApiParam("取消执行", required = false)
-        @QueryParam("cancel")
-        cancel: Boolean?,
-        @ApiParam("审核请求体", required = false)
-        reviewRequest: StageReviewRequest? = null
-    ): Result<Boolean>
-
-    @ApiOperation("获取构建中的变量值", tags = ["v4_app_build_variables_value", "v4_user_build_variables_value"])
-    @POST
-    @Path("/builds/variables")
-    fun getVariableValue(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam("变量名列表", required = true)
-        variableNames: List<String>
-    ): Result<Map<String, String>>
-
-    @ApiOperation("操作暂停插件", tags = ["v4_app_pause_build_execute", "v4_user_pause_build_execute"])
-    @POST
-    @Path("/builds/execute/pause")
-    fun executionPauseAtom(
+    @Path("/copy")
+    fun copy(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = false)
+        @ApiParam(value = "流水线模型", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam("构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        taskPauseExecute: BuildTaskPauseInfo
+        pipelineId: String,
+        @ApiParam(value = "流水线COPY", required = true)
+        pipeline: PipelineCopy
+    ): Result<PipelineId>
+
+    @ApiOperation("删除流水线编排", tags = ["v4_user_pipeline_delete", "v4_app_pipeline_delete"])
+    @DELETE
+    @Path("/")
+    fun delete(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取项目的流水线列表", tags = ["v4_user_pipeline_list", "v4_app_pipeline_list"])
+    @GET
+    @Path("/list")
+    fun getListByUser(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int? = null,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int? = null
+    ): Result<Page<Pipeline>>
+
+    @ApiOperation("获取流水线状态", tags = ["v4_app_pipeline_status", "v4_user_pipeline_status"])
+    @GET
+    @Path("/status")
+    fun status(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Pipeline?>
+
+    @ApiOperation("流水线重命名", tags = [])
+    @POST
+    @Path("/rename")
+    fun rename(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线名称", required = true)
+        name: PipelineName
+    ): Result<Boolean>
+
+    @ApiOperation("还原流水线编排", tags = [])
+    @PUT
+    @Path("/restore")
+    fun restore(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
+
+    @ApiOperation("更新流水线设置", tags = ["v4_app_pipeline_setting_update", "v4_user_pipeline_setting_update"])
+    @PUT
+    @Path("/setting_update")
+    fun saveSetting(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线设置", required = true)
+        setting: PipelineSetting
     ): Result<Boolean>
 }
