@@ -260,7 +260,11 @@ class ExperienceBaseService @Autowired constructor(
             experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
                 .contains(userId)
         }
-
+        logger.info(
+            "isSubscribe:${isSubscribe.value},isOuterGroup:${isOuterGroup.value}," +
+                    "isInnerGroup:${isInnerGroup.value},isInnerUser:${isInnerUser.value}" +
+                    "isOuterUser:${isOuterUser.value}"
+        )
         return isSubscribe.value || isOuterGroup.value || isInnerGroup.value
                 || isInnerUser.value || isOuterUser.value
     }

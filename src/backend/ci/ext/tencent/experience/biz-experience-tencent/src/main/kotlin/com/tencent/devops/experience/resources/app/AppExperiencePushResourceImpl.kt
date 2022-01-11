@@ -49,20 +49,47 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         return experiencePushService.bindDeviceToken(userId, platform, token)
     }
 
-    override fun subscribe(userId: String, subscribeParam: SubscribeParam): Result<Boolean> {
-        val platform = subscribeParam.platform
-        val projectId = subscribeParam.projectId
-        val bundleIdentifier = subscribeParam.bundleIdentifier
-        checkParam(userId, platform, projectId, bundleIdentifier)
-        return experiencePushService.subscribe(userId, platform, projectId, bundleIdentifier)
+    override fun subscribe(
+        userId: String,
+        platform: String,
+        subscribeParam: SubscribeParam
+    ): Result<Boolean> {
+        return updateSubscription(
+            userId = userId,
+            platform = platform,
+            operation = "subscribe",
+            subscribeParam = subscribeParam
+        )
     }
 
-    override fun unSubscribe(userId: String, subscribeParam: SubscribeParam): Result<Boolean> {
-        val platform = subscribeParam.platform
+    override fun unSubscribe(
+        userId: String,
+        platform: String,
+        subscribeParam: SubscribeParam
+    ): Result<Boolean> {
+        return updateSubscription(
+            userId = userId,
+            platform = platform,
+            operation = "unSubscribe",
+            subscribeParam = subscribeParam
+        )
+    }
+
+    fun updateSubscription(
+        userId: String,
+        platform: String,
+        operation: String,
+        subscribeParam: SubscribeParam
+    ): Result<Boolean> {
         val projectId = subscribeParam.projectId
         val bundleIdentifier = subscribeParam.bundleIdentifier
-        checkParam(userId, platform, projectId, bundleIdentifier)
-        return experiencePushService.unSubscribe(userId, platform, projectId, bundleIdentifier)
+        val experienceHashId = subscribeParam.experienceHashId
+        checkParam(userId, experienceHashId, platform, projectId, bundleIdentifier)
+        return if (operation == "subscribe") {
+            experiencePushService.subscribe(userId, experienceHashId, platform, projectId, bundleIdentifier)
+        } else {
+            experiencePushService.unSubscribe(userId, experienceHashId, platform, projectId, bundleIdentifier)
+        }
     }
 
     // todo  需要干掉
@@ -77,12 +104,16 @@ class AppExperiencePushResourceImpl @Autowired constructor(
 
     fun checkParam(
         userId: String,
+        experienceHashId: String,
         platform: String,
         projectId: String,
         bundleIdentifier: String
     ) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+        if (experienceHashId.isBlank()) {
+            throw ParamBlankException("Invalid experienceHashId")
         }
         if (platform.isBlank()) {
             throw ParamBlankException("Invalid platform")

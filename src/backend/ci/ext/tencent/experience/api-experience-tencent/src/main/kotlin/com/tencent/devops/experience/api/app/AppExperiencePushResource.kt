@@ -70,6 +70,9 @@ interface AppExperiencePushResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: String,
         @ApiParam("订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
@@ -81,6 +84,9 @@ interface AppExperiencePushResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: String,
         @ApiParam("取消订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>

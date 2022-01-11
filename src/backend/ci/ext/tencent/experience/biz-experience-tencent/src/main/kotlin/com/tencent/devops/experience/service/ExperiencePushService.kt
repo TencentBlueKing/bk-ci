@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
@@ -44,6 +45,7 @@ class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushDao: ExperiencePushDao,
     private val experienceNotifyService: ExperienceNotifyService,
+    private val experienceBaseService: ExperienceBaseService
 ) {
     fun bindDeviceToken(
         userId: String,
@@ -57,14 +59,20 @@ class ExperiencePushService @Autowired constructor(
         )
         return if (userTokenRecord != null) {
             // 若不为空，则用户有绑定记录，则检查前端传递的token和数据库表中的token是否一致。若不一致，则修改用户的设备token
-            checkAndUpdateToken(dslContext, userId, token, platform, userTokenRecord)
+            checkAndUpdateToken(
+                dslContext = dslContext,
+                userId = userId,
+                token = token,
+                platform = PlatformEnum.valueOf(platform).name,
+                userTokenRecord = userTokenRecord
+            )
         } else {
             // 若用户无绑定记录，则直接插入数据库表
             experiencePushDao.createUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
-                platform = platform
+                platform = PlatformEnum.valueOf(platform).name
             )
             Result("用户绑定设备成功！", true)
         }
@@ -96,54 +104,66 @@ class ExperiencePushService @Autowired constructor(
 
     fun subscribe(
         userId: String,
+        experienceHashId: String,
         platform: String,
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
-        val subscription = experiencePushDao.getSubscription(
-            dslContext = dslContext,
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        val isSubscribe = experienceBaseService.isSubscribe(
+            experienceId = experienceId,
             userId = userId,
-            projectId = projectId,
-            bundle = bundleIdentifier,
-            platform = platform
+            platform = PlatformEnum.valueOf(platform).name,
+            bundleIdentifier = bundleIdentifier,
+            projectId = projectId
         )
-        if (subscription.isNotEmpty) {
-            return Result("已订阅过该体验，请勿重复订阅！", true)
+        // 若已订阅或者为体验组成员，不能再重复订阅
+        if (isSubscribe) {
+            return Result("已订阅过该体验，请勿重复订阅！", false)
         }
         experiencePushDao.subscribe(
             dslContext = dslContext,
             userId = userId,
             projectId = projectId,
             bundle = bundleIdentifier,
-            platform = platform
+            platform = PlatformEnum.valueOf(platform).name
         )
         return Result("订阅体验成功！", true)
     }
 
     fun unSubscribe(
         userId: String,
+        experienceHashId: String,
         platform: String,
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val subscription = experiencePushDao.getSubscription(
             dslContext = dslContext,
             userId = userId,
             projectId = projectId,
             bundle = bundleIdentifier,
-            platform = platform
+            platform = PlatformEnum.valueOf(platform).name
         )
-
-        // todo 返回如果为空的处理
-        return if (subscription.isEmpty()) {
-            Result("内部体验默认为已订阅状态，无法取消订阅。如需取消订阅…………", true)
+        val isSubscribe = experienceBaseService.isSubscribe(
+            experienceId = experienceId,
+            userId = userId,
+            platform = PlatformEnum.valueOf(platform).name,
+            bundleIdentifier = bundleIdentifier,
+            projectId = projectId
+        )
+        // 若不是订阅用户，而是内部体验组，那么默认为订阅状态且不能取消订阅
+        // todo 若为手动订阅用户，并且在临时体验组中选择自己，那么此时 不仅subscription非空而且为默认订阅人员，此时到底可不可以取消订阅？？
+        return if (subscription.isEmpty() && isSubscribe) {
+            Result("内部体验默认为已订阅状态，无法取消订阅。如需取消订阅…………", false)
         } else {
             experiencePushDao.unSubscribe(
                 dslContext,
                 userId = userId,
                 projectId = projectId,
                 bundle = bundleIdentifier,
-                platform = platform
+                platform = PlatformEnum.valueOf(platform).name
             )
             Result("取消订阅成功", true)
         }

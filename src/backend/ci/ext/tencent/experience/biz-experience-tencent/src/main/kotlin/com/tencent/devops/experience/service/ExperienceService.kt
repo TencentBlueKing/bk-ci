@@ -702,7 +702,7 @@ class ExperienceService @Autowired constructor(
             val groupIdToUserIdsMap = experienceBaseService.getGroupIdToInnerUserIds(
                 experienceBaseService.getGroupIdsByRecordId(experienceId)
             )
-            val subscribeUser = experiencePushDao.getSubscription(
+            val subscribeUsers = experiencePushDao.getSubscription(
                 dslContext = dslContext,
                 userId = null,
                 projectId = projectId,
@@ -712,9 +712,6 @@ class ExperienceService @Autowired constructor(
             val receivers = mutableSetOf<String>()
             receivers.addAll(extraUsers)
             receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
-            if (subscribeUser.isNotEmpty()) {
-                receivers.addAll(subscribeUser)
-            }
             if (receivers.isEmpty()) {
                 logger.info("empty receivers , experienceId:$experienceId")
                 return@submit
@@ -722,9 +719,21 @@ class ExperienceService @Autowired constructor(
 
             val innerUrl = getInnerUrl(projectId, experienceId)
             val outerUrl = getShortExternalUrl(experienceId)
-
             val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-
+            if (subscribeUsers.isNotEmpty()) {
+                subscribeUsers.forEach {
+                    val message = AppNotifyUtil.makeMessage(
+                        projectName = projectName,
+                        name = name,
+                        version = version,
+                        innerUrl = innerUrl,
+                        outerUrl = outerUrl,
+                        receiver = it
+                    )
+                    // 通过APP发送给已订阅的用户
+                    experiencePushService.pushMessage(message)
+                }
+            }
             if (notifyTypeList.contains(NotifyType.EMAIL)) {
                 val message = EmailUtil.makeMessage(
                     userId = userId,
@@ -759,16 +768,6 @@ class ExperienceService @Autowired constructor(
                     )
                     client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 }
-                val message = AppNotifyUtil.makeMessage(
-                    projectName = projectName,
-                    name = name,
-                    version = version,
-                    innerUrl = innerUrl,
-                    outerUrl = outerUrl,
-                    receiver = it
-                )
-                // 发送给已订阅的用户
-                experiencePushService.pushMessage(message)
             }
             if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
                 val wechatGroupList = regex.split(experienceRecord.wechatGroups)

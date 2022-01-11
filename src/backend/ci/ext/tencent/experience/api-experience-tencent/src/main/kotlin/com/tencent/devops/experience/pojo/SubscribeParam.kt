@@ -34,10 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class SubscribeParam(
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
-
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-
-    @ApiModelProperty("平台", required = true)
-    val platform: String
+    @ApiModelProperty("experienceHashId", required = true)
+    val experienceHashId: String
 )
