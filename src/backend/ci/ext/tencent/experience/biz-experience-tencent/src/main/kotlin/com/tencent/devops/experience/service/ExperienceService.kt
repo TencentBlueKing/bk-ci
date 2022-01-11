@@ -696,44 +696,44 @@ class ExperienceService @Autowired constructor(
             val platform = experienceRecord.platform
             val bundleIdentifier = experienceRecord.bundleIdentifier
             val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
+            val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
 
+            // 内部用户
+            val innerReceivers = mutableSetOf<String>()
             val extraUsers =
                 experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
             val groupIdToUserIdsMap = experienceBaseService.getGroupIdToInnerUserIds(
                 experienceBaseService.getGroupIdsByRecordId(experienceId)
             )
+            innerReceivers.addAll(extraUsers)
+            innerReceivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
+            // 外部用户
+            val outerReceivers = mutableSetOf<String>()
+            val outerGroup =
+                experienceBaseService.getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }
+                    .toSet()
+            val outerUser =
+                experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+            outerReceivers.addAll(outerGroup)
+            outerReceivers.addAll(outerUser)
+            // 订阅用户
             val subscribeUsers = experiencePushDao.getSubscription(
                 dslContext = dslContext,
                 userId = null,
                 projectId = projectId,
                 bundle = bundleIdentifier,
                 platform = platform
-            ).map { it.value2() }.toSet()
-            val receivers = mutableSetOf<String>()
-            receivers.addAll(extraUsers)
-            receivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
-            if (receivers.isEmpty()) {
-                logger.info("empty receivers , experienceId:$experienceId")
+            ).map { it.value2() }.toSet().subtract(innerReceivers).subtract(outerReceivers)
+
+            if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()) {
+                logger.info("empty Receivers , experienceId:$experienceId")
                 return@submit
             }
 
             val innerUrl = getInnerUrl(projectId, experienceId)
             val outerUrl = getShortExternalUrl(experienceId)
             val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-            if (subscribeUsers.isNotEmpty()) {
-                subscribeUsers.forEach {
-                    val message = AppNotifyUtil.makeMessage(
-                        projectName = projectName,
-                        name = name,
-                        version = version,
-                        innerUrl = innerUrl,
-                        outerUrl = outerUrl,
-                        receiver = it
-                    )
-                    // 通过APP发送给已订阅的用户
-                    experiencePushService.pushMessage(message)
-                }
-            }
+
             if (notifyTypeList.contains(NotifyType.EMAIL)) {
                 val message = EmailUtil.makeMessage(
                     userId = userId,
@@ -741,11 +741,18 @@ class ExperienceService @Autowired constructor(
                     name = name,
                     version = version,
                     url = innerUrl,
-                    receivers = receivers.toSet()
+                    receivers = innerReceivers.toSet()
                 )
                 client.get(ServiceNotifyResource::class).sendEmailNotify(message)
             }
-            receivers.forEach {
+
+            subscribeUsers.forEach {
+                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
+            }
+            outerReceivers.forEach {
+                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
+            }
+            innerReceivers.forEach {
                 if (notifyTypeList.contains(NotifyType.RTX)) {
                     val message = RtxUtil.makeMessage(
                         projectName = projectName,
@@ -768,6 +775,8 @@ class ExperienceService @Autowired constructor(
                     )
                     client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 }
+                // 发送APP通知
+                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
             }
             if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
                 val wechatGroupList = regex.split(experienceRecord.wechatGroups)
@@ -784,6 +793,26 @@ class ExperienceService @Autowired constructor(
                 }
             }
         }
+    }
+
+    fun sendAppNotify(
+        projectName: String,
+        name: String,
+        version: String,
+        innerUrl: String,
+        outerUrl: String,
+        receiver: String
+    ) {
+        val message = AppNotifyUtil.makeMessage(
+            projectName = projectName,
+            name = name,
+            version = version,
+            innerUrl = innerUrl,
+            outerUrl = outerUrl,
+            receiver = receiver
+        )
+        // 通过APP发送给已订阅的用户
+        experiencePushService.pushMessage(message)
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {

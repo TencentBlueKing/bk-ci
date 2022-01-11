@@ -110,25 +110,64 @@ class ExperiencePushService @Autowired constructor(
         bundleIdentifier: String
     ): Result<Boolean> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        val isSubscribe = experienceBaseService.isSubscribe(
+        // 判断是否为体验组成员
+        val isExperienceGroups = experienceBaseService.isExperienceGroups(
             experienceId = experienceId,
             userId = userId,
             platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
             bundleIdentifier = bundleIdentifier,
             projectId = projectId
         )
-        // 若已订阅或者为体验组成员，不能再重复订阅
-        if (isSubscribe) {
-            return Result("已订阅过该体验，请勿重复订阅！", false)
+        // 判断是否公开体验
+        val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
+        return when {
+            isExperienceGroups -> {
+                if (isPublicExperience) {
+                    Result("该体验已订阅，不允许重复订阅", false)
+                } else {
+                    Result("内部体验默认已订阅", false)
+                }
+            }
+            else -> canSubscribe(
+                isPublicExperience = isPublicExperience,
+                userId = userId,
+                experienceId = experienceId,
+                platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
+                projectId = projectId,
+                bundleIdentifier = bundleIdentifier
+            )
         }
-        experiencePushDao.subscribe(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            bundle = bundleIdentifier,
-            platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-        )
-        return Result("订阅体验成功！", true)
+    }
+
+    fun canSubscribe(
+        isPublicExperience: Boolean,
+        userId: String,
+        experienceId: Long,
+        platform: String,
+        projectId: String,
+        bundleIdentifier: String
+    ): Result<Boolean> {
+        return when {
+            isPublicExperience -> {
+                val subscription =
+                    experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
+                        .isNotEmpty
+                // 查询公开订阅表是否有记录
+                if (subscription) {
+                    Result("不可重复订阅", false)
+                } else {
+                    experiencePushDao.subscribe(
+                        dslContext = dslContext,
+                        userId = userId,
+                        projectId = projectId,
+                        bundle = bundleIdentifier,
+                        platform = platform
+                    )
+                    Result("订阅体验成功！", true)
+                }
+            }
+            else -> Result("不允许订阅内部体验", false)
+        }
     }
 
     fun unSubscribe(
@@ -139,33 +178,71 @@ class ExperiencePushService @Autowired constructor(
         bundleIdentifier: String
     ): Result<Boolean> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        val subscription = experiencePushDao.getSubscription(
-            dslContext = dslContext,
-            userId = userId,
-            projectId = projectId,
-            bundle = bundleIdentifier,
-            platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-        )
-        val isSubscribe = experienceBaseService.isSubscribe(
+        // 判断是否为体验组成员
+        val isExperienceGroups = experienceBaseService.isExperienceGroups(
             experienceId = experienceId,
             userId = userId,
             platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
             bundleIdentifier = bundleIdentifier,
             projectId = projectId
         )
-        // 若不是订阅用户，而是内部体验组，那么默认为订阅状态且不能取消订阅
-        // todo 若为手动订阅用户，并且在临时体验组中选择自己，那么此时 不仅subscription非空而且为默认订阅人员，此时到底可不可以取消订阅？？
-        return if (subscription.isEmpty() && isSubscribe) {
-            Result("内部体验默认为已订阅状态，无法取消订阅。如需取消订阅…………", false)
-        } else {
-            experiencePushDao.unSubscribe(
-                dslContext,
-                userId = userId,
-                projectId = projectId,
-                bundle = bundleIdentifier,
-                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-            )
-            Result("取消订阅成功", true)
+        // 判断是否公开体验
+        val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
+        return when {
+            isExperienceGroups -> {
+                if (isPublicExperience) {
+                    Result(
+                        "既是公开体验又是内部体验的应用版本无法自行取消订阅。" +
+                                "蓝盾App已不再支持同时选中两种体验范围，请尽快更改发布体验版本的配置。", false
+                    )
+                } else {
+                    Result(
+                        "内部体验默认为已订阅状态，无法自行取消。如需取消订阅，" +
+                                "请联系产品负责人退出内部体验，退出后将不接收订阅信息。", false
+                    )
+                }
+            }
+            else -> {
+                canUnSubscribe(
+                    isPublicExperience = isPublicExperience,
+                    userId = userId,
+                    experienceId = experienceId,
+                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
+                    projectId = projectId,
+                    bundleIdentifier = bundleIdentifier
+                )
+            }
+        }
+    }
+
+    fun canUnSubscribe(
+        isPublicExperience: Boolean,
+        userId: String,
+        experienceId: Long,
+        platform: String,
+        projectId: String,
+        bundleIdentifier: String
+    ): Result<Boolean> {
+        return when {
+            isPublicExperience -> {
+                val subscription =
+                    experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
+                        .isNotEmpty
+                // 查询公开订阅表是否有记录
+                if (subscription) {
+                    experiencePushDao.unSubscribe(
+                        dslContext,
+                        userId = userId,
+                        projectId = projectId,
+                        bundle = bundleIdentifier,
+                        platform = platform
+                    )
+                    Result("取消订阅成功", true)
+                } else {
+                    Result("由于没有订阅该体验，不允许取消体验", true)
+                }
+            }
+            else -> Result("内部体验不可取消订阅", false)
         }
     }
 

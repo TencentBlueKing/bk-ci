@@ -243,6 +243,20 @@ class ExperienceBaseService @Autowired constructor(
             experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
                 .isNotEmpty
         }
+        val isExperienceGroups = isExperienceGroups(experienceId, userId, platform, bundleIdentifier, projectId)
+        return isSubscribe.value || isExperienceGroups
+    }
+
+    /**
+     * 判断是否为体验组成员
+     */
+    fun isExperienceGroups(
+        experienceId: Long,
+        userId: String,
+        platform: String,
+        bundleIdentifier: String,
+        projectId: String
+    ): Boolean {
         val groupIds = getGroupIdsByRecordId(experienceId)
         val isOuterGroup = lazy {
             getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
@@ -261,12 +275,25 @@ class ExperienceBaseService @Autowired constructor(
                 .contains(userId)
         }
         logger.info(
-            "isSubscribe:${isSubscribe.value},isOuterGroup:${isOuterGroup.value}," +
+            "isOuterGroup:${isOuterGroup.value}," +
                     "isInnerGroup:${isInnerGroup.value},isInnerUser:${isInnerUser.value}" +
                     "isOuterUser:${isOuterUser.value}"
         )
-        return isSubscribe.value || isOuterGroup.value || isInnerGroup.value
-                || isInnerUser.value || isOuterUser.value
+        return isOuterGroup.value || isInnerGroup.value ||
+                isInnerUser.value || isOuterUser.value
+    }
+
+    /**
+     * 判断是否为公开体验
+     */
+    fun isPublicExperience(
+        experienceId: Long
+    ): Boolean {
+        val experiencePublic = experiencePublicDao.getByRecordId(
+            dslContext = dslContext,
+            recordId = experienceId
+        )
+        return experiencePublic != null
     }
 
     /**
