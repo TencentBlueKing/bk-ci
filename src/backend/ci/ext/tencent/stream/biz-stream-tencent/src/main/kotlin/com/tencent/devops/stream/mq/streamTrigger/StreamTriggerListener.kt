@@ -29,7 +29,7 @@ package com.tencent.devops.stream.mq.streamTrigger
 
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
-import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import org.slf4j.LoggerFactory

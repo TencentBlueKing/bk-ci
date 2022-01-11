@@ -90,7 +90,7 @@ class BuildMonitorControl @Autowired constructor(
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(event.projectId, buildId)
         if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|BUILD_MONITOR|status=${buildInfo?.status}|ec=${event.executeCount}")
             return true
@@ -127,8 +127,8 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
-
-        val containers = pipelineContainerService.listContainers(event.buildId) // #5090 ==0 是为了兼容旧的监控事件
+        // #5090 ==0 是为了兼容旧的监控事件
+        val containers = pipelineContainerService.listContainers(event.projectId, event.buildId)
             .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
@@ -150,7 +150,7 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
-        val stages = pipelineStageService.listStages(event.buildId)
+        val stages = pipelineStageService.listStages(event.projectId, event.buildId)
             .filter {
                 // #5873 即使stage已完成，如果有准出卡审核也需要做超时监控
                 (!it.status.isFinish() || it.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) &&
@@ -346,7 +346,7 @@ class BuildMonitorControl @Autowired constructor(
     @Suppress("LongMethod")
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
-        if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
+        if (pipelineSettingService.isQueueTimeout(event.projectId, event.pipelineId, buildInfo.startTime!!)) {
             val exitQueue = pipelineRuntimeExtService.existQueue(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
@@ -386,10 +386,11 @@ class BuildMonitorControl @Autowired constructor(
             if (canStart) {
                 val buildId = event.buildId
                 LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
-                val model = pipelineBuildDetailService.getBuildModel(buildInfo.buildId) ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildInfo.buildId)
-                )
+                val model = pipelineBuildDetailService.getBuildModel(event.projectId, buildInfo.buildId)
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                        params = arrayOf(buildInfo.buildId)
+                    )
                 val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(

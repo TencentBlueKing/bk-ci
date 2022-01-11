@@ -136,7 +136,7 @@ class QualityHistoryService @Autowired constructor(
         val pipelineIdList = interceptHistoryList.map { it.pipelineId }
         val pipelineIdToNameMap = getPipelineIdToNameMap(projectId, pipelineIdList.toSet())
         val buildIdList = interceptHistoryList.map { it.buildId }
-        val buildIdToNameMap = getBuildIdToNameMap(buildIdList.toSet())
+        val buildIdToNameMap = getBuildIdToNameMap(projectId, buildIdList.toSet())
 
         val list = interceptHistoryList.filter {
             // 过滤掉已删除的流水线
@@ -360,7 +360,17 @@ class QualityHistoryService @Autowired constructor(
         }
 
         val count = serviceCount(projectId, pipelineId, ruleId, ruleInterceptResult, startLocalDateTime, endLocalDateTime)
-        val recordList = serviceList(projectId, pipelineId, null, ruleId, ruleInterceptResult, startLocalDateTime, endLocalDateTime, offset, limit)
+        val recordList = serviceList(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = null,
+            ruleId = ruleId,
+            result = ruleInterceptResult,
+            startTime = startLocalDateTime,
+            endTime = endLocalDateTime,
+            offset = offset,
+            limit = limit
+        )
 
         val ruleIdList = recordList.map { it.ruleId }
         val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIdList.toSet())
@@ -369,7 +379,7 @@ class QualityHistoryService @Autowired constructor(
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
         val buildIdList = recordList.map { it.buildId }
-        val buildIdToNameMap = getBuildIdToNameMap(buildIdList.toSet())
+        val buildIdToNameMap = getBuildIdToNameMap(projectId, buildIdList.toSet())
 
         val list = recordList.map {
             val sb = StringBuilder()
@@ -511,7 +521,7 @@ class QualityHistoryService @Autowired constructor(
             if (interceptHistory != null) {
                 val result = RuleInterceptResult.valueOf(interceptHistory.result)
                 val pipelineName = pipelineIdNameMap[interceptHistory.pipelineId]
-                val buildName = getBuildName(interceptHistory.buildId)
+                val buildName = getBuildName(projectId, interceptHistory.buildId)
                 val time = interceptHistory.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
                 if (result == RuleInterceptResult.PASS) {
                     "$pipelineName(#$buildName)在${time}验证通过"
@@ -532,12 +542,12 @@ class QualityHistoryService @Autowired constructor(
         return client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIdSet).data!!
     }
 
-    private fun getBuildIdToNameMap(buildIdSet: Set<String>): Map<String, String> {
-        return client.get(ServicePipelineResource::class).getBuildNoByBuildIds(buildIdSet).data ?: mapOf()
+    private fun getBuildIdToNameMap(projectId: String, buildIdSet: Set<String>): Map<String, String> {
+        return client.get(ServicePipelineResource::class).getBuildNoByBuildIds(buildIdSet, projectId).data ?: mapOf()
     }
 
-    private fun getBuildName(buildId: String): String {
-        val map = getBuildIdToNameMap(setOf(buildId))
+    private fun getBuildName(projectId: String, buildId: String): String {
+        val map = getBuildIdToNameMap(projectId, setOf(buildId))
         return map[buildId] ?: ""
     }
 
@@ -601,7 +611,7 @@ class QualityHistoryService @Autowired constructor(
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
         val buildIdList = recordList.map { it.buildId }
-        val buildIdToNameMap = getBuildIdToNameMap(buildIdList.toSet())
+        val buildIdToNameMap = getBuildIdToNameMap(projectId, buildIdList.toSet())
 
         recordList.filter { it.result == RuleInterceptResult.FAIL.name }.forEach { record ->
             val buildHisRuleStatus = ruleIdToRuleMap[record.ruleId]?.status

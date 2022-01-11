@@ -81,11 +81,14 @@ class ModelStage @Autowired constructor(
         pipeline: GitProjectPipeline
     ): Stage {
         val containerList = mutableListOf<Container>()
+        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet)
         stage.jobs.forEachIndexed { jobIndex, job ->
+            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet)
             val elementList = modelElement.makeElementList(
                 job = job,
                 gitBasicSetting = gitBasicSetting,
                 changeSet = changeSet,
+                jobEnable = jobEnable,
                 event = event
             )
 
@@ -95,7 +98,7 @@ class ModelStage @Autowired constructor(
                     elementList = elementList,
                     containerList = containerList,
                     jobIndex = jobIndex,
-                    changeSet = changeSet,
+                    jobEnable = jobEnable,
                     finalStage = finalStage
                 )
             } else {
@@ -106,7 +109,7 @@ class ModelStage @Autowired constructor(
                     jobIndex = jobIndex,
                     projectCode = gitBasicSetting.projectCode!!,
                     finalStage = finalStage,
-                    changeSet = changeSet,
+                    jobEnable = jobEnable,
                     resources = resources
                 )
             }
@@ -120,8 +123,7 @@ class ModelStage @Autowired constructor(
                 customCondition = stage.ifField.toString()
             )
         }
-        stageControlOption =
-            stageControlOption.copy(enable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet))
+        stageControlOption = stageControlOption.copy(enable = stageEnable)
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
