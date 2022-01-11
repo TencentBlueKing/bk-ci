@@ -57,7 +57,7 @@ interface AppExperiencePushResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: String,
+        platform: Int,
         @ApiParam("设备TOKEN", required = true)
         @QueryParam("token")
         token: String
@@ -72,7 +72,7 @@ interface AppExperiencePushResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: String,
+        platform: Int,
         @ApiParam("订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
@@ -86,7 +86,7 @@ interface AppExperiencePushResource {
         userId: String,
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
-        platform: String,
+        platform: Int,
         @ApiParam("取消订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>

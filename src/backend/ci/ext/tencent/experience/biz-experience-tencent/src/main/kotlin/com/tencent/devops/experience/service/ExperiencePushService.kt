@@ -49,7 +49,7 @@ class ExperiencePushService @Autowired constructor(
 ) {
     fun bindDeviceToken(
         userId: String,
-        platform: String,
+        platform: Int,
         token: String
     ): Result<Boolean> {
         // 检查是否该用户有绑定记录
@@ -63,7 +63,7 @@ class ExperiencePushService @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
-                platform = PlatformEnum.valueOf(platform).name,
+                platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
                 userTokenRecord = userTokenRecord
             )
         } else {
@@ -72,7 +72,7 @@ class ExperiencePushService @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
-                platform = PlatformEnum.valueOf(platform).name
+                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
             )
             Result("用户绑定设备成功！", true)
         }
@@ -105,7 +105,7 @@ class ExperiencePushService @Autowired constructor(
     fun subscribe(
         userId: String,
         experienceHashId: String,
-        platform: String,
+        platform: Int,
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
@@ -113,7 +113,7 @@ class ExperiencePushService @Autowired constructor(
         val isSubscribe = experienceBaseService.isSubscribe(
             experienceId = experienceId,
             userId = userId,
-            platform = PlatformEnum.valueOf(platform).name,
+            platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
             bundleIdentifier = bundleIdentifier,
             projectId = projectId
         )
@@ -126,7 +126,7 @@ class ExperiencePushService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             bundle = bundleIdentifier,
-            platform = PlatformEnum.valueOf(platform).name
+            platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
         )
         return Result("订阅体验成功！", true)
     }
@@ -134,7 +134,7 @@ class ExperiencePushService @Autowired constructor(
     fun unSubscribe(
         userId: String,
         experienceHashId: String,
-        platform: String,
+        platform: Int,
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
@@ -144,12 +144,12 @@ class ExperiencePushService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             bundle = bundleIdentifier,
-            platform = PlatformEnum.valueOf(platform).name
+            platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
         )
         val isSubscribe = experienceBaseService.isSubscribe(
             experienceId = experienceId,
             userId = userId,
-            platform = PlatformEnum.valueOf(platform).name,
+            platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
             bundleIdentifier = bundleIdentifier,
             projectId = projectId
         )
@@ -163,7 +163,7 @@ class ExperiencePushService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 bundle = bundleIdentifier,
-                platform = PlatformEnum.valueOf(platform).name
+                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
             )
             Result("取消订阅成功", true)
         }

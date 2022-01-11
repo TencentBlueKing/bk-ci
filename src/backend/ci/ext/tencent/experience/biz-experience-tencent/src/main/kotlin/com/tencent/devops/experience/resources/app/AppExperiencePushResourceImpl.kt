@@ -42,16 +42,16 @@ class AppExperiencePushResourceImpl @Autowired constructor(
 
     override fun bindDeviceToken(
         userId: String,
-        platform: String,
+        platform: Int,
         token: String
     ): Result<Boolean> {
-        checkParam(userId, token, platform)
+        checkParam(userId, token)
         return experiencePushService.bindDeviceToken(userId, platform, token)
     }
 
     override fun subscribe(
         userId: String,
-        platform: String,
+        platform: Int,
         subscribeParam: SubscribeParam
     ): Result<Boolean> {
         return updateSubscription(
@@ -64,7 +64,7 @@ class AppExperiencePushResourceImpl @Autowired constructor(
 
     override fun unSubscribe(
         userId: String,
-        platform: String,
+        platform: Int,
         subscribeParam: SubscribeParam
     ): Result<Boolean> {
         return updateSubscription(
@@ -77,14 +77,14 @@ class AppExperiencePushResourceImpl @Autowired constructor(
 
     fun updateSubscription(
         userId: String,
-        platform: String,
+        platform: Int,
         operation: String,
         subscribeParam: SubscribeParam
     ): Result<Boolean> {
         val projectId = subscribeParam.projectId
         val bundleIdentifier = subscribeParam.bundleIdentifier
         val experienceHashId = subscribeParam.experienceHashId
-        checkParam(userId, experienceHashId, platform, projectId, bundleIdentifier)
+        checkParam(userId, experienceHashId, projectId, bundleIdentifier)
         return if (operation == "subscribe") {
             experiencePushService.subscribe(userId, experienceHashId, platform, projectId, bundleIdentifier)
         } else {
@@ -105,7 +105,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
     fun checkParam(
         userId: String,
         experienceHashId: String,
-        platform: String,
         projectId: String,
         bundleIdentifier: String
     ) {
@@ -114,9 +113,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
-        }
-        if (platform.isBlank()) {
-            throw ParamBlankException("Invalid platform")
         }
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -128,17 +124,13 @@ class AppExperiencePushResourceImpl @Autowired constructor(
 
     fun checkParam(
         userId: String,
-        token: String,
-        platform: String
+        token: String
     ) {
         if (token.isBlank()) {
             throw ParamBlankException("Invalid token")
         }
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
-        }
-        if (platform.isBlank()) {
-            throw ParamBlankException("Invalid platform")
         }
     }
 }
