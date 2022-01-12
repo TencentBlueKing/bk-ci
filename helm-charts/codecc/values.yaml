@@ -68,6 +68,7 @@ mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置externalMongodb
   enabled: true
+  useStatefulSet: true
   auth:
     enabled: true
     rootPassword: codecc
