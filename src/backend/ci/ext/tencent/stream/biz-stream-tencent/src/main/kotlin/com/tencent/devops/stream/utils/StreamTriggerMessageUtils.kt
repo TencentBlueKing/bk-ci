@@ -38,6 +38,9 @@ class StreamTriggerMessageUtils @Autowired constructor(
             TGitObjectKind.MANUAL.value -> {
                 "[${event.branch}] Manual Triggered by ${event.userId}"
             }
+            TGitObjectKind.OPENAPI.value -> {
+                "[${event.branch}] openApi Triggered by ${event.userId}"
+            }
             TGitObjectKind.TAG_PUSH.value -> {
                 if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
                     "[${event.branch}] tag [${event.branch}] deleted by ${event.userId}"
