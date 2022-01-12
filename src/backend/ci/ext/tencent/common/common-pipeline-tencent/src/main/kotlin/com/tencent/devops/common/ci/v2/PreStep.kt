@@ -58,5 +58,5 @@ data class PreStep(
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
     val checkout: String?,
-    override val yamlMetaData: MetaData?
+    override val yamlMetaData: MetaData? = null
 ) : YamlMetaData
