@@ -122,6 +122,6 @@ class MicroServiceTarget<T> constructor(
     private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
 
     companion object {
-        val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
+        private val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
     }
 }
