@@ -82,8 +82,12 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildStatus = BuildStatus.RUNNING
             )
             // 插件状态变化-启动
-            pipelineBuildDetailService.taskStart(buildId = task.buildId, taskId = task.taskId)
-            val runVariables = buildVariableService.getAllVariable(task.buildId)
+            pipelineBuildDetailService.taskStart(
+                projectId = task.projectId,
+                buildId = task.buildId,
+                taskId = task.taskId
+            )
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
         } catch (t: BuildTaskException) {
@@ -166,6 +170,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 errorMsg = atomResponse.errorMsg
             )
             val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
+                projectId = task.projectId,
                 buildId = task.buildId,
                 taskId = task.taskId,
                 buildStatus = atomResponse.buildStatus,
@@ -176,6 +181,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                 pipelineTaskService.updateTaskStatusInfo(
                     transactionContext = null,
+                    projectId = task.projectId,
                     buildId = task.buildId,
                     taskId = updateTaskStatusInfo.taskId,
                     taskStatus = updateTaskStatusInfo.buildStatus
@@ -226,7 +232,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         var atomResponse = AtomResponse(BuildStatus.FAILED)
 
         try {
-            val runVariables = buildVariableService.getAllVariable(task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)

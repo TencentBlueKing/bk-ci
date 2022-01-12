@@ -475,7 +475,7 @@
         "skipFail": "Skip failed",
         "rebuildSuc": "Rebuild successfully",
         "rebuildFail": "Rebuild failed",
-        "stopSuc": "cancel successfully",
+        "stopSuc": "Successfully request the build to be canceled",
         "stopFail": "cancel failed",
         "loadPipelineVersionSuccess": "load version {version} successed，please confirm pipeline content"
     },

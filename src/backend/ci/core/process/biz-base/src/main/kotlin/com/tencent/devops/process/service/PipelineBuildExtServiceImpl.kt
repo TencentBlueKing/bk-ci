@@ -41,6 +41,7 @@ class PipelineBuildExtServiceImpl@Autowired constructor(
         variables: Map<String, String>
     ): Map<String, String> {
         return pipelineContextService.buildContext(
+            projectId = task.projectId,
             buildId = task.buildId,
             containerId = task.containerId,
             variables = variables

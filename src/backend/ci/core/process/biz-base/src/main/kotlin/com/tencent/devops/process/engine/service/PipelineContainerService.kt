@@ -84,9 +84,20 @@ class PipelineContainerService @Autowired constructor(
         private const val ELEMENT_NAME_MAX_LENGTH = 128
     }
 
-    fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
+    fun getContainer(
+        projectId: String,
+        buildId: String,
+        stageId: String?,
+        containerId: String
+    ): PipelineBuildContainer? {
         // #4518 防止出错暂时保留两个字段的兼容查询
-        val result = pipelineBuildContainerDao.getByContainerId(dslContext, buildId, stageId, containerId)
+        val result = pipelineBuildContainerDao.getByContainerId(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId
+        )
         if (result != null) {
             return pipelineBuildContainerDao.convert(result)
         }
@@ -94,6 +105,7 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun listContainers(
+        projectId: String,
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
@@ -101,6 +113,7 @@ class PipelineContainerService @Autowired constructor(
     ): List<PipelineBuildContainer> {
         val list = pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             containsMatrix = containsMatrix,
@@ -135,8 +148,12 @@ class PipelineContainerService @Autowired constructor(
         return result
     }
 
-    fun listByBuildId(buildId: String, stageId: String? = null): Collection<TPipelineBuildContainerRecord> {
-        return pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
+    fun listByBuildId(
+        projectId: String,
+        buildId: String,
+        stageId: String? = null
+    ): Collection<TPipelineBuildContainerRecord> {
+        return pipelineBuildContainerDao.listByBuildId(dslContext, projectId, buildId, stageId)
     }
 
     fun batchSave(transactionContext: DSLContext?, containerList: Collection<PipelineBuildContainer>) {
@@ -148,6 +165,7 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun updateContainerStatus(
+        projectId: String,
         buildId: String,
         stageId: String,
         containerId: String,
@@ -159,6 +177,7 @@ class PipelineContainerService @Autowired constructor(
             "containerSeqId=$containerId|stageId=$stageId")
         pipelineBuildContainerDao.updateStatus(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,
@@ -188,6 +207,7 @@ class PipelineContainerService @Autowired constructor(
             controlOption = controlOption
         )
         containerBuildDetailService.updateMatrixGroupContainer(
+            projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             matrixGroupId = matrixGroupId,

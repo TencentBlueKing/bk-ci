@@ -42,6 +42,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
 ) : BuildCredentialResource {
     @SensitiveApiPermission("get_credential")
     override fun get(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -63,11 +64,12 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(credentialService.buildGet(buildId, credentialId, publicKey))
+        return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
     }
 
     @SensitiveApiPermission("get_credential")
     override fun getDetail(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -85,6 +87,6 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.buildGetDetail(buildId, credentialId))
+        return Result(credentialService.buildGetDetail(projectId, buildId, credentialId))
     }
 }
