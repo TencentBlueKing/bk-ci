@@ -39,7 +39,6 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -195,7 +194,7 @@ interface ApigwPipelineResourceV4 {
         projectId: String,
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
-    ): Result<List<PipelineWithModel>>
+    ): Result<List<Pipeline>>
 
     @ApiOperation("复制流水线编排", tags = ["v4_user_pipeline_copy", "v4_app_pipeline_copy"])
     @POST

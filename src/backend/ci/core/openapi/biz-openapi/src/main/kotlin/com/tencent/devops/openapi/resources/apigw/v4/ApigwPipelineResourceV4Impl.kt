@@ -38,7 +38,6 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -157,7 +156,7 @@ class ApigwPipelineResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineIds: List<String>
-    ): Result<List<PipelineWithModel>> {
+    ): Result<List<Pipeline>> {
         logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
         return client.get(ServicePipelineResource::class).getBatch(
             userId = userId,
