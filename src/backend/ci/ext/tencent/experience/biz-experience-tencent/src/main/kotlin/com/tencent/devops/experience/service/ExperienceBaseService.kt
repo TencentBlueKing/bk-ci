@@ -289,11 +289,10 @@ class ExperienceBaseService @Autowired constructor(
     fun isPublicExperience(
         experienceId: Long
     ): Boolean {
-        val experiencePublic = experiencePublicDao.getByRecordId(
+        return experiencePublicDao.getByRecordId(
             dslContext = dslContext,
             recordId = experienceId
-        )
-        return experiencePublic != null
+        ) != null
     }
 
     /**

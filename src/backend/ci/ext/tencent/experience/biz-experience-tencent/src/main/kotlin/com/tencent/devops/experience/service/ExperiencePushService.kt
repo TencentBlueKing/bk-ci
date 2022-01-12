@@ -29,8 +29,10 @@ package com.tencent.devops.experience.service
 
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
@@ -45,7 +47,8 @@ class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushDao: ExperiencePushDao,
     private val experienceNotifyService: ExperienceNotifyService,
-    private val experienceBaseService: ExperienceBaseService
+    private val experienceBaseService: ExperienceBaseService,
+    private val experiencePublicDao: ExperiencePublicDao
 ) {
     fun bindDeviceToken(
         userId: String,
@@ -149,6 +152,8 @@ class ExperiencePushService @Autowired constructor(
     ): Result<Boolean> {
         return when {
             isPublicExperience -> {
+                // 检查前端传输数据是否和公开订阅表中数据一致
+                checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
                 val subscription =
                     experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
                         .isNotEmpty
@@ -225,6 +230,8 @@ class ExperiencePushService @Autowired constructor(
     ): Result<Boolean> {
         return when {
             isPublicExperience -> {
+                // 检查前端传输数据是否和公开订阅表中数据一致
+                checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
                 val subscription =
                     experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
                         .isNotEmpty
@@ -243,6 +250,28 @@ class ExperiencePushService @Autowired constructor(
                 }
             }
             else -> Result("内部体验不可取消订阅", false)
+        }
+    }
+
+    // 检查前端传输数据是否和公开订阅表中数据一致
+    fun checkPublicExperienceParam(
+        experienceId: Long,
+        platform: String,
+        projectId: String,
+        bundleIdentifier: String,
+    ) {
+        val experiencePublic = experiencePublicDao.getByRecordId(
+            dslContext = dslContext,
+            recordId = experienceId
+        )
+        if (platform != experiencePublic?.platform) {
+            throw ParamBlankException("Invalid platform")
+        }
+        if (projectId != experiencePublic.projectId) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (bundleIdentifier != experiencePublic.bundleIdentifier) {
+            throw ParamBlankException("Invalid bundleIdentifier")
         }
     }
 
