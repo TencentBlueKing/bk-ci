@@ -127,6 +127,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
+import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
@@ -626,7 +627,7 @@ class TemplateFacadeService @Autowired constructor(
             } else {
                 val modelStr = templateRecord["template"] as String
                 val version = templateRecord["version"] as Long
-
+                val createdTime = templateRecord["createdTime"] as LocalDateTime
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
@@ -651,7 +652,7 @@ class TemplateFacadeService @Autowired constructor(
 
                 run lit@{
                     associatePipeline.forEach {
-                        if (it.version < version) {
+                        if (it.createdTime < createdTime) {
                             logger.info("The pipeline ${it.pipelineId} need to upgrade from ${it.version} to $version")
                             hasInstances2Upgrade = true
                             return@lit
@@ -981,7 +982,7 @@ class TemplateFacadeService @Autowired constructor(
         )
         val versionNames = templates.groupBy { it.versionName }
         val versions = versionNames.map {
-            val temp = it.value.maxBy { t -> t.version }!!
+            val temp = it.value.maxBy { t -> t.createdTime }!!
             TemplateVersion(
                 version = temp.version,
                 versionName = temp.versionName,
@@ -1071,7 +1072,7 @@ class TemplateFacadeService @Autowired constructor(
 
         val versionNames = templates.groupBy { it.versionName }
         return versionNames.map {
-            val temp = it.value.maxBy { t -> t.version }!!
+            val temp = it.value.maxBy { t -> t.createdTime }!!
             TemplateVersion(temp.version, temp.versionName, temp.createdTime.timestampmilli(), temp.creator)
         }.toList()
     }
