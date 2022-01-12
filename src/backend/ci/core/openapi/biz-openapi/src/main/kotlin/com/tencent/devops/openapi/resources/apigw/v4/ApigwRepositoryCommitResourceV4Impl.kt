@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwRepositoryCommitResourceV4
+import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.repository.api.UserRepositoryResource
 import com.tencent.devops.repository.pojo.commit.CommitResponse
@@ -39,7 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwRepositoryCommitResourceV4Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val indexService: IndexService
 ) : ApigwRepositoryCommitResourceV4 {
 
     companion object {
@@ -59,8 +61,10 @@ class ApigwRepositoryCommitResourceV4Impl @Autowired constructor(
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-            ?: throw ParamBlankException("Invalid buildId")
+        val pipelineIdFormDB = indexService.getHandle(buildId) {
+            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+                ?: throw ParamBlankException("Invalid buildId")
+        }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")
         }

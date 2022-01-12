@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
+import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
@@ -48,7 +49,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ApigwBuildResourceV4Impl @Autowired constructor(
     private val client: Client,
-    private val apiGatewayUtil: ApiGatewayUtil
+    private val apiGatewayUtil: ApiGatewayUtil,
+    private val indexService: IndexService
 ) : ApigwBuildResourceV4 {
     override fun manualStartupInfo(
         appCode: String?,
@@ -245,8 +247,10 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-            ?: throw ParamBlankException("Invalid buildId")
+        val pipelineIdFormDB = indexService.getHandle(buildId) {
+            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+                ?: throw ParamBlankException("Invalid buildId")
+        }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")
         }

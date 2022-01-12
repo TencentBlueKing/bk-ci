@@ -37,6 +37,7 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwLogResourceV4
+import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +47,8 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class ApigwLogResourceV4Impl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val indexService: IndexService
 ) : ApigwLogResourceV4 {
 
     @Value("\${devopsGateway.api:#{null}}")
@@ -204,8 +206,10 @@ class ApigwLogResourceV4Impl @Autowired constructor(
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
-        val pipelineIdFormDB = client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-            ?: throw ParamBlankException("Invalid buildId")
+        val pipelineIdFormDB = indexService.getHandle(buildId) {
+            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+                ?: throw ParamBlankException("Invalid buildId")
+        }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")
         }
