@@ -27,8 +27,11 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -68,6 +71,8 @@ class GitCIHistoryService @Autowired constructor(
     fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
+        startBeginTime: String?,
+        endBeginTime: String?,
         page: Int?,
         pageSize: Int?,
         branch: String?,
@@ -79,6 +84,8 @@ class GitCIHistoryService @Autowired constructor(
         status: BuildStatus? = null
     ): Page<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
+        // 校验查询时间范围跨度
+        validateQueryTimeRange(startBeginTime, endBeginTime)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
@@ -103,7 +110,13 @@ class GitCIHistoryService @Autowired constructor(
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
         val buildHistoryList =
-            client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+            client.get(ServiceBuildResource::class).getBatchBuildStatus(
+                projectId = conf.projectCode!!,
+                buildId = builds,
+                channelCode = channelCode,
+                startBeginTime = startBeginTime,
+                endBeginTime = endBeginTime
+            ).data
         if (null == buildHistoryList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             return Page(
@@ -223,5 +236,21 @@ class GitCIHistoryService @Autowired constructor(
             return build
         }
         return null
+    }
+
+    private fun validateQueryTimeRange(
+        startUpdateTime: String?,
+        endUpdateTime: String?
+    ) {
+        if (startUpdateTime.isNullOrBlank() || endUpdateTime.isNullOrBlank()) return
+        val convertStartUpdateTime = DateTimeUtil.stringToLocalDateTime(startUpdateTime)
+        val convertEndUpdateTime = DateTimeUtil.stringToLocalDateTime(endUpdateTime)
+        if (convertStartUpdateTime.isAfter(convertEndUpdateTime)) {
+            // 超过查询时间范围则报错
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
+                defaultMessage = "查询的时间范围跨度错误"
+            )
+        }
     }
 }
