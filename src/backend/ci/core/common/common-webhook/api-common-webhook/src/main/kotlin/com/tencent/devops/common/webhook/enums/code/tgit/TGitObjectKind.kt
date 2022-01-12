@@ -33,7 +33,8 @@ enum class TGitObjectKind(val value: String) {
     MERGE_REQUEST("merge_request"),
     MANUAL("manual"),
     SCHEDULE("schedule"),
-    DELETE("delete");
+    DELETE("delete"),
+    OPENAPI("openApi");
 
     // 方便Json初始化使用常量保存，需要同步维护
     companion object {
@@ -43,5 +44,6 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
         const val OBJECT_KIND_SCHEDULE = "schedule"
         const val OBJECT_KIND_DELETE = "delete"
+        const val OBJECT_KIND_OPENAPI = "openApi"
     }
 }
