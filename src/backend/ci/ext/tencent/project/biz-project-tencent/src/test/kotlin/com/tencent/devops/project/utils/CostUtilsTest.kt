@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.utils
 
+import com.tencent.devops.common.api.util.HashUtil
 import org.junit.Test
 
 import org.slf4j.LoggerFactory
@@ -53,6 +54,13 @@ class CostUtilsTest {
         val startTime = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(5)
         val url = "http://test"
         CostUtils.costTime(startTime, url, logger)
+    }
+
+    @Test
+    fun getExperienceId() {
+        println(
+            HashUtil.encodeLongId(1000031)
+        )
     }
 
     companion object {

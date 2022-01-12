@@ -724,7 +724,7 @@ class ExperienceService @Autowired constructor(
                 bundle = bundleIdentifier,
                 platform = platform
             ).map { it.value2() }.toSet().subtract(innerReceivers).subtract(outerReceivers)
-
+            logger.info("innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , subscribeUsers: $subscribeUsers ")
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()) {
                 logger.info("empty Receivers , experienceId:$experienceId")
                 return@submit
