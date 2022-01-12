@@ -78,6 +78,34 @@ interface BuildCredentialResource {
         publicKey: String
     ): Result<CredentialInfo?>
 
+    @ApiOperation("构建机获取跨项目凭据")
+    @Path("/{credentialId}/across/")
+    @GET
+    fun getAcrossProject(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        vmSeqId: String,
+        @ApiParam(value = "构建机名称", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
+        vmName: String,
+        @ApiParam("凭据ID", required = true)
+        @PathParam("credentialId")
+        credentialId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("targetProjectId")
+        targetProjectId: String,
+        @ApiParam("Base64编码的加密公钥", required = true)
+        @QueryParam("publicKey")
+        @BkField(required = true)
+        publicKey: String
+    ): Result<CredentialInfo?>
+
     @ApiOperation("插件获取凭据")
     @Path("/{credentialId}/detail")
     @GET

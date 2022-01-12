@@ -1,0 +1,79 @@
+package com.tencent.devops.process.api.service
+
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_TEMPLATE_ACROSS"], description = "服务-模板跨项目使用资源")
+@Path("/service/template/across")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceTemplateAcrossResource {
+
+    @ApiOperation("创建当前构建中的跨项目模板信息")
+    @POST
+    @Path("/{projectId}/{pipelineId}")
+    fun create(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "跨项目模板信息", required = true)
+        templateAcrossInfo: BuildTemplateAcrossInfo
+    )
+
+    @ApiOperation("修改跨项目模板信息")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/{templateId}")
+    fun update(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<Boolean>
+
+    @ApiOperation("删除跨项目模板信息")
+    @DELETE
+    @Path("/{projectId}/{pipelineId}")
+    fun delete(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "模板ID", required = true)
+        @QueryParam("templateId")
+        templateId: String?,
+        @ApiParam(value = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String?
+    ): Result<Boolean>
+}
