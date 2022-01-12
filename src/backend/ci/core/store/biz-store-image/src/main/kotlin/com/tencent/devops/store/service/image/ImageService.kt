@@ -1079,11 +1079,11 @@ abstract class ImageService @Autowired constructor() {
             var versionName = imageVersion
             var latestVersionName = "${versionPrefix}latest"
             val imageStatus = it["imageStatus"] as Byte
-            val imageTag =it["imageTag"] as String
+            val imageTag = it["imageTag"] as String
             val imageVersionStatusList = listOf(
                 ImageStatusEnum.TESTING.status.toByte(),
                 ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
-                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
+                ImageStatusEnum.UNDERCARRIAGED.status.toByte()f
             )
             // 特殊情况单独覆盖处理
             if (imageVersionStatusList.contains(imageStatus)) {
@@ -1098,7 +1098,7 @@ abstract class ImageService @Autowired constructor() {
                 versionList.add(VersionInfo(latestVersionName, "$versionPrefix*")) // 添加大版本号的通用最新模式（如1.*）
                 tmpVersionPrefix = versionPrefix
             }
-            versionList.add(VersionInfo(versionName+"(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
+            versionList.add(VersionInfo(versionName + "(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
         }
         logger.info("the imageCode is: $imageCode,versionList is: $versionList")
         return versionList
