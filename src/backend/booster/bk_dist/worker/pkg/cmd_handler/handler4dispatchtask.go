@@ -238,6 +238,7 @@ func (h *Handle4DispatchReq) dealOneCommand(onecmd *dcProtocol.PBCommand,
 			exefullpath,
 			strings.Join(params, " "),
 			(end64-start64)/1000/1000/1000,
+			err,
 			outputMsg,
 			errorMsg)
 	} else {
@@ -245,6 +246,7 @@ func (h *Handle4DispatchReq) dealOneCommand(onecmd *dcProtocol.PBCommand,
 			exefullpath,
 			strings.Join(params, " "),
 			(end64-start64)/1000/1000/1000,
+			err,
 			outputMsg,
 			errorMsg)
 	}
