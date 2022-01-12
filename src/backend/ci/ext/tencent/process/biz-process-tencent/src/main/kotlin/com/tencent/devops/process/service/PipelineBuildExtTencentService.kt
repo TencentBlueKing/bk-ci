@@ -33,12 +33,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
+import com.tencent.devops.process.utils.PROJECT_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
@@ -47,38 +50,41 @@ import java.util.Random
 @Service
 class PipelineBuildExtTencentService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
-    private val pipelineContextService: PipelineContextService,
-    private val pipelineUrlBean: PipelineUrlBean
+    private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
 
-    override fun buildExt(task: PipelineBuildTask, variables: Map<String, String>): Map<String, String> {
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
+    override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
         val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
             val turboTaskId = getTurboTask(task.projectId, task.pipelineId, task.taskId)
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
-            extMap["turbo.task.id"] = turboTaskId
         }
 
         extMap.putAll(pipelineContextService.buildContext(
             projectId = task.projectId,
             buildId = task.buildId,
             containerId = task.containerId,
-            variables = variables
+            variables = variable
         ))
-        extMap["ci.build_url"] = pipelineUrlBean.genBuildDetailUrl(
-            projectCode = task.projectId,
-            pipelineId = task.pipelineId,
-            buildId = task.buildId,
-            position = null,
-            stageId = null,
-            needShortUrl = false
-        )
+        extMap["ci.build_url"] = getGitCiUrl(variable)
         return extMap
     }
 
     override fun endBuild(task: PipelineBuildTask) = Unit
+
+    fun getGitCiUrl(variable: Map<String, String>): String {
+        return if (v2GitUrl != null) {
+            "$v2GitUrl/pipeline/${variable[PIPELINE_ID]}/detail/${variable[PIPELINE_BUILD_ID]}" +
+                "/#${variable[PROJECT_NAME]}"
+        } else {
+            ""
+        }
+    }
 
     fun getTurboTask(projectId: String, pipelineId: String, elementId: String): String {
         try {

@@ -163,7 +163,7 @@ class PipelineContextService @Autowired constructor(
         if (inMatrix && c.id?.let { it == containerId } != true) return
         variables.forEach { (key, value) ->
             val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix)) {
+            if (key.startsWith(prefix) && prefix.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
         }

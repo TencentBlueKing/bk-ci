@@ -352,7 +352,7 @@ class TriggerMatcher @Autowired constructor(
 
     fun getStartParams(
         context: StreamTriggerContext,
-        triggerOn: TriggerOn,
+        triggerOn: TriggerOn?,
         isTrigger: Boolean
     ): Map<String, Any> {
         if (!isTrigger) {

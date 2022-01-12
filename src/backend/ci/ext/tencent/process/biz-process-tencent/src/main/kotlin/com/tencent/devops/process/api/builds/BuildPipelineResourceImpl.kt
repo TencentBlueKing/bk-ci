@@ -60,7 +60,7 @@ class BuildPipelineResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("the method of being done is: getHistoryBuild")
-        val userId = buildVariableService.getVariable(currentBuildId, "pipeline.start.user.id")
+        val userId = buildVariableService.getVariable(projectId, currentBuildId, "pipeline.start.user.id")
         val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
@@ -74,7 +74,7 @@ class BuildPipelineResourceImpl @Autowired constructor(
 
     override fun list(currentBuildId: String, projectId: String, pipelineIdListString: String?): Result<List<Pipeline>> {
         logger.info("the method of being done is: list")
-        val userId = buildVariableService.getVariable(currentBuildId, "pipeline.start.user.id")!!
+        val userId = buildVariableService.getVariable(projectId, currentBuildId, "pipeline.start.user.id")!!
         val pipelineIdList = pipelineIdListString?.split(",")
         return Result(pipelineListFacadeService.listPipelineInfo(
             userId = userId, projectId = projectId, pipelineIdList = pipelineIdList

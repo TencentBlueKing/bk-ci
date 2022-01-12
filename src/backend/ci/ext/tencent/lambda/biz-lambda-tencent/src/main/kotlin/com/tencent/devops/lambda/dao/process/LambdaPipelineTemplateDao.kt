@@ -36,11 +36,12 @@ class LambdaPipelineTemplateDao {
 
     fun getTemplate(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ): TTemplatePipelineRecord? {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

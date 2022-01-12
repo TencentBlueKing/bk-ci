@@ -44,14 +44,20 @@ class DataSourceServiceImpl @Autowired constructor(
 ) : DataSourceService {
 
     override fun addDataSource(userId: String, dataSource: DataSource): Boolean {
+        val clusterName = dataSource.clusterName
         val dataSourceName = dataSource.dataSourceName
         val moduleCode = dataSource.moduleCode.name
-        val nameCount = dataSourceDao.countByName(dslContext, moduleCode, dataSourceName)
+        val nameCount = dataSourceDao.countByName(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            dataSourceName = dataSourceName
+        )
         if (nameCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf("[$moduleCode]$dataSourceName")
+                params = arrayOf("[$clusterName-$moduleCode]$dataSourceName")
             )
         }
         dataSourceDao.add(dslContext, userId, dataSource)
@@ -64,9 +70,15 @@ class DataSourceServiceImpl @Autowired constructor(
     }
 
     override fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean {
+        val clusterName = dataSource.clusterName
         val dataSourceName = dataSource.dataSourceName
         val moduleCode = dataSource.moduleCode.name
-        val nameCount = dataSourceDao.countByName(dslContext, moduleCode, dataSourceName)
+        val nameCount = dataSourceDao.countByName(
+            dslContext = dslContext,
+            clusterName = clusterName,
+            moduleCode = moduleCode,
+            dataSourceName = dataSourceName
+        )
         if (nameCount > 0) {
             // 判断更新的名称是否属于自已
             val obj = dataSourceDao.getById(dslContext, id)
@@ -74,7 +86,7 @@ class DataSourceServiceImpl @Autowired constructor(
                 // 抛出错误提示
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                    params = arrayOf("[$moduleCode]$dataSourceName")
+                    params = arrayOf("[$clusterName-$moduleCode]$dataSourceName")
                 )
             }
         }
@@ -85,7 +97,12 @@ class DataSourceServiceImpl @Autowired constructor(
     override fun getDataSourceById(id: String): DataSource? {
         val record = dataSourceDao.getById(dslContext, id)
         return if (record != null) {
-            DataSource(SystemModuleEnum.valueOf(record.moduleCode), record.dataSourceName, record.fullFlag)
+            DataSource(
+                clusterName = record.clusterName,
+                moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
+                dataSourceName = record.dataSourceName,
+                fullFlag = record.fullFlag
+            )
         } else {
             null
         }

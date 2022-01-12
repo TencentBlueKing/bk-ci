@@ -299,7 +299,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(VERSION.desc())
+                .orderBy(CREATED_TIME.desc())
                 .fetch()
         }
     }
@@ -481,6 +481,18 @@ class TemplateDao {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
             baseStep.fetch()
+        }
+    }
+
+    fun listTemplateByIds(
+        dslContext: DSLContext,
+        templateList: List<String>
+    ): Result<TTemplateRecord> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(templateList))
+                .orderBy(CREATED_TIME.desc())
+                .fetch()
         }
     }
 

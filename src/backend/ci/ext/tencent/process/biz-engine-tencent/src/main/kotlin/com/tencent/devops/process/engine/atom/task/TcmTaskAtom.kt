@@ -65,7 +65,7 @@ class TcmTaskAtom @Autowired constructor(
         logger.info("Enter TcmTaskAtom Run...")
         val buildId = task.buildId
         val elementId = task.taskId
-        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(task.pipelineId)?.lastModifyUser
+        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(task.projectId, task.pipelineId)?.lastModifyUser
         val userId = if (param.startWithSaver == true) {
             lastModifyUser ?: task.starter
         } else {

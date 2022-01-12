@@ -63,8 +63,9 @@ class SendNotify @Autowired constructor(
     private fun sendNotifyV2(context: StreamBuildListenerContextV2, build: BuildHistory) {
         with(context) {
             // 获取需要进行替换的variables
+            val projectId = context.buildEvent.projectId
             val variables = client.get(ServiceVarResource::class)
-                .getContextVar(buildId = build.id, contextName = null).data
+                .getContextVar(projectId = projectId, buildId = build.id, contextName = null).data
             val notices = YamlUtil.getObjectMapper().readValue(
                 streamBuildEvent.normalizedYaml, ScriptBuildYaml::class.java
             ).notices
