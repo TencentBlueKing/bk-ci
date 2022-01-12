@@ -75,6 +75,14 @@ interface CredentialService {
 
     fun buildGet(projectId: String, buildId: String, credentialId: String, publicKey: String): CredentialInfo?
 
+    fun buildGetAcrossProject(
+        projectId: String,
+        targetProjectId: String,
+        buildId: String,
+        credentialId: String,
+        publicKey: String
+    ): CredentialInfo?
+
     fun buildGetDetail(projectId: String, buildId: String, credentialId: String): Map<String, String>
 
     fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo?

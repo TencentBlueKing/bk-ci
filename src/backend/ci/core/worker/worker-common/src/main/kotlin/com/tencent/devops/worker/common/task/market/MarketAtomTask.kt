@@ -52,6 +52,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_ATOM_CODE
 import com.tencent.devops.process.utils.PIPELINE_ATOM_NAME
@@ -69,12 +70,14 @@ import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
+import com.tencent.devops.worker.common.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -101,6 +104,8 @@ import java.nio.file.Paths
 open class MarketAtomTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+
+    private val processApi = ApiFactory.create(BuildSDKApi::class)
 
     private val outputFile = "output.json"
 
@@ -160,7 +165,6 @@ open class MarketAtomTask : ITask() {
         val props = JsonUtil.toMutableMap(atomData.props!!)
 
         // 解析输入参数
-
         val inputTemplate =
             if (props["input"] != null) {
                 props["input"] as Map<String, Map<String, Any>>
@@ -170,6 +174,24 @@ open class MarketAtomTask : ITask() {
 
         val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
 
+        // 解析跨项目模板信息
+        val acrossInfo = if (buildVariables.variables[TEMPLATE_ACROSS_INFO_ID].isNullOrBlank() ||
+            buildTask.stepId.isNullOrBlank()) {
+            null
+        } else {
+            val result = processApi.getBuildAcrossTemplateInfo(
+                templateId = buildVariables.variables[TEMPLATE_ACROSS_INFO_ID]!!
+            )
+            if (result.isNotOk() || result.data == null) {
+                null
+            } else {
+                result.data?.filter {
+                    it.templateType == TemplateAcrossInfoType.STEP &&
+                        it.templateInstancesIds.contains(buildTask.stepId)
+                }?.ifEmpty { null }?.first()
+            }
+        }
+
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
@@ -177,7 +199,8 @@ open class MarketAtomTask : ITask() {
                 var valueStr = JsonUtil.toJson(value)
                 valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
                     override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                        return CredentialUtils.getCredentialContextValue(key, acrossInfo?.targetProjectId) ?:
+                        if (doubleCurlyBraces) {
                             "\${{$key}}"
                         } else {
                             "\${$key}"

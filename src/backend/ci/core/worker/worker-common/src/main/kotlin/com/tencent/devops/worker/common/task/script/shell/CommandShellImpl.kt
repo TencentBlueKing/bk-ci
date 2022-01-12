@@ -47,7 +47,7 @@ class CommandShellImpl : ICommand {
         stepId: String?,
         charsetType: String?
     ) {
-        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir)
+        val realCommand = parseTemplate(buildId, script, taskParam.plus(runtimeVariables), dir, stepId)
         ShellUtil.execute(
             buildId = buildId,
             script = realCommand,

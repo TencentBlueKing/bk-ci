@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
@@ -51,6 +52,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
 import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -428,6 +430,22 @@ class CredentialServiceImpl @Autowired constructor(
         return serviceGet(buildBasicInfo.projectId, credentialId, publicKey)
     }
 
+    override fun buildGetAcrossProject(
+        projectId: String,
+        targetProjectId: String,
+        buildId: String,
+        credentialId: String,
+        publicKey: String
+    ): CredentialInfo? {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
+        if (buildBasicInfoResult.isNotOk()) {
+            throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        }
+        buildBasicInfoResult.data
+            ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        return serviceGet(targetProjectId, credentialId, publicKey)
+    }
+
     override fun buildGetDetail(projectId: String, buildId: String, credentialId: String): Map<String, String> {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
@@ -452,7 +470,13 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
-        val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
+        val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId)?.let {
+            if (!it.allowAcrossProject) {
+                throw CustomException(Response.Status.FORBIDDEN, "credential not allow across project")
+            } else {
+                it
+            }
+        } ?: return null
 
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
