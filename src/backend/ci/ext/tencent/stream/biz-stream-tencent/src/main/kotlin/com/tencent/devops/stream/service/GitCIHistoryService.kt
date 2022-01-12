@@ -248,7 +248,7 @@ class GitCIHistoryService @Autowired constructor(
         if (convertStartUpdateTime.isAfter(convertEndUpdateTime)) {
             // 超过查询时间范围则报错
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_TOO_LARGE,
+                errorCode = CommonMessageCode.ERROR_QUERY_TIME_RANGE_ERROR,
                 defaultMessage = "查询的时间范围跨度错误"
             )
         }
