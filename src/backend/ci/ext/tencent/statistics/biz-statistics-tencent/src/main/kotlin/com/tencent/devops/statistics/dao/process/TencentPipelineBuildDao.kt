@@ -31,29 +31,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 
 @Repository
 class TencentPipelineBuildDao {
-
-    fun listSuccessBuild(
-        dslContext: DSLContext,
-        pipelineId: String,
-        buildNum: Int
-    ): Result<TPipelineBuildHistoryRecord> {
-        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.eq(BuildStatus.SUCCEED.ordinal))
-                .and(BUILD_NUM.gt(buildNum))
-                .fetch()
-        }
-    }
 
     fun listScanPipelineBuildList(
         dslContext: DSLContext,

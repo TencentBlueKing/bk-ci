@@ -38,6 +38,7 @@ class LambdaPipelineLabelDao {
 
     fun getLables(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String
     ): Result<out Record>? {
         val a = TPipelineLabel.T_PIPELINE_LABEL.`as`("a")
@@ -45,6 +46,8 @@ class LambdaPipelineLabelDao {
 
         return dslContext.select(
             a.NAME.`as`("name")
-        ).from(b).join(a).on(b.LABEL_ID.eq(a.ID)).where(b.PIPELINE_ID.eq(pipelineId)).fetch()
+        ).from(b).join(a).on(b.LABEL_ID.eq(a.ID))
+            .where(b.PIPELINE_ID.eq(pipelineId).and(b.PROJECT_ID.eq(projectId)))
+            .fetch()
     }
 }

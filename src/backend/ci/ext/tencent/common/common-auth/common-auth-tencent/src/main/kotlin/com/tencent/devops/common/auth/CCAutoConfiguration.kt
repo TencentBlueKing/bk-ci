@@ -28,7 +28,7 @@
 package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkCCProperties
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
@@ -54,7 +54,7 @@ class CCAutoConfiguration {
         pipelineAuthServiceCode: PipelineAuthServiceCode,
         bkCCProperties: BkCCProperties,
         objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi
+        authTokenApi: AuthTokenApi
     ) =
-        BSCCProjectApi(bkCCProperties, objectMapper, bsAuthTokenApi, pipelineAuthServiceCode)
+        BSCCProjectApi(bkCCProperties, objectMapper, authTokenApi, pipelineAuthServiceCode)
 }

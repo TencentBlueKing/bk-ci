@@ -90,7 +90,13 @@ class CodeccTransferService @Autowired constructor(
             endTimeEndTime
         )
         val result = mutableListOf<BuildBasicInfo>()
+        val buildIds = mutableSetOf<String>()
         list.forEach {
+            val buildId = it.buildId
+            if (buildIds.contains(buildId)) {
+                return@forEach
+            }
+            buildIds.add(buildId)
             result.add(genBuildBaseInfo(it))
         }
         return result

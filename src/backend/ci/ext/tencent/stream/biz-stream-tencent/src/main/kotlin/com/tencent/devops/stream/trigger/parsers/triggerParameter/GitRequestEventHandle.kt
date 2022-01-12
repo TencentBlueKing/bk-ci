@@ -37,15 +37,16 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.joda.time.DateTime
-import java.text.SimpleDateFormat
-import java.util.Date
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.text.SimpleDateFormat
+import java.util.Date
 import javax.ws.rs.core.Response
 
 @Component
@@ -73,11 +74,7 @@ class GitRequestEventHandle @Autowired constructor(
             sourceGitProjectId = null,
             branch = gitPushEvent.ref.removePrefix("refs/heads/"),
             targetBranch = null,
-            commitId = if (gitPushEvent.isDeleteBranch()) {
-                gitPushEvent.before
-            } else {
-                gitPushEvent.after
-            },
+            commitId = gitPushEvent.after,
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
             commitAuthorName = latestCommit?.author?.name,
@@ -140,11 +137,7 @@ class GitRequestEventHandle @Autowired constructor(
             sourceGitProjectId = null,
             branch = gitTagPushEvent.ref.removePrefix("refs/tags/"),
             targetBranch = null,
-            commitId = if (gitTagPushEvent.isDeleteTag()) {
-                gitTagPushEvent.before
-            } else {
-                gitTagPushEvent.after
-            },
+            commitId = gitTagPushEvent.after,
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.timestamp),
             commitAuthorName = latestCommit?.author?.name,

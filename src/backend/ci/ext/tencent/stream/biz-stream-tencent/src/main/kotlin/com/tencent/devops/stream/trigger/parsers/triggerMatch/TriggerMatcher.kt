@@ -5,11 +5,19 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.TriggerOn
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.ci.v2.check
 import com.tencent.devops.common.ci.v2.getTypesObjectKind
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
+import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
@@ -20,18 +28,11 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
-import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
@@ -181,7 +182,7 @@ class TriggerMatcher @Autowired constructor(
                 triggerOn = triggerOn,
                 isTrigger = true
             ).map { entry -> entry.key to entry.value.toString() }.toMap()
-            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = false)
+            TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
             TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
         }
