@@ -62,7 +62,11 @@ class MQPipelineCreateListener @Autowired constructor(
             callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
             watcher.stop()
             watcher.start("updateAtomPipelineNum")
-            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+            pipelineAtomStatisticsService.updateAtomPipelineNum(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                version = event.version ?: 1
+            )
             watcher.stop()
             watcher.start("updateAgentPipelineRef")
             with(event) {

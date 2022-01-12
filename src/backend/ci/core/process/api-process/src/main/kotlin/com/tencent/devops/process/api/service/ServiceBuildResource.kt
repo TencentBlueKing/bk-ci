@@ -109,6 +109,9 @@ interface ServiceBuildResource {
     // @Path("/builds/{buildId}/basic")
     @Path("/{buildId}/basic")
     fun serviceBasic(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String

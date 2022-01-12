@@ -54,31 +54,34 @@ class PipelineContextService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
     fun buildContext(
+        projectId: String,
         buildId: String,
         containerId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
+                stage.containers.forEachIndexed { index, container ->
                     buildJobContext(
                         stage = stage,
                         c = container,
                         containerId = containerId,
                         contextMap = contextMap,
                         variables = variables,
-                        inMatrix = false
+                        inMatrix = false,
+                        groupIndex = 0
                     )
-                    container.fetchGroupContainers()?.forEach { c ->
+                    container.fetchGroupContainers()?.forEachIndexed { index, c ->
                         buildJobContext(
                             stage = stage,
                             c = c,
                             containerId = containerId,
                             contextMap = contextMap,
                             variables = variables,
-                            inMatrix = true
+                            inMatrix = true,
+                            groupIndex = index
                         )
                     }
                 }
@@ -127,7 +130,8 @@ class PipelineContextService @Autowired constructor(
         containerId: String?,
         contextMap: MutableMap<String, String>,
         variables: Map<String, String>,
-        inMatrix: Boolean
+        inMatrix: Boolean,
+        groupIndex: Int
     ) {
         // current job
         if (c.id?.let { it == containerId } == true) {
@@ -138,6 +142,7 @@ class PipelineContextService @Autowired constructor(
             contextMap["job.container.network"] = getNetWork(c) ?: ""
             contextMap["job.stage_id"] = stage.id ?: ""
             contextMap["job.stage_name"] = stage.name ?: ""
+            contextMap["job.index"] = groupIndex.toString()
         }
 
         // other job
@@ -158,7 +163,7 @@ class PipelineContextService @Autowired constructor(
         if (inMatrix && c.id?.let { it == containerId } != true) return
         variables.forEach { (key, value) ->
             val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix)) {
+            if (key.startsWith(prefix) && prefix.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
         }

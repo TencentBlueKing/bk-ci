@@ -64,7 +64,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
-        val taskRecord = pipelineTaskService.getBuildTask(event.buildId, event.taskId)
+        val taskRecord = pipelineTaskService.getBuildTask(event.projectId, event.buildId, event.taskId)
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             redisLock.lock()
@@ -85,17 +85,27 @@ class PipelineTaskPauseListener @Autowired constructor(
         continuePauseTask(current = task, userId = userId)
 
         var newElement: Element? = null
-        val newElementRecord = pipelineTaskPauseService.getPauseTask(buildId = task.buildId, taskId = task.taskId)
+        val newElementRecord = pipelineTaskPauseService.getPauseTask(
+            projectId = task.projectId,
+            buildId = task.buildId,
+            taskId = task.taskId
+        )
         if (newElementRecord != null) {
             newElement = JsonUtil.to(newElementRecord.newValue, Element::class.java)
             newElement.executeCount = task.executeCount ?: 1
             // 修改插件运行设置
-            pipelineTaskService.updateTaskParamWithElement(task.buildId, task.taskId, newElement)
+            pipelineTaskService.updateTaskParamWithElement(
+                projectId = task.projectId,
+                buildId = task.buildId,
+                taskId = task.taskId,
+                newElement = newElement
+            )
             logger.info("update task param success | ${task.buildId}| ${task.taskId} ")
         }
 
         // 修改详情model
         taskBuildDetailService.taskContinue(
+            projectId = task.projectId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
@@ -134,6 +144,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         // 刷新detail内model
         taskBuildDetailService.taskCancel(
+            projectId = task.projectId,
             buildId = task.buildId,
             containerId = task.containerId,
             taskId = task.taskId,
@@ -148,6 +159,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             executeCount = task.executeCount ?: 1
         )
         val containerRecord = pipelineContainerService.getContainer(
+            projectId = task.projectId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId
@@ -184,7 +196,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         logger.info("ENGINE|${current.buildId}]|PAUSE|${current.stageId}]|j(${current.containerId}|${current.taskId}")
 
         // 将启动和结束任务置为排队。用于启动构建机
-        val taskRecords = pipelineTaskService.getAllBuildTask(current.buildId)
+        val taskRecords = pipelineTaskService.getAllBuildTask(current.projectId, current.buildId)
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
         taskRecords.forEach { task ->
             if (task.containerId == current.containerId && task.stageId == current.stageId) {
@@ -210,6 +222,7 @@ class PipelineTaskPauseListener @Autowired constructor(
 
         // 修改容器状态位运行
         pipelineContainerService.updateContainerStatus(
+            projectId = current.projectId,
             buildId = current.buildId,
             stageId = current.stageId,
             containerId = current.containerId,
