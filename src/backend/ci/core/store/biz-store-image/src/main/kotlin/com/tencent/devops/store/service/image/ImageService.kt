@@ -1083,7 +1083,7 @@ abstract class ImageService @Autowired constructor() {
             val imageVersionStatusList = listOf(
                 ImageStatusEnum.TESTING.status.toByte(),
                 ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
-                ImageStatusEnum.UNDERCARRIAGED.status.toByte()f
+                ImageStatusEnum.UNDERCARRIAGED.status.toByte()
             )
             // 特殊情况单独覆盖处理
             if (imageVersionStatusList.contains(imageStatus)) {
