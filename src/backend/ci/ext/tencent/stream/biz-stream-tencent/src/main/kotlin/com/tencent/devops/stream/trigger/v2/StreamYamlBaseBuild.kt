@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.client.Client
@@ -168,8 +167,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         model: Model,
-        yamlTransferData: YamlTransferData? = null,
-        templateId: String
+        yamlTransferData: YamlTransferData? = null
     ) {
         // 【ID92537607】 stream 流水线标签不生效
         client.get(UserPipelineGroupResource::class).updatePipelineLabel(
@@ -185,7 +183,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = event.userId,
                 projectId = gitCIBasicSetting.projectCode!!,
                 pipelineId = pipeline.pipelineId,
-                templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(templateId)
+                templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(yamlTransferData.templateData.templateId)
             )
         }
     }
@@ -200,8 +198,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         yamlTransferData: YamlTransferData? = null
     ): BuildId? {
         // 跨模板信息构建唯一ID
-        val templateId = "t-${UUIDUtil.generate()}"
-        preStartBuild(pipeline, event, gitCIBasicSetting, model, yamlTransferData, templateId)
+        val templateId = yamlTransferData?.templateData?.templateId
+        preStartBuild(pipeline, event, gitCIBasicSetting, model, yamlTransferData)
 
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
@@ -224,7 +222,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
             )
         } catch (ignore: Throwable) {
-            errorStartBuild(gitCIBasicSetting, pipeline, gitBuildId, ignore, event, templateId)
+            errorStartBuild(gitCIBasicSetting, pipeline, gitBuildId, ignore, event, yamlTransferData)
         } finally {
             if (buildId.isNotEmpty()) {
                 kafkaClient.send(
@@ -243,7 +241,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             return null
         }
 
-        afterStartBuild(pipeline, buildId, gitBuildId, event, gitCIBasicSetting, templateId)
+        afterStartBuild(pipeline, buildId, gitBuildId, event, gitCIBasicSetting, yamlTransferData)
 
         return BuildId(buildId)
     }
@@ -254,7 +252,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         ignore: Throwable,
         event: GitRequestEvent,
-        templateId: String
+        yamlTransferData: YamlTransferData?
     ) {
         logger.error(
             "Stream Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
@@ -284,12 +282,14 @@ class StreamYamlBaseBuild @Autowired constructor(
         )
 
         // 删除模板跨项目信息
-        client.get(ServiceTemplateAcrossResource::class).delete(
-            projectId = gitCIBasicSetting.projectCode!!,
-            pipelineId = pipeline.pipelineId,
-            templateId = templateId,
-            buildId = null
-        )
+        if (yamlTransferData?.templateData != null) {
+            client.get(ServiceTemplateAcrossResource::class).delete(
+                projectId = gitCIBasicSetting.projectCode!!,
+                pipelineId = pipeline.pipelineId,
+                templateId = yamlTransferData.templateData.templateId,
+                buildId = null
+            )
+        }
     }
 
     private fun afterStartBuild(
@@ -298,7 +298,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
-        templateId: String
+        yamlTransferData: YamlTransferData?
     ) {
         try {
             // 更新流水线和构建记录状态
@@ -338,12 +338,14 @@ class StreamYamlBaseBuild @Autowired constructor(
             }
 
             // 更新跨项目模板信息
-            client.get(ServiceTemplateAcrossResource::class).update(
-                projectId = gitCIBasicSetting.projectCode!!,
-                pipelineId = pipeline.pipelineId,
-                templateId = templateId,
-                buildId = buildId
-            )
+            if (yamlTransferData?.templateData != null) {
+                client.get(ServiceTemplateAcrossResource::class).update(
+                    projectId = gitCIBasicSetting.projectCode!!,
+                    pipelineId = pipeline.pipelineId,
+                    templateId = yamlTransferData.templateData.templateId,
+                    buildId = buildId
+                )
+            }
         } catch (ignore: Exception) {
             logger.error(
                 "Stream after Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
