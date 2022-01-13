@@ -208,13 +208,14 @@ class ExperienceDownloadService @Autowired constructor(
         )
         // 若为公开体验，并且用户第一次下载，则订阅
         if (isPublicExperience && isFirstDownload) {
-            experiencePushService.subscribe(
+            val subscribe = experiencePushService.subscribe(
                 userId = userId,
                 experienceHashId = experienceHashId,
                 platform = platform.id,
                 projectId = projectId,
                 bundleIdentifier = bundleIdentifier,
             )
+            logger.info("Subscribe Result: ${subscribe.message}")
         }
 
         addDownloadRecord(experienceRecord, userId)
