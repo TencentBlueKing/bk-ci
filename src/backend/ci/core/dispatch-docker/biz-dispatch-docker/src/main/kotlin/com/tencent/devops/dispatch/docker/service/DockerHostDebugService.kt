@@ -62,6 +62,7 @@ import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -83,6 +84,9 @@ class DockerHostDebugService @Autowired constructor(
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
+
+    @Value("\${dispatch.dockerDebug.authToken:#{null}}")
+    val dockerDebugAuthToken: String? = ""
 
     fun startDebug(
         dockerIp: String,
@@ -209,6 +213,8 @@ class DockerHostDebugService @Autowired constructor(
                             imagePublicFlag = imageRepoInfo?.publicFlag,
                             imageRDType = imageRepoInfo?.rdType
                         )
+
+                        getDockerConsoleUrl(dockerIp, pipelineId, projectId, containerId)
                     }
                     response["status"] == 1 -> {
                         // 母机负载过高
@@ -282,6 +288,28 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         return Result(0, "success")
+    }
+
+    private fun getDockerConsoleUrl(
+        dockerIp: String,
+        pipelineId: String,
+        projectId: String,
+        containerId: String
+    ) {
+        val requestBody = mapOf("cmd" to "/bin/bash", "container_id" to containerId)
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/bcsapi/v1/consoleproxy/create_exec?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}",
+            dockerHostIp = dockerIp,
+            dockerHostPort = 9999,
+            urlPrefix = "https://"
+        ).addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            .build()
+
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            LOG.info("[$projectId|$pipelineId] get docker webconsole $dockerIp responseBody: $responseBody")
+        }
     }
 
     fun checkContainerStatus(
