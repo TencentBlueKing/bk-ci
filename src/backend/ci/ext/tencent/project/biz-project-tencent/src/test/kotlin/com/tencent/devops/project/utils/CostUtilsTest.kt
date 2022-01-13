@@ -59,7 +59,7 @@ class CostUtilsTest {
     @Test
     fun getExperienceId() {
         println(
-            HashUtil.encodeLongId(778)
+            HashUtil.encodeLongId(1000035)
         )
     }
 

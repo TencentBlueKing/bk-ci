@@ -1,7 +1,9 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
+import com.tencent.devops.model.experience.tables.records.TExperienceDownloadDetailRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -54,6 +56,21 @@ class ExperienceDownloadDetailDao {
                 .and(PLATFORM.eq(platform))
                 .and(CREATE_TIME.gt(hotDaysAgo))
                 .fetchAny()?.value1() ?: 0
+        }
+    }
+
+    fun getDownloadHistory(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String
+    ): Result<TExperienceDownloadDetailRecord> {
+        with(TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .fetch()
         }
     }
 }

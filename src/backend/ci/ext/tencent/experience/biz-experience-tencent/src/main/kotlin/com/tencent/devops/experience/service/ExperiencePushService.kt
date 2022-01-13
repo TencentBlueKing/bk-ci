@@ -206,7 +206,6 @@ class ExperiencePushService @Autowired constructor(
                     "内部体验默认为已订阅状态，无法自行取消。如需取消订阅，" +
                             "请联系产品负责人退出内部体验，退出后将不接收订阅信息。", false
                 )
-
             }
             // 若不在体验组中，进一步查看能否取消订阅
             else -> {

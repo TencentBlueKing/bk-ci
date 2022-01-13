@@ -47,6 +47,7 @@ import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
@@ -72,6 +73,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experiencePushDao: ExperiencePushDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
+    private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext,
     private val client: Client,
     private val objectMapper: ObjectMapper
@@ -294,7 +296,21 @@ class ExperienceBaseService @Autowired constructor(
             recordId = experienceId
         ) != null
     }
-
+    /**
+     * 判断是否为首次下载
+     */
+    fun isFirstDownload(
+        platform: String,
+        bundleIdentifier: String,
+        projectId: String
+    ): Boolean {
+        return experienceDownloadDetailDao.getDownloadHistory(
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform
+        ).isEmpty()
+    }
     /**
      * 根据体验获取组号列表
      */

@@ -74,6 +74,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
+    private val experiencePushService: ExperiencePushService,
     private val client: Client
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
@@ -176,6 +177,7 @@ class ExperienceDownloadService @Autowired constructor(
         val experienceHashId = HashUtil.encodeLongId(experienceId)
 
         val projectId = experienceRecord.projectId
+        val bundleIdentifier = experienceRecord.bundleIdentifier
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
@@ -197,6 +199,22 @@ class ExperienceDownloadService @Autowired constructor(
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class)
             .show(experienceRecord.creator, projectId, artifactoryType, path).data!!
+        val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
+        val isFirstDownload = experienceBaseService.isFirstDownload(
+            platform = platform.name,
+            bundleIdentifier = bundleIdentifier,
+            projectId = projectId,
+        )
+        // 若为公开体验，并且用户第一次下载，则订阅
+        if (isPublicExperience && isFirstDownload) {
+            experiencePushService.subscribe(
+                userId = userId,
+                experienceHashId = experienceHashId,
+                platform = platform.id,
+                projectId = projectId,
+                bundleIdentifier = bundleIdentifier,
+            )
+        }
 
         addDownloadRecord(experienceRecord, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
