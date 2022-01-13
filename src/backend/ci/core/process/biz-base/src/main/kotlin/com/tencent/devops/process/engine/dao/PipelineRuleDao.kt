@@ -65,7 +65,10 @@ class PipelineRuleDao {
                     pipelineRule.processor,
                     userId,
                     userId
-                ).execute()
+                )
+                .onDuplicateKeyUpdate()
+                .set(PROCESSOR, pipelineRule.processor)
+                .execute()
         }
     }
 
