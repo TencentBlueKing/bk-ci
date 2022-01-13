@@ -79,9 +79,14 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @AllowOuter
     override fun listV3(userId: String, platform: Int, organization: String?): Result<ExperienceList> {
-        val privateExperiences = experienceAppService.list(userId, 0, 100, true).records
-        val publicExperiences = experienceAppService.publicExperiences(userId, 0, 100)
+        val privateExperiences = experienceAppService.list(userId, 0, 100, true, platform, organization).records
+        val publicExperiences = if (null == organization) {
+            experienceAppService.publicExperiences(userId, platform, 0, 100)
+        } else {
+            emptyList()
+        }
         return Result(ExperienceList(privateExperiences, publicExperiences))
     }
 

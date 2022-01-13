@@ -60,13 +60,14 @@ class ExperienceDownloadDetailDao {
         }
     }
 
-    fun listIdsForPublic(dslContext: DSLContext, limit: Int): Result<Record1<Long>> {
+    fun listIdsForPublic(dslContext: DSLContext, platform: String?, limit: Int): Result<Record1<Long>> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC.`as`("p")
         val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL.`as`("d")
         val join = p.leftJoin(d).on(
             p.PLATFORM.eq(d.PLATFORM)
                 .and(p.PROJECT_ID.eq(d.PROJECT_ID))
                 .and(p.BUNDLE_IDENTIFIER.eq(d.BUNDLE_IDENTIFIER))
+                .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
         )
         return dslContext.select(p.RECORD_ID).from(join)
             .where(p.ONLINE.eq(true))
