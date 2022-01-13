@@ -199,7 +199,7 @@ interface ApigwCallBackResourceV4 {
         pageSize: Int?
     ): Result<Page<ProjectPipelineCallBackHistory>>
 
-    @ApiOperation("callback回调重试", tags = [])
+    @ApiOperation("callback回调重试", tags = ["v4_user_callback_history_retry","v4_app_callback_history_retry"])
     @POST
     @Path("/history/retry")
     fun retry(

@@ -279,7 +279,7 @@ interface ApigwPipelineResourceV4 {
         pipelineId: String
     ): Result<Pipeline?>
 
-    @ApiOperation("流水线重命名", tags = [])
+    @ApiOperation("流水线重命名", tags = ["v4_user_pipeline_rename", "v4_app_pipeline_rename"])
     @POST
     @Path("/rename")
     fun rename(
@@ -302,7 +302,7 @@ interface ApigwPipelineResourceV4 {
         name: PipelineName
     ): Result<Boolean>
 
-    @ApiOperation("还原流水线编排", tags = [])
+    @ApiOperation("还原流水线编排", tags = ["v4_app_pipeline_restore", "v4_user_pipeline_restore"])
     @PUT
     @Path("/restore")
     fun restore(

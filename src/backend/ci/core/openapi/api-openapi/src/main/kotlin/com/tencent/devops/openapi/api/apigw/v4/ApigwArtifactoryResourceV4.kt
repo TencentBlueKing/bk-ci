@@ -109,7 +109,10 @@ interface ApigwArtifactoryResourceV4 {
         pageSize: Int?
     ): Result<Page<FileInfo>>
 
-    @ApiOperation("下载熔断归档的全量日志（开源版暂未实现）", tags = [])
+    @ApiOperation(
+        "下载熔断归档的全量日志（开源版暂未实现）",
+        tags = ["v4_app_artifactory_log_download", "v4_user_artifactory_log_download"]
+    )
     @GET
     @Path("/log")
     fun getPluginLogUrl(

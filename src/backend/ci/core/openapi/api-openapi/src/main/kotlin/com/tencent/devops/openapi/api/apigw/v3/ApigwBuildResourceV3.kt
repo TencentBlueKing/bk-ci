@@ -168,7 +168,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<BuildHistoryWithVars>
 
-    @ApiOperation("获取流水线构建历史", tags = [])
+    @ApiOperation("获取流水线构建历史", tags = ["v3_user_build_list","v3_app_build_list"])
     @GET
     @Path("/history")
     fun getHistoryBuild(
