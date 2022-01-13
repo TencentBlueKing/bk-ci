@@ -693,10 +693,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
         run outSide@{
             // 优先进行单个项目的匹配
-            sharedEnvRecord.sortedByDescending { it.type }.forEach {
+            sharedEnvRecord.sortedByDescending { it.type }.forEach nextRecord@{
                 // 对于分享的单独项目则查看是否是同一个
                 if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {
-                    return@forEach
+                    return@nextRecord
                 }
 
                 // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
@@ -714,14 +714,15 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         logger.warn("$projectId $projectEnvName get share project error: ${e.message}")
                         null
                     }
-                    projectsInGroups?.projects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
-                        projectsInGroups.subProjects?.filter { project -> "git_${project.id}" == projectId }?.ifEmpty {
-                            return@forEach
+                    val gitProjectId = projectId.removePrefix("git_")
+                    projectsInGroups?.projects?.filter { project -> project.id == gitProjectId }?.ifEmpty {
+                        projectsInGroups.subProjects?.filter { subProject -> subProject.id == gitProjectId }?.ifEmpty {
+                            return@nextRecord
                         }
                     }
                 }
 
-                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@forEach
+                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@nextRecord
                 sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
                 // 找到了环境可用就可以退出了
                 return@outSide
