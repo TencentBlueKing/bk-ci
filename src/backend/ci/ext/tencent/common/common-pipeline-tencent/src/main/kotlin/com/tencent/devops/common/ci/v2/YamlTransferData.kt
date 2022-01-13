@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 /**
@@ -34,7 +35,12 @@ import com.tencent.devops.common.ci.v2.enums.TemplateType
  * 如：Yaml对象的模板信息,用来分享凭证
  */
 data class YamlTransferData(
-    val templateData: MutableMap<String, MutableList<TransferTemplateData>> = mutableMapOf()
+    val templateData: TemplateData = TemplateData()
+)
+
+data class TemplateData(
+    val templateId: String = "t-${UUIDUtil.generate()}",
+    val transferDataList: MutableMap<String, MutableList<TransferTemplateData>> = mutableMapOf()
 )
 
 data class TransferTemplateData(
@@ -48,7 +54,7 @@ fun YamlTransferData.add(objectId: String, templateType: TemplateType, remotePro
         return
     }
 
-    val dataList = templateData[remoteProjectId]
+    val dataList = templateData.transferDataList[remoteProjectId]
     if (dataList != null) {
         val data = dataList.filter { it.templateType == templateType }.ifEmpty { null }?.first()
         if (data == null) {
@@ -63,7 +69,7 @@ fun YamlTransferData.add(objectId: String, templateType: TemplateType, remotePro
             data.objectIds.add(objectId)
         }
     } else {
-        templateData[remoteProjectId] = mutableListOf(
+        templateData.transferDataList[remoteProjectId] = mutableListOf(
             TransferTemplateData(
                 objectIds = mutableListOf(objectId),
                 templateType = templateType,

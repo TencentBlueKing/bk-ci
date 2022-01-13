@@ -299,7 +299,8 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             pipeline = pipeline,
             changeSet = changeSet,
-            webhookParams = params
+            webhookParams = params,
+            yamlTransferData = yamlTransferData
         )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 

@@ -33,6 +33,7 @@ import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -74,7 +75,8 @@ class ModelCreate @Autowired constructor(
         yaml: ScriptBuildYaml,
         pipeline: GitProjectPipeline,
         changeSet: Set<String>? = null,
-        webhookParams: Map<String, String> = mapOf()
+        webhookParams: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData? = null
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -104,7 +106,8 @@ class ModelCreate @Autowired constructor(
             event = event,
             v2GitUrl = v2GitUrl,
             originEvent = originEvent,
-            webhookParams = webhookParams
+            webhookParams = webhookParams,
+            yamlTransferData = yamlTransferData
         )
 
         val triggerContainer = TriggerContainer(

@@ -63,7 +63,6 @@ import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.common.CommonVariables.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -181,7 +180,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         )
 
         // 添加模板跨项目信息
-        if (yamlTransferData != null && yamlTransferData.templateData.isNotEmpty()) {
+        if (yamlTransferData != null && yamlTransferData.templateData.transferDataList.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(
                 userId = event.userId,
                 projectId = gitCIBasicSetting.projectCode!!,
@@ -218,8 +217,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 event = event,
                 gitCIBasicSetting = gitCIBasicSetting,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = pipeline.displayName,
-                templateId = templateId
+                pipelineName = pipeline.displayName
             )
             logger.info(
                 "Stream Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
@@ -361,15 +359,14 @@ class StreamYamlBaseBuild @Autowired constructor(
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String,
-        pipelineName: String,
-        templateId: String
+        pipelineName: String
     ): String {
         processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
         return client.get(ServiceBuildResource::class).manualStartup(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
             pipelineId = pipelineId,
-            values = mapOf(PIPELINE_NAME to pipelineName, TEMPLATE_ACROSS_INFO_ID to templateId),
+            values = mapOf(PIPELINE_NAME to pipelineName),
             channelCode = channelCode
         ).data!!.id
     }
@@ -399,7 +396,7 @@ class StreamYamlBaseBuild @Autowired constructor(
 
     private fun YamlTransferData.getTemplateAcrossInfo(templateId: String): List<BuildTemplateAcrossInfo> {
         val results = mutableListOf<BuildTemplateAcrossInfo>()
-        templateData.forEach { (remoteProjectId, transferList) ->
+        templateData.transferDataList.forEach { (remoteProjectId, transferList) ->
             transferList.forEach nextData@{ data ->
                 results.add(
                     BuildTemplateAcrossInfo(
