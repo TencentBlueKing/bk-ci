@@ -206,8 +206,15 @@ class ExperienceDownloadService @Autowired constructor(
             projectId = projectId,
             userId = userId
         )
-        // 若为公开体验，并且用户第一次下载，则订阅
-        if (isPublicExperience && isFirstDownload) {
+        val isSubscribe = experienceBaseService.isSubscribe(
+            experienceId = experienceId,
+            userId = userId,
+            platform = platform.name,
+            bundleIdentifier = bundleIdentifier,
+            projectId = projectId
+        )
+        // 若为公开体验、用户第一次下载且未订阅过，则订阅
+        if (isPublicExperience && isFirstDownload && !isSubscribe) {
             val subscribe = experiencePushService.subscribe(
                 userId = userId,
                 experienceHashId = experienceHashId,

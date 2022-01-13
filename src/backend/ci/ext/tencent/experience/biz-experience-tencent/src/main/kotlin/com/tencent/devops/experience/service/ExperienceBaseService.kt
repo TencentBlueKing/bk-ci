@@ -296,6 +296,7 @@ class ExperienceBaseService @Autowired constructor(
             recordId = experienceId
         ) != null
     }
+
     /**
      * 判断是否为首次下载
      */
@@ -305,17 +306,13 @@ class ExperienceBaseService @Autowired constructor(
         projectId: String,
         userId: String
     ): Boolean {
-        logger.info("platform : $platform,bundleIdentifier : $bundleIdentifier" +
-                "projectId : $projectId, userId : $userId")
-        val downloadHistory = experienceDownloadDetailDao.getDownloadHistory(
+        return experienceDownloadDetailDao.getDownloadHistory(
             dslContext = dslContext,
             projectId = projectId,
             bundleIdentifier = bundleIdentifier,
             platform = platform,
             userId = userId
         ).isEmpty()
-        logger.info("downloadHistory : $downloadHistory")
-        return downloadHistory
     }
     /**
      * 根据体验获取组号列表
