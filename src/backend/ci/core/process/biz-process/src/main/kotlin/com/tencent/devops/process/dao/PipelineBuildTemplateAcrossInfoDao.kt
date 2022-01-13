@@ -17,7 +17,7 @@ class PipelineBuildTemplateAcrossInfoDao {
         buildId: String? = null,
         templateId: String,
         templateType: TemplateAcrossInfoType,
-        templateInstancesIds: Set<String>,
+        templateInstancesIds: List<String>,
         targetProjectId: String,
         userId: String
     ) {
