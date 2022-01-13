@@ -25,15 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.v2
+package com.tencent.devops.stream.trigger.pojo
 
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.YamlTransferData
 
 /**
- * 转换过程中的yaml对象，为了保存被模板替换后的yaml
+ * Yaml模板替换完且初始化完的结果
  */
-data class YamlObjects(
+data class YamlReplaceResult(
+    // 替换模板后Yaml对象
     val preYaml: PreScriptBuildYaml,
-    val normalYaml: ScriptBuildYaml
+    // 初始化后Yaml对象
+    val normalYaml: ScriptBuildYaml,
+    // Yaml转换过程中中间变量
+    val yamlTransferData: YamlTransferData
 )

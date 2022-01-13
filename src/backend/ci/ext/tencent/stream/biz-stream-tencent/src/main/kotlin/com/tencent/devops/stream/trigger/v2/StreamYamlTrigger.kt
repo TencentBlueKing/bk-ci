@@ -51,7 +51,6 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
-import com.tencent.devops.stream.pojo.v2.YamlObjects
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.trigger.template.YamlTemplate
@@ -60,10 +59,12 @@ import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.isFork
+import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
 import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -87,7 +88,7 @@ class StreamYamlTrigger @Autowired constructor(
     private val tokenService: StreamGitTokenService,
     private val deleteEventService: DeleteEventService,
     private val streamStorageBean: StreamStorageBean
-) : YamlTriggerInterface<YamlObjects> {
+) : YamlTriggerInterface {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlTrigger::class.java)
@@ -133,7 +134,7 @@ class StreamYamlTrigger @Autowired constructor(
             )
         }
 
-        val yamlObjects = prepareCIBuildYaml(
+        val yamlReplaceResult = prepareCIBuildYaml(
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
@@ -144,9 +145,9 @@ class StreamYamlTrigger @Autowired constructor(
             changeSet = mrChangeSet,
             forkGitProjectId = gitRequestEvent.getForkGitProjectId()
         ) ?: return false
-        val yamlObject = yamlObjects.normalYaml
+        val yamlObject = yamlReplaceResult.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
-        val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
+        val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
@@ -179,7 +180,8 @@ class StreamYamlTrigger @Autowired constructor(
                 isDeleteTrigger = isDelete,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
-                gitProjectInfo = gitProjectInfo
+                gitProjectInfo = gitProjectInfo,
+                yamlTransferData = yamlReplaceResult.yamlTransferData
             )
         }
 
@@ -220,14 +222,15 @@ class StreamYamlTrigger @Autowired constructor(
                 isTimeTrigger = false,
                 onlySavePipeline = false,
                 changeSet = changeSet,
-                params = startParams
+                params = startParams,
+                yamlTransferData = yamlReplaceResult.yamlTransferData
             )
         }
         return true
     }
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
-    override fun prepareCIBuildYaml(
+    fun prepareCIBuildYaml(
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
@@ -237,7 +240,7 @@ class StreamYamlTrigger @Autowired constructor(
         event: GitEvent?,
         changeSet: Set<String>?,
         forkGitProjectId: Long?
-    ): YamlObjects? {
+    ): YamlReplaceResult? {
         if (originYaml.isNullOrBlank()) {
             return null
         }
@@ -282,7 +285,7 @@ class StreamYamlTrigger @Autowired constructor(
         event: GitEvent?,
         changeSet: Set<String>?,
         forkGitProjectId: Long?
-    ): YamlObjects {
+    ): YamlReplaceResult {
         // 替换yaml文件中的模板引用
         try {
             val preYamlObject = YamlTemplate(
@@ -302,10 +305,9 @@ class StreamYamlTrigger @Autowired constructor(
                 ),
                 getTemplateMethod = yamlTemplateService::getTemplate
             ).replace()
-            val (normalYaml, _) = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
-            return YamlObjects(
-                preYaml = preYamlObject,
-                normalYaml = normalYaml
+            val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
+            return YamlReplaceResult(
+                preYaml = preYamlObject, normalYaml = normalYaml, yamlTransferData = transferData
             )
         } catch (e: Throwable) {
             logger.info("event ${gitRequestEvent.id} yaml template replace error", e)

@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -104,7 +105,8 @@ class StreamYamlBuild @Autowired constructor(
         isDeleteTrigger: Boolean = false,
         gitProjectInfo: GitCIProjectInfo? = null,
         changeSet: Set<String>? = null,
-        params: Map<String, String> = mapOf()
+        params: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
         // pipelineId可能为blank所以使用filePath为key
@@ -152,7 +154,8 @@ class StreamYamlBuild @Autowired constructor(
                     gitBuildId = gitBuildId,
                     changeSet = changeSet,
                     gitBasicSetting = gitBasicSetting,
-                    params = params
+                    params = params,
+                    yamlTransferData = yamlTransferData
                 )
             } else if (onlySavePipeline) {
                 savePipeline(
@@ -284,7 +287,8 @@ class StreamYamlBuild @Autowired constructor(
         gitBuildId: Long,
         gitBasicSetting: GitCIBasicSetting,
         changeSet: Set<String>? = null,
-        params: Map<String, String> = mapOf()
+        params: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
@@ -305,7 +309,8 @@ class StreamYamlBuild @Autowired constructor(
             event = event,
             gitCIBasicSetting = gitBasicSetting,
             model = model,
-            gitBuildId = gitBuildId
+            gitBuildId = gitBuildId,
+            yamlTransferData = yamlTransferData
         )
     }
 
