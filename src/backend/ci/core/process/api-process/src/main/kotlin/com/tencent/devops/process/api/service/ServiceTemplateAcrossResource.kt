@@ -24,10 +24,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTemplateAcrossResource {
 
-    @ApiOperation("创建当前构建中的跨项目模板信息")
+    @ApiOperation("批量创建当前构建中的跨项目模板信息")
     @POST
     @Path("/{projectId}/{pipelineId}")
-    fun create(
+    fun batchCreate(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -38,7 +38,7 @@ interface ServiceTemplateAcrossResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "跨项目模板信息", required = true)
-        templateAcrossInfo: BuildTemplateAcrossInfo
+        templateAcrossInfos: List<BuildTemplateAcrossInfo>
     )
 
     @ApiOperation("修改跨项目模板信息")

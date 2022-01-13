@@ -10,13 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceTemplateAcrossResourceImpl @Autowired constructor(
     private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService
 ) : ServiceTemplateAcrossResource {
-    override fun create(
+    override fun batchCreate(
         userId: String,
         projectId: String,
         pipelineId: String,
-        templateAcrossInfo: BuildTemplateAcrossInfo
+        templateAcrossInfos: List<BuildTemplateAcrossInfo>
     ) {
-        templateAcrossInfoService.create(projectId, pipelineId, null, userId, templateAcrossInfo)
+        templateAcrossInfoService.batchCreate(projectId, pipelineId, null, userId, templateAcrossInfos)
     }
 
     override fun update(projectId: String, pipelineId: String, templateId: String, buildId: String): Result<Boolean> {

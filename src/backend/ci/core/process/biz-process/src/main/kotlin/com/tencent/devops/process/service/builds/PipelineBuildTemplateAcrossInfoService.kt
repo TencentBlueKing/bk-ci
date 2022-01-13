@@ -34,6 +34,23 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
         )
     }
 
+    fun batchCreate(
+        projectId: String,
+        pipelineId: String,
+        buildId: String? = null,
+        userId: String,
+        templateAcrossInfos: List<BuildTemplateAcrossInfo>
+    ) {
+        templateAcrossInfoDao.batchCreate(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            userId = userId,
+            templateAcrossInfos = templateAcrossInfos
+        )
+    }
+
     fun get(
         projectId: String,
         pipelineId: String,
