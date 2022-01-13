@@ -52,7 +52,7 @@ data class GitIssueAttributes(
     @JsonProperty("author_id")
     val authorId: String,
     @JsonProperty("project_id")
-    val projectId: String,
+    val projectId: Long,
     val position: Long,
     @JsonProperty("branch_name")
     val branchName: String? = null,
