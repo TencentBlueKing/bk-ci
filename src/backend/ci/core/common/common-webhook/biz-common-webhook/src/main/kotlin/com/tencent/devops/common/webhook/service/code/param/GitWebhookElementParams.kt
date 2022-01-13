@@ -69,11 +69,16 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.webhookQueue = element.webhookQueue ?: false
-        params.includeCrState = if (element.includeCrState.isNullOrEmpty()) {
+        params.includeCrState = joinToString(element.includeCrState)
+        params.includeIssueAction = joinToString(element.includeIssueAction)
+        return params
+    }
+
+    private fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
             ""
         } else {
-            element.includeCrState!!.joinToString(",")
+            list.joinToString(",")
         }
-        return params
     }
 }
