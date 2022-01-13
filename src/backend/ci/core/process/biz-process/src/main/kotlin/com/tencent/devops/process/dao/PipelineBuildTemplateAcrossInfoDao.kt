@@ -58,34 +58,32 @@ class PipelineBuildTemplateAcrossInfoDao {
         if (templateAcrossInfos.isEmpty()) {
             return
         }
-        dslContext.batch(
-            templateAcrossInfos.map { info ->
-                with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
-                    dslContext.insertInto(
-                        this,
-                        TEMPLATE_ID,
-                        PROJECT_ID,
-                        PIPELINE_ID,
-                        BUILD_ID,
-                        TEMPLATE_TYPE,
-                        TEMPLATE_INSTANCE_IDS,
-                        TARGET_PROJECT_ID,
-                        CREATE_TIME,
-                        CREATOR
-                    ).values(
-                        info.templateId,
-                        projectId,
-                        pipelineId,
-                        buildId,
-                        info.templateType.name,
-                        JsonUtil.toJson(info.templateInstancesIds),
-                        info.targetProjectId,
-                        LocalDateTime.now(),
-                        userId
-                    )
-                }
+        templateAcrossInfos.forEach { info ->
+            with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+                dslContext.insertInto(
+                    this,
+                    TEMPLATE_ID,
+                    PROJECT_ID,
+                    PIPELINE_ID,
+                    BUILD_ID,
+                    TEMPLATE_TYPE,
+                    TEMPLATE_INSTANCE_IDS,
+                    TARGET_PROJECT_ID,
+                    CREATE_TIME,
+                    CREATOR
+                ).values(
+                    info.templateId,
+                    projectId,
+                    pipelineId,
+                    buildId,
+                    info.templateType.name,
+                    JsonUtil.toJson(info.templateInstancesIds),
+                    info.targetProjectId,
+                    LocalDateTime.now(),
+                    userId
+                ).execute()
             }
-        ).execute()
+        }
     }
 
     fun get(
