@@ -1866,6 +1866,7 @@ class TemplateFacadeService @Autowired constructor(
         )
 
         val latestVersion = getLatestVersion(projectId, templateId)
+        val version = latestVersion.version
         val templateInstanceItems = templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(
             dslContext = dslContext,
             projectId = projectId,
@@ -1879,11 +1880,7 @@ class TemplateFacadeService @Autowired constructor(
                     errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
                 )
             }
-            val templatePipelineStatus = generateTemplatePipelineStatus(
-                templateInstanceItems = templateInstanceItems,
-                templatePipelineRecord = it,
-                createdTime = latestVersion.createdTime
-            )
+            val templatePipelineStatus = generateTemplatePipelineStatus(templateInstanceItems, it, version)
             TemplatePipeline(
                 templateId = it.templateId,
                 versionName = it.versionName,
@@ -1925,7 +1922,7 @@ class TemplateFacadeService @Autowired constructor(
     fun generateTemplatePipelineStatus(
         templateInstanceItems: Result<TTemplateInstanceItemRecord>?,
         templatePipelineRecord: TTemplatePipelineRecord,
-        createdTime: LocalDateTime
+        version: Long
     ): TemplatePipelineStatus {
         var templatePipelineStatus = TemplatePipelineStatus.UPDATED
         run lit@{
@@ -1936,7 +1933,7 @@ class TemplateFacadeService @Autowired constructor(
                     return@lit
                 }
             }
-            if (templatePipelineRecord.createdTime < createdTime) {
+            if (templatePipelineRecord.version < version) {
                 templatePipelineStatus = TemplatePipelineStatus.PENDING_UPDATE
             }
         }
