@@ -100,6 +100,7 @@ class TemplateDao {
         version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
+            val currentTime = LocalDateTime.now()
             return dslContext.insertInto(
                 this,
                 PROJECT_ID,
@@ -108,6 +109,7 @@ class TemplateDao {
                 VERSION_NAME,
                 CREATOR,
                 CREATED_TIME,
+                UPDATE_TIME,
                 TEMPLATE,
                 TYPE,
                 CATEGORY,
@@ -123,7 +125,8 @@ class TemplateDao {
                     templateName,
                     versionName,
                     userId,
-                    LocalDateTime.now(),
+                    currentTime,
+                    currentTime,
                     template,
                     type,
                     category,
@@ -290,7 +293,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .fetch()
         }
     }
@@ -486,7 +489,7 @@ class TemplateDao {
                     )
                 )
             )
-            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
+            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
 
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -536,6 +539,7 @@ class TemplateDao {
             .on(a.ID.eq(b.field(KEY_ID, String::class.java)))
             .where(a.CREATED_TIME.eq(b.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .and(a.ID.`in`(templateList))
+            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
             .fetch()
     }
 
@@ -548,7 +552,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ID.eq(templateId))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw NotFoundException("流水线模板不存在")
         }
@@ -561,7 +565,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw NotFoundException("流水线模板不存在")
         }

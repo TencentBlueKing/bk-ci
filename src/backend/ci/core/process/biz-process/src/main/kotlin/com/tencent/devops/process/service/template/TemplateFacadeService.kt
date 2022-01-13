@@ -1014,7 +1014,7 @@ class TemplateFacadeService @Autowired constructor(
         )
         val versionNames = templates.groupBy { it.versionName }
         val versions = versionNames.map {
-            val temp = it.value.maxBy { t -> t.createdTime }!!
+            val temp = it.value.maxBy { t -> t.updateTime }!!
             TemplateVersion(
                 version = temp.version,
                 versionName = temp.versionName,
@@ -1104,7 +1104,7 @@ class TemplateFacadeService @Autowired constructor(
 
         val versionNames = templates.groupBy { it.versionName }
         return versionNames.map {
-            val temp = it.value.maxBy { t -> t.createdTime }!!
+            val temp = it.value.maxBy { t -> t.updateTime }!!
             TemplateVersion(temp.version, temp.versionName, temp.updateTime.timestampmilli(), temp.creator)
         }.toList()
     }
