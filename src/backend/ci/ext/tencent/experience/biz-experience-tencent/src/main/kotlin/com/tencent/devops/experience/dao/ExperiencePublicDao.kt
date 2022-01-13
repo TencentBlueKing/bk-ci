@@ -381,4 +381,21 @@ class ExperiencePublicDao {
                 .fetch()
         }
     }
+
+    fun getNewestRecordId(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String
+    ): Long? {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .fetchOne()?.recordId
+        }
+    }
 }

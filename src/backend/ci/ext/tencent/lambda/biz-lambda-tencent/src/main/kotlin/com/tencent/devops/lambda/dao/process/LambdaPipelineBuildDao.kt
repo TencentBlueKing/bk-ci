@@ -36,11 +36,12 @@ class LambdaPipelineBuildDao {
 
     fun getBuildHistory(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

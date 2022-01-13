@@ -158,3 +158,8 @@ net:
       host: 127.0.0.1
       # 代理服务器端口
       port: 8080
+
+# shardingsphere分片规则配置
+sharding:
+  routing:
+    cacheSize: 100000  # 缓存分片规则最大数量

@@ -72,6 +72,7 @@ class ModelContainer @Autowired constructor(
         jobIndex: Int,
         projectCode: String,
         finalStage: Boolean = false,
+        jobEnable: Boolean = true,
         resources: Resources? = null
     ) {
         val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
@@ -95,7 +96,11 @@ class ModelContainer @Autowired constructor(
             maxRunningMinutes = job.timeoutMinutes ?: 900,
             buildEnv = StreamDispatchUtils.getBuildEnv(job),
             customBuildEnv = job.env,
-            jobControlOption = getJobControlOption(job, finalStage),
+            jobControlOption = getJobControlOption(
+                job = job,
+                jobEnable = jobEnable,
+                finalStage = finalStage
+            ),
             dispatchType = StreamDispatchUtils.getDispatchType(
                 client = client,
                 objectMapper = objectMapper,
@@ -159,6 +164,7 @@ class ModelContainer @Autowired constructor(
         elementList: List<Element>,
         containerList: MutableList<Container>,
         jobIndex: Int,
+        jobEnable: Boolean = true,
         finalStage: Boolean = false
     ) {
 
@@ -176,7 +182,11 @@ class ModelContainer @Autowired constructor(
                 enableSkip = false,
                 conditions = null,
                 canRetry = false,
-                jobControlOption = getJobControlOption(job, finalStage),
+                jobControlOption = getJobControlOption(
+                    job = job,
+                    jobEnable = jobEnable,
+                    finalStage = finalStage
+                ),
                 mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
             )
         )
@@ -184,6 +194,7 @@ class ModelContainer @Autowired constructor(
 
     private fun getJobControlOption(
         job: Job,
+        jobEnable: Boolean = true,
         finalStage: Boolean = false
     ): JobControlOption {
         return if (!job.ifField.isNullOrBlank()) {
@@ -203,6 +214,7 @@ class ModelContainer @Autowired constructor(
                 )
             } else {
                 JobControlOption(
+                    enable = jobEnable,
                     timeout = job.timeoutMinutes,
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = job.ifField.toString(),
@@ -214,6 +226,7 @@ class ModelContainer @Autowired constructor(
             }
         } else {
             JobControlOption(
+                enable = jobEnable,
                 timeout = job.timeoutMinutes,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,

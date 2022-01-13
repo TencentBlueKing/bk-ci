@@ -37,6 +37,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -54,6 +55,7 @@ import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -578,6 +580,20 @@ class StreamScmService @Autowired constructor(
                 ).data
             }
         )
+    }
+
+    fun getCommitInfo(
+        gitToken: String,
+        projectName: String,
+        sha: String
+    ): GitCommit? {
+        logger.info("getCommitInfo: [$projectName|$sha]")
+        return client.getScm(ServiceGitResource::class).getRepoRecentCommitInfo(
+            repoName = projectName,
+            sha = sha,
+            token = gitToken,
+            tokenType = TokenTypeEnum.OAUTH
+        ).data
     }
 
     fun addMrComment(

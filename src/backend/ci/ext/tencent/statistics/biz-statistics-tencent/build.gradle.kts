@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-db-sharding"))
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:statistics:api-statistics-tencent"))
     api(project(":ext:tencent:statistics:model-statistics-tencent"))

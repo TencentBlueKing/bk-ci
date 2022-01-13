@@ -28,13 +28,10 @@
 package com.tencent.devops.sign.resources
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.sign.api.builds.BuildIpaResource
-import com.tencent.devops.sign.api.constant.SignMessageCode
-import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
@@ -65,13 +62,6 @@ class BuildIpaResourceImpl @Autowired constructor(
     ): Result<String> {
         val resignId = "s-${UUIDUtil.generate()}"
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
-        if (!checkParams(ipaSignInfo, projectId, pipelineId, buildId)) {
-            logger.warn("构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
-            throw ErrorCodeException(
-                errorCode = SignMessageCode.ERROR_NOT_AUTH_UPLOAD,
-                defaultMessage = "构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名."
-            )
-        }
         var taskExecuteCount = 1
         try {
             val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
@@ -123,16 +113,5 @@ class BuildIpaResourceImpl @Autowired constructor(
             resignId = resignId,
             downloadType = "build")
         )
-    }
-
-    private fun checkParams(
-        ipaSignInfo: IpaSignInfo,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Boolean {
-        return ipaSignInfo.projectId == projectId &&
-            ipaSignInfo.pipelineId == pipelineId &&
-            ipaSignInfo.buildId == buildId
     }
 }
