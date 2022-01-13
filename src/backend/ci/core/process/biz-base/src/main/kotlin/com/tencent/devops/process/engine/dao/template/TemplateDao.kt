@@ -468,6 +468,7 @@ class TemplateDao {
             a.STORE_FLAG.`as`("storeFlag"),
             a.CREATOR.`as`("creator"),
             a.CREATED_TIME.`as`("createdTime"),
+            a.UPDATE_TIME.`as`("updateTime"),
             a.SRC_TEMPLATE_ID.`as`("srcTemplateId"),
             a.TEMPLATE.`as`("template"),
             a.CATEGORY.`as`("category"),
