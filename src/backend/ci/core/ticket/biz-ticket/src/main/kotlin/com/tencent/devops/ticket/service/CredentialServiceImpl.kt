@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.dao.CredentialDao
@@ -443,7 +444,7 @@ class CredentialServiceImpl @Autowired constructor(
         }
         buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceGet(targetProjectId, credentialId, publicKey)
+        return serviceGetAcrossProject(targetProjectId, credentialId, publicKey)
     }
 
     override fun buildGetDetail(projectId: String, buildId: String, credentialId: String): Map<String, String> {
@@ -470,7 +471,17 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
-        val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId)?.let {
+        val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
+
+        return credentialInfo(publicKey, credentialRecord)
+    }
+
+    override fun serviceGetAcrossProject(
+        targetProjectId: String,
+        credentialId: String,
+        publicKey: String
+    ): CredentialInfo? {
+        val credentialRecord = credentialDao.getOrNull(dslContext, targetProjectId, credentialId)?.let {
             if (!it.allowAcrossProject) {
                 throw CustomException(Response.Status.FORBIDDEN, "credential not allow across project")
             } else {
@@ -478,6 +489,10 @@ class CredentialServiceImpl @Autowired constructor(
             }
         } ?: return null
 
+        return credentialInfo(publicKey, credentialRecord)
+    }
+
+    private fun credentialInfo(publicKey: String, credentialRecord: TCredentialRecord): CredentialInfo {
         val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
         val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
         val serverPublicKeyByteArray = serverDHKeyPair.publicKey
