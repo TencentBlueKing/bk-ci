@@ -67,6 +67,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
     }
 
+    @SensitiveApiPermission("get_credential")
     override fun getAcrossProject(
         projectId: String,
         buildId: String,

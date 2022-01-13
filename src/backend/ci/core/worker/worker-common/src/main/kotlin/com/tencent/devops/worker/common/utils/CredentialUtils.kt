@@ -105,7 +105,7 @@ object CredentialUtils {
         acrossProjectId: String?
     ): Result<CredentialInfo> {
         val encoder = Base64.getEncoder()
-        logger.info("Start to get the credential($credentialId)")
+        logger.info("Start to get the credential($credentialId|$acrossProjectId)")
 
         val result = sdkApi.get(credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isOk() && result.data != null) {
@@ -136,7 +136,7 @@ object CredentialUtils {
         return try {
             val valueTypePair = getCredentialWithType(ticketId, false, acrossProjectId)
             val value = getCredentialValue(valueTypePair.first, valueTypePair.second, key)
-            logger.info("get credential context value, key: $key, value: $value")
+            logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId, value: $value")
             value
         } catch (ignore: Exception) {
             logger.warn("凭证ID变量($ticketId)不存在", ignore.message)
