@@ -158,6 +158,6 @@ class IamCacheService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(IamCacheService::class.java)
+        private val logger = LoggerFactory.getLogger(IamCacheService::class.java)
     }
 }

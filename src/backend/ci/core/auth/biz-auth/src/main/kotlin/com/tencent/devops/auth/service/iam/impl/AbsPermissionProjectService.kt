@@ -204,6 +204,6 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)
     }
 }
