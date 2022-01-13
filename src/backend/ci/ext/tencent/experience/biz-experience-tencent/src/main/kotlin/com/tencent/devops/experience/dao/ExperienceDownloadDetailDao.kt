@@ -67,11 +67,11 @@ class ExperienceDownloadDetailDao {
             p.PLATFORM.eq(d.PLATFORM)
                 .and(p.PROJECT_ID.eq(d.PROJECT_ID))
                 .and(p.BUNDLE_IDENTIFIER.eq(d.BUNDLE_IDENTIFIER))
-                .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
         )
         return dslContext.select(p.RECORD_ID).from(join)
             .where(p.ONLINE.eq(true))
             .and(p.END_DATE.gt(LocalDateTime.now()))
+            .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
             .orderBy(d.UPDATE_TIME.desc()).limit(limit)
             .fetch()
     }

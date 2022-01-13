@@ -381,7 +381,7 @@ class ExperienceAppService(
 
     fun publicExperiences(userId: String, platform: Int, offset: Int, limit: Int): List<AppExperience> {
         val recordIds = experienceDownloadDetailDao.listIdsForPublic(
-            dslContext, PlatformEnum.of(platform)?.mean, 100
+            dslContext, PlatformEnum.of(platform)?.name, 100
         ).map { it.value1() }
         val records = experienceDao.list(dslContext, recordIds)
         return experienceBaseService.toAppExperiences(userId, records)
