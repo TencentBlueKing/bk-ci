@@ -44,6 +44,7 @@ import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialPermissions
+import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -202,6 +203,28 @@ class CredentialServiceImpl @Autowired constructor(
             credentialId = credentialId,
             credential = credential
         )
+    }
+
+    override fun userSettingEdit(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        credentialSetting: CredentialSettingUpdate
+    ): Boolean {
+        credentialPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            resourceCode = credentialId,
+            authPermission = AuthPermission.EDIT,
+            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
+        )
+
+        return credentialDao.updateSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            credentialId = credentialId,
+            allowAcrossProject = credentialSetting.allowAcrossProject
+        ) > 0
     }
 
     override fun userDelete(userId: String, projectId: String, credentialId: String) {

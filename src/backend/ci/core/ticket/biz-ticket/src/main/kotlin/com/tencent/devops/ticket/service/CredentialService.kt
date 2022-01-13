@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -43,6 +44,13 @@ interface CredentialService {
     fun userCreate(userId: String, projectId: String, credential: CredentialCreate, authGroupList: List<BkAuthGroup>?)
 
     fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate)
+
+    fun userSettingEdit(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        credentialSetting: CredentialSettingUpdate
+    ): Boolean
 
     fun userDelete(userId: String, projectId: String, credentialId: String)
 
@@ -90,6 +98,7 @@ interface CredentialService {
     fun serviceGetAcrossProject(targetProjectId: String, credentialId: String, publicKey: String): CredentialInfo?
 
     fun serviceGet(projectId: String, credentialId: String): Credential
+
     /**
      * 修改凭证的服务接口
      */
