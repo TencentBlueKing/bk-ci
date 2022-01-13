@@ -123,22 +123,24 @@ class ExperiencePushService @Autowired constructor(
         )
         // 判断是否公开体验
         val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
-        return when {
+        when {
             isExperienceGroups -> {
                 if (isPublicExperience) {
-                    Result("该体验已订阅，不允许重复订阅", false)
-                } else {
-                    Result("内部体验默认已订阅", false)
+                    return Result("该体验已订阅，不允许重复订阅", false)
                 }
+                return Result("内部体验默认已订阅", false)
             }
-            else -> canSubscribe(
-                isPublicExperience = isPublicExperience,
-                userId = userId,
-                experienceId = experienceId,
-                platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-                projectId = projectId,
-                bundleIdentifier = bundleIdentifier
-            )
+            // 若不在体验组中，进一步查看能否订阅
+            else -> {
+                return canSubscribe(
+                    isPublicExperience = isPublicExperience,
+                    userId = userId,
+                    experienceId = experienceId,
+                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
+                    projectId = projectId,
+                    bundleIdentifier = bundleIdentifier
+                )
+            }
         }
     }
 
@@ -150,28 +152,27 @@ class ExperiencePushService @Autowired constructor(
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
-        return when {
+        when {
             isPublicExperience -> {
                 // 检查前端传输数据是否和公开订阅表中数据一致
                 checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
-                val subscription =
-                    experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
-                        .isNotEmpty
                 // 查询公开订阅表是否有记录
+                val subscription =
+                    experiencePushDao.getSubscriptionList(dslContext, userId, projectId, bundleIdentifier, platform)
+                        .isNotEmpty
                 if (subscription) {
-                    Result("不可重复订阅", false)
-                } else {
-                    experiencePushDao.subscribe(
-                        dslContext = dslContext,
-                        userId = userId,
-                        projectId = projectId,
-                        bundle = bundleIdentifier,
-                        platform = platform
-                    )
-                    Result("订阅体验成功！", true)
+                    return Result("不可重复订阅", false)
                 }
+                experiencePushDao.subscribe(
+                    dslContext = dslContext,
+                    userId = userId,
+                    projectId = projectId,
+                    bundle = bundleIdentifier,
+                    platform = platform
+                )
+                return Result("订阅体验成功！", true)
             }
-            else -> Result("不允许订阅内部体验", false)
+            else -> return Result("不允许订阅内部体验", false)
         }
     }
 
@@ -193,22 +194,23 @@ class ExperiencePushService @Autowired constructor(
         )
         // 判断是否公开体验
         val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
-        return when {
+        when {
             isExperienceGroups -> {
                 if (isPublicExperience) {
-                    Result(
+                    return Result(
                         "既是公开体验又是内部体验的应用版本无法自行取消订阅。" +
                                 "蓝盾App已不再支持同时选中两种体验范围，请尽快更改发布体验版本的配置。", false
                     )
-                } else {
-                    Result(
-                        "内部体验默认为已订阅状态，无法自行取消。如需取消订阅，" +
-                                "请联系产品负责人退出内部体验，退出后将不接收订阅信息。", false
-                    )
                 }
+                return Result(
+                    "内部体验默认为已订阅状态，无法自行取消。如需取消订阅，" +
+                            "请联系产品负责人退出内部体验，退出后将不接收订阅信息。", false
+                )
+
             }
+            // 若不在体验组中，进一步查看能否取消订阅
             else -> {
-                canUnSubscribe(
+                return canUnSubscribe(
                     isPublicExperience = isPublicExperience,
                     userId = userId,
                     experienceId = experienceId,
@@ -228,28 +230,27 @@ class ExperiencePushService @Autowired constructor(
         projectId: String,
         bundleIdentifier: String
     ): Result<Boolean> {
-        return when {
+        when {
             isPublicExperience -> {
                 // 检查前端传输数据是否和公开订阅表中数据一致
                 checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
-                val subscription =
-                    experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
-                        .isNotEmpty
                 // 查询公开订阅表是否有记录
-                if (subscription) {
-                    experiencePushDao.unSubscribe(
-                        dslContext,
-                        userId = userId,
-                        projectId = projectId,
-                        bundle = bundleIdentifier,
-                        platform = platform
-                    )
-                    Result("取消订阅成功", true)
-                } else {
-                    Result("由于没有订阅该体验，不允许取消体验", true)
+                val subscription =
+                    experiencePushDao.getSubscriptionList(dslContext, userId, projectId, bundleIdentifier, platform)
+                        .isNotEmpty
+                if (!subscription) {
+                    return Result("由于没有订阅该体验，不允许取消体验", false)
                 }
+                experiencePushDao.unSubscribe(
+                    dslContext,
+                    userId = userId,
+                    projectId = projectId,
+                    bundle = bundleIdentifier,
+                    platform = platform
+                )
+                return Result("取消订阅成功", true)
             }
-            else -> Result("内部体验不可取消订阅", false)
+            else -> return Result("内部体验不可取消订阅", false)
         }
     }
 

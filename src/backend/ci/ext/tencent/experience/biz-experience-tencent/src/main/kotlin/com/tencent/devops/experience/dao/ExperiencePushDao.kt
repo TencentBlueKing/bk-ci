@@ -189,7 +189,7 @@ class ExperiencePushDao {
         }
     }
 
-    fun getSubscription(
+    fun getSubscriptionList(
         dslContext: DSLContext,
         userId: String?,
         projectId: String,

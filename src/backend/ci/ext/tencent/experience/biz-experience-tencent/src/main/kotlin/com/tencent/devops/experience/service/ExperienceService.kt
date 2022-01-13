@@ -717,13 +717,14 @@ class ExperienceService @Autowired constructor(
             outerReceivers.addAll(outerGroup)
             outerReceivers.addAll(outerUser)
             // 订阅用户
-            val subscribeUsers = experiencePushDao.getSubscription(
+            val subscribeUsers = experiencePushDao.getSubscriptionList(
                 dslContext = dslContext,
                 userId = null,
                 projectId = projectId,
                 bundle = bundleIdentifier,
                 platform = platform
-            ).map { it.value2() }.toSet().subtract(innerReceivers).subtract(outerReceivers)
+            ).map { it.value2() }.toSet().subtract(innerReceivers)
+                .subtract(outerReceivers)
             logger.info("innerReceivers: $innerReceivers , outerReceivers: $outerReceivers , subscribeUsers: $subscribeUsers ")
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()) {
                 logger.info("empty Receivers , experienceId:$experienceId")
@@ -746,9 +747,7 @@ class ExperienceService @Autowired constructor(
                 client.get(ServiceNotifyResource::class).sendEmailNotify(message)
             }
 
-            subscribeUsers.forEach {
-                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
-            }
+
             outerReceivers.forEach {
                 sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
             }
@@ -776,6 +775,9 @@ class ExperienceService @Autowired constructor(
                     client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 }
                 // 发送APP通知
+                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
+            }
+            subscribeUsers.forEach {
                 sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
             }
             if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {

@@ -240,7 +240,7 @@ class ExperienceBaseService @Autowired constructor(
     ): Boolean {
         logger.info("userId:$userId,platform:$platform,bundleIdentifier:$bundleIdentifier,projectId:$projectId")
         val isSubscribe = lazy {
-            experiencePushDao.getSubscription(dslContext, userId, projectId, bundleIdentifier, platform)
+            experiencePushDao.getSubscriptionList(dslContext, userId, projectId, bundleIdentifier, platform)
                 .isNotEmpty
         }
         val isExperienceGroups = isExperienceGroups(experienceId, userId, platform, bundleIdentifier, projectId)
