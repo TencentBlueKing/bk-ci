@@ -204,6 +204,7 @@ class ExperienceDownloadService @Autowired constructor(
             platform = platform.name,
             bundleIdentifier = bundleIdentifier,
             projectId = projectId,
+            userId = userId
         )
         // 若为公开体验，并且用户第一次下载，则订阅
         if (isPublicExperience && isFirstDownload) {

@@ -302,13 +302,15 @@ class ExperienceBaseService @Autowired constructor(
     fun isFirstDownload(
         platform: String,
         bundleIdentifier: String,
-        projectId: String
+        projectId: String,
+        userId: String
     ): Boolean {
         return experienceDownloadDetailDao.getDownloadHistory(
             dslContext = dslContext,
             projectId = projectId,
             bundleIdentifier = bundleIdentifier,
-            platform = platform
+            platform = platform,
+            userId = userId
         ).isEmpty()
     }
     /**

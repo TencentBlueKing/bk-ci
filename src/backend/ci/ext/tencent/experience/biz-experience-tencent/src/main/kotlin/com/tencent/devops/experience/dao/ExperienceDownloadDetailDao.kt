@@ -63,12 +63,14 @@ class ExperienceDownloadDetailDao {
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
-        platform: String
+        platform: String,
+        userId: String
     ): Result<TExperienceDownloadDetailRecord> {
         with(TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(USER_ID.eq(userId))
                 .and(PLATFORM.eq(platform))
                 .fetch()
         }
