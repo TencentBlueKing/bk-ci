@@ -160,6 +160,6 @@ class AuthGroupService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AuthGroupService::class.java)
+        private val logger = LoggerFactory.getLogger(AuthGroupService::class.java)
     }
 }

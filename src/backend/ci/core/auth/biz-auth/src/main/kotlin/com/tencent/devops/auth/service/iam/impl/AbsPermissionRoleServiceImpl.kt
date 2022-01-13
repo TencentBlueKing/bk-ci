@@ -1,11 +1,13 @@
 package com.tencent.devops.auth.service.iam.impl
 
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -50,7 +52,12 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
                 groupInfo = groupInfo
             )
             logger.info("create ext group success $projectCode $roleId")
-        } catch (e: Exception) {
+        } catch (iamException: IamException) {
+            logger.warn("create Role ext fail $iamException")
+            groupService.deleteGroup(roleId, false)
+            throw RemoteServiceException("create project role fail: ${iamException.errorMsg}")
+        }
+        catch (e: Exception) {
             logger.warn("create Role ext fail $e")
             groupService.deleteGroup(roleId, false)
             throw ParamBlankException("create project role fail")
@@ -106,6 +113,6 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
     )
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionRoleServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionRoleServiceImpl::class.java)
     }
 }
