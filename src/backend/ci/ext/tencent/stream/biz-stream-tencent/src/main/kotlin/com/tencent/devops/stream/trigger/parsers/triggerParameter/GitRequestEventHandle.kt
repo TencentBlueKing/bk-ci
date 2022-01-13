@@ -27,6 +27,9 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
@@ -36,8 +39,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -46,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.Date
+import javax.ws.rs.core.Response
 
 @Component
 class GitRequestEventHandle @Autowired constructor(
@@ -151,14 +153,20 @@ class GitRequestEventHandle @Autowired constructor(
 
     companion object {
         fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
+            if (triggerBuildReq.branch.isBlank()) {
+                throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "branche cannot be empty"
+                )
+            }
             return GitRequestEvent(
                 id = null,
-                objectKind = TGitObjectKind.MANUAL.value,
+                objectKind = triggerBuildReq.objectKind,
                 operationKind = "",
                 extensionAction = null,
                 gitProjectId = triggerBuildReq.gitProjectId,
                 sourceGitProjectId = null,
-                branch = getBranchName(triggerBuildReq.branch),
+                branch = getBranchName(triggerBuildReq.branch!!),
                 targetBranch = null,
                 commitId = triggerBuildReq.commitId ?: "",
                 commitMsg = triggerBuildReq.customCommitMsg,

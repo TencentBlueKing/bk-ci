@@ -4,6 +4,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind.Companion.OBJECT_KIND_OPENAPI
 import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
@@ -44,7 +45,7 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = "git_$gitProjectId",
             pipelineId = pipelineId,
-            streamTriggerBuildReq = streamTriggerBuildReq
+            streamTriggerBuildReq = streamTriggerBuildReq.copy(objectKind = OBJECT_KIND_OPENAPI)
         )
     }
 
