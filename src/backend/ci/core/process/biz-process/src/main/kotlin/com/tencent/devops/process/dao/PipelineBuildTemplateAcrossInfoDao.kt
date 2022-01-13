@@ -3,6 +3,7 @@ package com.tencent.devops.process.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildTemplateAcrossInfo
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTemplateAcrossInfoRecord
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -42,6 +43,46 @@ class PipelineBuildTemplateAcrossInfoDao {
                 targetProjectId,
                 LocalDateTime.now(),
                 userId
+            ).execute()
+        }
+    }
+
+    fun batchCreate(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String? = null,
+        userId: String,
+        templateAcrossInfos: List<BuildTemplateAcrossInfo>
+    ) {
+        with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+            dslContext.batch(
+                templateAcrossInfos.map { info ->
+                    with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+                        dslContext.insertInto(
+                            this,
+                            TEMPLATE_ID,
+                            PROJECT_ID,
+                            PIPELINE_ID,
+                            BUILD_ID,
+                            TEMPLATE_TYPE,
+                            TEMPLATE_INSTANCE_IDS,
+                            TARGET_PROJECT_ID,
+                            CREATE_TIME,
+                            CREATOR
+                        ).values(
+                            info.templateId,
+                            projectId,
+                            pipelineId,
+                            buildId,
+                            info.templateType.name,
+                            JsonUtil.toJson(info.templateInstancesIds),
+                            info.targetProjectId,
+                            LocalDateTime.now(),
+                            userId
+                        )
+                    }
+                }
             ).execute()
         }
     }
