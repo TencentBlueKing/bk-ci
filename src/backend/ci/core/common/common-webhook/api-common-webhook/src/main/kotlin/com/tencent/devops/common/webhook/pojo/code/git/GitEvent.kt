@@ -92,3 +92,6 @@ data class GitRepository(
     val description: String? = null,
     val homepage: String
 )
+
+fun GitEvent.isDeleteEvent() = (this is GitPushEvent && this.isDeleteBranch()) ||
+    (this is GitTagPushEvent && this.isDeleteTag())

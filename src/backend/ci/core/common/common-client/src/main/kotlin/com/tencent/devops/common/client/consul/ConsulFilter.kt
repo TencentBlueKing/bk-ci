@@ -50,6 +50,7 @@ class ConsulFilter : Filter {
             ConsulContent.setConsulContent(consulTag)
         }
         chain?.doFilter(request, response)
+        ConsulContent.removeConsulContent()
     }
 
     override fun destroy() {

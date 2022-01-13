@@ -50,7 +50,12 @@ class PipelineSettingVersionService @Autowired constructor(
         version: Int,
         channelCode: ChannelCode = ChannelCode.BS
     ): PipelineSettingVersion {
-        val it = pipelineSettingVersionDao.getSetting(dslContext, pipelineId, version)
+        val it = pipelineSettingVersionDao.getSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
         val setting = PipelineSettingVersion(projectId = projectId, pipelineId = pipelineId, version = version)
         if (it != null) {
             with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {

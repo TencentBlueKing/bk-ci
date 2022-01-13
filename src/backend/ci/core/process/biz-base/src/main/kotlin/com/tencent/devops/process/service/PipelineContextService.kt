@@ -54,11 +54,12 @@ class PipelineContextService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
     fun buildContext(
+        projectId: String,
         buildId: String,
         containerId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
@@ -162,7 +163,7 @@ class PipelineContextService @Autowired constructor(
         if (inMatrix && c.id?.let { it == containerId } != true) return
         variables.forEach { (key, value) ->
             val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix)) {
+            if (key.startsWith(prefix) && prefix.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
         }
