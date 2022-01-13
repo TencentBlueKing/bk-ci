@@ -63,9 +63,19 @@ class TemplateDao {
         version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
+            val currentTime = LocalDateTime.now()
             return dslContext.insertInto(
                 this,
-                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG, VERSION
+                PROJECT_ID,
+                ID,
+                TEMPLATE_NAME,
+                VERSION_NAME,
+                CREATOR,
+                CREATED_TIME,
+                UPDATE_TIME,
+                TEMPLATE,
+                STORE_FLAG,
+                VERSION
             )
                 .values(
                     projectId,
@@ -73,7 +83,8 @@ class TemplateDao {
                     templateName,
                     versionName,
                     userId,
-                    LocalDateTime.now(),
+                    currentTime,
+                    currentTime,
                     template,
                     storeFlag,
                     version
