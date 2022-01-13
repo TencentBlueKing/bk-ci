@@ -73,6 +73,14 @@ class TemplateInstanceBaseDao {
                     userId,
                     userId
                 )
+                .onDuplicateKeyUpdate()
+                .set(TEMPLATE_ID, templateId)
+                .set(TEMPLATE_VERSION, templateVersion)
+                .set(USE_TEMPLATE_SETTINGS_FLAG, useTemplateSettingsFlag)
+                .set(TOTAL_ITEM_NUM, totalItemNum)
+                .set(STATUS, status)
+                .set(CREATOR, userId)
+                .set(MODIFIER, userId)
                 .execute()
         }
     }

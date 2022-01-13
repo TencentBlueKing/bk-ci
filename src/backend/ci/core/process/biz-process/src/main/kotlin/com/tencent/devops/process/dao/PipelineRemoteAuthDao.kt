@@ -59,6 +59,8 @@ class PipelineRemoteAuthDao {
                     LocalDateTime.now(),
                     userId
                 )
+                .onDuplicateKeyUpdate()
+                .set(CREATE_USER, userId)
                 .execute()
         }
     }
