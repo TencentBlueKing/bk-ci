@@ -57,7 +57,7 @@ data class SignHistory(
     @ApiModelProperty("任务状态", required = false)
     val status: String?,
     @ApiModelProperty("创建时间", required = true)
-    val createTime: Long,
+    val createTime: Long?,
     @ApiModelProperty("完成时间", required = false)
     val endTime: Long?,
     @ApiModelProperty("上传完成时间", required = false)

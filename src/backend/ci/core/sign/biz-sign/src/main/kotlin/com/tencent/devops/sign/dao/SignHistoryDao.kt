@@ -252,13 +252,13 @@ class SignHistoryDao {
                 archiveType = archiveType,
                 archivePath = archivePath,
                 status = status,
-                createTime = createTime.timestampmilli(),
-                endTime = endTime.timestampmilli(),
-                uploadFinishTime = uploadFinishTime.timestampmilli(),
-                unzipFinishTime = unzipFinishTime.timestampmilli(),
-                resignFinishTime = resignFinishTime.timestampmilli(),
-                zipFinishTime = zipFinishTime.timestampmilli(),
-                archiveFinishTime = archiveFinishTime.timestampmilli(),
+                createTime = createTime?.timestampmilli(),
+                endTime = endTime?.timestampmilli(),
+                uploadFinishTime = uploadFinishTime?.timestampmilli(),
+                unzipFinishTime = unzipFinishTime?.timestampmilli(),
+                resignFinishTime = resignFinishTime?.timestampmilli(),
+                zipFinishTime = zipFinishTime?.timestampmilli(),
+                archiveFinishTime = archiveFinishTime?.timestampmilli(),
                 errorMessage = errorMessage
             )
         }
