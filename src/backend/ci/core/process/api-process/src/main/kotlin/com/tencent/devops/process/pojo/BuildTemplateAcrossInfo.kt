@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModel
 data class BuildTemplateAcrossInfo(
     val templateId: String,
     val templateType: TemplateAcrossInfoType,
-    val templateInstancesIds: Set<String>,
+    val templateInstancesIds: List<String>,
     val targetProjectId: String
 )
 
