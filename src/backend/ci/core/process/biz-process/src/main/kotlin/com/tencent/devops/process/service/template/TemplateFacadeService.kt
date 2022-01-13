@@ -1933,7 +1933,7 @@ class TemplateFacadeService @Autowired constructor(
                     return@lit
                 }
             }
-            if (templatePipelineRecord.version < version) {
+            if (templatePipelineRecord.version != version) {
                 templatePipelineStatus = TemplatePipelineStatus.PENDING_UPDATE
             }
         }
