@@ -46,6 +46,7 @@ import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
@@ -285,5 +286,21 @@ class ServiceGitResourceImpl @Autowired constructor(
             mrId = mrId
         )
         return Result(true)
+    }
+
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo> {
+        return Result(
+            gitService.getProjectGroupInfo(
+                id = id,
+                includeSubgroups = includeSubgroups,
+                token = token,
+                tokenType = tokenType
+            )
+        )
     }
 }
