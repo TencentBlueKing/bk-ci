@@ -27,4 +27,5 @@
 
 plugins {
     `task-gen-jooq`
+
 }
