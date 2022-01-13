@@ -92,16 +92,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
     }
 
-    // todo  需要干掉
-    override fun pushMessage(
-        userId: String,
-        title: String,
-        content: String,
-        url: String
-    ): Result<Boolean> {
-        return Result(true)
-    }
-
     fun checkParam(
         userId: String,
         experienceHashId: String,
