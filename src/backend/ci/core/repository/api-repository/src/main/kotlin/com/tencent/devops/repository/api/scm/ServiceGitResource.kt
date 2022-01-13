@@ -43,6 +43,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
@@ -442,4 +443,22 @@ interface ServiceGitResource {
         @QueryParam("mrId")
         mrId: Long
     ): Result<Boolean>
+
+    @ApiOperation("获取git项目组的详细信息")
+    @GET
+    @Path("/getProjectGroupInfo")
+    fun getProjectGroupInfo(
+        @ApiParam(value = "git项目组id", required = true)
+        @QueryParam("id")
+        id: String,
+        @ApiParam(value = "是否包含subgroup项目", required = false)
+        @QueryParam("includeSubgroups")
+        includeSubgroups: Boolean?,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo>
 }
