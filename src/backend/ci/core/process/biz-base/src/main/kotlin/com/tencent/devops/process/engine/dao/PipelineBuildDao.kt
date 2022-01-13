@@ -182,9 +182,9 @@ class PipelineBuildDao {
     fun listBuildInfoByBuildIds(
         dslContext: DSLContext,
         buildIds: Collection<String>,
+        projectId: String? = null,
         startBeginTime: String? = null,
-        endBeginTime: String? = null,
-        projectId: String? = null
+        endBeginTime: String? = null
     ): Result<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
