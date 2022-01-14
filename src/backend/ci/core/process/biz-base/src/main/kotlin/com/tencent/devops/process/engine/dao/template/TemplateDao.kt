@@ -489,7 +489,6 @@ class TemplateDao {
                     )
                 )
             )
-            .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
 
         return if (null != page && null != pageSize) {
@@ -541,7 +540,7 @@ class TemplateDao {
             .on(a.ID.eq(b.field(KEY_ID, String::class.java)))
             .where(a.CREATED_TIME.eq(b.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .and(a.ID.`in`(templateList))
-            .and(a.PROJECT_ID.eq(projectId))
+            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
             .fetch()
     }
 
