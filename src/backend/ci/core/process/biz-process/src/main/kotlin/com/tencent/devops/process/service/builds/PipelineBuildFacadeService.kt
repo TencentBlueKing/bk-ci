@@ -713,8 +713,10 @@ class PipelineBuildFacadeService(
                         // Replace the review user with environment
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(buildVariableService.replaceTemplate(projectId, buildId, user)
-                                .split(","))
+                            reviewUser.addAll(
+                                buildVariableService.replaceTemplate(projectId, buildId, user)
+                                    .split(",")
+                            )
                         }
                         params.params.forEach {
                             when (it.valueType) {
@@ -950,8 +952,10 @@ class PipelineBuildFacadeService(
                     if (el is ManualReviewUserTaskElement && el.id == elementId) {
                         val reviewUser = mutableListOf<String>()
                         el.reviewUsers.forEach { user ->
-                            reviewUser.addAll(buildVariableService.replaceTemplate(projectId, buildId, user)
-                                .split(","))
+                            reviewUser.addAll(
+                                buildVariableService.replaceTemplate(projectId, buildId, user)
+                                    .split(",")
+                            )
                         }
                         el.params.forEach { param ->
                             when (param.valueType) {
@@ -1280,9 +1284,16 @@ class PipelineBuildFacadeService(
         projectId: String,
         buildIdSet: Set<String>,
         channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?,
         checkPermission: Boolean
     ): List<BuildHistory> {
-        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(buildIdSet, projectId)
+        val buildHistories = pipelineRuntimeService.getBuildHistoryByIds(
+            buildIds = buildIdSet,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            projectId = projectId
+        )
 
         if (buildHistories.isEmpty()) {
             return emptyList()
