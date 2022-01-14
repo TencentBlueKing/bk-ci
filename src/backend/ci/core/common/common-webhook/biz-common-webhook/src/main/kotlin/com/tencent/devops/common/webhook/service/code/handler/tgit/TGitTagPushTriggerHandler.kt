@@ -43,6 +43,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREAT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
@@ -128,7 +129,23 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 includedBranches = WebhookUtils.convert(tagName),
                 excludedBranches = WebhookUtils.convert(excludeTagName)
             )
-            return listOf(urlFilter, eventTypeFilter, branchFilter)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = getUsername(event),
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers)
+            )
+            val filters = mutableListOf(urlFilter, eventTypeFilter, branchFilter, userFilter)
+            if (event.create_from != null) {
+                val fromBranchFilter = BranchFilter(
+                    pipelineId = pipelineId,
+                    triggerOnBranchName = event.create_from!!,
+                    includedBranches = WebhookUtils.convert(fromBranches),
+                    excludedBranches = emptyList()
+                )
+                filters.add(fromBranchFilter)
+            }
+            return filters
         }
     }
 }

@@ -56,6 +56,11 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         } else {
             EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
+        params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
+        }
         params.block = element.block ?: false
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
         params.eventType = element.eventType
@@ -71,6 +76,8 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.webhookQueue = element.webhookQueue ?: false
         params.includeCrState = joinToString(element.includeCrState)
         params.includeIssueAction = joinToString(element.includeIssueAction)
+        params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
+        params.includeMrAction = joinToString(element.includeMrAction)
         return params
     }
 

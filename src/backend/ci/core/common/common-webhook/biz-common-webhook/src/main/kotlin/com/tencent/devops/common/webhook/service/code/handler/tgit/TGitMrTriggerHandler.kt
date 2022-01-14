@@ -82,6 +82,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_NAME
+import com.tencent.devops.common.webhook.service.code.filter.ActionFilter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -218,7 +219,12 @@ class TGitMrTriggerHandler(
                 event.object_attributes.last_commit.message,
                 pipelineId
             )
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter)
+            val actionFilter = ActionFilter(
+                pipelineId = pipelineId,
+                triggerOnAction = event.object_attributes.action,
+                includedAction = convert(includeMrAction)
+            )
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter)
         }
     }
 
