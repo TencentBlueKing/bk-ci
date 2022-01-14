@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
@@ -70,6 +71,9 @@ class TriggerParameter @Autowired constructor(
                 }
 
                 return gitRequestEventHandle.createMergeEvent(event, e)
+            }
+            is GitIssueEvent -> {
+                return gitRequestEventHandle.createIssueEvent(event, e)
             }
         }
         logger.info("event invalid: $event")

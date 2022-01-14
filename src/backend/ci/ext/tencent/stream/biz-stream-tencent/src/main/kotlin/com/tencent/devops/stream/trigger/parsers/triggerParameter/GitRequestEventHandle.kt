@@ -31,6 +31,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
@@ -146,6 +147,42 @@ class GitRequestEventHandle @Autowired constructor(
             description = "",
             mrTitle = null,
             gitEvent = gitTagPushEvent
+        )
+    }
+
+    fun createIssueEvent(gitIssueEvent: GitIssueEvent, e: String): GitRequestEvent {
+        val gitProjectId = gitIssueEvent.objectAttributes.projectId
+        val token = streamGitTokenService.getToken(gitProjectId)
+        val defaultBranch = streamScmService.getProjectInfoRetry(
+            token = token,
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = true
+        ).defaultBranch!!
+        val latestCommit = streamScmService.getCommitInfo(
+            gitToken = token,
+            projectName = gitProjectId.toString(),
+            sha = defaultBranch
+        )
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.ISSUE.value,
+            operationKind = "",
+            extensionAction = null,
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = null,
+            branch = defaultBranch,
+            targetBranch = null,
+            commitId = latestCommit?.id ?: "0",
+            commitMsg = latestCommit?.message,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
+            commitAuthorName = latestCommit?.author_name,
+            userId = latestCommit?.author_name ?: "",
+            totalCommitCount = 1,
+            mergeRequestId = null,
+            event = e,
+            description = "",
+            mrTitle = null,
+            gitEvent = gitIssueEvent
         )
     }
 
