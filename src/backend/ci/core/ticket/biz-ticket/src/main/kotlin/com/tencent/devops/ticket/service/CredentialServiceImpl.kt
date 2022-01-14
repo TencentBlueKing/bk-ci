@@ -549,7 +549,8 @@ class CredentialServiceImpl @Autowired constructor(
             v1 = credentialV1,
             v2 = credentialV2,
             v3 = credentialV3,
-            v4 = credentialV4
+            v4 = credentialV4,
+            allowAcrossProject = credentialRecord.allowAcrossProject
         )
     }
 
