@@ -29,10 +29,10 @@ object TemplateAcrossInfoUtil {
             if (result.isNotOk() || result.data == null) {
                 null
             } else {
-                result.data?.filter {
+                result.data?.firstOrNull {
                     it.templateType == TemplateAcrossInfoType.STEP &&
                         it.templateInstancesIds.contains(stepId)
-                }?.ifEmpty { null }?.first()
+                }
             }
         }
     }
