@@ -52,7 +52,9 @@ data class LinuxScriptElement(
     @ApiModelProperty("启用脚本执行失败时归档的文件", required = false)
     val enableArchiveFile: Boolean? = false,
     @ApiModelProperty("脚本执行失败时归档的文件", required = false)
-    val archiveFile: String? = null
+    val archiveFile: String? = null,
+    @ApiModelProperty("FAQ url链接", required = false)
+    val errorFAQUrl: String? = null
 ) : Element(name, id, status) {
 
     companion object {
