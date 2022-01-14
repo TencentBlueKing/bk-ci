@@ -55,6 +55,7 @@ class QualityTemplateService @Autowired constructor(
 ) {
 
     fun userListIndicatorSet(): List<RuleIndicatorSet> {
+        // todo performance
         return ruleTemplateDao.listIndicatorSetEnable(dslContext)?.map { record ->
             val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(record.id, dslContext)
                 ?.map { item -> item.indicatorId } ?: listOf()
@@ -69,6 +70,7 @@ class QualityTemplateService @Autowired constructor(
     }
 
     fun userList(projectId: String): List<RuleTemplate> {
+        // todo performance
         val templateList = ruleTemplateDao.listTemplateEnable(dslContext)
         return templateList?.map { record ->
             val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(record.id, dslContext)

@@ -41,6 +41,7 @@ import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.dao.HistoryDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.quality.util.QualityUrlUtils
@@ -60,6 +61,7 @@ import java.time.format.DateTimeFormatter
 class QualityHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val ruleService: QualityRuleService,
+    private val qualityRuleDao: QualityRuleDao,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val historyDao: HistoryDao,
     private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
@@ -373,8 +375,11 @@ class QualityHistoryService @Autowired constructor(
         )
 
         val ruleIdList = recordList.map { it.ruleId }
-        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIdList.toSet())
-            .map { it.hashId to it.name }.toMap()
+        val ruleIdToNameMap = qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleIds = ruleIdList.toSet()
+        )?.map { it.id to it.name }?.toMap()
         val pipelineIdList = recordList.map { it.pipelineId }
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
@@ -398,7 +403,7 @@ class QualityHistoryService @Autowired constructor(
                 timestamp = it.createTime.timestamp(),
                 interceptResult = RuleInterceptResult.valueOf(it.result),
                 ruleHashId = hisRuleHashId,
-                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                ruleName = ruleIdToNameMap?.get(it.ruleId) ?: "",
                 pipelineId = it.pipelineId,
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,

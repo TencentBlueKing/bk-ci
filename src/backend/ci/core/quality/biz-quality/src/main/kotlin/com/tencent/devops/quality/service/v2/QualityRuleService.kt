@@ -52,8 +52,10 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
+import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
+import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RulePermission
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -75,6 +77,7 @@ class QualityRuleService @Autowired constructor(
     private val qualityRuleDao: QualityRuleDao,
     private val ruleMapDao: QualityRuleMapDao,
     private val indicatorService: QualityIndicatorService,
+    private val qualityControlPointDao: QualityControlPointDao,
     private val qualityControlPointService: QualityControlPointService,
     private val dslContext: DSLContext,
     private val client: Client,
@@ -215,21 +218,18 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun serviceListRules(projectId: String, startTime: LocalDateTime? = null): List<QualityRule> {
-        return qualityRuleDao.list(dslContext, projectId, startTime)?.map {
-            doGetRuleData(it)
-        } ?: listOf()
+        val recordList = qualityRuleDao.list(dslContext, projectId, startTime)
+        return batchGetRuleData(recordList?: listOf()) ?: listOf()
     }
 
     fun serviceListRuleByPosition(projectId: String, position: String): List<QualityRule> {
-        return qualityRuleDao.listByPosition(dslContext, projectId, position)?.map {
-            doGetRuleData(it)
-        } ?: listOf()
+        val recordList = qualityRuleDao.listByPosition(dslContext, projectId, position)
+        return batchGetRuleData(recordList?: listOf()) ?: listOf()
     }
 
     fun serviceListRuleByIds(projectId: String, ruleIds: Collection<Long>): List<QualityRule> {
-        return qualityRuleDao.list(dslContext, projectId, ruleIds)?.map {
-            doGetRuleData(it)
-        } ?: listOf()
+        val recordList = qualityRuleDao.list(dslContext, projectId, ruleIds)
+        return batchGetRuleData(recordList?: listOf()) ?: listOf()
     }
 
     fun userGetRule(userId: String, projectId: String, ruleHashId: String): UserQualityRule {
@@ -283,6 +283,106 @@ class QualityRuleService @Autowired constructor(
         )
     }
 
+    private fun batchGetRuleData(records: List<TQualityRuleRecord>): List<QualityRule>? {
+        val TQualityRuleRecordMap = records.map { it.id to it }.toMap()
+        val ruleIds = TQualityRuleRecordMap.keys
+        val ruleMap = ruleMapDao.batchGet(dslContext, ruleIds)?.map { it.ruleId to it }?.toMap()
+        logger.info("QUALITY|get rule data for ruleIds: $ruleIds")
+        val controlPointRecords = qualityControlPointDao.list(dslContext, records.map { it.controlPoint })
+        val ruleOperationMap = ruleOperationService.serviceBatchGet(dslContext, ruleIds).map { it.id to it }.toMap()
+        if (ruleMap.isNullOrEmpty()) {
+            return null
+        }
+        val resultList = mutableListOf<QualityRule>()
+        records.map { record ->
+            // 顺序遍历rule map生成每个指标实际的operation和threshold
+            val mapRecord = ruleMap[record.id] ?: return@map
+            val indicatorIds = mapRecord.indicatorIds.split(",")
+                .filter { NumberUtils.isDigits(it) }.map { it.toLong() }
+
+            // 查询控制点
+            val controlPoint = qualityControlPointService.serviceGet(controlPointRecords, record.projectId)
+            val dataControlPoint = QualityRule.RuleControlPoint(
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.controlPoint,
+                cnName = ElementUtils.getElementCnName(record.controlPoint, record.projectId),
+                position = ControlPointPosition(record.controlPointPosition),
+                availablePosition = if (controlPoint?.availablePosition != null &&
+                    !controlPoint.availablePosition.isNullOrBlank()) {
+                    controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
+                } else listOf()
+            )
+            // 查询红线通知方式
+            val ruleOperation = ruleOperationMap[record.id]
+
+            // 把指标的定义值换成实际的值
+            val indicatorOperations = mapRecord.indicatorOperations.split(",")
+            val indicatorThresholds = mapRecord.indicatorThresholds.split(",")
+            val indicatorExtraMap = mutableMapOf<String, Pair<String, String>>()
+            indicatorIds?.forEachIndexed { index, id ->
+                indicatorExtraMap[HashUtil.encodeLongId(id)] = Pair(indicatorOperations[index], indicatorThresholds[index])
+            }
+            val dataIndicators = indicatorService.serviceList(indicatorIds).map {
+                val pair = indicatorExtraMap[it.hashId]!!
+                QualityIndicator(
+                    hashId = it.hashId,
+                    elementType = it.elementType,
+                    elementDetail = it.elementDetail,
+                    enName = it.enName,
+                    cnName = it.cnName,
+                    stage = it.stage,
+                    operation = QualityOperation.valueOf(pair.first),
+                    operationList = it.operationList,
+                    threshold = pair.second,
+                    thresholdType = it.thresholdType,
+                    readOnly = it.readOnly,
+                    type = it.type,
+                    tag = it.tag,
+                    metadataList = it.metadataList,
+                    desc = it.desc,
+                    logPrompt = it.logPrompt,
+                    enable = it.enable,
+                    range = it.range
+                )
+            }
+            val qualityRule = QualityRule(
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.name,
+                desc = record.desc,
+                indicators = dataIndicators,
+                controlPoint = dataControlPoint,
+                range = if (record.indicatorRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    record.indicatorRange.split(",")
+                },
+                templateRange = if (record.pipelineTemplateRange.isNullOrBlank()) {
+                    listOf()
+                } else record.pipelineTemplateRange.split(","),
+                operation = RuleOperation.valueOf(ruleOperation?.type ?: RuleOperation.END.name),
+                notifyTypeList = if (ruleOperation == null || ruleOperation.notifyTypes.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.notifyTypes.split(",").map { NotifyType.valueOf(it) },
+                notifyGroupList = if (ruleOperation == null || ruleOperation.notifyGroupId.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.notifyGroupId.split(","),
+                notifyUserList = if (ruleOperation == null || ruleOperation.notifyUser.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.notifyUser.split(","),
+                auditUserList = if (ruleOperation == null || ruleOperation.auditUser.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.auditUser.split(","),
+                auditTimeoutMinutes = ruleOperation?.auditTimeout ?: 15,
+                gatewayId = record.gatewayId,
+                gateKeepers = listOf(),
+                stageId = "1",
+                status = null
+            )
+            resultList.add(qualityRule)
+        }
+        return resultList
+    }
+
     private fun doGetRuleData(record: TQualityRuleRecord): QualityRule {
         // 查询rule map
         val ruleId = record.id
@@ -295,7 +395,8 @@ class QualityRuleService @Autowired constructor(
             .map { it.toLong() }
 
         // 查询控制点
-        val controlPoint = qualityControlPointService.serviceGet(record.controlPoint, record.projectId)
+        val controlPointRecord = qualityControlPointService.serviceListByElementType(record.controlPoint)
+        val controlPoint = qualityControlPointService.serviceGet(controlPointRecord, record.projectId)
         val dataControlPoint = QualityRule.RuleControlPoint(
             hashId = HashUtil.encodeLongId(record.id),
             name = record.controlPoint,
@@ -429,6 +530,7 @@ class QualityRuleService @Autowired constructor(
             else ruleDetail.indicatorIds.split(",").map { it.toLong() }
 
             // get rule indicator map
+            // todo perform list indicator
             val indicators = indicatorService.serviceList(ruleIndicators)
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
@@ -660,6 +762,7 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
+        // todo performance
         val ruleList = serviceListRules(projectId)
         logger.info("get project rule list for $projectId, $pipelineId, $templateId: ${ruleList.map { it.name }}")
         return ruleList.filter {

@@ -811,6 +811,7 @@ class QualityRuleCheckService @Autowired constructor(
         return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
     }
 
+    // todo performance
     private fun getPipelineName(projectId: String, pipelineId: String): String {
         val map = getPipelineIdToNameMap(projectId, setOf(pipelineId))
         return map[pipelineId] ?: ""

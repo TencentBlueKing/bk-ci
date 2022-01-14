@@ -70,6 +70,7 @@ class QualityIndicatorService @Autowired constructor(
     private val encoder = Base64.getEncoder()
 
     fun listByLevel(projectId: String): List<IndicatorStageGroup> {
+        // todo perform
         val indicators = listIndicatorByProject(projectId).map { indicator ->
             val metadataIds = convertMetaIds(indicator.metadataIds)
             val metadata = metadataService.serviceListMetadata(metadataIds).map {
@@ -148,6 +149,16 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceList(indicatorIds: Collection<Long>): List<QualityIndicator> {
+        // todo perform
+        val indicators = indicatorDao.listByIds(dslContext, indicatorIds)
+        val metadataIds = mutableSetOf<Long>()
+        indicators?.forEach { indicator ->
+            val metadataId = convertMetaIds(indicator.metadataIds)
+            metadataIds.addAll(metadataId)
+        }
+        val metadataMap = metadataService.serviceListMetadata(metadataIds).associateBy { it.hashId }
+
+        //val indicatorMetadataMap = metadataService.serviceListMetadata(indicators.map {  })
         return indicatorDao.listByIds(dslContext, indicatorIds)?.map { indicator ->
             val metadataIds = convertMetaIds(indicator.metadataIds)
             val metadata = metadataService.serviceListMetadata(metadataIds).map {
@@ -158,6 +169,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        // todo perform
         return indicatorDao.listByElementType(dslContext, elementType, type = null, enNameSet = enNameSet)?.map { indicator ->
             val metadataIds = convertMetaIds(indicator.metadataIds)
             val metadata = metadataService.serviceListMetadata(metadataIds).map {
@@ -193,6 +205,7 @@ class QualityIndicatorService @Autowired constructor(
     private fun indicatorRecordToIndicatorData(
         indicatorRecords: Result<TQualityIndicatorRecord>?
     ): List<IndicatorData> {
+        // todo perform
         return indicatorRecords?.map {
             val metadataIds = convertMetaIds(it.metadataIds).toSet()
             val metadataList = metadataService.serviceListByIds(metadataIds)
@@ -317,6 +330,7 @@ class QualityIndicatorService @Autowired constructor(
         }.groupBy { it.elementType }.forEach { (_, indicators) ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
+                // todo performance
                 val metadata = metadataService.serviceListMetadata(metadataIds).map {
                     IndicatorListResponse.QualityMetadata(enName = it.dataId,
                         cnName = it.dataName,
