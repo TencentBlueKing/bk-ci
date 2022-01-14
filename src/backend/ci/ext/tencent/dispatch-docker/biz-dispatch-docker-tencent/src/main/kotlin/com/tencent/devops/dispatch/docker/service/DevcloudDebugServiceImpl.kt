@@ -15,7 +15,9 @@ import com.tencent.devops.dispatch.docker.pojo.UserPerformanceOptionsVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsShow
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
+import okhttp3.MediaType
 import okhttp3.Request
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -35,31 +37,71 @@ class DevcloudDebugServiceImpl @Autowired constructor(
         buildId: String?,
         vmSeqId: String
     ): String? {
-        return getDevcloudDebugUrl(userId, projectId, pipelineId, vmSeqId)
+        return getDevcloudDebugUrl(userId, projectId, pipelineId, buildId, vmSeqId)
+    }
+
+    override fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean {
+        val url = String.format(
+            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/stopDebug/pipeline/s%/vmSeq/s%?containerName=s%",
+            commonConfig.devopsIdcGateway,
+            pipelineId,
+            vmSeqId,
+            containerName
+        )
+        val request = Request.Builder().url(url)
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
+            .post(RequestBody.create(MediaType.parse("application/json"), ""))
+            .build()
+
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[$pipelineId Stop devcloud debug responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            if (response["code"] == 0) {
+                return true
+            } else {
+                val msg = response["message"] as String
+                logger.error("[$pipelineId] Stop devcloud debug failed, msg: $msg")
+                throw DockerServiceException(errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
+                    errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+                    errorMsg = "Stop devcloud debug failed, msg: $msg")
+            }
+        }
     }
 
     private fun getDevcloudDebugUrl(
         userId: String,
         projectId: String,
         pipelineId: String,
+        buildId: String?,
         vmSeqId: String
     ): String {
         val url = String.format(
-            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/startDebug/projects/s%/pipeline/s%/vmSeq/s%",
+            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/startDebug/projects/s%/pipeline/s%/vmSeq/s%?buildId=s%",
+            commonConfig.devopsIdcGateway,
             projectId,
             pipelineId,
-            vmSeqId
+            vmSeqId,
+            buildId
         )
         val request = Request.Builder().url(url)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
-            .get()
+            .post(RequestBody.create(MediaType.parse("application/json"), ""))
             .build()
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[$projectId get devcloud debugUrl responseBody: $responseBody")
+            logger.info("[$pipelineId get devcloud debugUrl responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["code"] == 0) {
                 val debugResponse = objectMapper.readValue(JsonUtil.toJson(response["data"] ?: ""),
@@ -68,7 +110,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
                 return debugResponse.websocketUrl
             } else {
                 val msg = response["message"] as String
-                logger.error("[$projectId] get devcloud debugUrl failed, msg: $msg")
+                logger.error("[$pipelineId] get devcloud debugUrl failed, msg: $msg")
                 throw DockerServiceException(errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
                     errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
                     errorMsg = "Get devcloud debugUrl failed, msg: $msg")
