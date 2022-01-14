@@ -153,7 +153,10 @@ interface AppExperienceResource {
         page: Int,
         @ApiParam("每页数目", required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否展示所有版本", required = false)
+        @QueryParam("showAll")
+        showAll: Boolean?
     ): Result<Pagination<ExperienceChangeLog>>
 
     @ApiOperation("创建外部直接下载链接")

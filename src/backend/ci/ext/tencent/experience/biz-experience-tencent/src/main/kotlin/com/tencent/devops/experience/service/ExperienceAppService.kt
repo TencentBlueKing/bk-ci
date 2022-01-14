@@ -216,7 +216,8 @@ class ExperienceAppService(
         experienceHashId: String,
         page: Int,
         pageSize: Int,
-        organization: String?
+        organization: String?,
+        showAll: Boolean?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
@@ -229,7 +230,8 @@ class ExperienceAppService(
                 page = if (page <= 0) 1 else page,
                 pageSize = if (pageSize <= 0) 10 else pageSize,
                 isOldVersion = false,
-                isOuter = organization == ORGANIZATION_OUTER
+                isOuter = organization == ORGANIZATION_OUTER,
+                showAll = showAll ?: false
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -253,9 +255,11 @@ class ExperienceAppService(
         page: Int,
         pageSize: Int,
         isOldVersion: Boolean,
-        isOuter: Boolean = false
+        isOuter: Boolean = false,
+        showAll: Boolean = false
     ): List<ExperienceChangeLog> {
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
+        val groupIdTypeEnum = if (showAll) GroupIdTypeEnum.ALL else GroupIdTypeEnum.JUST_PRIVATE
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, groupIdTypeEnum, isOuter)
         val now = LocalDateTime.now()
         val lastDownloadRecord = platform?.let {
             experienceLastDownloadDao.get(

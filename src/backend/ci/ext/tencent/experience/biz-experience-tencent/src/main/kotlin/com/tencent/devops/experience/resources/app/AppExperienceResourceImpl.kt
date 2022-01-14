@@ -47,6 +47,7 @@ import com.tencent.devops.experience.service.ExperienceAppService
 import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
 import com.tencent.devops.experience.service.GroupService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -81,6 +82,7 @@ class AppExperienceResourceImpl @Autowired constructor(
 
     @AllowOuter
     override fun listV3(userId: String, platform: Int, organization: String?): Result<ExperienceList> {
+        logger.debug("listV3 , userId:$userId , platform:$platform , organization:$organization")
         val privateExperiences = experienceAppService.list(userId, 0, 100, true, platform, organization).records
         val publicExperiences = if (null == organization) {
             experienceAppService.publicExperiences(userId, platform, 0, 100)
@@ -109,10 +111,11 @@ class AppExperienceResourceImpl @Autowired constructor(
         organization: String?,
         experienceHashId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        showAll: Boolean?
     ): Result<Pagination<ExperienceChangeLog>> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize, organization)
+        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize, organization, showAll)
         return Result(result)
     }
 
@@ -178,5 +181,9 @@ class AppExperienceResourceImpl @Autowired constructor(
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AppExperienceResourceImpl::class.java)
     }
 }
