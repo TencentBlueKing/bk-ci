@@ -378,35 +378,43 @@ class TXPipelineExportService @Autowired constructor(
                     },
                     fastKill = if (stage.fastKill == true) true else null,
                     jobs = jobs,
-                    checkIn = PreStageCheck(
-                        reviews = PreStageReviews(
-                            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers) },
-                            variables = stage.checkIn?.reviewParams?.associate {
-                                it.key to ReviewVariable(
-                                    label = it.chineseName ?: it.key,
-                                    type = when (it.valueType) {
-                                        ManualReviewParamType.TEXTAREA -> "TEXTAREA"
-                                        ManualReviewParamType.ENUM -> "SELECTOR"
-                                        ManualReviewParamType.MULTIPLE -> "SELECTOR-MULTIPLE"
-                                        ManualReviewParamType.BOOLEAN -> "BOOL"
-                                        else -> "INPUT"
-                                    },
-                                    default = it.value,
-                                    values = it.options?.map { mit -> mit.key },
-                                    description = it.desc
-                                )
-                            },
-                            description = stage.checkIn?.reviewDesc
-                        ),
-                        gates = null,
-                        timeoutHours = stage.checkIn?.timeout
-                    ),
+                    checkIn = getCheckInForStage(stage),
                     // TODO 暂时不支持准出和gates的导出
                     checkOut = null
                 )
             )
         }
         return stages
+    }
+
+    private fun getCheckInForStage(stage: Stage): PreStageCheck? {
+        val reviews = PreStageReviews(
+            flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers) },
+            variables = stage.checkIn?.reviewParams?.associate {
+                it.key to ReviewVariable(
+                    label = it.chineseName ?: it.key,
+                    type = when (it.valueType) {
+                        ManualReviewParamType.TEXTAREA -> "TEXTAREA"
+                        ManualReviewParamType.ENUM -> "SELECTOR"
+                        ManualReviewParamType.MULTIPLE -> "SELECTOR-MULTIPLE"
+                        ManualReviewParamType.BOOLEAN -> "BOOL"
+                        else -> "INPUT"
+                    },
+                    default = it.value,
+                    values = it.options?.map { mit -> mit.key },
+                    description = it.desc
+                )
+            },
+            description = stage.checkIn?.reviewDesc
+        )
+        if (reviews.flows.isNullOrEmpty()) {
+            return null
+        }
+        return PreStageCheck(
+            reviews = reviews,
+            gates = null,
+            timeoutHours = stage.checkIn?.timeout
+        )
     }
 
     private fun getV2FinalFromStage(
@@ -735,7 +743,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         PreStep(
                             name = step.name,
-                            id = step.id,
+                            id = step.stepId,
                             // bat插件上的
                             ifFiled = parseStepIfFiled(
                                 step = step,
@@ -766,7 +774,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         PreStep(
                             name = step.name,
-                            id = step.id,
+                            id = step.stepId,
                             // bat插件上的
                             ifFiled = parseStepIfFiled(
                                 step = step,
@@ -839,7 +847,7 @@ class TXPipelineExportService @Autowired constructor(
                     if (!checkoutAtom) stepList.add(
                         PreStep(
                             name = step.name,
-                            id = step.id,
+                            id = step.stepId,
                             // 插件上的
                             ifFiled = parseStepIfFiled(
                                 step = step,
@@ -875,7 +883,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         PreStep(
                             name = step.name,
-                            id = step.id,
+                            id = step.stepId,
                             // 插件上的
                             ifFiled = parseStepIfFiled(
                                 step = step,
@@ -907,7 +915,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         PreStep(
                             name = null,
-                            id = step.id,
+                            id = step.stepId,
                             ifFiled = null,
                             uses = "### [${step.name}] 人工审核插件请改用Stage审核 ###",
                             with = null,
@@ -929,7 +937,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         PreStep(
                             name = null,
-                            id = element.id,
+                            id = element.stepId,
                             ifFiled = null,
                             uses = "### [${element.name}] 内置老插件不支持导出，请使用市场插件 ###",
                             with = null,
@@ -1349,7 +1357,7 @@ class TXPipelineExportService @Autowired constructor(
             stepList.add(
                 PreStep(
                     name = step.name,
-                    id = step.id,
+                    id = step.stepId,
                     // 插件上的
                     ifFiled = parseStepIfFiled(
                         step = step,

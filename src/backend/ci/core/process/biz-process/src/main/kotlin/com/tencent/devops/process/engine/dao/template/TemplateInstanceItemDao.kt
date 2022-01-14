@@ -76,7 +76,16 @@ class TemplateInstanceItemDao {
                         baseId,
                         userId,
                         userId
-                    ).execute()
+                    )
+                    .onDuplicateKeyUpdate()
+                    .set(PIPELINE_NAME, it.pipelineName)
+                    .set(BUILD_NO_INFO, buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(STATUS, status)
+                    .set(PARAM, param?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(BASE_ID, baseId)
+                    .set(CREATOR, userId)
+                    .set(MODIFIER, userId)
+                    .execute()
             }
         }
     }

@@ -146,6 +146,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         gitProjectId: Long,
+        startBeginTime: String?,
+        endBeginTime: String?,
         page: Int?,
         pageSize: Int?,
         branch: String?,
@@ -160,6 +162,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             triggerUser = triggerUser,
             branch = branch,
             sourceGitProjectId = sourceGitProjectId,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
             page = page,
             pageSize = pageSize
         )

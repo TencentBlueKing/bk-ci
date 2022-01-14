@@ -25,12 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:api-repository"))
-}
+package com.tencent.devops.scm.utils
 
-plugins {
-    `task-deploy-to-maven`
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.scm.pojo.GitCodeErrorResp
+import okhttp3.Response
+import javax.ws.rs.core.Response as HttpResp
+
+object GitCodeUtils {
+
+    /**
+     * 将工蜂的错误信息完整返回给微服务调用方
+     */
+    fun handleErrorMessage(
+        response: Response
+    ): CustomException {
+        val data = response.body()?.string() ?: return CustomException(
+            status = HttpResp.Status.fromStatusCode(response.code()) ?: HttpResp.Status.BAD_REQUEST,
+            message = response.message()
+        )
+        val resp = JsonUtil.getObjectMapper().readValue(data) as GitCodeErrorResp
+        return CustomException(
+            status = HttpResp.Status.fromStatusCode(response.code()) ?: HttpResp.Status.BAD_REQUEST,
+            message = resp.message ?: response.message()
+        )
+    }
 }
