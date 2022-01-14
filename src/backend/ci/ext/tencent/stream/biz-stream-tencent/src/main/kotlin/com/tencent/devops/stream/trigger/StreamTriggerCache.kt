@@ -54,25 +54,29 @@ class StreamTriggerCache @Autowired constructor(
         token: String,
         useAccessToken: Boolean,
         getProjectInfo: (
-            gitProjectId: String,
             token: String,
+            gitProjectId: String,
             useAccessToken: Boolean
         ) -> GitCIProjectInfo
     ): StreamGitProjectCache {
-        val cache = getRequestGitProjectInfo(gitRequestEventId, gitProjectId)
+        val cache = getRequestGitProjectInfo(gitRequestEventId = gitRequestEventId, gitProjectName = gitProjectId)
         if (cache != null) {
             return cache
         }
-        val gitProjectInfo = getProjectInfo(gitProjectId, token, useAccessToken)
-        val cacheData = StreamGitProjectCache(
+        val gitProjectInfo = getProjectInfo(
+            token,
             gitProjectId,
-            gitProjectInfo.gitProjectId,
-            gitProjectInfo.defaultBranch
+            useAccessToken
+        )
+        val cacheData = StreamGitProjectCache(
+            gitProjectName = gitProjectId,
+            gitProjectId = gitProjectInfo.gitProjectId,
+            defaultBranch = gitProjectInfo.defaultBranch
         )
         saveRequestGitProjectInfo(
-            gitRequestEventId,
-            gitProjectId,
-            cacheData
+            gitRequestEventId = gitRequestEventId,
+            gitProjectName = gitProjectId,
+            cache = cacheData
         )
         return cacheData
     }
