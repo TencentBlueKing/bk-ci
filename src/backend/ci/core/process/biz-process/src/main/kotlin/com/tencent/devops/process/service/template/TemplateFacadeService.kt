@@ -129,7 +129,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
-import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
@@ -608,7 +607,6 @@ class TemplateFacadeService @Autowired constructor(
             } else {
                 val modelStr = templateRecord["template"] as String
                 val version = templateRecord["version"] as Long
-                val createdTime = templateRecord["createdTime"] as LocalDateTime
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
@@ -632,7 +630,7 @@ class TemplateFacadeService @Autowired constructor(
 
                 run lit@{
                     associatePipeline.forEach {
-                        if (it.createdTime < createdTime) {
+                        if (it.version != version) {
                             logger.info("The pipeline ${it.pipelineId} need to upgrade from ${it.version} to $version")
                             hasInstances2Upgrade = true
                             return@lit
@@ -1010,16 +1008,16 @@ class TemplateFacadeService @Autowired constructor(
         val latestVersion = TemplateVersion(
             version = latestTemplate.version,
             versionName = latestTemplate.versionName,
-            updateTime = latestTemplate.createdTime.timestampmilli(),
+            updateTime = latestTemplate.updateTime.timestampmilli(),
             creator = latestTemplate.creator
         )
         val versionNames = templates.groupBy { it.versionName }
         val versions = versionNames.map {
-            val temp = it.value.maxBy { t -> t.createdTime }!!
+            val temp = it.value.maxBy { t -> t.updateTime }!!
             TemplateVersion(
                 version = temp.version,
                 versionName = temp.versionName,
-                updateTime = temp.createdTime.timestampmilli(),
+                updateTime = temp.updateTime.timestampmilli(),
                 creator = temp.creator
             )
         }.toList()
@@ -1044,7 +1042,7 @@ class TemplateFacadeService @Autowired constructor(
         val currentVersion = TemplateVersion(
             template!!.version,
             template!!.versionName,
-            template!!.createdTime.timestampmilli(),
+            template!!.updateTime.timestampmilli(),
             template!!.creator
         )
         val model: Model = objectMapper.readValue(template!!.template)
@@ -1105,8 +1103,8 @@ class TemplateFacadeService @Autowired constructor(
 
         val versionNames = templates.groupBy { it.versionName }
         return versionNames.map {
-            val temp = it.value.maxBy { t -> t.createdTime }!!
-            TemplateVersion(temp.version, temp.versionName, temp.createdTime.timestampmilli(), temp.creator)
+            val temp = it.value.maxBy { t -> t.updateTime }!!
+            TemplateVersion(temp.version, temp.versionName, temp.updateTime.timestampmilli(), temp.creator)
         }.toList()
     }
 
@@ -1930,7 +1928,7 @@ class TemplateFacadeService @Autowired constructor(
             latestVersion = TemplateVersion(
                 version = latestVersion.version,
                 versionName = latestVersion.versionName,
-                updateTime = latestVersion.createdTime.timestampmilli(),
+                updateTime = latestVersion.updateTime.timestampmilli(),
                 creator = latestVersion.creator
             ),
             count = instancePage.count.toInt(),
