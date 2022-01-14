@@ -140,7 +140,7 @@ open class ScriptTask : ITask() {
                 "1. 根据错误日志排查\n" +
                 "2. 在本地手动执行脚本。如果本地执行也失败，很可能是脚本逻辑问题；" +
                 "如果本地OK，排查构建环境（比如环境依赖、或者代码变更等）"
-            if (!errorFAQUrl.isNullOrBlank()){
+            if (!errorFAQUrl.isNullOrBlank()) {
                 errorMsg = "$errorMsg\n" +
                     "FAQ相关链接: $errorFAQUrl\n"
             }
