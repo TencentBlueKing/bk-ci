@@ -38,6 +38,7 @@ data class WebHookParams(
     var excludeBranchName: String? = null,
     var tagName: String? = null,
     var excludeTagName: String? = null,
+    var fromBranches: String? = null,
     var pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     var includePaths: String? = null,
     var excludePaths: String? = null,
@@ -58,6 +59,8 @@ data class WebHookParams(
     var includeHost: String? = null,
     // code review状态
     var includeCrState: String? = null,
-    // 事件action
+    // issue事件action
     var includeIssueAction: String? = null,
+    // mr事件action
+    var includeMrAction: String? = null
 )
