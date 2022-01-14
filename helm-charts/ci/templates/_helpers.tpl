@@ -74,13 +74,13 @@ Return the mongodb fullname
 {{- end -}}
 
 {{/*
-MySQL host
+MySQL addr
 */}}
 {{- define "bkci.mysqlAddr" -}}
 {{- if eq .Values.mysql.enabled true -}}
 {{- include "bkci.mysql.fullname" . -}}:3306
 {{- else -}}
-{{- .Value.config.bkCiMysqlAddr -}}
+{{- .Value.externalMysql.host -}}:{{- .Value.externalMysql.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -91,7 +91,7 @@ MySQL username
 {{- if eq .Values.mysql.enabled true -}}
 root
 {{- else -}}
-{{- .Values.config.bkCiMysqlUser -}}
+{{- .Values.externalMysql.username -}}
 {{- end -}}
 {{- end -}}
 
@@ -102,7 +102,7 @@ MySQL password
 {{- if eq .Values.mysql.enabled true -}}
 {{- .Values.mysql.auth.rootPassword -}}
 {{- else -}}
-{{- .Values.config.bkCiMysqlPassword -}}
+{{- .Values.externalMysql.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -113,7 +113,7 @@ Elasticsearch host
 {{- if eq .Values.elasticsearch.enabled true -}}
 {{- include "bkci.elasticsearch.fullname" . -}}
 {{- else -}}
-{{- .Value.config.bkCiEsRestAddr -}}
+{{- .Value.externalElasticsearch.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -124,7 +124,7 @@ Elasticsearch port
 {{- if eq .Values.elasticsearch.enabled true -}}
 9200
 {{- else -}}
-{{- .Value.config.bkCiEsRestPort -}}
+{{- .Value.externalElasticsearch.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -134,7 +134,7 @@ Elasticsearch username
 {{- define "bkci.elasticsearchUsername" -}}
 {{- if eq .Values.elasticsearch.enabled true -}}
 {{- else -}}
-{{- .Value.config.bkCiEsUser -}}
+{{- .Value.externalElasticsearch.username -}}
 {{- end -}}
 {{- end -}}
 
@@ -144,7 +144,7 @@ Elasticsearch password
 {{- define "bkci.elasticsearchPassword" -}}
 {{- if eq .Values.elasticsearch.enabled true -}}
 {{- else -}}
-{{- .Value.config.bkCiEsPassword -}}
+{{- .Value.externalElasticsearch.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -155,7 +155,7 @@ Redis host
 {{- if eq .Values.redis.enabled true -}}
 {{- include "bkci.redis.fullname" . -}}
 {{- else -}}
-{{- .Value.config.bkCiRedisHost -}}
+{{- .Value.externalRedis.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -166,7 +166,7 @@ Redis port
 {{- if eq .Values.redis.enabled true -}}
 6379
 {{- else -}}
-{{- .Value.config.bkCiRedisPort -}}
+{{- .Value.externalRedis.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -177,7 +177,7 @@ Redis password
 {{- if eq .Values.redis.enabled true -}}
 {{- .Values.redis.auth.password -}}
 {{- else -}}
-{{- .Value.config.bkCiRedisPort -}}
+{{- .Value.externalRedis.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -188,7 +188,7 @@ Rabbitmq addr
 {{- if eq .Values.rabbitmq.enabled true -}}
 {{- include "bkci.rabbitmq.fullname" . -}}
 {{- else -}}
-{{- .Value.config.bkCiRabbitmqAddr -}}
+{{- .Value.externalRabbitmq.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -199,7 +199,7 @@ Rabbitmq user
 {{- if eq .Values.rabbitmq.enabled true -}}
 {{- .Values.rabbitmq.auth.username -}}
 {{- else -}}
-{{- .Value.config.bkCiRabbitmqUser -}}
+{{- .Value.externalRabbitmq.username -}}
 {{- end -}}
 {{- end -}}
 
@@ -210,7 +210,7 @@ Rabbitmq password
 {{- if eq .Values.rabbitmq.enabled true -}}
 {{- .Values.rabbitmq.auth.password -}}
 {{- else -}}
-{{- .Value.config.bkCiRabbitmqPassword -}}
+{{- .Value.externalRabbitmq.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -221,7 +221,7 @@ Rabbitmq vhost
 {{- if eq .Values.rabbitmq.enabled true -}}
 default-vhost
 {{- else -}}
-{{- .Value.config.bkCiRabbitmqVhost -}}
+{{- .Value.externalRabbitmq.vhost -}}
 {{- end -}}
 {{- end -}}
 
@@ -232,7 +232,7 @@ Influxdb host
 {{- if eq .Values.influxdb.enabled true -}}
 {{- include "bkci.influxdb.fullname" . -}}
 {{- else -}}
-{{- .Value.external.influxdb.host -}}
+{{- .Value.externalInfluxdb.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -243,7 +243,7 @@ Influxdb port
 {{- if eq .Values.influxdb.enabled true -}}
 8086
 {{- else -}}
-{{- .Values.external.influxdb.port  -}}
+{{- .Values.externalInfluxdb.port  -}}
 {{- end -}}
 {{- end -}}
 
@@ -254,7 +254,7 @@ influxdb username
 {{- if eq .Values.influxdb.enabled true -}}
 {{ .Values.influxdb.auth.admin.username }}
 {{- else -}}
-{{- .Values.external.influxdb.username -}}
+{{- .Values.externalInfluxdb.username -}}
 {{- end -}}
 {{- end -}}
 
@@ -265,7 +265,7 @@ influxdb password
 {{- if eq .Values.influxdb.enabled true -}}
 {{ .Values.influxdb.auth.admin.password }}
 {{- else -}}
-{{- .Values.external.influxdb.password -}}
+{{- .Values.externalInfluxdb.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -276,7 +276,7 @@ Return the db_turbo mongodb connection uri
 {{- if eq .Values.mongodb.enabled true -}}
 {{- printf "mongodb://%s:%s@%s:27017/db_turbo" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "bkci.mongodb.fullname" .) -}}
 {{- else -}}
-{{- .Values.external.mongodb.turbo.turboUrl -}}
+{{- .Values.externalMongodb.turbo.turboUrl -}}
 {{- end -}}
 {{- end -}}
 
@@ -288,6 +288,6 @@ Return the db_quartz mongodb connection uri
 {{- if eq .Values.mongodb.enabled true -}}
 {{- printf "mongodb://%s:%s@%s:27017/db_quartz" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "bkci.mongodb.fullname" .) -}}
 {{- else -}}
-{{- .Values.external.mongodb.turbo.quartzUrl -}}
+{{- .Values.externalMongodb.turbo.quartzUrl -}}
 {{- end -}}
 {{- end -}}

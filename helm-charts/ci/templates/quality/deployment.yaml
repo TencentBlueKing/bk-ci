@@ -14,7 +14,9 @@ spec:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: microservice
       app.kubernetes.io/name: quality
+  {{- if not .Values.quality.autoscaling.enabled }}
   replicas: {{ .Values.quality.replicas }}
+  {{- end }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}

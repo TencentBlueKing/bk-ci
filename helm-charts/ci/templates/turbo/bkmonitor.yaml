@@ -1,4 +1,4 @@
-{{- if .Values.bkmonitorConfig.turbo.enabled }}
+{{- if .Values.serviceMonitor.turbo.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

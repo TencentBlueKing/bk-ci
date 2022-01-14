@@ -14,7 +14,9 @@ spec:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: microservice
       app.kubernetes.io/name: image
+  {{- if not .Values.image.autoscaling.enabled }}
   replicas: {{ .Values.image.replicas }}
+  {{- end }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}

@@ -76,6 +76,9 @@ env_file = open(env_properties_file, 'r')
 value_re = re.compile(r'')
 for line in env_file:
     if line.startswith('BK_'):
+        # 排除掉数据库的相关值
+        if ('_MYSQL_' in line) or ('_REDIS_' in line and 'DB' not in line and 'SENTINEL' not in line) or ('_ES_' in line and 'CLUSTER' not in line) or ('_RABBITMQ_' in line) or ('_INFLUXDB_' in line and 'DB' not in line):
+            continue
         datas = line.split("=")
         key = datas[0]
         replace_dict[key] = humps.camelize(key.lower())

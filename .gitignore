@@ -47,3 +47,5 @@ docker-images/ci/*.gz
 #turbo 忽略文件
 src/backend/turbo/**/build/
 src/backend/turbo/release/
+
+helm-charts/ci-standard/

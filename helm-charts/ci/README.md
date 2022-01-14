@@ -50,16 +50,13 @@ $ helm uninstall bkci
 - [bitnami/influxdb](https://github.com/bitnami/charts/blob/master/bitnami/influxdb)
 - [bitnami/mongodb](https://github.com/bitnami/charts/blob/master/bitnami/mongodb)
 
-## 配置说明
-下面展示了可配置的参数列表以及默认值
-
-### RBAC配置
+## RBAC配置
 
 |参数|描述|默认值|
 |---|---|---|
 | `rbac.serviceAccount` | RBAC账户 | `bkci` |
 
-### 镜像配置
+## 镜像配置
 
 能够配置的镜像有:
 - gatewayImage
@@ -73,20 +70,23 @@ $ helm uninstall bkci
 | `pullPolicy` | 镜像拉取策略 | `IfNotPresent` |
 | `pullSecrets` | 镜像拉取Secret名称数组 | `[]` |
 
-### 蓝鲸日志采集配置
+## 蓝鲸日志采集配置
 |参数|描述|默认值|
 |---|---|---|
 | `bklogConfig.enabled` | 是否开启日志采集 | `false` |
 | `bklogConfig.service.dataId` | 服务日志采集ID | `1` |
 | `bklogConfig.gatewayAccess.dataId` | 网关访问日志采集ID | `1` |
 | `bklogConfig.gatewayError.dataId` | 网关异常日志采集ID | `1` |
+| `bklogConfig.turbo.enabled` | 是否开启turbo的日志采集 | `false` |
+| `bklogConfig.turbo.dataId` | turbo日志采集ID | `1` |
 
-### 蓝鲸监控配置
+## 蓝鲸监控配置
 |参数|描述|默认值|
 |---|---|---|
-| `bkmonitorConfig.enabled` | 是否开启蓝鲸监控 | `false` |
+| `serviceMonitor.enabled` | 是否开启蓝鲸监控 | `false` |
+| `serviceMonitor.turbo.enabled` | turbo是否开启蓝鲸监控 | `false` |
 
-### ingress 配置
+## ingress 配置
 
 |参数|描述|默认值 |
 |---|---|---|
@@ -101,7 +101,7 @@ $ helm uninstall bkci
 | `nginx-ingress-controller.enabled` | 是否部署nginx ingress controller | `false` |
 | `nginx-ingress-controller.defaultBackend.enabled` | nginx ingress controller默认backend | `false` |
 
-### 组件配置
+## 组件配置
 
 能够配置的组件有:
 - artifactory
@@ -126,7 +126,7 @@ $ helm uninstall bkci
 
 |参数|描述|默认值 |
 |---|---|---|
-| `replicas`                       | Number of pod 1                                                                      | `1`                                                     |
+| `replicas`                       | Number of pod 1  (only when `autoscaling.enabled=false`)                                                                    | `1`                                                     |
 | `resources.limits`                   | The resources limits for containers                                                          | `{cpu:500m ,memory:1500Mi}`                                                    |
 | `resources.requests`                 | The requested resources for containers                                                       | `{cpu:100m ,memory:1000Mi}`                                                    |
 | `affinity`                           | Affinity for pod assignment (evaluated as a template)                                                                   | `{}`                           |
@@ -146,6 +146,15 @@ $ helm uninstall bkci
 | `priorityClassName`                     | Define the priority class name for the pod.                                                        | `""`                                        |
 | `tolerations`                        | Tolerations for pod assignment                                                                                          | `[]` (evaluated as a template) |
 
+HPA设置
+|参数|描述|默认值 |
+|---|---|---|
+| `autoscaling.enabled` | 是否开启hpa | `false` |
+| `autoscaling.minReplicas` | 最小分片数 | `1` | 
+| `autoscaling.maxReplicas` | 最大分片数 | `3` |
+| `autoscaling.targetCPU` | CPU阈值 | `80` |
+| `autoscaling.targetMemory` | 内存阈值 | `80` |
+
 其中除了`gateway` , 其他组件还可以配置jvm的内存
 
 |参数|描述|默认值 |
@@ -153,59 +162,82 @@ $ helm uninstall bkci
 | `env.JVM_XMS` | JVM初始内存 | `512m` |
 | `env.JVM_XMX` | JVM最大内存(不能超过limit) | `1024m` | 
 
-### mysql 配置
+## mysql 配置
 默认将部署 mysql ，如果不需要可以关闭。
 相关配置请参考[bitnami/mysql](https://github.com/bitnami/charts/blob/master/bitnami/mysql)
 
 |参数|描述|默认值 |
 |---|---|---|
-| `mysql.enabled` | 是否部署mysql。如果需要使用外部数据库，设置为`false`并配置`config.bkCiMysqlxxxx` | `true` |
-| `redis.auth.rootPassword` | root密码 | `root` |
+| `mysql.enabled` | 是否部署mysql。否则会使用externalMysql配置 | `true` |
+| `mysql.rootPassword` | root密码 | `blueking` |
+| `externalMysql.host` | 外部地址 | `localhost` |
+| `externalMysql.port` | 外部端口 | `3306` |
+| `externalMysql.username` | 外部用户名 | `bkci` |
+| `externalMysql.password` | 外部密码 | `bkci` |
 
-### redis 配置
+## redis 配置
 默认将部署 redis , 如果不需要可以关闭。
 相关配置请参考[bitnami/redis](https://github.com/bitnami/charts/blob/master/bitnami/redis)
 
 |参数|描述|默认值 |
 |---|---|---|
-| `redis.enabled` | 是否部署redis。如果需要使用外部数据库，设置为`false`并配置`config.bkCiRedisxxxx` | `true` |
+| `redis.enabled` | 是否部署redis。否则会使用externalRedis配置 | `true` |
 | `redis.auth.password` | 密码 | `user` |
+| `externalRedis.host` | 外部地址 | `localhost` |
+| `externalRedis.port` | 外部端口 | `6379` |
+| `externalRedis.password` | 外部密码 | `bkci` |
 
-### elasticsearch 配置
+## elasticsearch 配置
 默认将部署 elasticsearch , 如果不需要可以关闭。
 相关配置请参考[bitnami/elasticsearch](https://github.com/bitnami/charts/blob/master/bitnami/elasticsearch)
 
 |参数|描述|默认值 |
 |---|---|---|
-| `elasticsearch.enabled` | 是否部署elasticsearch。如果需要使用外部数据库，设置为`false`并配置`config.bkCiEsxxxx` | `true` |
+| `elasticsearch.enabled` | 是否部署elasticsearch。否则会使用externalElasticsearch配置 | `true` |
+| `externalElasticsearch.host` | 外部地址 | `localhost` |
+| `externalElasticsearch.port` | 外部端口 | `9200` |
+| `externalElasticsearch.username` | 外部用户名 | `bkci` |
+| `externalElasticsearch.password` | 外部密码 | `bkci` |
 
-### rabbitmq 配置
+## rabbitmq 配置
 默认将部署 rabbitmq , 如果不需要可以关闭。
 相关配置请参考[bitnami/rabbitmq](https://github.com/bitnami/charts/blob/master/bitnami/rabbitmq)
 
 |参数|描述|默认值 |
 |---|---|---|
-| `rabbitmq.enabled` | 是否部署rabbitmq。如果需要使用外部数据库，设置为`false`并配置`config.bkCiRabbitmqxxxx` | `true` |
+| `rabbitmq.enabled` | 是否部署rabbitmq。否则会使用externalRabbitmq配置 | `true` |
 | `rabbitmq.auth.username` | 用户名 | `user` |
 | `rabbitmq.auth.password` | 密码 | `user` |
+| `externalRabbitmq.host` | 外部地址 | `localhost` |
+| `externalRabbitmq.vhost` | 外部vhost | `bkci` |
+| `externalRabbitmq.username` | 外部用户名 | `bkci` |
+| `externalRabbitmq.password` | 外部密码 | `bkci` |
 
-### influxdb 配置
+## influxdb 配置
 默认将部署 influxdb , 如果不需要可以关闭。
 相关配置请参考[bitnami/influxdb](https://github.com/bitnami/charts/blob/master/bitnami/influxdb)
 
 |参数|描述|默认值 |
 |---|---|---|
-| `influxdb.enabled` | 是否部署influxdb。如果需要使用外部数据库，设置为`false`并配置`config.bkCiInfluxdbxxxx` | `true` |
+| `influxdb.enabled` | 是否部署influxdb。否则会使用externalInfluxdb配置 | `true` |
 | `influxdb.auth.admin.username` | 用户名 | `user` |
 | `influxdb.auth.admin.password` | 密码 | `password` |
+| `externalInfluxdb.host` | 外部地址 | `localhost` |
+| `externalInfluxdb.port` | 外部端口 | `8086` |
+| `externalInfluxdb.username` | 外部用户名 | `bkci` |
+| `externalInfluxdb.password` | 外部密码 | `bkci` |
 
-### mongodb 配置
+## mongodb 配置
 默认将部署 mongodb , 如果不需要可以关闭。
 相关配置请参考[bitnami/mongodb](https://github.com/bitnami/charts/blob/master/bitnami/mongodb)
 
 |参数|描述|默认值 |
 |---|---|---|
-| `mongodb.enabled` | 是否部署mongodb。如果需要使用外部数据库，设置为`false`并配置`external.mongodb` | `true` |
+| `mongodb.enabled` | 是否部署mongodb。否则会使用externalMongodb配置 | `true` |
+| `mongodb.auth.username` | 用户名 | `true` |
+| `mongodb.auth.password` | 密码 | `true` |
+| `externalMongodb.turbo.turboUrl` | 外部turboUrl | `mongodb://bkci:bkci@localhost:27017/db_turbo` |
+| `externalMongodb.turbo.quartzUrl` | 外部quartzUrl | `mongodb://bkci:bkci@localhost:27017/db_quart` |
 
 ### 数据持久化配置
 
@@ -243,10 +275,6 @@ $ helm uninstall bkci
 | `bkCiDocsUrl`  | 文档地址 | `https://docs.bkci.net/` |
 | `bkCiEnvironmentAgentCollectorOn`  | 第三方构建机状态上报 | `true` |
 | `bkCiEsClusterName`  | ES的集群名 | `devops` |
-| `bkCiEsPassword`  | ES的密码 | `""` |
-| `bkCiEsRestAddr`  | ES的地址 | `""` |
-| `bkCiEsRestPort`  | ES的端口 | `80` |
-| `bkCiEsUser`  | ES的用户名 | `""` |
 | `bkCiFqdn`  | CI的其他域名,空格分隔 | `""` |
 | `bkCiFqdnCert`  | BKCI站点的HTTPS证书存储位置 | `""` |
 | `bkCiGatewayCorsAllowList`  | 网关允许cors的来源域名 | `""` |
@@ -259,12 +287,7 @@ $ helm uninstall bkci
 | `bkCiHttpPort`  | CI使用http时的端口 | `80` |
 | `bkCiIamCallbackUser`  | 供iam系统发起回调时使用的用户名 | `"bk_iam"` |
 | `bkCiIamWebUrl`  | IAM SaaS入口url | `""` |
-| `bkCiInfluxdbAddr`  | influxdb地址 | `""` |
 | `bkCiInfluxdbDb`  | influxdb数据库 | `"agentMetrix"` |
-| `bkCiInfluxdbHost`  | influxdb的host | `""` |
-| `bkCiInfluxdbPassword`  | influxdb密码 | `""` |
-| `bkCiInfluxdbPort`  | influxdb端口 | `80` |
-| `bkCiInfluxdbUser`  | influxdb用户 | `""` |
 | `bkCiJfrogFqdn`  | jFrog完全合格域名 | `""` |
 | `bkCiJfrogHttpPort`  | jFrog构件下载服务的http端口 | `80` |
 | `bkCiJfrogPassword`  | jFrog构件下载服务的密码 | `""` |
@@ -279,23 +302,13 @@ $ helm uninstall bkci
 | `bkCiLogStorageType`  | 日志存储方式 lucene/elasticsearch | `elasticsearch` |
 | `bkCiLuceneDataDir`  | log直接使用lucene时的数据目录 | `""` |
 | `bkCiLuceneIndexMaxSize`  | log直接使用lucene时最大值 | `""` |
-| `bkCiMysqlAddr`  | mysql地址 | `""` |
-| `bkCiMysqlPassword`  | mysql密码 | `""` |
-| `bkCiMysqlUser`  | mysql用户 | `""` |
 | `bkCiPaasDialogLoginUrl`  | 蓝鲸登录小窗 | `""` |
 | `bkCiPaasLoginUrl`  | 跳转到蓝鲸登录服务主页 | `""` |
 | `bkCiPrivateUrl`  | 蓝鲸集群内使用的url, 如iam回调ci时 | `""` |
 | `bkCiProcessEventConcurrent`  | process并发保护 | `10` |
 | `bkCiPublicUrl`  | CI的域名 | `devops.example.com` |
 | `bkCiPublicHostIp` | 对外IP | `127.0.0.1` |
-| `bkCiRabbitmqAddr`  | rabbitmq地址 | `""` |
-| `bkCiRabbitmqPassword`  | rabbitmq密码 | `""` |
-| `bkCiRabbitmqUser`  | rabbitmq用户 | `""` |
-| `bkCiRabbitmqVhost`  | rabbitmq虚拟地址 | `""` |
 | `bkCiRedisDb`  | redis数据库 | `0` |
-| `bkCiRedisHost`  | redis地址 | `""` |
-| `bkCiRedisPassword`  | redis密码 | `""` |
-| `bkCiRedisPort`  | redis端口 | `80` |
 | `bkCiRedisSentinelAddr`  | redis哨兵地址 | `""` |
 | `bkCiRedisSentinelMasterName`  | redis哨兵名称 | `""` |
 | `bkCiRepositoryGithubApp`  | github配置 | `""` |

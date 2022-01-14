@@ -14,7 +14,9 @@ spec:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: microservice
       app.kubernetes.io/name: artifactory
+  {{- if not .Values.artifactory.autoscaling.enabled }}
   replicas: {{ .Values.artifactory.replicas }}
+  {{- end }} 
   serviceName: {{ include "common.names.fullname" . }}-artifactory
   template:
     metadata:

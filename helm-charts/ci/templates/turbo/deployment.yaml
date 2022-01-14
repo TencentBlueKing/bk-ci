@@ -18,7 +18,9 @@ spec:
     matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/name: turbo
       app.kubernetes.io/component: microservice-turbo
+  {{- if not .Values.turbo.autoscaling.enabled }}
   replicas: {{ default 1 .Values.turbo.replicaCount }}
+  {{- end }}
   template:
     metadata:
       labels: {{- include "common.labels.standard" . | nindent 8 }}
