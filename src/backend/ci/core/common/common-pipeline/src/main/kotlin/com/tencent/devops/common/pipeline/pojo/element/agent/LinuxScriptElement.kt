@@ -43,6 +43,8 @@ data class LinuxScriptElement(
     override var status: String? = null,
     @ApiModelProperty("用户自定义ID", required = false)
     override var stepId: String? = null,
+    @ApiModelProperty("FAQ url链接", required = false)
+    val errorFAQUrl: String? = null,
     @ApiModelProperty("脚本类型", required = true)
     val scriptType: BuildScriptType,
     @ApiModelProperty("脚本内容", required = true)
@@ -52,9 +54,7 @@ data class LinuxScriptElement(
     @ApiModelProperty("启用脚本执行失败时归档的文件", required = false)
     val enableArchiveFile: Boolean? = false,
     @ApiModelProperty("脚本执行失败时归档的文件", required = false)
-    val archiveFile: String? = null,
-    @ApiModelProperty("FAQ url链接", required = false)
-    val errorFAQUrl: String? = null
+    val archiveFile: String? = null
 ) : Element(name, id, status) {
 
     companion object {
