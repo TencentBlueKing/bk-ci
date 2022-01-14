@@ -717,9 +717,8 @@ class ExperienceService @Autowired constructor(
             outerReceivers.addAll(outerGroup)
             outerReceivers.addAll(outerUser)
             // 订阅用户
-            val subscribeUsers = experiencePushDao.getSubscriptionList(
+            val subscribeUsers = experiencePushDao.listSubscription(
                 dslContext = dslContext,
-                userId = null,
                 projectId = projectId,
                 bundle = bundleIdentifier,
                 platform = platform

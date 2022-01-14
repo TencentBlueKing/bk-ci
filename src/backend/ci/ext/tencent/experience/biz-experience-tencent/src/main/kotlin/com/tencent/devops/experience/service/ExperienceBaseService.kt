@@ -241,12 +241,17 @@ class ExperienceBaseService @Autowired constructor(
         projectId: String
     ): Boolean {
         logger.info("userId:$userId,platform:$platform,bundleIdentifier:$bundleIdentifier,projectId:$projectId")
-        val isSubscribe = lazy {
-            experiencePushDao.getSubscriptionList(dslContext, userId, projectId, bundleIdentifier, platform)
-                .isNotEmpty
+        val subscriptionRecord = lazy {
+            experiencePushDao.getSubscription(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                bundle = bundleIdentifier,
+                platform = platform
+            ) != null
         }
         val isExperienceGroups = isExperienceGroups(experienceId, userId, platform, bundleIdentifier, projectId)
-        return isSubscribe.value || isExperienceGroups
+        return subscriptionRecord.value || isExperienceGroups
     }
 
     /**
@@ -314,6 +319,7 @@ class ExperienceBaseService @Autowired constructor(
             userId = userId
         ).isEmpty()
     }
+
     /**
      * 根据体验获取组号列表
      */

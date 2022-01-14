@@ -55,14 +55,13 @@ class ExperiencePushService @Autowired constructor(
         platform: Int,
         token: String
     ): Result<Boolean> {
-        // 检查是否该用户有绑定记录
         val userTokenRecord = experiencePushDao.getByUserId(
             dslContext = dslContext,
             userId = userId
         )
         return if (userTokenRecord != null) {
             // 若不为空，则用户有绑定记录，则检查前端传递的token和数据库表中的token是否一致。若不一致，则修改用户的设备token
-            checkAndUpdateToken(
+            checkAndUpdateUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
@@ -70,7 +69,6 @@ class ExperiencePushService @Autowired constructor(
                 userTokenRecord = userTokenRecord
             )
         } else {
-            // 若用户无绑定记录，则直接插入数据库表
             experiencePushDao.createUserToken(
                 dslContext = dslContext,
                 userId = userId,
@@ -81,7 +79,7 @@ class ExperiencePushService @Autowired constructor(
         }
     }
 
-    fun checkAndUpdateToken(
+    fun checkAndUpdateUserToken(
         dslContext: DSLContext,
         userId: String,
         token: String,
@@ -113,7 +111,6 @@ class ExperiencePushService @Autowired constructor(
         bundleIdentifier: String
     ): Result<Boolean> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        // 判断是否为体验组成员
         val isExperienceGroups = experienceBaseService.isExperienceGroups(
             experienceId = experienceId,
             userId = userId,
@@ -121,7 +118,6 @@ class ExperiencePushService @Autowired constructor(
             bundleIdentifier = bundleIdentifier,
             projectId = projectId
         )
-        // 判断是否公开体验
         val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
         when {
             isExperienceGroups -> {
@@ -157,10 +153,15 @@ class ExperiencePushService @Autowired constructor(
                 // 检查前端传输数据是否和公开订阅表中数据一致
                 checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
                 // 查询公开订阅表是否有记录
-                val subscription =
-                    experiencePushDao.getSubscriptionList(dslContext, userId, projectId, bundleIdentifier, platform)
-                        .isNotEmpty
-                if (subscription) {
+                val subscriptionRecord =
+                    experiencePushDao.getSubscription(
+                        dslContext = dslContext,
+                        userId = userId,
+                        projectId = projectId,
+                        bundle = bundleIdentifier,
+                        platform = platform
+                    ) != null
+                if (subscriptionRecord) {
                     return Result("不可重复订阅", false)
                 }
                 experiencePushDao.subscribe(
@@ -184,7 +185,6 @@ class ExperiencePushService @Autowired constructor(
         bundleIdentifier: String
     ): Result<Boolean> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        // 判断是否为体验组成员
         val isExperienceGroups = experienceBaseService.isExperienceGroups(
             experienceId = experienceId,
             userId = userId,
@@ -192,7 +192,6 @@ class ExperiencePushService @Autowired constructor(
             bundleIdentifier = bundleIdentifier,
             projectId = projectId
         )
-        // 判断是否公开体验
         val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
         when {
             isExperienceGroups -> {
@@ -234,10 +233,15 @@ class ExperiencePushService @Autowired constructor(
                 // 检查前端传输数据是否和公开订阅表中数据一致
                 checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
                 // 查询公开订阅表是否有记录
-                val subscription =
-                    experiencePushDao.getSubscriptionList(dslContext, userId, projectId, bundleIdentifier, platform)
-                        .isNotEmpty
-                if (!subscription) {
+                val subscriptionRecord =
+                    experiencePushDao.getSubscription(
+                        dslContext = dslContext,
+                        userId = userId,
+                        projectId = projectId,
+                        bundle = bundleIdentifier,
+                        platform = platform
+                    ) != null
+                if (!subscriptionRecord) {
                     return Result("由于没有订阅该体验，不允许取消体验", false)
                 }
                 experiencePushDao.unSubscribe(
@@ -281,7 +285,6 @@ class ExperiencePushService @Autowired constructor(
         val userId = appNotifyMessage.receiver
         val url = appNotifyMessage.url
         checkNotifyMessage(content, title, userId, url)
-        // 通过userId获取用户绑定设备记录
         val userTokenRecord = experiencePushDao.getByUserId(
             dslContext = dslContext,
             userId = userId
@@ -300,7 +303,6 @@ class ExperiencePushService @Autowired constructor(
             )
         val message =
             createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId, url)
-        // 发送MQ消息
         experienceNotifyService.sendMqMsg(message)
         return Result(true)
     }

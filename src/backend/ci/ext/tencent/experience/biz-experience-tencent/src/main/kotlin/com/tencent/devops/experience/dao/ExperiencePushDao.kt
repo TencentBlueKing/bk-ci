@@ -188,10 +188,24 @@ class ExperiencePushDao {
                 .execute()
         }
     }
-
-    fun getSubscriptionList(
+    fun getSubscription(
         dslContext: DSLContext,
-        userId: String?,
+        userId: String,
+        projectId: String,
+        bundle: String,
+        platform: String
+    ): TExperienceSubscribeRecord? {
+        with(TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundle))
+                .and(PLATFORM.eq(platform))
+                .and(USER_ID.eq(userId))
+                .fetchOne()
+        }
+    }
+    fun listSubscription(
+        dslContext: DSLContext,
         projectId: String,
         bundle: String,
         platform: String
@@ -201,7 +215,6 @@ class ExperiencePushDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundle))
                 .and(PLATFORM.eq(platform))
-                .let { if (null == userId) it else it.and(USER_ID.eq(userId)) }
                 .fetch()
         }
     }
