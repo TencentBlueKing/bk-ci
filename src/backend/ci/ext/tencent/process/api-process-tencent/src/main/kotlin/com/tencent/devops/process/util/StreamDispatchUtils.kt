@@ -105,16 +105,9 @@ object StreamDispatchUtils {
         context: Map<String, String>? = null,
         containsMatrix: Boolean? = false
     ): DispatchType {
-        // macos构建机
+
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
         val workspace = EnvUtils.parseEnv(job.runsOn.workspace, context ?: mapOf())
-        if (poolName.startsWith("macos")) {
-            return MacOSDispatchType(
-                macOSEvn = "Catalina10.15.4:12.2",
-                systemVersion = "Catalina10.15.4",
-                xcodeVersion = "12.2"
-            )
-        }
 
         // 第三方构建机
         if (job.runsOn.selfHosted == true) {
@@ -123,6 +116,15 @@ object StreamDispatchUtils {
                 envName = envName,
                 workspace = workspace,
                 agentType = AgentType.NAME
+            )
+        }
+
+        // macos构建机
+        if (poolName.startsWith("macos")) {
+            return MacOSDispatchType(
+                macOSEvn = "Catalina10.15.4:12.2",
+                systemVersion = "Catalina10.15.4",
+                xcodeVersion = "12.2"
             )
         }
 
