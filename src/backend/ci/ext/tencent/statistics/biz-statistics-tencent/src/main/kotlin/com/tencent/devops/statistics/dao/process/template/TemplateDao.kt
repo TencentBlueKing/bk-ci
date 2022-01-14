@@ -29,6 +29,8 @@ package com.tencent.devops.statistics.dao.process.template
 
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_ID
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -36,6 +38,7 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class TemplateDao {
@@ -189,8 +192,10 @@ class TemplateDao {
         if (storeFlag != null) {
             conditions.add(a.STORE_FLAG.eq(storeFlag))
         }
-        val t = dslContext.select(a.ID.`as`("templateId"), DSL.max(a.VERSION).`as`("version"))
-            .from(a).where(conditions).groupBy(a.ID)
+        val t = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME))
+            .from(a)
+            .where(conditions)
+            .groupBy(a.ID)
 
         val baseStep = dslContext.select(
             a.ID.`as`("templateId"),
@@ -210,16 +215,16 @@ class TemplateDao {
             .from(a)
             .join(t)
             .on(
-                a.ID.eq(t.field("templateId", String::class.java)).and(
-                    a.VERSION.eq(
+                a.ID.eq(t.field(KEY_ID, String::class.java)).and(
+                    a.CREATED_TIME.eq(
                         t.field(
-                            "version",
-                            Long::class.java
+                            KEY_CREATE_TIME,
+                            LocalDateTime::class.java
                         )
                     )
                 )
             )
-            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
+            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
 
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
