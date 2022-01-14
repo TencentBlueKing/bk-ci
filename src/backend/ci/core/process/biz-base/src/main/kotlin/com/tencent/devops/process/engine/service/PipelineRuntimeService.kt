@@ -255,7 +255,11 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()
-        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds, projectId)
+        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(
+            dslContext = dslContext,
+            buildIds = buildIds,
+            projectId = projectId
+        )
         buildInfoList.forEach {
             result[it.buildId] = it.buildNum.toString()
         }
@@ -556,7 +560,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result
