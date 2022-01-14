@@ -13,28 +13,7 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templateAcrossInfoDao: PipelineBuildTemplateAcrossInfoDao
 ) {
-
-    fun create(
-        projectId: String,
-        pipelineId: String,
-        buildId: String? = null,
-        userId: String,
-        templateAcrossInfo: BuildTemplateAcrossInfo
-    ) {
-        templateAcrossInfoDao.create(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            templateId = templateAcrossInfo.templateId,
-            templateType = templateAcrossInfo.templateType,
-            templateInstancesIds = templateAcrossInfo.templateInstancesIds,
-            targetProjectId = templateAcrossInfo.targetProjectId,
-            userId = userId
-        )
-    }
-
-    fun batchCreate(
+    fun batchCreateAcrossInfo(
         projectId: String,
         pipelineId: String,
         buildId: String? = null,
@@ -51,7 +30,7 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
         )
     }
 
-    fun get(
+    fun getAcrossInfo(
         projectId: String,
         pipelineId: String,
         templateId: String
@@ -67,7 +46,7 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
         }
     }
 
-    fun updateBuildId(
+    fun updateAcrossInfoBuildId(
         projectId: String,
         pipelineId: String,
         templateId: String,
@@ -76,7 +55,7 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
         return templateAcrossInfoDao.updateBuildId(dslContext, projectId, pipelineId, templateId, buildId) > 0
     }
 
-    fun delete(
+    fun deleteAcrossInfo(
         projectId: String,
         pipelineId: String,
         buildId: String?,
