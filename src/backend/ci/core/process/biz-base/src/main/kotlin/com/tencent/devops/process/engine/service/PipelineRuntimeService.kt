@@ -255,7 +255,11 @@ class PipelineRuntimeService @Autowired constructor(
 
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()
-        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds, projectId)
+        val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(
+            dslContext = dslContext,
+            buildIds = buildIds,
+            projectId = projectId
+        )
         buildInfoList.forEach {
             result[it.buildId] = it.buildNum.toString()
         }
@@ -556,7 +560,7 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getBuildBasicInfoByIds(buildIds: Set<String>): Map<String, BuildBasicInfo> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds)
+        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext = dslContext, buildIds = buildIds)
         val result = mutableMapOf<String, BuildBasicInfo>()
         if (records.isEmpty()) {
             return result
@@ -580,8 +584,19 @@ class PipelineRuntimeService @Autowired constructor(
         return genBuildHistory(record, values, currentTimestamp)
     }
 
-    fun getBuildHistoryByIds(buildIds: Set<String>, projectId: String? = null): List<BuildHistory> {
-        val records = pipelineBuildDao.listBuildInfoByBuildIds(dslContext, buildIds, projectId)
+    fun getBuildHistoryByIds(
+        buildIds: Set<String>,
+        startBeginTime: String? = null,
+        endBeginTime: String? = null,
+        projectId: String? = null
+    ): List<BuildHistory> {
+        val records = pipelineBuildDao.listBuildInfoByBuildIds(
+            dslContext = dslContext,
+            buildIds = buildIds,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
+            projectId = projectId
+        )
         val result = mutableListOf<BuildHistory>()
         if (records.isEmpty()) {
             return result
@@ -768,11 +783,14 @@ class PipelineRuntimeService @Autowired constructor(
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
                 if (context.needSkipContainerWhenFailRetry(stage, container) &&
-                    lastTimeBuildContainerRecords.isNotEmpty()) {
+                    lastTimeBuildContainerRecords.isNotEmpty()
+                ) {
                     if (null == pipelineContainerService.findTaskRecord(
                             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                             container = container,
-                            retryStartTaskId = context.retryStartTaskId)) {
+                            retryStartTaskId = context.retryStartTaskId
+                        )
+                    ) {
 
                         logger.info("[$buildId|RETRY_SKIP_JOB|j(${container.id!!})|${container.name}")
                         context.containerSeq++
@@ -899,7 +917,8 @@ class PipelineRuntimeService @Autowired constructor(
                 if (buildHistoryRecord != null) {
                     if (!context.stageRetry &&
                         context.actionType.isRetry() &&
-                        context.retryStartTaskId.isNullOrEmpty()) {
+                        context.retryStartTaskId.isNullOrEmpty()
+                    ) {
                         // 完整重试,重置启动时间
                         buildHistoryRecord.startTime = LocalDateTime.now()
                     }
@@ -913,10 +932,12 @@ class PipelineRuntimeService @Autowired constructor(
                         list.find { it.key == PIPELINE_RETRY_COUNT }?.let { param ->
                             param.value = retryCount
                         } ?: run {
-                            list.add(BuildParameters(
-                                key = PIPELINE_RETRY_COUNT,
-                                value = retryCount
-                            ))
+                            list.add(
+                                BuildParameters(
+                                    key = PIPELINE_RETRY_COUNT,
+                                    value = retryCount
+                                )
+                            )
                         }
                         JsonUtil.toJson(list)
                     }
@@ -982,10 +1003,12 @@ class PipelineRuntimeService @Autowired constructor(
                         parentBuildId = context.parentBuildId,
                         parentTaskId = context.parentTaskId,
                         buildParameters = currentBuildNo?.let { self ->
-                            originStartParams.plus(BuildParameters(
-                                key = BUILD_NO,
-                                value = self.toString()
-                            ))
+                            originStartParams.plus(
+                                BuildParameters(
+                                    key = BUILD_NO,
+                                    value = self.toString()
+                                )
+                            )
                         } ?: originStartParams,
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
@@ -1037,8 +1060,10 @@ class PipelineRuntimeService @Autowired constructor(
                     logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
                     pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 } else {
-                    logger.info("batch store to pipelineBuildTask, " +
-                        "updateExistsRecord size: ${updateTaskExistsRecord.size}")
+                    logger.info(
+                        "batch store to pipelineBuildTask, " +
+                            "updateExistsRecord size: ${updateTaskExistsRecord.size}"
+                    )
                     pipelineTaskService.batchUpdate(transactionContext, updateTaskExistsRecord)
                 }
 
