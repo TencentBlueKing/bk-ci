@@ -40,6 +40,7 @@ interface ExtDebugService {
         userId: String,
         projectId: String,
         pipelineId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        containerName: String
     ): Boolean
 }
