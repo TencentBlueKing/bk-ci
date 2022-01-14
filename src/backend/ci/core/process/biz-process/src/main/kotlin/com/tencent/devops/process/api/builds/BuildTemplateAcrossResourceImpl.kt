@@ -16,6 +16,6 @@ class BuildTemplateAcrossResourceImpl @Autowired constructor(
         pipelineId: String,
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>> {
-        return Result(templateAcrossInfoService.get(projectId, pipelineId, templateId))
+        return Result(templateAcrossInfoService.getAcrossInfo(projectId, pipelineId, templateId))
     }
 }

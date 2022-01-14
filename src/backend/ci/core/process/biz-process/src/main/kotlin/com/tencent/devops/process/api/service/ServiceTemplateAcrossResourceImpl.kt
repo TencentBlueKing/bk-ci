@@ -16,18 +16,18 @@ class ServiceTemplateAcrossResourceImpl @Autowired constructor(
         pipelineId: String,
         templateAcrossInfos: List<BuildTemplateAcrossInfo>
     ) {
-        templateAcrossInfoService.batchCreate(projectId, pipelineId, null, userId, templateAcrossInfos)
+        templateAcrossInfoService.batchCreateAcrossInfo(projectId, pipelineId, null, userId, templateAcrossInfos)
     }
 
     override fun update(projectId: String, pipelineId: String, templateId: String, buildId: String): Result<Boolean> {
         return Result(
-            templateAcrossInfoService.updateBuildId(projectId, pipelineId, templateId, buildId)
+            templateAcrossInfoService.updateAcrossInfoBuildId(projectId, pipelineId, templateId, buildId)
         )
     }
 
     override fun delete(projectId: String, pipelineId: String, templateId: String?, buildId: String?): Result<Boolean> {
         return Result(
-            templateAcrossInfoService.delete(projectId, pipelineId, buildId, templateId)
+            templateAcrossInfoService.deleteAcrossInfo(projectId, pipelineId, buildId, templateId)
         )
     }
 }
