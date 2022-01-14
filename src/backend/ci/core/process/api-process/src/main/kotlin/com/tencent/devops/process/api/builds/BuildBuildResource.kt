@@ -65,6 +65,9 @@ interface BuildBuildResource {
     @PUT
     @Path("/started")
     fun setStarted(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -81,6 +84,9 @@ interface BuildBuildResource {
     @GET
     @Path("/claim")
     fun claimTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -97,6 +103,9 @@ interface BuildBuildResource {
     @POST
     @Path("/complete")
     fun completeTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -115,6 +124,9 @@ interface BuildBuildResource {
     @POST
     @Path("/end")
     fun endTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -131,7 +143,7 @@ interface BuildBuildResource {
     @POST
     @Path("/timeout")
     fun timeoutTheBuild(
-        @ApiParam("projectId", required = true)
+        @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("pipelineId", required = true)
@@ -218,6 +230,9 @@ interface BuildBuildResource {
     @GET
     @Path("/taskIds/{taskId}/subVar")
     fun getSubBuildVars(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -230,7 +245,7 @@ interface BuildBuildResource {
     @PUT
     @Path("/project/updateRedisAtoms")
     fun updateRedisAtoms(
-        @ApiParam("", required = true)
+        @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
         @ApiParam("构建ID", required = true)

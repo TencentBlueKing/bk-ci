@@ -31,12 +31,9 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.pojo.SubscriptionType
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.DockerBuildService
-import com.tencent.devops.process.service.TxPipelineSubscriptionService
 import com.tencent.devops.process.service.TXPipelineExportService
 import com.tencent.devops.process.service.TXPipelineService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
@@ -48,7 +45,6 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class TXUserPipelineResourceImpl @Autowired constructor(
-    private val pipelineSubscriptionService: TxPipelineSubscriptionService,
     private val dockerBuildService: DockerBuildService,
     private val pipelineService: TXPipelineService,
     private val pipelineExportService: TXPipelineExportService
@@ -57,24 +53,6 @@ class TXUserPipelineResourceImpl @Autowired constructor(
     override fun enableDockerBuild(userId: String, projectId: String): Result<Boolean> {
         checkParam(userId, projectId)
         return Result(dockerBuildService.isEnable(userId, projectId))
-    }
-
-    override fun subscription(userId: String, projectId: String, pipelineId: String, type: SubscriptionType?): Result<Boolean> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineSubscriptionService.subscription(userId, pipelineId, type))
-    }
-
-    override fun getSubscription(userId: String, projectId: String, pipelineId: String): Result<PipelineSubscription?> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineSubscriptionService.getSubscriptions(userId, pipelineId))
-    }
-
-    override fun cancelSubscription(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
-        checkParam(userId, projectId)
-        checkPipelineId(pipelineId)
-        return Result(pipelineSubscriptionService.deleteSubscriptions(userId, pipelineId))
     }
 
     override fun exportPipelinePreCI(userId: String, projectId: String, pipelineId: String): Response {

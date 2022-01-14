@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
 import io.swagger.annotations.ApiModel
@@ -41,45 +42,47 @@ data class Pipeline(
     @ApiModelProperty("流水线名称", required = true)
     var pipelineName: String,
     @ApiModelProperty("流水线描述", required = false)
-    val pipelineDesc: String?,
+    var pipelineDesc: String? = null,
     @ApiModelProperty("流水线任务数量", required = true)
     val taskCount: Int,
     @ApiModelProperty("构建次数", required = true)
-    val buildCount: Long,
+    var buildCount: Long = 0,
     @ApiModelProperty("运行锁定", required = false)
-    val lock: Boolean = false,
+    var lock: Boolean = false,
     @ApiModelProperty("是否可手工启动", required = true)
     val canManualStartup: Boolean,
     @ApiModelProperty("最后构建启动时间", required = false)
-    val latestBuildStartTime: Long?,
+    var latestBuildStartTime: Long? = null,
     @ApiModelProperty("最后构建结束时间", required = false)
-    val latestBuildEndTime: Long?,
+    var latestBuildEndTime: Long? = null,
     @ApiModelProperty("最后构建状态", required = false)
-    val latestBuildStatus: BuildStatus?,
+    var latestBuildStatus: BuildStatus? = null,
     @ApiModelProperty("最后构建版本号", required = false)
-    val latestBuildNum: Int?,
+    var latestBuildNum: Int? = null,
     @ApiModelProperty("最后构建任务名称", required = false)
-    val latestBuildTaskName: String?,
+    var latestBuildTaskName: String? = null,
     @ApiModelProperty("最后任务预计执行时间（毫秒）", required = false)
     val latestBuildEstimatedExecutionSeconds: Long?,
     @ApiModelProperty("最后构建实例ID", required = false)
-    val latestBuildId: String?,
+    var latestBuildId: String? = null,
     @ApiModelProperty("部署时间", required = true)
     val deploymentTime: Long,
     @ApiModelProperty("流水线创建时间", required = true)
     val createTime: Long = deploymentTime,
+    @ApiModelProperty("更新时间", required = true)
+    val updateTime: Long,
     @ApiModelProperty("编排文件版本号", required = true)
     val pipelineVersion: Int,
     @ApiModelProperty("服务器当前时间戳", required = true)
     val currentTimestamp: Long,
     @ApiModelProperty("当前运行的构建的个数", required = true)
-    val runningBuildCount: Int,
+    var runningBuildCount: Int = 0,
     @ApiModelProperty("是否有list权限", required = true)
     val hasPermission: Boolean,
     @ApiModelProperty("是否被收藏", required = true)
     val hasCollect: Boolean,
     @ApiModelProperty("最后执行人id", required = false)
-    val latestBuildUserId: String = "",
+    var latestBuildUserId: String = "",
     @ApiModelProperty("是否从模板中实例化出来的", required = false)
     var instanceFromTemplate: Boolean? = null,
     @ApiModelProperty("模板ID", required = false)
@@ -89,7 +92,9 @@ data class Pipeline(
     @ApiModelProperty("流水线分组和标签", required = false)
     var groupLabel: List<PipelineGroupLabels>? = null,
     @ApiModelProperty("最后自定义构建版本号", required = false)
-    val latestBuildNumAlias: String? = null,
+    var latestBuildNumAlias: String? = null,
     @ApiModelProperty("自定义构建号规则", required = false)
-    val buildNumRule: String? = null
+    var buildNumRule: String? = null,
+    @ApiModelProperty("编排详情", required = false)
+    var model: Model? = null
 )

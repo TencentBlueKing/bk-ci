@@ -73,12 +73,21 @@ class TemplateInstanceBaseDao {
                     userId,
                     userId
                 )
+                .onDuplicateKeyUpdate()
+                .set(TEMPLATE_ID, templateId)
+                .set(TEMPLATE_VERSION, templateVersion)
+                .set(USE_TEMPLATE_SETTINGS_FLAG, useTemplateSettingsFlag)
+                .set(TOTAL_ITEM_NUM, totalItemNum)
+                .set(STATUS, status)
+                .set(CREATOR, userId)
+                .set(MODIFIER, userId)
                 .execute()
         }
     }
 
     fun updateTemplateInstanceBase(
         dslContext: DSLContext,
+        projectId: String,
         baseId: String,
         successItemNum: Int? = null,
         failItemNum: Int? = null,
@@ -98,15 +107,19 @@ class TemplateInstanceBaseDao {
             }
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
-                .where(ID.eq(baseId))
+                .where(ID.eq(baseId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
-    fun getTemplateInstanceBase(dslContext: DSLContext, baseId: String): TTemplateInstanceBaseRecord? {
+    fun getTemplateInstanceBase(
+        dslContext: DSLContext,
+        projectId: String,
+        baseId: String
+    ): TTemplateInstanceBaseRecord? {
         return with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
             dslContext.selectFrom(this)
-                .where(ID.eq(baseId))
+                .where(ID.eq(baseId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }
@@ -129,10 +142,10 @@ class TemplateInstanceBaseDao {
         }
     }
 
-    fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
+    fun deleteByBaseId(dslContext: DSLContext, projectId: String, baseId: String) {
         with(TTemplateInstanceBase.T_TEMPLATE_INSTANCE_BASE) {
             dslContext.deleteFrom(this)
-                .where(ID.eq(baseId))
+                .where(ID.eq(baseId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

@@ -39,7 +39,8 @@ data class TriggerOn(
     val push: PushRule?,
     val tag: TagRule?,
     val mr: MrRule?,
-    val schedules: SchedulesRule? = null
+    val schedules: SchedulesRule? = null,
+    val delete: DeleteRule? = null
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -48,5 +49,6 @@ data class PreTriggerOn(
     val push: Any?,
     val tag: Any?,
     val mr: Any?,
-    val schedules: SchedulesRule?
+    val schedules: SchedulesRule?,
+    val delete: DeleteRule?
 )
