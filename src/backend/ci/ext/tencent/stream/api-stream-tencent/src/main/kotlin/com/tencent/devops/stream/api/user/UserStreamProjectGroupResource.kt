@@ -25,12 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:api-repository"))
-}
+package com.tencent.devops.stream.api.user
 
-plugins {
-    `task-deploy-to-maven`
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.GitCodeGroup
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["USER_STREAM_PROJECT_GROUP"], description = "user-项目组资源")
+@Path("/user/groups")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStreamProjectGroupResource {
+
+    @ApiOperation("获取工蜂项目组列表")
+    @GET
+    @Path("/list")
+    fun getProjects(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Pagination<GitCodeGroup>>
 }
