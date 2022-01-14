@@ -25,31 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("StreamTriggerBuild请求")
-data class StreamTriggerBuildReq(
-    @ApiModelProperty("分支")
-    val branch: String?,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
+/**
+{
+"id": 95698,
+"name": "git_01subgroup.1",
+"path": "git_01subgroup.1",
+"description": "",
+"avatar_url": "https://git.xxx.com/assets/images/avatar/no_group_avatar.png",
+"full_name": "git_01rootsubgroup/git_01subgroup.1",
+"full_path": "git_01subgroup/git_01subgroup.1",
+"web_url": "https://git.xxx.com/groups/git_01subgroup/git_01subgroup.1",
+"parent_id": 95696
+}
+ */
+@ApiModel("工蜂项目组列表信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitCodeGroup(
+    val id: Long,
+    val name: String,
+    val path: String,
     val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("模拟代码库事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码库类型,预留字段")
-    val scmType: ScmType = ScmType.CODE_GIT,
-    @ApiModelProperty("模拟代码事件类型,预留字段")
-    val eventType: String? = null,
-    @ApiModelProperty("触发方式")
-    val objectKind: String = OBJECT_KIND_MANUAL
+    @JsonProperty("avatar_url")
+    val avatarUrl: String?,
+    @JsonProperty("full_name")
+    val fullName: String?,
+    @JsonProperty("full_path")
+    val fullPath: String?,
+    @JsonProperty("web_url")
+    val webUrl: String?,
+    @JsonProperty("parent_id")
+    val parentId: Long?
 )

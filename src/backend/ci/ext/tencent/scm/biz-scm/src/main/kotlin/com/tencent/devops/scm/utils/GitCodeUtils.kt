@@ -25,31 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.scm.utils
 
-import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.scm.pojo.GitCodeErrorResp
+import okhttp3.Response
+import javax.ws.rs.core.Response as HttpResp
 
-@ApiModel("StreamTriggerBuild请求")
-data class StreamTriggerBuildReq(
-    @ApiModelProperty("分支")
-    val branch: String?,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null,
-    @ApiModelProperty("模拟代码库事件请求体")
-    val payload: String? = null,
-    @ApiModelProperty("模拟代码库类型,预留字段")
-    val scmType: ScmType = ScmType.CODE_GIT,
-    @ApiModelProperty("模拟代码事件类型,预留字段")
-    val eventType: String? = null,
-    @ApiModelProperty("触发方式")
-    val objectKind: String = OBJECT_KIND_MANUAL
-)
+object GitCodeUtils {
+
+    /**
+     * 将工蜂的错误信息完整返回给微服务调用方
+     */
+    fun handleErrorMessage(
+        response: Response
+    ): CustomException {
+        val data = response.body()?.string() ?: return CustomException(
+            status = HttpResp.Status.fromStatusCode(response.code()) ?: HttpResp.Status.BAD_REQUEST,
+            message = response.message()
+        )
+        val resp = JsonUtil.getObjectMapper().readValue(data) as GitCodeErrorResp
+        return CustomException(
+            status = HttpResp.Status.fromStatusCode(response.code()) ?: HttpResp.Status.BAD_REQUEST,
+            message = resp.message ?: response.message()
+        )
+    }
+}

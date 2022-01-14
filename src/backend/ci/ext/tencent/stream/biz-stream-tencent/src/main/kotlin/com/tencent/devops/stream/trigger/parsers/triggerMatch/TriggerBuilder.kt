@@ -24,7 +24,7 @@ object TriggerBuilder {
 
     fun buildCodeGitWebHookTriggerElement(
         gitEvent: GitEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement? {
         return when (gitEvent) {
             is GitPushEvent ->
@@ -39,8 +39,8 @@ object TriggerBuilder {
         }
     }
 
-    private fun buildGitIssueElement(gitEvent: GitIssueEvent, triggerOn: TriggerOn): CodeGitWebHookTriggerElement? {
-        if (triggerOn.issues == null) {
+    private fun buildGitIssueElement(gitEvent: GitIssueEvent, triggerOn: TriggerOn?): CodeGitWebHookTriggerElement? {
+        if (triggerOn?.issues == null) {
             return null
         }
         return CodeGitWebHookTriggerElement(
@@ -83,9 +83,9 @@ object TriggerBuilder {
 
     private fun buildGitPushEventElement(
         gitPushEvent: GitPushEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement? {
-        if (triggerOn.push == null) {
+        if (triggerOn?.push == null) {
             return null
         }
         return CodeGitWebHookTriggerElement(
@@ -107,9 +107,9 @@ object TriggerBuilder {
 
     private fun buildGitTagEventElement(
         gitTagPushEvent: GitTagPushEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement? {
-        if (triggerOn.tag == null) {
+        if (triggerOn?.tag == null) {
             return null
         }
         return CodeGitWebHookTriggerElement(
@@ -133,9 +133,9 @@ object TriggerBuilder {
 
     private fun buildGitMrEventElement(
         gitMergeRequestEvent: GitMergeRequestEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement? {
-        if (triggerOn.mr == null) {
+        if (triggerOn?.mr == null) {
             return null
         }
         return CodeGitWebHookTriggerElement(

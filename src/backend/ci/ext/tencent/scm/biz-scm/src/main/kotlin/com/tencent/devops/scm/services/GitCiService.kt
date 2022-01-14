@@ -45,9 +45,11 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
+import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.QualityUtils
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -445,6 +447,34 @@ class GitCiService {
                 status = Response.Status.fromStatusCode(code),
                 message = "($code)${e.message}"
             )
+        }
+    }
+
+    fun getProjectGroupList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<GitCodeGroup> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val url = "$gitCIUrl/api/v3/groups?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            .addParams(mapOf(
+                "owned" to owned,
+                "min_access_level" to minAccessLevel?.level
+            ))
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getProjectGroupList with response=$response")
+            if (!response.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(response)
+            }
+            val data = response.body()?.string()?.ifBlank { null } ?: return emptyList()
+            return JsonUtil.to(data, object : TypeReference<List<GitCodeGroup>>() {})
         }
     }
 
