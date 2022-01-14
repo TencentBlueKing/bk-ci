@@ -36,6 +36,7 @@ import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -60,9 +61,12 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.pojo.isMr
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -82,7 +86,10 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val gitCheckService: GitCheckService,
     private val streamGitConfig: StreamGitConfig,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
+    private val triggerMessageUtil: StreamTriggerMessageUtils,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val oauthService: StreamOauthService,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
@@ -183,7 +190,11 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = event.userId,
                 projectId = gitCIBasicSetting.projectCode!!,
                 pipelineId = pipeline.pipelineId,
-                templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(yamlTransferData.templateData.templateId)
+                templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(
+                    gitRequestEventId = event.id!!,
+                    gitProjectId = event.gitProjectId,
+                    templateId = yamlTransferData.templateData.templateId
+                )
             )
         }
     }
@@ -197,8 +208,6 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitBuildId: Long,
         yamlTransferData: YamlTransferData? = null
     ): BuildId? {
-        // 跨模板信息构建唯一ID
-        val templateId = yamlTransferData?.templateData?.templateId
         preStartBuild(pipeline, event, gitCIBasicSetting, model, yamlTransferData)
 
         val processClient = client.get(ServicePipelineResource::class)
@@ -364,12 +373,13 @@ class StreamYamlBaseBuild @Autowired constructor(
         pipelineName: String
     ): String {
         processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
-        return client.get(ServiceBuildResource::class).manualStartup(
+        return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
             pipelineId = pipelineId,
             values = mapOf(PIPELINE_NAME to pipelineName),
-            channelCode = channelCode
+            channelCode = channelCode,
+            startType = StartType.SERVICE
         ).data!!.id
     }
 
@@ -396,16 +406,28 @@ class StreamYamlBaseBuild @Autowired constructor(
         return false
     }
 
-    private fun YamlTransferData.getTemplateAcrossInfo(templateId: String): List<BuildTemplateAcrossInfo> {
+    private fun YamlTransferData.getTemplateAcrossInfo(
+        gitRequestEventId: Long,
+        gitProjectId: Long,
+        templateId: String
+    ): List<BuildTemplateAcrossInfo> {
         val results = mutableListOf<BuildTemplateAcrossInfo>()
         templateData.transferDataList.forEach { (remoteProjectId, transferList) ->
+            // 将pathWithPathSpace转为数字id
+            val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitRequestEventId = gitRequestEventId,
+                gitProjectId = remoteProjectId,
+                token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
+                useAccessToken = true,
+                getProjectInfo = streamScmService::getProjectInfoRetry
+            ).gitProjectId.toString()
             transferList.forEach nextData@{ data ->
                 results.add(
                     BuildTemplateAcrossInfo(
                         templateId = templateId,
-                        templateType = data.templateType.toAcrossType(data.templateType) ?: return@nextData,
+                        templateType = data.templateType.toAcrossType() ?: return@nextData,
                         templateInstancesIds = data.objectIds.toList(),
-                        targetProjectId = remoteProjectId
+                        targetProjectId = remoteProjectIdLong
                     )
                 )
             }
@@ -413,8 +435,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         return results
     }
 
-    private fun TemplateType.toAcrossType(type: TemplateType): TemplateAcrossInfoType? {
-        return when (type) {
+    private fun TemplateType.toAcrossType(): TemplateAcrossInfoType? {
+        return when (this) {
             TemplateType.STEP -> TemplateAcrossInfoType.STEP
             TemplateType.JOB -> TemplateAcrossInfoType.JOB
             else -> null

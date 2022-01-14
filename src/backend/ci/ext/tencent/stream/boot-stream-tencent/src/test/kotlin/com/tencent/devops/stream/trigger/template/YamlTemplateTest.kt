@@ -124,6 +124,7 @@ class YamlTemplateTest {
             filePath = testYaml,
             yamlObject = preTemplateYamlObject,
             projectData = TemplateProjectData(
+                gitRequestEventId = 1,
                 triggerUserId = "ruotiantang",
                 triggerProjectId = 580280,
                 triggerToken = "",

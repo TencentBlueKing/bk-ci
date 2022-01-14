@@ -38,6 +38,7 @@ import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -50,7 +51,8 @@ class YamlTemplateService @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val ticketService: TicketService,
     private val yamlVersion: YamlVersion,
-    private val yamlSchemaCheck: YamlSchemaCheck
+    private val yamlSchemaCheck: YamlSchemaCheck,
+    private val streamTriggerCache: StreamTriggerCache
 ) {
 
     companion object {
@@ -72,6 +74,7 @@ class YamlTemplateService @Autowired constructor(
     fun getTemplate(
         param: GetTemplateParam
     ): String {
+        val gitRequestEventId = param.gitRequestEventId
         val token = param.token
         val event = param.event
         val forkToken = param.forkToken
@@ -122,7 +125,7 @@ class YamlTemplateService @Autowired constructor(
             val content = streamScmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetRepo!!,
-                ref = ref ?: getDefaultBranch(oAuthToken, targetRepo, true),
+                ref = ref ?: getDefaultBranch(gitRequestEventId, oAuthToken, targetRepo, true),
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
@@ -148,7 +151,7 @@ class YamlTemplateService @Autowired constructor(
             val content = streamScmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetRepo!!,
-                ref = ref ?: getDefaultBranch(personToken, targetRepo, false),
+                ref = ref ?: getDefaultBranch(gitRequestEventId, personToken, targetRepo, false),
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
@@ -168,8 +171,19 @@ class YamlTemplateService @Autowired constructor(
         }
     }
 
-    private fun getDefaultBranch(token: String, gitProjectId: String, useAccessToken: Boolean): String {
-        return streamScmService.getProjectInfoRetry(token, gitProjectId, useAccessToken).defaultBranch!!
+    private fun getDefaultBranch(
+        gitRequestEventId: Long,
+        token: String,
+        gitProjectId: String,
+        useAccessToken: Boolean
+    ): String {
+        return streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitRequestEventId = gitRequestEventId,
+            gitProjectId = gitProjectId,
+            token = token,
+            useAccessToken = useAccessToken,
+            getProjectInfo = streamScmService::getProjectInfoRetry
+        ).defaultBranch!!
     }
 
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {

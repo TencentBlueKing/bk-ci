@@ -51,6 +51,7 @@ fun TemplateLibrary.getTemplate(path: String, templateType: TemplateType?, repo:
     val template = if (repo == null) {
         getTemplateMethod(
             GetTemplateParam(
+                gitRequestEventId = projectData.gitRequestEventId,
                 token = projectData.triggerToken,
                 forkToken = projectData.forkGitToken,
                 gitProjectId = projectData.triggerProjectId,
@@ -66,6 +67,7 @@ fun TemplateLibrary.getTemplate(path: String, templateType: TemplateType?, repo:
     } else {
         getTemplateMethod(
             GetTemplateParam(
+                gitRequestEventId = projectData.gitRequestEventId,
                 token = null,
                 forkToken = null,
                 gitProjectId = projectData.sourceProjectId,

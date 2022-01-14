@@ -31,6 +31,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 data class GetTemplateParam(
+    val gitRequestEventId: Long,
     val token: String?,
     val forkToken: String?,
     val gitProjectId: Long,

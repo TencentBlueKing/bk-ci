@@ -25,20 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo
+package com.tencent.devops.stream.trigger.pojo
 
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-
-data class TemplateProjectData(
-    val gitRequestEventId: Long,
-    // 发起者的库ID,用户名,分支
-    val triggerProjectId: Long,
-    // sourceProjectId，在fork时是源库的ID
-    val sourceProjectId: Long,
-    val triggerUserId: String,
-    val triggerRef: String,
-    val triggerToken: String,
-    val forkGitToken: String?,
-    val changeSet: Set<String>?,
-    val event: GitEvent?
+data class StreamGitProjectCache(
+    val gitProjectName: String?,
+    val gitProjectId: Long?,
+    val defaultBranch: String?
 )
