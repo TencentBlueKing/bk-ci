@@ -57,7 +57,11 @@ class PipelineStageTagDao {
                     id,
                     stageTagName,
                     weight
-                ).execute()
+                )
+                .onDuplicateKeyUpdate()
+                .set(STAGE_TAG_NAME, stageTagName)
+                .set(WEIGHT, weight)
+                .execute()
         }
     }
 

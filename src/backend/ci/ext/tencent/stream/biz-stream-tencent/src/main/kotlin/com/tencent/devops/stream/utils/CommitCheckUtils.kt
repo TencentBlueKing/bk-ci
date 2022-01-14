@@ -39,6 +39,7 @@ object CommitCheckUtils {
 //        val event = request.gitEvent ?: return false
         return gitCIBasicSetting.enableCommitCheck &&
             request.objectKind != TGitObjectKind.MANUAL.value &&
+            request.objectKind != TGitObjectKind.OPENAPI.value &&
             !request.isDeleteBranch() &&
             !request.isDeleteTag()
     }
