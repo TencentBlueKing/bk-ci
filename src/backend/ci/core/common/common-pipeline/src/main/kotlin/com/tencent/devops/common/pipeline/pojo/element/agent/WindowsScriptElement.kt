@@ -49,8 +49,9 @@ data class WindowsScriptElement(
     @ApiModelProperty("脚本类型", required = true)
     val scriptType: BuildScriptType,
     @ApiModelProperty("字符集类型", required = false)
-    val charsetType: CharsetType? = null
-
+    val charsetType: CharsetType? = null,
+    @ApiModelProperty("FAQ url链接", required = false)
+    val errorFAQUrl: String? = null
 ) : Element(name, id, status) {
 
     companion object {
