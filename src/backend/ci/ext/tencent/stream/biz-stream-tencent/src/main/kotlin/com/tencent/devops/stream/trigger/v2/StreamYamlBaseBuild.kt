@@ -420,7 +420,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
                 useAccessToken = true,
                 getProjectInfo = streamScmService::getProjectInfoRetry
-            ).gitProjectId.toString()
+            ).gitProjectId.toString().let { "git_$it" }
             transferList.forEach nextData@{ data ->
                 results.add(
                     BuildTemplateAcrossInfo(
