@@ -387,7 +387,7 @@ class TXPipelineExportService @Autowired constructor(
         return stages
     }
 
-    private fun getCheckInForStage(stage: Stage):PreStageCheck? {
+    private fun getCheckInForStage(stage: Stage): PreStageCheck? {
         val reviews = PreStageReviews(
             flows = stage.checkIn?.reviewGroups?.map { PreFlow(it.name, it.reviewers) },
             variables = stage.checkIn?.reviewParams?.associate {
@@ -407,7 +407,7 @@ class TXPipelineExportService @Autowired constructor(
             },
             description = stage.checkIn?.reviewDesc
         )
-        if (reviews.flows.isNullOrEmpty()){
+        if (reviews.flows.isNullOrEmpty()) {
             return null
         }
         return PreStageCheck(
@@ -937,7 +937,7 @@ class TXPipelineExportService @Autowired constructor(
                     stepList.add(
                         V2Step(
                             name = null,
-                            id = step.stepId,
+                            id = element.stepId,
                             ifFiled = null,
                             uses = "### [${element.name}] 内置老插件不支持导出，请使用市场插件 ###",
                             with = null,
