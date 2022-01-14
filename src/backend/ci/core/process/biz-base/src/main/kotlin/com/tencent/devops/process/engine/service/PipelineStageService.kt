@@ -196,7 +196,7 @@ class PipelineStageService @Autowired constructor(
                     dslContext = context, projectId = projectId, buildId = buildId,
                     stageId = stageId, controlOption = controlOption!!,
                     // #5246 所有质量红线检查都不影响stage原构建状态
-                    buildStatus = buildStage.status, initStartTime = true,
+                    buildStatus = null, initStartTime = true,
                     checkIn = checkIn, checkOut = checkOut
                 )
                 pipelineBuildDao.updateBuildStageStatus(

@@ -51,6 +51,7 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
@@ -608,6 +609,23 @@ class StreamScmService @Autowired constructor(
             mrId = mrId,
             mrBody = mrBody
         )
+    }
+
+    fun getProjectGroupList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<GitCodeGroup>? {
+        logger.info("getProjectGroupList: [$accessToken|$page|$pageSize]")
+        return client.getScm(ServiceGitCiResource::class).getProjectGroupsList(
+            accessToken = accessToken,
+            page = page,
+            pageSize = pageSize,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        ).data
     }
 
     private fun getTriggerBranch(branch: String): String {

@@ -25,12 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:repository:api-repository"))
-}
+package com.tencent.devops.scm.pojo
 
-plugins {
-    `task-deploy-to-maven`
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+
+/**
+{
+"id": 95698,
+"name": "git_01subgroup.1",
+"path": "git_01subgroup.1",
+"description": "",
+"avatar_url": "https://git.xxx.com/assets/images/avatar/no_group_avatar.png",
+"full_name": "git_01rootsubgroup/git_01subgroup.1",
+"full_path": "git_01subgroup/git_01subgroup.1",
+"web_url": "https://git.xxx.com/groups/git_01subgroup/git_01subgroup.1",
+"parent_id": 95696
 }
+ */
+@ApiModel("工蜂项目组列表信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitCodeGroup(
+    val id: Long,
+    val name: String,
+    val path: String,
+    val description: String?,
+    @JsonProperty("avatar_url")
+    val avatarUrl: String?,
+    @JsonProperty("full_name")
+    val fullName: String?,
+    @JsonProperty("full_path")
+    val fullPath: String?,
+    @JsonProperty("web_url")
+    val webUrl: String?,
+    @JsonProperty("parent_id")
+    val parentId: Long?
+)
