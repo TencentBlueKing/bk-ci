@@ -282,7 +282,7 @@ class GitCITriggerService @Autowired constructor(
 //            state = GitCICommitCheckState.PENDING
 //        )
 
-        // 获取mr请求的变更文件列表，用来给后面判断，Merged事件不用检查版本
+        // 获取mr请求的变更文件列表，用来给后面判断
         val changeSet = if (mrEvent) {
             // 由于前面提交无流水线锁，所以这个出错需要解锁
             triggerExceptionService.handleErrorCode(
