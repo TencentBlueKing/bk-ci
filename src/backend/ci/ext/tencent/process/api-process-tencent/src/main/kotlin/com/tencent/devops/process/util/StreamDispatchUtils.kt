@@ -223,7 +223,8 @@ object StreamDispatchUtils {
                 client = client,
                 projectId = buildTemplateAcrossInfo.targetProjectId,
                 credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                type = CredentialType.USERNAME_PASSWORD
+                type = CredentialType.USERNAME_PASSWORD,
+                acrossProject = true
             )
         }
         return ticketsMap
