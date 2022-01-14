@@ -32,8 +32,8 @@ spec:
       affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.auth.affinity "context" $) | nindent 8 }}
       {{- else }}
       affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.auth.podAffinityPreset "component" "auth" "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.auth.podAntiAffinityPreset "component" "auth" "context" $) | nindent 10 }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.auth.podAffinityPreset "component" "microservice" "extraMatchLabels" (dict "app.kubernetes.io/name" "auth") "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.auth.podAntiAffinityPreset "component" "microservice" "extraMatchLabels" (dict "app.kubernetes.io/name" "auth") "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.auth.nodeAffinityPreset.type "key" .Values.auth.nodeAffinityPreset.key "values" .Values.auth.nodeAffinityPreset.values) | nindent 10 }}
       {{- end }}
       {{- if .Values.auth.nodeSelector }}

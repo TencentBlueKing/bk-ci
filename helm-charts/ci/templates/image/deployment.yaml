@@ -32,8 +32,8 @@ spec:
       affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.image.affinity "context" $) | nindent 8 }}
       {{- else }}
       affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.image.podAffinityPreset "component" "image" "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.image.podAntiAffinityPreset "component" "image" "context" $) | nindent 10 }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.image.podAffinityPreset "component" "microservice" "extraMatchLabels" (dict "app.kubernetes.io/name" "image") "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.image.podAntiAffinityPreset "component" "microservice" "extraMatchLabels" (dict "app.kubernetes.io/name" "image") "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.image.nodeAffinityPreset.type "key" .Values.image.nodeAffinityPreset.key "values" .Values.image.nodeAffinityPreset.values) | nindent 10 }}
       {{- end }}
       {{- if .Values.image.nodeSelector }}

@@ -32,8 +32,8 @@ spec:
       affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.websocket.affinity "context" $) | nindent 8 }}
       {{- else }}
       affinity:
-        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.websocket.podAffinityPreset "component" "websocket" "context" $) | nindent 10 }}
-        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.websocket.podAntiAffinityPreset "component" "websocket" "context" $) | nindent 10 }}
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.websocket.podAffinityPreset "component" "microservice" "extraMatchLabels" (dict "app.kubernetes.io/name" "websocket") "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.websocket.podAntiAffinityPreset "component" "microservice" "extraMatchLabels" (dict "app.kubernetes.io/name" "websocket") "context" $) | nindent 10 }}
         nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.websocket.nodeAffinityPreset.type "key" .Values.websocket.nodeAffinityPreset.key "values" .Values.websocket.nodeAffinityPreset.values) | nindent 10 }}
       {{- end }}
       {{- if .Values.websocket.nodeSelector }}

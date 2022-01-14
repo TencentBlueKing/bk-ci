@@ -150,8 +150,7 @@ mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
   enabled: true
-  architecture: replicaset
-  replicaCount: 1
+  useStatefulSet: true
   auth:
     enabled: true
     rootPassword: bkci

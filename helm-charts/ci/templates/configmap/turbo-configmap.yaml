@@ -1,4 +1,5 @@
-{{- if .Values.turbo.enabled -}}
+#turbo configmap
+{{if .Values.turbo.enabled -}}
 kind: ConfigMap
 apiVersion: v1
 metadata:

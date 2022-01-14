@@ -8,7 +8,7 @@ home: "https://github.com/Tencent/bk-ci"
 
 dependencies:
 - name: common
-  version: 1.4.1
+  version: 1.10.0
   repository: https://charts.bitnami.com/bitnami
 - name: mysql
   version: 8.8.3

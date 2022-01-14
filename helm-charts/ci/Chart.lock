@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: https://charts.bitnami.com/bitnami
-  version: 1.4.1
+  version: 1.10.0
 - name: mysql
   repository: https://charts.bitnami.com/bitnami
   version: 8.8.3
@@ -20,5 +20,5 @@ dependencies:
 - name: nginx-ingress-controller
   repository: https://charts.bitnami.com/bitnami
   version: 7.6.21
-digest: sha256:f498d0b18b15345a248e8f5f24bde41c02d930d8c1f4dcc4ac8875cb605ff474
-generated: "2021-12-15T15:51:32.561113178+08:00"
+digest: sha256:3890cb0a18df40c70ea6b175b69cd1f0eef7d775a71017cc0bdbe894be65b48a
+generated: "2022-01-13T14:40:15.676693911+08:00"
