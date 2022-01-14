@@ -93,7 +93,7 @@ class DockerHostDebugService @Autowired constructor(
         userId: String,
         poolNo: Int,
         debugStartParam: DebugStartParam
-    ) {
+    ): String {
         with(debugStartParam) {
             val stopWatch = StopWatch()
             var imageRepoInfo: ImageRepoInfo? = null
@@ -214,7 +214,8 @@ class DockerHostDebugService @Autowired constructor(
                             imageRDType = imageRepoInfo?.rdType
                         )
 
-                        getDockerConsoleUrl(dockerIp, pipelineId, projectId, containerId)
+                        return containerId
+                        // getDockerConsoleUrl(dockerIp, pipelineId, projectId, containerId)
                     }
                     response["status"] == 1 -> {
                         // 母机负载过高
@@ -296,9 +297,10 @@ class DockerHostDebugService @Autowired constructor(
         projectId: String,
         containerId: String
     ) {
+        val url = "/bcsapi/v1/consoleproxy/create_exec?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}"
         val requestBody = mapOf("cmd" to "/bin/bash", "container_id" to containerId)
         val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = "/bcsapi/v1/consoleproxy/create_exec?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}",
+            dockerHostUri = url,
             dockerHostIp = dockerIp,
             dockerHostPort = 9999,
             urlPrefix = "https://"
@@ -306,6 +308,7 @@ class DockerHostDebugService @Autowired constructor(
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .build()
 
+        LOG.info("start get docker websonsole url: $url, $dockerDebugAuthToken")
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
             LOG.info("[$projectId|$pipelineId] get docker webconsole $dockerIp responseBody: $responseBody")
