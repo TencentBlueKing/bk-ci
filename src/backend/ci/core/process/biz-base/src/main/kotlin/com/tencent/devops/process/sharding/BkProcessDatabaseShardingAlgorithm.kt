@@ -46,7 +46,7 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         val routingName = shardingValue.value
         // 从本地缓存获取路由规则
         var routingRule = BkShardingRoutingCacheUtil.getIfPresent(routingName)
-        if (routingRule == null) {
+        if (routingRule.isNullOrBlank()) {
             val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
             // 获取没有配置规则时的操作开关 --临时代码，规则全切换后删除
             val noShardingRuleSwitch = redisOperation.get("noShardingRuleSwitch")?.toBoolean() ?: false
