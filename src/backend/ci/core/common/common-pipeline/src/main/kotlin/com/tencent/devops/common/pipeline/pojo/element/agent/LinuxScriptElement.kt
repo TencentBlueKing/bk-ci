@@ -55,8 +55,7 @@ data class LinuxScriptElement(
     @ApiModelProperty("脚本执行失败时归档的文件", required = false)
     val archiveFile: String? = null,
     @ApiModelProperty("附加参数", required = false)
-    override var additionalOptions: ElementAdditionalOptions? = null
-    val archiveFile: String? = null,
+    override var additionalOptions: ElementAdditionalOptions? = null,
     @ApiModelProperty("FAQ url链接", required = false)
     val errorFAQUrl: String? = null
 ) : Element(name, id, status) {
