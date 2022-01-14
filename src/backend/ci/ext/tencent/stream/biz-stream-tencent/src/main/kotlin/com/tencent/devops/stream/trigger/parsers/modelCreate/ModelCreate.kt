@@ -34,6 +34,7 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.YamlTransferData
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -47,9 +48,14 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
+import com.tencent.devops.stream.trigger.StreamTriggerCache
+import com.tencent.devops.stream.v2.service.StreamOauthService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -59,7 +65,10 @@ import org.springframework.stereotype.Component
 class ModelCreate @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val modelStage: ModelStage
+    private val modelStage: ModelStage,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamScmService: StreamScmService,
+    private val oauthService: StreamOauthService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -110,6 +119,8 @@ class ModelCreate @Autowired constructor(
             yamlTransferData = yamlTransferData
         )
 
+        val jobBuildTemplateAcrossInfos = yamlTransferData?.getJobTemplateAcrossInfo(event.id!!, event.gitProjectId)
+
         val triggerContainer = TriggerContainer(
             id = "0",
             name = "构建触发",
@@ -138,7 +149,8 @@ class ModelCreate @Autowired constructor(
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
                     changeSet = changeSet,
-                    pipeline = pipeline
+                    pipeline = pipeline,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
                 )
             )
         }
@@ -161,7 +173,8 @@ class ModelCreate @Autowired constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    pipeline = pipeline
+                    pipeline = pipeline,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
                 )
             )
         }
@@ -195,9 +208,9 @@ class ModelCreate @Autowired constructor(
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
                         event.userId, PipelineGroupCreate(
-                            projectId = gitBasicSetting.projectCode!!,
-                            name = it
-                        )
+                        projectId = gitBasicSetting.projectCode!!,
+                        name = it
+                    )
                     )
 
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
@@ -247,5 +260,35 @@ class ModelCreate @Autowired constructor(
         }
 
         return null
+    }
+
+    private fun YamlTransferData.getJobTemplateAcrossInfo(
+        gitRequestEventId: Long,
+        gitProjectId: Long
+    ): Map<String, BuildTemplateAcrossInfo> {
+        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
+        templateData.transferDataList.forEach { (remoteProjectId, transferList) ->
+            // 将pathWithPathSpace转为数字id
+            val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitRequestEventId = gitRequestEventId,
+                gitProjectId = remoteProjectId,
+                token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
+                useAccessToken = true,
+                getProjectInfo = streamScmService::getProjectInfoRetry
+            ).gitProjectId.toString().let { "git_$it" }
+
+            transferList.filter { it.templateType == TemplateType.JOB }.forEach { transfer ->
+                transfer.objectIds.forEach { jobId ->
+                    results[jobId] = BuildTemplateAcrossInfo(
+                        templateId = templateData.templateId,
+                        templateType = TemplateAcrossInfoType.JOB,
+                        // 因为已经将jobId转为了map所以这里不保存，节省空间
+                        templateInstancesIds = emptyList(),
+                        targetProjectId = remoteProjectIdLong
+                    )
+                }
+            }
+        }
+        return results
     }
 }

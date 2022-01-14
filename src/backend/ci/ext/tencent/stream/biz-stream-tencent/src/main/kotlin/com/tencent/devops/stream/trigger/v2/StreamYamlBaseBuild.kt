@@ -192,8 +192,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(
                     gitRequestEventId = event.id!!,
-                    gitProjectId = event.gitProjectId,
-                    templateId = yamlTransferData.templateData.templateId
+                    gitProjectId = event.gitProjectId
                 )
             )
         }
@@ -408,8 +407,7 @@ class StreamYamlBaseBuild @Autowired constructor(
 
     private fun YamlTransferData.getTemplateAcrossInfo(
         gitRequestEventId: Long,
-        gitProjectId: Long,
-        templateId: String
+        gitProjectId: Long
     ): List<BuildTemplateAcrossInfo> {
         val results = mutableListOf<BuildTemplateAcrossInfo>()
         templateData.transferDataList.forEach { (remoteProjectId, transferList) ->
@@ -424,7 +422,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             transferList.forEach nextData@{ data ->
                 results.add(
                     BuildTemplateAcrossInfo(
-                        templateId = templateId,
+                        templateId = templateData.templateId,
                         templateType = data.templateType.toAcrossType() ?: return@nextData,
                         templateInstancesIds = data.objectIds.toList(),
                         targetProjectId = remoteProjectIdLong
