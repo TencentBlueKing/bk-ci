@@ -41,7 +41,13 @@ class ExtDebugServiceImpl : ExtDebugService {
         return null
     }
 
-    override fun stopDebug(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Boolean {
+    override fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean {
         return true
     }
 }
