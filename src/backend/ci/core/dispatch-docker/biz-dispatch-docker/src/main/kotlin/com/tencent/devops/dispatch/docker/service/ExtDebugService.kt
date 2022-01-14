@@ -35,4 +35,11 @@ interface ExtDebugService {
         buildId: String?,
         vmSeqId: String
     ): String?
+
+    fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): Boolean
 }
