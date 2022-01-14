@@ -327,7 +327,7 @@ class ManualTriggerService @Autowired constructor(
 
         var params = emptyMap<String, String>()
         if (gitRequestEvent.gitEvent != null) {
-            params = triggerMatcher.getStartParams(
+            params = triggerMatcher.matchAndStartParams(
                 context = StreamTriggerContext(
                     gitEvent = gitRequestEvent.gitEvent!!,
                     requestEvent = gitRequestEvent,
@@ -337,8 +337,7 @@ class ManualTriggerService @Autowired constructor(
                     mrChangeSet = null
                 ),
                 triggerOn = null,
-                isTrigger = true
-            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+            ).second
         }
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,

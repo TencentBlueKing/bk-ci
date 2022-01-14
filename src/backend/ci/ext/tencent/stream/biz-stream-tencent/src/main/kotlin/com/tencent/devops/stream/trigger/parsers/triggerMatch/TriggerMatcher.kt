@@ -205,7 +205,7 @@ class TriggerMatcher @Autowired constructor(
 
     fun matchAndStartParams(
         context: StreamTriggerContext,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): Pair<Boolean, Map<String, String>> {
         with(context) {
             val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
