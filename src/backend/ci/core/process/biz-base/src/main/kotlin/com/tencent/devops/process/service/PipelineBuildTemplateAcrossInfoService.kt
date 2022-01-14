@@ -1,4 +1,4 @@
-package com.tencent.devops.process.service.builds
+package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.process.dao.PipelineBuildTemplateAcrossInfoDao

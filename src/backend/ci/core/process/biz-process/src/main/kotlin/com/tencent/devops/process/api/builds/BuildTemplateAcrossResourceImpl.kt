@@ -3,7 +3,7 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.service.builds.PipelineBuildTemplateAcrossInfoService
+import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
