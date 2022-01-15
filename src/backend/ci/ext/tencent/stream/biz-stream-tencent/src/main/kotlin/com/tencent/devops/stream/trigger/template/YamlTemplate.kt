@@ -102,7 +102,7 @@ class YamlTemplate(
                 template = templateLib.getTemplate(
                     path = filePath,
                     templateType = resTemplateType,
-                    nowRepo = repo,
+                    nowRepo = nowRepo,
                     toRepo = repo
                 ),
                 parameters = parameters
