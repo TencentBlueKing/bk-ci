@@ -225,7 +225,12 @@ class TriggerMatcher @Autowired constructor(
             val isMatch = if (needMatch) {
                 matcher.isMatch(
                     projectId = context.streamSetting.projectCode ?: "",
-                    pipelineId = context.pipeline.pipelineId,
+                    // 如果是新的流水线,pipelineId还是为空,使用displayName
+                    pipelineId = if (context.pipeline.pipelineId.isEmpty()) {
+                        context.pipeline.displayName
+                    } else {
+                        context.pipeline.pipelineId
+                    },
                     repository = repository,
                     webHookParams = webHookParams
                 ).isMatch

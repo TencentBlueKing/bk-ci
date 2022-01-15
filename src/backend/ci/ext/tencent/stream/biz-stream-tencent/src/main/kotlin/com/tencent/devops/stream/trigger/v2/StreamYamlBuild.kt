@@ -286,7 +286,7 @@ class StreamYamlBuild @Autowired constructor(
         changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf()
     ): BuildId? {
-        logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
+        logger.info("Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}, event: ${event.id}")
 
         // create or refresh pipeline
         val model = modelCreate.createPipelineModel(
@@ -297,7 +297,6 @@ class StreamYamlBuild @Autowired constructor(
             changeSet = changeSet,
             webhookParams = params
         )
-        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
         return streamYamlBaseBuild.startBuild(

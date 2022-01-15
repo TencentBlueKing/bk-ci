@@ -19,6 +19,7 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 object TriggerBuilder {
@@ -165,6 +166,7 @@ object TriggerBuilder {
             repositoryType = RepositoryType.NAME,
             branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR),
             excludeBranchName = null,
+            pathFilterType = PathFilterType.RegexBasedFilter,
             includePaths = triggerOn.mr?.paths?.joinToString(JOIN_SEPARATOR),
             excludePaths = triggerOn.mr?.pathsIgnore?.joinToString(JOIN_SEPARATOR),
             includeUsers = triggerOn.mr?.users,
@@ -176,7 +178,16 @@ object TriggerBuilder {
             } else {
                 CodeEventType.MERGE_REQUEST
             },
-            includeMrAction = triggerOn.mr?.action
+            includeMrAction = if (triggerOn.mr?.action.isNullOrEmpty()) {
+                // 缺省时使用默认值
+                listOf(
+                    StreamMrEventAction.OPEN.value,
+                    StreamMrEventAction.REOPEN.value,
+                    StreamMrEventAction.PUSH_UPDATE.value
+                )
+            } else {
+                triggerOn.mr!!.action
+            }
         )
     }
 }
