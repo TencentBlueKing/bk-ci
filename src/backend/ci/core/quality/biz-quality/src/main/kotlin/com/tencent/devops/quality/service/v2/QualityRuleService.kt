@@ -55,7 +55,6 @@ import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
-import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.RulePermission
 import com.tencent.devops.quality.pojo.enum.RuleOperation
@@ -284,8 +283,8 @@ class QualityRuleService @Autowired constructor(
     }
 
     private fun batchGetRuleData(records: List<TQualityRuleRecord>): List<QualityRule>? {
-        val TQualityRuleRecordMap = records.map { it.id to it }.toMap()
-        val ruleIds = TQualityRuleRecordMap.keys
+        val qualityRuleRecordMap = records.map { it.id to it }.toMap()
+        val ruleIds = qualityRuleRecordMap.keys
         val ruleMap = ruleMapDao.batchGet(dslContext, ruleIds)?.map { it.ruleId to it }?.toMap()
         logger.info("QUALITY|get rule data for ruleIds: $ruleIds")
         val controlPointRecords = qualityControlPointDao.list(dslContext, records.map { it.controlPoint })
@@ -530,7 +529,6 @@ class QualityRuleService @Autowired constructor(
             else ruleDetail.indicatorIds.split(",").map { it.toLong() }
 
             // get rule indicator map
-            // todo perform list indicator
             val indicators = indicatorService.serviceList(ruleIndicators)
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
@@ -762,7 +760,6 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
-        // todo performance
         val ruleList = serviceListRules(projectId)
         logger.info("get project rule list for $projectId, $pipelineId, $templateId: ${ruleList.map { it.name }}")
         return ruleList.filter {

@@ -42,7 +42,6 @@ import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.codecc.CodeccUtils
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -668,7 +667,7 @@ class QualityRuleCheckService @Autowired constructor(
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
-        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
+        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: ""
         val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
@@ -735,7 +734,7 @@ class QualityRuleCheckService @Autowired constructor(
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
-        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
+        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: ""
         val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
@@ -809,16 +808,6 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
-    }
-
-    // todo performance
-    private fun getPipelineName(projectId: String, pipelineId: String): String {
-        val map = getPipelineIdToNameMap(projectId, setOf(pipelineId))
-        return map[pipelineId] ?: ""
-    }
-
-    private fun getPipelineIdToNameMap(projectId: String, pipelineIdSet: Set<String>): Map<String, String> {
-        return client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIdSet).data!!
     }
 
     companion object {

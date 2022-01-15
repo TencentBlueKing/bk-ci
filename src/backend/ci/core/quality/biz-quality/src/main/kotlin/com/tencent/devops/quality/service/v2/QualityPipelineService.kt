@@ -56,7 +56,6 @@ class QualityPipelineService @Autowired constructor(
                 projectId = projectId,
                 pipelineIds = pipelineIds
             ).data ?: mapOf()
-            // todo performance
             val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) })
                 .map { it.elementType }
 
