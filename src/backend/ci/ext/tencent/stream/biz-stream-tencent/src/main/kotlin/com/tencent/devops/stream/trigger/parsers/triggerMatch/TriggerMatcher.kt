@@ -11,8 +11,10 @@ import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -144,10 +146,10 @@ class TriggerMatcher @Autowired constructor(
                 deleteTrigger = false
             )
         return if (objectKind in deleteObjectKinds) {
-            val startParams = matchAndStartParams(
+            val startParams = getStartParams(
                 context = context,
                 triggerOn = triggerOn
-            ).second
+            )
             TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
             TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
@@ -205,7 +207,8 @@ class TriggerMatcher @Autowired constructor(
 
     fun matchAndStartParams(
         context: StreamTriggerContext,
-        triggerOn: TriggerOn?
+        triggerOn: TriggerOn?,
+        needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
         with(context) {
             val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
@@ -219,12 +222,16 @@ class TriggerMatcher @Autowired constructor(
             logger.info("match and start params, element:$element, webHookParams:$webHookParams")
             val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
             val repository = TriggerBuilder.buildCodeGitRepository(streamSetting)
-            val isMatch = matcher.isMatch(
-                projectId = context.streamSetting.projectCode ?: "",
-                pipelineId = context.pipeline.pipelineId,
-                repository = repository,
-                webHookParams = webHookParams
-            ).isMatch
+            val isMatch = if (needMatch) {
+                matcher.isMatch(
+                    projectId = context.streamSetting.projectCode ?: "",
+                    pipelineId = context.pipeline.pipelineId,
+                    repository = repository,
+                    webHookParams = webHookParams
+                ).isMatch
+            } else {
+                true
+            }
             val startParam = if (isMatch) {
                 WebhookStartParamsRegistrar.getService(element = element).getStartParams(
                     projectId = streamSetting.projectCode ?: "",
@@ -240,6 +247,17 @@ class TriggerMatcher @Autowired constructor(
             }
             return Pair(isMatch, startParam)
         }
+    }
+
+    fun getStartParams(
+        context: StreamTriggerContext,
+        triggerOn: TriggerOn?
+    ): Map<String, String> {
+        return matchAndStartParams(
+            context = context,
+            triggerOn = triggerOn,
+            needMatch = false
+        ).second
     }
 
     private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =

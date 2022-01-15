@@ -50,6 +50,7 @@ import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
@@ -327,7 +328,7 @@ class ManualTriggerService @Autowired constructor(
 
         var params = emptyMap<String, String>()
         if (gitRequestEvent.gitEvent != null) {
-            params = triggerMatcher.matchAndStartParams(
+            params = triggerMatcher.getStartParams(
                 context = StreamTriggerContext(
                     gitEvent = gitRequestEvent.gitEvent!!,
                     requestEvent = gitRequestEvent,
@@ -336,8 +337,8 @@ class ManualTriggerService @Autowired constructor(
                     originYaml = originYaml,
                     mrChangeSet = null
                 ),
-                triggerOn = null,
-            ).second
+                triggerOn = TriggerBuilder.buildManualTriggerOn(gitEvent = gitRequestEvent.gitEvent!!)
+            )
         }
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,

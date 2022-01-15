@@ -1,7 +1,10 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.ci.v2.IssuesRule
+import com.tencent.devops.common.ci.v2.MrRule
+import com.tencent.devops.common.ci.v2.PushRule
+import com.tencent.devops.common.ci.v2.TagRule
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -35,6 +38,23 @@ object TriggerBuilder {
                 buildGitMrEventElement(gitEvent, triggerOn)
             is GitIssueEvent ->
                 buildGitIssueElement(gitEvent, triggerOn)
+            else -> null
+        }
+    }
+
+    /**
+     * 手工触发模拟代码事件触发时,构造triggerOn
+     */
+    fun buildManualTriggerOn(gitEvent: GitEvent): TriggerOn? {
+        return when (gitEvent) {
+            is GitPushEvent ->
+                TriggerOn(push = PushRule(), mr = null, tag = null)
+            is GitTagPushEvent ->
+                TriggerOn(push = null, mr = null, tag = TagRule())
+            is GitMergeRequestEvent ->
+                TriggerOn(push = null, mr = MrRule(), tag = null)
+            is GitIssueEvent ->
+                TriggerOn(push = null, mr = MrRule(), tag = null, issues = IssuesRule())
             else -> null
         }
     }
