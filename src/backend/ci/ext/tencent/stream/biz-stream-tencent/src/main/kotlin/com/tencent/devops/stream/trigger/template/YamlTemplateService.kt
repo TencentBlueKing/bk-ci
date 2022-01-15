@@ -42,7 +42,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.util.CommonCredentialUtils
 import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
-import com.tencent.devops.stream.trigger.utils.TicketUtil
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -180,7 +179,7 @@ class YamlTemplateService @Autowired constructor(
     private fun getTicket(param: GetTemplateParam, key: String): String {
         with(param) {
             try {
-                return TicketUtil.getCredential(
+                return CommonCredentialUtils.getCredential(
                     client = client,
                     projectId = "git_$gitProjectId",
                     credentialId = key,
@@ -241,13 +240,35 @@ class YamlTemplateService @Autowired constructor(
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {
         return if (personalAccessToken.contains("\${{") && personalAccessToken.contains("}}")) {
             val str = personalAccessToken.split("\${{")[1].split("}}")[0].trim()
-            if (str.startsWith("settings.")) {
-                Pair(true, str.removePrefix("settings."))
+            val key = getCredentialKey(str)
+            if (str != key) {
+                Pair(true, key)
             } else {
                 throw YamlFormatException(ONLY_SUPPORT_ERROR)
             }
         } else {
             Pair(false, personalAccessToken)
+        }
+    }
+
+    private fun getCredentialKey(key: String): String {
+        // 参考CredentialType
+        return if (key.startsWith("settings.") && (
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )) {
+            key.substringAfter("settings.").substringBeforeLast(".")
+        } else {
+            key
         }
     }
 }
