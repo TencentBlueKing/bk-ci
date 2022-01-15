@@ -74,11 +74,17 @@ object TemplateYamlUtil {
         repoName: String,
         templateType: TemplateType,
         templateLib: TemplateLibrary,
-        repo: Repositories?
+        nowRepo: Repositories?,
+        toRepo: Repositories?
     ): Repositories {
         val repos = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(
             path = fromPath,
-            template = templateLib.getTemplate(path = fromPath, templateType = templateType, repo)
+            template = templateLib.getTemplate(
+                path = fromPath,
+                templateType = templateType,
+                nowRepo = nowRepo,
+                toRepo = toRepo
+            )
         ).resources?.repositories
 
         repos?.forEach {

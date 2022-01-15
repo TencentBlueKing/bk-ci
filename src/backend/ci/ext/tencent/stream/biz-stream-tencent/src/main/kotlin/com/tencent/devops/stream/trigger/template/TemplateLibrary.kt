@@ -43,12 +43,17 @@ data class TemplateLibrary(
 )
 
 // 从模板库中获得数据，如果有直接取出，没有则根据保存的库信息从远程仓库拉取，再没有则报错
-fun TemplateLibrary.getTemplate(path: String, templateType: TemplateType?, repo: Repositories?): String {
+fun TemplateLibrary.getTemplate(
+    path: String,
+    templateType: TemplateType?,
+    nowRepo: Repositories?,
+    toRepo: Repositories?
+): String {
     if (templates[path] != null) {
         return templates[path]!!
     }
     //  没有库信息说明是触发库
-    val template = if (repo == null) {
+    val template = if (toRepo == null) {
         getTemplateMethod(
             GetTemplateParam(
                 gitRequestEventId = projectData.gitRequestEventId,
@@ -61,7 +66,8 @@ fun TemplateLibrary.getTemplate(path: String, templateType: TemplateType?, repo:
                 fileName = path,
                 changeSet = projectData.changeSet,
                 event = projectData.event,
-                templateType = templateType
+                templateType = templateType,
+                nowRemoteGitProjectId = nowRepo?.repository
             )
         )
     } else {
@@ -71,13 +77,14 @@ fun TemplateLibrary.getTemplate(path: String, templateType: TemplateType?, repo:
                 token = null,
                 forkToken = null,
                 gitProjectId = projectData.sourceProjectId,
-                targetRepo = repo.repository,
-                ref = repo.ref,
-                personalAccessToken = repo.credentials?.personalAccessToken,
+                targetRepo = toRepo.repository,
+                ref = toRepo.ref,
+                personalAccessToken = toRepo.credentials?.personalAccessToken,
                 fileName = path,
                 changeSet = projectData.changeSet,
                 event = null,
-                templateType = templateType
+                templateType = templateType,
+                nowRemoteGitProjectId = nowRepo?.repository
             )
         )
     }

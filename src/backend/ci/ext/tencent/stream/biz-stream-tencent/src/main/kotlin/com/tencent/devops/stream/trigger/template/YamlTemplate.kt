@@ -57,8 +57,10 @@ class YamlTemplate(
     var filePath: String,
     // 文件对象
     var yamlObject: PreTemplateScriptBuildYaml?,
-    // 当前库信息(发起库没有库信息)
-    val repo: Repositories? = null,
+    // 当前库信息
+    val nowRepo: Repositories?,
+    // 目标库信息(发起库没有库信息)
+    val repo: Repositories?,
 
     // 来自文件
     private val fileFromPath: String? = null,
@@ -97,7 +99,12 @@ class YamlTemplate(
             val template = TemplateYamlUtil.parseTemplateParameters(
                 fromPath = fileFromPath ?: "",
                 path = filePath,
-                template = templateLib.getTemplate(path = filePath, templateType = resTemplateType, repo = repo),
+                template = templateLib.getTemplate(
+                    path = filePath,
+                    templateType = resTemplateType,
+                    nowRepo = repo,
+                    toRepo = repo
+                ),
                 parameters = parameters
             )
             // 将根文件也保存在模板库中方便取出
@@ -545,12 +552,14 @@ class YamlTemplate(
             if (templateType == TemplateType.GATE) {
                 templateLib.getTemplate(
                     path = toPath.split(Constants.FILE_REPO_SPLIT).first(),
-                    repo = TemplateYamlUtil.checkAndGetRepo(
+                    nowRepo = repo,
+                    toRepo = TemplateYamlUtil.checkAndGetRepo(
                         fromPath = fromPath,
                         repoName = toPath.split(Constants.FILE_REPO_SPLIT)[1],
                         templateType = templateType,
                         templateLib = templateLib,
-                        repo = repo
+                        nowRepo = nowRepo,
+                        toRepo = repo
                     ),
                     templateType = templateType
                 )
@@ -564,13 +573,19 @@ class YamlTemplate(
                         repoName = toPath.split(Constants.FILE_REPO_SPLIT)[1],
                         templateType = templateType,
                         templateLib = templateLib,
-                        repo = repo
+                        nowRepo = nowRepo,
+                        toRepo = repo
                     ),
                     deepTree = deepTree
                 )
             }
         } else {
-            templateLib.getTemplate(path = toPath, templateType = templateType, repo = repo)
+            templateLib.getTemplate(
+                path = toPath,
+                templateType = templateType,
+                nowRepo = nowRepo,
+                toRepo = repo
+            )
         }
         // 将需要替换的变量填入模板文件
         newTemplate = TemplateYamlUtil.parseTemplateParameters(
@@ -599,6 +614,7 @@ class YamlTemplate(
             fileFromPath = filePath,
             filePath = toPath.split(Constants.FILE_REPO_SPLIT)[0],
             projectData = projectData,
+            nowRepo = repo,
             repo = toRepo,
             rootDeepTree = deepTree,
             resTemplateType = templateType,

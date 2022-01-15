@@ -41,5 +41,7 @@ data class GetTemplateParam(
     val fileName: String,
     val changeSet: Set<String>?,
     val event: GitEvent?,
-    val templateType: TemplateType?
+    val templateType: TemplateType?,
+    // 正在被替换的远程库
+    val nowRemoteGitProjectId: String?
 )

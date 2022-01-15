@@ -134,7 +134,9 @@ class YamlTemplateTest {
                 event = null,
                 forkGitToken = null
             ),
-            getTemplateMethod = ::getTestTemplate
+            getTemplateMethod = ::getTestTemplate,
+            nowRepo = null,
+            repo = null
         ).replace()
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val yamls = YamlUtil.toYaml(normalOb)

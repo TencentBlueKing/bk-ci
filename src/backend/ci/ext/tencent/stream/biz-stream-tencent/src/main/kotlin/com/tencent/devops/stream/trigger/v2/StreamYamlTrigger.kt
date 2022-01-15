@@ -302,7 +302,9 @@ class StreamYamlTrigger @Autowired constructor(
                     changeSet = changeSet,
                     event = event
                 ),
-                getTemplateMethod = yamlTemplateService::getTemplate
+                getTemplateMethod = yamlTemplateService::getTemplate,
+                nowRepo = null,
+                repo = null
             ).replace()
             val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
             return YamlReplaceResult(

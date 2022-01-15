@@ -187,7 +187,7 @@ class YamlTemplateService @Autowired constructor(
                     type = CredentialType.ACCESSTOKEN
                 )["v1"]!!
             } catch (ignore: Exception) {
-                if (param.targetRepo == null) {
+                if (param.nowRemoteGitProjectId == null) {
                     // 没有库信息说明是触发库，并不需要获取跨项目信息
                     throw YamlFormatException(GET_TICKET_ERROR.format(ignore.message))
                 }
@@ -198,9 +198,9 @@ class YamlTemplateService @Autowired constructor(
             val acrossGitProjectId = getGitProjectCache(
                 gitRequestEventId = gitRequestEventId,
                 token = token,
-                gitProjectId = param.targetRepo!!,
+                gitProjectId = param.nowRemoteGitProjectId!!,
                 useAccessToken = true
-            )
+            ).gitProjectId
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,
