@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Resources
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.ci.v2.stageCheck.ReviewVariable
 import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.client.Client
@@ -80,6 +81,7 @@ class ModelStage @Autowired constructor(
         resources: Resources? = null,
         changeSet: Set<String>? = null,
         pipeline: GitProjectPipeline,
+        yamlTransferData: YamlTransferData?,
         jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
@@ -92,7 +94,8 @@ class ModelStage @Autowired constructor(
                 gitBasicSetting = gitBasicSetting,
                 changeSet = changeSet,
                 jobEnable = jobEnable,
-                event = event
+                event = event,
+                yamlTransferData = yamlTransferData
             )
 
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {

@@ -150,7 +150,8 @@ class ModelCreate @Autowired constructor(
                     resources = yaml.resource,
                     changeSet = changeSet,
                     pipeline = pipeline,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    yamlTransferData = yamlTransferData
                 )
             )
         }
@@ -173,7 +174,8 @@ class ModelCreate @Autowired constructor(
                     finalStage = true,
                     resources = yaml.resource,
                     pipeline = pipeline,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    yamlTransferData = yamlTransferData
                 )
             )
         }

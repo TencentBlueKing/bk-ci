@@ -89,7 +89,7 @@ class ModelElement @Autowired constructor(
         changeSet: Set<String>? = null,
         jobEnable: Boolean = true,
         event: GitRequestEvent,
-        yamlTransferData: YamlTransferData? = null
+        yamlTransferData: YamlTransferData?
     ): MutableList<Element> {
         val transferDataMap = yamlTransferData?.templateData?.transferDataMap
         // 解析service
