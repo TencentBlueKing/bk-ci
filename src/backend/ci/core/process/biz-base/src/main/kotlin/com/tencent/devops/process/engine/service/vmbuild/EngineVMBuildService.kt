@@ -54,6 +54,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
@@ -73,9 +74,7 @@ import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
-import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
-import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.utils.*
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import org.slf4j.LoggerFactory
@@ -87,23 +86,24 @@ import javax.ws.rs.NotFoundException
 @Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
-    private val taskBuildDetailService: TaskBuildDetailService,
-    private val buildVariableService: BuildVariableService,
-    private val pipelineContextService: PipelineContextService,
-    @Autowired(required = false)
+        private val pipelineRuntimeService: PipelineRuntimeService,
+        private val containerBuildDetailService: ContainerBuildDetailService,
+        private val taskBuildDetailService: TaskBuildDetailService,
+        private val buildVariableService: BuildVariableService,
+        private val pipelineContextService: PipelineContextService,
+        @Autowired(required = false)
     private val measureService: MeasureService?,
-    private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val pipelineTaskService: PipelineTaskService,
-    private val pipelineTaskPauseService: PipelineTaskPauseService,
-    private val jmxElements: JmxElements,
-    private val buildExtService: PipelineBuildExtService,
-    private val client: Client,
-    private val pipelineContainerService: PipelineContainerService,
-    private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
-    private val redisOperation: RedisOperation
+        private val buildLogPrinter: BuildLogPrinter,
+        private val pipelineEventDispatcher: PipelineEventDispatcher,
+        private val pipelineTaskService: PipelineTaskService,
+        private val pipelineTaskPauseService: PipelineTaskPauseService,
+        private val jmxElements: JmxElements,
+        private val buildExtService: PipelineBuildExtService,
+        private val client: Client,
+        private val pipelineContainerService: PipelineContainerService,
+        private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
+        private val redisOperation: RedisOperation,
+        private val pipelineBuildDao: PipelineBuildDao
 ) {
 
     companion object {
@@ -536,6 +536,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
                 )
+                writeRemark(result.buildResult, projectId, buildId)
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
@@ -783,6 +784,21 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         } finally {
             redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
+        }
+    }
+
+    private fun writeRemark(
+            buildResult: Map<String, String>,
+            projectId: String,
+            buildId: String
+    ) {
+        if (buildResult.containsKey(PIPELINE_BUILD_REMARK)) {
+            val remark = buildResult[PIPELINE_BUILD_REMARK]
+            if (remark != null) {
+                val pipelineId = buildResult[PIPELINE_ID]!!
+                LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
+                pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
+            }
         }
     }
 }
