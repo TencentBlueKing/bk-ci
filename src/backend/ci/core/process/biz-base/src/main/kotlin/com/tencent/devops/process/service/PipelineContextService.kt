@@ -173,7 +173,7 @@ class PipelineContextService @Autowired constructor(
         if (outputArrayMap != null && c.id?.let { it == containerId } != true) return
         variables.forEach { (key, value) ->
             val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix) && prefix.contains(".outputs.")) {
+            if (key.startsWith(prefix) && key.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
         }
