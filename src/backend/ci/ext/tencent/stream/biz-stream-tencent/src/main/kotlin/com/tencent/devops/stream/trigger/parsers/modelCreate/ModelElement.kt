@@ -151,7 +151,9 @@ class ModelElement @Autowired constructor(
 
             // 将过度id替换为唯一的taskId方便引擎处查找
             if (transferDataMap?.get("${job.id}|${step.id}") != null) {
-                transferDataMap[element.id!!] = transferDataMap["${job.id}|${step.id}"]!!
+                transferDataMap[element.id!!] = transferDataMap["${job.id}|${step.id}"]!!.copy(
+                    objectId = element.id!!
+                )
                 transferDataMap.remove("${job.id}|${step.id}")
             }
 
