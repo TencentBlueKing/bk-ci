@@ -952,15 +952,16 @@ class TemplateFacadeService @Autowired constructor(
         val isConstrainedFlag = latestTemplate.type == TemplateType.CONSTRAINT.name
 
         if (isConstrainedFlag) {
-            templates = templateDao.listTemplate(dslContext, projectId, latestTemplate.srcTemplateId)
-            if (templates.isEmpty()) {
+            try {
+                latestTemplate = templateDao.getLatestTemplate(dslContext, latestTemplate.srcTemplateId)
+            } catch (ignored: NotFoundException) {
                 logger.warn("The src template ${latestTemplate.srcTemplateId} is not exist")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS,
                     defaultMessage = "源模板不存在"
                 )
             }
-            latestTemplate = templates[0]
+            templates = templateDao.listTemplate(dslContext, latestTemplate.projectId, latestTemplate.srcTemplateId)
         }
 
         val setting = pipelineSettingDao.getSetting(dslContext, projectId, templateId)
