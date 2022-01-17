@@ -31,7 +31,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables
+import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
@@ -77,6 +79,17 @@ class TencentPipelineBuildDao {
                 where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
             }
             where.orderBy(END_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listCheckOutErrorStage(
+        dslContext: DSLContext
+    ): Collection<TPipelineBuildStageRecord> {
+        return with(Tables.T_PIPELINE_BUILD_STAGE) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(BuildStatus.RUNNING.ordinal)
+                    .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%")))
                 .fetch()
         }
     }
