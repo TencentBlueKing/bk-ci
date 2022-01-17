@@ -59,7 +59,6 @@ variables:
     readonly: false
 stages:
 - name: "前置信息收集"
-  id: "stage-M1H8AYD"
   label:
   - "28ee946a59f64949a74f3dee40a1bda4"
   if: null
@@ -103,7 +102,6 @@ stages:
   check-in: null
   check-out: null
 - name: "单元测试和代码扫描"
-  id: "stage-oUH8SNA"
   label:
   - "d0a06f6986fa4670af65ccad7bb49d3a"
   if: null
@@ -412,7 +410,6 @@ stages:
   check-in: null
   check-out: null
 - name: "测试产物解析"
-  id: "stage-3vSRLaG"
   label:
   - "d0a06f6986fa4670af65ccad7bb49d3a"
   if: null
@@ -524,7 +521,6 @@ stages:
   check-in: null
   check-out: null
 - name: "编译"
-  id: "stage-2U8NhTx"
   label:
   - "28ee946a59f64949a74f3dee40a1bda4"
   if: null

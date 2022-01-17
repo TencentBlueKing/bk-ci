@@ -90,7 +90,6 @@ object ScriptYmlUtils {
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    private const val stageNamespace = "stage-"
     private const val jobNamespace = "job-"
     private const val stepNamespace = "step-"
 

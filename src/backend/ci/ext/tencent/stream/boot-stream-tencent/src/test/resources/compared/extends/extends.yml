@@ -30,7 +30,6 @@ variables:
     value: "aaa"
 stages:
 - name: "root_stage_id_1"
-  id: "root_stage_id_1"
   label: []
   if: "envs.BK_CI_EVENT == 'push' || varivable.approve"
   fast-kill: false
@@ -316,7 +315,6 @@ stages:
     timeout-hours: null
   check-out: null
 - name: "res_stage_id_1"
-  id: "stage-0zbf1jC"
   label: []
   if: null
   fast-kill: false
@@ -413,7 +411,6 @@ stages:
     timeout-hours: null
   check-out: null
 - name: "res_stage_id_2"
-  id: "stage-il6Auyw"
   label: []
   if: null
   fast-kill: false
@@ -498,7 +495,6 @@ stages:
   check-in: null
   check-out: null
 - name: "res_repoB_stage_id_1"
-  id: "stage-vKT27Bl"
   label: []
   if: null
   fast-kill: false
@@ -539,7 +535,6 @@ stages:
   check-in: null
   check-out: null
 - name: "res_repoB_stage_id_2"
-  id: "stage-OmT2bTR"
   label: []
   if: null
   fast-kill: false

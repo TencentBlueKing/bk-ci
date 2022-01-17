@@ -18,7 +18,6 @@ triggerOn:
     - "push-update"
 stages:
 - name: "stage_1"
-  id: "stage-PGQ0xLz"
   label: []
   if: null
   fast-kill: false

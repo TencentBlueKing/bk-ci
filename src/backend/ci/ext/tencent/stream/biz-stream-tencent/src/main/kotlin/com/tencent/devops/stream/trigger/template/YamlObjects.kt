@@ -83,7 +83,7 @@ object YamlObjects {
             yamlMetaData = if (step["yamlMetaData"] == null) {
                 MetaData(templateInfo = repo)
             } else {
-                getYamlMetaData(fromPath, step["yamlMetaData"]!! as Map<String, Any>)
+                getYamlMetaData(fromPath, step["yamlMetaData"]!!)
             }
         )
     }
@@ -168,11 +168,12 @@ object YamlObjects {
         )
     }
 
-    fun getYamlMetaData(fromPath: String, yamlMetaData: Map<String, Any>): MetaData {
-        if (yamlMetaData["templateInfo"] == null) {
+    fun getYamlMetaData(fromPath: String, yamlMetaData: Any): MetaData {
+        val metaData = transValue<Map<String, String>>(fromPath, "yamlMetaData", yamlMetaData)
+        if (metaData["templateInfo"] == null) {
             return MetaData(templateInfo = null)
         }
-        val templateInfo = transValue<Map<String, Any?>>(fromPath, "templateInfo", yamlMetaData["templateInfo"]!!)
+        val templateInfo = transValue<Map<String, Any?>>(fromPath, "templateInfo", metaData["templateInfo"]!!)
         return MetaData(
             templateInfo = TemplateInfo(
                 remote = getNotNullValue("remote", "templateInfo", templateInfo).toBoolean(),
@@ -237,7 +238,6 @@ object YamlObjects {
 fun YamlTemplate.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
     return PreStage(
         name = stage["name"]?.toString(),
-        id = stage["id"]?.toString(),
         label = stage["label"],
         ifField = stage["if"]?.toString(),
         ifModify = if (stage["if-modify"] is List<*>) {
@@ -341,7 +341,7 @@ fun YamlTemplate.getJob(fromPath: String, job: Map<String, Any>, deepTree: Templ
                 remoteTemplateProjectId = repo?.repository
             ))
         } else {
-            YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!! as Map<String, Any>)
+            YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!!)
         }
     )
 }
