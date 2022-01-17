@@ -161,7 +161,13 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
     }
 
-    override fun stopDebug(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean>? {
+    override fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String?
+    ): Result<Boolean>? {
         checkPermission(userId, projectId, pipelineId, vmSeqId)
 
         val pipelineDockerDebug = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
@@ -172,7 +178,8 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                vmSeqId = vmSeqId
+                vmSeqId = vmSeqId,
+                containerName ?: ""
             ))
         }
     }
