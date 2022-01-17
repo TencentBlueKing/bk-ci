@@ -536,7 +536,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
                 )
-                writeRemark(result.buildResult, projectId, buildId)
+                writeRemark(result.buildResult, projectId, buildInfo.pipelineId, buildId)
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
@@ -790,12 +790,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private fun writeRemark(
             buildResult: Map<String, String>,
             projectId: String,
+            pipelineId: String,
             buildId: String
     ) {
         if (buildResult.containsKey(PIPELINE_BUILD_REMARK)) {
             val remark = buildResult[PIPELINE_BUILD_REMARK]
             if (remark != null) {
-                val pipelineId = buildResult[PIPELINE_ID]!!
                 LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
                 pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
             }
