@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -180,6 +181,11 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
+            val actionFilter = ActionFilter(
+                pipelineId = pipelineId,
+                triggerOnAction = TGitMrEventAction.getActionValue(event) ?: "",
+                includedAction = convert(includeMrAction)
+            )
 
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
             val pathFilter = object : WebhookFilter {
@@ -218,11 +224,6 @@ class TGitMrTriggerHandler(
                 excludeCommitMsg,
                 event.object_attributes.last_commit.message,
                 pipelineId
-            )
-            val actionFilter = ActionFilter(
-                pipelineId = pipelineId,
-                triggerOnAction = event.object_attributes.action,
-                includedAction = convert(includeMrAction)
             )
             return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter)
         }

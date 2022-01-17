@@ -25,50 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 
-class UserFilter(
-    private val pipelineId: String,
-    private val triggerOnUser: String,
-    private val includedUsers: List<String>,
-    private val excludedUsers: List<String>
-) : WebhookFilter {
+/*
+ * Stream Mr 事件支持动作
+ * 根据Webhook事件抽象Stream action
+ */
+
+enum class TGitMrEventAction(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge");
 
     companion object {
-        private val logger = LoggerFactory.getLogger(UserFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnUser:$triggerOnUser|includedUsers:$includedUsers" +
-                "|excludedUsers:$excludedUsers|user filter"
-        )
-        return hasNoUserSpecs() || (isUserNotExcluded() && isUserIncluded())
-    }
-
-    private fun hasNoUserSpecs(): Boolean {
-        return includedUsers.isEmpty() && excludedUsers.isEmpty()
-    }
-
-    private fun isUserNotExcluded(): Boolean {
-        excludedUsers.forEach { excludeUser ->
-            if (triggerOnUser.matches(Regex(excludeUser))) {
-                logger.warn("$pipelineId|$excludeUser|the exclude user match the git event user")
-                return false
+        fun getActionValue(event: GitMergeRequestEvent): String? {
+            return when (event.object_attributes.action) {
+                TGitMergeActionKind.OPEN.value -> OPEN.value
+                TGitMergeActionKind.CLOSE.value -> CLOSE.value
+                TGitMergeActionKind.REOPEN.value -> REOPEN.value
+                TGitMergeActionKind.UPDATE.value -> {
+                    if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
+                        PUSH_UPDATE.value
+                    } else {
+                        null
+                    }
+                }
+                TGitMergeActionKind.MERGE.value -> MERGE.value
+                else -> null
             }
         }
-        return true
-    }
-
-    private fun isUserIncluded(): Boolean {
-        includedUsers.forEach { includedUser ->
-            if (triggerOnUser.matches(Regex(includedUser))) {
-                logger.warn("$pipelineId|includedUser|the included user match the git event user")
-                return true
-            }
-        }
-        return includedUsers.isEmpty()
     }
 }

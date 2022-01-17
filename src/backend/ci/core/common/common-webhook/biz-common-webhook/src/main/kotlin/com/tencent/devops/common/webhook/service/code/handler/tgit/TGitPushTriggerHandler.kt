@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
@@ -48,12 +49,15 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_BEFO
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
-class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
+class TGitPushTriggerHandler(
+    private val gitScmService: GitScmService
+) : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitPushTriggerHandler::class.java)
@@ -124,11 +128,22 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits
-            val eventPaths = mutableSetOf<String>()
-            commits?.forEach { commit ->
-                eventPaths.addAll(commit.added ?: listOf())
-                eventPaths.addAll(commit.removed ?: listOf())
-                eventPaths.addAll(commit.modified ?: listOf())
+            // 如果是强制提交,文件列表应该只获取强制提交变更的文件，而不是所有的
+            val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+                gitScmService.getChangeFileList(
+                    projectId = projectId,
+                    repo = repository,
+                    from = event.after,
+                    to = event.before
+                )
+            } else {
+                val eventPaths = mutableSetOf<String>()
+                commits?.forEach { commit ->
+                    eventPaths.addAll(commit.added ?: listOf())
+                    eventPaths.addAll(commit.removed ?: listOf())
+                    eventPaths.addAll(commit.modified ?: listOf())
+                }
+                eventPaths
             }
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
