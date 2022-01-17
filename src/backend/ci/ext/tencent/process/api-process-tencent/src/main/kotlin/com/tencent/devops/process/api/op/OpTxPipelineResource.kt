@@ -29,4 +29,9 @@ interface OpTxPipelineResource {
         @QueryParam("creator")
         creator: String
     ): Result<Boolean>
+
+    @ApiOperation("修复流水线状态")
+    @PUT
+    @Path("/{pipelineId}/fixCheckOut")
+    fun fixPipelineCheckOut(): Result<Int>
 }

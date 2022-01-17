@@ -27,9 +27,11 @@
 
 package com.tencent.devops.stream.mq.streamRequest
 
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.GitCITriggerService
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
 import org.springframework.amqp.rabbit.annotation.Queue
@@ -55,12 +57,15 @@ class GitCIRequestListener @Autowired constructor(
         ))]
     )
     fun listenGitCIRequestEvent(gitCIRequestEvent: GitCIRequestEvent) {
+        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
         try {
             gitCITriggerService.externalCodeGitBuild(
                 event = gitCIRequestEvent.event
             )
-        } catch (e: Throwable) {
-            logger.error("Fail to start the git ci build($gitCIRequestEvent)", e)
+        } catch (ignore: Throwable) {
+            logger.error("Fail to start the git ci build($gitCIRequestEvent)", ignore)
+        } finally {
+            MDC.remove(TraceTag.BIZID)
         }
     }
 
