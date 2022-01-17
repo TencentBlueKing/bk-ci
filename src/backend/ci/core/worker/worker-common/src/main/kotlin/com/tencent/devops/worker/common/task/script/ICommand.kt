@@ -51,7 +51,8 @@ interface ICommand {
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
         stepId: String? = null,
-        charsetType: String? = null
+        charsetType: String? = null,
+        taskId: String? = null
     )
 
     fun parseTemplate(
@@ -59,10 +60,10 @@ interface ICommand {
         command: String,
         data: Map<String, String>,
         dir: File,
-        stepId: String?
+        taskId: String?
     ): String {
         // 解析跨项目模板信息
-        val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(data, stepId)?.targetProjectId
+        val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
 
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
             override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {

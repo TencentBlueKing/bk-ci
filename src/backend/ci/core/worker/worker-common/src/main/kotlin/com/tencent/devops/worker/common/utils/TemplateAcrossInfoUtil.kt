@@ -15,12 +15,12 @@ object TemplateAcrossInfoUtil {
 
     fun getAcrossInfo(
         variables: Map<String, String>,
-        stepId: String?
+        taskId: String?
     ): BuildTemplateAcrossInfo? {
         val tid = variables[TEMPLATE_ACROSS_INFO_ID]
-        logger.info("getAcrossInfo tid: $tid stepId: $stepId")
+        logger.info("getAcrossInfo tid: $tid stepId: $taskId")
 
-        return if (tid.isNullOrBlank() || stepId.isNullOrBlank()) {
+        return if (tid.isNullOrBlank() || taskId.isNullOrBlank()) {
             null
         } else {
             val result = processApi.getBuildAcrossTemplateInfo(
@@ -31,7 +31,7 @@ object TemplateAcrossInfoUtil {
             } else {
                 result.data?.firstOrNull {
                     it.templateType == TemplateAcrossInfoType.STEP &&
-                        it.templateInstancesIds.contains(stepId)
+                        it.templateInstancesIds.contains(taskId)
                 }
             }
         }
