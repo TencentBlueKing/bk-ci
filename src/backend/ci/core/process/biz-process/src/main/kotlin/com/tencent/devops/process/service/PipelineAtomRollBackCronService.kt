@@ -222,9 +222,10 @@ class PipelineAtomRollBackCronService @Autowired constructor(
 
     private fun rollBackPipelineReplaceHistory(pipelineReplaceHistory: TPipelineAtomReplaceHistoryRecord) {
         val historyId = pipelineReplaceHistory.id
+        val projectId = pipelineReplaceHistory.projectId
         val pipelineId = pipelineReplaceHistory.busId
         try {
-            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = pipelineId)
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             if (pipelineInfo == null) {
                 val params = arrayOf(pipelineId)
                 throw ErrorCodeException(
@@ -238,8 +239,11 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 )
             }
             val sourceVersion = pipelineReplaceHistory.sourceVersion
-            val sourceModel =
-                pipelineRepositoryService.getModel(pipelineId = pipelineId, version = sourceVersion)
+            val sourceModel = pipelineRepositoryService.getModel(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = sourceVersion
+            )
             if (sourceModel == null) {
                 val params = arrayOf("$pipelineId+$sourceVersion")
                 throw ErrorCodeException(
@@ -255,7 +259,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
             sourceModel.latestVersion = 0 // latestVersion置为0以便适配修改流水线的校验逻辑
             pipelineRepositoryService.deployPipeline(
                 model = sourceModel,
-                projectId = pipelineReplaceHistory.projectId,
+                projectId = projectId,
                 signPipelineId = pipelineId,
                 userId = pipelineInfo.lastModifyUser,
                 channelCode = pipelineInfo.channelCode,

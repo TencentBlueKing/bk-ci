@@ -36,10 +36,10 @@ enum class ProjectChannelCode {
     BS,
     @ApiModelProperty("PREBULD")
     PREBUILD,
-    @ApiModelProperty("CI")
-    CI,
     @ApiModelProperty("CODECC")
     CODECC,
     @ApiModelProperty("GITCI")
-    GITCI
+    GITCI,
+    @ApiModelProperty("自动化集群项目，区分于CODECC项目")
+    AUTO
 }
