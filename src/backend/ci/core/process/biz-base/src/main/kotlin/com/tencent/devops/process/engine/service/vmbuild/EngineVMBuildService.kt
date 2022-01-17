@@ -791,11 +791,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     }
 
     private fun writeRemark(
-            buildResult: Map<String, String>,
-            projectId: String,
-            pipelineId: String,
-            buildId: String,
-            userId: String
+        buildResult: Map<String, String>,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String
     ) {
         if (buildResult.containsKey(PIPELINE_BUILD_REMARK)) {
             val remark = buildResult[PIPELINE_BUILD_REMARK]
