@@ -52,7 +52,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
@@ -158,7 +158,10 @@ class CallBackControl @Autowired constructor(
             projectId = projectId,
             events = callBackEvent.name
         )
-        if (list.isEmpty()) {
+
+        val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
+            ?.getPipelineCallBack(projectId) ?: emptyList()
+        if (list.isEmpty() && pipelineCallback.isEmpty()) {
             return
         }
 

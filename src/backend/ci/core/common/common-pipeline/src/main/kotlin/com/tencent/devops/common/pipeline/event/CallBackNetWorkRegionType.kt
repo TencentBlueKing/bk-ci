@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.enums
+package com.tencent.devops.common.pipeline.event
 
 enum class CallBackNetWorkRegionType {
     DEVNET,

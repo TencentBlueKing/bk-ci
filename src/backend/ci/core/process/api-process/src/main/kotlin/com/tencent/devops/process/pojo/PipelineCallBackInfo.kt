@@ -25,13 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 
-interface ProjectPipelineCallBackUrlGenerator {
-
-    fun generateCallBackUrl(region: CallBackNetWorkRegionType?, url: String): String
-
-    fun encodeCallbackUrl(url: String): String
-}
+data class PipelineCallBackInfo(
+    val callbackEvent: CallBackEvent,
+    val callbackUrl: String,
+    val secretToken: String?,
+    val callbackName: String,
+    val region: CallBackNetWorkRegionType?
+)
