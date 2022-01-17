@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -37,6 +39,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class StreamTriggerCache @Autowired constructor(
+    private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation
 ) {
 
@@ -45,7 +48,7 @@ class StreamTriggerCache @Autowired constructor(
 
         //  过期时间目前设为1小时
         private const val STREAM_CACHE_EXPIRE_TIME = 60 * 60L
-        private const val STREAM_REQUEST_KEY_PREFIX = "stream:request:"
+        private const val STREAM_REQUEST_KEY_PREFIX = "stream:request"
     }
 
     fun getAndSaveRequestGitProjectInfo(
@@ -103,7 +106,7 @@ class StreamTriggerCache @Autowired constructor(
                 "$STREAM_REQUEST_KEY_PREFIX:$gitRequestEventId:gitProjectInfo:$gitProjectName"
             )
             if (result != null) {
-                JsonUtil.to<StreamGitProjectCache>(result)
+                objectMapper.readValue<StreamGitProjectCache>(result)
             } else {
                 null
             }

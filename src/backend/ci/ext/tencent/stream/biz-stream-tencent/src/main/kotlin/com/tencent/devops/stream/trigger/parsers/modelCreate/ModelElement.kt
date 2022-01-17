@@ -35,9 +35,7 @@ import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.TransferTemplateData
 import com.tencent.devops.common.ci.v2.YamlTransferData
-import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -152,12 +150,9 @@ class ModelElement @Autowired constructor(
             elementList.add(element)
 
             // 将过度id替换为唯一的taskId方便引擎处查找
-            val oldData = transferDataMap?.get("${job.id}|${step.id}")
-            if (oldData != null) {
-                transferDataMap[element.id!!] = TransferTemplateData(
-                    objectId = element.id!!,
-                    templateType = TemplateType.STEP,
-                    remoteProjectId = oldData.remoteProjectId
+            if (transferDataMap?.get("${job.id}|${step.id}") != null) {
+                transferDataMap[element.id!!] = transferDataMap["${job.id}|${step.id}"]!!.copy(
+                    objectId = element.id!!
                 )
                 transferDataMap.remove("${job.id}|${step.id}")
             }
