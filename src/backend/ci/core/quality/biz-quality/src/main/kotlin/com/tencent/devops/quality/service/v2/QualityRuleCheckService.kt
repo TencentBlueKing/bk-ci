@@ -280,10 +280,17 @@ class QualityRuleCheckService @Autowired constructor(
 
             resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
             ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
-            if (!rule.gateKeepers.isNullOrEmpty() && !interceptResult) {
-                qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId),
-                    RuleInterceptResult.WAIT.name)
+
+            val status = if (interceptResult) {
+                RuleInterceptResult.PASS.name
+            } else {
+                if (rule.gateKeepers.isNullOrEmpty()) {
+                    RuleInterceptResult.FAIL.name
+                } else {
+                    RuleInterceptResult.WAIT.name
+                }
             }
+            qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId), status)
         }
 
         return Pair(resultList, ruleInterceptList)
