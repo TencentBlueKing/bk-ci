@@ -301,7 +301,8 @@ class CredentialServiceImpl @Autowired constructor(
                     hasViewPermission,
                     hasEditPermission
                 ),
-                updateUser = it.updateUser
+                updateUser = it.updateUser,
+                allowAcrossProject = it.allowAcrossProject
             )
         }
         return SQLPage(count, credentialList)
@@ -440,7 +441,8 @@ class CredentialServiceImpl @Autowired constructor(
                 hasViewPermission,
                 hasEditPermission
             ),
-            updateUser = credentialRecord.updateUser
+            updateUser = credentialRecord.updateUser,
+            allowAcrossProject = credentialRecord.allowAcrossProject
         )
     }
 
