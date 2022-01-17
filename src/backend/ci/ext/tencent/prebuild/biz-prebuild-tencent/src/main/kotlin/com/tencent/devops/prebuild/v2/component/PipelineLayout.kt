@@ -135,7 +135,6 @@ class PipelineLayout private constructor(
         if (!finallyJobs.isNullOrEmpty()) {
             val v2Stage = V2Stage(
                 name = "Finally",
-                id = null,
                 label = emptyList(),
                 ifField = null,
                 fastKill = false,
@@ -312,7 +311,7 @@ class PipelineLayout private constructor(
         }
 
         return Stage(
-            id = v2Stage.id,
+            id = null,
             name = v2Stage.name ?: when (finalStage) {
                 true -> "Final"
                 false -> "Stage-$stageIndex"
