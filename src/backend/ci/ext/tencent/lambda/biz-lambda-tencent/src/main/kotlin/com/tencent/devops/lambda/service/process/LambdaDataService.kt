@@ -95,7 +95,11 @@ class LambdaDataService @Autowired constructor(
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
-        val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.pipelineId, event.buildId)
+        val history = lambdaPipelineBuildDao.getBuildHistory(
+            dslContext = dslContext,
+            projectId = event.projectId,
+            buildId = event.buildId
+        )
         if (history == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build history is not exist")
             return
