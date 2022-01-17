@@ -40,6 +40,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_DOCKER_HOST"], description = "用户-获取构建容器信息")
@@ -74,6 +75,9 @@ interface UserDockerDebugResource {
         pipelineId: String,
         @ApiParam("vmSeqId", required = true)
         @PathParam("vmSeqId")
-        vmSeqId: String
+        vmSeqId: String,
+        @ApiParam("containerName", required = false)
+        @QueryParam("containerName")
+        containerName: String?
     ): Result<Boolean>?
 }
