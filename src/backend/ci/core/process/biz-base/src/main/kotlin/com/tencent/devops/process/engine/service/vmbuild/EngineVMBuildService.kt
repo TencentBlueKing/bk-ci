@@ -55,7 +55,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
@@ -76,7 +75,10 @@ import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.process.utils.*
+import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
+import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
 import org.slf4j.LoggerFactory
@@ -88,23 +90,23 @@ import javax.ws.rs.NotFoundException
 @Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions")
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
-        private val pipelineRuntimeService: PipelineRuntimeService,
-        private val containerBuildDetailService: ContainerBuildDetailService,
-        private val taskBuildDetailService: TaskBuildDetailService,
-        private val buildVariableService: BuildVariableService,
-        private val pipelineContextService: PipelineContextService,
-        @Autowired(required = false)
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
+    private val taskBuildDetailService: TaskBuildDetailService,
+    private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
+    @Autowired(required = false)
     private val measureService: MeasureService?,
-        private val buildLogPrinter: BuildLogPrinter,
-        private val pipelineEventDispatcher: PipelineEventDispatcher,
-        private val pipelineTaskService: PipelineTaskService,
-        private val pipelineTaskPauseService: PipelineTaskPauseService,
-        private val jmxElements: JmxElements,
-        private val buildExtService: PipelineBuildExtService,
-        private val client: Client,
-        private val pipelineContainerService: PipelineContainerService,
-        private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
-        private val redisOperation: RedisOperation
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val pipelineTaskService: PipelineTaskService,
+    private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val jmxElements: JmxElements,
+    private val buildExtService: PipelineBuildExtService,
+    private val client: Client,
+    private val pipelineContainerService: PipelineContainerService,
+    private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
