@@ -162,7 +162,7 @@ class ExperiencePushService @Autowired constructor(
                         platform = platform
                     ) != null
                 if (subscriptionRecord) {
-                    return Result("不可重复订阅", false)
+                    return Result("该体验已订阅，不允许重复订阅", false)
                 }
                 experiencePushDao.createSubscription(
                     dslContext = dslContext,

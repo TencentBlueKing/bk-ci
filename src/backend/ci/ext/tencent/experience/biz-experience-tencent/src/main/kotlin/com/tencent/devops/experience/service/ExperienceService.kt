@@ -745,8 +745,6 @@ class ExperienceService @Autowired constructor(
                 )
                 client.get(ServiceNotifyResource::class).sendEmailNotify(message)
             }
-
-
             outerReceivers.forEach {
                 sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
             }
