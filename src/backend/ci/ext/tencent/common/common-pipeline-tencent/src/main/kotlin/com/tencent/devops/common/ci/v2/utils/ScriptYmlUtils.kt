@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.DeleteRule
+import com.tencent.devops.common.ci.v2.IssuesRule
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.ParametersType
@@ -612,8 +613,27 @@ object ScriptYmlUtils {
             tag = tagRule(preTriggerOn),
             mr = mrRule(preTriggerOn),
             schedules = schedulesRule(preTriggerOn),
-            delete = deleteRule(preTriggerOn)
+            delete = deleteRule(preTriggerOn),
+            issues = issuesRule(preTriggerOn)
         )
+    }
+
+    private fun issuesRule(
+        preTriggerOn: PreTriggerOn
+    ): IssuesRule? {
+        if (preTriggerOn.issues != null) {
+            val issues = preTriggerOn.issues
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(issues),
+                    IssuesRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn issuesRule failed.", e)
+                null
+            }
+        }
+        return null
     }
 
     private fun deleteRule(

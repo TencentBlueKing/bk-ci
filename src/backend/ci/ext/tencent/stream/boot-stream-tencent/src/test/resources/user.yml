@@ -18,6 +18,9 @@ on:
   delete:
     types:
       - branch
+  issues:
+    action:
+      - open
 variables:
   123_GIT_KEY: 4cd6f303222a9f4854210ac00b398da8
   123_USERNAME: kiyachen
