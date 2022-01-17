@@ -275,7 +275,6 @@ object ScriptYmlUtils {
                 listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(stageNamespace),
                         jobs = listOf(
                             Job(
                                 id = jobId,
@@ -293,7 +292,6 @@ object ScriptYmlUtils {
                 listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(stageNamespace),
                         jobs = preJobs2Jobs(preScriptBuildYaml.jobs, transferData),
                         checkIn = null,
                         checkOut = null
@@ -435,18 +433,9 @@ object ScriptYmlUtils {
         }
 
         val stageList = mutableListOf<Stage>()
-        val stageIdSet = mutableSetOf<String>()
         preStageList.forEach {
-            // 校验stageId唯一性
-            if (it.id != null && stageIdSet.contains(it.id)) {
-                throw YamlFormatException("请确保stage.id唯一性!(${it.id})")
-            } else if (it.id != null && !stageIdSet.contains(it.id)) {
-                stageIdSet.add(it.id)
-            }
-
             stageList.add(
                 Stage(
-                    id = it.id ?: randomString(stageNamespace),
                     name = it.name,
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
