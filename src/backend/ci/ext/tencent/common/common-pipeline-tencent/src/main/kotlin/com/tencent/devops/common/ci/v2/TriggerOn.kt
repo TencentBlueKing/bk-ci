@@ -51,5 +51,6 @@ data class PreTriggerOn(
     val tag: Any?,
     val mr: Any?,
     val schedules: SchedulesRule?,
-    val delete: DeleteRule?
+    val delete: DeleteRule?,
+    val issues: IssuesRule? = null
 )
