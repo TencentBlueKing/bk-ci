@@ -266,29 +266,33 @@ class ModelCreate @Autowired constructor(
         gitRequestEventId: Long,
         gitProjectId: Long
     ): Map<String, BuildTemplateAcrossInfo> {
-        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
-        templateData.transferDataList.forEach { (remoteProjectId, transferList) ->
+        // 临时保存远程项目id的映射，就不用去redis里面查了
+        val remoteProjectIdMap = mutableMapOf<String, String>()
+        templateData.transferDataMap.values.forEach { objectData ->
+            if (objectData.remoteProjectId in remoteProjectIdMap.keys) {
+                return@forEach
+            }
             // 将pathWithPathSpace转为数字id
-            val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            remoteProjectIdMap[objectData.remoteProjectId] = streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitRequestEventId = gitRequestEventId,
-                gitProjectId = remoteProjectId,
+                gitProjectId = objectData.remoteProjectId,
                 token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
                 useAccessToken = true,
                 getProjectInfo = streamScmService::getProjectInfoRetry
             ).gitProjectId.toString().let { "git_$it" }
-
-            transferList.filter { it.templateType == TemplateType.JOB }.forEach { transfer ->
-                transfer.objectIds.forEach { jobId ->
-                    results[jobId] = BuildTemplateAcrossInfo(
-                        templateId = templateData.templateId,
-                        templateType = TemplateAcrossInfoType.JOB,
-                        // 因为已经将jobId转为了map所以这里不保存，节省空间
-                        templateInstancesIds = emptyList(),
-                        targetProjectId = remoteProjectIdLong
-                    )
-                }
-            }
         }
+
+        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
+        templateData.transferDataMap.filter { it.value.templateType == TemplateType.JOB }
+            .forEach { (objectId, objectData) ->
+                results[objectId] = BuildTemplateAcrossInfo(
+                    templateId = templateData.templateId,
+                    templateType = TemplateAcrossInfoType.JOB,
+                    // 因为已经将jobId转为了map所以这里不保存，节省空间
+                    templateInstancesIds = emptyList(),
+                    targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
+                )
+            }
         return results
     }
 }

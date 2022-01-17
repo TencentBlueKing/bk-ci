@@ -271,16 +271,17 @@ object ScriptYmlUtils {
     private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml, transferData: YamlTransferData?): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
+                val jobId = randomString(jobNamespace)
                 listOf(
                     Stage(
                         name = "stage_1",
                         id = randomString(stageNamespace),
                         jobs = listOf(
                             Job(
-                                id = randomString(jobNamespace),
+                                id = jobId,
                                 name = "job1",
                                 runsOn = RunsOn(),
-                                steps = preStepsToSteps(preScriptBuildYaml.steps, transferData)
+                                steps = preStepsToSteps(jobId, preScriptBuildYaml.steps, transferData)
                             )
                         ),
                         checkIn = null,
@@ -335,7 +336,7 @@ object ScriptYmlUtils {
                     services = services,
                     ifField = preJob.ifField,
                     ifModify = preJob.ifModify,
-                    steps = preStepsToSteps(preJob.steps, transferData),
+                    steps = preStepsToSteps(index, preJob.steps, transferData),
                     timeoutMinutes = preJob.timeoutMinutes,
                     env = preJob.env,
                     continueOnError = preJob.continueOnError,
@@ -378,7 +379,11 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun preStepsToSteps(oldSteps: List<PreStep>?, transferData: YamlTransferData?): List<Step> {
+    private fun preStepsToSteps(
+        jobId: String,
+        oldSteps: List<PreStep>?,
+        transferData: YamlTransferData?
+    ): List<Step> {
         if (oldSteps == null) {
             return emptyList()
         }
@@ -417,8 +422,8 @@ object ScriptYmlUtils {
                     checkout = preStep.checkout
                 )
             )
-
-            transferData?.add(id, TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
+            // stepId不一定唯一，所以需要加上jobId，在最后构建时再做转换
+            transferData?.add("$jobId|$id", TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return stepList

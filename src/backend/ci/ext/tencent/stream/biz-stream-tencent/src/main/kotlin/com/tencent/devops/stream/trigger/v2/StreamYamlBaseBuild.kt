@@ -185,7 +185,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         )
 
         // 添加模板跨项目信息
-        if (yamlTransferData != null && yamlTransferData.templateData.transferDataList.isNotEmpty()) {
+        if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(
                 userId = event.userId,
                 projectId = gitCIBasicSetting.projectCode!!,
@@ -409,27 +409,32 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitRequestEventId: Long,
         gitProjectId: Long
     ): List<BuildTemplateAcrossInfo> {
-        val results = mutableListOf<BuildTemplateAcrossInfo>()
-        templateData.transferDataList.forEach { (remoteProjectId, transferList) ->
-            // 将pathWithPathSpace转为数字id
-            val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                gitRequestEventId = gitRequestEventId,
-                gitProjectId = remoteProjectId,
-                token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
-                useAccessToken = true,
-                getProjectInfo = streamScmService::getProjectInfoRetry
-            ).gitProjectId.toString().let { "git_$it" }
-            transferList.forEach nextData@{ data ->
-                results.add(
-                    BuildTemplateAcrossInfo(
-                        templateId = templateData.templateId,
-                        templateType = data.templateType.toAcrossType() ?: return@nextData,
-                        templateInstancesIds = data.objectIds.toList(),
-                        targetProjectId = remoteProjectIdLong
-                    )
+        val remoteProjectIdMap = mutableMapOf<String, BuildTemplateAcrossInfo>()
+        templateData.transferDataMap.values.forEach { objectData ->
+            if (objectData.remoteProjectId !in remoteProjectIdMap.keys) {
+                // 将pathWithPathSpace转为数字id
+                val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitRequestEventId = gitRequestEventId,
+                    gitProjectId = objectData.remoteProjectId,
+                    token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                ).gitProjectId.toString().let { "git_$it" }
+
+                remoteProjectIdMap[objectData.remoteProjectId] = BuildTemplateAcrossInfo(
+                    templateId = templateData.templateId,
+                    templateType = objectData.templateType.toAcrossType()!!,
+                    templateInstancesIds = listOf(objectData.objectId),
+                    targetProjectId = remoteProjectIdLong
                 )
+            } else {
+                remoteProjectIdMap[objectData.remoteProjectId]!!.templateInstancesIds
+                    .toMutableList().add(objectData.objectId)
             }
         }
+
+        val results = mutableListOf<BuildTemplateAcrossInfo>()
+        remoteProjectIdMap.forEach { (_, data) -> results.add(data) }
         return results
     }
 

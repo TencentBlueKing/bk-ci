@@ -29,11 +29,13 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -86,8 +88,10 @@ class ModelElement @Autowired constructor(
         gitBasicSetting: GitCIBasicSetting,
         changeSet: Set<String>? = null,
         jobEnable: Boolean = true,
-        event: GitRequestEvent
+        event: GitRequestEvent,
+        yamlTransferData: YamlTransferData? = null
     ): MutableList<Element> {
+        val transferDataMap = yamlTransferData?.templateData?.transferDataMap
         // 解析service
         val elementList = makeServiceElementList(job)
         val stepIdCheckList = mutableListOf<String?>()
@@ -132,6 +136,7 @@ class ModelElement @Autowired constructor(
                     val data = mutableMapOf<String, Any>()
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
+                        id = "e-${UUIDUtil.generate()}",
                         name = step.name ?: step.uses!!.split('@')[0],
                         stepId = step.id,
                         atomCode = step.uses!!.split('@')[0],
@@ -143,6 +148,12 @@ class ModelElement @Autowired constructor(
             }
 
             elementList.add(element)
+
+            // 将过度id替换为唯一的taskId方便引擎处查找
+            if (transferDataMap?.get("${job.id}|${step.id}") != null) {
+                transferDataMap[element.id!!] = transferDataMap["${job.id}|${step.id}"]!!
+                transferDataMap.remove("${job.id}|${step.id}")
+            }
 
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
@@ -162,6 +173,7 @@ class ModelElement @Autowired constructor(
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
+                id = "e-${UUIDUtil.generate()}",
                 name = step.name ?: "run",
                 stepId = step.id,
                 atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
@@ -171,6 +183,7 @@ class ModelElement @Autowired constructor(
             )
         } else {
             val linux = LinuxScriptElement(
+                id = "e-${UUIDUtil.generate()}",
                 name = step.name ?: "run",
                 stepId = step.id,
                 scriptType = BuildScriptType.SHELL,
@@ -185,6 +198,7 @@ class ModelElement @Autowired constructor(
                     "linux" -> linux
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
+                        id = "e-${UUIDUtil.generate()}",
                         name = step.name ?: "run",
                         stepId = step.id,
                         scriptType = BuildScriptType.BAT,
@@ -237,6 +251,7 @@ class ModelElement @Autowired constructor(
         data["input"] = inputMap
 
         return MarketBuildAtomElement(
+            id = "e-${UUIDUtil.generate()}",
             name = step.name ?: "checkout",
             stepId = step.id,
             atomCode = "checkout",
@@ -315,6 +330,7 @@ class ModelElement @Autowired constructor(
                     record.env
                 )
                 val servicesElement = MarketBuildAtomElement(
+                    id = "e-${UUIDUtil.generate()}",
                     name = "创建${it.image}服务",
                     status = null,
                     atomCode = ServiceJobDevCloudTask.atomCode,

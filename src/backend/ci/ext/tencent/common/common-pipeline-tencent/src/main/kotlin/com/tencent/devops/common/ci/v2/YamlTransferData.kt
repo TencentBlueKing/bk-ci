@@ -29,6 +29,7 @@ package com.tencent.devops.common.ci.v2
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 
 /**
  * 从preYaml转向Yaml产生的内部使用而不暴露的中间数据
@@ -40,11 +41,12 @@ data class YamlTransferData(
 
 data class TemplateData(
     val templateId: String = "t-${UUIDUtil.generate()}",
-    val transferDataList: MutableMap<String, MutableList<TransferTemplateData>> = mutableMapOf()
+    // Map<objectId,object>
+    val transferDataMap: MutableMap<String, TransferTemplateData> = mutableMapOf()
 )
 
 data class TransferTemplateData(
-    val objectIds: MutableList<String>,
+    val objectId: String,
     val templateType: TemplateType,
     val remoteProjectId: String
 )
@@ -54,27 +56,13 @@ fun YamlTransferData.add(objectId: String, templateType: TemplateType, remotePro
         return
     }
 
-    val dataList = templateData.transferDataList[remoteProjectId]
-    if (dataList != null) {
-        val data = dataList.filter { it.templateType == templateType }.ifEmpty { null }?.first()
-        if (data == null) {
-            dataList.add(
-                TransferTemplateData(
-                    objectIds = mutableListOf(objectId),
-                    templateType = templateType,
-                    remoteProjectId = remoteProjectId
-                )
-            )
-        } else {
-            data.objectIds.add(objectId)
-        }
-    } else {
-        templateData.transferDataList[remoteProjectId] = mutableListOf(
-            TransferTemplateData(
-                objectIds = mutableListOf(objectId),
-                templateType = templateType,
-                remoteProjectId = remoteProjectId
-            )
-        )
+    if (templateData.transferDataMap[objectId] != null) {
+        throw YamlFormatException("step or job id $objectId is not unique")
     }
+
+    templateData.transferDataMap[objectId] = TransferTemplateData(
+        objectId = objectId,
+        templateType = templateType,
+        remoteProjectId = remoteProjectId
+    )
 }
