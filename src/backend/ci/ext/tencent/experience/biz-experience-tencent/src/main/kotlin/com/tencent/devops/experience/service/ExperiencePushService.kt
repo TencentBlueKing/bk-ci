@@ -164,7 +164,7 @@ class ExperiencePushService @Autowired constructor(
                 if (subscriptionRecord) {
                     return Result("不可重复订阅", false)
                 }
-                experiencePushDao.subscribe(
+                experiencePushDao.createSubscription(
                     dslContext = dslContext,
                     userId = userId,
                     projectId = projectId,
@@ -244,7 +244,7 @@ class ExperiencePushService @Autowired constructor(
                 if (!subscriptionRecord) {
                     return Result("由于没有订阅该体验，不允许取消体验", false)
                 }
-                experiencePushDao.unSubscribe(
+                experiencePushDao.deleteSubscription(
                     dslContext,
                     userId = userId,
                     projectId = projectId,

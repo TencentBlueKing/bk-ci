@@ -143,7 +143,7 @@ class ExperiencePushDao {
         }
     }
 
-    fun subscribe(
+    fun createSubscription(
         dslContext: DSLContext,
         userId: String,
         projectId: String,
@@ -172,7 +172,7 @@ class ExperiencePushDao {
         }
     }
 
-    fun unSubscribe(
+    fun deleteSubscription(
         dslContext: DSLContext,
         userId: String,
         projectId: String,
