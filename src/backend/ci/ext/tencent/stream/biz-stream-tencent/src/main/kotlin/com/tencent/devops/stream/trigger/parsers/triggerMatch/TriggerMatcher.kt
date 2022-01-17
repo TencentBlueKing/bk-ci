@@ -211,6 +211,7 @@ class TriggerMatcher @Autowired constructor(
         needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
         with(context) {
+            logger.info("match and start params|triggerOn:$triggerOn|gitEvent:$gitEvent")
             val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
                 gitEvent = gitEvent,
                 triggerOn = triggerOn

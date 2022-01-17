@@ -9,6 +9,7 @@ import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -19,7 +20,6 @@ import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 object TriggerBuilder {
@@ -181,9 +181,9 @@ object TriggerBuilder {
             includeMrAction = if (triggerOn.mr?.action.isNullOrEmpty()) {
                 // 缺省时使用默认值
                 listOf(
-                    StreamMrEventAction.OPEN.value,
-                    StreamMrEventAction.REOPEN.value,
-                    StreamMrEventAction.PUSH_UPDATE.value
+                    TGitMrEventAction.OPEN.value,
+                    TGitMrEventAction.REOPEN.value,
+                    TGitMrEventAction.PUSH_UPDATE.value
                 )
             } else {
                 triggerOn.mr!!.action
