@@ -83,14 +83,7 @@ data class GitRequestEvent(
 ) {
     companion object {
         // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。
-        private const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"
-    }
-    fun isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
-
-    fun isFork(): Boolean {
-        return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
-            sourceGitProjectId != null &&
-            sourceGitProjectId != gitProjectId
+        const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"
     }
 
     // 获取fork库的项目id
@@ -102,14 +95,29 @@ data class GitRequestEvent(
         }
     }
 
-    // 判断是否是删除分支的event这个Event不做构建只做删除逻辑
-    fun isDeleteBranch(): Boolean {
-        return objectKind == TGitObjectKind.PUSH.value &&
-            operationKind == TGitPushOperationKind.DELETE.value &&
-            (extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
-                commitId == DELETE_BRANCH_COMMITID_FROM_CLIENT)
-    }
-
     // 当人工触发时不推送CommitCheck消息
     fun sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+}
+
+fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
+
+fun GitRequestEvent.isFork(): Boolean {
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+        sourceGitProjectId != null &&
+        sourceGitProjectId != gitProjectId
+}
+
+/**
+ * 判断是否是删除分支的event这个Event不做构建只做删除逻辑
+ */
+fun GitRequestEvent.isDeleteBranch(): Boolean {
+    return objectKind == TGitObjectKind.PUSH.value &&
+        operationKind == TGitPushOperationKind.DELETE.value &&
+        (extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
+            commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT)
+}
+
+fun GitRequestEvent.isDeleteTag(): Boolean {
+    return objectKind == TGitObjectKind.TAG_PUSH.value &&
+        operationKind == TGitPushOperationKind.DELETE.value
 }

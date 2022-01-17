@@ -36,12 +36,12 @@ import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -61,6 +61,12 @@ interface GitCIHistoryResource {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("startBeginTime")
+        startBeginTime: String?,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("endBeginTime")
+        endBeginTime: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-web"))
     api(project(":core:common:common-environment-thirdpartyagent"))
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:environment:api-environment"))
     api(project(":core:artifactory:api-artifactory"))
@@ -38,8 +39,4 @@ dependencies {
     api(project(":core:misc:api-misc"))
     api(project(":core:common:common-websocket"))
     api("org.json:json")
-    api("org.springframework.boot:spring-boot-starter-jooq")
-    api("com.zaxxer:HikariCP")
-    api("org.jooq:jooq")
-    api("mysql:mysql-connector-java")
 }

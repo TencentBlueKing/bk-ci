@@ -898,7 +898,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         try {
             logger.info("start to copy the quality rule for template: $templateCode")
             val sourceTemplate = client.get(ServicePTemplateResource::class).listTemplateById(
-                setOf(templateCode), null).data?.templates!!.getValue(templateCode)
+                setOf(templateCode), null, null).data?.templates!!.getValue(templateCode)
             projectCodeList.forEach { projectCode ->
                 client.get(ServiceQualityRuleResource::class).copyRule(CopyRuleRequest(
                     sourceTemplate.projectId,

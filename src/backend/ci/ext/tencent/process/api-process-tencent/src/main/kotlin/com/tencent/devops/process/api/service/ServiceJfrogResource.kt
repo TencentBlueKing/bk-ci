@@ -36,6 +36,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_JFROG"], description = "服务-Artifactory对接Process接口的资源")
@@ -56,19 +57,14 @@ interface ServiceJfrogResource {
         pipelineIds: Set<String>
     ): Result<Map<String, String>>
 
-    @ApiOperation("根据流水线id和构建id对，获取build num")
-    @POST
-    @Path("/{projectId}/getBuildNoByBuildIds")
-    @Deprecated("use ServiceJfrogResource.getBuildNoByBuildIdsNew")
-    fun getBuildNoByBuildIds(
-        @ApiParam("项目id", required = true)
-        buildIds: Set<String>
-    ): Result<Map<String, String>>
-
     @ApiOperation("根据构建id对，获取build num")
     @POST
-    @Path("//getBuildNoByBuildIds")
+    @Path("/getBuildNoByBuildIds")
     fun getBuildNoByBuildIdsNew(
-        buildIds: Set<String>
+        @ApiParam("构建ID集合", required = true)
+        buildIds: Set<String>,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null
     ): Result<Map<String, String>>
 }

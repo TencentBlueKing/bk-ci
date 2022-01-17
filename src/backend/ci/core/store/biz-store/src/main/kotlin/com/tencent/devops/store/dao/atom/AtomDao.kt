@@ -29,7 +29,7 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.db.util.JooqUtils
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify

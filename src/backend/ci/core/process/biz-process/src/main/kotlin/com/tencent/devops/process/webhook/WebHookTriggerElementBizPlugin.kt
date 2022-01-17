@@ -62,6 +62,7 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     override fun beforeDelete(element: T, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             pipelineWebhookService.deleteWebhook(
+                projectId = param.projectId,
                 pipelineId = param.pipelineId,
                 taskId = element.id!!,
                 userId = param.userId

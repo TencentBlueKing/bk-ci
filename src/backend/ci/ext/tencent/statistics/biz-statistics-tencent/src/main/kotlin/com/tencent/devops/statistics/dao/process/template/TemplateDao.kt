@@ -68,7 +68,7 @@ class TemplateDao {
             }
 
             return dslContext
-                .select(ID.countDistinct())
+                .select(DSL.countDistinct(ID))
                 .from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
@@ -103,7 +103,7 @@ class TemplateDao {
             }
 
             return dslContext
-                .select(ID.countDistinct())
+                .select(DSL.countDistinct(ID))
                 .from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!

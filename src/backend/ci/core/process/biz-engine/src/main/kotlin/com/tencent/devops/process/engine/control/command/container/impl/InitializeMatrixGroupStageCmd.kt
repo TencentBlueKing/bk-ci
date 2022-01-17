@@ -147,6 +147,7 @@ class InitializeMatrixGroupStageCmd(
         val event = commandContext.event
         val variables = commandContext.variables
         val modelStage = containerBuildDetailService.getBuildModel(
+            projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
         )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
             "stage(${parentContainer.stageId}) cannot be found in model"

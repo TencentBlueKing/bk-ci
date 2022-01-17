@@ -208,7 +208,7 @@ private fun waitBuildLessJobStart() {
     val dockerHostIp = DockerEnv.getDockerHostIp()
     val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
-    val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+    val loopUrl = "http://$dockerHostIp:$dockerHostPort/build/task/claim?containerId=$hostname"
 
     val request = Request.Builder()
         .url(loopUrl)
@@ -237,6 +237,7 @@ private fun doResponse(
     resp: Response
 ): Boolean {
     val responseBody = resp.body()?.string() ?: ""
+    println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
         val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
         buildLessTask.forEach { (t, u) ->

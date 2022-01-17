@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import org.springframework.stereotype.Component
 
@@ -56,7 +55,6 @@ class SubPipelineCallAtom constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildService: PipelineBuildService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : IAtomTask<SubPipelineCallElement> {
 
@@ -79,7 +77,7 @@ class SubPipelineCallAtom constructor(
             )
         } else {
             val subBuildId = task.subBuildId!!
-            val subBuildInfo = pipelineRuntimeService.getBuildInfo(subBuildId)
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(task.subProjectId!!, subBuildId)
             return if (subBuildInfo == null) {
                 buildLogPrinter.addRedLine(
                     buildId = task.buildId,

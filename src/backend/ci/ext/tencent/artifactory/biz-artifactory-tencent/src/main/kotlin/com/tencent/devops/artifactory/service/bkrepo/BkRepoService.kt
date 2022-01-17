@@ -434,7 +434,7 @@ class BkRepoService @Autowired constructor(
                 }
             }
             val pipelineIdToNameMap = pipelineService.getPipelineNames(projectId, pipelineIdList.toSet())
-            val buildIdToNameMap = pipelineService.getBuildNames(buildIdList.toSet())
+            val buildIdToNameMap = pipelineService.getBuildNames(projectId, buildIdList.toSet())
 
             val fileInfoList = mutableListOf<FileInfo>()
             fileList.forEach {
@@ -568,7 +568,7 @@ class BkRepoService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId)
 
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
-        val buildNo = pipelineService.getBuildName(buildId)
+        val buildNo = pipelineService.getBuildName(projectId, buildId)
         val fromPath = "$pipelineId/$buildId"
         val toPath = "_from_pipeline/$pipelineName/$buildNo"
 
