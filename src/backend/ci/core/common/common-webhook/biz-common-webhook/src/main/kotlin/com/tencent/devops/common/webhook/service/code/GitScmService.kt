@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -174,6 +175,52 @@ class GitScmService @Autowired constructor(
             logger.error("fail to get mr info", e)
             null
         }
+    }
+
+    fun getChangeFileList(
+        projectId: String,
+        repo: Repository,
+        from: String,
+        to: String,
+    ): Set<String> {
+        val type = getType(repo) ?: return emptySet()
+        val changeSet = mutableSetOf<String>()
+        try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            for (i in 1..10) {
+                // 反向进行三点比较可以比较出rebase的真实提交
+                val result = client.get(ServiceGitResource::class).getChangeFileList(
+                    token = token,
+                    tokenType = tokenType,
+                    gitProjectId = repo.projectName,
+                    from = from,
+                    to = to,
+                    straight = false,
+                    page = i,
+                    pageSize = 100
+                ).data ?: emptyList()
+                changeSet.addAll(result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else {
+                        it.newPath
+                    }
+                }
+                )
+                if (result.size < 100) {
+                    break
+                }
+            }
+        } catch (ignore: Exception) {
+            logger.error("fail to get change file list", ignore)
+        }
+        return changeSet
     }
 
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
