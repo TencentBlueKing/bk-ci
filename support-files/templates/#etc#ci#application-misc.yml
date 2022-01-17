@@ -58,3 +58,8 @@ build:
       otherMaxKeepNum: 500
       clearChannelCodes: "BS,PREBUILD,CI,CODECC"
       maxThreadHandleProjectNum: 5
+
+sharding:
+  databaseShardingStrategy:
+    algorithmClassName: "com.tencent.devops.misc.sharding.BkProcessDatabaseShardingAlgorithm"
+    shardingField: PROJECT_ID
