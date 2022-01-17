@@ -961,7 +961,7 @@ class TemplateFacadeService @Autowired constructor(
                     defaultMessage = "源模板不存在"
                 )
             }
-            templates = templateDao.listTemplate(dslContext, latestTemplate.projectId, latestTemplate.srcTemplateId)
+            templates = templateDao.listTemplate(dslContext, latestTemplate.projectId, latestTemplate.id)
         }
 
         val setting = pipelineSettingDao.getSetting(dslContext, projectId, templateId)
