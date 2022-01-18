@@ -1228,7 +1228,7 @@ class TemplateFacadeService @Autowired constructor(
         pipelineIds: Set<String>
     ): Map<String, TemplateInstanceParams> {
         try {
-            val template = templateDao.getTemplate(dslContext, projectId, version)
+            val template = templateDao.getTemplate(dslContext = dslContext, version = version)
             val templateModel: Model = objectMapper.readValue(template.template)
             val templateTriggerContainer = templateModel.stages[0].containers[0] as TriggerContainer
             val latestInstances = listLatestModel(projectId, pipelineIds)
@@ -1285,7 +1285,7 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
         logger.info("Create the new template instance [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
-        val template = templateDao.getTemplate(dslContext, projectId, version)
+        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val successPipelinesId = ArrayList<String>()
