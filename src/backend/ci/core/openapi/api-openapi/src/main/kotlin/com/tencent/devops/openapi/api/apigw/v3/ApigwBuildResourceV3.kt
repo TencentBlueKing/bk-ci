@@ -320,8 +320,8 @@ interface ApigwBuildResourceV3 {
 
     @ApiOperation("取消并发起新构建")
     @POST
-    @Path("/{buildId}/build/refresh")
-    fun buildRefresh(
+    @Path("/{buildId}/build/restart")
+    fun buildRestart(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)

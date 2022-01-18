@@ -36,19 +36,19 @@ import java.util.concurrent.TimeUnit
 class PipelineRedisService @Autowired constructor(
     val redisOperation: RedisOperation
 ) {
-    fun getRefreshBuildValue(buildId: String): String? {
-        return redisOperation.get("$REFRESH_KEY$buildId") ?: null
+    fun getBuildRestartValue(buildId: String): String? {
+        return redisOperation.get("$RESTART_KEY$buildId") ?: null
     }
 
-    fun setRefreshBuildValue(buildId: String) {
-        return redisOperation.set("$REFRESH_KEY$buildId", "run", TimeUnit.MINUTES.toSeconds(900))
+    fun setBuildRestartValue(buildId: String) {
+        return redisOperation.set("$RESTART_KEY$buildId", "run", TimeUnit.MINUTES.toSeconds(900))
     }
 
-    fun deleteRefreshBuild(buildId: String) {
-        return redisOperation.delete("$REFRESH_KEY$buildId")
+    fun deleteRestartBuild(buildId: String) {
+        return redisOperation.delete("$RESTART_KEY$buildId")
     }
 
     companion object {
-        const val REFRESH_KEY = "pipeline:build:refresh:"
+        const val RESTART_KEY = "pipeline:build:restart:"
     }
 }

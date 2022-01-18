@@ -278,9 +278,9 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.popNextBuild() {
-        if (pipelineRedisService.getRefreshBuildValue(this.buildId) != null) {
+        if (pipelineRedisService.getBuildRestartValue(this.buildId) != null) {
             // 删除buildId占用的refresh锁
-            pipelineRedisService.deleteRefreshBuild(this.buildId)
+            pipelineRedisService.deleteRestartBuild(this.buildId)
         }
 
         // 获取下一个排队的

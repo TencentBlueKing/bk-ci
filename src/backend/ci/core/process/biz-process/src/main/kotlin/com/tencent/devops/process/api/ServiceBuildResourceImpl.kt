@@ -564,8 +564,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun buildRefresh(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
-        return Result(pipelineBuildFacadeService.refreshBuild(
+    override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(pipelineBuildFacadeService.buildRestart(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

@@ -1936,7 +1936,7 @@ class PipelineBuildFacadeService(
             )
     }
 
-    fun refreshBuild(
+    fun buildRestart(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -1957,11 +1957,11 @@ class PipelineBuildFacadeService(
         try {
             if (redisLock.tryLock()) {
                 // 同一个buildId只能有一个在refresh的请求
-                if (pipelineRedisService.getRefreshBuildValue(buildId) != null) {
+                if (pipelineRedisService.getBuildRestartValue(buildId) != null) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.BAD_REQUEST.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_REFRESH_EXSIT,
-                        defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_REFRESH_EXSIT, arrayOf(buildId)),
+                        errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
+                        defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
                         params = arrayOf(buildId)
                     )
                 }
@@ -1984,7 +1984,7 @@ class PipelineBuildFacadeService(
                 }
 
                 // 锁定当前构建refresh操作
-                pipelineRedisService.setRefreshBuildValue(buildId)
+                pipelineRedisService.setBuildRestartValue(buildId)
                 // 取消当次构建
                 pipelineRuntimeService.cancelBuild(
                     projectId = projectId,
@@ -2006,7 +2006,12 @@ class PipelineBuildFacadeService(
         } finally {
             redisLock.unlock()
         }
-        return ""
+        throw ErrorCodeException(
+            statusCode = Response.Status.BAD_REQUEST.statusCode,
+            errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
+            defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
+            params = arrayOf(buildId)
+        )
     }
 
     private fun checkPipelineInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo {

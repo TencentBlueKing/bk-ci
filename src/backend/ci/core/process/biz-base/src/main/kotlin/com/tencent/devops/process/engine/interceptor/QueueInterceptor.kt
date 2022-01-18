@@ -72,7 +72,7 @@ class QueueInterceptor @Autowired constructor(
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
             if (buildSummaryRecord.latestBuildId == null ||
-                pipelineRedisService.getRefreshBuildValue(buildSummaryRecord.latestBuildId) != null) {
+                pipelineRedisService.getBuildRestartValue(buildSummaryRecord.latestBuildId) != null) {
                 return Response(data = BuildStatus.RUNNING)
             }
 
