@@ -1093,8 +1093,9 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("Compare the template instances - [$projectId|$userId|$templateId|$pipelineId|$version]")
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
             ?: throw NotFoundException("流水线模板不存在")
-        val template: Model =
-            objectMapper.readValue(templateDao.getTemplate(dslContext, projectId, templatePipelineRecord.version).template)
+        val template: Model = objectMapper.readValue(
+            templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
+        )
         val v1Model: Model = instanceCompareModel(
             objectMapper.readValue(
                 content = pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, null)
@@ -1107,13 +1108,13 @@ class TemplateFacadeService @Autowired constructor(
             template
         )
 
-        val v2Model = getTemplateModel(projectId, version)
+        val srcTemplate = templateDao.getTemplate(dslContext = dslContext, version = version)
+        val v2Model = getTemplateModel(srcTemplate.template)
         val v1Containers = getContainers(v1Model)
         val v2Containers = getContainers(v2Model)
         logger.info("Get the containers - [$v1Containers] - [$v2Containers]")
 
         compareContainer(v1Containers, v2Containers)
-        val srcTemplate = templateDao.getTemplate(dslContext, projectId, version)
         val versions = listTemplateVersions(srcTemplate.projectId, srcTemplate.id)
         return compareModel(versions, v1Model, v2Model)
     }
@@ -1161,8 +1162,8 @@ class TemplateFacadeService @Autowired constructor(
         }
     }
 
-    private fun getTemplateModel(projectId: String, version: Long): Model {
-        return objectMapper.readValue(templateDao.getTemplate(dslContext, projectId, version).template)
+    private fun getTemplateModel(templateModelStr: String): Model {
+        return objectMapper.readValue(templateModelStr)
     }
 
     fun elementModify(e1: Element, e2: Element): Boolean {
@@ -1383,7 +1384,7 @@ class TemplateFacadeService @Autowired constructor(
         val failurePipelines = ArrayList<String>()
         val messages = HashMap<String, String>()
 
-        val template = templateDao.getTemplate(dslContext, projectId, version)
+        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
 
         instances.forEach {
             try {
@@ -1515,7 +1516,7 @@ class TemplateFacadeService @Autowired constructor(
         logger.info("asyncUpdateTemplateInstances [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         // 当更新的实例数量较小则走同步更新逻辑，较大走异步更新逻辑
         if (instances.size <= maxSyncInstanceNum) {
-            val template = templateDao.getTemplate(dslContext, projectId, version)
+            val template = templateDao.getTemplate(dslContext = dslContext, version = version)
             val successPipelines = ArrayList<String>()
             val failurePipelines = ArrayList<String>()
             instances.forEach { templateInstanceUpdate ->
