@@ -39,7 +39,6 @@ import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
 
 object YamlCommonUtils {
     private val objectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)).apply {
-        registerModule(KotlinModule())
         // 去掉替换模板中间过程中生成的中间变量
         registerKotlinModule().setFilterProvider(
             SimpleFilterProvider().addFilter(

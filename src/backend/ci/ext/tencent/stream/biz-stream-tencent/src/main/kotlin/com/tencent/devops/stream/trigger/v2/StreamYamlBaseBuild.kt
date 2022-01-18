@@ -409,36 +409,44 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitRequestEventId: Long,
         gitProjectId: Long
     ): List<BuildTemplateAcrossInfo> {
-        val remoteProjectIdMap = mutableMapOf<String, BuildTemplateAcrossInfo>()
+        val remoteProjectIdMap = mutableMapOf<String, MutableMap<TemplateAcrossInfoType, BuildTemplateAcrossInfo>>()
         templateData.transferDataMap.values.forEach { objectData ->
-            if (objectData.remoteProjectId !in remoteProjectIdMap.keys) {
+            val templateType = objectData.templateType.toAcrossType()!!
+            val remoteProjectString = objectData.remoteProjectId
+
+            if (remoteProjectString !in remoteProjectIdMap.keys) {
                 // 将pathWithPathSpace转为数字id
                 val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
                     gitRequestEventId = gitRequestEventId,
-                    gitProjectId = objectData.remoteProjectId,
+                    gitProjectId = remoteProjectString,
                     token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
                     useAccessToken = true,
                     getProjectInfo = streamScmService::getProjectInfoRetry
                 ).gitProjectId.toString().let { "git_$it" }
 
-                remoteProjectIdMap[objectData.remoteProjectId] = BuildTemplateAcrossInfo(
-                    templateId = templateData.templateId,
-                    templateType = objectData.templateType.toAcrossType()!!,
-                    templateInstancesIds = listOf(objectData.objectId),
-                    targetProjectId = remoteProjectIdLong
-                )
-            } else {
-                val oldData = remoteProjectIdMap[objectData.remoteProjectId]!!
-                remoteProjectIdMap[objectData.remoteProjectId] = oldData.copy(
-                    templateInstancesIds = mutableListOf<String>().apply {
-                        addAll(oldData.templateInstancesIds)
-                        add(objectData.objectId)
-                    }
-                )
+                TemplateAcrossInfoType.values().forEach { type ->
+                    remoteProjectIdMap[remoteProjectString] = mutableMapOf(
+                        templateType to BuildTemplateAcrossInfo(
+                            templateId = templateData.templateId,
+                            templateType = type,
+                            templateInstancesIds = listOf(),
+                            targetProjectId = remoteProjectIdLong
+                        )
+                    )
+                }
             }
+
+            val oldData = remoteProjectIdMap[remoteProjectString]!![templateType]!!
+
+            remoteProjectIdMap[remoteProjectString]!![templateType] = oldData.copy(
+                templateInstancesIds = mutableListOf<String>().apply {
+                    addAll(oldData.templateInstancesIds)
+                    add(objectData.objectId)
+                }
+            )
         }
 
-        return remoteProjectIdMap.map { (_, data) -> data }
+        return remoteProjectIdMap.values.flatMap { it.values }.filter { it.templateInstancesIds.isNotEmpty() }
     }
 
     private fun TemplateType.toAcrossType(): TemplateAcrossInfoType? {

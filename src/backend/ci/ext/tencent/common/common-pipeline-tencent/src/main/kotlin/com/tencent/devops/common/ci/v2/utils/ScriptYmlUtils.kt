@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
@@ -393,20 +394,20 @@ object ScriptYmlUtils {
             }
 
             // 校验stepId唯一性
-            if (preStep.id != null && stepIdSet.contains(preStep.id)) {
+            if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
                 throw YamlFormatException("请确保step.id唯一性!(${preStep.id})")
-            } else if (preStep.id != null && !stepIdSet.contains(preStep.id)) {
+            } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
                 stepIdSet.add(preStep.id)
             }
 
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(preStep.env)
 
-            val id = preStep.id ?: randomString(stepNamespace)
+            val taskId = "e-${UUIDUtil.generate()}"
             stepList.add(
                 Step(
                     name = preStep.name,
-                    id = id,
+                    id = preStep.id,
                     ifFiled = preStep.ifFiled,
                     ifModify = preStep.ifModify,
                     uses = preStep.uses,
@@ -416,11 +417,12 @@ object ScriptYmlUtils {
                     retryTimes = preStep.retryTimes,
                     env = preStep.env,
                     run = preStep.run,
-                    checkout = preStep.checkout
+                    checkout = preStep.checkout,
+                    taskId = taskId
                 )
             )
-            // stepId不一定唯一，所以需要加上jobId，在最后构建时再做转换
-            transferData?.add("$jobId|$id", TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
+
+            transferData?.add(taskId, TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return stepList
