@@ -158,6 +158,7 @@ class ExperienceNotifyService @Autowired constructor(
         pushAppRequest.message = message
         // todo 还要添加action_type，既点击消息之后的跳转页面
         val messageAndroid = MessageAndroid()
+        //messageAndroid.action
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
         tokenList.add(appNotifyMessageWithOperation.token)
@@ -169,7 +170,7 @@ class ExperienceNotifyService @Autowired constructor(
         val pushAppRequest = PushAppRequest()
         pushAppRequest.audience_type = AudienceType.token
         // todo 配置在配置文件中？
-        pushAppRequest.environment = Environment.valueOf("dev")
+        pushAppRequest.environment = Environment.valueOf("product")
         pushAppRequest.message_type = MessageType.notify
         val message = Message()
         message.title = appNotifyMessageWithOperation.title
