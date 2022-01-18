@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v3
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
@@ -33,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwSignResourceV3
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
+import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.api.service.ServiceIpaResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,6 +43,25 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwSignResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwSignResourceV3 {
+
+    override fun getHistorySign(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        startTime: Long,
+        endTime: Long,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<SignHistory>> {
+        logger.info("get the sign task list by user($userId)")
+        return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getHistorySign(
+            userId = userId,
+            startTime = startTime,
+            endTime = endTime,
+            page = page,
+            pageSize = pageSize
+        )
+    }
 
     override fun getSignToken(
         appCode: String?,

@@ -103,6 +103,10 @@ func (ni *NodeInfo) figureAvailableInstanceFromFree(cpuPerInstance, memPerInstan
 	return int(math.Min(math.Min(instanceByCPU, instanceByMem), instanceByDisk))
 }
 
+func (ni *NodeInfo) valid() bool {
+	return ni.CPUTotal >= 0 && ni.MemTotal >= 0 && ni.DiskTotal >= 0
+}
+
 // NewNodeInfoPool get a new node info pool
 func NewNodeInfoPool(cpu, mem, disk float64) *NodeInfoPool {
 	return &NodeInfoPool{
@@ -201,6 +205,11 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		go recordResource(NodeInfo)
 
 		if NodeInfo.Disabled {
+			continue
+		}
+
+		if !NodeInfo.valid() {
+			blog.Warnf("crm: get node(%s) resources less than 0, cpu left: %.2f, memory left:%.2f, disk left:%.2f", NodeInfo.Hostname, NodeInfo.CPUUsed, NodeInfo.MemUsed, NodeInfo.DiskUsed)
 			continue
 		}
 

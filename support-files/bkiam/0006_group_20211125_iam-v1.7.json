@@ -180,10 +180,16 @@
               "id": "quality_group_delete"
             },
             {
-              "id": "quality_rule_edit"
+              "id": "rule_edit"
             },
             {
-              "id": "quality_rule_delete"
+              "id": "rule_delete"
+            },
+            {
+              "id": "rule_create"
+            },
+            {
+              "id": "rule_enable"
             }
           ]
         }

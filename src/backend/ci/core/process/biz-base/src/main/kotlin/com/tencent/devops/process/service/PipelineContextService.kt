@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth")
+@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -54,18 +54,35 @@ class PipelineContextService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
     fun buildContext(
+        projectId: String,
         buildId: String,
         containerId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
-                    buildJobContext(stage, container, containerId, contextMap, variables)
-                    container.fetchGroupContainers()?.forEach { c ->
-                        buildJobContext(stage, c, containerId, contextMap, variables)
+                stage.containers.forEachIndexed { index, container ->
+                    buildJobContext(
+                        stage = stage,
+                        c = container,
+                        containerId = containerId,
+                        contextMap = contextMap,
+                        variables = variables,
+                        inMatrix = false,
+                        groupIndex = 0
+                    )
+                    container.fetchGroupContainers()?.forEachIndexed { index, c ->
+                        buildJobContext(
+                            stage = stage,
+                            c = c,
+                            containerId = containerId,
+                            contextMap = contextMap,
+                            variables = variables,
+                            inMatrix = true,
+                            groupIndex = index
+                        )
                     }
                 }
             }
@@ -112,17 +129,10 @@ class PipelineContextService @Autowired constructor(
         c: Container,
         containerId: String?,
         contextMap: MutableMap<String, String>,
-        variables: Map<String, String>
+        variables: Map<String, String>,
+        inMatrix: Boolean,
+        groupIndex: Int
     ) {
-        // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
-        // 后续需要改为只有本job才去掉前缀
-        variables.forEach { (key, value) ->
-            val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix)) {
-                contextMap[key.removePrefix(prefix)] = value
-            }
-        }
-
         // current job
         if (c.id?.let { it == containerId } == true) {
             contextMap["job.id"] = c.jobId ?: ""
@@ -132,6 +142,7 @@ class PipelineContextService @Autowired constructor(
             contextMap["job.container.network"] = getNetWork(c) ?: ""
             contextMap["job.stage_id"] = stage.id ?: ""
             contextMap["job.stage_name"] = stage.name ?: ""
+            contextMap["job.index"] = groupIndex.toString()
         }
 
         // other job
@@ -146,6 +157,16 @@ class PipelineContextService @Autowired constructor(
 
         // all element
         buildStepContext(c, contextMap)
+
+        // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
+        // 后续需要改为只有本job才去掉前缀
+        if (inMatrix && c.id?.let { it == containerId } != true) return
+        variables.forEach { (key, value) ->
+            val prefix = "jobs.${c.jobId ?: containerId}."
+            if (key.startsWith(prefix) && prefix.contains(".outputs.")) {
+                contextMap[key.removePrefix(prefix)] = value
+            }
+        }
     }
 
     private fun buildStepContext(

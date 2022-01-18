@@ -155,7 +155,7 @@
                     if (isEdit) Object.assign(CodelibDialog, { repositoryHashId: this.$route.hash.split('-')[1] })
                 }
                 if (isGitLab(typeName)) {
-                    Object.assign(CodelibDialog, { authType: 'HTTP' })
+                    Object.assign(CodelibDialog, { authType: 'SSH' })
                 }
                 if (isP4(typeName)) {
                     Object.assign(CodelibDialog, { authType: 'HTTP' })

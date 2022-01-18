@@ -15,7 +15,6 @@
                 </atom-checkbox>
             </div>
         </form-field>
-
         <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
             <form-field :label="$t('editPage.resourceType')">
                 <selector
@@ -175,6 +174,17 @@
         </section>
 
         <div>
+            <div class="job-matrix">
+                <job-matrix
+                    v-if="!isTriggerContainer(container)"
+                    :enable-matrix="container.matrixGroupFlag || false"
+                    :matrix-control-option="container.matrixControlOption"
+                    :update-container-params="handleContainerChange"
+                    :set-parent-validate="setContainerValidate"
+                    :disabled="!editable"
+                >
+                </job-matrix>
+            </div>
             <div class="job-option">
                 <job-option
                     v-if="!isTriggerContainer(container)"
@@ -224,6 +234,7 @@
     import VersionConfig from './VersionConfig'
     import JobOption from './JobOption'
     import JobMutual from './JobMutual'
+    import JobMatrix from './JobMatrix'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import ImageSelector from '@/components/AtomSelector/imageSelector'
     import SelectInput from '@/components/AtomFormComponent/SelectInput'
@@ -241,6 +252,7 @@
             ContainerEnvNode,
             JobOption,
             JobMutual,
+            JobMatrix,
             Selector,
             AtomCheckbox,
             ImageSelector,
@@ -248,6 +260,7 @@
         },
         props: {
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
@@ -312,8 +325,8 @@
                 return getContainers(stage)
             },
             container () {
-                const { containers, containerIndex } = this
-                return this.getContainer(containers, containerIndex)
+                const { containers, containerIndex, containerGroupIndex } = this
+                return this.getContainer(containers, containerIndex, containerGroupIndex)
             },
             isPublicResourceType () {
                 return this.isPublicResource(this.container)
@@ -439,6 +452,9 @@
             }
             if (!this.isTriggerContainer(container) && this.container.jobId === undefined) {
                 Vue.set(container, 'jobId', '')
+            }
+            if (!this.isTriggerContainer(container) && this.container.matrixGroupFlag === undefined) {
+                Vue.set(container, 'matrixGroupFlag', false)
             }
             if (this.buildResourceType === 'THIRD_PARTY_AGENT_ID' && !this.container.dispatchType.agentType) {
                 this.handleContainerChange('dispatchType', Object.assign({
@@ -624,7 +640,6 @@
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
-                    console.log(name, typeof value, value)
                     this.handleContainerChange('buildEnv', {})
                 }
                 this.handleContainerChange(name, value)
