@@ -500,6 +500,7 @@ dispatchDocker:
 
 # dispatchKubernetes Deployment
 dispatchKubernetes:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory

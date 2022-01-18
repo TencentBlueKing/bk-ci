@@ -1,3 +1,4 @@
+{{if .Values.dispatchKubernetes.enabled -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -29,3 +30,4 @@ data:
 
     cat docker_init.sh >> logs/docker.log
     sh docker_init.sh $@
+{{- end -}}

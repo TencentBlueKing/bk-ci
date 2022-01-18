@@ -1,4 +1,5 @@
 # dispatchKubernetes hpa
+{{if .Values.dispatchKubernetes.enabled -}}
 {{ if .Values.dispatchKubernetes.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.dispatchKubernetes.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}
