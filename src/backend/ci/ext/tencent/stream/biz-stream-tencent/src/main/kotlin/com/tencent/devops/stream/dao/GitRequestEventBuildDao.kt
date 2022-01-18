@@ -59,7 +59,7 @@ class GitRequestEventBuildDao {
         commitMsg: String?,
         sourceGitProjectId: Long?,
         buildStatus: BuildStatus,
-        version: String?,
+        version: String?
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(
@@ -99,7 +99,7 @@ class GitRequestEventBuildDao {
 
     fun retryUpdate(
         dslContext: DSLContext,
-        gitBuildId: Long,
+        gitBuildId: Long
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
@@ -113,7 +113,7 @@ class GitRequestEventBuildDao {
 
     fun removeBuild(
         dslContext: DSLContext,
-        gitBuildId: Long,
+        gitBuildId: Long
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
@@ -129,7 +129,7 @@ class GitRequestEventBuildDao {
         gitBuildId: Long,
         pipelineId: String,
         buildId: String,
-        version: String?,
+        version: String?
     ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             dslContext.update(this)
@@ -143,7 +143,7 @@ class GitRequestEventBuildDao {
 
     fun getByBuildId(
         dslContext: DSLContext,
-        buildId: String,
+        buildId: String
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -154,7 +154,7 @@ class GitRequestEventBuildDao {
 
     fun getEventByBuildId(
         dslContext: DSLContext,
-        buildId: String,
+        buildId: String
     ): Record? {
         val t1 = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("t1")
         val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
@@ -169,7 +169,7 @@ class GitRequestEventBuildDao {
 
     fun getByEventIds(
         dslContext: DSLContext,
-        eventIds: Collection<Long>,
+        eventIds: Collection<Long>
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -181,7 +181,7 @@ class GitRequestEventBuildDao {
 
     fun getIdByEventIds(
         dslContext: DSLContext,
-        eventIds: Collection<Long>,
+        eventIds: Collection<Long>
     ): List<Long> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.select(EVENT_ID).from(this)
@@ -191,7 +191,7 @@ class GitRequestEventBuildDao {
 
     fun getByGitBuildId(
         dslContext: DSLContext,
-        gitBuildId: Long,
+        gitBuildId: Long
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -203,7 +203,7 @@ class GitRequestEventBuildDao {
     fun getLatestBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipelineId: String?,
+        pipelineId: String?
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val query = dslContext.selectFrom(this)
@@ -218,7 +218,7 @@ class GitRequestEventBuildDao {
 
     fun getBranchBuildList(
         dslContext: DSLContext,
-        gitProjectId: Long,
+        gitProjectId: Long
     ): List<BranchBuilds> {
         val sql = "SELECT BRANCH, GIT_PROJECT_ID, SOURCE_GIT_PROJECT_ID, \n" +
             "SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) " +
@@ -257,7 +257,7 @@ class GitRequestEventBuildDao {
         gitProjectId: Long,
         page: Int?,
         pageSize: Int?,
-        keyword: String?,
+        keyword: String?
     ): List<TGitRequestEventBuildRecord> {
         var buildRecords: List<TGitRequestEventBuildRecord>
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
@@ -304,7 +304,7 @@ class GitRequestEventBuildDao {
         sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?,
-        event: String?,
+        event: String?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -338,7 +338,7 @@ class GitRequestEventBuildDao {
         gitProjectId: Long,
         pipelineId: String,
         branch: String? = null,
-        objectKind: String? = null,
+        objectKind: String? = null
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -361,7 +361,7 @@ class GitRequestEventBuildDao {
         gitProjectId: Long,
         pipelineId: String,
         branch: String? = null,
-        objectKind: String? = null,
+        objectKind: String? = null
     ): TGitRequestEventBuildRecord? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -383,7 +383,7 @@ class GitRequestEventBuildDao {
     fun updateBuildStatusById(
         dslContext: DSLContext,
         id: Long,
-        buildStatus: BuildStatus,
+        buildStatus: BuildStatus
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.update(this)
@@ -405,7 +405,7 @@ class GitRequestEventBuildDao {
         buildStatus: Set<String>?,
         limit: Int,
         offset: Int,
-        pipelineIds: Set<String>?,
+        pipelineIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -433,7 +433,7 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?,
+        pipelineIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -461,7 +461,7 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?,
+        pipelineIds: Set<String>?
     ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -507,7 +507,7 @@ class GitRequestEventBuildDao {
 
     fun deleteBuildByPipelineIds(
         dslContext: DSLContext,
-        pipelineIds: Set<String>,
+        pipelineIds: Set<String>
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.deleteFrom(this)
@@ -555,7 +555,7 @@ class GitRequestEventBuildDao {
     fun getBuildCountByPipelineId(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipelineId: String,
+        pipelineId: String
     ): Long {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectCount().from(this)
@@ -569,7 +569,7 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         pipelineId: String,
-        handlePageSize: Int,
+        handlePageSize: Int
     ): Result<out Record>? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val conditions = mutableListOf<Condition>()
@@ -587,7 +587,7 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         pipelineId: String,
-        buildId: String,
+        buildId: String
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.deleteFrom(this)
@@ -601,7 +601,7 @@ class GitRequestEventBuildDao {
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipelineIds: Set<String>,
+        pipelineIds: Set<String>
     ): List<TGitRequestEventBuildRecord>? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
@@ -619,7 +619,7 @@ class GitRequestEventBuildDao {
     fun getLatestPipelineByDuration(
         dslContext: DSLContext,
         startTime: Long,
-        endTime: Long,
+        endTime: Long
     ): Map<String, String> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext
