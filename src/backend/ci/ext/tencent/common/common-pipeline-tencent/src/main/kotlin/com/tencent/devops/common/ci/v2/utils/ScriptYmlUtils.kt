@@ -429,14 +429,11 @@ object ScriptYmlUtils {
 
         // 首先校验用户的id是否重复
         val stepIdSet = mutableSetOf<String>()
-        oldSteps.forEach { old ->
-            if (old.id.isNullOrBlank()) {
-                return@forEach
-            }
+        oldSteps.filter { !it.id.isNullOrBlank() }.forEach { old ->
             if (stepIdSet.contains(old.id)) {
                 throw YamlFormatException("请确保step.id唯一性!(${old.id})")
             } else {
-                stepIdSet.add(old.id)
+                stepIdSet.add(old.id!!)
             }
         }
 
@@ -447,15 +444,16 @@ object ScriptYmlUtils {
             }
 
             // 这里校验自动生成的stepId和已有的是否冲突如果有重新生成
-            val realStepId = if (!it.id.isNullOrBlank()) {
-                it.id
-            } else {
-                var autoId = randomString(stepNamespace)
-                while (stepIdSet.contains(autoId)) {
-                    autoId = randomString(stepNamespace)
-                }
-                autoId
-            }
+//            val realStepId = if (!it.id.isNullOrBlank()) {
+//                it.id
+//            } else {
+//                var autoId = randomString(stepNamespace)
+//                while (stepIdSet.contains(autoId)) {
+//                    autoId = randomString(stepNamespace)
+//                }
+//                autoId
+//            }
+            val realStepId = it.id
 
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(it.env)
