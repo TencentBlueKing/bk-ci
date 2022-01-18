@@ -31,6 +31,8 @@ const val BK_CI_RUN = "BK_CI_RUN"
 const val BK_CI_REF = "BK_CI_REF"
 const val BK_CI_REPO_OWNER = "BK_CI_REPO_OWNER"
 const val BK_CI_REPOSITORY = "BK_CI_REPOSITORY"
+const val CI_BRANCH = "ci.branch"
+const val DELETE_EVENT = "delete"
 
 const val BK_REPO_WEBHOOK_REPO_TYPE = "BK_CI_REPO_WEBHOOK_REPO_TYPE"
 const val BK_REPO_WEBHOOK_REPO_URL = "BK_CI_REPO_WEBHOOK_REPO_URL"

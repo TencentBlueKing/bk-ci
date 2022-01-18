@@ -29,6 +29,9 @@ package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -52,6 +55,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @SuppressWarnings("LongParameterList")
 interface ScmWebhookStartParams<T : WebHookTriggerElement> {
@@ -140,6 +144,12 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
             startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String? ?: "代码库触发"
         )
         startParams[PIPELINE_WEBHOOK_QUEUE] = params.webhookQueue
+
+        val gitProjectName = matcher.getRepoName()
+        startParams[PIPELINE_GIT_REPO] = gitProjectName
+        val (group, name) = GitUtils.getRepoGroupAndName(gitProjectName)
+        startParams[PIPELINE_GIT_REPO_NAME] = name
+        startParams[PIPELINE_GIT_REPO_GROUP] = group
         return startParams
     }
 
