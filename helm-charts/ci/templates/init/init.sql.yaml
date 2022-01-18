@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ include "common.names.fullname" . }}-init-sql
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/component: init-sql
   annotations:
     "helm.sh/hook": post-install,post-upgrade
@@ -12,7 +12,7 @@ metadata:
 spec:
   template:
     metadata:
-      labels: {{- include "common.labels.standard" . | nindent 8 }}
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
         app.kubernetes.io/component: init-sql
     spec:
       {{- if .Values.mysql.enabled }}

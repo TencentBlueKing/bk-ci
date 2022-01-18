@@ -3,7 +3,7 @@ apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-dispatch-kubernetes
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/name: dispatch-kubernetes
 spec:
   selector:
-    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/component: microservice
       app.kubernetes.io/name: dispatch-kubernetes
   {{- if not .Values.dispatchKubernetes.autoscaling.enabled }}
@@ -19,7 +19,7 @@ spec:
   {{- end }}
   template:
     metadata:
-      labels: {{- include "common.labels.standard" . | nindent 8 }}
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
         {{- if .Values.dispatchKubernetes.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.dispatchKubernetes.podLabels "context" $) | nindent 8 }}
         {{- end }}

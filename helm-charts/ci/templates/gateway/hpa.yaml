@@ -4,9 +4,9 @@ apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "common.names.fullname" . }}-gateway
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: gateway
-    app.kubernetes.io/component: microservice
+    app.kubernetes.io/component: gateway
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}

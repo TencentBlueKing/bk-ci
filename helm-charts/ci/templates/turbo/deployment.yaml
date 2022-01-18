@@ -4,7 +4,7 @@ apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
   name: {{ include "common.names.fullname" . }}-turbo
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: turbo
     app.kubernetes.io/component: microservice-turbo
     {{- if .Values.commonLabels }}
@@ -15,7 +15,7 @@ metadata:
   {{- end }}
 spec:
   selector:
-    matchLabels: {{- include "common.labels.matchLabels" . | nindent 6 }}
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
       app.kubernetes.io/name: turbo
       app.kubernetes.io/component: microservice-turbo
   {{- if not .Values.turbo.autoscaling.enabled }}
@@ -23,7 +23,7 @@ spec:
   {{- end }}
   template:
     metadata:
-      labels: {{- include "common.labels.standard" . | nindent 8 }}
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
         app.kubernetes.io/name: turbo
         app.kubernetes.io/component: microservice-turbo
         {{- if .Values.turbo.podLabels }}

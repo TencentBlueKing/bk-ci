@@ -4,7 +4,7 @@ apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ include "common.names.fullname" . }}-turbo
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: turbo
     app.kubernetes.io/component: microservice
     {{- if .Values.commonLabels }}

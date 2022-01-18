@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "common.names.fullname" . }}-turbo
-  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: turbo
     app.kubernetes.io/component: microservice-turbo
     {{- if .Values.commonLabels }}
@@ -23,7 +23,7 @@ spec:
       targetPort: monitor
       port: 18080
       protocol: TCP
-  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+  selector: {{- include "bkci.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/name: turbo
     app.kubernetes.io/component: microservice-turbo
 {{- end }}
