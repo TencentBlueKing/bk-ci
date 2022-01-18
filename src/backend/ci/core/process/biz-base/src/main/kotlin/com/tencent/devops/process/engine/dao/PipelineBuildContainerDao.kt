@@ -156,7 +156,7 @@ class PipelineBuildContainerDao {
     ): TPipelineBuildContainerRecord? {
 
         return with(T_PIPELINE_BUILD_CONTAINER) {
-            val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            val query = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (stageId.isNullOrBlank()) {
                 query.and(CONTAINER_ID.eq(containerId)).fetchAny()
             } else {

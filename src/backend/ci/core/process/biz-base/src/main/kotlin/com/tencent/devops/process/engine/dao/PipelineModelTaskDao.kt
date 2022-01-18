@@ -139,7 +139,7 @@ class PipelineModelTaskDao {
     ): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
             val condition = mutableListOf<Condition>()
-            condition.add(PIPELINE_ID.eq(pipelineId))
+            condition.add(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             if (isAtomVersionNull != null) {
                 if (isAtomVersionNull) {
                     condition.add(ATOM_VERSION.isNull)
