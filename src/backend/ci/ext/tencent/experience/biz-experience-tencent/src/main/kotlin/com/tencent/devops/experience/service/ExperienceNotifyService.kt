@@ -157,6 +157,8 @@ class ExperienceNotifyService @Autowired constructor(
         message.content = appNotifyMessageWithOperation.body
         pushAppRequest.message = message
         val messageAndroid = MessageAndroid()
+        // action_type 动作类型，1，打开activity或app本身；2，打开浏览器；3，打开Intent
+        messageAndroid.action.action_type = 3
         messageAndroid.action.intent = appNotifyMessageWithOperation.url
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
