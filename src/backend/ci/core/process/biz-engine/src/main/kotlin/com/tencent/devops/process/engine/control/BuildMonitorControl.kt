@@ -36,7 +36,6 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -239,17 +238,18 @@ class BuildMonitorControl @Autowired constructor(
         startTime: LocalDateTime?,
         endTime: LocalDateTime?
     ): Long {
-        val checkInIntervals = checkInOutMonitorIntervals(userId, checkIn, startTime)
-        val checkOutIntervals = checkInOutMonitorIntervals(userId, checkOut, endTime)
+        val checkInIntervals = checkInOutMonitorIntervals(userId, true, startTime)
+        val checkOutIntervals = checkInOutMonitorIntervals(userId, false, endTime)
         return min(checkInIntervals, checkOutIntervals)
     }
 
     private fun PipelineBuildStage.checkInOutMonitorIntervals(
         userId: String,
-        checkInOrOut: StagePauseCheck?,
+        isCheckIn: Boolean,
         time: LocalDateTime?
     ): Long {
 
+        val checkInOrOut = if (isCheckIn) checkIn else checkOut
         if (checkInOrOut?.manualTrigger != true && checkInOrOut?.ruleIds.isNullOrEmpty()) {
             return Timeout.STAGE_MAX_MILLS
         }
