@@ -424,16 +424,14 @@ class StreamYamlBaseBuild @Autowired constructor(
                     getProjectInfo = streamScmService::getProjectInfoRetry
                 ).gitProjectId.toString().let { "git_$it" }
 
-                TemplateAcrossInfoType.values().forEach { type ->
-                    remoteProjectIdMap[remoteProjectString] = mutableMapOf(
-                        templateType to BuildTemplateAcrossInfo(
-                            templateId = templateData.templateId,
-                            templateType = type,
-                            templateInstancesIds = listOf(),
-                            targetProjectId = remoteProjectIdLong
-                        )
+                remoteProjectIdMap[remoteProjectString] = TemplateAcrossInfoType.values().associateWith {
+                    BuildTemplateAcrossInfo(
+                        templateId = templateData.templateId,
+                        templateType = it,
+                        templateInstancesIds = listOf(),
+                        targetProjectId = remoteProjectIdLong
                     )
-                }
+                }.toMutableMap()
             }
 
             val oldData = remoteProjectIdMap[remoteProjectString]!![templateType]!!
