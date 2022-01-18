@@ -59,6 +59,13 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_OWNER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_STATE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
@@ -180,7 +187,14 @@ object PipelineVarUtil {
         "ci.mr_title" to PIPELINE_GIT_MR_TITLE,
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
-        "ci.mr_action" to PIPELINE_GIT_MR_ACTION
+        "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
+        "ci.issue_title" to PIPELINE_WEBHOOK_ISSUE_TITLE,
+        "ci.issue_id" to PIPELINE_WEBHOOK_ISSUE_ID,
+        "ci.issue_iid" to PIPELINE_WEBHOOK_ISSUE_IID,
+        "ci.issue.description" to PIPELINE_WEBHOOK_ISSUE_DESCRIPTION,
+        "ci.issue.state" to PIPELINE_WEBHOOK_ISSUE_STATE,
+        "ci.issue.owner" to PIPELINE_WEBHOOK_ISSUE_OWNER,
+        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
     )
 
     /**
