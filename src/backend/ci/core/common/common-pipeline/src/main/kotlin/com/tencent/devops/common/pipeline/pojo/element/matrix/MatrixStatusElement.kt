@@ -46,7 +46,7 @@ data class MatrixStatusElement(
     @ApiModelProperty("启动时间", required = false)
     override var startEpoch: Long? = null,
     @ApiModelProperty("上下文标识", required = false)
-    override var stepId: String? = null,
+    override var stepId: String?,
     @ApiModelProperty("原插件的类型标识")
     var originClassType: String,
     // 当状态插件为质量红线插件是需要专门保存
