@@ -178,6 +178,8 @@ class ExperienceNotifyService @Autowired constructor(
         val messageIOS = MessageIOS()
         val alert = Alert()
         val aps = Aps()
+        aps.category = "https://test.bkdevops.qq.com/share/expDetail/?flag=experienceDetail&experienceId=paekrqjp&" +
+                "logo=1f9c65431e321b9271d159f89d34b68ddc9dcf97315b0f13b6f931cd93ff0112.png&appName=蓝盾&platform=ipa"
         aps.alert = alert
         messageIOS.aps = aps
         message.ios = messageIOS
