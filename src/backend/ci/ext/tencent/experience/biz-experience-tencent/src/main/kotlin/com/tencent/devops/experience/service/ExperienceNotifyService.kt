@@ -156,9 +156,8 @@ class ExperienceNotifyService @Autowired constructor(
         message.title = appNotifyMessageWithOperation.title
         message.content = appNotifyMessageWithOperation.body
         pushAppRequest.message = message
-        // todo 还要添加action_type，既点击消息之后的跳转页面
         val messageAndroid = MessageAndroid()
-        //messageAndroid.action
+        messageAndroid.action.intent = appNotifyMessageWithOperation.url
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
         tokenList.add(appNotifyMessageWithOperation.token)
@@ -169,7 +168,6 @@ class ExperienceNotifyService @Autowired constructor(
     fun createIosPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         pushAppRequest.audience_type = AudienceType.token
-        // todo 配置在配置文件中？
         pushAppRequest.environment = Environment.valueOf("product")
         pushAppRequest.message_type = MessageType.notify
         val message = Message()
@@ -178,8 +176,7 @@ class ExperienceNotifyService @Autowired constructor(
         val messageIOS = MessageIOS()
         val alert = Alert()
         val aps = Aps()
-        aps.category = "https://test.bkdevops.qq.com/share/expDetail/?flag=experienceDetail&experienceId=bqpglqvm&" +
-                "logo=1f9c65431e321b9271d159f89d34b68ddc9dcf97315b0f13b6f931cd93ff0112.png&appName=蓝盾&platform=ipa"
+        aps.category = appNotifyMessageWithOperation.url
         aps.alert = alert
         messageIOS.aps = aps
         message.ios = messageIOS

@@ -37,6 +37,9 @@ open class AppNotifyMessage {
     @ApiModelProperty("消息id")
     var messageId: Long = 0
 
+    @ApiModelProperty("experienceHashId")
+    var experienceHashId: String = ""
+
     @ApiModelProperty("通知接收者")
     var receiver: String = ""
 

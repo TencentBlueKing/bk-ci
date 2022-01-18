@@ -33,17 +33,18 @@ import com.tencent.devops.experience.pojo.AppNotifyMessage
 object AppNotifyUtil {
     fun makeMessage(
         projectName: String,
+        experienceHashId: String,
         name: String,
         version: String,
-        innerUrl: String,
-        outerUrl: String,
         receiver: String
     ): AppNotifyMessage {
         val message = AppNotifyMessage()
         message.receiver = receiver
         message.title = "【$projectName】最新体验版本分享"
         message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。点击查看>>"
-        message.url = "PC体验地址：$innerUrl\n手机体验地址：$outerUrl"
+        message.url = "https://test.bkdevops.qq.com/share/expDetail/?flag=experienceDetail" +
+                "&experienceId=$experienceHashId&platform=ipa"
+        message.experienceHashId = experienceHashId
         return message
     }
 }

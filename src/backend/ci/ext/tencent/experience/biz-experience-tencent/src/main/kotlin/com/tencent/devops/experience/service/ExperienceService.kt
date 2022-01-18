@@ -746,7 +746,14 @@ class ExperienceService @Autowired constructor(
                 client.get(ServiceNotifyResource::class).sendEmailNotify(message)
             }
             outerReceivers.forEach {
-                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
+                val appMessage = AppNotifyUtil.makeMessage(
+                    projectName = projectName,
+                    experienceHashId = HashUtil.encodeLongId(experienceId),
+                    name = name,
+                    version = version,
+                    receiver = it
+                )
+                experiencePushService.pushMessage(appMessage)
             }
             innerReceivers.forEach {
                 if (notifyTypeList.contains(NotifyType.RTX)) {
@@ -772,10 +779,24 @@ class ExperienceService @Autowired constructor(
                     client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 }
                 // 发送APP通知
-                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
+                val appMessage = AppNotifyUtil.makeMessage(
+                    projectName = projectName,
+                    experienceHashId = HashUtil.encodeLongId(experienceId),
+                    name = name,
+                    version = version,
+                    receiver = it
+                )
+                experiencePushService.pushMessage(appMessage)
             }
             subscribeUsers.forEach {
-                sendAppNotify(projectName, name, version, innerUrl, outerUrl, it)
+                val appMessage = AppNotifyUtil.makeMessage(
+                    projectName = projectName,
+                    experienceHashId = HashUtil.encodeLongId(experienceId),
+                    name = name,
+                    version = version,
+                    receiver = it
+                )
+                experiencePushService.pushMessage(appMessage)
             }
             if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
                 val wechatGroupList = regex.split(experienceRecord.wechatGroups)
@@ -792,26 +813,6 @@ class ExperienceService @Autowired constructor(
                 }
             }
         }
-    }
-
-    fun sendAppNotify(
-        projectName: String,
-        name: String,
-        version: String,
-        innerUrl: String,
-        outerUrl: String,
-        receiver: String
-    ) {
-        val message = AppNotifyUtil.makeMessage(
-            projectName = projectName,
-            name = name,
-            version = version,
-            innerUrl = innerUrl,
-            outerUrl = outerUrl,
-            receiver = receiver
-        )
-        // 通过APP发送给已订阅的用户
-        experiencePushService.pushMessage(message)
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
