@@ -88,7 +88,8 @@ class TencentPipelineBuildDao {
         return with(Tables.T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
                 .where(STATUS.eq(BuildStatus.RUNNING.ordinal)
-                    .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%")))
+                    .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%"))
+                    .and(END_TIME.isNotNull))
                 .fetch()
         }
     }
