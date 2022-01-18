@@ -243,7 +243,6 @@ log:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -285,7 +284,6 @@ auth:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -327,7 +325,6 @@ agentless:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -369,7 +366,6 @@ dockerhost:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -411,7 +407,6 @@ artifactory:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -453,7 +448,6 @@ dispatch:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -495,7 +489,6 @@ dispatchDocker:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -537,7 +530,6 @@ dispatchKubernetes:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -579,7 +571,6 @@ environment:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -621,7 +612,6 @@ image:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -663,7 +653,6 @@ misc:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -705,7 +694,6 @@ monitoring:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -747,7 +735,6 @@ notify:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -789,7 +776,6 @@ openapi:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -831,7 +817,6 @@ plugin:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -873,7 +858,6 @@ process:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -915,7 +899,6 @@ project:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -957,7 +940,6 @@ quality:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -999,7 +981,6 @@ repository:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -1041,7 +1022,6 @@ sign:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -1083,7 +1063,6 @@ store:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -1125,7 +1104,6 @@ ticket:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -1167,7 +1145,6 @@ websocket:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -1209,7 +1186,6 @@ angetless:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
@@ -1293,7 +1269,6 @@ gateway:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  podLabels: {}
   podAnnotations: {}
   priorityClassName: ""
   autoscaling:
