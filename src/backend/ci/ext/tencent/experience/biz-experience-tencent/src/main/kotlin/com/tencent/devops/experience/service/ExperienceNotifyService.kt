@@ -44,6 +44,7 @@ import com.tencent.xinge.bean.ios.Alert
 import com.tencent.xinge.push.app.PushAppRequest
 import com.tencent.xinge.bean.Message
 import com.tencent.xinge.bean.ios.Aps
+import com.tencent.xinge.bean.ClickAction
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -158,6 +159,7 @@ class ExperienceNotifyService @Autowired constructor(
         pushAppRequest.message = message
         val messageAndroid = MessageAndroid()
         // action_type 动作类型，1，打开activity或app本身；2，打开浏览器；3，打开Intent
+        messageAndroid.action = ClickAction()
         messageAndroid.action.action_type = 3
         messageAndroid.action.intent = appNotifyMessageWithOperation.url
         message.android = messageAndroid
