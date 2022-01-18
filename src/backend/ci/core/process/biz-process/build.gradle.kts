@@ -33,7 +33,6 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket"))
     api(project(":core:store:api-store"))
     api(project(":core:store:api-store-image"))
@@ -49,8 +48,6 @@ dependencies {
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
 
-    api("com.zaxxer:HikariCP")
-    api("mysql:mysql-connector-java")
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")

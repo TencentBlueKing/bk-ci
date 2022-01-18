@@ -264,7 +264,9 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
+        val projectId = containerContext.container.projectId
         val contextMap = pipelineContextService.buildContext(
+            projectId = projectId,
             buildId = buildId,
             containerId = containerId,
             variables = containerContext.variables
@@ -310,12 +312,13 @@ class StartActionTaskContainerCmd(
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                val updateTaskStatusInfo = taskBuildDetailService.taskEnd(
+                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
+                    projectId = projectId,
                     buildId = buildId,
                     taskId = taskId,
                     buildStatus = taskStatus
                 )
-                refreshTaskStatus(updateTaskStatusInfo, index, containerTasks)
+                refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 // 打印构建日志
                 buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
@@ -454,6 +457,7 @@ class StartActionTaskContainerCmd(
             // 更新排队中的post任务的构建状态
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
             taskBuildDetailService.updateTaskStatus(
+                projectId = currentTask.projectId,
                 buildId = currentTask.buildId,
                 taskId = currentTask.taskId,
                 taskStatus = taskStatus,
