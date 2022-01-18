@@ -29,9 +29,12 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -45,6 +48,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Strategy
+import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
 import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
@@ -120,7 +124,11 @@ class TXPipelineExportService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
         private val yamlObjectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE))
             .apply {
-                registerModule(KotlinModule())
+                registerKotlinModule().setFilterProvider(
+                    SimpleFilterProvider().addFilter(
+                        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+                    )
+                )
             }
     }
 

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
 import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
 import org.junit.Test
@@ -140,6 +141,8 @@ class YamlTemplateTest {
         ).replace()
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val yamls = YamlUtil.toYaml(normalOb)
+        println(YamlCommonUtils.toYamlNotNull(preScriptBuildYaml))
+        println("------------------------")
         println(JsonUtil.toJson(trans))
         println("------------------------")
         println(yamls)
