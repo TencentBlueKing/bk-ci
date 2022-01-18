@@ -77,9 +77,14 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("org.apache.logging.log4j:${Versions.log4j}"){
+            dependencySet("org.apache.logging.log4j:${Versions.log4j}") {
                 entry("log4j-api")
                 entry("log4j-core")
+                entry("log4j-to-slf4j")
+            }
+            dependencySet("ch.qos.logback:${Versions.Logback}") {
+                entry("logback-core")
+                entry("logback-classic")
             }
             dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
@@ -102,7 +107,6 @@ allprojects {
     }
     // 兼容 Log4j
     configurations.forEach {
-        it.exclude("org.springframework.boot", "spring-boot-starter-logging")
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
         it.exclude("org.apache.tomcat", "tomcat-jdbc")
         it.exclude("org.slf4j", "log4j-over-slf4j")
