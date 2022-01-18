@@ -172,7 +172,7 @@ class ExperienceNotifyService @Autowired constructor(
     fun createIosPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         pushAppRequest.audience_type = AudienceType.token
-        pushAppRequest.environment = Environment.valueOf("dev")
+        pushAppRequest.environment = Environment.valueOf("product")
         pushAppRequest.message_type = MessageType.notify
         val message = Message()
         message.title = appNotifyMessageWithOperation.title
