@@ -89,8 +89,6 @@ object ScriptYmlUtils {
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    private const val stepNamespace = "step-"
-
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
@@ -427,33 +425,19 @@ object ScriptYmlUtils {
             return emptyList()
         }
 
-        // 首先校验用户的id是否重复
-        val stepIdSet = mutableSetOf<String>()
-        oldSteps.filter { !it.id.isNullOrBlank() }.forEach { old ->
-            if (stepIdSet.contains(old.id)) {
-                throw YamlFormatException("请确保step.id唯一性!(${old.id})")
-            } else {
-                stepIdSet.add(old.id!!)
-            }
-        }
-
         val stepList = mutableListOf<Step>()
+        val stepIdSet = mutableSetOf<String>()
         oldSteps.forEach {
             if (it.uses == null && it.run == null && it.checkout == null) {
                 throw YamlFormatException("step必须包含uses或run或checkout!")
             }
 
-            // 这里校验自动生成的stepId和已有的是否冲突如果有重新生成
-//            val realStepId = if (!it.id.isNullOrBlank()) {
-//                it.id
-//            } else {
-//                var autoId = randomString(stepNamespace)
-//                while (stepIdSet.contains(autoId)) {
-//                    autoId = randomString(stepNamespace)
-//                }
-//                autoId
-//            }
-            val realStepId = it.id
+            // 校验stepId唯一性
+            if (!it.id.isNullOrBlank() && stepIdSet.contains(it.id)) {
+                throw YamlFormatException("请确保step.id唯一性!(${it.id})")
+            } else if (!it.id.isNullOrBlank() && !stepIdSet.contains(it.id)) {
+                stepIdSet.add(it.id)
+            }
 
             // 检测step env合法性
             GitCIEnvUtils.checkEnv(it.env)
@@ -461,7 +445,7 @@ object ScriptYmlUtils {
             stepList.add(
                 Step(
                     name = it.name,
-                    id = realStepId,
+                    id = it.id,
                     ifFiled = it.ifFiled,
                     ifModify = it.ifModify,
                     uses = it.uses,
