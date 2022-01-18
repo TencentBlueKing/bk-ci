@@ -71,7 +71,6 @@ class QualityTemplateService @Autowired constructor(
     }
 
     fun userList(projectId: String): List<RuleTemplate> {
-        // todo performance
         val templateList = ruleTemplateDao.listTemplateEnable(dslContext)
         val controlPointRecords = qualityControlPointDao.list(
             dslContext = dslContext,

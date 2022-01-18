@@ -81,10 +81,6 @@ class QualityControlPointService @Autowired constructor(
         return serviceListFilter(controlPointRecords, projectId)?.firstOrNull()
     }
 
-    /*fun serviceGet(elementType: String, projectId: String): TQualityControlPointRecord? {
-        return controlPointDao.list(dslContext, setOf(elementType), projectId)?.firstOrNull()
-    }*/
-
     fun serviceGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         if (elementType.isNullOrBlank()) return null
         val recordList = serviceListByElementType(elementType!!)
