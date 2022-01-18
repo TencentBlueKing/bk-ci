@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,19 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-websocket"))
-    api(project(":core:store:api-store"))
-    api(project(":core:project:api-project"))
-    api(project(":core:process:api-process"))
-    api(project(":core:quality:api-quality"))
-    api(project(":core:monitoring:api-monitoring"))
-    api(project(":core:artifactory:api-artifactory-store"))
-    api(project(":core:store:model-store"))
-    testImplementation(project(":core:common:common-test"))
-    api("net.coobird:thumbnailator")
-    api("org.springframework.boot:spring-boot-starter-aop")
+package com.tencent.devops.process.engine.service
+
+import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+
+@Service
+class PipelineRedisService @Autowired constructor(
+    val redisOperation: RedisOperation
+) {
+    fun getBuildRestartValue(buildId: String): String? {
+        return redisOperation.get("$RESTART_KEY$buildId") ?: null
+    }
+
+    fun setBuildRestartValue(buildId: String) {
+        return redisOperation.set("$RESTART_KEY$buildId", "run", TimeUnit.MINUTES.toSeconds(900))
+    }
+
+    fun deleteRestartBuild(buildId: String) {
+        return redisOperation.delete("$RESTART_KEY$buildId")
+    }
+
+    companion object {
+        const val RESTART_KEY = "pipeline:build:restart:"
+    }
 }
