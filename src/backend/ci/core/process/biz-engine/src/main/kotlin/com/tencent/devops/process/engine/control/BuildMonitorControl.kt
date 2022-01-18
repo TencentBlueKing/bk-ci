@@ -245,23 +245,23 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun PipelineBuildStage.checkInOutMonitorIntervals(
         userId: String,
-        isCheckIn: Boolean,
-        time: LocalDateTime?
+        inOrOut: Boolean,
+        checkTime: LocalDateTime?
     ): Long {
 
-        val checkInOrOut = if (isCheckIn) checkIn else checkOut
-        if (checkInOrOut?.manualTrigger != true && checkInOrOut?.ruleIds.isNullOrEmpty()) {
+        val pauseCheck = if (inOrOut) checkIn else checkOut
+        if (pauseCheck?.manualTrigger != true && pauseCheck?.ruleIds.isNullOrEmpty()) {
             return Timeout.STAGE_MAX_MILLS
         }
 
-        var hours = checkInOrOut?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+        var hours = pauseCheck?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > Timeout.MAX_HOURS) {
             hours = Timeout.MAX_HOURS.toInt()
         }
 
         val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
-        val usedTimeMills: Long = if (time != null) {
-            System.currentTimeMillis() - time!!.timestampmilli()
+        val usedTimeMills: Long = if (checkTime != null) {
+            System.currentTimeMillis() - checkTime!!.timestampmilli()
         } else {
             0
         }
@@ -277,7 +277,7 @@ class BuildMonitorControl @Autowired constructor(
             )
 
             // #5654 如果是红线待审核状态则取消红线审核
-            if (checkInOrOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
                 pipelineStageService.qualityTriggerStage(
                     userId = userId,
                     buildStage = this,
@@ -286,19 +286,19 @@ class BuildMonitorControl @Autowired constructor(
                         pass = false,
                         checkTimes = executeCount
                     ),
-                    inOrOut = checkInOrOut == checkIn,
-                    check = checkInOrOut!!,
+                    inOrOut = inOrOut,
+                    check = pauseCheck!!,
                     timeout = true
                 )
             }
             // #5654 如果是待人工审核则取消人工审核
-            else if (checkInOrOut?.groupToReview() != null) {
+            else if (pauseCheck?.groupToReview() != null) {
                 pipelineStageService.cancelStage(
                     userId = userId,
                     buildStage = this,
                     reviewRequest = StageReviewRequest(
                         reviewParams = listOf(),
-                        id = checkInOrOut?.groupToReview()?.id,
+                        id = pauseCheck?.groupToReview()?.id,
                         suggest = null
                     ),
                     timeout = true
