@@ -79,7 +79,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
     private val consulTag: String = "prod"
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<String>? {
-        checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+        // checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
@@ -99,7 +99,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
 
         if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
             val dockerBuildHistory = dockerBuildHistoryList[0]
-            // running状态且容器已创建，则复用
+            /*// running状态且容器已创建，则复用
             if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status &&
                 dockerBuildHistory.containerId.isNotEmpty()
             ) {
@@ -135,7 +135,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                             "Container running|ContainerId=${dockerBuildHistory.containerId}")
                     return Result(dockerBuildHistory.containerId)
                 }
-            }
+            }*/
 
             return Result(dockerHostDebugService.startDebug(
                 dockerIp = dockerBuildHistory.dockerIp,
