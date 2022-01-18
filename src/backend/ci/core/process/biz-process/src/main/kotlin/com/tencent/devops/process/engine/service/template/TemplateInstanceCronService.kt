@@ -119,7 +119,7 @@ class TemplateInstanceCronService @Autowired constructor(
                     return@forEach
                 }
                 val templateVersion = templateInstanceBase.templateVersion.toLong()
-                val template = templateDao.getTemplate(dslContext, projectId, templateVersion)
+                val template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
                 val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
                 // 分页切片处理当前批次的待处理任务
                 for (page in 1..totalPages) {
