@@ -433,9 +433,9 @@ object ScriptYmlUtils {
             }
 
             // 校验stepId唯一性
-            if (it.id != null && stepIdSet.contains(it.id)) {
+            if (!it.id.isNullOrBlank() && stepIdSet.contains(it.id)) {
                 throw YamlFormatException("请确保step.id唯一性!(${it.id})")
-            } else if (it.id != null && !stepIdSet.contains(it.id)) {
+            } else if (!it.id.isNullOrBlank() && !stepIdSet.contains(it.id)) {
                 stepIdSet.add(it.id)
             }
 
