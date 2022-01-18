@@ -428,14 +428,17 @@ class StreamYamlBaseBuild @Autowired constructor(
                     targetProjectId = remoteProjectIdLong
                 )
             } else {
-                remoteProjectIdMap[objectData.remoteProjectId]!!.templateInstancesIds
-                    .toMutableList().add(objectData.objectId)
+                val oldData = remoteProjectIdMap[objectData.remoteProjectId]!!
+                remoteProjectIdMap[objectData.remoteProjectId] = oldData.copy(
+                    templateInstancesIds = mutableListOf<String>().apply {
+                        addAll(oldData.templateInstancesIds)
+                        add(objectData.objectId)
+                    }
+                )
             }
         }
 
-        val results = mutableListOf<BuildTemplateAcrossInfo>()
-        remoteProjectIdMap.forEach { (_, data) -> results.add(data) }
-        return results
+        return remoteProjectIdMap.map { (_, data) -> data }
     }
 
     private fun TemplateType.toAcrossType(): TemplateAcrossInfoType? {
