@@ -518,7 +518,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
             BuildType.WORKER -> {
@@ -530,7 +531,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
         }
@@ -587,7 +589,8 @@ open class MarketAtomTask : ITask() {
         val gateway: String,
         val buildId: String,
         val vmSeqId: String,
-        val fileGateway: String
+        val fileGateway: String,
+        val taskId: String
     )
 
     private fun writeInputFile(

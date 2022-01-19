@@ -101,6 +101,19 @@ class PipelineBuildTemplateAcrossInfoDao {
         }
     }
 
+    fun getByTemplateId(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String
+    ): List<TPipelineBuildTemplateAcrossInfoRecord> {
+        with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(TEMPLATE_ID.eq(templateId))
+                .fetch()
+        }
+    }
+
     fun updateBuildId(
         dslContext: DSLContext,
         projectId: String,
