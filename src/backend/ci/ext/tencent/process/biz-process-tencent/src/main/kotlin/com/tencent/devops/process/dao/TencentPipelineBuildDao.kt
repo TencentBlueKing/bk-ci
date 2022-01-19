@@ -84,7 +84,8 @@ class TencentPipelineBuildDao {
     }
 
     fun listCheckOutErrorStage(
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        stageTimeoutDays: Long
     ): Collection<TPipelineBuildStageRecord> {
         return with(Tables.T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
@@ -92,7 +93,20 @@ class TencentPipelineBuildDao {
                     .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%")))
                 .or(STATUS.eq(BuildStatus.RUNNING.ordinal)
                     .and(CHECK_OUT.like("%QUALITY_CHECK_WAIT%"))
-                    .and(END_TIME.lt(LocalDateTime.now().minusDays(1)))
+                    .and(END_TIME.lt(LocalDateTime.now().minusDays(stageTimeoutDays)))
+                )
+                .fetch()
+        }
+    }
+
+    fun listRunningErrorBuild(
+        dslContext: DSLContext,
+        buildTimeoutDays: Long
+    ): Collection<TPipelineBuildHistoryRecord> {
+        return with(Tables.T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(BuildStatus.RUNNING.ordinal)
+                    .and(START_TIME.lt(LocalDateTime.now().minusDays(buildTimeoutDays)))
                 )
                 .fetch()
         }
