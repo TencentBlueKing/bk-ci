@@ -45,6 +45,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
@@ -450,6 +451,30 @@ class ServiceGitResourceImpl @Autowired constructor(
                 includeSubgroups = includeSubgroups,
                 token = token,
                 tokenType = tokenType
+            )
+        )
+    }
+
+    override fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>> {
+        return Result(
+            gitService.getChangeFileList(
+                tokenType = tokenType,
+                gitProjectId = gitProjectId,
+                token = token,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

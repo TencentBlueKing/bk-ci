@@ -60,6 +60,7 @@ import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
+import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
 import com.tencent.devops.scm.code.git.api.GitOauthApi
@@ -67,6 +68,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
@@ -1689,6 +1691,41 @@ class GitService @Autowired constructor(
                 return Result(validateResult.status, "${validateResult.message}（git error:$message）")
             }
             return Result(true)
+        }
+    }
+
+    fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo> {
+        return if (TokenTypeEnum.OAUTH == tokenType) {
+            GitOauthApi().getChangeFileList(
+                host = gitConfig.gitApiUrl,
+                gitProjectId = gitProjectId,
+                token = token,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize
+            )
+        } else {
+            GitApi().getChangeFileList(
+                host = gitConfig.gitApiUrl,
+                gitProjectId = gitProjectId,
+                token = token,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize
+            )
         }
     }
 }
