@@ -100,7 +100,7 @@ class ExperiencePushDao {
         title: String,
         content: String,
         url: String,
-        platform: String,
+        platform: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperiencePushHistory.T_EXPERIENCE_PUSH_HISTORY) {

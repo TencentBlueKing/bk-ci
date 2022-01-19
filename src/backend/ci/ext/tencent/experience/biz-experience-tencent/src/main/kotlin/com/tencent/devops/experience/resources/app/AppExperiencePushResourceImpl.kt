@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AppExperiencePushResourceImpl @Autowired constructor(
-    private val experiencePushService: ExperiencePushService,
+    private val experiencePushService: ExperiencePushService
 ) : AppExperiencePushResource {
 
     override fun bindDeviceToken(

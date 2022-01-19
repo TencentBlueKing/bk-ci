@@ -220,7 +220,7 @@ class ExperienceDownloadService @Autowired constructor(
                 experienceHashId = experienceHashId,
                 platform = platform.id,
                 projectId = projectId,
-                bundleIdentifier = bundleIdentifier,
+                bundleIdentifier = bundleIdentifier
             )
             logger.info("Subscribe Result: ${subscribe.message}")
         }

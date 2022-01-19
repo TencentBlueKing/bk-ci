@@ -60,7 +60,7 @@ import org.springframework.stereotype.Service
 class ExperienceNotifyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushDao: ExperiencePushDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
 

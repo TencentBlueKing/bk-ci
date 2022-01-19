@@ -260,7 +260,7 @@ class ExperiencePushService @Autowired constructor(
         experienceId: Long,
         platform: String,
         projectId: String,
-        bundleIdentifier: String,
+        bundleIdentifier: String
     ) {
         val experiencePublic = experiencePublicDao.getByRecordId(
             dslContext = dslContext,
