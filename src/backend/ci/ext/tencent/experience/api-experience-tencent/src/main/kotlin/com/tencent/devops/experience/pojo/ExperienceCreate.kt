@@ -62,5 +62,7 @@ data class ExperienceCreate(
     @ApiModelProperty("产品类别", required = true)
     val categoryId: Int?,
     @ApiModelProperty("产品负责人", required = true)
-    val productOwner: List<String>?
+    val productOwner: List<String>?,
+    @ApiModelProperty("体验范围,0--公开体验 , 1--内部体验", required = false)
+    val groupScope: Int? = null
 )

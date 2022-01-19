@@ -58,6 +58,7 @@ import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
+import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
@@ -813,6 +814,11 @@ class ExperienceService @Autowired constructor(
             val innerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
             val outers = experienceOuterDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
             val groups = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceRecord.id)
+            val groupScope = if (groups.size == 1 && groups[0].value1() == 0L) {
+                GroupScopeEnum.PUBLIC
+            } else {
+                GroupScopeEnum.PRIVATE
+            }.id
 
             return ExperienceCreate(
                 name = experienceRecord.name,
@@ -829,7 +835,8 @@ class ExperienceService @Autowired constructor(
                 experienceName = experienceRecord.experienceName,
                 versionTitle = experienceRecord.versionTitle,
                 categoryId = experienceRecord.category,
-                productOwner = objectMapper.readValue(experienceRecord.productOwner)
+                productOwner = objectMapper.readValue(experienceRecord.productOwner),
+                groupScope = groupScope
             )
         }
     }
