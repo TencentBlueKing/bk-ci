@@ -357,6 +357,12 @@ object ScriptYmlUtils {
 
         val jobs = mutableListOf<Job>()
         preJobs.forEach { (index, preJob) ->
+
+            // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
+            if (index.length > 64) {
+                throw YamlFormatException("job.id 超过长度限制64 $index")
+            }
+
             // 检测job env合法性
             GitCIEnvUtils.checkEnv(preJob.env)
 
