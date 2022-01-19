@@ -32,24 +32,48 @@ class OpTxPipelineResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun fixPipelineCheckOut(): Result<Int> {
-        val stages = tencentPipelineBuildDao.listCheckOutErrorStage(dslContext)
-        stages.forEach { buildStage ->
-            logger.info("cancel build with stage(buildId=${buildStage.buildId}, stageId=${buildStage.stageId}), " +
-                "status=${buildStage.status}, checkOut=${buildStage.checkOut}")
-            try {
-                pipelineBuildFacadeService.buildManualShutdown(
-                    userId = "SYSTEM",
-                    projectId = buildStage.projectId,
-                    pipelineId = buildStage.pipelineId,
-                    buildId = buildStage.buildId,
-                    channelCode = ChannelCode.GIT,
-                    checkPermission = false
-                )
-            } catch (ignore: Throwable) {
-                logger.warn("cancel build failed: ", ignore)
+    override fun fixPipelineCheckOut(stageTimeoutDays: Long?, buildTimeoutDays: Long?): Result<Int> {
+        var count = 0
+        stageTimeoutDays?.let {
+            val stages = tencentPipelineBuildDao.listCheckOutErrorStage(dslContext, stageTimeoutDays)
+            stages.forEach { buildStage ->
+                logger.info("cancel build with stage(buildId=${buildStage.buildId}, stageId=${buildStage.stageId}), " +
+                    "status=${buildStage.status}, checkOut=${buildStage.checkOut}")
+                try {
+                    pipelineBuildFacadeService.buildManualShutdown(
+                        userId = "SYSTEM",
+                        projectId = buildStage.projectId,
+                        pipelineId = buildStage.pipelineId,
+                        buildId = buildStage.buildId,
+                        channelCode = ChannelCode.GIT,
+                        checkPermission = false
+                    )
+                    count++
+                } catch (ignore: Throwable) {
+                    logger.warn("cancel stage failed: ", ignore)
+                }
             }
         }
-        return Result(stages.size)
+        buildTimeoutDays?.let {
+            val builds = tencentPipelineBuildDao.listRunningErrorBuild(dslContext, buildTimeoutDays)
+            builds.forEach { build ->
+                logger.info("cancel build with stage(buildId=${build.buildId}, " +
+                    "status=${build.status}")
+                try {
+                    pipelineBuildFacadeService.buildManualShutdown(
+                        userId = "SYSTEM",
+                        projectId = build.projectId,
+                        pipelineId = build.pipelineId,
+                        buildId = build.buildId,
+                        channelCode = ChannelCode.GIT,
+                        checkPermission = false
+                    )
+                    count++
+                } catch (ignore: Throwable) {
+                    logger.warn("cancel build failed: ", ignore)
+                }
+            }
+        }
+        return Result(count)
     }
 }
