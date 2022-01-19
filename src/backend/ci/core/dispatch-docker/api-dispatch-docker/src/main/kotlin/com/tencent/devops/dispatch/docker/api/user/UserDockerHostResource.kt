@@ -64,17 +64,6 @@ interface UserDockerHostResource {
         debugStartParam: DebugStartParam
     ): Result<Boolean>?
 
-    @ApiOperation("启动调试容器-新版")
-    @POST
-    @Path("/startDebugNew")
-    fun startDebugNew(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        debugStartParam: DebugStartParam
-    ): Result<String>?
-
     @ApiOperation("根据pipelineId和vmSeqId获取容器信息")
     @GET
     @Path("/getDebugStatus/{projectId}/{pipelineId}/{vmSeqId}")
