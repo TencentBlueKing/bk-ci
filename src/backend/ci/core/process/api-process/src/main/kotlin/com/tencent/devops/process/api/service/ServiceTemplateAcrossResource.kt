@@ -44,7 +44,7 @@ interface ServiceTemplateAcrossResource {
 
     @ApiOperation("获取当前构建中的跨项目模板信息")
     @GET
-    @Path("/{projectId}/{pipelineId}/{templateId}")
+    @Path("/{projectId}/{templateId}")
     fun getBuildAcrossTemplateInfo(
         @ApiParam("projectId", required = true)
         @PathParam("projectId")
