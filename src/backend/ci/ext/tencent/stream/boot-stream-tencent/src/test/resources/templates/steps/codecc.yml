@@ -92,7 +92,7 @@ parameters:
 steps:
   - if: ${{ parameters.iftest }} == true
     uses: CodeccCheckAtomDebug@4.*
-    id: step-77lAxqm
+    id: "check"
     name: 腾讯代码分析(官方-代码分析工作组)
     with:
         beAutoLang: false # 不自动检测项目语言

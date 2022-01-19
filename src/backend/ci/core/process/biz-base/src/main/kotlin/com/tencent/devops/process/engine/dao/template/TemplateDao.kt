@@ -276,12 +276,18 @@ class TemplateDao {
 
     fun getTemplate(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String? = null,
         version: Long
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(VERSION.eq(version))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             return dslContext.selectFrom(this)
-                .where(VERSION.eq(version).and(PROJECT_ID.eq(projectId)))
+                .where(conditions)
+                .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
                 defaultMessage = "模板不存在"
@@ -489,6 +495,7 @@ class TemplateDao {
                     )
                 )
             )
+            .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
 
         return if (null != page && null != pageSize) {

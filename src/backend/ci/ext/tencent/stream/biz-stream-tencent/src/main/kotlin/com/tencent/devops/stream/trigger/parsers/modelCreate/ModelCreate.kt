@@ -145,7 +145,6 @@ class ModelCreate @Autowired constructor(
                 modelStage.createStage(
                     stage = com.tencent.devops.common.ci.v2.Stage(
                         name = "Finally",
-                        id = null,
                         label = emptyList(),
                         ifField = null,
                         fastKill = false,
