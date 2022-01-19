@@ -86,6 +86,9 @@ class DockerHostDebugService(
     @Value("\${dockerhost.dockerDebug.authToken:#{null}}")
     val dockerDebugAuthToken: String? = ""
 
+    @Value("\${dockerhost.dockerDebug.gateway:#{null}}")
+    val dockerDebugGateway: String? = ""
+
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -280,47 +283,13 @@ class DockerHostDebugService(
 
     fun getWebSocketUrl(projectId: String, pipelineId: String, containerId: String): String {
         val hostIp = CommonUtils.getInnerIP()
-        val eventId = getDockerConsoleId(
-            dockerIp = hostIp,
-            pipelineId = pipelineId,
-            projectId = projectId,
-            containerId = containerId
-        )
 
         return getDockerConsoleUrl(
             dockerIp = hostIp,
             pipelineId = pipelineId,
             projectId = projectId,
-            containerId = containerId,
-            eventId = eventId
+            containerId = containerId
         )
-    }
-
-    private fun getDockerConsoleId(
-        dockerIp: String,
-        pipelineId: String,
-        projectId: String,
-        containerId: String
-    ): String {
-        val requestBody = mapOf("cmd" to listOf("/bin/bash"), "container_id" to containerId)
-        val request = Request.Builder().url("http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}")
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .build()
-
-        logger.info("start get docker webconsole id, ${JsonUtil.toJson(requestBody)}  $dockerDebugAuthToken")
-        OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
-            logger.info("[$projectId|$pipelineId] get docker webconsole id responseBody: $responseBody")
-            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-            val id = response["Id"] as String
-
-            return id
-        }
-
-        return ""
     }
 
     private fun getDockerConsoleUrl(
@@ -328,9 +297,30 @@ class DockerHostDebugService(
         pipelineId: String,
         projectId: String,
         containerId: String,
-        eventId: String
     ): String {
-        return "ws://http://dev.devnet.devops.oa.com/docker-console-new?eventId=${eventId}&pipelineId=${pipelineId}&projectId=${projectId}&targetIP=${dockerIp}&containerId=${containerId}"
+        val requestBody = mapOf("cmd" to listOf("/bin/bash"), "container_id" to containerId)
+        val request = Request.Builder().url("http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?" +
+                "pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}")
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
+            .post(RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                JsonUtil.toJson(requestBody)))
+            .build()
+
+        logger.info("start get docker webconsole id, ${JsonUtil.toJson(requestBody)}  $dockerDebugAuthToken")
+        var eventId: String
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[$projectId|$pipelineId] get docker webconsole id responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            eventId = response["Id"] as String
+        }
+
+        return "wss://$dockerDebugGateway/docker-console-new-v2?" +
+                "eventId=${eventId}&pipelineId=${pipelineId}&projectId=${projectId}" +
+                "&targetIP=${dockerIp}&containerId=${containerId}"
     }
 
     fun getContainerNum(): Int {
