@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.utils
 
-import com.tencent.devops.common.api.util.HashUtil
 import org.junit.Test
 
 import org.slf4j.LoggerFactory
