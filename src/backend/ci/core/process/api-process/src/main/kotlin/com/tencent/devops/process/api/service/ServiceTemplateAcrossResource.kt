@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -40,6 +41,18 @@ interface ServiceTemplateAcrossResource {
         @ApiParam(value = "跨项目模板信息", required = true)
         templateAcrossInfos: List<BuildTemplateAcrossInfo>
     )
+
+    @ApiOperation("获取当前构建中的跨项目模板信息")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{templateId}")
+    fun getBuildAcrossTemplateInfo(
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "模板ID", required = true)
+        @PathParam("templateId")
+        templateId: String
+    ): Result<List<BuildTemplateAcrossInfo>>
 
     @ApiOperation("修改跨项目模板信息")
     @PUT

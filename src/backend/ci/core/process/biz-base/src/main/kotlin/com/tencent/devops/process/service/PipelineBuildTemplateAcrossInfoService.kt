@@ -32,10 +32,14 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
 
     fun getAcrossInfo(
         projectId: String,
-        pipelineId: String,
+        pipelineId: String?,
         templateId: String
     ): List<BuildTemplateAcrossInfo> {
-        val records = templateAcrossInfoDao.get(dslContext, projectId, pipelineId, templateId)
+        val records = if (pipelineId != null) {
+            templateAcrossInfoDao.get(dslContext, projectId, pipelineId, templateId)
+        } else {
+            templateAcrossInfoDao.getByTemplateId(dslContext, projectId, templateId)
+        }
         return records.map { record ->
             BuildTemplateAcrossInfo(
                 templateId = record.templateId,

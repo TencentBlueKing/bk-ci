@@ -103,6 +103,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
+        taskId: String?,
         credentialId: String
     ): Result<Map<String, String>> {
         if (buildId.isBlank()) {
@@ -117,6 +118,6 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.buildGetDetail(projectId, buildId, credentialId))
+        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
     }
 }

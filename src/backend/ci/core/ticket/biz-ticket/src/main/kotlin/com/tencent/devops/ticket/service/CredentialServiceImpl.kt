@@ -38,6 +38,10 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
+import com.tencent.devops.process.api.service.ServiceVarResource
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
@@ -472,14 +476,27 @@ class CredentialServiceImpl @Autowired constructor(
         return serviceGetAcrossProject(targetProjectId, credentialId, publicKey)
     }
 
-    override fun buildGetDetail(projectId: String, buildId: String, credentialId: String): Map<String, String> {
+    override fun buildGetDetail(
+        projectId: String,
+        buildId: String,
+        taskId: String?,
+        credentialId: String
+    ): Map<String, String> {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        val credentialInfo = serviceGet(buildBasicInfo.projectId, credentialId)
+
+        val credentialInfo = try {
+            serviceGet(buildBasicInfo.projectId, credentialId)
+        } catch (ignore: Exception) {
+            // 如果没有跨项目信息则直接抛出异常
+            val acrossInfo = getAcrossInfo(projectId, buildId, taskId) ?: throw ignore
+            serviceAcrossGet(acrossInfo.targetProjectId, credentialId)
+        }
+
         val keyMap = CredentialType.getKeyMap(credentialInfo.credentialType.name)
         val credentialMap = mutableMapOf<String, String?>()
         credentialMap["v1"] = credentialInfo.v1
@@ -573,6 +590,27 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
+    private fun serviceAcrossGet(projectId: String, credentialId: String): Credential {
+        val record = credentialDao.get(dslContext, projectId, credentialId).also {
+            if (!it.allowAcrossProject) {
+                throw CustomException(Response.Status.FORBIDDEN, "credential not allow across project")
+            }
+        }
+
+        return Credential(
+            credentialId = record.credentialId,
+            credentialName = record.credentialName ?: record.credentialId,
+            credentialType = CredentialType.valueOf(record.credentialType),
+            credentialRemark = record.credentialRemark,
+            updatedTime = record.updatedTime.timestamp(),
+            v1 = credentialHelper.decryptCredential(record.credentialV1)!!,
+            v2 = credentialHelper.decryptCredential(record.credentialV2),
+            v3 = credentialHelper.decryptCredential(record.credentialV3),
+            v4 = credentialHelper.decryptCredential(record.credentialV4),
+            updateUser = record.updateUser
+        )
+    }
+
     override fun getCredentialByIds(projectId: String?, credentialIds: Set<String>): List<Credential>? {
         val records = credentialDao.listByProject(
             dslContext = dslContext,
@@ -631,11 +669,40 @@ class CredentialServiceImpl @Autowired constructor(
         return SQLPage(count, result)
     }
 
+    private fun getAcrossInfo(
+        projectId: String,
+        buildId: String,
+        taskId: String?
+    ): BuildTemplateAcrossInfo? {
+        if (taskId.isNullOrBlank()) {
+            return null
+        }
+        val templateId = client.get(ServiceVarResource::class).getBuildVar(
+            projectId = projectId,
+            buildId = buildId,
+            varName = TEMPLATE_ACROSS_INFO_ID
+        ).data?.get(TEMPLATE_ACROSS_INFO_ID)
+        if (templateId.isNullOrBlank()) {
+            return null
+        }
+
+        val acrossInfoList = client.get(ServiceTemplateAcrossResource::class).getBuildAcrossTemplateInfo(
+            projectId = projectId,
+            templateId = templateId
+        ).data?.ifEmpty { return null } ?: return null
+
+        return acrossInfoList.firstOrNull {
+            it.templateType == TemplateAcrossInfoType.STEP &&
+                it.templateInstancesIds.contains(taskId)
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
         private const val CREDENTIAL_ID_MAX_SIZE = 40
         private const val CREDENTIAL_NAME_MAX_SIZE = 64
         private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
         private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-.]+$")
+        private const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
     }
 }
