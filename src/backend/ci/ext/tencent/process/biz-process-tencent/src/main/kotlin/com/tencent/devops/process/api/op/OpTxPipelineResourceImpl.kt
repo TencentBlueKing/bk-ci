@@ -40,14 +40,18 @@ class OpTxPipelineResourceImpl @Autowired constructor(
         stages.forEach { buildStage ->
             logger.info("cancel build with stage(buildId=${buildStage.buildId}, stageId=${buildStage.stageId}), " +
                 "status=${buildStage.status}, checkOut=${buildStage.checkOut}")
-            pipelineBuildFacadeService.buildManualShutdown(
-                userId = "SYSTEM",
-                projectId = buildStage.projectId,
-                pipelineId = buildStage.pipelineId,
-                buildId = buildStage.buildId,
-                channelCode = ChannelCode.GIT,
-                checkPermission = false
-            )
+            try {
+                pipelineBuildFacadeService.buildManualShutdown(
+                    userId = "SYSTEM",
+                    projectId = buildStage.projectId,
+                    pipelineId = buildStage.pipelineId,
+                    buildId = buildStage.buildId,
+                    channelCode = ChannelCode.GIT,
+                    checkPermission = false
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("cancel build failed: ", ignore)
+            }
         }
         return Result(stages.size)
     }
