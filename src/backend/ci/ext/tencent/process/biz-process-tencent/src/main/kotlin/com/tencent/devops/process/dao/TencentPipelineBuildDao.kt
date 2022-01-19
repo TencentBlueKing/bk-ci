@@ -36,6 +36,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Repository
 class TencentPipelineBuildDao {
@@ -87,9 +88,12 @@ class TencentPipelineBuildDao {
     ): Collection<TPipelineBuildStageRecord> {
         return with(Tables.T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(STATUS.eq(BuildStatus.RUNNING.ordinal)
-                    .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%"))
-                    .and(END_TIME.isNotNull))
+                .where(STATUS.eq(BuildStatus.RUNNING.ordinal).and(END_TIME.isNotNull)
+                    .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%")))
+                .or(STATUS.eq(BuildStatus.RUNNING.ordinal)
+                    .and(CHECK_OUT.like("%QUALITY_CHECK_WAIT%"))
+                    .and(END_TIME.lt(LocalDateTime.now().minusDays(1)))
+                )
                 .fetch()
         }
     }
