@@ -125,9 +125,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                         buildEnv = "",
                         registryUser = "",
                         registryPwd = "",
-                        imageType = "",
-                        imagePublicFlag = false,
-                        imageRDType = null
+                        imageType = ""
                     )
 
                     logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
