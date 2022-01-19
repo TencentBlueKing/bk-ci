@@ -12,7 +12,6 @@ resources:
     ref: refs/heads/master
 stages:
 - name: 腾讯代码质量扫描
-  id: xxxxx
   jobs:
     job_tcoder_codecc_new:
       name: 腾讯代码质量扫描
@@ -22,7 +21,7 @@ stages:
           image: mirrors.tencent.com/ci/tlinux3_ci:latest
       steps:
         - name: 代码拉取
-          id: step-eFav7qd
+          id: "step-1"
           checkout: self
           with:
             strategy: FRESH_CHECKOUT

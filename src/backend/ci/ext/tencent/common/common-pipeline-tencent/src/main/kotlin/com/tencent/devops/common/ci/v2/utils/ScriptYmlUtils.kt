@@ -89,10 +89,6 @@ object ScriptYmlUtils {
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    private const val stageNamespace = "stage-"
-    private const val jobNamespace = "job-"
-    private const val stepNamespace = "step-"
-
     // 用户编写的触发器语法和实际对象不一致
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
@@ -326,10 +322,8 @@ object ScriptYmlUtils {
                 listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(stageNamespace),
                         jobs = listOf(
                             Job(
-                                id = randomString(jobNamespace),
                                 name = "job1",
                                 runsOn = RunsOn(),
                                 steps = formatSteps(preScriptBuildYaml.steps)
@@ -344,7 +338,6 @@ object ScriptYmlUtils {
                 listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(stageNamespace),
                         jobs = preJobs2Jobs(preScriptBuildYaml.jobs),
                         checkIn = null,
                         checkOut = null
@@ -440,9 +433,9 @@ object ScriptYmlUtils {
             }
 
             // 校验stepId唯一性
-            if (it.id != null && stepIdSet.contains(it.id)) {
+            if (!it.id.isNullOrBlank() && stepIdSet.contains(it.id)) {
                 throw YamlFormatException("请确保step.id唯一性!(${it.id})")
-            } else if (it.id != null && !stepIdSet.contains(it.id)) {
+            } else if (!it.id.isNullOrBlank() && !stepIdSet.contains(it.id)) {
                 stepIdSet.add(it.id)
             }
 
@@ -452,7 +445,7 @@ object ScriptYmlUtils {
             stepList.add(
                 Step(
                     name = it.name,
-                    id = it.id ?: randomString(stepNamespace),
+                    id = it.id,
                     ifFiled = it.ifFiled,
                     ifModify = it.ifModify,
                     uses = it.uses,
@@ -476,18 +469,9 @@ object ScriptYmlUtils {
         }
 
         val stageList = mutableListOf<Stage>()
-        val stageIdSet = mutableSetOf<String>()
         preStageList.forEach {
-            // 校验stageId唯一性
-            if (it.id != null && stageIdSet.contains(it.id)) {
-                throw YamlFormatException("请确保stage.id唯一性!(${it.id})")
-            } else if (it.id != null && !stageIdSet.contains(it.id)) {
-                stageIdSet.add(it.id)
-            }
-
             stageList.add(
                 Stage(
-                    id = it.id ?: randomString(stageNamespace),
                     name = it.name,
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
