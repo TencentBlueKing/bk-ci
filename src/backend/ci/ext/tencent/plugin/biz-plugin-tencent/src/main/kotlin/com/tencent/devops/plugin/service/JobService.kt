@@ -106,7 +106,8 @@ class JobService @Autowired constructor(
 
     fun listUsableServerEnvsByLastUpdateUser(projectId: String, pipelineId: String): Result<List<EnvWithPermission>> {
         logger.info("listUsableServerEnvsByLastUpdateUser(projectId=$projectId, pipelineId=$pipelineId")
-        val userId = getLastUpdateUserId(pipelineId) ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
+        val userId = getLastUpdateUserId(projectId, pipelineId)
+            ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
         // 以流水线最后修改人的身份调用service接口获取信息
         val result = client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
         logger.info("listUsableServerEnvs==Return===\n${jacksonObjectMapper().writeValueAsString(result)}")
@@ -115,7 +116,8 @@ class JobService @Autowired constructor(
 
     fun listUsableServerNodesByLastUpdateUser(projectId: String, pipelineId: String): Result<List<NodeWithPermission>> {
         logger.info("listUsableServerNodesByLastUpdateUser(projectId=$projectId, pipelineId=$pipelineId")
-        val userId = getLastUpdateUserId(pipelineId) ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
+        val userId = getLastUpdateUserId(projectId, pipelineId)
+            ?: return Result(500, "服务端内部异常，pipelineId=${pipelineId}的构建未查到")
         // 以流水线最后修改人的身份调用service接口获取信息
         val result = client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
         logger.info("listUsableServerNodes==Return===\n${jacksonObjectMapper().writeValueAsString(result)}")
@@ -123,9 +125,9 @@ class JobService @Autowired constructor(
     }
 
     // 根据pipelineId查出最后修改人
-    private fun getLastUpdateUserId(pipelineId: String): String? {
+    private fun getLastUpdateUserId(projectId: String, pipelineId: String): String? {
         logger.info("getLastUpdateUserId(pipelineId=$pipelineId)=")
-        val updateUser = client.get(ServiceOperationResource::class).getUpdateUser(pipelineId)
+        val updateUser = client.get(ServiceOperationResource::class).getUpdateUser(projectId, pipelineId)
         logger.info("userId=${updateUser.data}|====end==getUserId====(pipelineId=$pipelineId)")
         return updateUser.data
     }

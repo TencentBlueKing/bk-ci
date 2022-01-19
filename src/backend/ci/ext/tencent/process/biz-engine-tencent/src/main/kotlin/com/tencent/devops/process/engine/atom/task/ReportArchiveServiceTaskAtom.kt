@@ -277,7 +277,7 @@ class ReportArchiveServiceTaskAtom @Autowired constructor(
         val localDirFilePath = Paths.get(localDirFile.canonicalPath)
         val emailReceivers = parseVariable(param.emailReceivers?.joinToString(","), runVariables)
 
-        val reportRootUrl = reportService.getRootUrl(buildId, taskId)
+        val reportRootUrl = reportService.getRootUrl(projectId, buildId, taskId)
         outputVariables[REPORT_DYNAMIC_ROOT_URL] = reportRootUrl
 
         val indexFile = File(localDir, indexFileParam)

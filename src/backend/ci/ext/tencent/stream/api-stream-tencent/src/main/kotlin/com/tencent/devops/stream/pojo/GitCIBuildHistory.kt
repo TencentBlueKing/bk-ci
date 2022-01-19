@@ -38,7 +38,7 @@ data class GitCIBuildHistory(
     @ApiModelProperty("蓝盾流水线ID", required = true)
     var pipelineId: String?,
     @ApiModelProperty("工蜂Event事件", required = true)
-    val gitRequestEvent: GitRequestEvent,
+    val gitRequestEvent: GitRequestEventReq,
     @ApiModelProperty("历史构建模型", required = false)
     val buildHistory: BuildHistory?,
     @ApiModelProperty("原因", required = true)

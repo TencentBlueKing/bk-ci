@@ -1,24 +1,24 @@
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
@@ -215,6 +215,12 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("startBeginTime")
+        startBeginTime: String?,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("endBeginTime")
+        endBeginTime: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

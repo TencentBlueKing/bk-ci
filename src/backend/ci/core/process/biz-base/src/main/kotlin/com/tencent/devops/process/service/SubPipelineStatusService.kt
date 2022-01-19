@@ -73,14 +73,14 @@ class SubPipelineStatusService @Autowired constructor(
 
             redisOperation.set(
                 key = getSubPipelineStatusKey(buildId),
-                value = JsonUtil.toJson(getSubPipelineStatusFromDB(buildId)),
+                value = JsonUtil.toJson(getSubPipelineStatusFromDB(event.projectId, buildId)),
                 expiredInSecond = SUBPIPELINE_STATUS_FINISH_EXPIRED
             )
         }
     }
 
-    private fun getSubPipelineStatusFromDB(buildId: String): SubPipelineStatus {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+    private fun getSubPipelineStatusFromDB(projectId: String, buildId: String): SubPipelineStatus {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         return if (buildInfo != null) {
             val status: BuildStatus = when {
                 buildInfo.isSuccess() && buildInfo.isStageSuccess() -> BuildStatus.SUCCEED
@@ -102,12 +102,12 @@ class SubPipelineStatusService @Autowired constructor(
         }
     }
 
-    fun getSubPipelineStatus(buildId: String): SubPipelineStatus {
+    fun getSubPipelineStatus(projectId: String, buildId: String): SubPipelineStatus {
         val subPipelineStatusStr = redisOperation.get(getSubPipelineStatusKey(buildId))
         return if (subPipelineStatusStr.isNullOrBlank()) {
-            getSubPipelineStatusFromDB(buildId)
+            getSubPipelineStatusFromDB(projectId, buildId)
         } else {
-            val redisSubPipelineStatus = JsonUtil.to(subPipelineStatusStr!!, SubPipelineStatus::class.java)
+            val redisSubPipelineStatus = JsonUtil.to(subPipelineStatusStr, SubPipelineStatus::class.java)
             // 如果状态完成,子流水线插件就不会再调用,从redis中删除key
             if (BuildStatus.parse(redisSubPipelineStatus.status).isFinish()) {
                 redisOperation.delete(getSubPipelineStatusKey(buildId))

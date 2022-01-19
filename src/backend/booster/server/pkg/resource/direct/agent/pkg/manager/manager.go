@@ -733,6 +733,7 @@ func (o *processManager) reportResource() error {
 		for _, uri := range uriList {
 			blog.Debugf("report resource: report to %s, data: %s", uri, (string)(data))
 			if _, _, err = o.post(uri, o.getHeader(""), data); err != nil {
+				blog.Warnf("failed to report resource to server %s with data %s, error:%v", uri, (string)(data), err)
 				continue
 			}
 

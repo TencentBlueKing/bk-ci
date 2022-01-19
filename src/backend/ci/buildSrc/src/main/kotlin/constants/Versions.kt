@@ -33,10 +33,12 @@ object Versions {
     const val Lucene = "8.2.0"
     const val Feign = "11.6" // TODO 修复这个BUG:https://github.com/OpenFeign/feign/pull/1347 , 后续SpringCloud升级后可以去掉
     const val PinyinPlus = "1.0"
+    const val ShardingSphere = "5.0.0"
     const val Oshi = "5.8.3"
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
-    const val log4j = "2.16.0"
+    const val log4j = "2.17.0" // es依赖在使用
+    const val Logback = "1.2.10" // 1.2.3也有安全漏洞
     const val Xinge = "1.2.4.9"
 }

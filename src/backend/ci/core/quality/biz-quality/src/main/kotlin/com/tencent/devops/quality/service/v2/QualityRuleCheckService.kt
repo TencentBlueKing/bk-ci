@@ -280,10 +280,17 @@ class QualityRuleCheckService @Autowired constructor(
 
             resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
             ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
-            if (!rule.gateKeepers.isNullOrEmpty() && !interceptResult) {
-                qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId),
-                    RuleInterceptResult.WAIT.name)
+
+            val status = if (interceptResult) {
+                RuleInterceptResult.PASS.name
+            } else {
+                if (rule.gateKeepers.isNullOrEmpty()) {
+                    RuleInterceptResult.FAIL.name
+                } else {
+                    RuleInterceptResult.WAIT.name
+                }
             }
+            qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId), status)
         }
 
         return Pair(resultList, ruleInterceptList)
@@ -409,7 +416,6 @@ class QualityRuleCheckService @Autowired constructor(
                     buildNo = buildNo,
                     createTime = createTime,
                     resultList = resultList,
-                    auditNotifyTypeList = ruleOp.notifyTypeList ?: listOf(),
                     auditNotifyUserList = (ruleOp.auditUserList
                         ?: listOf()).toSet().map { user ->
                         EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
@@ -661,7 +667,6 @@ class QualityRuleCheckService @Autowired constructor(
         buildNo: String,
         createTime: LocalDateTime,
         resultList: List<RuleCheckSingleResult>,
-        auditNotifyTypeList: List<NotifyType>,
         auditNotifyUserList: List<String>,
         position: String,
         stageId: String?,
@@ -695,7 +700,6 @@ class QualityRuleCheckService @Autowired constructor(
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2,
             receivers = notifyUserSet,
-            notifyType = auditNotifyTypeList.map { it.name }.toMutableSet(),
             cc = mutableSetOf(triggerUserId),
             titleParams = mapOf(
                 "projectName" to projectName,
@@ -748,6 +752,10 @@ class QualityRuleCheckService @Autowired constructor(
             ?: runtimeVariable?.get("BK_CI_START_USER_ID") ?: ""
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
+
+        if (triggerUserId.isNotBlank()) {
+            notifyUserSet.add(triggerUserId)
+        }
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()

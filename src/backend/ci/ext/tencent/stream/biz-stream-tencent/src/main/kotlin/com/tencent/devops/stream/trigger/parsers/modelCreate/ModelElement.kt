@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
@@ -48,7 +47,6 @@ import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import javax.ws.rs.core.Response
@@ -85,19 +83,13 @@ class ModelElement @Autowired constructor(
         job: Job,
         gitBasicSetting: GitCIBasicSetting,
         changeSet: Set<String>? = null,
+        jobEnable: Boolean = true,
         event: GitRequestEvent
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
-        val stepIdCheckList = mutableListOf<String?>()
         // 解析job steps
         job.steps!!.forEach { step ->
-            if (step.id !in stepIdCheckList) {
-                stepIdCheckList.add(step.id)
-            } else throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.STEP_ID_CONFLICT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.STEP_ID_CONFLICT_ERROR.formatErrorMessage
-            )
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
@@ -118,7 +110,7 @@ class ModelElement @Autowired constructor(
                 customCondition = step.ifFiled
             )
 
-            additionalOptions.enable = PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
+            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
             // bash
             val element: Element = when {
                 step.run != null -> {

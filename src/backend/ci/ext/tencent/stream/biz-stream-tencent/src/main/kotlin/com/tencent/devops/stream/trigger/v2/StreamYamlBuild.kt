@@ -57,10 +57,12 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
 import com.tencent.devops.stream.service.GitCIPipelineService
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.v2.service.DeleteEventService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -76,7 +78,8 @@ class StreamYamlBuild @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val modelCreate: ModelCreate,
     private val streamStorageBean: StreamStorageBean,
-    private val streamTimerService: StreamTimerService
+    private val streamTimerService: StreamTimerService,
+    private val deleteEventService: DeleteEventService
 ) {
 
     companion object {
@@ -98,6 +101,7 @@ class StreamYamlBuild @Autowired constructor(
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
+        isDeleteTrigger: Boolean = false,
         gitProjectInfo: GitCIProjectInfo? = null,
         changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf()
@@ -130,26 +134,15 @@ class StreamYamlBuild @Autowired constructor(
             // 改名时保存需要修改名称
             realPipeline.displayName = pipeline.displayName
 
-            // 如果是定时触发需要注册事件
-            if (isTimeTrigger) {
-                streamTimerService.saveTimer(
-                    StreamTimer(
-                        projectId = GitCIPipelineUtils.genGitProjectCode(event.gitProjectId),
-                        pipelineId = realPipeline.pipelineId,
-                        userId = event.userId,
-                        crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
-                        gitProjectId = event.gitProjectId,
-                        // 未填写则在每次触发拉默认分支
-                        branchs = yaml.triggerOn?.schedules?.branches?.ifEmpty {
-                            listOf(gitProjectInfo?.defaultBranch!!)
-                        } ?: listOf(gitProjectInfo?.defaultBranch!!),
-                        always = yaml.triggerOn?.schedules?.always ?: false,
-                        channelCode = channelCode,
-                        eventId = event.id!!,
-                        originYaml = originYaml
-                    )
-                )
-            }
+            saveSpecialTriggerEvent(
+                isTimeTrigger = isTimeTrigger,
+                event = event,
+                realPipeline = realPipeline,
+                yaml = yaml,
+                gitProjectInfo = gitProjectInfo,
+                originYaml = originYaml,
+                isDeleteTrigger = isDeleteTrigger
+            )
 
             return if (gitBuildId != null) {
                 startBuildPipeline(
@@ -214,6 +207,49 @@ class StreamYamlBuild @Autowired constructor(
         } finally {
             streamStorageBean.buildTime(LocalDateTime.now().timestampmilli() - start)
             triggerLock.unlock()
+        }
+    }
+
+    private fun saveSpecialTriggerEvent(
+        isTimeTrigger: Boolean,
+        event: GitRequestEvent,
+        realPipeline: GitProjectPipeline,
+        yaml: ScriptBuildYaml,
+        gitProjectInfo: GitCIProjectInfo?,
+        originYaml: String,
+        isDeleteTrigger: Boolean
+    ) {
+        // 如果是定时触发需要注册事件
+        if (isTimeTrigger) {
+            streamTimerService.saveTimer(
+                StreamTimer(
+                    projectId = GitCIPipelineUtils.genGitProjectCode(event.gitProjectId),
+                    pipelineId = realPipeline.pipelineId,
+                    userId = event.userId,
+                    crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
+                    gitProjectId = event.gitProjectId,
+                    // 未填写则在每次触发拉默认分支
+                    branchs = yaml.triggerOn?.schedules?.branches?.ifEmpty {
+                        listOf(gitProjectInfo?.defaultBranch!!)
+                    } ?: listOf(gitProjectInfo?.defaultBranch!!),
+                    always = yaml.triggerOn?.schedules?.always ?: false,
+                    channelCode = channelCode,
+                    eventId = event.id!!,
+                    originYaml = originYaml
+                )
+            )
+        }
+
+        if (isDeleteTrigger && deleteEventService.getDeleteEvent(realPipeline.pipelineId) == null) {
+            deleteEventService.saveDeleteEvent(
+                StreamDeleteEvent(
+                    gitProjectId = event.gitProjectId,
+                    pipelineId = realPipeline.pipelineId,
+                    userId = event.userId,
+                    eventId = event.id!!,
+                    originYaml = originYaml
+                )
+            )
         }
     }
 

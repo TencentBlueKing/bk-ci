@@ -175,7 +175,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         if (!dispatchType.credentialId.isNullOrBlank()) {
             val realCredentialId = EnvUtils.parseEnv(
                 command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(buildId))
+                data = buildVariableService.getAllVariable(projectId, buildId))
             if (realCredentialId.isNotEmpty()) {
                 val ticketsMap = CommonCredentialUtils.getCredential(
                     client = client,
