@@ -56,13 +56,6 @@ class CostUtilsTest {
         CostUtils.costTime(startTime, url, logger)
     }
 
-    @Test
-    fun getExperienceId() {
-        println(
-            HashUtil.encodeLongId(1000039)
-        )
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(CostUtilsTest::class.java)
     }
