@@ -2,13 +2,10 @@ package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.dao.TxPipelineInfoDao
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import org.jooq.DSLContext
@@ -40,14 +37,18 @@ class OpTxPipelineResourceImpl @Autowired constructor(
         stages.forEach { buildStage ->
             logger.info("cancel build with stage(buildId=${buildStage.buildId}, stageId=${buildStage.stageId}), " +
                 "status=${buildStage.status}, checkOut=${buildStage.checkOut}")
-            pipelineBuildFacadeService.buildManualShutdown(
-                userId = "SYSTEM",
-                projectId = buildStage.projectId,
-                pipelineId = buildStage.pipelineId,
-                buildId = buildStage.buildId,
-                channelCode = ChannelCode.GIT,
-                checkPermission = false
-            )
+            try {
+                pipelineBuildFacadeService.buildManualShutdown(
+                    userId = "SYSTEM",
+                    projectId = buildStage.projectId,
+                    pipelineId = buildStage.pipelineId,
+                    buildId = buildStage.buildId,
+                    channelCode = ChannelCode.GIT,
+                    checkPermission = false
+                )
+            } catch (ignore: Throwable) {
+                logger.warn("cancel build failed: ", ignore)
+            }
         }
         return Result(stages.size)
     }
