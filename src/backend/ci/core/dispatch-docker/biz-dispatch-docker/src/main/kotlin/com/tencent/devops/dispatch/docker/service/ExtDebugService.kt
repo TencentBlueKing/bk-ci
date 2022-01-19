@@ -36,6 +36,15 @@ interface ExtDebugService {
         vmSeqId: String
     ): String?
 
+    fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String?
+
     fun stopDebug(
         userId: String,
         projectId: String,

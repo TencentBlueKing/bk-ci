@@ -377,8 +377,8 @@ class DockerHostDebugService @Autowired constructor(
     fun getDebugHistory(pipelineId: String, vmSeqId: String): String? {
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (debugTask != null) {
-            LOG.warn("$pipelineId $vmSeqId debug history: ${debugTask.wsUrl}")
-            return debugTask.wsUrl
+            LOG.warn("$pipelineId $vmSeqId debug history: ${debugTask.containerId}")
+            return debugTask.containerId
         }
 
         return null
