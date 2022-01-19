@@ -100,6 +100,12 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         content: String,
         url: String
     ): Result<Boolean> {
+        val appNotifyMessage = AppNotifyMessage()
+        appNotifyMessage.body = content
+        appNotifyMessage.title = title
+        appNotifyMessage.receiver = userId
+        appNotifyMessage.url = url
+        experiencePushService.pushMessage(appNotifyMessage)
         return Result(true)
     }
 
