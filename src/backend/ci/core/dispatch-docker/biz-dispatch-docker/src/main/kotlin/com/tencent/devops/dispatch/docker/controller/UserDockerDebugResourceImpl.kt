@@ -38,18 +38,14 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
-import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
-import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
-import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.service.ExtDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
-import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -79,15 +75,15 @@ class UserDockerDebugResourceImpl @Autowired constructor(
     private val consulTag: String = "prod"
 
     override fun startDebug(userId: String, debugStartParam: DebugStartParam): Result<String>? {
-        checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+        // checkPermission(userId, debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId)
 
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
-        val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
-        if (result.status == 0) {
+        val lastWsUrl = dockerHostDebugService.getDebugHistory(debugStartParam.pipelineId, debugStartParam.vmSeqId)
+        if (!lastWsUrl.isNullOrBlank()) {
             logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                    "Container Exist|ContainerId=${result.data?.containerId}")
-            return Result(result.data?.containerId!!)
+                    "Container Exist|wsUrl=$lastWsUrl")
+            return Result(lastWsUrl)
         }
 
         // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
@@ -99,7 +95,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
 
         if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
             val dockerBuildHistory = dockerBuildHistoryList[0]
-            // running状态且容器已创建，则复用
+            /*// running状态且容器已创建，则复用
             if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status &&
                 dockerBuildHistory.containerId.isNotEmpty()
             ) {
@@ -135,7 +131,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                             "Container running|ContainerId=${dockerBuildHistory.containerId}")
                     return Result(dockerBuildHistory.containerId)
                 }
-            }
+            }*/
 
             return Result(dockerHostDebugService.startDebug(
                 dockerIp = dockerBuildHistory.dockerIp,

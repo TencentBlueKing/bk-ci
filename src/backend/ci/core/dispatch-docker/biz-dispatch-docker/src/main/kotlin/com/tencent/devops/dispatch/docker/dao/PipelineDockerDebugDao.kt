@@ -55,6 +55,7 @@ class PipelineDockerDebugDao {
         imageName: String,
         hostTag: String,
         containerId: String,
+        wsUrl: String = "",
         buildEnv: String,
         registryUser: String?,
         registryPwd: String?,
@@ -74,6 +75,7 @@ class PipelineDockerDebugDao {
                 IMAGE_NAME,
                 HOST_TAG,
                 CONTAINER_ID,
+                WS_URL,
                 CREATED_TIME,
                 UPDATED_TIME,
                 BUILD_ENV,
@@ -93,6 +95,7 @@ class PipelineDockerDebugDao {
                     imageName,
                     hostTag,
                     containerId,
+                    wsUrl,
                     now,
                     now,
                     buildEnv,
@@ -109,6 +112,7 @@ class PipelineDockerDebugDao {
                 .set(IMAGE_NAME, imageName)
                 .set(HOST_TAG, hostTag)
                 .set(CONTAINER_ID, containerId)
+                .set(WS_URL, wsUrl)
                 .set(UPDATED_TIME, now)
                 .set(BUILD_ENV, buildEnv)
                 .set(REGISTRY_USER, registryUser)

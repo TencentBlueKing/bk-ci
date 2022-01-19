@@ -194,7 +194,7 @@ class DockerHostDebugService @Autowired constructor(
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
                     response["status"] == 0 -> {
-                        val containerId = response["data"].toString()
+                        val wsUrl = response["data"].toString()
                         pipelineDockerDebugDao.insertDebug(
                             dslContext = dslContext,
                             projectId = projectId,
@@ -205,7 +205,8 @@ class DockerHostDebugService @Autowired constructor(
                             token = "",
                             imageName = dockerImage.trim(),
                             hostTag = dockerIp,
-                            containerId = containerId,
+                            wsUrl = wsUrl,
+                            containerId = "",
                             buildEnv = buildEnvStr,
                             registryUser = userName,
                             registryPwd = password,
@@ -214,8 +215,7 @@ class DockerHostDebugService @Autowired constructor(
                             imageRDType = imageRepoInfo?.rdType
                         )
 
-                        return containerId
-                        // getDockerConsoleUrl(dockerIp, pipelineId, projectId, containerId)
+                        return wsUrl
                     }
                     response["status"] == 1 -> {
                         // 母机负载过高
@@ -289,30 +289,6 @@ class DockerHostDebugService @Autowired constructor(
         }
 
         return Result(0, "success")
-    }
-
-    private fun getDockerConsoleUrl(
-        dockerIp: String,
-        pipelineId: String,
-        projectId: String,
-        containerId: String
-    ) {
-        val url = "/bcsapi/v1/consoleproxy/create_exec?pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}"
-        val requestBody = mapOf("cmd" to "/bin/bash", "container_id" to containerId)
-        val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = url,
-            dockerHostIp = dockerIp,
-            dockerHostPort = 9999,
-            urlPrefix = "https://"
-        ).addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .build()
-
-        LOG.info("start get docker websonsole url: $url, $dockerDebugAuthToken")
-        OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
-            LOG.info("[$projectId|$pipelineId] get docker webconsole $dockerIp responseBody: $responseBody")
-        }
     }
 
     fun checkContainerStatus(
@@ -396,6 +372,16 @@ class DockerHostDebugService @Autowired constructor(
                 imageType = debugTask.imageType
             )
         )
+    }
+
+    fun getDebugHistory(pipelineId: String, vmSeqId: String): String? {
+        val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
+        if (debugTask != null) {
+            LOG.warn("$pipelineId $vmSeqId debug history: ${debugTask.containerId}")
+            return debugTask.containerId
+        }
+
+        return null
     }
 
     private fun getDebugDockerImage(
