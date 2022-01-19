@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperiencePushResource
+import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.SubscribeParam
 import com.tencent.devops.experience.service.ExperiencePushService
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,6 +91,16 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         } else {
             experiencePushService.unSubscribe(userId, experienceHashId, platform, projectId, bundleIdentifier)
         }
+    }
+
+    // todo  需要干掉
+    override fun pushMessage(
+        userId: String,
+        title: String,
+        content: String,
+        url: String
+    ): Result<Boolean> {
+        return Result(true)
     }
 
     fun checkParam(

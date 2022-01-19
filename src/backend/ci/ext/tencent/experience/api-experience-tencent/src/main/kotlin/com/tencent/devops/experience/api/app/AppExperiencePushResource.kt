@@ -90,4 +90,22 @@ interface AppExperiencePushResource {
         @ApiParam("取消订阅参数", required = true)
         subscribeParam: SubscribeParam
     ): Result<Boolean>
+
+    @ApiOperation("推送消息")
+    @Path("/pushMessage")
+    @POST
+    fun pushMessage(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("消息标题", required = true)
+        @QueryParam("title")
+        title: String,
+        @ApiParam("消息内容", required = true)
+        @QueryParam("content")
+        content: String,
+        @ApiParam("跳转路径", required = true)
+        @QueryParam("url")
+        url: String
+    ): Result<Boolean>
 }

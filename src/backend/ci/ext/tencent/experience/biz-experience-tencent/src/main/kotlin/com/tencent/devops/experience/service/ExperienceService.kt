@@ -749,6 +749,7 @@ class ExperienceService @Autowired constructor(
                 val appMessage = AppNotifyUtil.makeMessage(
                     projectName = projectName,
                     experienceHashId = HashUtil.encodeLongId(experienceId),
+                    platform = platform,
                     name = name,
                     version = version,
                     receiver = it
@@ -782,6 +783,7 @@ class ExperienceService @Autowired constructor(
                 val appMessage = AppNotifyUtil.makeMessage(
                     projectName = projectName,
                     experienceHashId = HashUtil.encodeLongId(experienceId),
+                    platform = platform,
                     name = name,
                     version = version,
                     receiver = it
@@ -792,6 +794,7 @@ class ExperienceService @Autowired constructor(
                 val appMessage = AppNotifyUtil.makeMessage(
                     projectName = projectName,
                     experienceHashId = HashUtil.encodeLongId(experienceId),
+                    platform = platform,
                     name = name,
                     version = version,
                     receiver = it
