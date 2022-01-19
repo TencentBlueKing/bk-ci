@@ -79,11 +79,20 @@ class UserDockerDebugResourceImpl @Autowired constructor(
 
         logger.info("[$userId]| start debug, debugStartParam: $debugStartParam")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
-        val lastWsUrl = dockerHostDebugService.getDebugHistory(debugStartParam.pipelineId, debugStartParam.vmSeqId)
-        if (!lastWsUrl.isNullOrBlank()) {
+        val historyPair = dockerHostDebugService.getDebugHistory(
+            debugStartParam.pipelineId,
+            debugStartParam.vmSeqId
+        )
+        if (historyPair != null) {
+            val wsUrl = dockerHostDebugService.getWsUrl(
+                dockerIp = historyPair.first,
+                projectId = debugStartParam.projectId,
+                pipelineId = debugStartParam.pipelineId,
+                containerId = historyPair.second
+            )
             logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                    "Container Exist|wsUrl=$lastWsUrl")
-            return Result(lastWsUrl)
+                    "Container Exist|wsUrl=$wsUrl")
+            return Result(wsUrl)
         }
 
         // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
@@ -95,49 +104,17 @@ class UserDockerDebugResourceImpl @Autowired constructor(
 
         if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
             val dockerBuildHistory = dockerBuildHistoryList[0]
-            /*// running状态且容器已创建，则复用
-            if (dockerBuildHistory.status == PipelineTaskStatus.RUNNING.status &&
-                dockerBuildHistory.containerId.isNotEmpty()
-            ) {
-                val containerStatusRunning = dockerHostDebugService.checkContainerStatus(
-                    projectId = debugStartParam.projectId,
-                    pipelineId = debugStartParam.pipelineId,
-                    vmSeqId = debugStartParam.vmSeqId,
-                    dockerIp = dockerBuildHistory.dockerIp,
-                    containerId = dockerBuildHistory.containerId
-                )
-
-                if (containerStatusRunning) {
-                    pipelineDockerDebugDao.insertDebug(
-                        dslContext = dslContext,
-                        projectId = debugStartParam.projectId,
-                        pipelineId = debugStartParam.pipelineId,
-                        vmSeqId = debugStartParam.vmSeqId,
-                        poolNo = dockerBuildHistory.poolNo,
-                        status = PipelineTaskStatus.RUNNING,
-                        token = "",
-                        imageName = "",
-                        hostTag = dockerBuildHistory.dockerIp,
-                        containerId = dockerBuildHistory.containerId,
-                        buildEnv = "",
-                        registryUser = "",
-                        registryPwd = "",
-                        imageType = "",
-                        imagePublicFlag = false,
-                        imageRDType = null
-                    )
-
-                    logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
-                            "Container running|ContainerId=${dockerBuildHistory.containerId}")
-                    return Result(dockerBuildHistory.containerId)
-                }
-            }*/
-
-            return Result(dockerHostDebugService.startDebug(
+            val containerId = dockerHostDebugService.startDebug(
                 dockerIp = dockerBuildHistory.dockerIp,
                 userId = userId,
                 poolNo = dockerBuildHistory.poolNo,
                 debugStartParam = debugStartParam
+            )
+            return Result(dockerHostDebugService.getWsUrl(
+                dockerIp = dockerBuildHistory.dockerIp,
+                projectId = debugStartParam.projectId,
+                pipelineId = debugStartParam.pipelineId,
+                containerId = containerId
             ))
         } else {
             // 没有构建历史的情况下debug，先确认是否来自其他构建集群

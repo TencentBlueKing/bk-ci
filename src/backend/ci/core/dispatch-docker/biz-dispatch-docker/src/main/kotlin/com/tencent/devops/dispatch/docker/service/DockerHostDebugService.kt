@@ -194,7 +194,7 @@ class DockerHostDebugService @Autowired constructor(
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
                     response["status"] == 0 -> {
-                        val wsUrl = response["data"].toString()
+                        val containerId = response["data"].toString()
                         pipelineDockerDebugDao.insertDebug(
                             dslContext = dslContext,
                             projectId = projectId,
@@ -205,8 +205,7 @@ class DockerHostDebugService @Autowired constructor(
                             token = "",
                             imageName = dockerImage.trim(),
                             hostTag = dockerIp,
-                            wsUrl = wsUrl,
-                            containerId = "",
+                            containerId = containerId,
                             buildEnv = buildEnvStr,
                             registryUser = userName,
                             registryPwd = password,
@@ -215,7 +214,7 @@ class DockerHostDebugService @Autowired constructor(
                             imageRDType = imageRepoInfo?.rdType
                         )
 
-                        return wsUrl
+                        return containerId
                     }
                     response["status"] == 1 -> {
                         // 母机负载过高
@@ -318,6 +317,33 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
+    fun getWsUrl(
+        projectId: String,
+        pipelineId: String,
+        dockerIp: String,
+        containerId: String
+    ): String {
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/api/docker/debug/getWsUrl?" +
+                    "projectId=$projectId&pipelineId=$pipelineId&containerId=$containerId",
+            dockerHostIp = dockerIp
+        ).get().build()
+
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            if (response["status"] == 0) {
+                return response["data"] as String
+            } else {
+                val msg = response["message"] as String
+                LOG.warn("[$projectId|$pipelineId]getWsUrl|$dockerIp|$containerId|failed: $msg")
+                throw DockerServiceException(errorType = ErrorCodeEnum.GET_VM_STATUS_FAIL.errorType,
+                    errorCode = ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode,
+                    errorMsg = "Get websocketUrl $dockerIp $containerId failed, msg: $msg")
+            }
+        }
+    }
+
     fun getDebugStatus(pipelineId: String, vmSeqId: String): Result<ContainerInfo> {
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (null == debugTask) {
@@ -374,11 +400,11 @@ class DockerHostDebugService @Autowired constructor(
         )
     }
 
-    fun getDebugHistory(pipelineId: String, vmSeqId: String): String? {
+    fun getDebugHistory(pipelineId: String, vmSeqId: String): Pair<String, String>? {
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (debugTask != null) {
             LOG.warn("$pipelineId $vmSeqId debug history: ${debugTask.containerId}")
-            return debugTask.containerId
+            return Pair(debugTask.hostTag, debugTask.containerId)
         }
 
         return null
