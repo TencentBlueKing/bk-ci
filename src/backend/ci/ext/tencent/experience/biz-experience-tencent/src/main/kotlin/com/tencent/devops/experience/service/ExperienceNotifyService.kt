@@ -32,8 +32,8 @@ import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.AppNotifyMessageWithOperation
 import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.QUEUE_NOTIFY_APP
-import com.tencent.devops.notify.ROUTE_APP
+import com.tencent.devops.notify.QUEUE_NOTIFY_PUSH
+import com.tencent.devops.notify.ROUTE_PUSH
 import com.tencent.xinge.XingeApp
 import com.tencent.xinge.bean.AudienceType
 import com.tencent.xinge.bean.Environment
@@ -81,7 +81,7 @@ class ExperienceNotifyService @Autowired constructor(
 
     // 发送MQ
     fun sendMqMsg(message: AppNotifyMessage) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_APP, message)
+        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_PUSH, message)
     }
 
     // 消费MQ消息，然后发送信鸽，修改推送信息状态
@@ -89,8 +89,8 @@ class ExperienceNotifyService @Autowired constructor(
         containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
-                key = [ROUTE_APP],
-                value = Queue(value = QUEUE_NOTIFY_APP, durable = "true"),
+                key = [ROUTE_PUSH],
+                value = Queue(value = QUEUE_NOTIFY_PUSH, durable = "true"),
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
             )]
     )
