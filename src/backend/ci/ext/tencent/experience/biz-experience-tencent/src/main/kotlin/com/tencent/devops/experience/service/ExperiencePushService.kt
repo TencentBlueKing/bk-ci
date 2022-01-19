@@ -28,7 +28,6 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.devops.common.api.enums.PlatformEnum
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
@@ -37,7 +36,6 @@ import com.tencent.devops.experience.dao.ExperiencePushDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
-import com.tencent.devops.notify.constant.NotifyMessageCode
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -284,7 +282,6 @@ class ExperiencePushService @Autowired constructor(
         val title = appNotifyMessage.title
         val userId = appNotifyMessage.receiver
         val url = appNotifyMessage.url
-        checkNotifyMessage(content, title, userId, url)
         val userTokenRecord = experiencePushDao.getByUserId(
             dslContext = dslContext,
             userId = userId
@@ -325,37 +322,5 @@ class ExperiencePushService @Autowired constructor(
         appNotifyMessage.receiver = userId
         appNotifyMessage.url = url
         return appNotifyMessage
-    }
-
-    fun checkNotifyMessage(
-        body: String,
-        title: String,
-        receiver: String,
-        url: String
-    ) {
-        if (body.isBlank()) {
-            throw InvalidParamException(
-                message = "invalid body:$body",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_BODY
-            )
-        }
-        if (title.isBlank()) {
-            throw InvalidParamException(
-                message = "invalid title:$title",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_TITLE
-            )
-        }
-        if (receiver.isBlank()) {
-            throw InvalidParamException(
-                message = "invalid receiver:$receiver",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_RECEIVERS
-            )
-        }
-        if (url.isBlank()) {
-            throw InvalidParamException(
-                message = "invalid url:$url",
-                errorCode = NotifyMessageCode.ERROR_NOTIFY_INVALID_NOTIFY_TYPE
-            )
-        }
     }
 }

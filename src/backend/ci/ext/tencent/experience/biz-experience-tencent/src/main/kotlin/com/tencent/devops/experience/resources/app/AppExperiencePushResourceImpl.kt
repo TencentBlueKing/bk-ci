@@ -93,20 +93,19 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
     }
 
-    // todo  需要干掉
     override fun pushMessage(
         userId: String,
         title: String,
         content: String,
         url: String
     ): Result<Boolean> {
+        checkNotifyMessage(content, title, userId, url)
         val appNotifyMessage = AppNotifyMessage()
         appNotifyMessage.body = content
         appNotifyMessage.title = title
         appNotifyMessage.receiver = userId
         appNotifyMessage.url = url
-        experiencePushService.pushMessage(appNotifyMessage)
-        return Result(true)
+        return experiencePushService.pushMessage(appNotifyMessage)
     }
 
     fun checkParam(
@@ -138,6 +137,26 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         }
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+    }
+
+    fun checkNotifyMessage(
+        body: String,
+        title: String,
+        receiver: String,
+        url: String
+    ) {
+        if (body.isBlank()) {
+            throw ParamBlankException("Invalid body")
+        }
+        if (title.isBlank()) {
+            throw ParamBlankException("Invalid title")
+        }
+        if (receiver.isBlank()) {
+            throw ParamBlankException("Invalid receiver")
+        }
+        if (url.isBlank()) {
+            throw ParamBlankException("Invalid url")
         }
     }
 }
