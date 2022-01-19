@@ -241,22 +241,7 @@ class DockerHostDebugService(
             logger.info("Created container $container")
             dockerCli.startContainerCmd(container.id).exec()
 
-            val eventId = getDockerConsoleId(
-                dockerIp = CommonUtils.getInnerIP(),
-                pipelineId = containerInfo.pipelineId,
-                projectId = containerInfo.projectId,
-                containerId = container.id
-            )
-
-            return getDockerConsoleUrl(
-                dockerIp = CommonUtils.getInnerIP(),
-                pipelineId = containerInfo.pipelineId,
-                projectId = containerInfo.projectId,
-                containerId = container.id,
-                eventId = eventId
-            )
-
-            // return container.id
+            return container.id
         } catch (er: Throwable) {
             logger.error(er.toString())
             logger.error(er.cause.toString())
@@ -291,6 +276,24 @@ class DockerHostDebugService(
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${containerInfo.containerId}, error msg: $e")
         }
+    }
+
+    fun getWebSocketUrl(projectId: String, pipelineId: String, containerId: String): String {
+        val hostIp = CommonUtils.getInnerIP()
+        val eventId = getDockerConsoleId(
+            dockerIp = hostIp,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            containerId = containerId
+        )
+
+        return getDockerConsoleUrl(
+            dockerIp = hostIp,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            containerId = containerId,
+            eventId = eventId
+        )
     }
 
     private fun getDockerConsoleId(

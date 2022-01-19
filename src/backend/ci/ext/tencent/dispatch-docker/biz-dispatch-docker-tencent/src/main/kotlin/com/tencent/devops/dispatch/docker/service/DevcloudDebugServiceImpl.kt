@@ -40,6 +40,17 @@ class DevcloudDebugServiceImpl @Autowired constructor(
         return getDevcloudDebugUrl(userId, projectId, pipelineId, buildId, vmSeqId)
     }
 
+    override fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String? {
+        return null
+    }
+
     override fun stopDebug(
         userId: String,
         projectId: String,
