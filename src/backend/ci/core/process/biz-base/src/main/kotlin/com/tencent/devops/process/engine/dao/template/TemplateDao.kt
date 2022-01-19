@@ -63,9 +63,19 @@ class TemplateDao {
         version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
+            val currentTime = LocalDateTime.now()
             return dslContext.insertInto(
                 this,
-                PROJECT_ID, ID, TEMPLATE_NAME, VERSION_NAME, CREATOR, CREATED_TIME, TEMPLATE, STORE_FLAG, VERSION
+                PROJECT_ID,
+                ID,
+                TEMPLATE_NAME,
+                VERSION_NAME,
+                CREATOR,
+                CREATED_TIME,
+                UPDATE_TIME,
+                TEMPLATE,
+                STORE_FLAG,
+                VERSION
             )
                 .values(
                     projectId,
@@ -73,7 +83,8 @@ class TemplateDao {
                     templateName,
                     versionName,
                     userId,
-                    LocalDateTime.now(),
+                    currentTime,
+                    currentTime,
                     template,
                     storeFlag,
                     version
@@ -100,6 +111,7 @@ class TemplateDao {
         version: Long? = null
     ): Long {
         with(TTemplate.T_TEMPLATE) {
+            val currentTime = LocalDateTime.now()
             return dslContext.insertInto(
                 this,
                 PROJECT_ID,
@@ -108,6 +120,7 @@ class TemplateDao {
                 VERSION_NAME,
                 CREATOR,
                 CREATED_TIME,
+                UPDATE_TIME,
                 TEMPLATE,
                 TYPE,
                 CATEGORY,
@@ -123,7 +136,8 @@ class TemplateDao {
                     templateName,
                     versionName,
                     userId,
-                    LocalDateTime.now(),
+                    currentTime,
+                    currentTime,
                     template,
                     type,
                     category,
@@ -262,12 +276,18 @@ class TemplateDao {
 
     fun getTemplate(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String? = null,
         version: Long
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(VERSION.eq(version))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             return dslContext.selectFrom(this)
-                .where(VERSION.eq(version).and(PROJECT_ID.eq(projectId)))
+                .where(conditions)
+                .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
                 defaultMessage = "模板不存在"
@@ -299,7 +319,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
                 .and(PROJECT_ID.eq(projectId))
-                .orderBy(VERSION.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .fetch()
         }
     }
@@ -457,6 +477,7 @@ class TemplateDao {
             a.STORE_FLAG.`as`("storeFlag"),
             a.CREATOR.`as`("creator"),
             a.CREATED_TIME.`as`("createdTime"),
+            a.UPDATE_TIME.`as`("updateTime"),
             a.SRC_TEMPLATE_ID.`as`("srcTemplateId"),
             a.TEMPLATE.`as`("template"),
             a.CATEGORY.`as`("category"),
@@ -475,7 +496,7 @@ class TemplateDao {
                 )
             )
             .where(conditions)
-            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc())
+            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
 
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
@@ -527,7 +548,7 @@ class TemplateDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ID.eq(templateId))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw NotFoundException("流水线模板不存在")
         }
@@ -540,7 +561,7 @@ class TemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(templateId))
-                .orderBy(CREATED_TIME.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw NotFoundException("流水线模板不存在")
         }

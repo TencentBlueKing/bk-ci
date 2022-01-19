@@ -83,7 +83,7 @@ class TemplateService @Autowired constructor(
         when {
             fixTemplateVersion != null -> { // 否则以指定的版本
                 templateVersion = fixTemplateVersion
-                versionName = templateDao.getTemplate(dslContext, projectId, fixTemplateVersion).versionName
+                versionName = templateDao.getTemplate(dslContext = dslContext, version = fixTemplateVersion).versionName
             }
             else -> { // 以指定的模板Id创建
                 templateVersion = latestTemplate.version
