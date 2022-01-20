@@ -41,8 +41,8 @@ helm-charts/core/ci/bk-ci*.tgz
 helm-charts/core/ci/build/values.json
 helm-charts/core/ci/values.yaml
 helm-charts/core/ci/templates/configmap/tpl/
-docker-images/ci/ci
-docker-images/ci/*.gz
+docker-images/core/ci/ci
+docker-images/core/ci/*.gz
 
 #turbo 忽略文件
 src/backend/turbo/**/build/
