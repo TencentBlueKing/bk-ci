@@ -58,13 +58,9 @@ class DevcloudDebugServiceImpl @Autowired constructor(
         vmSeqId: String,
         containerName: String
     ): Boolean {
-        val url = String.format(
-            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/stopDebug/pipeline/s%/vmSeq/s%?containerName=s%",
-            commonConfig.devopsIdcGateway,
-            pipelineId,
-            vmSeqId,
-            containerName
-        )
+        val url = "${commonConfig.devopsIdcGateway}/ms/dispatch-devcloud/api/service/dispatchDevcloud/stopDebug/pipeline" +
+                "/$pipelineId/vmSeq/$vmSeqId?containerName=$containerName"
+
         val request = Request.Builder().url(url)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
@@ -95,14 +91,14 @@ class DevcloudDebugServiceImpl @Autowired constructor(
         buildId: String?,
         vmSeqId: String
     ): String {
-        val url = String.format(
-            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/startDebug/projects/s%/pipeline/s%/vmSeq/s%?buildId=s%",
-            commonConfig.devopsIdcGateway,
-            projectId,
-            pipelineId,
-            vmSeqId,
-            buildId
-        )
+        val url = if (buildId == null) {
+            "${commonConfig.devopsIdcGateway}/ms/dispatch-devcloud/api/service/dispatchDevcloud/startDebug/" +
+                    "projects/$projectId/pipeline/$pipelineId/vmSeq/$vmSeqId"
+        } else {
+            "${commonConfig.devopsIdcGateway}/ms/dispatch-devcloud/api/service/dispatchDevcloud/startDebug/" +
+                    "projects/$projectId/pipeline/$pipelineId/vmSeq/$vmSeqId?buildId=$buildId"
+        }
+
         val request = Request.Builder().url(url)
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
