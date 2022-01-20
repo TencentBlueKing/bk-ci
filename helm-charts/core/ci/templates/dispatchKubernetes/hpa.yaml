@@ -1,5 +1,5 @@
 # dispatchKubernetes hpa
-{{if .Values.dispatchKubernetes.enabled -}}
+{{ if .Values.dispatchKubernetes.enabled -}}
 {{ if .Values.dispatchKubernetes.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler

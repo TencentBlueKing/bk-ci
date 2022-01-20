@@ -1244,6 +1244,7 @@ turbo:
 
 # gateway Deployment
 gateway:
+  enabled: false
   replicas: 1
   podLabels: {}
   resources:

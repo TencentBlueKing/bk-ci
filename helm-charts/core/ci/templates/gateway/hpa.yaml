@@ -1,4 +1,5 @@
 # gateway hpa
+{{ if .Values.gateway.enabled -}}
 {{ if .Values.gateway.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.gateway.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

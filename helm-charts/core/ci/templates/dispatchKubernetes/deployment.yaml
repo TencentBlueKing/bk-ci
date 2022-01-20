@@ -1,5 +1,5 @@
 #dispatch-kubernetes Deployment
-{{if .Values.dispatchKubernetes.enabled -}}
+{{ if .Values.dispatchKubernetes.enabled -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
