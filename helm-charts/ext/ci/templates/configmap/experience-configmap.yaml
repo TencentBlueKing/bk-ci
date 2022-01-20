@@ -1,0 +1,16 @@
+#experience configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "common.names.fullname" . }}-experience
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: experience
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+data:
+  application.yml: |-
+    {{- include "bkci.experience.yaml" . | nindent 4 -}}
