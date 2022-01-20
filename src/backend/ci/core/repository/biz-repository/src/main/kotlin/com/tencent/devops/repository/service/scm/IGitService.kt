@@ -209,4 +209,10 @@ interface IGitService {
         page: Int,
         pageSize: Int
     ): List<ChangeFileInfo>
+
+    fun getGitProjectInfo(
+        id: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectInfo?>
 }

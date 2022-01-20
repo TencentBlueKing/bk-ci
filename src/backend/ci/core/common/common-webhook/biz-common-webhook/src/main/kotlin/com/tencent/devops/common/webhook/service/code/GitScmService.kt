@@ -41,6 +41,7 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -221,6 +222,38 @@ class GitScmService @Autowired constructor(
             logger.error("fail to get change file list", ignore)
         }
         return changeSet
+    }
+
+    fun getDefaultBranchLatestCommitInfo(
+        projectId: String,
+        repo: Repository
+    ): Pair<String?, GitCommit?> {
+        val type = getType(repo) ?: return Pair(null, null)
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            val serviceGitResource = client.get(ServiceGitResource::class)
+            val defaultBranch = serviceGitResource.getProjectInfo(
+                token = token,
+                tokenType = tokenType,
+                gitProjectId = repo.projectName
+            ).data?.defaultBranch ?: return Pair(null, null)
+            val commitInfo = serviceGitResource.getRepoRecentCommitInfo(
+                repoName = repo.projectName,
+                sha = defaultBranch,
+                token = token,
+                tokenType = tokenType
+            ).data
+            Pair(defaultBranch, commitInfo)
+        } catch (ignore: Exception) {
+            logger.error("fail to get default branch latest commit info", ignore)
+            Pair(null, null)
+        }
     }
 
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {

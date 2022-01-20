@@ -492,4 +492,19 @@ interface ServiceGitResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<List<ChangeFileInfo>>
+
+    @ApiOperation("获取指定项目详细信息")
+    @GET
+    @Path("/getProjectInfo")
+    fun getProjectInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+    ): Result<GitProjectInfo?>
 }

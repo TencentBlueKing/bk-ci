@@ -451,13 +451,11 @@ open class GitApi {
         page: Int,
         pageSize: Int
     ): List<ChangeFileInfo> {
-        URLEncoder.encode(gitProjectId, "UTF8")
         val url = "${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
         val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_CHANGE_FILE_LIST, request))
     }
-
 //    private val OPERATION_BRANCH = "拉分支"
 //    private val OPERATION_TAG = "拉标签"
 //    private val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"
