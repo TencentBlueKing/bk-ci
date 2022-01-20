@@ -41,4 +41,4 @@ for c_path in os.listdir(config_server):
         service_tpl.flush()
 
 # 打包
-os.system("helm package . --version " + os.environ.get("chart_version")) + " --app-version "+os.environ.get("version"))
+os.system("helm package . --version " + os.environ.get("chart_version") + " --app-version "+os.environ.get("version"))
