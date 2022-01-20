@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
@@ -298,6 +299,7 @@ class TGitMrTriggerHandler(
         }
         startParams[PIPELINE_GIT_MR_PROPOSER] = event.user.username
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action
+        startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url
         return startParams
     }
 
