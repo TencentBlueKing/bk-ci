@@ -28,7 +28,6 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.devops.common.api.enums.PlatformEnum
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.experience.dao.ExperiencePublicDao
@@ -37,6 +36,7 @@ import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
+import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -111,22 +111,20 @@ class ExperiencePushService @Autowired constructor(
     fun subscribe(
         userId: String,
         experienceHashId: String,
-        platform: Int,
-        projectId: String,
-        bundleIdentifier: String
+        platform: Int
     ): Result<Boolean> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isExperienceGroups = experienceBaseService.isExperienceGroups(
             experienceId = experienceId,
-            userId = userId,
-            platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-            bundleIdentifier = bundleIdentifier,
-            projectId = projectId
+            userId = userId
         )
-        val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
+        val publicExperience = experiencePublicDao.getByRecordId(
+            dslContext = dslContext,
+            recordId = experienceId
+        )
         when {
             isExperienceGroups -> {
-                if (isPublicExperience) {
+                if (publicExperience != null) {
                     return Result("该体验已订阅，不允许重复订阅", false)
                 }
                 return Result("内部体验默认已订阅", false)
@@ -134,73 +132,63 @@ class ExperiencePushService @Autowired constructor(
             // 若不在体验组中，进一步查看能否订阅
             else -> {
                 return canSubscribe(
-                    isPublicExperience = isPublicExperience,
+                    publicExperience = publicExperience,
                     userId = userId,
                     experienceId = experienceId,
-                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-                    projectId = projectId,
-                    bundleIdentifier = bundleIdentifier
+                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
                 )
             }
         }
     }
 
     fun canSubscribe(
-        isPublicExperience: Boolean,
+        publicExperience: TExperiencePublicRecord?,
         userId: String,
         experienceId: Long,
-        platform: String,
-        projectId: String,
-        bundleIdentifier: String
+        platform: String
     ): Result<Boolean> {
-        when {
-            isPublicExperience -> {
-                // 检查前端传输数据是否和公开订阅表中数据一致
-                checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
-                // 查询公开订阅表是否有记录
-                val subscriptionRecord =
-                    experiencePushSubscribeDao.getSubscription(
-                        dslContext = dslContext,
-                        userId = userId,
-                        projectId = projectId,
-                        bundle = bundleIdentifier,
-                        platform = platform
-                    ) != null
-                if (subscriptionRecord) {
-                    return Result("该体验已订阅，不允许重复订阅", false)
-                }
-                experiencePushSubscribeDao.createSubscription(
-                    dslContext = dslContext,
-                    userId = userId,
-                    projectId = projectId,
-                    bundle = bundleIdentifier,
-                    platform = platform
-                )
-                return Result("订阅体验成功！", true)
-            }
-            else -> return Result("不允许订阅内部体验", false)
+        if (publicExperience == null) {
+            return Result("不允许订阅内部体验", false)
         }
+        // 查询公开订阅表是否有记录
+        val subscriptionRecord =
+            experiencePushSubscribeDao.getSubscription(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = publicExperience.projectId,
+                bundle = publicExperience.bundleIdentifier,
+                platform = platform
+            )
+        if (subscriptionRecord != null) {
+            return Result("该体验已订阅，不允许重复订阅", false)
+        }
+        experiencePushSubscribeDao.createSubscription(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = publicExperience.projectId,
+            bundle = publicExperience.bundleIdentifier,
+            platform = platform
+        )
+        return Result("订阅体验成功！", true)
     }
 
     fun unSubscribe(
         userId: String,
         experienceHashId: String,
-        platform: Int,
-        projectId: String,
-        bundleIdentifier: String
+        platform: Int
     ): Result<Boolean> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isExperienceGroups = experienceBaseService.isExperienceGroups(
             experienceId = experienceId,
-            userId = userId,
-            platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-            bundleIdentifier = bundleIdentifier,
-            projectId = projectId
+            userId = userId
         )
-        val isPublicExperience = experienceBaseService.isPublicExperience(experienceId)
+        val publicExperience = experiencePublicDao.getByRecordId(
+            dslContext = dslContext,
+            recordId = experienceId
+        )
         when {
             isExperienceGroups -> {
-                if (isPublicExperience) {
+                if (publicExperience != null) {
                     return Result(
                         "既是公开体验又是内部体验的应用版本无法自行取消订阅。" +
                                 "蓝盾App已不再支持同时选中两种体验范围，请尽快更改发布体验版本的配置。", false
@@ -214,74 +202,40 @@ class ExperiencePushService @Autowired constructor(
             // 若不在体验组中，进一步查看能否取消订阅
             else -> {
                 return canUnSubscribe(
-                    isPublicExperience = isPublicExperience,
+                    publicExperience = publicExperience,
                     userId = userId,
                     experienceId = experienceId,
-                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-                    projectId = projectId,
-                    bundleIdentifier = bundleIdentifier
+                    platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
                 )
             }
         }
     }
 
     fun canUnSubscribe(
-        isPublicExperience: Boolean,
+        publicExperience: TExperiencePublicRecord?,
         userId: String,
         experienceId: Long,
-        platform: String,
-        projectId: String,
-        bundleIdentifier: String
+        platform: String
     ): Result<Boolean> {
-        when {
-            isPublicExperience -> {
-                // 检查前端传输数据是否和公开订阅表中数据一致
-                checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
-                // 查询公开订阅表是否有记录
-                val subscriptionRecord =
-                    experiencePushSubscribeDao.getSubscription(
-                        dslContext = dslContext,
-                        userId = userId,
-                        projectId = projectId,
-                        bundle = bundleIdentifier,
-                        platform = platform
-                    ) != null
-                if (!subscriptionRecord) {
-                    return Result("由于没有订阅该体验，不允许取消体验", false)
-                }
-                experiencePushSubscribeDao.deleteSubscription(
-                    dslContext,
-                    userId = userId,
-                    projectId = projectId,
-                    bundle = bundleIdentifier,
-                    platform = platform
-                )
-                return Result("取消订阅成功", true)
-            }
-            else -> return Result("内部体验不可取消订阅", false)
+        if (publicExperience == null) {
+            return Result("内部体验不可取消订阅", false)
         }
-    }
-
-    // 检查前端传输数据是否和公开订阅表中数据一致
-    fun checkPublicExperienceParam(
-        experienceId: Long,
-        platform: String,
-        projectId: String,
-        bundleIdentifier: String
-    ) {
-        val experiencePublic = experiencePublicDao.getByRecordId(
+        // 查询公开订阅表是否有记录
+        experiencePushSubscribeDao.getSubscription(
             dslContext = dslContext,
-            recordId = experienceId
+            userId = userId,
+            projectId = publicExperience.projectId,
+            bundle = publicExperience.bundleIdentifier,
+            platform = platform
+        ) ?: return Result("由于没有订阅该体验，不允许取消体验", false)
+        experiencePushSubscribeDao.deleteSubscription(
+            dslContext,
+            userId = userId,
+            projectId = publicExperience.projectId,
+            bundle = publicExperience.bundleIdentifier,
+            platform = platform
         )
-        if (platform != experiencePublic?.platform) {
-            throw ParamBlankException("Invalid platform")
-        }
-        if (projectId != experiencePublic.projectId) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (bundleIdentifier != experiencePublic.bundleIdentifier) {
-            throw ParamBlankException("Invalid bundleIdentifier")
-        }
+        return Result("取消订阅成功", true)
     }
 
     fun pushMessage(appNotifyMessage: AppNotifyMessage): Result<Boolean> {

@@ -55,12 +55,10 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         platform: Int,
         subscribeParam: SubscribeParam
     ): Result<Boolean> {
-        return updateSubscription(
-            userId = userId,
-            platform = platform,
-            operation = "subscribe",
-            subscribeParam = subscribeParam
-        )
+        val experienceHashId = subscribeParam.experienceHashId
+        checkSubscribeParam(userId, experienceHashId)
+        return experiencePushService.subscribe(userId, experienceHashId, platform)
+
     }
 
     override fun unSubscribe(
@@ -68,29 +66,9 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         platform: Int,
         subscribeParam: SubscribeParam
     ): Result<Boolean> {
-        return updateSubscription(
-            userId = userId,
-            platform = platform,
-            operation = "unSubscribe",
-            subscribeParam = subscribeParam
-        )
-    }
-
-    fun updateSubscription(
-        userId: String,
-        platform: Int,
-        operation: String,
-        subscribeParam: SubscribeParam
-    ): Result<Boolean> {
-        val projectId = subscribeParam.projectId
-        val bundleIdentifier = subscribeParam.bundleIdentifier
         val experienceHashId = subscribeParam.experienceHashId
-        checkParam(userId, experienceHashId, projectId, bundleIdentifier)
-        return if (operation == "subscribe") {
-            experiencePushService.subscribe(userId, experienceHashId, platform, projectId, bundleIdentifier)
-        } else {
-            experiencePushService.unSubscribe(userId, experienceHashId, platform, projectId, bundleIdentifier)
-        }
+        checkSubscribeParam(userId, experienceHashId)
+        return experiencePushService.unSubscribe(userId, experienceHashId, platform)
     }
 
     override fun pushMessage(
@@ -108,23 +86,15 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         return experiencePushService.pushMessage(appNotifyMessage)
     }
 
-    fun checkParam(
+    fun checkSubscribeParam(
         userId: String,
-        experienceHashId: String,
-        projectId: String,
-        bundleIdentifier: String
+        experienceHashId: String
     ) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (bundleIdentifier.isBlank()) {
-            throw ParamBlankException("Invalid bundleIdentifier")
         }
     }
 

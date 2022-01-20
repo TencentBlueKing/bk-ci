@@ -244,9 +244,7 @@ class ExperienceDownloadService @Autowired constructor(
             val subscribe = experiencePushService.subscribe(
                 userId = userId,
                 experienceHashId = experienceHashId,
-                platform = platform.id,
-                projectId = projectId,
-                bundleIdentifier = bundleIdentifier
+                platform = platform.id
             )
             logger.info("Subscribe Result: ${subscribe.message}")
         }

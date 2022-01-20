@@ -250,7 +250,7 @@ class ExperienceBaseService @Autowired constructor(
                 platform = platform
             ) != null
         }
-        val isExperienceGroups = isExperienceGroups(experienceId, userId, platform, bundleIdentifier, projectId)
+        val isExperienceGroups = isExperienceGroups(experienceId, userId)
         return subscriptionRecord.value || isExperienceGroups
     }
 
@@ -259,10 +259,7 @@ class ExperienceBaseService @Autowired constructor(
      */
     fun isExperienceGroups(
         experienceId: Long,
-        userId: String,
-        platform: String,
-        bundleIdentifier: String,
-        projectId: String
+        userId: String
     ): Boolean {
         val groupIds = getGroupIdsByRecordId(experienceId)
         val isOuterGroup = lazy {
