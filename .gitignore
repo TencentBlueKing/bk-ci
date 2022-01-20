@@ -38,10 +38,10 @@ build.yml
 bkci-slim.tar.gz
 
 # 容器化忽略文件
-helm-charts/ci/bk-ci*.tgz
-helm-charts/ci/build/values.json
-helm-charts/ci/values.yaml
-helm-charts/ci/templates/configmap/tpl/
+helm-charts/core/ci/bk-ci*.tgz
+helm-charts/core/ci/build/values.json
+helm-charts/core/ci/values.yaml
+helm-charts/core/ci/templates/configmap/tpl/
 docker-images/ci/ci
 docker-images/ci/*.gz
 

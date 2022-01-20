@@ -71,6 +71,9 @@ class ImageHistoryDataService @Autowired constructor(
             ImageAgentTypeEnum.PUBLIC_DEVCLOUD -> {
                 "devcloud/$value"
             }
+            ImageAgentTypeEnum.KUBERNETES -> {
+                throw Exception("not support !")
+            }
         }
         realImageNameTag = realImageNameTag.removePrefix("/")
         // 拆分repoName与tag

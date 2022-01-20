@@ -1,0 +1,29 @@
+{{- if .Values.codeccjob.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "common.names.fullname" . }}-codeccjob
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: codeccjob
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    - name: monitor
+      port: 18080
+      targetPort: monitor
+      protocol: TCP
+  selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
+    app.kubernetes.io/name: codeccjob
+    app.kubernetes.io/component: microservice
+{{- end }}

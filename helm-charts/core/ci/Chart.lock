@@ -1,0 +1,24 @@
+dependencies:
+- name: common
+  repository: https://charts.bitnami.com/bitnami
+  version: 1.10.0
+- name: mysql
+  repository: https://charts.bitnami.com/bitnami
+  version: 8.8.3
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.8.8
+- name: elasticsearch
+  repository: https://charts.bitnami.com/bitnami
+  version: 17.5.2
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 8.20.1
+- name: influxdb
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.3.7
+- name: nginx-ingress-controller
+  repository: https://charts.bitnami.com/bitnami
+  version: 7.6.21
+digest: sha256:3890cb0a18df40c70ea6b175b69cd1f0eef7d775a71017cc0bdbe894be65b48a
+generated: "2022-01-13T14:40:15.676693911+08:00"

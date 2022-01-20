@@ -28,7 +28,10 @@
 package com.tencent.devops.process.jmx.pipeline
 
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import io.micrometer.core.instrument.Gauge
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
@@ -42,8 +45,19 @@ import java.util.concurrent.atomic.AtomicInteger
     description = "build jmx metrics"
 )
 class PipelineBuildBean @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService
-) {
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val meterRegistry: PrometheusMeterRegistry
+) : InitializingBean {
+
+    override fun afterPropertiesSet() {
+        Gauge.builder("jvm_process_builds") {
+            activeBuildCount
+        }.tags("paths", "ActiveBuildCount").register(meterRegistry)
+
+        Gauge.builder("jvm_process_builds") {
+            executeFailure
+        }.tags("paths", "ExecuteFailureCount").register(meterRegistry)
+    }
 
     private val execute = AtomicInteger(0)
     private val executeFailure = AtomicInteger(0)
@@ -54,6 +68,8 @@ class PipelineBuildBean @Autowired constructor(
     private val timerStart = AtomicInteger(0)
     private val hookStart = AtomicInteger(0)
     private val otherStart = AtomicInteger(0)
+
+    private val activeBuildCount = AtomicInteger(0)
 
     fun executeFailure() {
         executeFailure.incrementAndGet()

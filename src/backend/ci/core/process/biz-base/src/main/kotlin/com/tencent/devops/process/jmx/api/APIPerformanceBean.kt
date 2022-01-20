@@ -27,16 +27,26 @@
 
 package com.tencent.devops.process.jmx.api
 
+import com.google.common.util.concurrent.AtomicDouble
+import io.micrometer.core.instrument.Gauge
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 @ManagedResource
-class APIPerformanceBean constructor(api: String) {
+class APIPerformanceBean() {
     private val executeCount = AtomicInteger(0)
     private val executeElapse = AtomicLong(0)
     private val calculateCount = AtomicInteger(0)
+    private val executePerformance = AtomicDouble(0.0)
+
+    constructor(meterRegistry: PrometheusMeterRegistry, api: String) : this() {
+        Gauge.builder("jvm_process_api_performance") {
+            executePerformance
+        }.tags("api", api, "paths", "ExecutePerformance").register(meterRegistry)
+    }
 
     @Synchronized
     fun execute(elapse: Long) {
@@ -50,11 +60,14 @@ class APIPerformanceBean constructor(api: String) {
     fun getExecutePerformance(): Double {
         val elapse = executeElapse.getAndSet(0)
         val count = calculateCount.getAndSet(0)
-        return if (count == 0) {
-            0.0
-        } else {
-            elapse.toDouble() / count
-        }
+        executePerformance.set(
+            if (count == 0) {
+                0.0
+            } else {
+                elapse.toDouble() / count
+            }
+        )
+        return executePerformance.get()
     }
 
     @ManagedAttribute

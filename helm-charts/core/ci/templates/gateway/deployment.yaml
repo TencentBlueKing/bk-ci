@@ -1,0 +1,87 @@
+#gateway Deployment
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "common.names.fullname" . }}-gateway
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/name: gateway
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/name: gateway
+  {{- if not .Values.gateway.autoscaling.enabled }}
+  replicas: {{ .Values.gateway.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/name: gateway
+        {{- if .Values.gateway.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.gateway.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.gateway.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.gateway.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.gateway.podAffinityPreset "component" "gateway" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.gateway.podAntiAffinityPreset "component" "gateway" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.gateway.nodeAffinityPreset.type "key" .Values.gateway.nodeAffinityPreset.key "values" .Values.gateway.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.gateway.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.gateway.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.priorityClassName }}
+      priorityClassName: {{ .Values.gateway.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.gateway.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: gateway
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.gatewayImage "global" $) }}
+          imagePullPolicy: {{ .Values.gatewayImage.pullPolicy }}
+          {{- if .Values.gateway.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.gateway.resources }}
+          resources: {{- toYaml .Values.gateway.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.bkCiHttpPort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "common.names.fullname" . }}-gateway
+          workingDir: /usr/local/openresty/nginx/
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
