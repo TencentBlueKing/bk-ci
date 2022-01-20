@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
@@ -194,7 +195,8 @@ object PipelineVarUtil {
         "ci.issue.description" to PIPELINE_WEBHOOK_ISSUE_DESCRIPTION,
         "ci.issue.state" to PIPELINE_WEBHOOK_ISSUE_STATE,
         "ci.issue.owner" to PIPELINE_WEBHOOK_ISSUE_OWNER,
-        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
+        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.event_url" to PIPELINE_GIT_EVENT_URL
     )
 
     /**
