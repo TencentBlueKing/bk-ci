@@ -45,10 +45,11 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["EXPERIENCE_GROUP"], description = "版本体验-用户分组")
-@Path("/app/experiences/group")
+@Path("/app/experience/group")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface AppExperienceGroupResource {
+@Deprecated("已废弃, 以AppExperienceGroupResource为准")
+interface OldAppExperienceGroupResource {
 
     @ApiOperation("获取体验用户分组")
     @Path("/{projectId}/list")
