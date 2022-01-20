@@ -606,29 +606,6 @@ class UserPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listQualityViewPipelines(
-        userId: String,
-        projectId: String,
-        keywords: String?,
-        page: Int?,
-        pageSize: Int?,
-        viewId: String?
-    ): Result<PipelineViewPipelinePage<QualityPipeline>> {
-        return Result(
-            pipelineListFacadeService.listQualityViewPipelines(
-                userId = userId,
-                projectId = projectId,
-                page = page,
-                pageSize = pageSize,
-                sortType = PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
-                viewId = viewId ?: PIPELINE_VIEW_ALL_PIPELINES,
-                checkPermission = true,
-                filterByPipelineName = keywords
-            )
-        )
-    }
-
     override fun checkYaml(
         userId: String,
         projectId: String,
