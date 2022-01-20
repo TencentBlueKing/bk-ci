@@ -46,15 +46,14 @@ class ExperiencePushTokenDao {
         }
     }
 
-    fun countByToken(
+    fun getByToken(
         dslContext: DSLContext,
         token: String
-    ): Int {
+    ): TExperiencePushTokenRecord? {
         with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
-            return dslContext.selectCount()
-                .from(this)
+            return dslContext.selectFrom(this)
                 .where(TOKEN.eq(token))
-                .fetchAny()?.value1() ?: 0
+                .fetchOne()
         }
     }
 
@@ -98,6 +97,19 @@ class ExperiencePushTokenDao {
                 now
             ).returning(ID)
                 .fetchOne()!!.id
+        }
+    }
+
+    fun deleteUserToken(
+        dslContext: DSLContext,
+        userId: String,
+        token: String
+    ) {
+        with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
+            dslContext.deleteFrom(this)
+                .where(USER_ID.eq(userId))
+                .and(TOKEN.eq(token))
+                .execute()
         }
     }
 }

@@ -57,23 +57,27 @@ class ExperiencePushService @Autowired constructor(
         platform: Int,
         token: String
     ): Result<Boolean> {
-        val userTokenRecord = experiencePushTokenDao.getByUserId(
+        val userTokenByUserId = experiencePushTokenDao.getByUserId(
             dslContext = dslContext,
             userId = userId
         )
-        val isBind = experiencePushTokenDao.countByToken(dslContext, token) > 0
-        if (userTokenRecord != null) {
+        val userTokenByToken = experiencePushTokenDao.getByToken(dslContext, token)
+        if (userTokenByUserId != null) {
             return checkAndUpdateUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
                 platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-                userTokenRecord = userTokenRecord,
-                isBind = isBind
+                userTokenByUserId = userTokenByUserId,
+                userTokenByToken = userTokenByToken
             )
         }
-        if (isBind) {
-            return Result("该设备已被其他用户绑定！", false)
+        if (userTokenByToken != null) {
+            experiencePushTokenDao.deleteUserToken(
+                dslContext = dslContext,
+                userId = userTokenByToken.userId,
+                token = token
+            )
         }
         experiencePushTokenDao.createUserToken(
             dslContext = dslContext,
@@ -90,15 +94,19 @@ class ExperiencePushService @Autowired constructor(
         userId: String,
         token: String,
         platform: String,
-        userTokenRecord: TExperiencePushTokenRecord,
-        isBind: Boolean
+        userTokenByUserId: TExperiencePushTokenRecord,
+        userTokenByToken: TExperiencePushTokenRecord?
     ): Result<Boolean> {
         // 前端传递的token和数据库表中token进行比较
-        return if (token == userTokenRecord.token) {
+        return if (token == userTokenByUserId.token) {
             Result("请勿重复绑定同台设备！", false)
         } else {
-            if (isBind) {
-                return Result("该设备已被其他用户绑定！", false)
+            if (userTokenByToken != null) {
+                experiencePushTokenDao.deleteUserToken(
+                    dslContext = dslContext,
+                    userId = userTokenByToken.userId,
+                    token = token
+                )
             }
             val isUpdate = experiencePushTokenDao.updateUserToken(
                 dslContext = dslContext,
