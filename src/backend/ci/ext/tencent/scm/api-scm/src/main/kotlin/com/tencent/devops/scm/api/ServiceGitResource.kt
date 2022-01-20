@@ -781,8 +781,8 @@ interface ServiceGitResource {
 
     @ApiOperation("获取指定项目详细信息")
     @GET
-    @Path("/getProjectInfo")
-    fun getProjectInfo(
+    @Path("/getGitProjectInfo")
+    fun getGitProjectInfo(
         @ApiParam(value = "token")
         @QueryParam("token")
         token: String,

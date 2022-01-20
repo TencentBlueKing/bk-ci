@@ -395,7 +395,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
     }
 
     override fun getGitProjectInfo(id: String, token: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
-        return client.getScm(ServiceGitResource::class).getProjectInfo(
+        return client.getScm(ServiceGitResource::class).getGitProjectInfo(
             token = token,
             tokenType = tokenType,
             gitProjectId = id
