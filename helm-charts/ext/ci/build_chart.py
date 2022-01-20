@@ -19,8 +19,8 @@ for line in open(default_value_yaml, 'r'):
 # 生成 tpl
 config_server = config_path+"/config-server/"
 # common config
-common_yaml = yaml.load(open(config_server+'application.yml', 'r'))
-common_yaml.update(yaml.load(open(config_server+'application-'+spring_profile+'.yml', 'r')))
+common_yaml = yaml.safe_load(open(config_server+'application.yml', 'r'))
+common_yaml.update(yaml.safe_load(open(config_server+'application-'+spring_profile+'.yml', 'r')))
 common_tpl = open(template_parent+'_common.tpl', 'a+')
 common_tpl.write('{{- define "bkci.common.yaml" -}}')
 yaml.dump(common_yaml, common_tpl)
