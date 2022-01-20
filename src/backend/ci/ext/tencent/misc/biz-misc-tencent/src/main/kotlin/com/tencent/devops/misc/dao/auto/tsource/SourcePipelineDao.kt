@@ -51,10 +51,15 @@ class SourcePipelineDao {
         }
     }
 
-    fun getPipelineRes(dslContext: DSLContext, pipelineId: String, version: Int? = null): TPipelineResourceRecord? {
+    fun getPipelineRes(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int? = null
+    ): TPipelineResourceRecord? {
         return with(T_PIPELINE_RESOURCE) {
             val where = dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             if (version != null) {
                 where.and(VERSION.eq(version))
             } else {
@@ -82,26 +87,38 @@ class SourcePipelineDao {
         }
     }
 
-    fun getPipelineSummary(dslContext: DSLContext, pipelineId: String): TPipelineBuildSummaryRecord? {
+    fun getPipelineSummary(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineBuildSummaryRecord? {
         return with(Tables.T_PIPELINE_BUILD_SUMMARY) {
             dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchAny()
         }
     }
 
-    fun getPipelineBuildDetail(dslContext: DSLContext, buildId: String): TPipelineBuildDetailRecord? {
+    fun getPipelineBuildDetail(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): TPipelineBuildDetailRecord? {
         return with(Tables.T_PIPELINE_BUILD_DETAIL) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
                 .fetchAny()
         }
     }
 
-    fun getPipelineSetting(dslContext: DSLContext, pipelineId: String): TPipelineSettingRecord? {
+    fun getPipelineSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): TPipelineSettingRecord? {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

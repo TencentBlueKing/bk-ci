@@ -43,10 +43,13 @@ class StreamAppService @Autowired constructor(
         }
         val projects = streamBasicSettingDao.searchProjectByIds(dslContext, projectIdMap.keys)
         val result = projects.map {
+            val gitCodeInfo = projectIdMap[it.id]
             AppProjectVO(
                 projectCode = it.projectCode,
-                projectName = it.name,
-                logoUrl = projectIdMap[it.id]?.avatarUrl,
+                // 使用 pathWithPathSpace唯一标识App 中项目名称
+                projectName = gitCodeInfo?.pathWithNamespace ?: gitCodeInfo?.nameWithNamespace ?: it.pathWithNameSpace
+                ?: it.nameWithNameSpace ?: it.name,
+                logoUrl = gitCodeInfo?.avatarUrl,
                 projectSource = ProjectSourceEnum.GIT_CI.id
             )
         }

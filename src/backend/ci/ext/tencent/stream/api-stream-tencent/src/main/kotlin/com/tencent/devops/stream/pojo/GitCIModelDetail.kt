@@ -36,7 +36,7 @@ data class GitCIModelDetail(
     @ApiModelProperty("Stream流水线信息", required = true)
     val gitProjectPipeline: GitProjectPipeline?,
     @ApiModelProperty("工蜂Event事件", required = true)
-    val gitRequestEvent: GitRequestEvent,
+    val gitRequestEvent: GitRequestEventReq,
     @ApiModelProperty("构建详情-构建信息", required = true)
     val modelDetail: ModelDetail,
     @ApiModelProperty("构建历史-备注信息")

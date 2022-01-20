@@ -66,15 +66,19 @@ open class PipelineTimerDao {
         }
     }
 
-    open fun get(dslContext: DSLContext, pipelineId: String): TPipelineTimerRecord? {
+    open fun get(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineTimerRecord? {
         return with(T_PIPELINE_TIMER) {
-            dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId)).fetchAny()
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchAny()
         }
     }
 
-    open fun delete(dslContext: DSLContext, pipelineId: String): Int {
+    open fun delete(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_TIMER) {
-            dslContext.delete(this).where(PIPELINE_ID.eq(pipelineId)).execute()
+            dslContext.delete(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .execute()
         }
     }
 

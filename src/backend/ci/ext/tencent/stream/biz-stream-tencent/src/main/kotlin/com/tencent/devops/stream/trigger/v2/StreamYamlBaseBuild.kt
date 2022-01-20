@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService

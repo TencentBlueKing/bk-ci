@@ -874,7 +874,6 @@ class YamlTemplate(
     private fun getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
         return PreStage(
             name = stage["name"]?.toString(),
-            id = stage["id"]?.toString(),
             label = stage["label"],
             ifField = stage["if"]?.toString(),
             ifModify = if (stage["if-modify"] is List<*>) {

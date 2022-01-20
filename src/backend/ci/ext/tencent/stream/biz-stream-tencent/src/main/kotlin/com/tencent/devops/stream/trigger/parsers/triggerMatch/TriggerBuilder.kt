@@ -22,7 +22,7 @@ object TriggerBuilder {
 
     fun buildCodeGitWebHookTriggerElement(
         gitEvent: GitEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement? {
         return when (gitEvent) {
             is GitPushEvent ->
@@ -59,19 +59,19 @@ object TriggerBuilder {
 
     private fun buildGitPushEventElement(
         gitPushEvent: GitPushEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement {
         return CodeGitWebHookTriggerElement(
             id = "0",
             repositoryHashId = null,
             repositoryName = gitPushEvent.project_id.toString(),
             repositoryType = RepositoryType.NAME,
-            branchName = triggerOn.push?.branches?.joinToString(JOIN_SEPARATOR),
-            excludeBranchName = triggerOn.push?.branchesIgnore?.joinToString(JOIN_SEPARATOR),
+            branchName = triggerOn?.push?.branches?.joinToString(JOIN_SEPARATOR),
+            excludeBranchName = triggerOn?.push?.branchesIgnore?.joinToString(JOIN_SEPARATOR),
             pathFilterType = PathFilterType.RegexBasedFilter,
-            includePaths = triggerOn.push?.paths?.joinToString(JOIN_SEPARATOR),
-            excludePaths = triggerOn.push?.pathsIgnore?.joinToString(JOIN_SEPARATOR),
-            excludeUsers = triggerOn.push?.usersIgnore,
+            includePaths = triggerOn?.push?.paths?.joinToString(JOIN_SEPARATOR),
+            excludePaths = triggerOn?.push?.pathsIgnore?.joinToString(JOIN_SEPARATOR),
+            excludeUsers = triggerOn?.push?.usersIgnore,
             block = false,
             eventType = CodeEventType.PUSH
         )
@@ -79,7 +79,7 @@ object TriggerBuilder {
 
     private fun buildGitTagEventElement(
         gitTagPushEvent: GitTagPushEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement {
         return CodeGitWebHookTriggerElement(
             id = "0",
@@ -90,9 +90,9 @@ object TriggerBuilder {
             excludeBranchName = null,
             includePaths = null,
             excludePaths = null,
-            tagName = triggerOn.tag?.tags?.joinToString(JOIN_SEPARATOR),
-            excludeTagName = triggerOn.tag?.tagsIgnore?.joinToString(JOIN_SEPARATOR),
-            excludeUsers = triggerOn.tag?.usersIgnore,
+            tagName = triggerOn?.tag?.tags?.joinToString(JOIN_SEPARATOR),
+            excludeTagName = triggerOn?.tag?.tagsIgnore?.joinToString(JOIN_SEPARATOR),
+            excludeUsers = triggerOn?.tag?.usersIgnore,
             block = false,
             eventType = CodeEventType.TAG_PUSH
         )
@@ -100,19 +100,19 @@ object TriggerBuilder {
 
     private fun buildGitMrEventElement(
         gitMergeRequestEvent: GitMergeRequestEvent,
-        triggerOn: TriggerOn
+        triggerOn: TriggerOn?
     ): CodeGitWebHookTriggerElement {
         return CodeGitWebHookTriggerElement(
             id = "0",
             repositoryHashId = null,
             repositoryName = gitMergeRequestEvent.object_attributes.target_project_id.toString(),
             repositoryType = RepositoryType.NAME,
-            branchName = triggerOn.mr?.targetBranches?.joinToString(JOIN_SEPARATOR),
+            branchName = triggerOn?.mr?.targetBranches?.joinToString(JOIN_SEPARATOR),
             excludeBranchName = null,
-            includePaths = triggerOn.mr?.paths?.joinToString(JOIN_SEPARATOR),
-            excludePaths = triggerOn.mr?.pathsIgnore?.joinToString(JOIN_SEPARATOR),
-            excludeUsers = triggerOn.mr?.usersIgnore,
-            excludeSourceBranchName = triggerOn.mr?.sourceBranchesIgnore?.joinToString(JOIN_SEPARATOR),
+            includePaths = triggerOn?.mr?.paths?.joinToString(JOIN_SEPARATOR),
+            excludePaths = triggerOn?.mr?.pathsIgnore?.joinToString(JOIN_SEPARATOR),
+            excludeUsers = triggerOn?.mr?.usersIgnore,
+            excludeSourceBranchName = triggerOn?.mr?.sourceBranchesIgnore?.joinToString(JOIN_SEPARATOR),
             block = false,
             eventType = if (gitMergeRequestEvent.object_attributes.action == "merge") {
                 CodeEventType.MERGE_REQUEST_ACCEPT

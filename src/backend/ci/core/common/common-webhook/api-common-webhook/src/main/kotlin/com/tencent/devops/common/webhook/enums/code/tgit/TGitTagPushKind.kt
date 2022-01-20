@@ -39,3 +39,15 @@ enum class TGitTagPushOperationKind(val value: String) {
     CREATE("create"),
     DELETE("delete")
 }
+
+/*
+ * action_kind字段
+ * client push：客户端请求（不在工蜂Web上操作的都默认是这个）
+ * create tag：在工蜂Web上创建Tag
+ * delete tag：在工蜂Web上删除Tag
+ */
+enum class TGitTagPushActionKind(val value: String) {
+    CLIENT_PUSH("client push"),
+    CREATE_TAG("create tag"),
+    DELETE_TAG("delete tag")
+}
