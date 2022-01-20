@@ -31,10 +31,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.util.ServiceHomeUrlUtils
 import com.tencent.devops.store.pojo.common.PIPELINE_TASK_PAUSE_NOTIFY
 import org.jooq.DSLContext
@@ -46,9 +46,9 @@ import org.springframework.stereotype.Service
 class TxPipelinePauseExtServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val projectNameService: ProjectNameService,
-    private val client: Client,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val client: Client
 ) : PipelinePauseExtService {
 
     override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
@@ -61,6 +61,7 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
                 subscriptionPauseUser.addAll(sendUsers)
             }
             sendPauseNotify(
+                projectId = buildTask.projectId,
                 buildId = buildId,
                 taskName = buildTask.taskName,
                 pipelineId = buildTask.pipelineId,
@@ -73,19 +74,20 @@ class TxPipelinePauseExtServiceImpl @Autowired constructor(
     }
 
     private fun sendPauseNotify(
+        projectId: String,
         buildId: String,
         taskName: String,
         pipelineId: String,
         receivers: Set<String>?
     ) {
-        val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+        val pipelineRecord = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
         if (pipelineRecord == null) {
             logger.warn("sendPauseNotify pipeline[$pipelineId] is empty record")
             return
         }
 
-        val buildRecord = pipelineRuntimeService.getBuildInfo(buildId)
-        val pipelineName = (pipelineRecord?.pipelineName ?: "")
+        val buildRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+        val pipelineName = (pipelineRecord.pipelineName ?: "")
         val buildNum = buildRecord?.buildNum.toString()
         val projectName = projectNameService.getProjectName(pipelineRecord.projectId) ?: ""
         val host = ServiceHomeUrlUtils.server()

@@ -265,9 +265,9 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val timeout = 0L + (param.timeout ?: 600) * 60000
         var operator = task.starter
         val executeCount = task.executeCount ?: 1
-
+        val projectId = task.projectId
         val pipelineId = task.pipelineId
-        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.lastModifyUser
+        val lastModifyUser = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.lastModifyUser
         if (null != lastModifyUser && operator != lastModifyUser) {
             // 以流水线的最后一次修改人身份执行；如果最后一次修改人也没有这个环境的操作权限，这种情况不考虑，有问题联系产品!
             logger.info("operator:$operator, lastModifyUser:$lastModifyUser")
@@ -281,7 +281,6 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
 
             operator = lastModifyUser
         }
-        val projectId = task.projectId
         val targetPath = parseVariable(param.targetPath, runVariables)
         buildLogPrinter.addLine(buildId, "distribute files to target path : $targetPath", taskId, containerId,
             executeCount)

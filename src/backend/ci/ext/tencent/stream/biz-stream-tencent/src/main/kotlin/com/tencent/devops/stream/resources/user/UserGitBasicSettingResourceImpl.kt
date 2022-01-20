@@ -38,6 +38,7 @@ import com.tencent.devops.repository.api.ServiceGitOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
@@ -46,6 +47,7 @@ import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -61,8 +63,9 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
-        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
+        checkCommonUser(userId)
         permissionService.checkGitCIAndOAuth(
             userId = userId,
             projectId = projectId
@@ -112,6 +115,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        checkCommonUser(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
@@ -167,6 +171,19 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+    }
+
+    // 判断用户是否公共账号，并且存在，否则提示用户注册
+    private fun checkCommonUser(userId: String) {
+        // get接口先查本地，再查tof
+        val userResult =
+            client.get(ServiceTxUserResource::class).get(userId)
+        if (userResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
+            )
         }
     }
 }

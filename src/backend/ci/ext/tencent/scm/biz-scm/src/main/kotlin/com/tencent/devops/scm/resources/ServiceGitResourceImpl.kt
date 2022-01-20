@@ -54,6 +54,7 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -419,5 +420,37 @@ class ServiceGitResourceImpl @Autowired constructor(
             mrId = mrId
         )
         return Result(true)
+    }
+
+    override fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.createGitTag(
+            repoName = repoName,
+            tagName = tagName,
+            ref = ref,
+            token = token,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo> {
+        return Result(
+            gitService.getProjectGroupInfo(
+                id = id,
+                includeSubgroups = includeSubgroups,
+                token = token,
+                tokenType = tokenType
+            )
+        )
     }
 }

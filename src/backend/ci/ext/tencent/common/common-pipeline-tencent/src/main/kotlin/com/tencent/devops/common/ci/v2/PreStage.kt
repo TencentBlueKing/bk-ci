@@ -36,11 +36,13 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class PreStage(
     val name: String?,
-    val id: String?,
     val label: Any? = null,
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     @ApiModelProperty(name = "fast-kill")
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,

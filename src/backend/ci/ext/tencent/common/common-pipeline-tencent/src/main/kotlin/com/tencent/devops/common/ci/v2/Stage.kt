@@ -36,7 +36,6 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class Stage(
     val name: String?,
-    val id: String?,
     val label: List<String> = emptyList(),
     @ApiModelProperty(name = "if")
     @JsonProperty("if")
@@ -45,6 +44,9 @@ data class Stage(
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: List<Job>,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     @ApiModelProperty(name = "check-in")
     @JsonProperty("check-in")
     val checkIn: StageCheck?,

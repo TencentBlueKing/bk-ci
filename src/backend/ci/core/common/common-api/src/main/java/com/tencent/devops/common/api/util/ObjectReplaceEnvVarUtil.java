@@ -37,7 +37,6 @@ public class ObjectReplaceEnvVarUtil {
 
     /**
      * 把对象字段值中的占位符替换成环境变量
-     *
      * @param obj 需要把占位符替换环境变量的对象(对象如果是集合对象，注意要选择支持增加、删除等操作的集合类型，不要选择类似SingletonMap这种)
      * @param envMap 环境变量Map
      * @return 变量替换后的对象
@@ -90,7 +89,7 @@ public class ObjectReplaceEnvVarUtil {
                 replaceEnvVar(dataMap, envMap);
                 obj = JsonUtil.INSTANCE.to(JsonUtil.INSTANCE.toJson(dataMap, true), obj.getClass());
             } catch (Throwable e) {
-                // 转换不了map的对象则直接替换
+                // 转换不了map的对象则进行直接替换
                 obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj, true), envMap, false, false);
             }
         }
@@ -104,7 +103,7 @@ public class ObjectReplaceEnvVarUtil {
             if (objStr.startsWith("{") && objStr.endsWith("}") && JsonSchemaUtil.INSTANCE.validateJson(objStr)) {
                 try {
                     Object dataObj = JsonUtil.INSTANCE.to((String) obj, Map.class);
-                    // string能正常转成map，说明是json串，把dataObj进行递归替换变量后再转成json串
+                    // string能正常转换成map，则说明是json串，那么把dataObj进行递归替换变量后再转成json串
                     dataObj = replaceEnvVar(dataObj, envMap);
                     obj = JsonUtil.INSTANCE.toJson(dataObj, true);
                 } catch (Throwable e) {
@@ -129,6 +128,11 @@ public class ObjectReplaceEnvVarUtil {
         return obj;
     }
 
+    /**
+     * 判断对象是否是普通替换对象
+     * @param obj 需要把占位符替换环境变量的对象(对象如果是集合对象，注意要选择支持增加、删除等操作的集合类型，不要选择类似SingletonMap这种)
+     * @return 是否是普通替换对象
+     */
     private static Boolean isNormalReplaceEnvVar(Object obj) {
         return obj == null || ReflectUtil.INSTANCE.isNativeType(obj) || obj instanceof String;
     }

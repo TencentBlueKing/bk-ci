@@ -40,18 +40,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.process.dao.PipelineSubscriptionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
-import com.tencent.devops.process.pojo.SubscriptionType
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscription
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.util.ServiceHomeUrlUtils.server
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -60,6 +55,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -69,8 +65,6 @@ import com.tencent.devops.process.utils.PIPELINE_TIME_END
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.process.utils.PipelineVarUtil
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -84,52 +78,16 @@ import java.util.Date
 @Service
 class TxPipelineSubscriptionService @Autowired(required = false) constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val dslContext: DSLContext,
-    private val pipelineSubscriptionDao: PipelineSubscriptionDao,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val projectCacheService: ProjectCacheService,
-    private val wechatWorkService: WechatWorkService,
     @Autowired(required = false)
     private val measureService: MeasureService?,
     private val bsAuthProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val client: Client
 ) {
-
-    fun subscription(userId: String, pipelineId: String, type: SubscriptionType?): Boolean {
-        // Check if the subscription exist
-        return dslContext.transactionResult { configuration ->
-            val context = DSL.using(configuration)
-            val record = pipelineSubscriptionDao.get(context, pipelineId, userId)
-            if (record == null) {
-                // Add the subscription
-                pipelineSubscriptionDao.insert(
-                    dslContext = context, pipelineId = pipelineId, username = userId, subscriptionTypes = listOf(
-                    PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX
-                ), type = type ?: SubscriptionType.ALL
-                )
-            } else {
-                pipelineSubscriptionDao.update(
-                    dslContext = context, id = record.id,
-                    subscriptionTypes = listOf(
-                        PipelineSubscriptionType.EMAIL, PipelineSubscriptionType.RTX
-                    ),
-                    type = type ?: SubscriptionType.ALL
-                )
-            }
-            true
-        }
-    }
-
-    fun getSubscriptions(userId: String, pipelineId: String): PipelineSubscription? {
-        val record = pipelineSubscriptionDao.get(dslContext, pipelineId, userId) ?: return null
-        return pipelineSubscriptionDao.convert(record)
-    }
-
-    fun deleteSubscriptions(userId: String, pipelineId: String) =
-        pipelineSubscriptionDao.delete(dslContext, pipelineId, userId)
 
     fun onPipelineShutdown(
         pipelineId: String,
@@ -165,7 +123,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
             else -> TYPE_SHUTDOWN_SUCCESS
         }
 
-        val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
+        val vars = buildVariableService.getAllVariable(projectId, buildId).toMutableMap()
         if (!vars[PIPELINE_TIME_DURATION].isNullOrBlank()) {
             val timeDuration = vars[PIPELINE_TIME_DURATION]!!.toLongOrNull() ?: 0L
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(timeDuration * 1000)
@@ -184,7 +142,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
         val user = executionVar.user
         val originTriggerType = executionVar.originTriggerType
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
         // Add the measure data
         measureService?.postPipelineData(
             projectId = projectId,
@@ -201,7 +159,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
 
         val replaceWithEmpty = true
         // 流水线设置订阅的用户
-        val settingInfo = pipelineRepositoryService.getSetting(pipelineId)
+        val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
         if (settingInfo != null) {
 
             val successReceiver = EnvUtils.parseEnv(settingInfo.successSubscription.users, vars, replaceWithEmpty)
@@ -334,7 +292,8 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
     private fun checkPipelineCall(buildId: String, vars: Map<String, String>) {
         val parentTaskId = vars[PIPELINE_START_PARENT_BUILD_TASK_ID] ?: return
         val parentBuildId = vars[PIPELINE_START_PARENT_BUILD_ID] ?: return
-        val parentBuildTask = pipelineRuntimeService.getBuildTask(parentBuildId, parentTaskId)
+        val parentProjectId = vars[PIPELINE_START_PARENT_PROJECT_ID] ?: return
+        val parentBuildTask = pipelineTaskService.getBuildTask(parentProjectId, parentBuildId, parentTaskId)
         if (parentBuildTask == null) {
             logger.warn("The parent build($parentBuildId) task($parentTaskId) not exist ")
             return
@@ -349,6 +308,7 @@ class TxPipelineSubscriptionService @Autowired(required = false) constructor(
                 buildId = parentBuildTask.buildId,
                 stageId = parentBuildTask.stageId,
                 containerId = parentBuildTask.containerId,
+                containerHashId = parentBuildTask.containerHashId,
                 containerType = parentBuildTask.containerType,
                 taskId = parentBuildTask.taskId,
                 taskParam = parentBuildTask.taskParams,

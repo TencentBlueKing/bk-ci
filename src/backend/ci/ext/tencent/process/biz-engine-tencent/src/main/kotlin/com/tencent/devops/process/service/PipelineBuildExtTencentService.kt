@@ -51,16 +51,22 @@ class PipelineBuildExtTencentService @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean
 ) : PipelineBuildExtService {
 
-    override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
+    override fun buildExt(task: PipelineBuildTask, variables: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
         val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
             val turboTaskId = getTurboTask(task.projectId, task.pipelineId, task.taskId)
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
+            extMap["turbo.task.id"] = turboTaskId
         }
 
-        extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
+        extMap.putAll(pipelineContextService.buildContext(
+            projectId = task.projectId,
+            buildId = task.buildId,
+            containerId = task.containerId,
+            variables = variables
+        ))
         extMap["ci.build_url"] = pipelineUrlBean.genBuildDetailUrl(
             projectCode = task.projectId,
             pipelineId = task.pipelineId,

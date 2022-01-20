@@ -28,4 +28,4 @@ leaf:
   name: leaf
 
 system:
-  router: prod
+  router: __BK_CI_PROJECT_ROUTER_TAG__

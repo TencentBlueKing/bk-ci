@@ -11,13 +11,13 @@ triggerOn:
     - "master"
 stages:
 - name: "腾讯代码质量扫描"
-  id: "xxxxx"
   label: []
   if: null
   fast-kill: false
   jobs:
   - id: "job_tcoder_codecc_new"
     name: "腾讯代码质量扫描"
+    resource-exclusive-declaration: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -32,8 +32,9 @@ stages:
     if: null
     steps:
     - name: "代码拉取"
-      id: "step-eFav7qd"
+      id: "step-1"
       if: null
+      if-modify: null
       uses: null
       with:
         strategy: "FRESH_CHECKOUT"
@@ -47,8 +48,9 @@ stages:
       run: null
       checkout: "self"
     - name: "腾讯代码分析(官方-代码分析工作组)"
-      id: "step-77lAxqm"
+      id: "check"
       if: "false == true"
+      if-modify: null
       uses: "CodeccCheckAtomDebug@4.*"
       with:
         beAutoLang: false
@@ -98,6 +100,7 @@ stages:
     - name: null
       id: "123123123"
       if: "[JAVA, JS] == [PYTHON]"
+      if-modify: null
       uses: null
       with: null
       timeout-minutes: null
@@ -106,11 +109,13 @@ stages:
       env: null
       run: "echo 123\n"
       checkout: null
+    if-modify: null
     timeout-minutes: null
     env: null
     continue-on-error: null
     strategy: null
     depend-on: null
+  if-modify: null
   check-in: null
   check-out: null
 resource:

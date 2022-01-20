@@ -28,9 +28,11 @@
 package com.tencent.devops.quality.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.dao.OPQualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
 import org.jooq.DSLContext
@@ -40,8 +42,10 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
+@Suppress("NestedBlockDepth")
 class OPQualityRuleBuildHisService @Autowired constructor(
     private val qualityRuleBuildHisDao: OPQualityRuleBuildHisDao,
+    private val buildHisDao: QualityRuleBuildHisDao,
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
     private val dslContext: DSLContext,
     private val client: Client
@@ -71,16 +75,19 @@ class OPQualityRuleBuildHisService @Autowired constructor(
                             checkTimes = 1
                         )
                     ).data ?: false
-                    qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
+                    if (trigger) {
+                        buildHisDao.updateStatus(rule.id, RuleInterceptResult.INTERCEPT.name)
+                        qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
+                    }
                     logger.info("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
                             "buildId: ${rule.buildId}, trigger: $trigger")
                 } catch (e: Exception) {
                     logger.error("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
-                            "buildId: ${rule.buildId} has triggered")
+                            "buildId: ${rule.buildId} trigger exception", e)
                 }
             }
             count = records.size
-            currId = records.last()?.id ?: 0
+            currId = records.lastOrNull()?.id ?: 0
         }
         return count
     }

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -60,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
@@ -68,21 +68,25 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.v2.common.CommonVariables
-import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
-import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @Suppress("ComplexMethod")
 object ModelParameters {
 
     private const val PUSH_OPTIONS_PREFIX = "ci.variable::"
+
+    private const val DELETE_EVENT = "delete"
 
     fun createPipelineParams(
         yaml: ScriptBuildYaml,
@@ -125,9 +129,13 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
-                startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
+                startParams[PIPELINE_GIT_EVENT] = if (originEvent.isDeleteBranch()) {
+                    DELETE_EVENT
+                } else {
+                    GitPushEvent.classType
+                }
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
-                    originEvent.commits?.first { it.id == originEvent.after }?.author?.name ?: ""
+                    originEvent.commits?.firstOrNull { it.id == originEvent.after }?.author?.name ?: ""
                 startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
                 if (originEvent.before.isNotBlank() && originEvent.before.length >= 8) {
                     startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
@@ -142,9 +150,13 @@ object ModelParameters {
                 startParams[PIPELINE_GIT_REPO_URL] = originEvent.repository.git_http_url
                 startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CommonVariables.CI_BRANCH] = ModelCommon.getBranchName(originEvent.ref)
-                startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
+                startParams[PIPELINE_GIT_EVENT] = if (originEvent.isDeleteTag()) {
+                    DELETE_EVENT
+                } else {
+                    GitTagPushEvent.classType
+                }
                 startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
-                    originEvent.commits?.get(0)?.author?.name ?: ""
+                    originEvent.commits?.firstOrNull()?.author?.name ?: ""
                 startParams[PIPELINE_GIT_BEFORE_SHA] = originEvent.before
                 if (originEvent.before.isNotBlank() && originEvent.before.length >= 8) {
                     startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = originEvent.before.substring(0, 8)
@@ -189,6 +201,7 @@ object ModelParameters {
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = if (event.objectKind == TGitObjectKind.SCHEDULE.value) {
+                    startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.commitAuthorName ?: ""
                     TGitObjectKind.SCHEDULE.value
                 } else {
                     startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
@@ -293,6 +306,10 @@ object ModelParameters {
 
         val result = variables.toMutableMap()
         variables.forEach { (key, value) ->
+            // 不替换只读变量
+            if (value.readonly != null && value.readonly == true) {
+                return@forEach
+            }
             if (key in variablesOptionsKeys) {
                 result[key] = Variable(
                     value = pushOptions["$PUSH_OPTIONS_PREFIX$key"],

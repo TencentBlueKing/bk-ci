@@ -70,23 +70,11 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
 
-        // 判断是否为开源项目
+        // 判断是否为开源项目, 校验非管理员 若是开源项目直接放行
         if (projectInfoService.checkProjectPublic(gitProjectId)) {
             return true
         }
-
-        val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
-        if (gitUserId.isNullOrEmpty()) {
-            GitCIPermissionServiceImpl.logger.warn("$userId is not gitCI user")
-            return false
-        }
-
-        val checkResult = client.getScm(ServiceGitCiResource::class)
-            .checkUserGitAuth(gitUserId, gitProjectId).data ?: false
-        if (!checkResult) {
-            logger.warn("$projectCode $userId is project check fail")
-        }
-        return checkResult
+        return checkProjectUser(userId, gitProjectId, projectCode)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
@@ -95,6 +83,33 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         return emptyList()
+    }
+
+    fun checkProjectUser(userId: String, gitProjectId: String, projectCode: String): Boolean {
+        val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
+        if (gitUserId.isNullOrEmpty()) {
+            logger.warn("$userId is not gitCI user")
+            return false
+        }
+        val projectUser = mutableListOf<String>()
+        try {
+            client.getScm(ServiceGitCiResource::class).getProjectMembersAll(
+                gitProjectId = gitProjectId,
+                page = 0,
+                pageSize = 100,
+                search = userId
+            ).data?.forEach {
+                projectUser.add(it.username)
+            }
+            if (projectUser.isNotEmpty() && projectUser.contains(userId)) {
+                return true
+            }
+        } catch (e: Exception) {
+            logger.warn("checkProjectUser fail $userId $projectCode ${e.message}")
+            return false
+        }
+        logger.warn("$projectCode $userId is project check fail")
+        return false
     }
 
     companion object {

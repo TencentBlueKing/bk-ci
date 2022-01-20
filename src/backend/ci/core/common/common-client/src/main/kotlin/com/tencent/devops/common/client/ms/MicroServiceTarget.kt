@@ -36,6 +36,7 @@ import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
@@ -84,6 +85,9 @@ class MicroServiceTarget<T> constructor(
         // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
         val consulContentTag = ConsulContent.getConsulContent()
         val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
+            if (consulContentTag != tag) {
+                logger.info("MicroService content:${ConsulContent.getConsulContent()} local:$tag")
+            }
             consulContentTag
         } else tag
 
@@ -129,4 +133,8 @@ class MicroServiceTarget<T> constructor(
     override fun name() = serviceName
 
     private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
+    }
 }

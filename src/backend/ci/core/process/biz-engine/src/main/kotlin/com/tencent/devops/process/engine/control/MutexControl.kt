@@ -37,7 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -49,7 +49,7 @@ import java.util.concurrent.TimeUnit
 class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
-    private val pipelineRuntimeService: PipelineRuntimeService
+    private val pipelineContainerService: PipelineContainerService
 ) {
 
     companion object {
@@ -313,7 +313,7 @@ class MutexControl @Autowired constructor(
             val buildId = mutexIdList[0]
             val containerId = mutexIdList[1]
             // container结束的时候，删除lock key
-            val containerFinished = isContainerFinished(buildId, containerId)
+            val containerFinished = isContainerFinished(projectId, buildId, containerId)
             if (containerFinished) {
                 LOG.warn("[MUTEX] CLEAN LOCK KEY|buildId=$buildId|container=$containerId|projectId=$projectId")
                 val containerMutexLock = RedisLockByValue(redisOperation, lockKey, mutexLockId, EXP_SECONDS)
@@ -334,7 +334,7 @@ class MutexControl @Autowired constructor(
                 val buildId = mutexIdList[0]
                 val containerId = mutexIdList[1]
                 // container结束的时候，删除queue中的key
-                if (isContainerFinished(buildId, containerId)) {
+                if (isContainerFinished(projectId, buildId, containerId)) {
                     redisOperation.hdelete(queueKey, mutexId)
                 }
             }
@@ -342,11 +342,16 @@ class MutexControl @Autowired constructor(
     }
 
     // 判断container是否已经结束
-    private fun isContainerFinished(buildId: String?, containerId: String?): Boolean {
+    private fun isContainerFinished(projectId: String, buildId: String?, containerId: String?): Boolean {
         if (buildId.isNullOrBlank() || containerId.isNullOrBlank()) {
             return false
         }
-        val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = containerId)
+        val container = pipelineContainerService.getContainer(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = null,
+            containerId = containerId
+        )
         return container == null || container.status.isFinish()
     }
 }

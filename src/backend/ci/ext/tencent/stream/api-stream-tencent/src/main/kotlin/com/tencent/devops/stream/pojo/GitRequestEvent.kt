@@ -61,6 +61,9 @@ data class GitRequestEvent(
     val commitMsg: String?,
     @ApiModelProperty("提交时间")
     val commitTimeStamp: String?,
+    // 目前只在上下文中传递，后续看需求是否保存至数据库
+    @ApiModelProperty("提交用户")
+    val commitAuthorName: String?,
     @ApiModelProperty("用户")
     val userId: String,
     @ApiModelProperty("提交总数")
@@ -77,31 +80,44 @@ data class GitRequestEvent(
     // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
     @ApiModelProperty("Git事件对象")
     var gitEvent: GitEvent?
-)
+) {
+    companion object {
+        // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。
+        const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"
+    }
+
+    // 获取fork库的项目id
+    fun getForkGitProjectId(): Long? {
+        return if (isFork() && sourceGitProjectId != gitProjectId) {
+            sourceGitProjectId!!
+        } else {
+            null
+        }
+    }
+
+    // 当人工触发时不推送CommitCheck消息
+    fun sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+}
 
 fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
     return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
-            sourceGitProjectId != null &&
-            sourceGitProjectId != gitProjectId
+        sourceGitProjectId != null &&
+        sourceGitProjectId != gitProjectId
 }
 
-// 获取fork库的项目id
-fun GitRequestEvent.getForkGitProjectId(): Long? {
-    return if (isFork() && sourceGitProjectId != gitProjectId) {
-        sourceGitProjectId!!
-    } else {
-        null
-    }
-}
-
-// 判断是否是删除分支的event这个Event不做构建只做删除逻辑
+/**
+ * 判断是否是删除分支的event这个Event不做构建只做删除逻辑
+ */
 fun GitRequestEvent.isDeleteBranch(): Boolean {
     return objectKind == TGitObjectKind.PUSH.value &&
-            operationKind == TGitPushOperationKind.DELETE.value &&
-            extensionAction == TGitPushActionKind.DELETE_BRANCH.value
+        operationKind == TGitPushOperationKind.DELETE.value &&
+        (extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
+            commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT)
 }
 
-// 当人工触发时不推送CommitCheck消息
-fun GitRequestEvent.sendCommitCheck() = objectKind != TGitObjectKind.MANUAL.value
+fun GitRequestEvent.isDeleteTag(): Boolean {
+    return objectKind == TGitObjectKind.TAG_PUSH.value &&
+        operationKind == TGitPushOperationKind.DELETE.value
+}

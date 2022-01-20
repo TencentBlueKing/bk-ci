@@ -37,6 +37,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -50,9 +51,11 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -270,14 +273,12 @@ class StreamScmService @Autowired constructor(
                 "createNewFile RemoteServiceException|" +
                         "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
-            if (e.httpStatus == GitCodeApiStatus.FORBIDDEN.status ||
-                e.httpStatus == GitCodeApiStatus.UNAUTHORIZED.status
-            ) {
+            if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
                 error(
                     logMessage = "createNewFile error ${e.errorMessage}",
-                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN,
-                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR_FORBIDDEN.formatErrorMessage
-                        .format(userId, gitCICreateFile.branch)
+                    errorCode = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR,
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR.formatErrorMessage
+                        .format(gitCICreateFile.filePath, gitCICreateFile.branch, e.httpStatus, e.errorMessage)
                 )
             } else {
                 error(
@@ -497,6 +498,30 @@ class StreamScmService @Autowired constructor(
         )
     }
 
+    // 获取指定文件在项目中的文件树信息，用于删除分支时判断yml是否在默认分支还存在的情况
+    fun getFileTreeFromGitWithDefaultBranch(
+        gitToken: String,
+        gitProjectId: Long,
+        filePath: String
+    ): List<GitFileInfo> {
+        return retryFun(
+            log = "$gitProjectId get $filePath file tree error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+            action = {
+                client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                    gitProjectId = gitProjectId,
+                    path = if (filePath.contains("/")) {
+                        filePath.substring(0, filePath.lastIndexOf("/"))
+                    } else {
+                        filePath
+                        },
+                    token = gitToken,
+                    ref = ""
+                ).data ?: emptyList()
+            }
+        )
+    }
+
     fun getCommitChangeFileListRetry(
         token: String?,
         userId: String?,
@@ -557,6 +582,20 @@ class StreamScmService @Autowired constructor(
         )
     }
 
+    fun getCommitInfo(
+        gitToken: String,
+        projectName: String,
+        sha: String
+    ): GitCommit? {
+        logger.info("getCommitInfo: [$projectName|$sha]")
+        return client.getScm(ServiceGitResource::class).getRepoRecentCommitInfo(
+            repoName = projectName,
+            sha = sha,
+            token = gitToken,
+            tokenType = TokenTypeEnum.OAUTH
+        ).data
+    }
+
     fun addMrComment(
         token: String,
         gitProjectId: String,
@@ -570,6 +609,23 @@ class StreamScmService @Autowired constructor(
             mrId = mrId,
             mrBody = mrBody
         )
+    }
+
+    fun getProjectGroupList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<GitCodeGroup>? {
+        logger.info("getProjectGroupList: [$accessToken|$page|$pageSize]")
+        return client.getScm(ServiceGitCiResource::class).getProjectGroupsList(
+            accessToken = accessToken,
+            page = page,
+            pageSize = pageSize,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        ).data
     }
 
     private fun getTriggerBranch(branch: String): String {

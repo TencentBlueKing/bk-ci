@@ -48,6 +48,7 @@ import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -81,11 +82,12 @@ class ModelElement @Autowired constructor(
     fun makeElementList(
         job: Job,
         gitBasicSetting: GitCIBasicSetting,
+        changeSet: Set<String>? = null,
+        jobEnable: Boolean = true,
         event: GitRequestEvent
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
-
         // 解析job steps
         job.steps!!.forEach { step ->
             val additionalOptions = ElementAdditionalOptions(
@@ -108,6 +110,7 @@ class ModelElement @Autowired constructor(
                 customCondition = step.ifFiled
             )
 
+            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
             // bash
             val element: Element = when {
                 step.run != null -> {
@@ -121,7 +124,7 @@ class ModelElement @Autowired constructor(
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
                         name = step.name ?: step.uses!!.split('@')[0],
-                        id = step.id,
+                        stepId = step.id,
                         atomCode = step.uses!!.split('@')[0],
                         version = step.uses!!.split('@')[1],
                         data = data,
@@ -151,7 +154,7 @@ class ModelElement @Autowired constructor(
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
                 name = step.name ?: "run",
-                id = step.id,
+                stepId = step.id,
                 atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
                 version = runPlugInVersion ?: throw RuntimeException("runPlugInVersion must exist"),
                 data = data,
@@ -160,7 +163,7 @@ class ModelElement @Autowired constructor(
         } else {
             val linux = LinuxScriptElement(
                 name = step.name ?: "run",
-                id = step.id,
+                stepId = step.id,
                 scriptType = BuildScriptType.SHELL,
                 script = step.run!!,
                 continueNoneZero = false,
@@ -174,7 +177,7 @@ class ModelElement @Autowired constructor(
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
                         name = step.name ?: "run",
-                        id = step.id,
+                        stepId = step.id,
                         scriptType = BuildScriptType.BAT,
                         script = step.run!!
                     )
@@ -207,36 +210,7 @@ class ModelElement @Autowired constructor(
 
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
-                gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
-            }
-
-            when (event.objectKind) {
-                TGitObjectKind.MERGE_REQUEST.value ->
-                    inputMap["pullType"] = "BRANCH"
-                TGitObjectKind.TAG_PUSH.value -> {
-                    inputMap["pullType"] = "TAG"
-                    inputMap["refName"] = event.branch
-                }
-                TGitObjectKind.MANUAL.value -> {
-                    if (event.commitId.isNotBlank()) {
-                        inputMap["pullType"] = "COMMIT_ID"
-                        inputMap["refName"] = event.commitId
-                    } else {
-                        inputMap["pullType"] = "BRANCH"
-                        inputMap["refName"] = event.branch
-                    }
-                }
-                // 定时触发根据传入的分支参数触发
-                TGitObjectKind.SCHEDULE.value -> {
-                    inputMap["pullType"] = "BRANCH"
-                    inputMap["refName"] = event.branch
-                }
-                else -> {
-                    inputMap["pullType"] = "COMMIT_ID"
-                    inputMap["refName"] = event.commitId
-                }
-            }
+            makeCheckoutSelf(inputMap, gitBasicSetting, event)
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
         }
@@ -255,11 +229,52 @@ class ModelElement @Autowired constructor(
 
         return MarketBuildAtomElement(
             name = step.name ?: "checkout",
-            id = step.id,
+            stepId = step.id,
             atomCode = "checkout",
             version = "1.*",
             data = data
         )
+    }
+
+    private fun makeCheckoutSelf(
+        inputMap: MutableMap<String, Any?>,
+        gitBasicSetting: GitCIBasicSetting,
+        event: GitRequestEvent
+    ) {
+        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
+            gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
+        }
+
+        when (event.objectKind) {
+            TGitObjectKind.MERGE_REQUEST.value ->
+                inputMap["pullType"] = "BRANCH"
+            TGitObjectKind.TAG_PUSH.value -> {
+                inputMap["pullType"] = "TAG"
+                inputMap["refName"] = event.branch
+            }
+            TGitObjectKind.PUSH.value -> {
+                inputMap["pullType"] = "BRANCH"
+                inputMap["refName"] = event.branch
+            }
+            TGitObjectKind.MANUAL.value -> {
+                if (event.commitId.isNotBlank()) {
+                    inputMap["pullType"] = "COMMIT_ID"
+                    inputMap["refName"] = event.commitId
+                } else {
+                    inputMap["pullType"] = "BRANCH"
+                    inputMap["refName"] = event.branch
+                }
+            }
+            // 定时触发根据传入的分支参数触发
+            TGitObjectKind.SCHEDULE.value -> {
+                inputMap["pullType"] = "BRANCH"
+                inputMap["refName"] = event.branch
+            }
+            else -> {
+                inputMap["pullType"] = "COMMIT_ID"
+                inputMap["refName"] = event.commitId
+            }
+        }
     }
 
     private fun makeServiceElementList(job: Job): MutableList<Element> {
@@ -292,7 +307,6 @@ class ModelElement @Autowired constructor(
                 )
                 val servicesElement = MarketBuildAtomElement(
                     name = "创建${it.image}服务",
-                    id = null,
                     status = null,
                     atomCode = ServiceJobDevCloudTask.atomCode,
                     version = "1.*",

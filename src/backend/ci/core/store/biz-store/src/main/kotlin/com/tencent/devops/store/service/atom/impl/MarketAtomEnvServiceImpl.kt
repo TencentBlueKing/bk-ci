@@ -320,9 +320,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             return Result(atomResult.status, atomResult.message ?: "")
         }
         val atom = atomResult.data ?: return Result(data = null)
-        if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion
-            || (atom.classType != MarketBuildAtomElement.classType
-                    && atom.classType != MarketBuildLessAtomElement.classType)
+        val classType = atom.classType
+        if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion ||
+            (classType != MarketBuildAtomElement.classType && classType != MarketBuildLessAtomElement.classType)
         ) {
             // 如果是历史老插件则直接返回环境信息
             return Result(

@@ -45,7 +45,7 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isMr
-import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -153,7 +153,7 @@ class YamlSchemaCheck @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
+                    logger.warn("YamlSchemaCheck event: ${gitRequestEvent.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

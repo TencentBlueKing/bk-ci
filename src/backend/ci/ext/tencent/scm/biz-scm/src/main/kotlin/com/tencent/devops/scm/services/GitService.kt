@@ -76,10 +76,12 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
@@ -659,13 +661,10 @@ class GitService @Autowired constructor(
                 )
             )
             .build()
-        logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
             if (!it.isSuccessful) {
-                throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${it.code()})${it.message()}"
-                )
+                throw GitCodeUtils.handleErrorMessage(it)
             }
             return true
         }
@@ -1576,6 +1575,36 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo {
+        var url = "$gitCIUrl/api/v3/groups/$id?${
+            if (tokenType == TokenTypeEnum.OAUTH) {
+                "access_token=$token"
+            } else {
+                "private_token=$token"
+            }
+        }"
+        if (includeSubgroups != null) {
+            url = "$url&include_subgroups=$includeSubgroups"
+        }
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getProjectGroupInfo with response=$response")
+            if (!response.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(response)
+            }
+            val data = response.body()!!.string()
+            return JsonUtil.to(data, GitProjectGroupInfo::class.java)
+        }
+    }
+
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
         if (TokenTypeEnum.OAUTH == tokenType) {
             url.append("?access_token=$token")
@@ -1619,6 +1648,47 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
+        }
+    }
+
+    fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tags")
+        setToken(tokenType, url, token)
+        val params = mutableMapOf<String, Any?>()
+        params["id"] = repoName
+        params["tag_name"] = tagName
+        params["ref"] = ref
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(params)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("createGitTag response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val message = dataMap["message"]
+            if (!StringUtils.isEmpty(message)) {
+                val validateResult: Result<String?> =
+                    MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL
+                    )
+                logger.info("createGitTag validateResult>> $validateResult")
+
+                return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+            }
+            return Result(true)
         }
     }
 }

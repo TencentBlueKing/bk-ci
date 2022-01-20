@@ -68,7 +68,6 @@ variables:
 
 stages:
   - name: "stage1"
-    id: abc
     label:
       - Build
     if: envs.BK_CI_EVENT == 'push' || varivable.approve
@@ -104,7 +103,8 @@ stages:
         continue-on-error: false
         strategy:
           matrix:
-
+            os: [ docker, macos-10.15 ]
+            node: [ "12.13.1", "10.11.0" ]
           fast-kill: true
           max-parallel: 10
         depend-on:

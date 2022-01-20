@@ -80,6 +80,25 @@ class PipelineDelete @Autowired constructor(
         gitProjectConf: GitCIBasicSetting,
         gitToken: String
     ) {
+
+        // 直接删除分支,挪到前面，不需要对deleteYamlFiles获取后再做判断。
+        if (gitRequestEvent.isDeleteBranch()) {
+            val pipelines = streamPipelineBranchService.getBranchPipelines(
+                gitRequestEvent.gitProjectId,
+                gitRequestEvent.branch
+            )
+            pipelines.forEach {
+                // 这里需增加获取pipeline对应的yml路径，需要判断该文件是否在默认分支存在。
+                val gitPipelineResourceRecord = gitPipelineResourceDao.getPipelineById(
+                    dslContext = dslContext,
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    pipelineId = it
+                )
+                delete(it, gitRequestEvent, gitPipelineResourceRecord?.filePath, gitProjectConf, gitToken)
+            }
+            return
+        }
+
         val deleteYamlFiles = when (event) {
             is GitPushEvent -> {
                 event.commits?.flatMap {
@@ -109,19 +128,6 @@ class PipelineDelete @Autowired constructor(
                 null
             }
         }
-
-        // 直接删除分支
-        if (gitRequestEvent.isDeleteBranch()) {
-            val pipelines = streamPipelineBranchService.getBranchPipelines(
-                gitRequestEvent.gitProjectId,
-                gitRequestEvent.branch
-            )
-            pipelines.forEach {
-                delete(it, gitRequestEvent, null, gitProjectConf)
-            }
-            return
-        }
-
         if (deleteYamlFiles.isNullOrEmpty()) {
             return
         }
@@ -129,7 +135,7 @@ class PipelineDelete @Autowired constructor(
         deleteYamlFiles.forEach { filePath ->
             val existPipeline = path2PipelineExists[filePath] ?: return@forEach
             val pipelineId = existPipeline.pipelineId
-            delete(pipelineId, gitRequestEvent, filePath, gitProjectConf)
+            delete(pipelineId, gitRequestEvent, filePath, gitProjectConf, gitToken)
         }
     }
 
@@ -137,7 +143,8 @@ class PipelineDelete @Autowired constructor(
         pipelineId: String,
         gitRequestEvent: GitRequestEvent,
         filePath: String?,
-        gitProjectConf: GitCIBasicSetting
+        gitProjectConf: GitCIBasicSetting,
+        gitToken: String
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         // 先删除后查询的过程需要加锁
@@ -153,19 +160,56 @@ class PipelineDelete @Autowired constructor(
                 pipelineId,
                 gitRequestEvent.branch
             )
-            if (!streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
+
+            val isFileEmpty = if (null != filePath) {
+                checkFileEmpty(
+                    gitToken = gitToken,
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    filePath = filePath
+                    )
+            } else {
+                true
+            }
+            if (isFileEmpty &&
+                !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
                 logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
-                processClient.delete(
-                    gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
-                    channelCode
+                val pipelineInfoResult = processClient.getPipelineInfo(
+                    projectId = gitProjectConf.projectCode!!,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode
                 )
+                if (pipelineInfoResult.data != null) {
+                    processClient.delete(
+                        gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
+                        channelCode
+                    )
+                }
                 // 删除相关的构建记录
                 gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
             }
         } finally {
             redisLock.unlock()
         }
+    }
+
+    private fun checkFileEmpty(
+        gitToken: String,
+        gitProjectId: Long,
+        filePath: String
+    ): Boolean {
+        val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
+            gitToken = gitToken,
+            gitProjectId = gitProjectId,
+            filePath = filePath
+        )
+
+        fileList.forEach {
+            if (it.name == filePath.substring(filePath.lastIndexOf("/") + 1)) {
+                return false
+            }
+        }
+        return true
     }
 
     private fun isCiFile(name: String): Boolean {

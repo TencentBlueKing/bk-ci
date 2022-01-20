@@ -76,6 +76,13 @@ class WeworkRobotServiceImpl @Autowired constructor(
 
     override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
         val sendRequest = mutableListOf<WeweokRobotBaseMessage>()
+        val content = if (checkMessageSize(weworkNotifyTextMessage.message)) {
+            weworkNotifyTextMessage.message.replace("\\n", "\n")
+        } else {
+            weworkNotifyTextMessage.message.replace("\\n", "\n").substring(0, WEWORK_MAX_SIZE - 1) +
+                "...(消息长度超$WEWORK_MAX_SIZE 已截断,请控制消息长度)"
+        }
+        weworkNotifyTextMessage.message = content
         when (weworkNotifyTextMessage.receiverType) {
             WeworkReceiverType.group -> {
                 return
@@ -87,7 +94,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                             WeworkRobotSingleTextMessage(
                                 chatid = it,
                                 text = WeworkRobotContentMessage(
-                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
+                                    content = content,
                                     mentionedList = null,
                                     mentionedMobileList = null
                                 ),
@@ -100,7 +107,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
                             WeworkRobotMarkdownMessage(
                                 chatid = it,
                                 markdown = WeworkRobotContentMessage(
-                                    content = weworkNotifyTextMessage.message.replace("\\n", "\n"),
+                                    content = content,
                                     mentionedList = null,
                                     mentionedMobileList = null
                                 ),
@@ -158,10 +165,6 @@ class WeworkRobotServiceImpl @Autowired constructor(
         return if (url.startsWith("http")) url else "https://$url"
     }
 
-    private fun chunkedReceivers(receivers: Collection<String>): String {
-        return receivers.joinToString("|", "", "", -1)
-    }
-
     private fun saveResult(receivers: Collection<String>, body: String, success: Boolean, errMsg: String?) {
         weworkNotifyDao.insertOrUpdateWeworkNotifyRecord(
             success = success,
@@ -171,7 +174,15 @@ class WeworkRobotServiceImpl @Autowired constructor(
         )
     }
 
+    private fun checkMessageSize(message: String): Boolean {
+        if (message.length < WEWORK_MAX_SIZE) {
+            return true
+        }
+        return false
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(WeworkRobotServiceImpl::class.java)
+        const val WEWORK_MAX_SIZE = 4000
     }
 }

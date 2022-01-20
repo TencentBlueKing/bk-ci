@@ -78,7 +78,8 @@ class ScheduleTriggerService @Autowired constructor(
             streamTimerEvent,
             buildBranch,
             buildCommitInfo.revision,
-            buildCommitInfo.updatedMessage
+            buildCommitInfo.updatedMessage,
+            buildCommitInfo.authorName
         )
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
