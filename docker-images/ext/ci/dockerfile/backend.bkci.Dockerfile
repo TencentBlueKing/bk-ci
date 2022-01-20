@@ -12,6 +12,6 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     wget "https://bkrepo.woa.com/api/generic/bkdevops/static/jre/macos/jre.zip?download=true" -P /data/workspace/agent-package/jre/macos/ 
 
 COPY ./ci /data/workspace/
-COPY ./dockerfile/backend.bkci.sh /data/workspace/
+COPY ./backend.bkci.sh /data/workspace/
 
 WORKDIR /data/workspace
