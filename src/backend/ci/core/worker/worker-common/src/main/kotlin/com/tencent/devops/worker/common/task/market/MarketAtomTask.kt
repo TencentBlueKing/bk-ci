@@ -180,8 +180,10 @@ open class MarketAtomTask : ITask() {
                 var valueStr = JsonUtil.toJson(value)
                 valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
                     override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                        return CredentialUtils.getCredentialContextValue(key, acrossInfo?.targetProjectId) ?:
-                        if (doubleCurlyBraces) {
+                        return CredentialUtils.getCredentialContextValue(
+                            key = key,
+                            acrossProjectId = acrossInfo?.targetProjectId
+                        ) ?: if (doubleCurlyBraces) {
                             "\${{$key}}"
                         } else {
                             "\${$key}"
