@@ -69,7 +69,7 @@ stages:
       steps:
       - template: download-code.yml@stream-ci-template
         parameters:
-          checkout: http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git
+          checkout: http://xxxxx/${{ variables.CODELIB_ALIAS }}.git
           id: "step_download-code_1"
           localPath: ${{ variables.APP_NAME }}
           pullType: BRANCH
@@ -89,7 +89,7 @@ stages:
       steps:
       - template: download-code.yml@stream-ci-template
         parameters:
-          checkout: http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git
+          checkout: http://xxxxx/${{ variables.CODELIB_ALIAS }}.git
           id: "step_download-code_2"
           localPath: ${{ variables.APP_NAME }}
           pullType: BRANCH
@@ -111,7 +111,7 @@ stages:
       steps:
       - template: download-code.yml@stream-ci-template
         parameters:
-          checkout: http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git
+          checkout: http://xxxxx/${{ variables.CODELIB_ALIAS }}.git
           id: "step_download-code_3"
           localPath: ${{ variables.APP_NAME }}
           pullType: BRANCH
@@ -223,7 +223,7 @@ stages:
       steps:
       - template: download-code.yml@stream-ci-template
         parameters:
-          checkout: http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git
+          checkout: http://xxxxx/${{ variables.CODELIB_ALIAS }}.git
           id: "step_download-code_4"
           localPath: ${{ variables.APP_NAME }}
           pullType: BRANCH

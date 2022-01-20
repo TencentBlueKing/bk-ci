@@ -146,7 +146,7 @@ stages:
       retry-times: null
       env: null
       run: null
-      checkout: "http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git"
+      checkout: "http://xxxxx/${{ variables.CODELIB_ALIAS }}.git"
     - name: "代码安全扫描"
       id: "step_codeSecurity"
       if: null
@@ -210,7 +210,7 @@ stages:
       retry-times: null
       env: null
       run: null
-      checkout: "http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git"
+      checkout: "http://xxxxx/${{ variables.CODELIB_ALIAS }}.git"
     - name: "CCK-腾讯代码分析(最新)"
       id: "step_codecc"
       if: null
@@ -313,7 +313,7 @@ stages:
       retry-times: null
       env: null
       run: null
-      checkout: "http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git"
+      checkout: "http://xxxxx/${{ variables.CODELIB_ALIAS }}.git"
     - name: "覆盖率-前置信息采集"
       id: "step_covPreInfo"
       if: null
@@ -565,7 +565,7 @@ stages:
       retry-times: null
       env: null
       run: null
-      checkout: "http://git.woa.com/${{ variables.CODELIB_ALIAS }}.git"
+      checkout: "http://xxxxx/${{ variables.CODELIB_ALIAS }}.git"
     - name: "tRPC编译"
       id: "step_trpc_compile"
       if: null

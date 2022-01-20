@@ -48,6 +48,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ComplexCondition")
 @Service
 class YamlTemplateService @Autowired constructor(
     private val client: Client,
