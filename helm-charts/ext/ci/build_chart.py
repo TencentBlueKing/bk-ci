@@ -17,7 +17,7 @@ for line in open(default_value_yaml, 'r'):
     value_file.write(line)
 
 # 生成 tpl
-config_server = os.walk(config_path+"/config-server/")
+config_server = config_path+"/config-server/"
 # common config
 common_yaml = yaml.load(open(config_server+'application.yml', 'r'))
 common_yaml.update(yaml.load(open(config_server+'application-'+spring_profile+'.yml', 'r')))
