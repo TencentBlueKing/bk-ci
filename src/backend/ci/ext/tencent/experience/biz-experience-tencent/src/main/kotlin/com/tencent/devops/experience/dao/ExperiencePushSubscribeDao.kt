@@ -27,10 +27,7 @@
 
 package com.tencent.devops.experience.dao
 
-import com.tencent.devops.model.experience.tables.TExperiencePushHistory
-import com.tencent.devops.model.experience.tables.TExperiencePushToken
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
-import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceSubscribeRecord
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -38,111 +35,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class ExperiencePushDao {
-    fun getByUserId(
-        dslContext: DSLContext,
-        userId: String
-    ): TExperiencePushTokenRecord? {
-        with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
-            return dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId))
-                .fetchOne()
-        }
-    }
-
-    fun updateUserToken(
-        dslContext: DSLContext,
-        userId: String,
-        token: String,
-        platform: String
-    ): Boolean {
-        val now = LocalDateTime.now()
-        return with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
-            dslContext.update(this)
-                .set(TOKEN, token)
-                .set(UPDATE_TIME, now)
-                .set(PLATFORM, platform)
-                .where(USER_ID.eq(userId))
-                .execute() == 1
-        }
-    }
-
-    fun createUserToken(
-        dslContext: DSLContext,
-        userId: String,
-        token: String,
-        platform: String
-    ): Long {
-        val now = LocalDateTime.now()
-        with(TExperiencePushToken.T_EXPERIENCE_PUSH_TOKEN) {
-            return dslContext.insertInto(
-                this,
-                USER_ID,
-                TOKEN,
-                PLATFORM,
-                UPDATE_TIME,
-                CREATE_TIME
-            ).values(
-                userId,
-                token,
-                platform,
-                now,
-                now
-            ).returning(ID)
-                .fetchOne()!!.id
-        }
-    }
-
-    fun createPushHistory(
-        dslContext: DSLContext,
-        status: Int,
-        receivers: String,
-        title: String,
-        content: String,
-        url: String,
-        platform: String
-    ): Long {
-        val now = LocalDateTime.now()
-        with(TExperiencePushHistory.T_EXPERIENCE_PUSH_HISTORY) {
-            return dslContext.insertInto(
-                this,
-                STATUS,
-                RECEIVERS,
-                CONTENT,
-                URL,
-                PLATFORM,
-                TITLE,
-                CREATED_TIME,
-                UPDATED_TIME
-            ).values(
-                status,
-                receivers,
-                content,
-                url,
-                platform,
-                title,
-                now,
-                now
-            ).returning(ID)
-                .fetchOne()!!.id
-        }
-    }
-
-    fun updatePushHistoryStatus(
-        dslContext: DSLContext,
-        id: Long,
-        status: Int
-    ): Boolean {
-        val now = LocalDateTime.now()
-        with(TExperiencePushHistory.T_EXPERIENCE_PUSH_HISTORY) {
-            return dslContext.update(this)
-                .set(STATUS, status)
-                .set(UPDATED_TIME, now)
-                .where(ID.eq(id))
-                .execute() == 1
-        }
-    }
-
+class ExperiencePushSubscribeDao {
     fun createSubscription(
         dslContext: DSLContext,
         userId: String,
@@ -188,6 +81,7 @@ class ExperiencePushDao {
                 .execute()
         }
     }
+
     fun getSubscription(
         dslContext: DSLContext,
         userId: String,
@@ -204,6 +98,7 @@ class ExperiencePushDao {
                 .fetchOne()
         }
     }
+
     fun listSubscription(
         dslContext: DSLContext,
         projectId: String,

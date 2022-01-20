@@ -46,7 +46,7 @@ import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushDao
+import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
@@ -70,7 +70,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
-    private val experiencePushDao: ExperiencePushDao,
+    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
@@ -242,7 +242,7 @@ class ExperienceBaseService @Autowired constructor(
     ): Boolean {
         logger.info("userId:$userId,platform:$platform,bundleIdentifier:$bundleIdentifier,projectId:$projectId")
         val subscriptionRecord = lazy {
-            experiencePushDao.getSubscription(
+            experiencePushSubscribeDao.getSubscription(
                 dslContext = dslContext,
                 userId = userId,
                 projectId = projectId,
@@ -311,13 +311,13 @@ class ExperienceBaseService @Autowired constructor(
         projectId: String,
         userId: String
     ): Boolean {
-        return experienceDownloadDetailDao.getDownloadHistory(
+        return experienceDownloadDetailDao.countDownloadHistory(
             dslContext = dslContext,
             projectId = projectId,
             bundleIdentifier = bundleIdentifier,
             platform = platform,
             userId = userId
-        ).isEmpty()
+        ) == 0
     }
 
     /**
@@ -349,6 +349,24 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     /**
+     * 获取内部用户列表
+     */
+    fun getInnerReceivers(
+        dslContext: DSLContext,
+        experienceId: Long
+    ): MutableSet<String> {
+        val innerReceivers = mutableSetOf<String>()
+        val extraUsers =
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+        val groupIdToUserIdsMap = getGroupIdToInnerUserIds(
+            getGroupIdsByRecordId(experienceId)
+        )
+        innerReceivers.addAll(extraUsers)
+        innerReceivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
+        return innerReceivers
+    }
+
+    /**
      * 外部用户,根据组号获取<组号,用户列表>
      */
     fun getGroupIdToOuters(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
@@ -362,6 +380,25 @@ class ExperienceBaseService @Autowired constructor(
             userIds.add(it.outer)
         }
         return groupIdToUserIds
+    }
+
+    /**
+     * 获取外部用户列表
+     */
+    fun getOuterReceivers(
+        dslContext: DSLContext,
+        experienceId: Long,
+        groupIds: Set<Long>
+    ): MutableSet<String> {
+        val outerReceivers = mutableSetOf<String>()
+        val outerGroup =
+            getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }
+                .toSet()
+        val outerUser =
+            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+        outerReceivers.addAll(outerGroup)
+        outerReceivers.addAll(outerUser)
+        return outerReceivers
     }
 
     /**

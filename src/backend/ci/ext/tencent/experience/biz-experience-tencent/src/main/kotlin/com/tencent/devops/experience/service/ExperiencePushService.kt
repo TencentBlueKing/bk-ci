@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushDao
+import com.tencent.devops.experience.dao.ExperiencePushTokenDao
+import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
+import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
@@ -43,41 +45,46 @@ import org.springframework.stereotype.Service
 @Service
 class ExperiencePushService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val experiencePushDao: ExperiencePushDao,
+    private val experiencePushTokenDao: ExperiencePushTokenDao,
     private val experienceNotifyService: ExperienceNotifyService,
     private val experienceBaseService: ExperienceBaseService,
-    private val experiencePublicDao: ExperiencePublicDao
+    private val experiencePublicDao: ExperiencePublicDao,
+    private val experiencePushHistoryDao: ExperiencePushHistoryDao,
+    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao
 ) {
     fun bindDeviceToken(
         userId: String,
         platform: Int,
         token: String
     ): Result<Boolean> {
-        val userTokenRecord = experiencePushDao.getByUserId(
+        val userTokenRecord = experiencePushTokenDao.getByUserId(
             dslContext = dslContext,
             userId = userId
         )
-        return if (userTokenRecord != null) {
-            // 若不为空，则用户有绑定记录，则检查前端传递的token和数据库表中的token是否一致。若不一致，则修改用户的设备token
-            checkAndUpdateUserToken(
+        if (userTokenRecord != null) {
+            return checkAndUpdateUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
                 platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
                 userTokenRecord = userTokenRecord
             )
-        } else {
-            experiencePushDao.createUserToken(
-                dslContext = dslContext,
-                userId = userId,
-                token = token,
-                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-            )
-            Result("用户绑定设备成功！", true)
         }
+        val isBind = experiencePushTokenDao.countByToken(dslContext, token) > 0
+        if (isBind) {
+            return Result("该设备已被其他用户绑定！", false)
+        }
+        experiencePushTokenDao.createUserToken(
+            dslContext = dslContext,
+            userId = userId,
+            token = token,
+            platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
+        )
+        return Result("用户绑定设备成功！", true)
     }
 
-    fun checkAndUpdateUserToken(
+    // 检查前端传递的token和数据库表中的token是否一致。若不一致，则修改用户的设备token
+    private fun checkAndUpdateUserToken(
         dslContext: DSLContext,
         userId: String,
         token: String,
@@ -88,7 +95,7 @@ class ExperiencePushService @Autowired constructor(
         return if (token == userTokenRecord.token) {
             Result("请勿重复绑定同台设备！", false)
         } else {
-            val isUpdate = experiencePushDao.updateUserToken(
+            val isUpdate = experiencePushTokenDao.updateUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
@@ -152,7 +159,7 @@ class ExperiencePushService @Autowired constructor(
                 checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
                 // 查询公开订阅表是否有记录
                 val subscriptionRecord =
-                    experiencePushDao.getSubscription(
+                    experiencePushSubscribeDao.getSubscription(
                         dslContext = dslContext,
                         userId = userId,
                         projectId = projectId,
@@ -162,7 +169,7 @@ class ExperiencePushService @Autowired constructor(
                 if (subscriptionRecord) {
                     return Result("该体验已订阅，不允许重复订阅", false)
                 }
-                experiencePushDao.createSubscription(
+                experiencePushSubscribeDao.createSubscription(
                     dslContext = dslContext,
                     userId = userId,
                     projectId = projectId,
@@ -232,7 +239,7 @@ class ExperiencePushService @Autowired constructor(
                 checkPublicExperienceParam(experienceId, platform, projectId, bundleIdentifier)
                 // 查询公开订阅表是否有记录
                 val subscriptionRecord =
-                    experiencePushDao.getSubscription(
+                    experiencePushSubscribeDao.getSubscription(
                         dslContext = dslContext,
                         userId = userId,
                         projectId = projectId,
@@ -242,7 +249,7 @@ class ExperiencePushService @Autowired constructor(
                 if (!subscriptionRecord) {
                     return Result("由于没有订阅该体验，不允许取消体验", false)
                 }
-                experiencePushDao.deleteSubscription(
+                experiencePushSubscribeDao.deleteSubscription(
                     dslContext,
                     userId = userId,
                     projectId = projectId,
@@ -282,14 +289,14 @@ class ExperiencePushService @Autowired constructor(
         val title = appNotifyMessage.title
         val userId = appNotifyMessage.receiver
         val url = appNotifyMessage.url
-        val userTokenRecord = experiencePushDao.getByUserId(
+        val userTokenRecord = experiencePushTokenDao.getByUserId(
             dslContext = dslContext,
             userId = userId
         ) ?: return Result("该用户未绑定设备", false)
         val platform = userTokenRecord.platform
         // 创建推送消息记录，此时状态发送中
         val messageId =
-            experiencePushDao.createPushHistory(
+            experiencePushHistoryDao.createPushHistory(
                 dslContext = dslContext,
                 status = PushStatus.SENDING.status,
                 receivers = userId,

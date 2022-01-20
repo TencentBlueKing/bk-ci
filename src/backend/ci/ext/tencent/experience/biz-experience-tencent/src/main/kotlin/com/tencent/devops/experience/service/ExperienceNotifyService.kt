@@ -27,7 +27,7 @@
 
 package com.tencent.devops.experience.service
 
-import com.tencent.devops.experience.dao.ExperiencePushDao
+import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.AppNotifyMessageWithOperation
 import com.tencent.devops.experience.pojo.enums.PushStatus
@@ -59,7 +59,7 @@ import org.springframework.stereotype.Service
 @Service
 class ExperienceNotifyService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val experiencePushDao: ExperiencePushDao,
+    private val experiencePushHistoryDao: ExperiencePushHistoryDao,
     private val rabbitTemplate: RabbitTemplate
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
@@ -112,12 +112,12 @@ class ExperienceNotifyService @Autowired constructor(
         }
         val isSuccess = sendXinge(appNotifyMessageWithOperation)
         when {
-            isSuccess -> experiencePushDao.updatePushHistoryStatus(
+            isSuccess -> experiencePushHistoryDao.updatePushHistoryStatus(
                 dslContext = dslContext,
                 id = appNotifyMessageWithOperation.messageId,
                 status = PushStatus.SUCCESS.status
             )
-            else -> experiencePushDao.updatePushHistoryStatus(
+            else -> experiencePushHistoryDao.updatePushHistoryStatus(
                 dslContext = dslContext,
                 id = appNotifyMessageWithOperation.messageId,
                 status = PushStatus.FAILURE.status

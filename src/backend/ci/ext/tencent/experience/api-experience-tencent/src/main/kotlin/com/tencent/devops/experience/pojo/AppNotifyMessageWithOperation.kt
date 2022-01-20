@@ -26,6 +26,8 @@
  */
 
 package com.tencent.devops.experience.pojo
+
+// 消息重试机制封装类
 class AppNotifyMessageWithOperation : AppNotifyMessage() {
     var id: String? = null
     var retryCount: Int = 0

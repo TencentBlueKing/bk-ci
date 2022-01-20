@@ -59,20 +59,21 @@ class ExperienceDownloadDetailDao {
         }
     }
 
-    fun getDownloadHistory(
+    fun countDownloadHistory(
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
         platform: String,
         userId: String
-    ): Result<TExperienceDownloadDetailRecord> {
+    ): Int {
         with(TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount()
+                .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(USER_ID.eq(userId))
                 .and(PLATFORM.eq(platform))
-                .fetch()
+                .fetchAny()?.value1() ?: 0
         }
     }
 }
