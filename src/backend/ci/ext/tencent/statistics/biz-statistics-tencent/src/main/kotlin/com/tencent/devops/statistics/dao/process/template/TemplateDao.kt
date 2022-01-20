@@ -224,6 +224,7 @@ class TemplateDao {
                     )
                 )
             )
+            .where(conditions)
             .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
 
         return if (null != page && null != pageSize) {

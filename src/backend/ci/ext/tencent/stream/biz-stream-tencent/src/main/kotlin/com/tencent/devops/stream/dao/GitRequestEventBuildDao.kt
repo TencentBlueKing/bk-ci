@@ -28,10 +28,12 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.pojo.BranchBuilds
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.stream.pojo.BranchBuilds
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -39,7 +41,6 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ComplexCondition")
 @Repository
@@ -612,6 +613,24 @@ class GitRequestEventBuildDao {
                             .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
                     )
                 ).fetch()
+        }
+    }
+
+    fun getLatestPipelineByDuration(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Map<String, String> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext
+                .select(ORIGIN_YAML)
+                .distinctOn(this.PIPELINE_ID)
+                .from(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .fetch().map {
+                    it.getValue(PIPELINE_ID) to it.getValue(ORIGIN_YAML)
+                }.toMap()
         }
     }
 }
