@@ -58,9 +58,7 @@ class PipelineDockerDebugDao {
         buildEnv: String,
         registryUser: String?,
         registryPwd: String?,
-        imageType: String?,
-        imagePublicFlag: Boolean?,
-        imageRDType: ImageRDTypeEnum?
+        imageType: String?
     ) {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             val now = LocalDateTime.now()
@@ -79,9 +77,7 @@ class PipelineDockerDebugDao {
                 BUILD_ENV,
                 REGISTRY_USER,
                 REGISTRY_PWD,
-                IMAGE_TYPE,
-                IMAGE_PUBLIC_FLAG,
-                IMAGE_RD_TYPE
+                IMAGE_TYPE
             )
                 .values(
                     projectId,
@@ -98,9 +94,7 @@ class PipelineDockerDebugDao {
                     buildEnv,
                     registryUser,
                     registryPwd,
-                    imageType,
-                    imagePublicFlag,
-                    imageRDType?.type?.toByte()
+                    imageType
                 )
                 .onDuplicateKeyUpdate()
                 .set(POOL_NO, poolNo)

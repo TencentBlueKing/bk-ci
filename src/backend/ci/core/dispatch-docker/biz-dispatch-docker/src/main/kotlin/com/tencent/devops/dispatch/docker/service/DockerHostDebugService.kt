@@ -62,7 +62,6 @@ import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
@@ -85,18 +84,16 @@ class DockerHostDebugService @Autowired constructor(
 
     private val grayFlag: Boolean = gray.isGray()
 
-    @Value("\${dispatch.dockerDebug.authToken:#{null}}")
-    val dockerDebugAuthToken: String? = ""
-
     fun startDebug(
         dockerIp: String,
         userId: String,
         poolNo: Int,
-        debugStartParam: DebugStartParam
+        debugStartParam: DebugStartParam,
+        startupMessage: String
     ): String {
         with(debugStartParam) {
             val stopWatch = StopWatch()
-            var imageRepoInfo: ImageRepoInfo? = null
+            /*var imageRepoInfo: ImageRepoInfo? = null
             var finalCredentialId = credentialId
             var credentialProject = projectId
 
@@ -136,7 +133,7 @@ class DockerHostDebugService @Autowired constructor(
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 containerPool = containerPool
-            )
+            )*/
 
             stopWatch.start("get buildEnvs")
             val buildEnvStr = if (null != buildEnv && buildEnv!!.isNotEmpty()) {
@@ -162,6 +159,7 @@ class DockerHostDebugService @Autowired constructor(
             }
             stopWatch.stop()
 
+            val containerPool: Pool = objectMapper.readValue(startupMessage)
             LOG.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr. stopWatch: $stopWatch")
 
             // 根据dockerIp定向调用dockerhost
@@ -171,14 +169,14 @@ class DockerHostDebugService @Autowired constructor(
                 vmSeqId = vmSeqId,
                 poolNo = poolNo,
                 status = PipelineTaskStatus.RUNNING.status,
-                imageName = dockerImage,
+                imageName = containerPool.container!!,
                 containerId = "",
                 address = "",
                 token = cmd ?: "/bin/sh",
                 buildEnv = buildEnvStr,
-                registryUser = userName,
-                registryPwd = password,
-                imageType = newImageType
+                registryUser = containerPool.credential!!.user,
+                registryPwd = containerPool.credential!!.password,
+                imageType = containerPool.imageType
             )
 
             val request = dockerHostProxyService.getDockerHostProxyRequest(
@@ -203,15 +201,13 @@ class DockerHostDebugService @Autowired constructor(
                             poolNo = poolNo,
                             status = PipelineTaskStatus.RUNNING,
                             token = "",
-                            imageName = dockerImage.trim(),
+                            imageName = containerPool.container!!,
                             hostTag = dockerIp,
                             containerId = containerId,
                             buildEnv = buildEnvStr,
-                            registryUser = userName,
-                            registryPwd = password,
-                            imageType = newImageType,
-                            imagePublicFlag = imageRepoInfo?.publicFlag,
-                            imageRDType = imageRepoInfo?.rdType
+                            registryUser = containerPool.credential!!.user,
+                            registryPwd = containerPool.credential!!.password,
+                            imageType = containerPool.imageType
                         )
 
                         return containerId

@@ -108,7 +108,8 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 dockerIp = dockerBuildHistory.dockerIp,
                 userId = userId,
                 poolNo = dockerBuildHistory.poolNo,
-                debugStartParam = debugStartParam
+                debugStartParam = debugStartParam,
+                startupMessage = dockerBuildHistory.startupMessage
             )
             return Result(dockerHostDebugService.getWsUrl(
                 dockerIp = dockerBuildHistory.dockerIp,
