@@ -49,6 +49,12 @@ export const codelibConfig = {
         typeName: 'codeGit'
     },
     gitlab: {
+        credentialTypes: 'TOKEN_SSH_PRIVATEKEY',
+        addType: 'TOKEN_SSH_PRIVATEKEY',
+        label: 'Gitlab',
+        typeName: 'codeGitLab'
+    },
+    gitlab_http: {
         credentialTypes: 'ACCESSTOKEN',
         addType: 'ACCESSTOKEN',
         label: 'Gitlab',
@@ -98,6 +104,9 @@ export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     }
     if (type === 'tgit' && authType === 'HTTPS') {
         type = 'tgit_https'
+    }
+    if (type === 'gitlab' && authType === 'HTTP') {
+        type = 'gitlab_http'
     }
 
     return codelibConfig[type]

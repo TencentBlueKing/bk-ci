@@ -215,6 +215,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 // 为项目分配数据源
                 projectDataSourceAssignService.assignDataSource(
+                    channelCode = projectChannel,
                     projectId = projectCreateInfo.englishName,
                     moduleCodes = listOf(SystemModuleEnum.PROCESS)
                 )

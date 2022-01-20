@@ -247,10 +247,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         isDecrypt: Boolean,
         types: String?
     ): Result<List<SensitiveConfResp>?> {
-        if (userId.isNotBlank()) {
+        val filedTypeList = if (!types.isNullOrBlank()) types.split(",") else null
+        // 私有配置为后端类型时才需要做权限校验
+        if (userId.isNotBlank() && filedTypeList?.contains(FieldTypeEnum.BACKEND.name) == true) {
             checkUserAuthority(userId, storeCode, storeType)
         }
-        val filedTypeList = if (!types.isNullOrBlank()) types.split(",") else null
         val records = sensitiveConfDao.list(dslContext, storeType.type.toByte(), storeCode, filedTypeList)
         val sensitiveConfRespList = mutableListOf<SensitiveConfResp>()
         records?.forEach {
