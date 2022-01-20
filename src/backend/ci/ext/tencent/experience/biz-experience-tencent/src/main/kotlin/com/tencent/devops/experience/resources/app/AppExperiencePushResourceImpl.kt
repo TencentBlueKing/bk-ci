@@ -58,7 +58,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         val experienceHashId = subscribeParam.experienceHashId
         checkSubscribeParam(userId, experienceHashId)
         return experiencePushService.subscribe(userId, experienceHashId, platform)
-
     }
 
     override fun unSubscribe(
