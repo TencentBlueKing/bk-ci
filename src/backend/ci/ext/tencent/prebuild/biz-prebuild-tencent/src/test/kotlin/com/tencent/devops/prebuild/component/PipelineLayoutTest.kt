@@ -32,7 +32,6 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
