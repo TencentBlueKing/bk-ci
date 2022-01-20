@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -58,6 +59,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
@@ -75,6 +77,7 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
+import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -536,6 +539,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     projectId = buildInfo.projectId,
                     pipelineId = buildInfo.pipelineId, buildId = buildId, variables = result.buildResult
                 )
+                writeRemark(result.buildResult, projectId, buildInfo.pipelineId, buildId, buildInfo.startUser)
             } catch (ignored: Exception) { // 防止因为变量字符过长而失败。
                 LOG.warn("ENGINE|$buildId| save var fail: ${ignored.message}", ignored)
             }
@@ -783,6 +787,28 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         } finally {
             redisOperation.delete(SensitiveApiUtil.getRunningAtomCodeKey(buildId = buildId, vmSeqId = vmSeqId))
             containerIdLock.unlock()
+        }
+    }
+
+    private fun writeRemark(
+        buildResult: Map<String, String>,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String
+    ) {
+        if (buildResult.containsKey(PIPELINE_BUILD_REMARK)) {
+            val remark = buildResult[PIPELINE_BUILD_REMARK]
+            if (remark != null) {
+                LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
+                pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
+                pipelineEventDispatcher.dispatch(
+                        PipelineBuildWebSocketPushEvent(
+                                source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
+                                userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                        )
+                )
+            }
         }
     }
 }

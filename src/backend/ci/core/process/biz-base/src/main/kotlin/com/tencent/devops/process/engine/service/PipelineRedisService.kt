@@ -25,17 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-redis"))
-    api("org.springframework.boot:spring-boot-starter-actuator")
-    api("org.springframework.boot:spring-boot-starter-logging")
-    api("org.springframework.cloud:spring-cloud-consul-discovery")
-    api("io.github.openfeign:feign-okhttp")
-    api("org.jolokia:jolokia-core")
-    api("javax.servlet:javax.servlet-api")
-    api("org.springframework:spring-web")
-    api("org.apache.commons:commons-lang3")
-    api("org.springframework.cloud:spring-cloud-starter-bootstrap")
-    api("org.jooq:jooq")
+package com.tencent.devops.process.engine.service
+
+import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
+
+@Service
+class PipelineRedisService @Autowired constructor(
+    val redisOperation: RedisOperation
+) {
+    fun getBuildRestartValue(buildId: String): String? {
+        return redisOperation.get("$RESTART_KEY$buildId") ?: null
+    }
+
+    fun setBuildRestartValue(buildId: String) {
+        return redisOperation.set("$RESTART_KEY$buildId", "run", TimeUnit.MINUTES.toSeconds(900))
+    }
+
+    fun deleteRestartBuild(buildId: String) {
+        return redisOperation.delete("$RESTART_KEY$buildId")
+    }
+
+    companion object {
+        const val RESTART_KEY = "pipeline:build:restart:"
+    }
 }
