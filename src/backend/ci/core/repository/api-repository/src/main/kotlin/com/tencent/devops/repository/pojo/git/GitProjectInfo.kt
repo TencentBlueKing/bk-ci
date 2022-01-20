@@ -51,18 +51,12 @@ data class GitProjectInfo(
     @ApiModelProperty("页面地址", name = "web_url")
     @JsonProperty("web_url")
     val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true, name = "http_url_to_repo")
-    @JsonProperty("http_url_to_repo")
-    val gitHttpUrl: String,
     @ApiModelProperty("HTTPS链接", name = "https_url_to_repo")
     @JsonProperty("https_url_to_repo")
     val gitHttpsUrl: String?,
     @ApiModelProperty("gitSshUrl", name = "ssh_url_to_repo")
     @JsonProperty("ssh_url_to_repo")
     val gitSshUrl: String?,
-    @ApiModelProperty("带有名空间的项目名称", name = "name_with_namespace")
-    @JsonProperty("name_with_namespace")
-    val nameWithNamespace: String,
     @ApiModelProperty("带有名空间的项目路径", name = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
