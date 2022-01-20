@@ -18,7 +18,7 @@ object TemplateAcrossInfoUtil {
         taskId: String?
     ): BuildTemplateAcrossInfo? {
         val tid = variables[TEMPLATE_ACROSS_INFO_ID]
-        logger.info("getAcrossInfo tid: $tid stepId: $taskId")
+        logger.info("getAcrossInfo tid: $tid taskId: $taskId")
 
         return if (tid.isNullOrBlank() || taskId.isNullOrBlank()) {
             null
