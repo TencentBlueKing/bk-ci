@@ -58,6 +58,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -79,7 +80,8 @@ class BuildEndControl @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRedisService: PipelineRedisService
 ) {
 
     companion object {
@@ -276,6 +278,10 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun PipelineBuildFinishEvent.popNextBuild() {
+        if (pipelineRedisService.getBuildRestartValue(this.buildId) != null) {
+            // 删除buildId占用的refresh锁
+            pipelineRedisService.deleteRestartBuild(this.buildId)
+        }
 
         // 获取下一个排队的
         val nextBuild = pipelineRuntimeExtService.popNextQueueBuildInfo(projectId = projectId, pipelineId = pipelineId)
