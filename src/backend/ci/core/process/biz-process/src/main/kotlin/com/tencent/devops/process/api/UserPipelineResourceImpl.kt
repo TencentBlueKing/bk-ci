@@ -66,8 +66,6 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
-import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
