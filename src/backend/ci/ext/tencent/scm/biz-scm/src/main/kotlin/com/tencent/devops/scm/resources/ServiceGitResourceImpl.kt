@@ -478,4 +478,16 @@ class ServiceGitResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getProjectInfo(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String
+    ): Result<GitProjectInfo?> {
+        return gitService.getGitProjectInfo(
+            id = gitProjectId,
+            token = token,
+            tokenType
+        )
+    }
 }
