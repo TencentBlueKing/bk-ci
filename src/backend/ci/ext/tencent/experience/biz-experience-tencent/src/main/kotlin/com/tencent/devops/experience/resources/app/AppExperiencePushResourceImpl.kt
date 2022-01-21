@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperiencePushResource
-import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.SubscribeParam
 import com.tencent.devops.experience.service.ExperiencePushService
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,21 +67,6 @@ class AppExperiencePushResourceImpl @Autowired constructor(
         val experienceHashId = subscribeParam.experienceHashId
         checkSubscribeParam(userId, experienceHashId)
         return experiencePushService.unSubscribe(userId, experienceHashId, platform)
-    }
-
-    override fun pushMessage(
-        userId: String,
-        title: String,
-        content: String,
-        url: String
-    ): Result<Boolean> {
-        checkNotifyMessage(content, title, userId, url)
-        val appNotifyMessage = AppNotifyMessage()
-        appNotifyMessage.body = content
-        appNotifyMessage.title = title
-        appNotifyMessage.receiver = userId
-        appNotifyMessage.url = url
-        return experiencePushService.pushMessage(appNotifyMessage)
     }
 
     fun checkSubscribeParam(
