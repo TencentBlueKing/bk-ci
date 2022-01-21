@@ -34,7 +34,6 @@ object AppNotifyUtil {
     fun makeMessage(
         projectName: String,
         experienceHashId: String,
-        platform: String,
         name: String,
         version: String,
         receiver: String
@@ -45,7 +44,6 @@ object AppNotifyUtil {
         message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。点击查看>>"
         message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"
         message.experienceHashId = experienceHashId
-        message.platform = platform
         return message
     }
 }
