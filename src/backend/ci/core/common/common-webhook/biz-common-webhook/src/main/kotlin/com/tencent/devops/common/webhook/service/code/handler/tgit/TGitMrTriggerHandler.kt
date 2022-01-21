@@ -101,7 +101,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
-import com.tencent.devops.common.webhook.service.code.filter.ActionFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -199,10 +199,11 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
-            val actionFilter = ActionFilter(
+            val actionFilter = ContainsFilter(
                 pipelineId = pipelineId,
-                triggerOnAction = TGitMrEventAction.getActionValue(event) ?: "",
-                includedAction = convert(includeMrAction)
+                filterName = "mrAction",
+                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
+                included = convert(includeMrAction)
             )
 
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询

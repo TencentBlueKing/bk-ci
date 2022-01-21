@@ -48,7 +48,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_URL
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
-import com.tencent.devops.common.webhook.service.code.filter.ActionFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
@@ -129,10 +129,11 @@ class TGitIssueTriggerHandler(
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        val actionFilter = ActionFilter(
+        val actionFilter = ContainsFilter(
             pipelineId = pipelineId,
-            triggerOnAction = event.objectAttributes.action,
-            includedAction = WebhookUtils.convert(webHookParams.includeIssueAction)
+            filterName = "issueAction",
+            triggerOn = event.objectAttributes.action,
+            included = WebhookUtils.convert(webHookParams.includeIssueAction)
         )
         return listOf(actionFilter)
     }
