@@ -391,11 +391,16 @@ class ProjectPipelineCallBackService @Autowired constructor(
         callbackInfo.callbackUrl = callBackUrl
         val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
-        model.events?.forEach { eventName, event ->
-            // 事件名称重复,以新的为准
-            if (eventName == callbackInfo.callbackName) {
-                newEventMap[callbackInfo.callbackName] = callbackInfo
-            } else newEventMap[eventName] = event
+
+        if (model.events?.isEmpty() == true) {
+            newEventMap[callbackInfo.callbackName] = callbackInfo
+        } else {
+            model.events?.forEach { eventName, event ->
+                // 事件名称重复,以新的为准
+                if (eventName == callbackInfo.callbackName) {
+                    newEventMap[callbackInfo.callbackName] = callbackInfo
+                } else newEventMap[eventName] = event
+            }
         }
         model.events = newEventMap
         val newModel = mutableListOf<PipelineModelVersion>()
