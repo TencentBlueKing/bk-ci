@@ -67,6 +67,7 @@ class GitCIRequestListener @Autowired constructor(
         }
         try {
             gitCITriggerService.externalCodeGitBuild(
+                eventType = gitCIRequestEvent.eventType,
                 event = gitCIRequestEvent.event
             )
         } catch (ignore: Throwable) {

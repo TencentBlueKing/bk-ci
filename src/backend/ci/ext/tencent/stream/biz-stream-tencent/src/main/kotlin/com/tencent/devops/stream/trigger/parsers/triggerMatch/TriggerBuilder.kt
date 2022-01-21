@@ -14,6 +14,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
@@ -39,8 +40,31 @@ object TriggerBuilder {
                 buildGitMrEventElement(gitEvent, triggerOn)
             is GitIssueEvent ->
                 buildGitIssueElement(gitEvent, triggerOn)
+            is GitReviewEvent ->
+                buildGitReviewElement(gitEvent, triggerOn)
             else -> null
         }
+    }
+
+    private fun buildGitReviewElement(gitEvent: GitReviewEvent, triggerOn: TriggerOn?): CodeGitWebHookTriggerElement? {
+        if (triggerOn?.review == null) {
+            return null
+        }
+        return CodeGitWebHookTriggerElement(
+            id = "0",
+            repositoryHashId = null,
+            repositoryName = gitEvent.projectId.toString(),
+            repositoryType = RepositoryType.NAME,
+            branchName = null,
+            excludeBranchName = null,
+            includePaths = null,
+            excludePaths = null,
+            excludeUsers = null,
+            block = false,
+            includeCrState = triggerOn.review?.states,
+            includeCrTypes = triggerOn.review?.types,
+            eventType = CodeEventType.REVIEW
+        )
     }
 
     /**

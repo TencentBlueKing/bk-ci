@@ -56,6 +56,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.PushRule
+import com.tencent.devops.common.ci.v2.ReviewRule
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -614,8 +615,27 @@ object ScriptYmlUtils {
             mr = mrRule(preTriggerOn),
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
-            issues = issuesRule(preTriggerOn)
+            issues = issuesRule(preTriggerOn),
+            review = reviewRule(preTriggerOn)
         )
+    }
+
+    private fun reviewRule(
+        preTriggerOn: PreTriggerOn
+    ): ReviewRule? {
+        if (preTriggerOn.review != null) {
+            val issues = preTriggerOn.review
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(issues),
+                    ReviewRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn issuesRule failed.", e)
+                null
+            }
+        }
+        return null
     }
 
     private fun issuesRule(

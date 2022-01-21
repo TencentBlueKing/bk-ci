@@ -35,5 +35,6 @@ import org.slf4j.MDC
 @Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
 data class GitCIRequestEvent(
     val event: String,
+    val eventType: String? = null,
     val traceId: String? = MDC.get(TraceTag.BIZID)
 )

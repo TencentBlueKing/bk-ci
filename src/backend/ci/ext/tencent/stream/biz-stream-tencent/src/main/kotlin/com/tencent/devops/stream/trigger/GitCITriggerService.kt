@@ -38,6 +38,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -110,13 +111,17 @@ class GitCITriggerService @Autowired constructor(
         const val noPipelineBuildEvent = "MR held, waiting until pipeline validation finish."
     }
 
-    fun externalCodeGitBuild(event: String): Boolean? {
+    fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
         val start = LocalDateTime.now().timestampmilli()
         logger.info("Trigger code git build($event)")
         val eventObject = try {
-            objectMapper.readValue<GitEvent>(event)
-        } catch (e: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+            if (eventType == "Review Hook") {
+                objectMapper.readValue<GitReviewEvent>(event)
+            } else {
+                objectMapper.readValue<GitEvent>(event)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
             return false
         }
 

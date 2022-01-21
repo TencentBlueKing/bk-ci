@@ -45,12 +45,13 @@ class ExternalScmResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ExternalScmResourceImpl::class.java)
     }
 
-    override fun webHookCodeGitCommit(token: String, event: String): Result<Boolean> {
+    override fun webHookCodeGitCommit(token: String, eventType: String, event: String): Result<Boolean> {
         logger.info("webHook event: $event")
         GitCIRequestDispatcher.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = GitCIRequestEvent(
-                event = event
+                eventType = eventType,
+                event = event,
             )
         )
         return Result(true)
