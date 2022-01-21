@@ -44,7 +44,7 @@ class GitProjectInfoService @Autowired constructor(
 
     private val projectPublicCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
-        .expireAfterWrite(1, TimeUnit.HOURS)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String/*project*/, String?>()
 
     fun checkProjectPublic(projectCode: String): Boolean {
