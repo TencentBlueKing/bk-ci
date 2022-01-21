@@ -1,5 +1,6 @@
 # 初始化iam
-{{ if eq .Values.config.bkCiAuthProvider "bk_login_v3" }}
+{{ if eq .Values.init.iam "true" }}
+{{- if eq .Values.config.bkCiAuthProvider "bk_login_v3" -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -70,4 +71,5 @@ spec:
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
       restartPolicy: OnFailure
-{{ end }}
+{{- end -}}
+{{- end -}}

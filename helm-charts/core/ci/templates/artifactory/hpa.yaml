@@ -1,4 +1,5 @@
 # artifactory hpa
+{{ if .Values.artifactory.enabled -}}
 {{ if .Values.artifactory.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.artifactory.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

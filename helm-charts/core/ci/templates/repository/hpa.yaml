@@ -1,4 +1,5 @@
 # repository hpa
+{{ if .Values.repository.enabled -}}
 {{ if .Values.repository.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.repository.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

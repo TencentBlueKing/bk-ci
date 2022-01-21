@@ -1,4 +1,5 @@
 # websocket hpa
+{{ if .Values.websocket.enabled -}}
 {{ if .Values.websocket.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.websocket.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}
