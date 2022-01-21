@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode.CAN_NOT_FIND_RELATION
 import com.tencent.devops.auth.pojo.MemberInfo
@@ -45,6 +46,7 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
@@ -70,35 +72,42 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         managerGroup: Boolean,
         checkAGradeManager: Boolean?
     ) {
+
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
             logger.warn("$roleId can not find relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
-
-        // 页面操作需要校验分级管理员,服务间调用无需校验
-        if (checkAGradeManager!!) {
-            permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
-        }
-        val roleMembers = mutableListOf<ManagerMember>()
-        val userIds = mutableListOf<String>()
-        members.forEach {
-            if (it.type == ManagerScopesEnum.USER) {
-                checkUser(it.id)
-                userIds.add(it.id)
+        try {
+            // 页面操作需要校验分级管理员,服务间调用无需校验
+            if (checkAGradeManager!!) {
+                permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
             }
-            roleMembers.add(ManagerMember(ManagerScopesEnum.getType(it.type), it.id))
-        }
-        val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
-        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder().expiredAt(expiredTime).members(roleMembers).build()
-        iamManagerService.createRoleGroupMember(iamId!!.toInt(), managerMemberGroupDTO)
-
-        // 添加用户到管理员需要同步添加用户到分级管理员
-        if (managerGroup) {
-            if (userIds.isNotEmpty()) {
-                val gradeMembers = ManagerRoleMemberDTO.builder().members(userIds).build()
-                iamManagerService.batchCreateGradeManagerRoleMember(gradeMembers, projectId)
+            val roleMembers = mutableListOf<ManagerMember>()
+            val userIds = mutableListOf<String>()
+            members.forEach {
+                if (it.type == ManagerScopesEnum.USER) {
+                    checkUser(it.id)
+                    userIds.add(it.id)
+                }
+                roleMembers.add(ManagerMember(ManagerScopesEnum.getType(it.type), it.id))
             }
+            val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
+            val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
+                .expiredAt(expiredTime)
+                .members(roleMembers)
+                .build()
+            iamManagerService.createRoleGroupMember(iamId!!.toInt(), managerMemberGroupDTO)
+
+            // 添加用户到管理员需要同步添加用户到分级管理员
+            if (managerGroup) {
+                if (userIds.isNotEmpty()) {
+                    val gradeMembers = ManagerRoleMemberDTO.builder().members(userIds).build()
+                    iamManagerService.batchCreateGradeManagerRoleMember(gradeMembers, projectId)
+                }
+            }
+        } catch (e: IamException) {
+            throw RemoteServiceException(e.errorMsg)
         }
     }
 
