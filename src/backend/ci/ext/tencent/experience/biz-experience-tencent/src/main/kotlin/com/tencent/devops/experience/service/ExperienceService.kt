@@ -802,7 +802,7 @@ class ExperienceService @Autowired constructor(
         innerUrl: String,
         outerUrl: String,
         receiver: String,
-        experienceId: Long,
+        experienceId: Long
     ) {
         if (notifyTypeList.contains(NotifyType.RTX)) {
             val message = RtxUtil.makeMessage(
