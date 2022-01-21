@@ -27,8 +27,13 @@
 
 package com.tencent.devops.stream.resources
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.stream.api.ExternalScmResource
 import com.tencent.devops.stream.mq.streamRequest.GitCIRequestDispatcher
 import com.tencent.devops.stream.mq.streamRequest.GitCIRequestEvent
@@ -38,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ExternalScmResourceImpl @Autowired constructor(
+    private val objectMapper: ObjectMapper,
     private val rabbitTemplate: RabbitTemplate
 ) : ExternalScmResource {
 
@@ -47,11 +53,18 @@ class ExternalScmResourceImpl @Autowired constructor(
 
     override fun webHookCodeGitCommit(token: String, eventType: String, event: String): Result<Boolean> {
         logger.info("webHook event: $event, eventType:$eventType")
+        val body = if (eventType == "Review Hook") {
+            // 工蜂cr事件的webhook body不统一，没有objectKind字段,需要再转换
+            val gitReviewEvent = objectMapper.readValue<GitReviewEvent>(event)
+            JsonUtil.toJson(gitReviewEvent.copy(objectKind = GitReviewEvent.classType))
+        } else {
+            event
+        }
         GitCIRequestDispatcher.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = GitCIRequestEvent(
                 eventType = eventType,
-                event = event,
+                event = body,
             )
         )
         return Result(true)

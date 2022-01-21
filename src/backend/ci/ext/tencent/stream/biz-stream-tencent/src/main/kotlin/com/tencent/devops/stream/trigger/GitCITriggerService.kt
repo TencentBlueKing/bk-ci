@@ -115,11 +115,7 @@ class GitCITriggerService @Autowired constructor(
         val start = LocalDateTime.now().timestampmilli()
         logger.info("Trigger code git build($event, $eventType)")
         val eventObject = try {
-            if (eventType == "Review Hook") {
-                objectMapper.readValue<GitReviewEvent>(event)
-            } else {
-                objectMapper.readValue<GitEvent>(event)
-            }
+            objectMapper.readValue<GitEvent>(event)
         } catch (ignore: Exception) {
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
             return false
