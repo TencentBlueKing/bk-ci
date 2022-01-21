@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
@@ -55,6 +56,11 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
@@ -168,6 +174,7 @@ object PipelineVarUtil {
         "ci.repo_name" to PIPELINE_GIT_REPO_NAME,
         "ci.repo_group" to PIPELINE_GIT_REPO_GROUP,
         "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
+        "ci.event_url" to PIPELINE_GIT_EVENT_URL,
         "ci.sha" to PIPELINE_GIT_SHA,
         "ci.sha_short" to PIPELINE_GIT_SHA_SHORT,
         "ci.before_sha" to PIPELINE_GIT_BEFORE_SHA,
@@ -194,7 +201,12 @@ object PipelineVarUtil {
         "ci.issue.description" to PIPELINE_WEBHOOK_ISSUE_DESCRIPTION,
         "ci.issue.state" to PIPELINE_WEBHOOK_ISSUE_STATE,
         "ci.issue.owner" to PIPELINE_WEBHOOK_ISSUE_OWNER,
-        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
+        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
+        "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
+        "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
+        "ci.review_state" to BK_REPO_GIT_WEBHOOK_REVIEW_STATE,
+        "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
     )
 
     /**
