@@ -392,13 +392,20 @@ class ProjectPipelineCallBackService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: return
         val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
         model.events?.forEach { eventName, event ->
-            // 事件名称重复,已新的为准
+            // 事件名称重复,以新的为准
             if (eventName == callbackInfo.callbackName) {
                 newEventMap[callbackInfo.callbackName] = callbackInfo
             } else newEventMap[eventName] = event
         }
         model.events = newEventMap
         val newModel = mutableListOf<PipelineModelVersion>()
+        newModel.add(
+            PipelineModelVersion(
+            pipelineId = pipelineId,
+            projectId = projectId,
+            model = JsonUtil.toJson(model, formatted = false),
+            creator = model.pipelineCreator ?: userId
+        ))
         pipelineRepositoryService.batchUpdatePipelineModel(
             userId = userId,
             pipelineModelVersionList = newModel
