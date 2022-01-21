@@ -245,6 +245,15 @@ interface UserQualityRuleResource {
         projectId: String
     ): Result<List<RuleTemplate>>
 
+    @ApiOperation("获取规则模板")
+    @Path("/project/{projectId}/listTemplates")
+    @GET
+    fun listProjectTemplates(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<RuleTemplate>>
+
     @ApiOperation("查询生效范围数据")
     @Path("/listPipelineRangeDetail")
     @POST
