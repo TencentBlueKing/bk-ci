@@ -29,18 +29,23 @@ package com.tencent.devops.common.webhook.service.code.filter
 
 import org.slf4j.LoggerFactory
 
-class ActionFilter(
+/**
+ * 包含过滤器
+ */
+class ContainsFilter(
     private val pipelineId: String,
-    private val triggerOnAction: String,
-    private val includedAction: List<String>
+    // 过滤器名字
+    private val filterName: String,
+    private val triggerOn: String,
+    private val included: List<String>
 ) : WebhookFilter {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ActionFilter::class.java)
+        private val logger = LoggerFactory.getLogger(ContainsFilter::class.java)
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info("$pipelineId|triggerOnAction:$triggerOnAction|includedAction:$includedAction|action filter")
-        return includedAction.isEmpty() || includedAction.contains(triggerOnAction)
+        logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
+        return included.isEmpty() || included.contains(triggerOn)
     }
 }

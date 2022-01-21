@@ -69,12 +69,12 @@ class GitWebHookMatcherTest {
 
     @Before
     fun setUp() {
-        CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler())
-        CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
         val gitScmService: GitScmService = mock()
+        CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler(gitScmService))
+        CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
         CodeWebhookHandlerRegistrar.register(TGitMrTriggerHandler(gitScmService))
         CodeWebhookHandlerRegistrar.register(TGitReviewTriggerHandler(gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitIssueTriggerHandler())
+        CodeWebhookHandlerRegistrar.register(TGitIssueTriggerHandler(gitScmService))
     }
 
     @Test

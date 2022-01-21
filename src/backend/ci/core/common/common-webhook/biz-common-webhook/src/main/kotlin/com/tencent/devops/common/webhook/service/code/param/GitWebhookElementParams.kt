@@ -41,6 +41,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         return CodeGitWebHookTriggerElement::class.java
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun getWebhookElementParams(
         element: CodeGitWebHookTriggerElement,
         variables: Map<String, String>
@@ -75,6 +76,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.webhookQueue = element.webhookQueue ?: false
         params.includeCrState = joinToString(element.includeCrState)
+        params.includeCrTypes = joinToString(element.includeCrTypes)
         params.includeIssueAction = joinToString(element.includeIssueAction)
         params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
         params.includeMrAction = joinToString(element.includeMrAction)

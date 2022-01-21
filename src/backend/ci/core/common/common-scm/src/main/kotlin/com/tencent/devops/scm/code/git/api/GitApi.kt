@@ -451,7 +451,7 @@ open class GitApi {
         page: Int,
         pageSize: Int
     ): List<ChangeFileInfo> {
-        val url = "${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
+        val url = "projects/${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
         val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_CHANGE_FILE_LIST, request))
