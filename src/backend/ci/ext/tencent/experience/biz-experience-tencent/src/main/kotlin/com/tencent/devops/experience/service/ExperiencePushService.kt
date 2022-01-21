@@ -150,17 +150,15 @@ class ExperiencePushService @Autowired constructor(
                 return canSubscribe(
                     publicExperience = publicExperience,
                     userId = userId,
-                    experienceId = experienceId,
                     platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
                 )
             }
         }
     }
 
-    fun canSubscribe(
+    private fun canSubscribe(
         publicExperience: TExperiencePublicRecord?,
         userId: String,
-        experienceId: Long,
         platform: String
     ): Result<Boolean> {
         if (publicExperience == null) {
@@ -220,17 +218,15 @@ class ExperiencePushService @Autowired constructor(
                 return canUnSubscribe(
                     publicExperience = publicExperience,
                     userId = userId,
-                    experienceId = experienceId,
                     platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
                 )
             }
         }
     }
 
-    fun canUnSubscribe(
+    private fun canUnSubscribe(
         publicExperience: TExperiencePublicRecord?,
         userId: String,
-        experienceId: Long,
         platform: String
     ): Result<Boolean> {
         if (publicExperience == null) {
@@ -281,7 +277,7 @@ class ExperiencePushService @Autowired constructor(
         return Result(true)
     }
 
-    fun createAppNotifyMessage(
+    private fun createAppNotifyMessage(
         messageId: Long,
         token: String,
         content: String,

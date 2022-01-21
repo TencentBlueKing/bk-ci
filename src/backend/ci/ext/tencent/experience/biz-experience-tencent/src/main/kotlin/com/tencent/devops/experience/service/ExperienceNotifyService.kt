@@ -102,7 +102,7 @@ class ExperienceNotifyService @Autowired constructor(
         }
     }
 
-    fun sendMessage(appNotifyMessageWithOperation: AppNotifyMessageWithOperation?) {
+    private fun sendMessage(appNotifyMessageWithOperation: AppNotifyMessageWithOperation?) {
         if (appNotifyMessageWithOperation == null) {
             logger.warn(
                 "appNotifyMessageWithOperation is " +
@@ -125,7 +125,7 @@ class ExperienceNotifyService @Autowired constructor(
         }
     }
 
-    fun sendXinge(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
+    private fun sendXinge(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): Boolean {
         logger.info("appNotifyMessageWithOperation:  $appNotifyMessageWithOperation")
         val platform = appNotifyMessageWithOperation.platform
         val appId = if (platform == "ANDROID") androidAppId else iosAppId
@@ -148,7 +148,9 @@ class ExperienceNotifyService @Autowired constructor(
         return retCode == 0
     }
 
-    fun createAndroidPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
+    private fun createAndroidPushAppRequest(
+        appNotifyMessageWithOperation: AppNotifyMessageWithOperation
+    ): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         // 单设备推送
         pushAppRequest.audience_type = AudienceType.token
@@ -169,7 +171,9 @@ class ExperienceNotifyService @Autowired constructor(
         return pushAppRequest
     }
 
-    fun createIosPushAppRequest(appNotifyMessageWithOperation: AppNotifyMessageWithOperation): PushAppRequest {
+    private fun createIosPushAppRequest(
+        appNotifyMessageWithOperation: AppNotifyMessageWithOperation
+    ): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         pushAppRequest.audience_type = AudienceType.token
         pushAppRequest.environment = Environment.valueOf("product")
