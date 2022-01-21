@@ -77,6 +77,7 @@ import com.tencent.devops.process.service.view.PipelineViewService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -84,6 +85,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
@@ -1505,6 +1507,130 @@ class PipelineListFacadeService @Autowired constructor(
                 id = it.id,
                 createUser = it.creator
             )
+        }
+    }
+
+    // 质量红线获取视图流水线
+    fun listQualityViewPipelines(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        sortType: PipelineSortType,
+        channelCode: ChannelCode,
+        viewId: String,
+        checkPermission: Boolean = true,
+        filterByPipelineName: String? = null,
+        filterByCreator: String? = null,
+        filterByLabels: String? = null,
+        callByApp: Boolean? = false,
+        authPipelineIds: List<String> = emptyList(),
+        skipPipelineIds: List<String> = emptyList()
+    ): PipelineViewPipelinePage<QualityPipeline> {
+
+        val watch = StopWatch()
+        watch.start("perm_r_perm")
+        val authPipelines = if (authPipelineIds.isEmpty()) {
+            pipelinePermissionService.getResourceByPermission(
+                userId, projectId, AuthPermission.LIST
+            )
+        } else {
+            authPipelineIds
+        }
+        watch.stop()
+
+        watch.start("s_r_summary")
+        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode)
+        watch.stop()
+
+        watch.start("s_r_fav")
+        val skipPipelineIdsNew = mutableListOf<String>()
+        if (pipelineBuildSummary.isNotEmpty) {
+            pipelineBuildSummary.forEach {
+                skipPipelineIdsNew.add(it["PIPELINE_ID"] as String)
+            }
+        }
+        if (skipPipelineIds.isNotEmpty()) {
+            skipPipelineIdsNew.addAll(skipPipelineIds)
+        }
+
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: -1
+        var slqLimit: SQLLimit? = null
+        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+
+        val offset = slqLimit?.offset ?: 0
+        val limit = slqLimit?.limit ?: -1
+        var count = 0L
+        try {
+
+            val list = if (pipelineBuildSummary.isNotEmpty) {
+
+                val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
+                val pipelines = buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
+                val allFilterPipelines = filterViewPipelines(
+                    pipelines,
+                    filterByPipelineName,
+                    filterByCreator,
+                    filterByLabels
+                )
+
+                val hasPipelines = allFilterPipelines.isNotEmpty()
+
+                if (!hasPipelines) {
+                    return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, 0, emptyList())
+                }
+
+                val filterPipelines = when (viewId) {
+                    PIPELINE_VIEW_FAVORITE_PIPELINES -> {
+                        logger.info("User($userId) favorite pipeline ids($favorPipelines)")
+                        allFilterPipelines.filter { favorPipelines.contains(it.pipelineId) }
+                    }
+                    PIPELINE_VIEW_MY_PIPELINES -> {
+                        logger.info("User($userId) my pipelines")
+                        allFilterPipelines.filter {
+                            authPipelines.contains(it.pipelineId)
+                        }
+                    }
+                    PIPELINE_VIEW_ALL_PIPELINES -> {
+                        logger.info("User($userId) all pipelines")
+                        allFilterPipelines
+                    }
+                    else -> {
+                        logger.info("User($userId) filter view($viewId)")
+                        filterViewPipelines(userId, projectId, allFilterPipelines, viewId)
+                    }
+                }
+
+                val permissionList = filterPipelines.filter { it.hasPermission }.toMutableList()
+                sortPipelines(permissionList, sortType)
+                count = permissionList.size.toLong()
+
+                val toIndex =
+                    if (limit == -1 || permissionList.size <= (offset + limit)) permissionList.size else offset + limit
+
+                if (offset >= permissionList.size) mutableListOf() else permissionList.subList(offset, toIndex)
+            } else {
+                mutableListOf()
+            }
+            watch.stop()
+
+            val records = list.map {
+                QualityPipeline(
+                    projectId = it.projectId,
+                    pipelineId = it.pipelineId,
+                    pipelineName = it.pipelineName,
+                    pipelineDesc = it.pipelineDesc,
+                    taskCount = it.taskCount,
+                    buildCount = it.buildCount,
+                    latestBuildStartTime = it.latestBuildStartTime,
+                    latestBuildEndTime = it.latestBuildEndTime
+                )
+            }
+            return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, count, records)
+        } finally {
+            logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
+            processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
         }
     }
 }
