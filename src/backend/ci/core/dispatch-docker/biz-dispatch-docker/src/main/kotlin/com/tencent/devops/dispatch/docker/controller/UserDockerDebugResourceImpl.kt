@@ -46,6 +46,7 @@ import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.service.ExtDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -95,24 +96,37 @@ class UserDockerDebugResourceImpl @Autowired constructor(
             return Result(wsUrl)
         }
 
-        // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
-        val dockerBuildHistoryList = pipelineDockerBuildDao.getLatestBuild(
-            dslContext,
-            debugStartParam.pipelineId,
-            debugStartParam.vmSeqId.toInt()
-        )
+        var buildHistory: TDispatchPipelineDockerBuildRecord? = null
+        if (debugStartParam.buildId.isNullOrBlank()) {
+            // 查询是否存在构建机可启动调试，查看当前构建机的状态，如果running且已经容器，则直接复用当前running的containerId
+            val dockerBuildHistoryList = pipelineDockerBuildDao.getLatestBuild(
+                dslContext,
+                debugStartParam.pipelineId,
+                debugStartParam.vmSeqId.toInt()
+            )
 
-        if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
-            val dockerBuildHistory = dockerBuildHistoryList[0]
+            if (dockerBuildHistoryList.size > 0 && dockerBuildHistoryList[0].dockerIp.isNotEmpty()) {
+                buildHistory = dockerBuildHistoryList[0]
+            }
+        } else {
+            buildHistory = pipelineDockerBuildDao.getBuild(
+                dslContext = dslContext,
+                buildId = debugStartParam.buildId!!,
+                vmSeqId = debugStartParam.vmSeqId.toInt()
+            )
+        }
+
+
+        if (buildHistory != null) {
             val containerId = dockerHostDebugService.startDebug(
-                dockerIp = dockerBuildHistory.dockerIp,
+                dockerIp = buildHistory.dockerIp,
                 userId = userId,
-                poolNo = dockerBuildHistory.poolNo,
+                poolNo = buildHistory.poolNo,
                 debugStartParam = debugStartParam,
-                startupMessage = dockerBuildHistory.startupMessage
+                startupMessage = buildHistory.startupMessage
             )
             return Result(dockerHostDebugService.getWsUrl(
-                dockerIp = dockerBuildHistory.dockerIp,
+                dockerIp = buildHistory.dockerIp,
                 projectId = debugStartParam.projectId,
                 pipelineId = debugStartParam.pipelineId,
                 containerId = containerId
