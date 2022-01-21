@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
@@ -20,6 +21,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -29,6 +31,9 @@ class DevcloudDebugServiceImpl @Autowired constructor(
 ) : ExtDebugService {
 
     private val logger = LoggerFactory.getLogger(DevcloudDebugServiceImpl::class.java)
+
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
 
     override fun startDebug(
         userId: String,
@@ -65,6 +70,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
+            .addHeader(AUTH_HEADER_GATEWAY_TAG, consulTag)
             .post(RequestBody.create(MediaType.parse("application/json"), ""))
             .build()
 
@@ -103,6 +109,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
+            .addHeader(AUTH_HEADER_GATEWAY_TAG, consulTag)
             .post(RequestBody.create(MediaType.parse("application/json"), ""))
             .build()
 
