@@ -777,7 +777,7 @@ class ExperienceService @Autowired constructor(
                     innerUrl = innerUrl,
                     outerUrl = outerUrl,
                     receiver = it,
-                    experienceId = experienceId,
+                    experienceId = experienceId
                 )
             }
 
