@@ -113,7 +113,7 @@ class GitCITriggerService @Autowired constructor(
 
     fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
         val start = LocalDateTime.now().timestampmilli()
-        logger.info("Trigger code git build($event)")
+        logger.info("Trigger code git build($event, $eventType)")
         val eventObject = try {
             if (eventType == "Review Hook") {
                 objectMapper.readValue<GitReviewEvent>(event)

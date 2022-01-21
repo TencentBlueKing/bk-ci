@@ -46,7 +46,7 @@ class ExternalScmResourceImpl @Autowired constructor(
     }
 
     override fun webHookCodeGitCommit(token: String, eventType: String, event: String): Result<Boolean> {
-        logger.info("webHook event: $event")
+        logger.info("webHook event: $event, eventType:$eventType")
         GitCIRequestDispatcher.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = GitCIRequestEvent(
