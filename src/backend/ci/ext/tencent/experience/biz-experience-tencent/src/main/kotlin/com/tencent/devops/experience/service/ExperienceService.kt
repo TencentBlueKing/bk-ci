@@ -778,7 +778,6 @@ class ExperienceService @Autowired constructor(
                     outerUrl = outerUrl,
                     receiver = it,
                     experienceId = experienceId,
-                    platform = platform
                 )
             }
 
@@ -804,7 +803,6 @@ class ExperienceService @Autowired constructor(
         outerUrl: String,
         receiver: String,
         experienceId: Long,
-        platform: String
     ) {
         if (notifyTypeList.contains(NotifyType.RTX)) {
             val message = RtxUtil.makeMessage(
