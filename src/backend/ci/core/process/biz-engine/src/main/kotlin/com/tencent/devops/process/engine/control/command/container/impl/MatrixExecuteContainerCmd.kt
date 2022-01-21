@@ -147,6 +147,7 @@ class MatrixExecuteContainerCmd(
         var finishContainerNum = 0
         val containersToRun = mutableListOf<PipelineBuildContainer>()
 
+        // 完全复用stage的执行状态判断逻辑
         groupContainers.forEach { container ->
             if (container.status.isFinish()) finishContainerNum++
             if (container.status.isCancel()) {
@@ -158,6 +159,7 @@ class MatrixExecuteContainerCmd(
             } else if (container.status == BuildStatus.SKIP) {
                 skipContainerNum++
             } else if (container.status.isRunning() && !newActionType.isEnd()) {
+                running = BuildStatus.RUNNING
                 runningContainerNum++
             } else if (!container.status.isFinish()) {
                 running = BuildStatus.RUNNING

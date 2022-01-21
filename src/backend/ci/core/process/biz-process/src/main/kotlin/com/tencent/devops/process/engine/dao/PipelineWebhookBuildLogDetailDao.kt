@@ -47,7 +47,7 @@ class PipelineWebhookBuildLogDetailDao {
         if (webhookBuildLogDetails.isEmpty()) {
             return
         }
-        val records = webhookBuildLogDetails.map {
+        webhookBuildLogDetails.map {
             with(T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
                 dslContext.insertInto(
                     this,
@@ -76,14 +76,14 @@ class PipelineWebhookBuildLogDetailDao {
                     it.triggerResult,
                     Timestamp(it.createdTime).toLocalDateTime(),
                     it.id
-                )
+                ).execute()
             }
         }
-        dslContext.batch(records).execute()
     }
 
     fun listByPage(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         repoName: String?,
         commitId: String?,
@@ -93,6 +93,7 @@ class PipelineWebhookBuildLogDetailDao {
         return with(T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL) {
             val where = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
             if (commitId != null) {
                 where.and(COMMIT_ID.eq(commitId))
             }
@@ -106,6 +107,7 @@ class PipelineWebhookBuildLogDetailDao {
 
     fun countByPage(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         repoName: String?,
         commitId: String?
@@ -114,6 +116,7 @@ class PipelineWebhookBuildLogDetailDao {
             val where = dslContext.selectCount()
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
             if (commitId != null) {
                 where.and(COMMIT_ID.eq(commitId))
             }

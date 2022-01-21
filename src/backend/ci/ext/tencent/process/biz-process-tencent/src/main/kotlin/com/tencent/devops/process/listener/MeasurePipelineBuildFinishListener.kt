@@ -57,9 +57,10 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
         if (!measureExecute.isNullOrEmpty() && measureExecute == "false") {
             return
         }
+        val projectId = event.projectId
         val pipelineId = event.pipelineId
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         if (buildInfo == null) {
             logger.warn("[$pipelineId] build ($buildId) is not exist")
             return

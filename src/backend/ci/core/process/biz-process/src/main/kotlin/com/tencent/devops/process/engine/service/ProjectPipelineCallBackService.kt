@@ -193,6 +193,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         validProjectManager(userId, projectId)
         projectPipelineCallbackDao.get(
             dslContext = dslContext,
+            projectId = projectId,
             id = id
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_NOT_FOUND,
@@ -201,6 +202,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
         projectPipelineCallbackDao.deleteById(
             dslContext = dslContext,
+            projectId = projectId,
             id = id
         )
     }
@@ -232,7 +234,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         projectId: String,
         id: Long
     ): ProjectPipelineCallBackHistory? {
-        val record = projectPipelineCallbackHistoryDao.get(dslContext, id) ?: return null
+        val record = projectPipelineCallbackHistoryDao.get(dslContext, projectId, id) ?: return null
         return projectPipelineCallbackHistoryDao.convert(record)
     }
 

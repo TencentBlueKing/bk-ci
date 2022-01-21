@@ -148,7 +148,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        val container = containerBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -158,7 +158,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        containerBuildDetailService.containerPreparing(buildId, vmSeqId)
+        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
 
         dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
 

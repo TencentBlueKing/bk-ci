@@ -79,7 +79,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
                 permission = permission
             )
         }
-        val iamId = findInstanceId(pipelineId)
+        val iamId = findInstanceId(projectId, pipelineId)
 
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -109,7 +109,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             return
         }
 
-        val iamId = findInstanceId(pipelineId)
+        val iamId = findInstanceId(projectId, pipelineId)
         if (iamId.isNullOrEmpty()) {
             throw PermissionForbiddenException("流水线不存在")
         }
@@ -142,7 +142,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
             val ids = iamInstanceList.map { it.toInt() }
-            pipelineInfoDao.getPieplineByAutoId(dslContext, ids)?.map { pipelineIds.add(it.pipelineId) }
+            pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
         }
         return pipelineIds
     }
@@ -153,7 +153,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         pipelineId: String,
         pipelineName: String
     ) {
-        val pipelineAutoId = findInstanceId(pipelineId)
+        val pipelineAutoId = findInstanceId(projectId, pipelineId)
         return authResourceApi.createResource(
             user = userId,
             projectCode = projectId,
@@ -185,8 +185,8 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         return authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)
     }
 
-    private fun findInstanceId(pipelineId: String): String {
-        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+    private fun findInstanceId(projectId: String, pipelineId: String): String {
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
             ?: throw PermissionForbiddenException("流水线$pipelineId 不存在")
         return pipelineInfo.id.toString()
     }

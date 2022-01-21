@@ -27,11 +27,13 @@
 
 package com.tencent.devops.plugin.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -47,6 +49,9 @@ interface BuildProcessResource {
     @POST
     @Path("/getLastUpdateUser/{pipelineId}/")
     fun getUpdateUser(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam("渠道号，默认为DS", required = false)
         @PathParam("pipelineId")
         pipelineId: String

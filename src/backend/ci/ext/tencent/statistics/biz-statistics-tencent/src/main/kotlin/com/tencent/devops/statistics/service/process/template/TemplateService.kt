@@ -65,6 +65,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class TemplateService @Autowired constructor(
@@ -231,7 +232,7 @@ class TemplateService @Autowired constructor(
             } else {
                 val modelStr = templateRecord["template"] as String
                 val version = templateRecord["version"] as Long
-
+                val createdTime = templateRecord["createdTime"] as LocalDateTime
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
@@ -254,7 +255,7 @@ class TemplateService @Autowired constructor(
 
                 run lit@{
                     associatePipeline.forEach {
-                        if (it.version < version) {
+                        if (it.createdTime < createdTime) {
                             logger.info("The pipeline ${it.pipelineId} need to upgrade from ${it.version} to $version")
                             hasInstances2Upgrade = true
                             return@lit

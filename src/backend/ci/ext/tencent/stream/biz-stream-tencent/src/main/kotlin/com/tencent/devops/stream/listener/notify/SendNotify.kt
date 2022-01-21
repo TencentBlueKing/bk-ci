@@ -15,12 +15,13 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.listener.StreamBuildListenerContext
-import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
+import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.getBuildStatus
 import com.tencent.devops.stream.listener.getGitCommitCheckState
 import com.tencent.devops.stream.listener.isSuccess
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
+import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.slf4j.LoggerFactory
@@ -62,8 +63,9 @@ class SendNotify @Autowired constructor(
     private fun sendNotifyV2(context: StreamBuildListenerContextV2, build: BuildHistory) {
         with(context) {
             // 获取需要进行替换的variables
+            val projectId = context.buildEvent.projectId
             val variables = client.get(ServiceVarResource::class)
-                .getContextVar(buildId = build.id, contextName = null).data
+                .getContextVar(projectId = projectId, buildId = build.id, contextName = null).data
             val notices = YamlUtil.getObjectMapper().readValue(
                 streamBuildEvent.normalizedYaml, ScriptBuildYaml::class.java
             ).notices

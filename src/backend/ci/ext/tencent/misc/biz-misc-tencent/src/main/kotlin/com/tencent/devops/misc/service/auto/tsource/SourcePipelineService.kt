@@ -57,19 +57,35 @@ class SourcePipelineService @Autowired constructor(
         return sourcePipelineDao.listPipelineBuilds(dslContext, projectId, pipelineId, offset, limit)
     }
 
-    fun getPipelineLatestRes(pipelineId: String): TPipelineResourceRecord? {
-        return sourcePipelineDao.getPipelineRes(dslContext, pipelineId)
+    fun getPipelineLatestRes(projectId: String, pipelineId: String): TPipelineResourceRecord? {
+        return sourcePipelineDao.getPipelineRes(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
-    fun getPipelineSetting(pipelineId: String): TPipelineSettingRecord? {
-        return sourcePipelineDao.getPipelineSetting(dslContext, pipelineId)
+    fun getPipelineSetting(projectId: String, pipelineId: String): TPipelineSettingRecord? {
+        return sourcePipelineDao.getPipelineSetting(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
-    fun getPipelineSummary(pipelineId: String): TPipelineBuildSummaryRecord? {
-        return sourcePipelineDao.getPipelineSummary(dslContext, pipelineId)
+    fun getPipelineSummary(projectId: String, pipelineId: String): TPipelineBuildSummaryRecord? {
+        return sourcePipelineDao.getPipelineSummary(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
-    fun getPipelineBuildDetail(buildId: String): TPipelineBuildDetailRecord? {
-        return sourcePipelineDao.getPipelineBuildDetail(dslContext, buildId)
+    fun getPipelineBuildDetail(projectId: String, buildId: String): TPipelineBuildDetailRecord? {
+        return sourcePipelineDao.getPipelineBuildDetail(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )
     }
 }

@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
@@ -207,5 +208,21 @@ class ServiceGitCiResourceImpl @Autowired constructor(
 
     override fun addMrComment(token: String, gitProjectId: String, mrId: Long, mrBody: MrCommentBody) {
         gitCiService.addMrComment(token = token, gitProjectId = gitProjectId, mrId = mrId, mrBody = mrBody)
+    }
+
+    override fun getProjectGroupsList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeGroup>> {
+        return Result(gitCiService.getProjectGroupList(
+            accessToken = accessToken,
+            page = page,
+            pageSize = pageSize,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        ))
     }
 }

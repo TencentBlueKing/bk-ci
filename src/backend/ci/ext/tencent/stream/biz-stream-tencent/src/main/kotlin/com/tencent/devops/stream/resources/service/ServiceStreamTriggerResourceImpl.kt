@@ -34,11 +34,15 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 homepage = null,
                 gitHttpUrl = null,
                 gitSshUrl = null,
-                branch = branch,
+                branch = branch ?: "",
                 customCommitMsg = customCommitMsg,
                 yaml = yaml,
                 description = description,
-                commitId = commitId
+                commitId = commitId,
+                payload = payload,
+                scmType = scmType,
+                eventType = eventType,
+                objectKind = objectKind
             )
         }
         return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))
