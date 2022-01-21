@@ -57,35 +57,39 @@ class ExperiencePushService @Autowired constructor(
         platform: Int,
         token: String
     ): Result<Boolean> {
-        val userTokenByUserId = experiencePushTokenDao.getByUserId(
+        val userTokenGetByUserId = experiencePushTokenDao.getByUserId(
             dslContext = dslContext,
             userId = userId
         )
-        val userTokenByToken = experiencePushTokenDao.getByToken(dslContext, token)
-        if (userTokenByUserId != null) {
+        val userTokenGetByToken = experiencePushTokenDao.getByToken(
+            dslContext = dslContext,
+            token = token
+        )
+        if (userTokenGetByUserId != null) {
             return checkAndUpdateUserToken(
                 dslContext = dslContext,
                 userId = userId,
                 token = token,
                 platform = PlatformEnum.of(platform)?.name ?: "ANDROID",
-                userTokenByUserId = userTokenByUserId,
-                userTokenByToken = userTokenByToken
+                userTokenGetByUserId = userTokenGetByUserId,
+                userTokenGetByToken = userTokenGetByToken
             )
-        }
-        if (userTokenByToken != null) {
-            experiencePushTokenDao.deleteUserToken(
+        } else {
+            if (userTokenGetByToken != null) {
+                experiencePushTokenDao.deleteUserToken(
+                    dslContext = dslContext,
+                    userId = userTokenGetByToken.userId,
+                    token = token
+                )
+            }
+            experiencePushTokenDao.createUserToken(
                 dslContext = dslContext,
-                userId = userTokenByToken.userId,
-                token = token
+                userId = userId,
+                token = token,
+                platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
             )
+            return Result("用户绑定设备成功！", true)
         }
-        experiencePushTokenDao.createUserToken(
-            dslContext = dslContext,
-            userId = userId,
-            token = token,
-            platform = PlatformEnum.of(platform)?.name ?: "ANDROID"
-        )
-        return Result("用户绑定设备成功！", true)
     }
 
     // 检查前端传递的token和数据库表中的token是否一致。若不一致，则修改用户的设备token
@@ -94,17 +98,16 @@ class ExperiencePushService @Autowired constructor(
         userId: String,
         token: String,
         platform: String,
-        userTokenByUserId: TExperiencePushTokenRecord,
-        userTokenByToken: TExperiencePushTokenRecord?
+        userTokenGetByUserId: TExperiencePushTokenRecord,
+        userTokenGetByToken: TExperiencePushTokenRecord?
     ): Result<Boolean> {
-        // 前端传递的token和数据库表中token进行比较
-        return if (token == userTokenByUserId.token) {
+        return if (token == userTokenGetByUserId.token) {
             Result("请勿重复绑定同台设备！", false)
         } else {
-            if (userTokenByToken != null) {
+            if (userTokenGetByToken != null) {
                 experiencePushTokenDao.deleteUserToken(
                     dslContext = dslContext,
-                    userId = userTokenByToken.userId,
+                    userId = userTokenGetByToken.userId,
                     token = token
                 )
             }
