@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import io.swagger.annotations.ApiModel
@@ -191,18 +192,20 @@ data class Model(
         return count
     }
 
-    fun getPipelineCallBack(projectId: String): List<ProjectPipelineCallBack>? {
+    fun getPipelineCallBack(projectId: String, callbackEvent: CallBackEvent): List<ProjectPipelineCallBack> {
         val pipelineCallBack = mutableListOf<ProjectPipelineCallBack>()
         events?.forEach { eventName, event ->
-            pipelineCallBack.add(
-                ProjectPipelineCallBack(
-                    id = null,
-                    projectId = projectId,
-                    events = event.callbackEvent.name,
-                    callBackUrl = event.callbackUrl,
-                    secretToken = event.secretToken
+            if (event.callbackEvent == callbackEvent) {
+                pipelineCallBack.add(
+                    ProjectPipelineCallBack(
+                        id = null,
+                        projectId = projectId,
+                        events = event.callbackEvent.name,
+                        callBackUrl = event.callbackUrl,
+                        secretToken = event.secretToken
+                    )
                 )
-            )
+            }
         }
         return pipelineCallBack
     }

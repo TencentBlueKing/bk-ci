@@ -154,14 +154,20 @@ class CallBackControl @Autowired constructor(
             }
 
         logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
-        val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = projectId,
-            events = callBackEvent.name
+        val list = mutableListOf<ProjectPipelineCallBack>()
+        list.addAll(
+            projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = callBackEvent.name
+            )
         )
-
         val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
-            ?.getPipelineCallBack(projectId) ?: emptyList()
-        if (list.isEmpty() && pipelineCallback.isEmpty()) {
+            ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
+        if (pipelineCallback.isNotEmpty()) {
+            list.addAll(pipelineCallback)
+        }
+
+        if (list.isEmpty()) {
             return
         }
 
