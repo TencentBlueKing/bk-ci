@@ -139,6 +139,11 @@ class BluekingV3AuthAutoConfiguration {
     @Bean
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
+    // 鉴权类
+    @Bean
+    fun policyHttpService() = DefaultHttpClientServiceImpl(iamConfiguration())
+
+    // 非鉴权类(与鉴权类请求分开,方式授权类请求响应慢,影响鉴权类接口的响应)
     @Bean
     fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
 
@@ -146,7 +151,7 @@ class BluekingV3AuthAutoConfiguration {
     fun tokenService() = TokenServiceImpl(iamConfiguration(), httpService())
 
     @Bean
-    fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())
+    fun policyService() = PolicyServiceImpl(iamConfiguration(), policyHttpService())
 
     @Bean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
