@@ -161,6 +161,20 @@ class TGitReviewTriggerHandler(
                 )
             )
         }
+
+        // 兼容stream变量
+        startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
+        if (projectId != null && repository != null) {
+            val (defaultBranch, commitInfo) =
+                gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
+            startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
+            startParams[CI_BRANCH] = defaultBranch ?: ""
+
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
+            startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
+        }
+
         return startParams
     }
 
@@ -206,7 +220,6 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_COMMIT] = mrInfo?.sourceCommit ?: ""
 
         // 兼容stream变量
-        startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
         startParams[PIPELINE_GIT_HEAD_REF] = mrInfo?.sourceBranch ?: ""
         startParams[PIPELINE_GIT_BASE_REF] = mrInfo?.targetBranch ?: ""
         startParams[PIPELINE_GIT_MR_ID] = mrInfo?.mrId ?: ""
@@ -215,14 +228,6 @@ class TGitReviewTriggerHandler(
         startParams[PIPELINE_GIT_MR_DESC] = mrInfo?.description ?: ""
         startParams[PIPELINE_GIT_MR_PROPOSER] = mrInfo?.author?.username ?: ""
         startParams[PIPELINE_GIT_MR_URL] = "${event.repository.homepage}/merge_requests/${mrInfo?.mrNumber}"
-        val (defaultBranch, commitInfo) =
-            gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
-        startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
-        startParams[CI_BRANCH] = defaultBranch ?: ""
-
-        startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
-        startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
-        startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
         return startParams
     }
 
