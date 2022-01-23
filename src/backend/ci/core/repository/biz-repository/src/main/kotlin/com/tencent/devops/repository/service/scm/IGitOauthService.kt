@@ -49,7 +49,7 @@ interface IGitOauthService {
         refreshToken: Boolean? = false
     ): AuthorizeResult
     fun gitCallback(code: String, state: String): GitOauthCallback
-    fun checkAndGetAccessToken(buildId: String, userId: String): GitToken?
+    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken?
     fun getAccessToken(userId: String): GitToken?
     fun saveAccessToken(userId: String, tGitToken: GitToken): Int
     fun deleteToken(userId: String): Int

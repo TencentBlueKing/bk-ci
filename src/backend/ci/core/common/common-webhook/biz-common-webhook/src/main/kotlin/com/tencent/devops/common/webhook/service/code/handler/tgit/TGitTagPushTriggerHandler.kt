@@ -65,7 +65,11 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getRevision(event: GitTagPushEvent): String {
-        return event.commits?.get(0)?.id ?: ""
+        return if (event.commits.isNullOrEmpty()) {
+            ""
+        } else {
+            event.commits!![0].id
+        }
     }
 
     override fun getRepoName(event: GitTagPushEvent): String {
@@ -77,7 +81,11 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getMessage(event: GitTagPushEvent): String {
-        return event.commits?.get(0)?.message ?: ""
+        return if (event.commits.isNullOrEmpty()) {
+            ""
+        } else {
+            event.commits!![0].message
+        }
     }
 
     override fun retrieveParams(
