@@ -31,7 +31,9 @@ import com.tencent.devops.common.service.Profile
 import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
+@Service
 class Process3ShardingDataClearServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val profile: Profile

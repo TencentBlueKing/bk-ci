@@ -33,7 +33,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.misc.config.ProcessShardingDataClearConfig
 import com.tencent.devops.misc.service.project.TxProjectMiscService
 import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
-import com.tencent.devops.misc.service.shardingprocess.TxProcessMiscService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -47,12 +46,10 @@ import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
 @Component
-@Suppress("ALL")
 class ProcessShardingDataClearJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val processShardingDataClearConfig: ProcessShardingDataClearConfig,
-    private val txProjectMiscService: TxProjectMiscService,
-    private val txProcessMiscService: TxProcessMiscService
+    private val txProjectMiscService: TxProjectMiscService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProcessShardingDataClearJob::class.java)
@@ -192,34 +189,42 @@ class ProcessShardingDataClearJob @Autowired constructor(
         logger.info("processShardingDataClearJob clearShardingData projectId:$projectId,routingRule:$routingRule")
         val clearServiceList = SpringContextUtil.getBeansWithClass(ProcessShardingDataClearService::class.java)
         clearServiceList.forEach { clearService ->
+            // 判断数据对应的service是否有权限执行删除逻辑
+            val executeFlag = clearService.getExecuteFlag(routingRule)
+            if (executeFlag) {
+                return@forEach
+            }
             // 按项目ID清理分片数据
             clearService.clearShardingDataByProjectId(projectId, routingRule)
-        }
-        // 获取当前项目下流水线记录的最小主键ID值
-        var minId = txProcessMiscService.getMinPipelineInfoIdByProjectId(projectId)
-        do {
-            logger.info("processShardingDataClearJob clearShardingData projectId:$projectId,minId:$minId")
-            val pipelineIdList = txProcessMiscService.getPipelineIdListByProjectId(
-                projectId = projectId,
-                minId = minId,
-                limit = DEFAULT_PAGE_SIZE.toLong()
-            )
-            if (!pipelineIdList.isNullOrEmpty()) {
-                // 重置minId的值
-                minId = txProcessMiscService.getPipelineInfoIdByPipelineId(
+            // 获取当前项目下流水线记录的最小主键ID值
+            var minId = clearService.getMinPipelineInfoIdByProjectId(projectId)
+            val serviceClassName = clearService.javaClass.name
+            do {
+                logger.info("[$serviceClassName] clearShardingData projectId:$projectId,minId:$minId")
+                val pipelineIdList = clearService.getPipelineIdListByProjectId(
                     projectId = projectId,
-                    pipelineId = pipelineIdList[pipelineIdList.size - 1]
-                ) + 1
-            }
-            pipelineIdList?.forEach { pipelineId ->
-                clearShardingDataByBuildId(
-                    clearServiceList = clearServiceList,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    routingRule = routingRule
+                    minId = minId,
+                    limit = DEFAULT_PAGE_SIZE.toLong()
                 )
-            }
-        } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
+                if (!pipelineIdList.isNullOrEmpty()) {
+                    // 重置minId的值
+                    minId = clearService.getPipelineInfoIdByPipelineId(
+                        projectId = projectId,
+                        pipelineId = pipelineIdList[pipelineIdList.size - 1]
+                    ) + 1
+                }
+                val pipelineNum = pipelineIdList?.size
+                logger.info("[$serviceClassName] clearShardingData projectId:$projectId,pipelineNum:$pipelineNum")
+                pipelineIdList?.forEach { pipelineId ->
+                    clearShardingDataByBuildId(
+                        clearServiceList = clearServiceList,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        routingRule = routingRule
+                    )
+                }
+            } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
+        }
     }
 
     private fun clearShardingDataByBuildId(
@@ -231,30 +236,47 @@ class ProcessShardingDataClearJob @Autowired constructor(
         clearServiceList.forEach { clearService ->
             // 按流水线ID清理分片数据
             clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)
-        }
-        val totalBuildCount = txProcessMiscService.getTotalBuildCount(projectId, pipelineId)
-        logger.info("clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
-        var totalHandleNum = 0
-        while (totalHandleNum < totalBuildCount) {
-            val pipelineHistoryBuildIdList = txProcessMiscService.getHistoryBuildIdList(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                totalHandleNum = totalHandleNum,
-                handlePageSize = DEFAULT_PAGE_SIZE,
-                isCompletelyDelete = true
-            )
-            pipelineHistoryBuildIdList?.forEach { buildId ->
-                clearServiceList.forEach { clearService ->
-                    // 按构建ID清理分片数据
-                    clearService.clearShardingDataByBuildId(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        routingRule = routingRule
-                    )
-                }
+            val totalBuildCount = clearService.getTotalBuildCount(projectId, pipelineId)
+            val serviceClassName = clearService.javaClass.name
+            logger.info("[$serviceClassName]clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
+            var totalHandleNum = 0
+            while (totalHandleNum < totalBuildCount) {
+                val pipelineHistoryBuildIdList = clearService.getHistoryBuildIdList(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    totalHandleNum = totalHandleNum,
+                    handlePageSize = DEFAULT_PAGE_SIZE,
+                    isCompletelyDelete = true
+                )
+                doClearShardingDataByBuildId(
+                    pipelineHistoryBuildIdList = pipelineHistoryBuildIdList,
+                    clearServiceList = clearServiceList,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    routingRule = routingRule
+                )
+                totalHandleNum += DEFAULT_PAGE_SIZE
             }
-            totalHandleNum += DEFAULT_PAGE_SIZE
+        }
+    }
+
+    private fun doClearShardingDataByBuildId(
+        pipelineHistoryBuildIdList: List<String>?,
+        clearServiceList: List<ProcessShardingDataClearService>,
+        projectId: String,
+        pipelineId: String,
+        routingRule: String?
+    ) {
+        pipelineHistoryBuildIdList?.forEach { buildId ->
+            clearServiceList.forEach { clearService ->
+                // 按构建ID清理分片数据
+                clearService.clearShardingDataByBuildId(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    routingRule = routingRule
+                )
+            }
         }
     }
 }

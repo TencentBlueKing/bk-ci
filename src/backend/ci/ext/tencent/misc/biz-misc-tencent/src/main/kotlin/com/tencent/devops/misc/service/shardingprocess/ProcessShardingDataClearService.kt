@@ -27,12 +27,19 @@
 
 package com.tencent.devops.misc.service.shardingprocess
 
+import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessShardingDataClearDao
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 
 abstract class ProcessShardingDataClearService {
+
+    @Autowired
+    lateinit var processDao: ProcessDao
 
     @Autowired
     lateinit var processShardingDataClearDao: ProcessShardingDataClearDao
@@ -128,5 +135,72 @@ abstract class ProcessShardingDataClearService {
             }
         }
         return true
+    }
+
+    fun getHistoryBuildIdList(
+        projectId: String,
+        pipelineId: String,
+        totalHandleNum: Int,
+        handlePageSize: Int,
+        isCompletelyDelete: Boolean
+    ): List<String>? {
+        val historyBuildIdRecords = processDao.getHistoryBuildIdList(
+            dslContext = getDSLContext(),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            totalHandleNum = totalHandleNum,
+            handlePageSize = handlePageSize,
+            isCompletelyDelete = isCompletelyDelete
+        )
+        return generateIdList(historyBuildIdRecords)
+    }
+
+    fun getPipelineIdListByProjectId(
+        projectId: String,
+        minId: Long,
+        limit: Long
+    ): List<String>? {
+        val pipelineIdRecords = processDao.getPipelineIdListByProjectId(
+            dslContext = getDSLContext(),
+            projectId = projectId,
+            minId = minId,
+            limit = limit
+        )
+        return generateIdList(pipelineIdRecords)
+    }
+
+    private fun generateIdList(records: Result<out Record>?): MutableList<String>? {
+        return if (records == null) {
+            null
+        } else {
+            val idList = mutableListOf<String>()
+            records.forEach { record ->
+                idList.add(record.getValue(0) as String)
+            }
+            idList
+        }
+    }
+
+    fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
+        return processDao.getMinPipelineInfoIdListByProjectId(getDSLContext(), projectId)
+    }
+
+    fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
+        return processDao.getPipelineInfoByPipelineId(getDSLContext(), projectId, pipelineId)?.id ?: 0L
+    }
+
+    fun getTotalBuildCount(
+        projectId: String,
+        pipelineId: String,
+        maxBuildNum: Int? = null,
+        maxStartTime: LocalDateTime? = null
+    ): Long {
+        return processDao.getTotalBuildCount(
+            dslContext = getDSLContext(),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            maxBuildNum = maxBuildNum,
+            maxStartTime = maxStartTime
+        )
     }
 }
