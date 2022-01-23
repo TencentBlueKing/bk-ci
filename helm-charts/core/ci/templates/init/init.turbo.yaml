@@ -1,5 +1,6 @@
 # 初始化turbo
-{{ if .Values.turbo.enabled }}
+{{ if .Values.init.turbo }}
+{{- if .Values.turbo.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -42,4 +43,5 @@ spec:
                 "js_url": "{{ .Values.config.bkCiPublicUrl }}/turbo/turbo.js" 
               }' "http://{{ include "common.names.fullname" . }}-project/api/op/services/update/Turbo"
       restartPolicy: OnFailure
-{{ end }}
+{{- end -}}
+{{- end -}}

@@ -1,4 +1,5 @@
 # auth hpa
+{{ if .Values.auth.enabled -}}
 {{ if .Values.auth.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.auth.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

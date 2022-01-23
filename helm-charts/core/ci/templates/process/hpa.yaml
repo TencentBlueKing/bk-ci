@@ -1,4 +1,5 @@
 # process hpa
+{{ if .Values.process.enabled -}}
 {{ if .Values.process.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.process.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

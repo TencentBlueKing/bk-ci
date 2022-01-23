@@ -1,4 +1,5 @@
 # image hpa
+{{ if .Values.image.enabled -}}
 {{ if .Values.image.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.image.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

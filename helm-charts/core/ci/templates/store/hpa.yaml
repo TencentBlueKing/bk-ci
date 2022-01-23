@@ -1,4 +1,5 @@
 # store hpa
+{{ if .Values.store.enabled -}}
 {{ if .Values.store.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.store.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

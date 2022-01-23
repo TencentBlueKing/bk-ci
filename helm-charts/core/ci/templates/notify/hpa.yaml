@@ -1,4 +1,5 @@
 # notify hpa
+{{ if .Values.notify.enabled -}}
 {{ if .Values.notify.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.notify.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

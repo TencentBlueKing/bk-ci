@@ -1,4 +1,5 @@
 #artifactory StatefulSet
+{{ if .Values.artifactory.enabled -}}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
 metadata:
@@ -117,3 +118,4 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+{{- end -}}

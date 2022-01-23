@@ -1,4 +1,5 @@
 # dispatch hpa
+{{ if .Values.dispatch.enabled -}}
 {{ if .Values.dispatch.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.dispatch.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

@@ -1,4 +1,5 @@
 #dispatch Deployment
+{{ if .Values.dispatch.enabled -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
@@ -101,5 +102,4 @@ spec:
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
-
-
+{{- end -}}

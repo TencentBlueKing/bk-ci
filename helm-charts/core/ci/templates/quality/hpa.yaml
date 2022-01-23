@@ -1,4 +1,5 @@
 # quality hpa
+{{ if .Values.quality.enabled -}}
 {{ if .Values.quality.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.quality.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

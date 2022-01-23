@@ -1,4 +1,5 @@
 # log hpa
+{{ if .Values.log.enabled -}}
 {{ if .Values.log.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.log.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

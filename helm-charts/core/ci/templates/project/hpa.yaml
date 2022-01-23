@@ -1,4 +1,5 @@
 # project hpa
+{{ if .Values.project.enabled -}}
 {{ if .Values.project.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.project.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}
