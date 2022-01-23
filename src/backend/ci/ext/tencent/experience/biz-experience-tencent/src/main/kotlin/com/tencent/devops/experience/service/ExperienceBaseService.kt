@@ -283,7 +283,7 @@ class ExperienceBaseService @Autowired constructor(
         logger.info(
             "isOuterGroup:${isOuterGroup.value}, " +
                     "isInnerGroup:${isInnerGroup.value}, isInnerUser:${isInnerUser.value}, " +
-                    "isOuterUser:${isOuterUser.value} ,isCreator:${isCreator}"
+                    "isOuterUser:${isOuterUser.value} ,isCreator:${isCreator.value}"
         )
         return isOuterGroup.value || isInnerGroup.value ||
                 isInnerUser.value || isOuterUser.value || isCreator.value
