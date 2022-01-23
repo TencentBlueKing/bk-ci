@@ -354,7 +354,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AuthDeptServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AuthDeptServiceImpl::class.java)
         const val LIST_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_departments/"
         const val LIST_DEPARTMENT_PROFILES = "api/c/compapi/v2/usermanage/list_department_profiles/"
         const val USER_INFO = "api/c/compapi/v2/usermanage/list_users/"
