@@ -176,7 +176,7 @@ class ExperienceNotifyService @Autowired constructor(
     ): PushAppRequest {
         val pushAppRequest = PushAppRequest()
         pushAppRequest.audience_type = AudienceType.token
-        pushAppRequest.environment = Environment.valueOf("product")
+        pushAppRequest.environment = Environment.valueOf("dev")
         pushAppRequest.message_type = MessageType.notify
         val message = Message()
         message.title = appNotifyMessageWithOperation.title
