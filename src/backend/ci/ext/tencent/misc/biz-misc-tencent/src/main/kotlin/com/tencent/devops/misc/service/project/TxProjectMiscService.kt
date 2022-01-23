@@ -27,6 +27,7 @@
 
 package com.tencent.devops.misc.service.project
 
+import com.tencent.devops.misc.dao.project.ProjectMiscDao
 import com.tencent.devops.misc.dao.project.TxProjectMiscDao
 import com.tencent.devops.misc.pojo.ProjectShardingInfo
 import org.jooq.DSLContext
@@ -36,8 +37,15 @@ import org.springframework.stereotype.Service
 @Service
 class TxProjectMiscService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val projectMiscDao: ProjectMiscDao,
     private val txProjectMiscDao: TxProjectMiscDao
 ) {
+
+    fun getMaxId(
+        projectIdList: List<String>? = null
+    ): Long? {
+        return projectMiscDao.getMaxId(dslContext, projectIdList)
+    }
 
     fun getProjectShardingInfoList(
         projectIdList: List<String>? = null,

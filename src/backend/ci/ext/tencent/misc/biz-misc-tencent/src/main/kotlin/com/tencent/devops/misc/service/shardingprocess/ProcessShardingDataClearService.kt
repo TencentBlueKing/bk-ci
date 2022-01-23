@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.process
+package com.tencent.devops.misc.service.shardingprocess
 
 import com.tencent.devops.misc.dao.process.ProcessShardingDataClearDao
 import org.jooq.DSLContext
@@ -35,10 +35,13 @@ import org.springframework.beans.factory.annotation.Autowired
 abstract class ProcessShardingDataClearService {
 
     @Autowired
-    lateinit var dslContext: DSLContext
-
-    @Autowired
     lateinit var processShardingDataClearDao: ProcessShardingDataClearDao
+
+    /**
+     * 获取DSLContext
+     * @return DSLContext
+     */
+    abstract fun getDSLContext(): DSLContext
 
     /**
      * 获取执行条件
@@ -55,7 +58,7 @@ abstract class ProcessShardingDataClearService {
      */
     fun clearShardingDataByProjectId(projectId: String, routingRule: String?): Boolean {
         if (getExecuteFlag(routingRule)) {
-            dslContext.transaction { t ->
+            getDSLContext().transaction { t ->
                 val context = DSL.using(t)
                 processShardingDataClearDao.deleteAuditResourceByProjectId(context, projectId)
                 processShardingDataClearDao.deletePipelineFavorByProjectId(context, projectId)
@@ -85,7 +88,7 @@ abstract class ProcessShardingDataClearService {
      */
     fun clearShardingDataByPipelineId(projectId: String, pipelineId: String, routingRule: String?): Boolean {
         if (getExecuteFlag(routingRule)) {
-            dslContext.transaction { t ->
+            getDSLContext().transaction { t ->
                 val context = DSL.using(t)
                 processShardingDataClearDao.deleteBuildHistoryByPipelineId(context, projectId, pipelineId)
                 processShardingDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
@@ -117,9 +120,8 @@ abstract class ProcessShardingDataClearService {
         routingRule: String?
     ): Boolean {
         if (getExecuteFlag(routingRule)) {
-            dslContext.transaction { t ->
+            getDSLContext().transaction { t ->
                 val context = DSL.using(t)
-                processShardingDataClearDao.deleteAuditResourceByBuildId(context, buildId)
                 processShardingDataClearDao.deleteBuildDetailByBuildId(context, buildId)
                 processShardingDataClearDao.deletePipelinePauseValueByBuildId(context, buildId)
                 processShardingDataClearDao.deleteReportByBuildId(context, projectId, pipelineId, buildId)

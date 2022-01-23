@@ -31,10 +31,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.misc.config.ProcessShardingDataClearConfig
-import com.tencent.devops.misc.service.process.ProcessMiscService
-import com.tencent.devops.misc.service.process.ProcessShardingDataClearService
-import com.tencent.devops.misc.service.project.ProjectMiscService
 import com.tencent.devops.misc.service.project.TxProjectMiscService
+import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
+import com.tencent.devops.misc.service.shardingprocess.TxProcessMiscService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
@@ -52,9 +51,8 @@ import javax.annotation.PostConstruct
 class ProcessShardingDataClearJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val processShardingDataClearConfig: ProcessShardingDataClearConfig,
-    private val projectMiscService: ProjectMiscService,
     private val txProjectMiscService: TxProjectMiscService,
-    private val processMiscService: ProcessMiscService
+    private val txProcessMiscService: TxProcessMiscService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ProcessShardingDataClearJob::class.java)
@@ -103,7 +101,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
                 logger.info("get lock failed, skip")
                 return
             }
-            val maxProjectNum = projectMiscService.getMaxId() ?: 0L
+            val maxProjectNum = txProjectMiscService.getMaxId() ?: 0L
             // 获取清理数据库冗余数据的线程数量
             val maxThreadHandleProjectNum = processShardingDataClearConfig.maxThreadHandleProjectNum
             val avgProjectNum = maxProjectNum / maxThreadHandleProjectNum
@@ -191,23 +189,24 @@ class ProcessShardingDataClearJob @Autowired constructor(
     }
 
     private fun clearShardingData(projectId: String, routingRule: String?) {
+        logger.info("processShardingDataClearJob clearShardingData projectId:$projectId,routingRule:$routingRule")
         val clearServiceList = SpringContextUtil.getBeansWithClass(ProcessShardingDataClearService::class.java)
         clearServiceList.forEach { clearService ->
             // 按项目ID清理分片数据
             clearService.clearShardingDataByProjectId(projectId, routingRule)
         }
         // 获取当前项目下流水线记录的最小主键ID值
-        var minId = processMiscService.getMinPipelineInfoIdListByProjectId(projectId)
+        var minId = txProcessMiscService.getMinPipelineInfoIdByProjectId(projectId)
         do {
             logger.info("processShardingDataClearJob clearShardingData projectId:$projectId,minId:$minId")
-            val pipelineIdList = processMiscService.getPipelineIdListByProjectId(
+            val pipelineIdList = txProcessMiscService.getPipelineIdListByProjectId(
                 projectId = projectId,
                 minId = minId,
                 limit = DEFAULT_PAGE_SIZE.toLong()
             )
             if (!pipelineIdList.isNullOrEmpty()) {
                 // 重置minId的值
-                minId = processMiscService.getPipelineInfoIdListByPipelineId(
+                minId = txProcessMiscService.getPipelineInfoIdByPipelineId(
                     projectId = projectId,
                     pipelineId = pipelineIdList[pipelineIdList.size - 1]
                 ) + 1
@@ -233,11 +232,11 @@ class ProcessShardingDataClearJob @Autowired constructor(
             // 按流水线ID清理分片数据
             clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)
         }
-        val totalBuildCount = processMiscService.getTotalBuildCount(projectId, pipelineId)
+        val totalBuildCount = txProcessMiscService.getTotalBuildCount(projectId, pipelineId)
         logger.info("clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
         var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
-            val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
+            val pipelineHistoryBuildIdList = txProcessMiscService.getHistoryBuildIdList(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,

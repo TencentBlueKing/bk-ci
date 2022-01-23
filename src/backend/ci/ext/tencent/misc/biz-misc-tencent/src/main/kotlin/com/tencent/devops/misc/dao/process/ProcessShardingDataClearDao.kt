@@ -28,7 +28,6 @@
 package com.tencent.devops.misc.dao.process
 
 import com.tencent.devops.model.process.tables.TAuditResource
-import com.tencent.devops.model.process.tables.TMetadata
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildSummary
@@ -253,14 +252,6 @@ class ProcessShardingDataClearDao {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .execute()
-        }
-    }
-
-    fun deleteAuditResourceByBuildId(dslContext: DSLContext, buildId: String) {
-        with(TMetadata.T_METADATA) {
-            dslContext.deleteFrom(this)
-                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }

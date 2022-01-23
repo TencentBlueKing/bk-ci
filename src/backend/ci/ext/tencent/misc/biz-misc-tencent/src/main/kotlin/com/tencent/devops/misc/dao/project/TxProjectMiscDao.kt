@@ -33,7 +33,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository

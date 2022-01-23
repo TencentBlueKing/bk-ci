@@ -25,15 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.process.p1
+package com.tencent.devops.misc.service.shardingprocess.p5
 
-import com.tencent.devops.misc.service.process.ProcessShardingDataClearService
-import org.springframework.stereotype.Service
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 
-@Service
-class Process1ShardingDataClearServiceImpl : ProcessShardingDataClearService() {
+class Process5ShardingDataClearServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val profile: Profile
+) : ProcessShardingDataClearService() {
+
+    override fun getDSLContext(): DSLContext {
+        return dslContext
+    }
 
     override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_0" && !routingRule.isNullOrBlank()
+        return if (profile.isProd() || profile.isProdGray()) {
+            routingRule != "ds_4"
+        } else {
+            false
+        }
     }
 }
