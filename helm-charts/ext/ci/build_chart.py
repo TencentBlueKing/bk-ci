@@ -9,7 +9,7 @@ template_parent = './templates/configmap/tpl/'
 
 # 生成value.yaml
 image_gateway_tag = '0.0'
-image_backend_tag = os.environ.get("image_tag")
+image_backend_tag = '0.0'
 value_file = open(output_value_yaml, 'w')
 for line in open(default_value_yaml, 'r'):
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
