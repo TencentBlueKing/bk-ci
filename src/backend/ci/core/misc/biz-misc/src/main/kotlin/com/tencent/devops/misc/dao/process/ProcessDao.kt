@@ -115,7 +115,7 @@ class ProcessDao {
         }
     }
 
-    fun getMinPipelineInfoIdListByProjectId(
+    fun getMinPipelineInfoIdByProjectId(
         dslContext: DSLContext,
         projectId: String
     ): Long {
@@ -123,6 +123,19 @@ class ProcessDao {
             return dslContext.select(DSL.min(ID))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getMinPipelineBuildNum(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Long {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.select(DSL.min(BUILD_NUM))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
                 .fetchOne(0, Long::class.java)!!
         }
     }
