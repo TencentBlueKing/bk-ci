@@ -249,7 +249,7 @@ class TGitReviewTriggerHandler(
             val crTypeFilter = ContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "crType",
-                triggerOn = event.restrictType ?: "",
+                triggerOn = event.reviewableType ?: "",
                 included = WebhookUtils.convert(includeCrTypes)
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter, crTypeFilter)
