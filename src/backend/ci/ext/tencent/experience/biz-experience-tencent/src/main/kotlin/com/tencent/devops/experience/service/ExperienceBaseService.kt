@@ -278,13 +278,15 @@ class ExperienceBaseService @Autowired constructor(
             experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
                 .contains(userId)
         }
+        val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
+
         logger.info(
             "isOuterGroup:${isOuterGroup.value}, " +
                     "isInnerGroup:${isInnerGroup.value}, isInnerUser:${isInnerUser.value}, " +
-                    "isOuterUser:${isOuterUser.value}"
+                    "isOuterUser:${isOuterUser.value} ,isCreator:${isCreator}"
         )
         return isOuterGroup.value || isInnerGroup.value ||
-                isInnerUser.value || isOuterUser.value
+                isInnerUser.value || isOuterUser.value || isCreator.value
     }
 
     /**
