@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
@@ -141,7 +142,8 @@ class TGitReviewTriggerHandler(
                 "approved" -> approvedReviews.add(reviewer.reviewer.username)
             }
         }
-        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS] = event.reviewers.joinToString(",")
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS] =
+            event.reviewers.joinToString(",") { it.reviewer.username }
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS] = approvingReviews.joinToString(",")
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS] = approvedReviews.joinToString(",")
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_STATE] = event.state
@@ -152,6 +154,7 @@ class TGitReviewTriggerHandler(
         if (event.reviewableType == "merge_request" && event.reviewableId != null) {
             startParams.putAll(
                 mrStartParam(
+                    event = event,
                     mrRequestId = event.reviewableId!!,
                     projectId = projectId,
                     repository = repository
@@ -163,6 +166,7 @@ class TGitReviewTriggerHandler(
 
     @SuppressWarnings("ComplexMethod")
     private fun mrStartParam(
+        event: GitReviewEvent,
         mrRequestId: Long,
         projectId: String?,
         repository: Repository?
@@ -210,6 +214,7 @@ class TGitReviewTriggerHandler(
         startParams[PIPELINE_GIT_MR_TITLE] = mrInfo?.title ?: ""
         startParams[PIPELINE_GIT_MR_DESC] = mrInfo?.description ?: ""
         startParams[PIPELINE_GIT_MR_PROPOSER] = mrInfo?.author?.username ?: ""
+        startParams[PIPELINE_GIT_MR_URL] = "${event.repository.homepage}/merge_requests/${mrInfo?.mrNumber}"
         val (defaultBranch, commitInfo) =
             gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
         startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
