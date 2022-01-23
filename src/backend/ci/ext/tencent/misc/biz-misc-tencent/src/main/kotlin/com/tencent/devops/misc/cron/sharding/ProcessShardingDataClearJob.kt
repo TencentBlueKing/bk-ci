@@ -239,7 +239,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
             val totalBuildCount = clearService.getTotalBuildCount(projectId, pipelineId)
             val serviceClassName = clearService.javaClass.name
             logger.info("[$serviceClassName]clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
-            var totalHandleNum = 0
+            var totalHandleNum = clearService.getMinPipelineBuildNum(projectId, pipelineId).toInt()
             while (totalHandleNum < totalBuildCount) {
                 val pipelineHistoryBuildIdList = clearService.getHistoryBuildIdList(
                     projectId = projectId,

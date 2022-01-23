@@ -182,11 +182,18 @@ abstract class ProcessShardingDataClearService {
     }
 
     fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
-        return processDao.getMinPipelineInfoIdListByProjectId(getDSLContext(), projectId)
+        return processDao.getMinPipelineInfoIdByProjectId(getDSLContext(), projectId)
     }
 
     fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
         return processDao.getPipelineInfoByPipelineId(getDSLContext(), projectId, pipelineId)?.id ?: 0L
+    }
+
+    fun getMinPipelineBuildNum(
+        projectId: String,
+        pipelineId: String
+    ): Long {
+        return processDao.getMinPipelineBuildNum(getDSLContext(), projectId, pipelineId)
     }
 
     fun getTotalBuildCount(
