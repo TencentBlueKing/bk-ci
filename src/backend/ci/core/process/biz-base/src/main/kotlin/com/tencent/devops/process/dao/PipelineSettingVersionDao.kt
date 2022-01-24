@@ -142,34 +142,43 @@ class PipelineSettingVersionDao {
         }
     }
 
-    fun getSetting(dslContext: DSLContext, pipelineId: String, version: Int): TPipelineSettingVersionRecord? {
+    fun getSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): TPipelineSettingVersionRecord? {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }
 
-    fun deleteAllVersion(dslContext: DSLContext, pipelineId: String): Int {
+    fun deleteAllVersion(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
-    fun deleteByVer(dslContext: DSLContext, pipelineId: String, version: Int): Int {
+    fun deleteByVer(dslContext: DSLContext, projectId: String, pipelineId: String, version: Int): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
     fun deleteEarlyVersion(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         currentVersion: Int,
         maxPipelineResNum: Int
@@ -178,6 +187,7 @@ class PipelineSettingVersionDao {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.le(currentVersion - maxPipelineResNum))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

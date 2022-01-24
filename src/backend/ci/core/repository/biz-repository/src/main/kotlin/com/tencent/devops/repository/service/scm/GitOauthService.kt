@@ -201,9 +201,9 @@ class GitOauthService @Autowired constructor(
         )
     }
 
-    override fun checkAndGetAccessToken(buildId: String, userId: String): GitToken? {
+    override fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GitToken? {
         logger.info("buildId: $buildId, userId: $userId")
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
         }

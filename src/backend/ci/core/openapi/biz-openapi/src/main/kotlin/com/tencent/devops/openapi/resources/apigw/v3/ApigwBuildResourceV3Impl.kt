@@ -244,6 +244,16 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
+        logger.info("buildRestart $userId|$projectId|$pipelineId|$buildId")
+        return client.get(ServiceBuildResource::class).buildRestart(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwBuildResourceV3Impl::class.java)
     }

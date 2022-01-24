@@ -90,16 +90,6 @@ class UpdateStateContainerCmdFinally(
                     )
                 )
             }
-        } else if (commandContext.container.matrixGroupFlag == true &&
-            commandContext.container.status.isRunning()) {
-            // 如果是构建矩阵的刷新状态且运行中则重放一个事件保证执行
-            pipelineEventDispatcher.dispatch(
-                commandContext.event.copy(
-                    actionType = ActionType.REFRESH,
-                    source = commandContext.latestSummary,
-                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
-                )
-            )
         }
     }
 
@@ -135,6 +125,7 @@ class UpdateStateContainerCmdFinally(
         }
 
         pipelineContainerService.updateContainerStatus(
+            projectId = event.projectId,
             buildId = event.buildId,
             stageId = event.stageId,
             containerId = event.containerId,
@@ -148,12 +139,17 @@ class UpdateStateContainerCmdFinally(
                 pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
-            containerBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)
+            containerBuildDetailService.containerSkip(
+                projectId = event.projectId, buildId = event.buildId, containerId = event.containerId
+            )
         } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
             // 刷新Model状态-仅更新container状态
             containerBuildDetailService.updateContainerStatus(
-                buildId = event.buildId, containerId = event.containerId,
-                buildStatus = buildStatus, executeCount = commandContext.executeCount
+                projectId = event.projectId,
+                buildId = event.buildId,
+                containerId = event.containerId,
+                buildStatus = buildStatus,
+                executeCount = commandContext.executeCount
             )
         }
     }

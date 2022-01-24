@@ -21,14 +21,14 @@ class ThreadPoolUtils private constructor() {
     private val cpuCount = Runtime.getRuntime().availableProcessors()
 
     /**
-     * 核心线程数为手机CPU数量+1
+     * 核心线程数
      * */
-    private val coolPoolSize = cpuCount + 1
+    private val coolPoolSize = cpuCount + 10
 
     /**
-     * 最大线程数为手机CPU数量×2+1
+     * 最大线程数
      * */
-    private val maxPoolSize = cpuCount * 2 + 1
+    private val maxPoolSize = cpuCount * 2 + 10
 
     /**
      * 线程活跃时间 秒，超时线程会被回收
@@ -50,8 +50,8 @@ class ThreadPoolUtils private constructor() {
         val SINGLE_HOLDER = ThreadPoolUtils()
     }
 
-    private fun getThreadPool(tag: String): ThreadPoolExecutor {
-        var threadPoolExecutor = threadPoolMap[tag]
+    fun getThreadPool(poolName: String): ThreadPoolExecutor {
+        var threadPoolExecutor = threadPoolMap[poolName]
         if (threadPoolExecutor == null) {
             threadPoolExecutor = ThreadPoolExecutor(
                 coolPoolSize,
@@ -66,36 +66,27 @@ class ThreadPoolUtils private constructor() {
             )
             // 允许核心线程闲置超时时被回收
             threadPoolExecutor.allowCoreThreadTimeOut(true)
-            threadPoolMap[tag] = threadPoolExecutor
+            threadPoolMap[poolName] = threadPoolExecutor
         }
         return threadPoolExecutor
     }
 
     /**
-     *  @param tag 针对每个TAG 获取对应的线程池
-     *  @param runnable 对应的 runnable 任务
-     * */
-    fun removeTask(tag: String, runnable: Runnable) {
-        getThreadPool(tag).queue?.remove(runnable)
-    }
-
-    /**
-     *  @param tag 针对每个TAG 获取对应的线程池
-     *  @param runnable 对应的 runnable 任务
-     * */
-    fun addTask(tag: String, runnable: Runnable) {
-        getThreadPool(tag).execute(runnable)
-    }
-
-    /**
-     *   @param tag 针对每个TAG 获取对应的线程池
+     *   @param poolName 针对每个POOL_NAME 获取对应的线程池
      *   取消 移除线程池
      * */
-    fun exitThreadPool(tag: String) {
-        val threadPoolExecutor = threadPoolMap[tag]
+    fun exitThreadPool(poolName: String) {
+        val threadPoolExecutor = threadPoolMap[poolName]
         if (threadPoolExecutor != null) {
             threadPoolExecutor.shutdownNow()
-            threadPoolMap.remove(tag)
+            threadPoolMap.remove(poolName)
         }
     }
+}
+
+enum class ThreadPoolName {
+    /**
+     * 任务认领线程池
+     */
+    CLAIM_TASK
 }

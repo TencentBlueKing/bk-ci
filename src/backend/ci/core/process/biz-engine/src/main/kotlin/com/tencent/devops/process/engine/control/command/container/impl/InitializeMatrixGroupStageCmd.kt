@@ -58,7 +58,6 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
-import java.lang.StringBuilder
 import kotlin.math.min
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -148,6 +147,7 @@ class InitializeMatrixGroupStageCmd(
         val event = commandContext.event
         val variables = commandContext.variables
         val modelStage = containerBuildDetailService.getBuildModel(
+            projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
         )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
             "stage(${parentContainer.stageId}) cannot be found in model"
@@ -181,7 +181,7 @@ class InitializeMatrixGroupStageCmd(
         val contextCaseList: List<Map<String, String>>
         val jobControlOption: JobControlOption
 
-            // 每一种上下文组合都是一个新容器
+        // 每一种上下文组合都是一个新容器
         when (modelContainer) {
             is VMBuildContainer -> {
 
@@ -439,6 +439,7 @@ class InitializeMatrixGroupStageCmd(
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
+                stepId = e.stepId,
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
                 interceptTask = interceptTask,
