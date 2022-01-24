@@ -62,13 +62,13 @@ class TxProjectMiscDao {
             conditions.add(tp.CHANNEL.`in`(channelCodeList))
         }
         if (!dsName.isNullOrBlank()) {
-            conditions.add(tsrr.ROUTING_RULE.lt(dsName))
+            conditions.add(tsrr.ROUTING_RULE.eq(dsName))
         }
         return dslContext.select(
-            tp.ID,
-            tp.ENGLISH_NAME,
-            tp.CHANNEL,
-            tsrr.ROUTING_RULE
+            tp.ID.`as`("ID"),
+            tp.ENGLISH_NAME.`as`("ENGLISH_NAME"),
+            tp.CHANNEL.`as`("CHANNEL"),
+            tsrr.ROUTING_RULE.`as`("ROUTING_RULE")
         ).from(tp).leftJoin(tsrr).on(tp.ENGLISH_NAME.eq(tsrr.ROUTING_NAME))
             .where(conditions).fetch()
     }
