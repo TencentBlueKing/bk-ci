@@ -86,8 +86,8 @@ class PipelineStatusService(
     /**
      * 获取构建状态
      */
-    fun getBuildStatus(buildStatusOrd: Int): BuildStatus? {
-        val pipelineBuildStatus = if (buildStatusOrd != null) {
+    fun getBuildStatus(buildStatusOrd: Int?): BuildStatus? {
+        return if (buildStatusOrd != null) {
             val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
             if (tmpStatus.isFinish()) {
                 BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
@@ -97,6 +97,5 @@ class PipelineStatusService(
         } else {
             null
         }
-        return pipelineBuildStatus
     }
 }
