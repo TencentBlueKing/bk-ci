@@ -27,7 +27,6 @@
 
 package com.tencent.devops.misc.service.shardingprocess.p6
 
-import com.tencent.devops.common.service.Profile
 import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,19 +34,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class Process6ShardingDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val profile: Profile
+    private val dslContext: DSLContext?
 ) : ProcessShardingDataClearService() {
 
-    override fun getDSLContext(): DSLContext {
+    override fun getDSLContext(): DSLContext? {
         return dslContext
     }
 
     override fun getExecuteFlag(routingRule: String?): Boolean {
-        return if (profile.isProd() || profile.isProdGray()) {
-            routingRule != "ds_5"
-        } else {
-            false
-        }
+        return routingRule != "ds_5" && dslContext != null
     }
 }

@@ -34,14 +34,14 @@ import org.springframework.stereotype.Service
 
 @Service
 class Process2ShardingDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext?
 ) : ProcessShardingDataClearService() {
 
-    override fun getDSLContext(): DSLContext {
+    override fun getDSLContext(): DSLContext? {
         return dslContext
     }
 
     override fun getExecuteFlag(routingRule: String?): Boolean {
-        return routingRule != "ds_1"
+        return routingRule != "ds_1" && dslContext != null
     }
 }

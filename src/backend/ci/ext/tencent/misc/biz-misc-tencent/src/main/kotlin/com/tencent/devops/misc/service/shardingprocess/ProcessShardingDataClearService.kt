@@ -48,7 +48,7 @@ abstract class ProcessShardingDataClearService {
      * 获取DSLContext
      * @return DSLContext
      */
-    abstract fun getDSLContext(): DSLContext
+    abstract fun getDSLContext(): DSLContext?
 
     /**
      * 获取执行条件
@@ -65,7 +65,7 @@ abstract class ProcessShardingDataClearService {
      */
     fun clearShardingDataByProjectId(projectId: String, routingRule: String?): Boolean {
         if (getExecuteFlag(routingRule)) {
-            getDSLContext().transaction { t ->
+            getDSLContext()?.transaction { t ->
                 val context = DSL.using(t)
                 processShardingDataClearDao.deleteAuditResourceByProjectId(context, projectId)
                 processShardingDataClearDao.deletePipelineFavorByProjectId(context, projectId)
@@ -95,7 +95,7 @@ abstract class ProcessShardingDataClearService {
      */
     fun clearShardingDataByPipelineId(projectId: String, pipelineId: String, routingRule: String?): Boolean {
         if (getExecuteFlag(routingRule)) {
-            getDSLContext().transaction { t ->
+            getDSLContext()?.transaction { t ->
                 val context = DSL.using(t)
                 processShardingDataClearDao.deleteBuildHistoryByPipelineId(context, projectId, pipelineId)
                 processShardingDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
@@ -127,7 +127,7 @@ abstract class ProcessShardingDataClearService {
         routingRule: String?
     ): Boolean {
         if (getExecuteFlag(routingRule)) {
-            getDSLContext().transaction { t ->
+            getDSLContext()?.transaction { t ->
                 val context = DSL.using(t)
                 processShardingDataClearDao.deleteBuildDetailByBuildId(context, buildId)
                 processShardingDataClearDao.deletePipelinePauseValueByBuildId(context, buildId)
@@ -144,8 +144,9 @@ abstract class ProcessShardingDataClearService {
         handlePageSize: Int,
         isCompletelyDelete: Boolean
     ): List<String>? {
+        val dslContext = getDSLContext() ?: return null
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
-            dslContext = getDSLContext(),
+            dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             totalHandleNum = totalHandleNum,
@@ -160,8 +161,9 @@ abstract class ProcessShardingDataClearService {
         minId: Long,
         limit: Long
     ): List<String>? {
+        val dslContext = getDSLContext() ?: return null
         val pipelineIdRecords = processDao.getPipelineIdListByProjectId(
-            dslContext = getDSLContext(),
+            dslContext = dslContext,
             projectId = projectId,
             minId = minId,
             limit = limit
@@ -182,11 +184,13 @@ abstract class ProcessShardingDataClearService {
     }
 
     fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
-        return processDao.getMinPipelineInfoIdByProjectId(getDSLContext(), projectId)
+        val dslContext = getDSLContext() ?: return 0L
+        return processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
     }
 
     fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
-        return processDao.getPipelineInfoByPipelineId(getDSLContext(), projectId, pipelineId)?.id ?: 0L
+        val dslContext = getDSLContext() ?: return 0L
+        return processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId)?.id ?: 0L
     }
 
     fun getTotalBuildCount(
@@ -195,8 +199,9 @@ abstract class ProcessShardingDataClearService {
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null
     ): Long {
+        val dslContext = getDSLContext() ?: return 0L
         return processDao.getTotalBuildCount(
-            dslContext = getDSLContext(),
+            dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
