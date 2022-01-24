@@ -272,7 +272,6 @@ class ProcessShardingDataClearDao {
         }
     }
 
-
     fun deleteReportByBuildId(
         dslContext: DSLContext,
         projectId: String,

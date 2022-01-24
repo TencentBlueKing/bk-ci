@@ -150,7 +150,6 @@ class ProcessShardingDataSourceConfig {
         return configuration
     }
 
-
     @Bean
     fun p4DataSource(
         @Value("\${spring.datasource.process.sharding.p4.url}")
@@ -186,8 +185,6 @@ class ProcessShardingDataSourceConfig {
         return configuration
     }
 
-
-
     @Bean
     fun p5DataSource(
         @Value("\${spring.datasource.process.sharding.p5.url}")
@@ -222,7 +219,6 @@ class ProcessShardingDataSourceConfig {
         configuration.settings().isRenderSchema = false
         return configuration
     }
-
 
     @Bean
     fun p6DataSource(
