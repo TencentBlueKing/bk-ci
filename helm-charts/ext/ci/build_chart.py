@@ -31,11 +31,12 @@ common_tpl.flush()
 common_tpl.close()
 # service config
 for c_path in os.listdir(config_server):
-    if os.path.isdir(c_path):
+    service_path = config_server+c_path
+    if os.path.isdir(service_path):
         service_name = c_path
         service_tpl = open(template_parent+'_'+service_name+'.tpl', 'w')
-        service_tpl.write('{{- define "bkci.'+service_name+'.yaml" -}}')
-        for service_config in os.listdir(config_path+c_path):
+        service_tpl.write('{{- define "bkci.'+service_name+'.yaml" -}}\n')
+        for service_config in os.listdir(service_path):
             if service_config == 'application-'+spring_profile+'.yml' == service_config:
                 for line in open(config_server+c_path+'/'+service_config, 'r'):
                     service_tpl.write(line)
