@@ -61,6 +61,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
@@ -166,7 +167,11 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         for (stage in stages) {
-            val interval = stage.checkNextStageMonitorIntervals(event.userId)
+            val interval = stage.checkNextStageMonitorIntervals(
+                userId = event.userId,
+                startTime = stage.startTime,
+                endTime = stage.endTime
+            )
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
                 minInterval = interval
@@ -228,32 +233,40 @@ class BuildMonitorControl @Autowired constructor(
         return interval
     }
 
-    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
-        val checkInIntervals = checkInMonitorIntervals(userId)
-        val checkOutIntervals = checkOutMonitorIntervals(userId)
+    private fun PipelineBuildStage.checkNextStageMonitorIntervals(
+        userId: String,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?
+    ): Long {
+        val checkInIntervals = checkInOutMonitorIntervals(userId, true, startTime)
+        val checkOutIntervals = checkInOutMonitorIntervals(userId, false, endTime)
         return min(checkInIntervals, checkOutIntervals)
     }
 
-    private fun PipelineBuildStage.checkInMonitorIntervals(userId: String): Long {
+    private fun PipelineBuildStage.checkInOutMonitorIntervals(
+        userId: String,
+        inOrOut: Boolean,
+        checkTime: LocalDateTime?
+    ): Long {
 
-        var interval = 0L
-        if (checkIn?.manualTrigger != true && checkIn?.ruleIds.isNullOrEmpty()) {
-            return interval
+        val pauseCheck = if (inOrOut) checkIn else checkOut
+        if (pauseCheck?.manualTrigger != true && pauseCheck?.ruleIds.isNullOrEmpty()) {
+            return Timeout.STAGE_MAX_MILLS
         }
 
-        var hours = checkIn?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+        var hours = pauseCheck?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > Timeout.MAX_HOURS) {
             hours = Timeout.MAX_HOURS.toInt()
         }
 
         val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
-        val usedTimeMills: Long = if (startTime != null) {
-            System.currentTimeMillis() - startTime!!.timestampmilli()
+        val usedTimeMills: Long = if (checkTime != null) {
+            System.currentTimeMillis() - checkTime!!.timestampmilli()
         } else {
             0
         }
 
-        interval = timeoutMills - usedTimeMills
+        val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
             buildLogPrinter.addRedLine(
                 buildId = buildId,
@@ -264,7 +277,7 @@ class BuildMonitorControl @Autowired constructor(
             )
 
             // #5654 如果是红线待审核状态则取消红线审核
-            if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
                 pipelineStageService.qualityTriggerStage(
                     userId = userId,
                     buildStage = this,
@@ -273,19 +286,19 @@ class BuildMonitorControl @Autowired constructor(
                         pass = false,
                         checkTimes = executeCount
                     ),
-                    inOrOut = true,
-                    check = checkIn!!,
+                    inOrOut = inOrOut,
+                    check = pauseCheck!!,
                     timeout = true
                 )
             }
             // #5654 如果是待人工审核则取消人工审核
-            else if (checkIn?.groupToReview() != null) {
+            else if (pauseCheck?.groupToReview() != null) {
                 pipelineStageService.cancelStage(
                     userId = userId,
                     buildStage = this,
                     reviewRequest = StageReviewRequest(
                         reviewParams = listOf(),
-                        id = checkIn?.groupToReview()?.id,
+                        id = pauseCheck?.groupToReview()?.id,
                         suggest = null
                     ),
                     timeout = true
@@ -293,53 +306,6 @@ class BuildMonitorControl @Autowired constructor(
             }
         }
 
-        return interval
-    }
-
-    private fun PipelineBuildStage.checkOutMonitorIntervals(userId: String): Long {
-
-        var interval = 0L
-        if (checkOut?.ruleIds.isNullOrEmpty()) {
-            return interval
-        }
-
-        var hours = checkOut?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
-        if (hours <= 0 || hours > Timeout.MAX_HOURS) {
-            hours = Timeout.MAX_HOURS.toInt()
-        }
-
-        val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
-        val usedTimeMills: Long = if (endTime != null) {
-            System.currentTimeMillis() - endTime!!.timestampmilli()
-        } else {
-            0
-        }
-
-        interval = timeoutMills - usedTimeMills
-        if (interval <= 0) {
-            buildLogPrinter.addRedLine(
-                buildId = buildId,
-                message = "Stage Review timeout $hours hours. Shutdown build!",
-                tag = stageId,
-                jobId = "",
-                executeCount = executeCount
-            )
-            // #5654 如果是红线待审核状态则取消红线审核
-            if (checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
-                pipelineStageService.qualityTriggerStage(
-                    userId = userId,
-                    buildStage = this,
-                    qualityRequest = StageQualityRequest(
-                        position = ControlPointPosition.BEFORE_POSITION,
-                        pass = false,
-                        checkTimes = executeCount
-                    ),
-                    inOrOut = false,
-                    check = checkOut!!,
-                    timeout = true
-                )
-            }
-        }
         return interval
     }
 

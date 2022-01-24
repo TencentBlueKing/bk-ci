@@ -71,6 +71,7 @@ import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
+import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
@@ -92,6 +93,7 @@ import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -139,7 +141,8 @@ class PipelineBuildFacadeService(
     private val paramFacadeService: ParamFacadeService,
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val client: Client
+    private val client: Client,
+    private val pipelineRedisService: PipelineRedisService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
@@ -1940,6 +1943,94 @@ class PipelineBuildFacadeService(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 defaultMessage = "流水线构建[$buildId]不存在",
+                params = arrayOf(buildId)
+            )
+    }
+
+    fun buildRestart(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): String {
+        // 校验用户是否有执行流水线权限
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 无权限启动流水线($pipelineId)"
+        )
+        // 校验是否pipeline跟buildId匹配, 防止误传参数
+        val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
+        // 防止接口有并发问题
+        val redisLock = RedisLock(redisOperation, "refreshBuild$buildId", 10L)
+        try {
+            if (redisLock.tryLock()) {
+                // 同一个buildId只能有一个在refresh的请求
+                if (pipelineRedisService.getBuildRestartValue(buildId) != null) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.BAD_REQUEST.statusCode,
+                        errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
+                        defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
+                        params = arrayOf(buildId)
+                    )
+                }
+                // 按原有的启动参数组装启动参数
+                val startParameters = mutableMapOf<String, String>()
+                buildInfo.buildParameters?.map {
+                    startParameters.put(it.key, it.value.toString())
+                }
+                // 目标构建已经结束,直接按原有启动参数新发起一次构建,此次构建会遵循流水线配置的串行阈值
+                if (buildInfo.status.isFinish()) {
+                    // 发起新构建
+                    return buildManualStartup(
+                        userId = buildInfo.startUser,
+                        startType = StartType.MANUAL,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        values = startParameters,
+                        channelCode = ChannelCode.BS
+                    )
+                }
+
+                // 锁定当前构建refresh操作
+                pipelineRedisService.setBuildRestartValue(buildId)
+                // 取消当次构建
+                pipelineRuntimeService.cancelBuild(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    userId = userId,
+                    buildStatus = BuildStatus.CANCELED
+                )
+                // 发起新构建
+                return buildManualStartup(
+                    userId = buildInfo.startUser,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = startParameters,
+                    channelCode = ChannelCode.BS
+                )
+            }
+        } finally {
+            redisLock.unlock()
+        }
+        throw ErrorCodeException(
+            statusCode = Response.Status.BAD_REQUEST.statusCode,
+            errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
+            defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
+            params = arrayOf(buildId)
+        )
+    }
+
+    private fun checkPipelineInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo {
+        return pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
     }

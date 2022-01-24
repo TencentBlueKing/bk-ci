@@ -234,9 +234,21 @@ func (h *Handle4DispatchReq) dealOneCommand(onecmd *dcProtocol.PBCommand,
 	end64 := time.Now().UnixNano()
 
 	if err != nil {
-		blog.Errorf("failed to execute command for error: %v,output:[%s],errmsg:[%s]", err, outputMsg, errorMsg)
-		// in this condition, we should return detail error message
-		// return nil, err
+		blog.Errorf("failed to execute command[%s %s] after %d seconds for error: %v,output:[%s],errmsg:[%s]",
+			exefullpath,
+			strings.Join(params, " "),
+			(end64-start64)/1000/1000/1000,
+			err,
+			outputMsg,
+			errorMsg)
+	} else {
+		blog.Infof("succeed to execute command[%s %s] after %d seconds for error: %v,output:[%s],errmsg:[%s]",
+			exefullpath,
+			strings.Join(params, " "),
+			(end64-start64)/1000/1000/1000,
+			err,
+			outputMsg,
+			errorMsg)
 	}
 
 	retcode32 := int32(retcode)
