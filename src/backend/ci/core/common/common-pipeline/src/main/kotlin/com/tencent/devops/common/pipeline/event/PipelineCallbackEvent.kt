@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.pipeline.event
 
-data class PipelineCallbackEvent (
+data class PipelineCallbackEvent(
     val callbackEvent: CallBackEvent,
     var callbackUrl: String,
     val secretToken: String?,
