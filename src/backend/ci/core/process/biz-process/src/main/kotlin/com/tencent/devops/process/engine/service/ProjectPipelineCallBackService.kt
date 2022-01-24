@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
@@ -87,7 +86,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         secretToken: String?
     ): CreateCallBackResult {
         // 验证用户是否为管理员
-        validAuth(userId, projectId, BkAuthGroup.MANAGER)
+        validProjectManager(userId, projectId)
         if (!validUrl(projectId, url)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
@@ -191,7 +190,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 
     fun delete(userId: String, projectId: String, id: Long) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId, BkAuthGroup.MANAGER)
+        validProjectManager(userId, projectId)
         projectPipelineCallbackDao.get(
             dslContext = dslContext,
             projectId = projectId,
@@ -294,7 +293,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         id: Long
     ) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId, BkAuthGroup.MANAGER)
+        validProjectManager(userId, projectId)
         val record = getHistory(userId, projectId, id) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND,
             defaultMessage = "重试的回调历史记录($id)不存在",
@@ -374,10 +373,19 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    private fun validAuth(userId: String, projectId: String, group: BkAuthGroup? = null) {
-        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, group)) {
+    private fun validAuth(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectUser(userId, pipelineAuthServiceCode, projectId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+    }
+
+    private fun validProjectManager(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
                 params = arrayOf(userId, projectId)
             )
         }
