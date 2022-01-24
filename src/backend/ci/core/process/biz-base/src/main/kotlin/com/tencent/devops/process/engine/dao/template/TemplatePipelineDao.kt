@@ -159,12 +159,14 @@ class TemplatePipelineDao {
     fun listSimpleByPipelines(
         dslContext: DSLContext,
         pipelineIds: Set<String>,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type,
         projectId: String? = null
     ): Result<Record2<String, String>> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PIPELINE_ID.`in`(pipelineIds))
             conditions.add(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
+            conditions.add(INSTANCE_TYPE.eq(instanceType))
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
