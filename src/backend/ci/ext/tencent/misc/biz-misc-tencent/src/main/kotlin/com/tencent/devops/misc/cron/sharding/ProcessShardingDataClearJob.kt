@@ -194,8 +194,6 @@ class ProcessShardingDataClearJob @Autowired constructor(
             if (!executeFlag) {
                 return@forEach
             }
-            // 按项目ID清理分片数据
-            clearService.clearShardingDataByProjectId(projectId, routingRule)
             // 获取当前项目下流水线记录的最小主键ID值
             var minId = clearService.getMinPipelineInfoIdByProjectId(projectId)
             val serviceClassName = clearService.javaClass.name
@@ -216,7 +214,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
                 val pipelineNum = pipelineIdList?.size
                 logger.info("[$serviceClassName] clearShardingData projectId:$projectId,pipelineNum:$pipelineNum")
                 pipelineIdList?.forEach { pipelineId ->
-                    clearShardingDataByBuildId(
+                    clearShardingDataByPipelineId(
                         clearServiceList = clearServiceList,
                         projectId = projectId,
                         pipelineId = pipelineId,
@@ -224,18 +222,18 @@ class ProcessShardingDataClearJob @Autowired constructor(
                     )
                 }
             } while (pipelineIdList?.size == DEFAULT_PAGE_SIZE)
+            // 按项目ID清理分片数据
+            clearService.clearShardingDataByProjectId(projectId, routingRule)
         }
     }
 
-    private fun clearShardingDataByBuildId(
+    private fun clearShardingDataByPipelineId(
         clearServiceList: List<ProcessShardingDataClearService>,
         projectId: String,
         pipelineId: String,
         routingRule: String?
     ) {
         clearServiceList.forEach { clearService ->
-            // 按流水线ID清理分片数据
-            clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)
             val totalBuildCount = clearService.getTotalBuildCount(projectId, pipelineId)
             val serviceClassName = clearService.javaClass.name
             logger.info("[$serviceClassName]clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
@@ -257,6 +255,8 @@ class ProcessShardingDataClearJob @Autowired constructor(
                 )
                 totalHandleNum += DEFAULT_PAGE_SIZE
             }
+            // 按流水线ID清理分片数据
+            clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)
         }
     }
 
