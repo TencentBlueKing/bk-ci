@@ -69,7 +69,7 @@ class TxProjectMiscDao {
             tp.ENGLISH_NAME,
             tp.CHANNEL,
             tsrr.ROUTING_RULE
-        ).from(tp).leftJoin(tsrr).on(tp.ENGLISH_NAME.eq(tsrr.ROUTING_RULE))
+        ).from(tp).leftJoin(tsrr).on(tp.ENGLISH_NAME.eq(tsrr.ROUTING_NAME))
             .where(conditions).fetch()
     }
 }
