@@ -1115,7 +1115,7 @@ class PipelineListFacadeService @Autowired constructor(
             projectId = projectId
         ).map { it.pipelineId to it }.toMap()
 
-        //获取template信息
+        // 获取template信息
         val tTemplate = TTemplatePipeline.T_TEMPLATE_PIPELINE
         val pipelineTemplateMap = templatePipelineDao.listSimpleByPipelines(
             dslContext = dslContext,
