@@ -45,6 +45,7 @@ import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -182,6 +183,13 @@ interface IGitService {
         repoName: String,
         mrId: Long
     )
+
+    fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo
 
     fun createGitTag(
         repoName: String,

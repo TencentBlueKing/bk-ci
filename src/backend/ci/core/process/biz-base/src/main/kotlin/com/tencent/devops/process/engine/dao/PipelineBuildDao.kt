@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.JooqUtils
@@ -181,13 +182,21 @@ class PipelineBuildDao {
     fun listBuildInfoByBuildIds(
         dslContext: DSLContext,
         buildIds: Collection<String>,
-        projectId: String? = null
+        projectId: String? = null,
+        startBeginTime: String? = null,
+        endBeginTime: String? = null
     ): Result<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(BUILD_ID.`in`(buildIds))
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (startBeginTime != null) {
+                conditions.add(START_TIME.ge(DateTimeUtil.stringToLocalDateTime(startBeginTime)))
+            }
+            if (endBeginTime != null) {
+                conditions.add(START_TIME.le(DateTimeUtil.stringToLocalDateTime(endBeginTime)))
             }
             dslContext.selectFrom(this)
                 .where(conditions)
@@ -878,6 +887,18 @@ class PipelineBuildDao {
             dslContext.selectCount().from(this)
                 .where(conditions)
                 .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getBuildInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))).fetchAny()
         }
     }
 }

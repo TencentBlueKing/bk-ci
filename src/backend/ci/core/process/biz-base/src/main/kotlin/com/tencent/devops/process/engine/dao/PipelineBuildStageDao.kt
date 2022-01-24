@@ -233,16 +233,16 @@ class PipelineBuildStageDao {
         projectId: String,
         buildId: String,
         stageId: String,
-        buildStatus: BuildStatus,
+        buildStatus: BuildStatus?,
         controlOption: PipelineBuildStageControlOption? = null,
         checkIn: StagePauseCheck? = null,
         checkOut: StagePauseCheck? = null,
         initStartTime: Boolean? = false
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
-            val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
+            val update = dslContext.update(this).set(STAGE_ID, stageId)
             // 根据状态来设置字段
-            if (buildStatus.isFinish() || buildStatus == BuildStatus.STAGE_SUCCESS) {
+            if (buildStatus?.isFinish() == true || buildStatus == BuildStatus.STAGE_SUCCESS) {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(
                     COST, COST + JooqUtils.timestampDiff(
@@ -251,12 +251,13 @@ class PipelineBuildStageDao {
                     END_TIME.cast(java.sql.Timestamp::class.java)
                 )
                 )
-            } else if (buildStatus.isRunning() || initStartTime == true) {
+            } else if (buildStatus?.isRunning() == true || initStartTime == true) {
                 update.set(START_TIME, LocalDateTime.now())
             }
-            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))
-            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn, formatted = false))
-            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut, formatted = false))
+            buildStatus?.let { update.set(STATUS, it.ordinal) }
+            controlOption?.let { update.set(CONDITIONS, JsonUtil.toJson(it, formatted = false)) }
+            checkIn?.let { update.set(CHECK_IN, JsonUtil.toJson(it, formatted = false)) }
+            checkOut?.let { update.set(CHECK_OUT, JsonUtil.toJson(it, formatted = false)) }
             update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }

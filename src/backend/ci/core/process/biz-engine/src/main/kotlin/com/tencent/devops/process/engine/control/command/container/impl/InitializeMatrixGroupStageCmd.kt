@@ -439,6 +439,7 @@ class InitializeMatrixGroupStageCmd(
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
+                stepId = e.stepId,
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
                 interceptTask = interceptTask,
