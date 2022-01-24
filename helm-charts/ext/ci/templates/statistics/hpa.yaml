@@ -1,4 +1,5 @@
 # statistics hpa
+{{ if .Values.statistics.enabled -}}
 {{ if .Values.statistics.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.statistics.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

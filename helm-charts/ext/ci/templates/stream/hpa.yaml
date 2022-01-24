@@ -1,4 +1,5 @@
 # stream hpa
+{{ if .Values.stream.enabled -}}
 {{ if .Values.stream.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.stream.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

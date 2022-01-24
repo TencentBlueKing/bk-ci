@@ -1,4 +1,5 @@
 # external hpa
+{{ if .Values.external.enabled -}}
 {{ if .Values.external.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.external.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

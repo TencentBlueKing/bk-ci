@@ -1,4 +1,5 @@
 # prebuild hpa
+{{ if .Values.prebuild.enabled -}}
 {{ if .Values.prebuild.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.prebuild.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

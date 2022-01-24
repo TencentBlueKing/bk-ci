@@ -52,6 +52,12 @@ serviceMonitor:
   turbo:
     enabled: false
 
+# 初始化配置
+init:
+  sql: true
+  iam: true
+  turbo: true
+
 # 内部数据源配置
 mysql:
   image: 
@@ -213,6 +219,7 @@ persistence:
 
 # Log Deployment
 log:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -254,6 +261,7 @@ log:
 
 # Auth Deployment
 auth:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -295,6 +303,7 @@ auth:
 
 # agentless Deployment
 agentless:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -336,6 +345,7 @@ agentless:
 
 # dockerhost Deployment
 dockerhost:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -377,6 +387,7 @@ dockerhost:
 
 # artifactory Deployment
 artifactory:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -418,6 +429,7 @@ artifactory:
 
 # dispatch Deployment
 dispatch:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -459,6 +471,7 @@ dispatch:
 
 # dispatchDocker Deployment
 dispatchDocker:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -542,6 +555,7 @@ dispatchKubernetes:
 
 # environment Deployment
 environment:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -583,6 +597,7 @@ environment:
 
 # image Deployment
 image:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -625,6 +640,7 @@ image:
 # misc Deployment
 misc:
   env:
+    enabled: true
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
     JVM_XMX: 1024m
@@ -665,6 +681,7 @@ misc:
 
 # monitoring Deployment
 monitoring:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -706,6 +723,7 @@ monitoring:
 
 # notify Deployment
 notify:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -747,6 +765,7 @@ notify:
 
 # openapi Deployment
 openapi:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -788,6 +807,7 @@ openapi:
 
 # plugin Deployment
 plugin:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -829,6 +849,7 @@ plugin:
 
 # process Deployment
 process:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -870,6 +891,7 @@ process:
 
 # project Deployment
 project:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -911,6 +933,7 @@ project:
 
 # quality Deployment
 quality:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -952,6 +975,7 @@ quality:
 
 # repository Deployment
 repository:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -993,6 +1017,7 @@ repository:
 
 # sign Deployment
 sign:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1034,6 +1059,7 @@ sign:
 
 # store Deployment
 store:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1075,6 +1101,7 @@ store:
 
 # ticket Deployment
 ticket:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1116,6 +1143,7 @@ ticket:
 
 # websocket Deployment
 websocket:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1157,6 +1185,7 @@ websocket:
 
 # angetless Deployment
 angetless:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1244,7 +1273,7 @@ turbo:
 
 # gateway Deployment
 gateway:
-  enabled: false
+  enabled: true
   replicas: 1
   podLabels: {}
   resources:
@@ -1280,8 +1309,10 @@ gateway:
     targetCPU: 80
     targetMemory: 80
 
+
 # experience Deployment
 experience:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1323,6 +1354,7 @@ experience:
 
 # external Deployment
 external:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1364,6 +1396,7 @@ external:
 
 # lambda Deployment
 lambda:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1405,6 +1438,7 @@ lambda:
 
 # monitoring Deployment
 monitoring:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1446,6 +1480,7 @@ monitoring:
 
 # prebuild Deployment
 prebuild:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1487,6 +1522,7 @@ prebuild:
 
 # statistics Deployment
 statistics:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory
@@ -1528,6 +1564,7 @@ statistics:
 
 # stream Deployment
 stream:
+  enabled: true
   env:
     JVM_XMS: 512m
     # JVM的-xmx , 不能大于 limits.memory

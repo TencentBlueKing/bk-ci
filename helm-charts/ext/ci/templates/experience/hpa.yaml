@@ -1,4 +1,5 @@
 # experience hpa
+{{ if .Values.experience.enabled -}}
 {{ if .Values.experience.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.experience.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}

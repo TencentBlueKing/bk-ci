@@ -1,4 +1,5 @@
 # monitoring hpa
+{{ if .Values.monitoring.enabled -}}
 {{ if .Values.monitoring.autoscaling.enabled }}
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
@@ -34,3 +35,4 @@ spec:
         targetAverageUtilization: {{ .Values.monitoring.autoscaling.targetMemory  }}
     {{- end }}
 {{- end }}
+{{- end -}}
