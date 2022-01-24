@@ -191,7 +191,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
         clearServiceList.forEach { clearService ->
             // 判断数据对应的service是否有权限执行删除逻辑
             val executeFlag = clearService.getExecuteFlag(routingRule)
-            if (executeFlag) {
+            if (!executeFlag) {
                 return@forEach
             }
             // 按项目ID清理分片数据
