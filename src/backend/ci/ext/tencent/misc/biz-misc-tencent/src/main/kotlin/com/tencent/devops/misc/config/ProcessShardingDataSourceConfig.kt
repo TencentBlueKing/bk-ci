@@ -287,7 +287,7 @@ class ProcessShardingDataSourceConfig {
         datasourceInitSql: String?,
         datasourceLeakDetectionThreshold: Long
     ): HikariDataSource? {
-        if(datasourceUrl.isNotBlank()) {
+        if (datasourceUrl.isNotBlank()) {
             return HikariDataSource().apply {
                 poolName = datasourcePoolName
                 jdbcUrl = datasourceUrl
