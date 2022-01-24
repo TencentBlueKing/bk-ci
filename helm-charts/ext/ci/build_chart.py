@@ -44,6 +44,12 @@ for c_path in os.listdir(config_server):
         service_tpl.write('{{- end -}}')
         service_tpl.flush()
         service_tpl.close()
+#gateway config(伪装)
+gateway_tpl = open(template_parent+'_gateway.tpl', 'w')
+gateway_tpl.write('{{- define "bkci.gateway.yaml" -}}\n')
+gateway_tpl.write('{{- end -}}')
+gateway_tpl.flush()
+gateway_tpl.close()
 
 # 打包
 os.system("helm package . --version " + os.environ.get("chart_version") + " --app-version "+os.environ.get("version"))
