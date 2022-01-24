@@ -127,19 +127,6 @@ class ProcessDao {
         }
     }
 
-    fun getMinPipelineBuildNum(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String
-    ): Long {
-        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            return dslContext.select(DSL.min(BUILD_NUM))
-                .from(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne(0, Long::class.java)!!
-        }
-    }
-
     fun getMaxPipelineBuildNum(
         dslContext: DSLContext,
         projectId: String,

@@ -329,7 +329,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
     ) {
         val totalBuildCount = processMiscService.getTotalBuildCount(projectId, pipelineId, maxBuildNum, maxStartTime)
         logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
-        var totalHandleNum = processMiscService.getMinPipelineBuildNum(projectId, pipelineId).toInt()
+        var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
                 projectId = projectId,
