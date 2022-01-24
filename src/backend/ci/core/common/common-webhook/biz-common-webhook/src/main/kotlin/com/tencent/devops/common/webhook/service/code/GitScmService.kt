@@ -182,7 +182,7 @@ class GitScmService @Autowired constructor(
         projectId: String,
         repo: Repository,
         from: String,
-        to: String,
+        to: String
     ): Set<String> {
         val type = getType(repo) ?: return emptySet()
         val changeSet = mutableSetOf<String>()

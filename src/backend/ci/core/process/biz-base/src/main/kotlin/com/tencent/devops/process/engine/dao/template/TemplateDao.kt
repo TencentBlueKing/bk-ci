@@ -276,12 +276,18 @@ class TemplateDao {
 
     fun getTemplate(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String? = null,
         version: Long
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(VERSION.eq(version))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             return dslContext.selectFrom(this)
-                .where(VERSION.eq(version).and(PROJECT_ID.eq(projectId)))
+                .where(conditions)
+                .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
                 defaultMessage = "模板不存在"
@@ -377,7 +383,7 @@ class TemplateDao {
             if (includePublicFlag != null && includePublicFlag) {
                 val publicConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
                 publicConditions.add((TYPE.eq(TemplateType.PUBLIC.name)))
-                count += dslContext.select(DSL.count(ID))
+                count += dslContext.select(DSL.countDistinct(ID))
                     .from(this)
                     .where(publicConditions)
                     .fetchOne(0, Int::class.java)!!
@@ -419,7 +425,9 @@ class TemplateDao {
         val conditions = mutableListOf<Condition>()
         if (projectId != null) {
             if (includePublicFlag != null && includePublicFlag) {
-                conditions.add(a.PROJECT_ID.eq(projectId).or(a.TYPE.eq(TemplateType.PUBLIC.name)))
+                conditions.add(
+                    a.PROJECT_ID.eq(projectId).or(a.PROJECT_ID.eq("").and(a.TYPE.eq(TemplateType.PUBLIC.name)))
+                )
             } else {
                 conditions.add(a.PROJECT_ID.eq(projectId))
             }
