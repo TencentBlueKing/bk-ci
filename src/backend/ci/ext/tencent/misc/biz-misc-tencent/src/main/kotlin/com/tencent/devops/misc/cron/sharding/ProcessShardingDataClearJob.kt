@@ -215,7 +215,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
                 logger.info("[$serviceClassName] clearShardingData projectId:$projectId,pipelineNum:$pipelineNum")
                 pipelineIdList?.forEach { pipelineId ->
                     clearShardingDataByPipelineId(
-                        clearServiceList = clearServiceList,
+                        clearService = clearService,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         routingRule = routingRule
@@ -228,55 +228,51 @@ class ProcessShardingDataClearJob @Autowired constructor(
     }
 
     private fun clearShardingDataByPipelineId(
-        clearServiceList: List<ProcessShardingDataClearService>,
+        clearService: ProcessShardingDataClearService,
         projectId: String,
         pipelineId: String,
         routingRule: String?
     ) {
-        clearServiceList.forEach { clearService ->
-            val totalBuildCount = clearService.getTotalBuildCount(projectId, pipelineId)
-            val serviceClassName = clearService.javaClass.name
-            logger.info("[$serviceClassName]clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
-            var totalHandleNum = 0
-            while (totalHandleNum < totalBuildCount) {
-                val pipelineHistoryBuildIdList = clearService.getHistoryBuildIdList(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    totalHandleNum = totalHandleNum,
-                    handlePageSize = DEFAULT_PAGE_SIZE,
-                    isCompletelyDelete = true
-                )
-                doClearShardingDataByBuildId(
-                    pipelineHistoryBuildIdList = pipelineHistoryBuildIdList,
-                    clearServiceList = clearServiceList,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    routingRule = routingRule
-                )
-                totalHandleNum += DEFAULT_PAGE_SIZE
-            }
-            // 按流水线ID清理分片数据
-            clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)
+        val totalBuildCount = clearService.getTotalBuildCount(projectId, pipelineId)
+        val serviceClassName = clearService.javaClass.name
+        logger.info("[$serviceClassName]clearShardingData|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
+        var totalHandleNum = 0
+        while (totalHandleNum < totalBuildCount) {
+            val pipelineHistoryBuildIdList = clearService.getHistoryBuildIdList(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                totalHandleNum = totalHandleNum,
+                handlePageSize = DEFAULT_PAGE_SIZE,
+                isCompletelyDelete = true
+            )
+            doClearShardingDataByBuildId(
+                pipelineHistoryBuildIdList = pipelineHistoryBuildIdList,
+                clearService = clearService,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                routingRule = routingRule
+            )
+            totalHandleNum += DEFAULT_PAGE_SIZE
         }
+        // 按流水线ID清理分片数据
+        clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)
     }
 
     private fun doClearShardingDataByBuildId(
         pipelineHistoryBuildIdList: List<String>?,
-        clearServiceList: List<ProcessShardingDataClearService>,
+        clearService: ProcessShardingDataClearService,
         projectId: String,
         pipelineId: String,
         routingRule: String?
     ) {
         pipelineHistoryBuildIdList?.forEach { buildId ->
-            clearServiceList.forEach { clearService ->
-                // 按构建ID清理分片数据
-                clearService.clearShardingDataByBuildId(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    routingRule = routingRule
-                )
-            }
+            // 按构建ID清理分片数据
+            clearService.clearShardingDataByBuildId(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                routingRule = routingRule
+            )
         }
     }
 }
