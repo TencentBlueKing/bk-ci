@@ -1,5 +1,5 @@
 # 初始化iam
-{{ if eq .Values.init.iam "true" }}
+{{ if .Values.init.iam }}
 {{- if eq .Values.config.bkCiAuthProvider "bk_login_v3" -}}
 apiVersion: batch/v1
 kind: Job

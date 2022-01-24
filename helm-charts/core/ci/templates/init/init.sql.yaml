@@ -1,5 +1,5 @@
 # 初始化数据库
-{{ if eq .Values.init.sql "true" }}
+{{ if .Values.init.sql }}
 apiVersion: batch/v1
 kind: Job
 metadata:
