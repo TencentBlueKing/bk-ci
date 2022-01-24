@@ -15,6 +15,8 @@ for line in open(default_value_yaml, 'r'):
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
     line = line.replace("__image_backend_tag__", image_backend_tag)
     value_file.write(line)
+value_file.flush()
+value_file.close()
 
 # 生成 tpl
 config_server = config_path+"/config-server/"
@@ -26,6 +28,7 @@ common_tpl.write('{{- define "bkci.common.yaml" -}}')
 yaml.dump(common_yaml, common_tpl)
 common_tpl.write('{{- end -}}')
 common_tpl.flush()
+common_tpl.close()
 # service config
 for c_path in os.listdir(config_server):
     if os.path.isdir(c_path):
@@ -39,6 +42,7 @@ for c_path in os.listdir(config_server):
                 break
         service_tpl.write('{{- end -}}')
         service_tpl.flush()
+        service_tpl.close()
 
 # 打包
 os.system("helm package . --version " + os.environ.get("chart_version") + " --app-version "+os.environ.get("version"))
