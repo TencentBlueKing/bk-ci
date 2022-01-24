@@ -118,7 +118,7 @@ const actions = {
      * 生效流水线列表
      */
     requestEffectPipeline ({ commit }, { projectId, params }) {
-        return vue.$ajax.post(`${processPrefix}/user/quality/pipelines/${projectId}`, params)
+        return vue.$ajax.post(`${processPrefix}/user/pipeline/quality/${projectId}`, params)
     },
 
     /**
@@ -218,14 +218,14 @@ const actions = {
      * 获取视图流水线编排列表
      */
     requestViewPipelines ({ commit }, { projectId, params }) {
-        return vue.$ajax.get(`${processPrefix}/user/pipelines/projects/${projectId}/listQualityViewPipelines`, { params })
+        return vue.$ajax.get(`${processPrefix}/user/pipeline/quality/projects/${projectId}/listQualityViewPipelines`, { params })
     },
 
     /**
      * 获取规则模板
      */
     requestRuleTemplate ({ commit }, { projectId }) {
-        return vue.$ajax.get(`${prefix}/user/rules/v2/${projectId}/listTemplates`)
+        return vue.$ajax.get(`${prefix}/user/rules/v2/project/${projectId}/listTemplates`)
     },
 
     /**

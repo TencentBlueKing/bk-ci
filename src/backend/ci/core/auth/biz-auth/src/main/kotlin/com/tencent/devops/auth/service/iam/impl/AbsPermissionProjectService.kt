@@ -135,15 +135,11 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         if (iamCacheService.checkProjectUser(userId, projectCode)) {
             return true
         }
-        var checkProjectUser = false
-
-        val extProjectId = getProjectId(projectCode)
-        val userGroupInfos = permissionRoleMemberService.getUserGroups(extProjectId, userId)
-        if (userGroupInfos != null && userGroupInfos.isNotEmpty()) {
-            iamCacheService.cacheProjectUser(userId, projectCode)
-            checkProjectUser = true
-        }
-        return checkProjectUser
+        // 获取用户所在的所有组,包括以组织架构形式加入的用户组
+        val joinGroupIds = policyService.getUserGroup(userId, true)?.map { it.id } ?: emptyList()
+        val projectGroupIds = iamCacheService.getProjectGroup(projectCode)
+        // 加入的用户组与项目下的用户组取交集。若有交集说明加入的用户组内存在待校验项目下的用户组
+        return joinGroupIds.intersect(projectGroupIds).isNotEmpty()
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
@@ -208,6 +204,6 @@ abstract class AbsPermissionProjectService @Autowired constructor(
     abstract fun getUserByExt(group: BkAuthGroup, projectCode: String): List<String>
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionProjectService::class.java)
     }
 }

@@ -270,10 +270,12 @@ const (
 	ControllerBinary = "bk-dist-controller"
 )
 
+// define errors when launch controller
 var (
 	ErrControllerNotAvailable   = fmt.Errorf("controller not available")
 	ErrControllerNeedBeLaunched = fmt.Errorf("controller need be launched")
 	ErrControllerNotReady       = fmt.Errorf("controller not ready")
+	ErrControllerKilled         = fmt.Errorf("controller killed")
 )
 
 // WorkStatusDetail describe the work status
