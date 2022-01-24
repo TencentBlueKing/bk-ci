@@ -55,7 +55,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     @Value("\${spring.datasource.misc.pkgRegex:}")
-    val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    private val pkgRegex = "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
