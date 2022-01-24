@@ -38,6 +38,6 @@ object Versions {
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
-    const val log4j = "2.17.0" // es依赖在使用
+    const val log4j = "2.17.1" // es依赖在使用
     const val Logback = "1.2.10" // 1.2.3也有安全漏洞
 }
