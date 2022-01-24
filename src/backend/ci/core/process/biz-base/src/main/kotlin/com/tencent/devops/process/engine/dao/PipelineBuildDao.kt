@@ -889,4 +889,16 @@ class PipelineBuildDao {
                 .fetchOne(0, Int::class.java)!!
         }
     }
+
+    fun getBuildInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): TPipelineBuildHistoryRecord? {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))).fetchAny()
+        }
+    }
 }

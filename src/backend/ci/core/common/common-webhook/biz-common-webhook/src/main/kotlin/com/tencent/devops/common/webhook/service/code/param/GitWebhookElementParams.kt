@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.param
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
@@ -56,7 +57,6 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         } else {
             EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
-        params.block = element.block ?: false
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
@@ -74,6 +74,14 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         } else {
             element.includeCrState!!.joinToString(",")
         }
+        params.block = isBlock(element)
         return params
+    }
+
+    private fun isBlock(element: CodeGitWebHookTriggerElement): Boolean {
+        return when {
+            element.enableCheck == false || element.eventType != CodeEventType.MERGE_REQUEST -> false
+            else -> element.block ?: false
+        }
     }
 }

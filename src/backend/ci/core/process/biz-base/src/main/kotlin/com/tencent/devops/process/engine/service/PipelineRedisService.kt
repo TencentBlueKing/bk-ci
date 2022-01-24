@@ -23,37 +23,32 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam.impl
+package com.tencent.devops.process.engine.service
 
-import com.tencent.bk.sdk.iam.dto.PageInfoDTO
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
-open class AbsPermissionGradeServiceImpl @Autowired constructor(
-    open val iamManagerService: ManagerService
-) : PermissionGradeService {
+@Service
+class PipelineRedisService @Autowired constructor(
+    val redisOperation: RedisOperation
+) {
+    fun getBuildRestartValue(buildId: String): String? {
+        return redisOperation.get("$RESTART_KEY$buildId") ?: null
+    }
 
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        val pageInfoDTO = PageInfoDTO()
-        pageInfoDTO.limit = 0
-        pageInfoDTO.offset = 500 // 一个用户最多可以加入500个项目
-        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)?.map { it.id }
+    fun setBuildRestartValue(buildId: String) {
+        return redisOperation.set("$RESTART_KEY$buildId", "run", TimeUnit.MINUTES.toSeconds(900))
+    }
 
-        if (managerProject == null || !managerProject.contains(projectId)) {
-            logger.warn("checkGradeManagerUser $userId $projectId $managerProject")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
-        }
+    fun deleteRestartBuild(buildId: String) {
+        return redisOperation.delete("$RESTART_KEY$buildId")
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AbsPermissionGradeServiceImpl::class.java)
+        const val RESTART_KEY = "pipeline:build:restart:"
     }
 }
