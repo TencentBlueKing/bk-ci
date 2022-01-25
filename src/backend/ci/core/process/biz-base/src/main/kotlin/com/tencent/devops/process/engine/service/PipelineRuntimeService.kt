@@ -864,7 +864,7 @@ class PipelineRuntimeService @Autowired constructor(
 
             if (lastTimeBuildStageRecords.isNotEmpty()) {
                 if (context.needUpdateStage) {
-                    stage.resetBuildOption(true)
+                    stage.resetBuildOption(context.actionType)
                     run findHistoryStage@{
                         lastTimeBuildStageRecords.forEach {
                             if (it.stageId == stage.id!!) {
@@ -881,7 +881,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                 }
             } else {
-                stage.resetBuildOption(true)
+                stage.resetBuildOption(context.actionType)
                 buildStages.add(
                     PipelineBuildStage(
                         projectId = pipelineInfo.projectId,

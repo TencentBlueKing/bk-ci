@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -64,10 +65,10 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
+    stageTagService: StageTagService,
     redisOperation: RedisOperation,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildDetailService(
@@ -75,6 +76,7 @@ class PipelineBuildDetailService @Autowired constructor(
     pipelineBuildDao,
     buildDetailDao,
     pipelineEventDispatcher,
+    stageTagService,
     redisOperation
 ) {
 
@@ -312,6 +314,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
                 }
+                if (buildStatus.isCancel()) stage.resetBuildOption(ActionType.TERMINATE)
                 return Traverse.CONTINUE
             }
 
@@ -319,9 +322,7 @@ class PipelineBuildDetailService @Autowired constructor(
                 if (!e.status.isNullOrBlank() && BuildStatus.valueOf(e.status!!).isRunning()) {
                     e.status = buildStatus.name
                     update = true
-                    if (e.startEpoch != null) {
-                        e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-                    }
+                    e.startEpoch?.let { e.elapsed = System.currentTimeMillis() - e.startEpoch!! }
 
                     var elementElapsed = 0L
                     run lit@{
@@ -352,24 +353,6 @@ class PipelineBuildDetailService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
-    }
-
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {

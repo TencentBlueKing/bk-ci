@@ -44,6 +44,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -52,8 +54,8 @@ open class BaseBuildDetailService constructor(
     val pipelineBuildDao: PipelineBuildDao,
     val buildDetailDao: BuildDetailDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val stageTagService: StageTagService,
     val redisOperation: RedisOperation
-
 ) {
     val logger = LoggerFactory.getLogger(BaseBuildDetailService::class.java)!!
 
@@ -202,6 +204,24 @@ open class BaseBuildDetailService constructor(
                 refreshTypes = RefreshType.DETAIL.binary
             )
         )
+    }
+
+    protected fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
+        // 更新Stage状态至BuildHistory
+        return model.stages.map {
+            BuildStageStatus(
+                stageId = it.id!!,
+                name = it.name ?: it.id!!,
+                status = it.status,
+                startEpoch = it.startEpoch,
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagMap.getOrDefault(_it, "null")
+                }
+            )
+        }
     }
 
     protected interface ModelInterface {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import io.swagger.annotations.ApiModel
@@ -66,14 +67,14 @@ data class Stage(
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
      */
-    fun resetBuildOption(init: Boolean? = false) {
-        if (init == true) {
+    fun resetBuildOption(action: ActionType? = ActionType.REFRESH) {
+        if (action?.isStart() == true) {
             status = null
             startEpoch = null
             elapsed = null
         }
-        checkIn?.fixReviewGroups(init == true)
-        checkOut?.fixReviewGroups(init == true)
+        checkIn?.fixReviewGroups(action)
+        checkOut?.fixReviewGroups(action)
         if (stageControlOption?.manualTrigger == true && checkIn == null) {
             checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
         }

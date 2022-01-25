@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.pojo
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
@@ -117,10 +118,10 @@ data class StagePauseCheck(
     /**
      * 初始化状态并，填充审核组ID
      */
-    fun fixReviewGroups(init: Boolean) {
+    fun fixReviewGroups(action: ActionType?) {
         reviewGroups?.forEach { group ->
             if (group.id.isNullOrBlank()) group.id = UUIDUtil.generate()
-            if (init) {
+            if (action?.isStart() == true) {
                 group.status = null
                 group.reviewTime = null
                 group.operator = null
@@ -128,9 +129,11 @@ data class StagePauseCheck(
                 group.suggest = null
             }
         }
-        if (init) {
+        if (action?.isStart() == true) {
             status = null
             checkTimes = null
+        } else if (action?.isTerminate() == true && status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            status = BuildStatus.QUALITY_CHECK_FAIL.name
         }
     }
 
@@ -175,20 +178,6 @@ data class StagePauseCheck(
         }
         reviewDesc = EnvUtils.parseEnv(reviewDesc, variables)
         reviewParams?.forEach { it.parseValueWithType(variables) }
-    }
-
-    /**
-     *  重新恢复所有准入/准出状态
-     */
-    fun retryRefresh() {
-        status = null
-        reviewGroups?.forEach { group ->
-            group.status = null
-            group.params = null
-            group.operator = null
-            group.reviewTime = null
-            group.suggest = null
-        }
     }
 
     companion object {
