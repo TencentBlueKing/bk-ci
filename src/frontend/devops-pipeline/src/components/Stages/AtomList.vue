@@ -78,7 +78,10 @@
             </li>
             <span v-if="editable" :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
                 <i class="add-plus-icon" />
-                <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
+                <span v-if="atomList.length === 0">
+                    {{ $t('editPage.addAtom') }}
+                    <i class="devops-icon icon-exclamation-triangle-shape error-icon" />
+                </span>
             </span>
         </draggable>
         <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog" :element="element"></check-atom-dialog>
@@ -632,7 +635,7 @@
                 margin-right: 6px;
             }
         }
-
+        
         .quality-item {
             height: 24px;
             line-height: 20px;
@@ -770,6 +773,15 @@
             background-color: white;
             cursor: pointer;
             z-index: 3;
+            span {
+                width: 76%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .error-icon {
+                color: $iconFailColor;
+            }
             .add-plus-icon {
                 @include add-plus-icon($fontLigtherColor, $fontLigtherColor, white, 18px, true);
                 @include add-plus-icon-hover($primaryColor, $primaryColor, white);
@@ -779,7 +791,7 @@
                 position: static;
                 border-style: dashed;
                 color: $borderWeightColor;
-                border-color: $borderWeightColor;
+                border-color: $dangerColor;
                 border-width: 1px;
                 .add-plus-icon {
                     margin: 12px 13px;
