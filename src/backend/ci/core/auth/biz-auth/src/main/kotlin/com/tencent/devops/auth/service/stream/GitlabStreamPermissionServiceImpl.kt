@@ -30,9 +30,7 @@ package com.tencent.devops.auth.service.stream
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitlabStreamPermissionServiceImpl @Autowired constructor(
-
-) : StreamPermissionServiceImpl(){
+class GitlabStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl(){
     override fun isPublicProject(projectCode: String): Boolean {
         TODO("Not yet implemented")
     }
@@ -41,7 +39,12 @@ class GitlabStreamPermissionServiceImpl @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean {
+    override fun extPermission(
+        projectCode: String,
+        userId: String,
+        action: AuthPermission,
+        resourceType: String
+    ): Boolean {
         TODO("Not yet implemented")
     }
 }
