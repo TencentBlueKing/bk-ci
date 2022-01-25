@@ -28,19 +28,20 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -186,6 +187,42 @@ class GitRequestEventHandle @Autowired constructor(
             description = "",
             mrTitle = null,
             gitEvent = gitIssueEvent
+        )
+    }
+
+    fun createNoteEvent(gitNoteEvent: GitNoteEvent, e: String): GitRequestEvent {
+        val gitProjectId = gitNoteEvent.objectAttributes.projectId
+        val token = streamGitTokenService.getToken(gitProjectId)
+        val defaultBranch = streamScmService.getProjectInfoRetry(
+            token = token,
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = true
+        ).defaultBranch!!
+        val latestCommit = streamScmService.getCommitInfo(
+            gitToken = token,
+            projectName = gitProjectId.toString(),
+            sha = defaultBranch
+        )
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.NOTE.value,
+            operationKind = "",
+            extensionAction = null,
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = null,
+            branch = defaultBranch,
+            targetBranch = null,
+            commitId = latestCommit?.id ?: "0",
+            commitMsg = latestCommit?.message,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
+            commitAuthorName = latestCommit?.author_name,
+            userId = latestCommit?.author_name ?: "",
+            totalCommitCount = 1,
+            mergeRequestId = null,
+            event = e,
+            description = "",
+            mrTitle = null,
+            gitEvent = gitNoteEvent
         )
     }
 

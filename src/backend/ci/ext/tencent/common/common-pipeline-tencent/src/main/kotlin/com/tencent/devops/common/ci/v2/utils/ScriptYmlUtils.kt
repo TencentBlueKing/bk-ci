@@ -49,6 +49,7 @@ import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.IssuesRule
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.MrRule
+import com.tencent.devops.common.ci.v2.NoteRule
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
@@ -74,13 +75,13 @@ import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -616,8 +617,27 @@ object ScriptYmlUtils {
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
             issues = issuesRule(preTriggerOn),
-            review = reviewRule(preTriggerOn)
+            review = reviewRule(preTriggerOn),
+            note = noteRule(preTriggerOn)
         )
+    }
+
+    private fun noteRule(
+        preTriggerOn: PreTriggerOn
+    ): NoteRule? {
+        if (preTriggerOn.note != null) {
+            val note = preTriggerOn.note
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(note),
+                    NoteRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn noteRule failed.", e)
+                null
+            }
+        }
+        return null
     }
 
     private fun reviewRule(
