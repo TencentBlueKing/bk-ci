@@ -101,7 +101,7 @@ class TGitIssueTriggerHandler(
             startParams[PIPELINE_WEBHOOK_ISSUE_DESCRIPTION] = description ?: ""
             startParams[PIPELINE_WEBHOOK_ISSUE_STATE] = state
             startParams[PIPELINE_WEBHOOK_ISSUE_OWNER] = event.user.username
-            startParams[PIPELINE_WEBHOOK_ISSUE_URL] = url
+            startParams[PIPELINE_WEBHOOK_ISSUE_URL] = url ?: ""
             startParams[PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
         }
 
@@ -118,7 +118,7 @@ class TGitIssueTriggerHandler(
             startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
             startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
         }
-        startParams[PIPELINE_GIT_EVENT_URL] = event.objectAttributes.url
+        startParams[PIPELINE_GIT_EVENT_URL] = event.objectAttributes.url ?: ""
         return startParams
     }
 
@@ -132,7 +132,7 @@ class TGitIssueTriggerHandler(
         val actionFilter = ContainsFilter(
             pipelineId = pipelineId,
             filterName = "issueAction",
-            triggerOn = event.objectAttributes.action,
+            triggerOn = event.objectAttributes.action ?: "",
             included = WebhookUtils.convert(webHookParams.includeIssueAction)
         )
         return listOf(actionFilter)

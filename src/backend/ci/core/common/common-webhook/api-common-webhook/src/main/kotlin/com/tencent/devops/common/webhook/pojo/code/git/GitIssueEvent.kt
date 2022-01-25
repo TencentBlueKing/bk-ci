@@ -61,6 +61,6 @@ data class GitIssueAttributes(
     val milestoneId: String? = null,
     val state: String,
     val iid: String,
-    val url: String,
-    val action: String
+    val url: String?,
+    val action: String?
 )
