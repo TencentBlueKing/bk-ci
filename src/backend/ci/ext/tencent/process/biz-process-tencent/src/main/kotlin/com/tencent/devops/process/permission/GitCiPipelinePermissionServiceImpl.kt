@@ -1,6 +1,7 @@
 package com.tencent.devops.process.permission
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -84,6 +85,14 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
             action = "",
             projectCode = projectId,
             resourceCode = null
+        ).data ?: false
+    }
+
+    override fun checkProjectManager(userId: String, projectId: String): Boolean {
+        return client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            userId = userId,
+            token = checkTokenService.getSystemToken(null) ?: "",
+            projectCode = projectId
         ).data ?: false
     }
 
