@@ -37,7 +37,9 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CertPermissionServiceImpl
+import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.StreamCredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
 import org.jooq.DSLContext
@@ -121,5 +123,19 @@ class TicketConfiguration {
         dslContext = dslContext,
         tokenService = tokenService,
         authResourceApi = authResourceApi
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitlabStreamCredentialPermissionService(
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ): CredentialPermissionService = StreamCredentialPermissionServiceImpl(
+        dslContext = dslContext,
+        credentialDao = credentialDao,
+        client = client,
+        tokenService = tokenService
     )
 }
