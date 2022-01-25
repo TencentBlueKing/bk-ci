@@ -25,26 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.stream
 
-import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
 import com.tencent.devops.common.auth.api.AuthPermission
+import org.springframework.beans.factory.annotation.Autowired
 
-class SimpleIStreamPermissionValidateImpl : IStreamPermissionValidateService {
+class GitlabStreamPermissionServiceImpl @Autowired constructor(
+
+) : StreamPermissionServiceImpl(){
     override fun isPublicProject(projectCode: String): Boolean {
-        return true
+        TODO("Not yet implemented")
     }
 
     override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        return Pair(first = true, second = true)
+        TODO("Not yet implemented")
     }
 
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        return false
+    override fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean {
+        TODO("Not yet implemented")
     }
 }
