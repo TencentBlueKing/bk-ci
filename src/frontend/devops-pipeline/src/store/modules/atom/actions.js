@@ -123,7 +123,7 @@ export default {
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
         let page = store.page || 1
-        const pageSize = store.pageSize || 1500
+        const pageSize = store.pageSize || 2000
         const keyword = store.keyword || undefined
         const loadEnd = store.loadEnd || false
         const loading = store.loading || false
@@ -137,7 +137,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1500,
+                pageSize: 2000,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword
@@ -235,6 +235,9 @@ export default {
     },
     fetchBuildResourceByType: ({ commit }, { projectCode, containerId, os, buildType }) => {
         return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/container/projects/${projectCode}/containers/${containerId}/oss/${os}?buildType=${buildType}`)
+    },
+    setFetchingAtomList: ({ commit }, payload) => {
+        commit(FETCHING_ATOM_LIST, payload)
     },
     fetchAtoms: async ({ commit }, { projectCode }) => {
         try {

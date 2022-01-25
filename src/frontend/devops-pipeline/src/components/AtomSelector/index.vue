@@ -230,9 +230,20 @@
 
             classifyCode: {
                 handler (val) {
+                    this.curTabList = []
                     const classifyObject = this.atomTree[val] || {}
                     const children = classifyObject.children || []
-                    this.curTabList = children.filter(item => item.recommendFlag !== false)
+                    const curTabList = children.filter(item => item.recommendFlag !== false)
+                    this.setFetchingAtomList(true)
+                    for (let index = 0; index < 1000; index++) {
+                        curTabList[1] && curTabList.push(curTabList[1])
+                    }
+                    setTimeout(() => {
+                        for (let i = 0; i < curTabList.length; i++) {
+                            this.curTabList.push(curTabList[i])
+                        }
+                        this.setFetchingAtomList(false)
+                    })
                     this.curTabUncomList = children.filter(item => item.recommendFlag === false)
                 },
                 immediate: true
@@ -260,7 +271,8 @@
                 'addStoreAtom',
                 'clearStoreAtom',
                 'setStoreSearch',
-                'fetchAtoms'
+                'fetchAtoms',
+                'setFetchingAtomList'
             ]),
 
             getAtomFromStore (atomTree) {
