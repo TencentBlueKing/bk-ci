@@ -38,8 +38,6 @@ import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
-import com.tencent.devops.ticket.service.GitCICertPermissionServiceImpl
-import com.tencent.devops.ticket.service.GitCICredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
 import org.jooq.DSLContext
@@ -56,24 +54,6 @@ import org.springframework.core.Ordered
 class TicketConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCICertPermissionServiceImpl(
-        client: Client,
-        certDao: CertDao,
-        dslContext: DSLContext,
-        tokenService: ClientTokenService
-    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext, tokenService)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCICredentialPermissionServiceImpl(
-        client: Client,
-        credentialDao: CredentialDao,
-        dslContext: DSLContext,
-        tokenService: ClientTokenService
-    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext, tokenService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")

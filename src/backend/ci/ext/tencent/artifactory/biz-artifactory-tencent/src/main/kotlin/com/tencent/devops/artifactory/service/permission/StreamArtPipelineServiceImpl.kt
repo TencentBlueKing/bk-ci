@@ -5,6 +5,7 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -12,7 +13,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitCIPipelineServiceImpl @Autowired constructor(
+class StreamArtPipelineServiceImpl @Autowired constructor(
     private val client: Client,
     private val tokenCheckService: ClientTokenService
 ) : PipelineService(client) {
@@ -34,14 +35,14 @@ class GitCIPipelineServiceImpl @Autowired constructor(
         pipelineId: String?,
         permission: AuthPermission?
     ): Boolean {
-        logger.info("GitCIPipelineService |$userId|$projectId|$pipelineId|$permission|")
+        logger.info("StreamLocalPipelineServiceImpl |$userId|$projectId|$pipelineId|$permission|")
         return if (pipelineId != null) {
             client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
                 userId = userId,
                 token = tokenCheckService.getSystemToken(null) ?: "",
                 action = permission?.value ?: "",
                 projectCode = projectId,
-                resourceCode = null
+                resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
             ).data ?: false
         } else {
             client.get(ServiceProjectAuthResource::class).isProjectUser(
@@ -73,6 +74,6 @@ class GitCIPipelineServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCIPipelineServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(StreamArtPipelineServiceImpl::class.java)
     }
 }
