@@ -30,7 +30,7 @@ package com.tencent.devops.auth.service.stream
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.springframework.beans.factory.annotation.Autowired
 
-class GithubStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl(){
+class GithubStreamPermissionServiceImpl @Autowired constructor() : StreamPermissionServiceImpl() {
     override fun isPublicProject(projectCode: String): Boolean {
         TODO("Not yet implemented")
     }
