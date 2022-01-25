@@ -36,9 +36,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
+import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.StreamCertPermissionServiceImpl
 import com.tencent.devops.ticket.service.StreamCredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
 import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
@@ -123,6 +125,20 @@ class TicketConfiguration {
         dslContext = dslContext,
         tokenService = tokenService,
         authResourceApi = authResourceApi
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamCertPermissionService(
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ): CertPermissionService = StreamCertPermissionServiceImpl(
+        dslContext = dslContext,
+        certDao = certDao,
+        client = client,
+        tokenService = tokenService
     )
 
     @Bean
