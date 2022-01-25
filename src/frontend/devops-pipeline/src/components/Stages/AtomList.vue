@@ -10,7 +10,7 @@
                 @click.stop="showPropertyPanel(index)"
             >
                 <section class="atom-item atom-section normal-atom" :class="{ [atomCls(atom)]: true,
-                                                                              'is-error': atom.isError,
+                                                                              'is-error': atom.isError || !atom.atomCode,
                                                                               'quality-atom': atom['@type'] === 'qualityGateOutTask',
                                                                               'is-intercept': atom.isQualityCheck,
                                                                               'template-compare-atom': atom.templateModify }"
@@ -55,7 +55,7 @@
                         <Logo name="copy" size="18"></Logo>
                     </span>
                     <i v-if="editable" @click.stop="editAtom(index, false)" class="add-plus-icon close" />
-                    <i v-if="editable && atom.isError" class="devops-icon icon-exclamation-triangle-shape" />
+                    <i v-if="(editable && atom.isError) || !atom.atomCode" class="devops-icon icon-exclamation-triangle-shape" />
                     <span @click.stop="" v-if="isPreview && canSkipElement && container['@type'].indexOf('trigger') < 0">
                         <bk-checkbox class="atom-canskip-checkbox" v-model="atom.canElementSkip" :disabled="useSkipStyle(atom)" />
                     </span>
