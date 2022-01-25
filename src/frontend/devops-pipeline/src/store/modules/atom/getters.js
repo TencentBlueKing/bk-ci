@@ -185,10 +185,12 @@ export default {
 
             const allContainers = getters.getAllContainers(stages)
 
-            const elementsMap = []
-            allContainers.forEach(container => {
-                elementsMap.push(container.elements)
-            })
+            // 当前所有插件element
+            const elementsMap = allContainers.reduce(function (prev, cur) {
+                prev.push(...cur.elements)
+                return prev
+            }, [])
+
             if (elementsMap.some(element => !element.atomCode)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
             }
