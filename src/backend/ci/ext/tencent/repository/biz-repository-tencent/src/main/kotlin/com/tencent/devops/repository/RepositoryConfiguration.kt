@@ -31,7 +31,6 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.repository.dao.RepositoryDao
-import com.tencent.devops.repository.service.impl.GitCiRepositoryPermissionServiceImpl
 import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -69,20 +68,6 @@ class RepositoryConfiguration {
         managerService = managerService,
         repositoryDao = repositoryDao,
         dslContext = dslContext
-    )
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCIRepositoryPermissionService(
-        dslContext: DSLContext,
-        tokenService: ClientTokenService,
-        client: Client,
-        repositoryDao: RepositoryDao
-    ) = GitCiRepositoryPermissionServiceImpl(
-        dslContext = dslContext,
-        tokenService = tokenService,
-        client = client,
-        repositoryDao = repositoryDao
     )
 
     @Bean
