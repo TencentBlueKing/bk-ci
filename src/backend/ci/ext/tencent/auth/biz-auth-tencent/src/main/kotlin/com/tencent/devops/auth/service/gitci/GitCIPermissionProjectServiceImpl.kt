@@ -77,6 +77,21 @@ class GitCIPermissionProjectServiceImpl @Autowired constructor(
         return checkProjectUser(userId, gitProjectId, projectCode)
     }
 
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+        val gitUserId = projectInfoService.getGitUserByRtx(userId, gitProjectId)
+        if (gitUserId.isNullOrEmpty()) {
+            logger.warn("$userId is not gitCI user")
+            return false
+        }
+        val checkResult = client.getScm(ServiceGitCiResource::class)
+            .checkUserGitAuth(gitUserId, gitProjectId).data ?: false
+        if (!checkResult) {
+            logger.warn("$projectCode $userId check manager fail")
+        }
+        return checkResult
+    }
+
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
         return true
     }
