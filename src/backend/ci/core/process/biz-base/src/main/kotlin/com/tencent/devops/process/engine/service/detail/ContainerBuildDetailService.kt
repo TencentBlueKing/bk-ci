@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 
@@ -48,12 +49,14 @@ class ContainerBuildDetailService(
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
+    stageTagService: StageTagService,
     redisOperation: RedisOperation
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
     pipelineEventDispatcher,
+    stageTagService,
     redisOperation
 ) {
 
