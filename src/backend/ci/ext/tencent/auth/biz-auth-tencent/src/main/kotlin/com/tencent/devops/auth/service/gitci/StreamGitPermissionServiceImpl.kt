@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
+import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.GitCIUtils
@@ -37,11 +37,11 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class StreamLocalPermissionServiceImpl @Autowired constructor(
+class StreamGitPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val managerService: ManagerService,
     val projectInfoService: GitProjectInfoService
-) : IStreamPermissionValidateService {
+) : StreamPermissionServiceImpl() {
     override fun isPublicProject(projectCode: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         return projectInfoService.checkProjectPublic(gitProjectId)
@@ -124,6 +124,6 @@ class StreamLocalPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(StreamLocalPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(StreamGitPermissionServiceImpl::class.java)
     }
 }
