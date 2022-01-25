@@ -235,9 +235,6 @@
                     const children = classifyObject.children || []
                     const curTabList = children.filter(item => item.recommendFlag !== false)
                     this.setFetchingAtomList(true)
-                    for (let index = 0; index < 1000; index++) {
-                        curTabList[1] && curTabList.push(curTabList[1])
-                    }
                     setTimeout(() => {
                         for (let i = 0; i < curTabList.length; i++) {
                             this.curTabList.push(curTabList[i])
