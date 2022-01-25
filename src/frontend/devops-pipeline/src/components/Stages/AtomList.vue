@@ -790,7 +790,6 @@
                 @extend .atom-item;
                 position: static;
                 border-style: dashed;
-                color: $borderWeightColor;
                 border-color: $dangerColor;
                 border-width: 1px;
                 .add-plus-icon {
