@@ -142,7 +142,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val pageInfoDTO = PageInfoDTO()
         pageInfoDTO.limit = 1000
         pageInfoDTO.offset = 0
-        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO) ?: return emptyList()
         val iamIds = groupInfos.results.map { it.id }
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
         val resultList = mutableListOf<GroupInfoVo>()
@@ -364,7 +364,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
         const val PROJECT = "project_view"
         const val PIPELINEACTION = "pipeline_create"
 
