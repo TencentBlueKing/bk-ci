@@ -33,7 +33,6 @@ import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InjectionPoint
-import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -67,7 +66,7 @@ class JooqConfiguration {
     fun dslContext(
         configurationMap: Map<String?, DefaultConfiguration?>,
         injectionPoint: InjectionPoint
-    ): DSLContext {
+    ): DSLContext? {
         val annotatedElement: AnnotatedElement = injectionPoint.annotatedElement
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
@@ -75,9 +74,12 @@ class JooqConfiguration {
             val matchResult = pkgRegex.toRegex().find(packageName)
             if (matchResult != null) {
                 val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
-                    ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
-                LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
-                return DSL.using(configuration)
+                return if (configuration != null) {
+                    LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
+                    DSL.using(configuration)
+                } else {
+                    null
+                }
             }
         }
         return DSL.using(configurationMap["defaultJooqConfiguration"]!!)
