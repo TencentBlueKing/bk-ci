@@ -44,6 +44,7 @@ import org.springframework.stereotype.Component
 @Component
 class MQPipelineRestoreListener @Autowired constructor(
     private val agentPipelineRefService: AgentPipelineRefService,
+    private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineRestoreEvent>(pipelineEventDispatcher) {
 
@@ -54,6 +55,14 @@ class MQPipelineRestoreListener @Autowired constructor(
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "restore_pipeline", projectId, pipelineId)
             }
+            watcher.stop()
+            watcher.start("updateAtomPipelineNum")
+            pipelineAtomStatisticsService.updateAtomPipelineNum(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                version = event.version,
+                deleteFlag = false
+            )
             watcher.stop()
         } finally {
             watcher.stop()
