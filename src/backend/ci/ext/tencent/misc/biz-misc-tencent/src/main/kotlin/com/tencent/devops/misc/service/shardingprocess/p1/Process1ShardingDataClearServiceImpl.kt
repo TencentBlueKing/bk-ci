@@ -25,36 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.configuration
+package com.tencent.devops.misc.service.shardingprocess.p1
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitCIPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCIPermissionServiceImpl
-import com.tencent.devops.auth.service.gitci.GitCiProjectInfoService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.misc.service.shardingprocess.ProcessShardingDataClearService
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Configuration
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-class GitCIConfiguration {
-    @Bean
-    fun gitCIPermissionServiceImpl(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitCiProjectInfoService,
-        projectServiceImpl: GitCIPermissionProjectServiceImpl
-    ) = GitCIPermissionServiceImpl(client, managerService, projectInfoService, projectServiceImpl)
+@Service
+class Process1ShardingDataClearServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext?
+) : ProcessShardingDataClearService() {
 
-    @Bean
-    fun gitCIPermissionProjectServiceImpl(
-        client: Client,
-        projectInfoService: GitCiProjectInfoService
-    ) = GitCIPermissionProjectServiceImpl(client, projectInfoService)
+    override fun getDSLContext(): DSLContext? {
+        return dslContext
+    }
 
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitCiProjectInfoService(client)
+    override fun getExecuteFlag(routingRule: String?): Boolean {
+        return routingRule != "ds_0" && !routingRule.isNullOrBlank() && dslContext != null
+    }
 }

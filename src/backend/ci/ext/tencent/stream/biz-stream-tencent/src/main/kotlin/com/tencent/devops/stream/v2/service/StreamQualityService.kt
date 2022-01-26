@@ -65,7 +65,7 @@ class StreamQualityService {
             val pipelineId = event.pipelineId
             val buildId = event.buildId
 
-            val titleData = listOf(
+            val titleData = mutableListOf(
                 event.status,
                 if (event.startTime == null) {
                     "--"
@@ -84,6 +84,8 @@ class StreamQualityService {
                 ),
                 PIPELINE_NAME_TITLE
             )
+
+            val ruleName = mutableSetOf<String>()
 
             // key：质量红线产出插件
             // value：指标、预期、结果、状态
@@ -113,7 +115,9 @@ class StreamQualityService {
                         )
                         resultMap[elementCnName] = resultList
                     }
+                    ruleName.add(ruleIntercept.ruleName)
                 }
+            titleData.add(ruleName.joinToString("、"))
             return Pair(titleData, resultMap)
         } catch (ignore: Exception) {
             logger.error("get quality result failed ${ignore.message}")

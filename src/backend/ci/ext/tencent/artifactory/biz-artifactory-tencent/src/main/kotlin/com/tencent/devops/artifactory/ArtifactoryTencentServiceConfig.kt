@@ -35,7 +35,7 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.service.bkrepo.GitCIBkRepoDownloadService
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceImpl
-import com.tencent.devops.artifactory.service.permission.GitCIPipelineServiceImpl
+import com.tencent.devops.artifactory.service.permission.StreamArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
@@ -111,11 +111,11 @@ class ArtifactoryTencentServiceConfig {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
     fun gitCIPipelineService(
         client: Client,
         tokenCheckService: ClientTokenService
-    ) = GitCIPipelineServiceImpl(client, tokenCheckService)
+    ) = StreamArtPipelineServiceImpl(client, tokenCheckService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")

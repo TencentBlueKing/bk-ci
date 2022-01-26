@@ -25,10 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.gitci.entify
+package com.tencent.devops.misc.config
 
-enum class GitCIPermissionLevel(val level: Int) {
-    DEVELOP_UP(1), // develop及以上
-    DEVELOP_DOWN(2), // develop以下的项目成员
-    NO_PERMISSION(0); // 非项目成员
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.context.config.annotation.RefreshScope
+import org.springframework.stereotype.Component
+
+@Component
+@RefreshScope
+class ProcessShardingDataClearConfig {
+
+    @Value("\${spring.datasource.process.sharding.data.clear.switch:false}")
+    val switch: String = "false"
+
+    @Value("\${spring.datasource.process.sharding.data.clear.maxEveryProjectHandleNum:5}")
+    val maxEveryProjectHandleNum: Int = 5
+
+    @Value("\${spring.datasource.process.sharding.data.clear.maxThreadHandleProjectNum:5}")
+    val maxThreadHandleProjectNum: Int = 5
+
+    @Value("\${spring.datasource.process.sharding.data.clear.clearChannelCodes:BS}")
+    val clearChannelCodes: String = "BS"
 }

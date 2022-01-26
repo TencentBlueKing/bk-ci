@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.permission.impl
+package com.tencent.devops.environment.permission
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.util.HashUtil
@@ -34,15 +34,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * Pipeline专用权限校验接口
- */
-class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
+class StreamEnvironmentPermissionServiceImp @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val nodeDao: NodeDao,
@@ -62,6 +58,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
+        // 后续如果产品侧调整, view不按操作类校验,此处需要调整为对应的AuthPermission
         if (!checkPermission(userId, projectId)) {
             return emptyMap()
         }
@@ -110,6 +107,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
+        // 后续如果产品侧调整, view不按操作类校验,此处需要调整为对应的AuthPermission
         if (!checkPermission(userId, projectId)) {
             return emptyMap()
         }
@@ -147,11 +145,11 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     private fun checkPermission(userId: String, projectId: String): Boolean {
-        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId ")
+        logger.info("StreamEnvironmentPermissionServiceImp user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
-            action = "",
+            action = AuthPermission.ENABLE.value, // 环境,节点类的校验都需要按操作类的校验方式校验。即便是view类型也按操作类
             projectCode = projectId,
             resourceCode = ""
         ).data ?: false
@@ -179,6 +177,6 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCIEnvironmentPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(StreamEnvironmentPermissionServiceImp::class.java)
     }
 }

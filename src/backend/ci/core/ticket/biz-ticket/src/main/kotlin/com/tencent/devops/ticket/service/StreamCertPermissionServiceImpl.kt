@@ -37,7 +37,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitCICertPermissionServiceImpl @Autowired constructor(
+class StreamCertPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val certDao: CertDao,
     val dslContext: DSLContext,
@@ -68,12 +68,16 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        logger.info("GitCICredentialPermission user:$userId projectId: $projectId ")
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        logger.info("StreamCertPermissionServiceImpl user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenService.getSystemToken(null) ?: "",
-            action = authPermission.value,
+            action = AuthPermission.ENABLE.value, // 证书类所有检验都以操作类来校验。即便是view也走操作类权限校验
             projectCode = projectId,
             resourceCode = null
         ).data ?: false
@@ -105,7 +109,8 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val checkPermission = validatePermission(userId, projectId, authPermissions.first())
+        // 证书类所有检验都以操作类来校验。即便是view也走操作类权限校验. 若后续产品有调整,此处需要拆解为不同的permission类型
+        val checkPermission = validatePermission(userId, projectId, AuthPermission.ENABLE)
         if (!checkPermission) {
             return emptyMap()
         }
@@ -117,11 +122,18 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
         return resultMap
     }
 
-    override fun createResource(userId: String, projectId: String, certId: String) {
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        certId: String
+    ) {
         return
     }
 
-    override fun deleteResource(projectId: String, certId: String) {
+    override fun deleteResource(
+        projectId: String,
+        certId: String
+    ) {
         return
     }
 
@@ -136,6 +148,6 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCICredentialPermissionServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(StreamCertPermissionServiceImpl::class.java)
     }
 }

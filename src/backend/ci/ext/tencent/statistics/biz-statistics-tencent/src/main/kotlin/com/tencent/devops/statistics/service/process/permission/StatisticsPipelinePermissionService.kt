@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 
-interface PipelinePermissionService {
+interface StatisticsPipelinePermissionService {
     /**
      * 校验是否有任意流水线存在指定的权限
      * @param userId userId
