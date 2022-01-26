@@ -29,36 +29,28 @@ package com.tencent.devops.auth.configuration
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.gitci.GitProjectInfoService
-import com.tencent.devops.auth.service.gitci.StreamLocalPermissionServiceImpl
-import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
+import com.tencent.devops.auth.service.gitci.StreamGitPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 
-@Configuration
-@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamLocalConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun streamLocalPermissionService(
+    fun tgitStreamPermissionService(
         client: Client,
         managerService: ManagerService,
         projectInfoService: GitProjectInfoService
-    ) = StreamLocalPermissionServiceImpl(client, managerService, projectInfoService)
+    ) = StreamGitPermissionServiceImpl(client, managerService, projectInfoService)
 
     @Bean
-    fun streamProjectPermissionService(
-        streamPermissionService: IStreamPermissionValidateService
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun tgitStreamProjectPermissionService(
+        streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
-
-    @Bean
-    fun streamPermissionService(
-        streamPermissionService: IStreamPermissionValidateService
-    ) = StreamPermissionServiceImpl(streamPermissionService)
 
     @Bean
     fun gitProjectInfoService(

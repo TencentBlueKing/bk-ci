@@ -42,6 +42,8 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.repository.service.RepositoryPermissionService
+import com.tencent.devops.repository.service.impl.StreamRepositoryPermissionServiceImpl
 import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 
@@ -84,5 +86,19 @@ class RepositoryConfiguration {
         client = client,
         tokenService = tokenService,
         authResourceApiStr = authResourceApiStr
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamRepositoryPermissionService(
+        dslContext: DSLContext,
+        tokenService: ClientTokenService,
+        repositoryDao: RepositoryDao,
+        client: Client
+    ): RepositoryPermissionService = StreamRepositoryPermissionServiceImpl(
+        dslContext = dslContext,
+        repositoryDao = repositoryDao,
+        tokenService = tokenService,
+        client = client
     )
 }
