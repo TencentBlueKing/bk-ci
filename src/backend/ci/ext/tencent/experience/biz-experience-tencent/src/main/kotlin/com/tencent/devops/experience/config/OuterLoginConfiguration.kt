@@ -16,7 +16,7 @@ class OuterLoginConfiguration {
     private var outApiToken: String? = null
 
     @Bean
-    fun apiClient(): ApiClient {
+    fun bkApiClient(): ApiClient {
         return ApiClient().setBasePath(outApiHost).addDefaultHeader("Authorization", "iBearer $outApiToken")
     }
 

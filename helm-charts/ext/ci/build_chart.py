@@ -35,16 +35,15 @@ for c_path in os.listdir(config_server):
     if os.path.isdir(service_path):
         service_name = c_path
         service_tpl = open(template_parent+'_'+service_name+'.tpl', 'w')
+        service_yaml = yaml.safe_load(open(service_path+'/application-'+spring_profile+'.yml'))
+        if os.path.isfile(service_path+'/application.yml'):
+            service_yaml.update(yaml.safe_load(open(service_path+'/application.yml')))
         service_tpl.write('{{- define "bkci.'+service_name+'.yaml" -}}\n')
-        for service_config in os.listdir(service_path):
-            if service_config == 'application-'+spring_profile+'.yml' == service_config:
-                for line in open(config_server+c_path+'/'+service_config, 'r'):
-                    service_tpl.write(line)
-                break
+        yaml.dump(service_yaml, service_tpl)
         service_tpl.write('{{- end -}}')
         service_tpl.flush()
         service_tpl.close()
-#gateway config(伪装)
+# gateway config(伪装)
 gateway_tpl = open(template_parent+'_gateway.tpl', 'w')
 gateway_tpl.write('{{- define "bkci.gateway.yaml" -}}\n')
 gateway_tpl.write('{{- end -}}')
