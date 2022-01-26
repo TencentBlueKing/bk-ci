@@ -92,24 +92,4 @@ class AppExperiencePushResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
     }
-
-    fun checkNotifyMessage(
-        body: String,
-        title: String,
-        receiver: String,
-        url: String
-    ) {
-        if (body.isBlank()) {
-            throw ParamBlankException("Invalid body")
-        }
-        if (title.isBlank()) {
-            throw ParamBlankException("Invalid title")
-        }
-        if (receiver.isBlank()) {
-            throw ParamBlankException("Invalid receiver")
-        }
-        if (url.isBlank()) {
-            throw ParamBlankException("Invalid url")
-        }
-    }
 }
