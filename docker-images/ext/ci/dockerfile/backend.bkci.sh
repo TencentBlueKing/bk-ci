@@ -29,6 +29,7 @@ java_argv+=(
   "-Dspring.cloud.kubernetes.config.sources[0].name=${SERVICE_PREFIX:-bkci}-common"
   "-Dspring.cloud.kubernetes.config.sources[1].name=${SERVICE_PREFIX:-bkci}-${MS_NAME}"
   "-Dservice-suffix="
+  "-Dspring.main.allow-bean-definition-overriding=true"
 )
 
 echo "run java"
