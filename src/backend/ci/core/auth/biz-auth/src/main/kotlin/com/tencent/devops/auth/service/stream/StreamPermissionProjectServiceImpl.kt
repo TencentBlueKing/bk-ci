@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import org.springframework.beans.factory.annotation.Autowired
 
 class StreamPermissionProjectServiceImpl @Autowired constructor(
-    val IStreamPermissionValidateService: IStreamPermissionValidateService
+    private val streamPermissionService: StreamPermissionServiceImpl
 ) : PermissionProjectService {
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         // stream场景下使用不到此接口。占做默认实现
@@ -56,14 +56,14 @@ class StreamPermissionProjectServiceImpl @Autowired constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        return IStreamPermissionValidateService.isProjectMember(projectCode, userId).first
+        return streamPermissionService.isProjectMember(projectCode, userId).first
     }
 
     override fun checkProjectManager(
         userId: String,
         projectCode: String
     ): Boolean {
-        return IStreamPermissionValidateService.isProjectMember(projectCode, userId).second
+        return streamPermissionService.isProjectMember(projectCode, userId).second
     }
 
     override fun createProjectUser(
