@@ -36,10 +36,10 @@ for c_path in os.listdir(config_server):
         service_name = c_path
         service_tpl = open(template_parent+'_'+service_name+'.tpl', 'w')
         service_yaml = {}
-        if os.path.isfile(service_path+'/application-'+spring_profile+'.yml'):
-            service_yaml.update(yaml.safe_load(open(service_path+'/application-'+spring_profile+'.yml')))
         if os.path.isfile(service_path+'/application.yml'):
             service_yaml.update(yaml.safe_load(open(service_path+'/application.yml')))
+        if os.path.isfile(service_path+'/application-'+spring_profile+'.yml'):
+            service_yaml.update(yaml.safe_load(open(service_path+'/application-'+spring_profile+'.yml')))
         service_tpl.write('{{- define "bkci.'+service_name+'.yaml" -}}\n')
         yaml.dump(service_yaml, service_tpl)
         service_tpl.write('{{- end -}}')
