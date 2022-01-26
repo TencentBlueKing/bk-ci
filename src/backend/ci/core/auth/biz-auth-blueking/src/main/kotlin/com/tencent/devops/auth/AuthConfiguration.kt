@@ -40,14 +40,14 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.BkPermissionProjectService
 import com.tencent.devops.auth.service.BkPermissionService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.SimpleIStreamPermissionValidateImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
+import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
@@ -93,10 +93,6 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionProjectService::class)
     fun permissionProjectService() = SimpleAuthPermissionProjectService()
-
-    @Bean
-    @ConditionalOnMissingBean(IStreamPermissionValidateService::class)
-    fun streamPermissionService() = SimpleIStreamPermissionValidateImpl()
 
     @Bean
     @ConditionalOnMissingBean
@@ -153,14 +149,22 @@ class AuthConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "stream")
-    fun streamPermissionService(
-        IStreamPermissionValidateService: IStreamPermissionValidateService
-    ) = StreamPermissionServiceImpl(IStreamPermissionValidateService)
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamPermissionService() = GithubStreamPermissionServiceImpl()
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "stream")
-    fun streamProjectPermissionService(
-        IStreamPermissionValidateService: IStreamPermissionValidateService
-    ) = StreamPermissionProjectServiceImpl(IStreamPermissionValidateService)
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamProjectPermissionService(
+        streamPermissionService: StreamPermissionServiceImpl
+    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamPermissionService() = GitlabStreamPermissionServiceImpl()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamProjectPermissionService(
+        streamPermissionService: StreamPermissionServiceImpl
+    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
 }
