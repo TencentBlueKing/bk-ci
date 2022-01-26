@@ -114,7 +114,10 @@ abstract class StreamPermissionServiceImpl : PermissionService {
      * projectCode: stream侧项目编码
      * userId: 待校验用户
      */
-    abstract fun isProjectMember(projectCode: String, userId: String): Pair<Boolean/**是否为项目成员*/, Boolean/**是否为developer以上权限*/>
+    abstract fun isProjectMember(
+        projectCode: String,
+        userId: String
+    ): Pair<Boolean/**是否为项目成员*/, Boolean/**是否为developer以上权限*/>
 
     /**
      * 扩展权限(如本地管理员之类的特殊逻辑)
@@ -122,7 +125,12 @@ abstract class StreamPermissionServiceImpl : PermissionService {
      * userId: 待校验用户
      * action: stream内定义的操作类型
      */
-    abstract fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean
+    abstract fun extPermission(
+        projectCode: String,
+        userId: String,
+        action: AuthPermission,
+        resourceType: String
+    ): Boolean
 
     companion object {
         val logger = LoggerFactory.getLogger(StreamPermissionServiceImpl::class.java)
