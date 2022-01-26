@@ -107,7 +107,7 @@
     "stageReviewDesc": "60-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
     "stageTimeoutLabel": "Approval time limit",
     "stageTimeoutError": "Please specify an integer from 1 to 720",
-    "stageTimeoutDesc": "If the approval is not carried out within the time limit, it shall be deemed as approved. The value range is: an integer between 1 and 720 (unit: hour)",
+    "stageTimeoutDesc": "The \"approval time limit\" can be set to protect the assembly line tasks. If the approval is not carried out within the time limit, the approval is regarded as failed, and the assembly line enters STAGE_SUCCESS state, and the process terminates",
     "stageUserTriggers": "Stage Owner",
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
