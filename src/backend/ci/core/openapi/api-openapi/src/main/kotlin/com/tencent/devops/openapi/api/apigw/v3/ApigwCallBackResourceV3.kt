@@ -158,7 +158,7 @@ interface ApigwCallBackResourceV3 {
         @ApiParam("projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("id", required = true)
+        @ApiParam("传入的是回调列表接口返回的id：v3_user/app_callback_list", required = true)
         @PathParam("id")
         id: Long
     ): Result<Boolean>
