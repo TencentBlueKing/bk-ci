@@ -69,7 +69,7 @@ data class GitNoteAttributes(
     @JsonProperty("line_code")
     val lineCode: String? = null,
     @JsonProperty("commit_id")
-    val commitId: String,
+    val commitId: String?,
     @JsonProperty("noteable_id")
     val noteableId: Long? = null,
     val system: Boolean,

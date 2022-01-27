@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ACTION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_IID
@@ -103,6 +104,7 @@ class TGitIssueTriggerHandler(
             startParams[PIPELINE_WEBHOOK_ISSUE_OWNER] = event.user.username
             startParams[PIPELINE_WEBHOOK_ISSUE_URL] = url ?: ""
             startParams[PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
+            startParams[PIPELINE_WEBHOOK_ISSUE_ACTION] = action
         }
 
         // 兼容stream变量

@@ -246,7 +246,7 @@ interface UserQualityRuleResource {
     ): Result<List<RuleTemplate>>
 
     @ApiOperation("获取规则模板")
-    @Path("/{projectId}/listTemplates")
+    @Path("/project/{projectId}/listTemplates")
     @GET
     fun listProjectTemplates(
         @ApiParam("项目ID", required = true)

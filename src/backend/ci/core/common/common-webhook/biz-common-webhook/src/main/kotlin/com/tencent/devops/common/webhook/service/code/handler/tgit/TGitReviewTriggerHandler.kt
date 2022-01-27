@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
@@ -141,7 +142,8 @@ class TGitReviewTriggerHandler(
                 "approved" -> approvedReviews.add(reviewer.reviewer.username)
             }
         }
-        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS] = event.reviewers.joinToString(",")
+        startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS] =
+            event.reviewers.joinToString(",") { it.reviewer.username }
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVING_REVIEWERS] = approvingReviews.joinToString(",")
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_APPROVED_REVIEWERS] = approvedReviews.joinToString(",")
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_STATE] = event.state
@@ -152,17 +154,33 @@ class TGitReviewTriggerHandler(
         if (event.reviewableType == "merge_request" && event.reviewableId != null) {
             startParams.putAll(
                 mrStartParam(
+                    event = event,
                     mrRequestId = event.reviewableId!!,
                     projectId = projectId,
                     repository = repository
                 )
             )
         }
+
+        // 兼容stream变量
+        startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
+        if (projectId != null && repository != null) {
+            val (defaultBranch, commitInfo) =
+                gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
+            startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
+            startParams[CI_BRANCH] = defaultBranch ?: ""
+
+            startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
+            startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
+            startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
+        }
+
         return startParams
     }
 
     @SuppressWarnings("ComplexMethod")
     private fun mrStartParam(
+        event: GitReviewEvent,
         mrRequestId: Long,
         projectId: String?,
         repository: Repository?
@@ -202,7 +220,6 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_COMMIT] = mrInfo?.sourceCommit ?: ""
 
         // 兼容stream变量
-        startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
         startParams[PIPELINE_GIT_HEAD_REF] = mrInfo?.sourceBranch ?: ""
         startParams[PIPELINE_GIT_BASE_REF] = mrInfo?.targetBranch ?: ""
         startParams[PIPELINE_GIT_MR_ID] = mrInfo?.mrId ?: ""
@@ -210,14 +227,7 @@ class TGitReviewTriggerHandler(
         startParams[PIPELINE_GIT_MR_TITLE] = mrInfo?.title ?: ""
         startParams[PIPELINE_GIT_MR_DESC] = mrInfo?.description ?: ""
         startParams[PIPELINE_GIT_MR_PROPOSER] = mrInfo?.author?.username ?: ""
-        val (defaultBranch, commitInfo) =
-            gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
-        startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
-        startParams[CI_BRANCH] = defaultBranch ?: ""
-
-        startParams[PIPELINE_GIT_COMMIT_AUTHOR] = commitInfo?.author_name ?: ""
-        startParams[PIPELINE_GIT_SHA] = commitInfo?.id ?: ""
-        startParams[PIPELINE_GIT_SHA_SHORT] = commitInfo?.short_id ?: ""
+        startParams[PIPELINE_GIT_MR_URL] = "${event.repository.homepage}/merge_requests/${mrInfo?.mrNumber}"
         return startParams
     }
 
@@ -249,7 +259,7 @@ class TGitReviewTriggerHandler(
             val crTypeFilter = ContainsFilter(
                 pipelineId = pipelineId,
                 filterName = "crType",
-                triggerOn = event.restrictType ?: "",
+                triggerOn = event.reviewableType ?: "",
                 included = WebhookUtils.convert(includeCrTypes)
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter, crTypeFilter)
