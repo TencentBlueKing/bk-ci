@@ -47,11 +47,11 @@ class RegexContainFilter(
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
-        if (included.isEmpty()){
+        if (included.isEmpty()) {
             return true
         }
         included.forEach {
-            if(Pattern.compile(it).matcher(triggerOn).find()){
+            if (Pattern.compile(it).matcher(triggerOn).find()) {
                 return true
             }
         }
