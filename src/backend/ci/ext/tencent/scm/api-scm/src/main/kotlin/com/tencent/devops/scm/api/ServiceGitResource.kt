@@ -46,18 +46,18 @@ import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
-import com.tencent.devops.scm.pojo.GitCIMrInfo
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.Project
-import com.tencent.devops.scm.pojo.GitRepositoryResp
-import com.tencent.devops.scm.pojo.GitRepositoryDirItem
-import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
+import com.tencent.devops.scm.pojo.GitCIMrInfo
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitRepositoryDirItem
+import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -791,6 +791,6 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
-        gitProjectId: String,
+        gitProjectId: String
     ): Result<GitProjectInfo?>
 }
