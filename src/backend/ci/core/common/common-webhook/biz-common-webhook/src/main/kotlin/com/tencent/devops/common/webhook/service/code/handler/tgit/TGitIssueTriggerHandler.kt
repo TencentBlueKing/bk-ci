@@ -104,7 +104,7 @@ class TGitIssueTriggerHandler(
             startParams[PIPELINE_WEBHOOK_ISSUE_OWNER] = event.user.username
             startParams[PIPELINE_WEBHOOK_ISSUE_URL] = url ?: ""
             startParams[PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID] = milestoneId ?: 0L
-            startParams[PIPELINE_WEBHOOK_ISSUE_ACTION] = action
+            startParams[PIPELINE_WEBHOOK_ISSUE_ACTION] = action ?: ""
         }
 
         // 兼容stream变量
