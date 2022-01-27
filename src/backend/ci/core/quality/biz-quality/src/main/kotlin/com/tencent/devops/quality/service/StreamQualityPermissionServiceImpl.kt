@@ -30,6 +30,7 @@ package com.tencent.devops.quality.service
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
@@ -37,7 +38,7 @@ import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitCIQualityPermissionService @Autowired constructor(
+class StreamQualityPermissionServiceImpl @Autowired constructor(
     private val client: Client,
     private val tokenCheckService: ClientTokenService,
     private val ruleDao: QualityRuleDao,
@@ -51,16 +52,28 @@ class GitCIQualityPermissionService @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+        val permissionCheck = validateGroupPermission(
             userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
-            action = "",
-            projectCode = projectId,
-            resourceCode = ""
-        ).data ?: false
+            projectId = projectId,
+            authPermission = authPermission
+        )
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
+    }
+
+    private fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null) ?: "",
+            action = authPermission.value,
+            projectCode = projectId,
+            resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
+        ).data ?: false
     }
 
     override fun createGroupResource(
@@ -85,24 +98,25 @@ class GitCIQualityPermissionService @Autowired constructor(
     }
 
     override fun filterGroup(
-        user: String,
+        userId: String,
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId = user,
-            token = tokenCheckService.getSystemToken(null) ?: "",
-            action = "",
-            projectCode = projectId,
-            resourceCode = ""
-        ).data ?: false
-        if (!permissionCheck) {
-            return emptyMap()
-        }
-        val groupInfos = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
+        // 此处不同的AuthPermission类型有不同的校验逻辑。需要拆分
         val resultMap = mutableMapOf<AuthPermission, List<Long>>()
+        val groupInfos = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
+
         authPermissions.forEach {
-            resultMap[it] = groupInfos
+            val permissionCheck = validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = it
+            )
+            if (!permissionCheck) {
+                resultMap[it] = emptyList()
+            } else {
+                resultMap[it] = groupInfos
+            }
         }
         return resultMap
     }
@@ -115,9 +129,9 @@ class GitCIQualityPermissionService @Autowired constructor(
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
-            action = "",
+            action = authPermission.value,
             projectCode = projectId,
-            resourceCode = ""
+            resourceCode = AuthResourceType.QUALITY_RULE.value
         ).data ?: false
     }
 
@@ -168,22 +182,23 @@ class GitCIQualityPermissionService @Autowired constructor(
     override fun filterRules(
         userId: String,
         projectId: String,
-        bkAuthPermissionSet: Set<AuthPermission>
+        authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId = userId,
-            token = tokenCheckService.getSystemToken(null) ?: "",
-            action = "",
-            projectCode = projectId,
-            resourceCode = ""
-        ).data ?: false
-        if (!permissionCheck) {
-            return emptyMap()
-        }
-        val groupInfos = ruleDao.list(dslContext, projectId)?.map { it.id } ?: emptyList()
+        // 此处不同的AuthPermission类型有不同的校验逻辑。需要拆分
         val resultMap = mutableMapOf<AuthPermission, List<Long>>()
-        bkAuthPermissionSet.forEach {
-            resultMap[it] = groupInfos
+        val ruleInfos = ruleDao.list(dslContext, projectId)?.map { it.id } ?: emptyList()
+
+        authPermissions.forEach {
+            val permissionCheck = validateRulePermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = it
+            )
+            if (!permissionCheck) {
+                resultMap[it] = emptyList()
+            } else {
+                resultMap[it] = ruleInfos
+            }
         }
         return resultMap
     }

@@ -38,13 +38,12 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitCICredentialPermissionServiceImpl @Autowired constructor(
+class StreamCredentialPermissionServiceImpl @Autowired constructor(
     private val client: Client,
     private val credentialDao: CredentialDao,
     private val dslContext: DSLContext,
     val tokenService: ClientTokenService
 ) : CredentialPermissionService {
-
     override fun validatePermission(
         userId: String,
         projectId: String,
@@ -69,11 +68,11 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectId ")
+        logger.info("StreamCredentialPermissionServiceImpl user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenService.getSystemToken(null) ?: "",
-            action = "",
+            action = AuthPermission.ENABLE.value, // 凭证类所有检验都以操作类来校验。即便是view也走操作类权限校验
             projectCode = projectId,
             resourceCode = null
         ).data ?: false
@@ -101,7 +100,8 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val checkPermission = validatePermission(userId, projectId, authPermissions.first())
+        // 凭证类所有检验都以操作类来校验。即便是view也走操作类权限校验. 若后续产品有调整,此处需要拆解为不同的permission类型
+        val checkPermission = validatePermission(userId, projectId, AuthPermission.ENABLE)
         if (!checkPermission) {
             return emptyMap()
         }
@@ -134,6 +134,6 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCICertPermissionServiceImpl::class.java)
+        val logger = LoggerFactory.getLogger(StreamCredentialPermissionServiceImpl::class.java)
     }
 }

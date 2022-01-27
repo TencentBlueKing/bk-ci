@@ -349,7 +349,6 @@ class TXPipelineExportService @Autowired constructor(
             stages.add(
                 PreStage(
                     name = stage.name,
-                    id = null,
                     label = tags,
                     ifField = when (stage.stageControlOption?.runCondition) {
                         StageRunCondition.CUSTOM_CONDITION_MATCH -> stage.stageControlOption?.customCondition

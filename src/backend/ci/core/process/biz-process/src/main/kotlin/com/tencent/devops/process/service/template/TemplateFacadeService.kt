@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -1787,7 +1786,7 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun hasManagerPermission(projectId: String, userId: String): Boolean =
-        pipelinePermissionService.isProjectUser(userId = userId, projectId = projectId, group = BkAuthGroup.MANAGER)
+        pipelinePermissionService.checkProjectManager(userId = userId, projectId = projectId)
 
     /**
      * 删除模板的参数， 如果模板中没有这个参数，那么流水线中应该删除掉

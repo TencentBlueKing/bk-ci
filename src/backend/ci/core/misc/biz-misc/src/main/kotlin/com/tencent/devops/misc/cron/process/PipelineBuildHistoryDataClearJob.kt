@@ -243,7 +243,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         projectDataClearConfigService: ProjectDataClearConfigService
     ) {
         // 获取当前项目下流水线记录的最小主键ID值
-        var minId = processMiscService.getMinPipelineInfoIdListByProjectId(projectId)
+        var minId = processMiscService.getMinPipelineInfoIdByProjectId(projectId)
         do {
             logger.info("pipelineBuildHistoryPastDataClear clearPipelineBuildData projectId:$projectId,minId:$minId")
             val pipelineIdList = processMiscService.getPipelineIdListByProjectId(
@@ -253,7 +253,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             )
             if (!pipelineIdList.isNullOrEmpty()) {
                 // 重置minId的值
-                minId = processMiscService.getPipelineInfoIdListByPipelineId(
+                minId = processMiscService.getPipelineInfoIdByPipelineId(
                     projectId = projectId,
                     pipelineId = pipelineIdList[pipelineIdList.size - 1]
                 ) + 1

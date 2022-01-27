@@ -37,7 +37,7 @@ import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitCiRepositoryPermissionServiceImpl @Autowired constructor(
+class StreamRepositoryPermissionServiceImpl @Autowired constructor(
     private val client: Client,
     val dslContext: DSLContext,
     val tokenService: ClientTokenService,

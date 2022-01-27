@@ -36,7 +36,6 @@ import io.swagger.annotations.ApiModelProperty
  */
 data class PreStage(
     val name: String?,
-    val id: String?,
     val label: Any? = null,
     @ApiModelProperty(name = "if")
     @JsonProperty("if")

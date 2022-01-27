@@ -11,7 +11,6 @@ triggerOn:
     - "master"
 stages:
 - name: "腾讯代码质量扫描"
-  id: "xxxxx"
   label: []
   if: null
   fast-kill: false
@@ -33,7 +32,7 @@ stages:
     if: null
     steps:
     - name: "代码拉取"
-      id: "step-eFav7qd"
+      id: "step-1"
       if: null
       if-modify: null
       uses: null
@@ -49,7 +48,7 @@ stages:
       run: null
       checkout: "self"
     - name: "腾讯代码分析(官方-代码分析工作组)"
-      id: "step-77lAxqm"
+      id: "check"
       if: "false == true"
       if-modify: null
       uses: "CodeccCheckAtomDebug@4.*"

@@ -32,9 +32,11 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.service.impl.BluekingPipelinePermissionService
 import com.tencent.devops.process.permission.service.impl.MockPipelinePermissionService
 import com.tencent.devops.process.permission.service.impl.V3PipelinePermissionService
@@ -104,5 +106,33 @@ class PipelinePermConfiguration {
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         client = client,
         redisOperation = redisOperation
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamPipelinePermissionService(
+        client: Client,
+        pipelineInfoDao: PipelineInfoDao,
+        dslContext: DSLContext,
+        checkTokenService: ClientTokenService
+    ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
+        client = client,
+        pipelineInfoDao = pipelineInfoDao,
+        dslContext = dslContext,
+        checkTokenService = checkTokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamPipelinePermissionService(
+        client: Client,
+        pipelineInfoDao: PipelineInfoDao,
+        dslContext: DSLContext,
+        checkTokenService: ClientTokenService
+    ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
+        client = client,
+        pipelineInfoDao = pipelineInfoDao,
+        dslContext = dslContext,
+        checkTokenService = checkTokenService
     )
 }
