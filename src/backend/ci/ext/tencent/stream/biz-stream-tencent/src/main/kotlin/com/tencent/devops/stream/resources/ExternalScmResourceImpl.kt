@@ -64,7 +64,7 @@ class ExternalScmResourceImpl @Autowired constructor(
             rabbitTemplate = rabbitTemplate,
             event = GitCIRequestEvent(
                 eventType = eventType,
-                event = body,
+                event = body
             )
         )
         return Result(true)

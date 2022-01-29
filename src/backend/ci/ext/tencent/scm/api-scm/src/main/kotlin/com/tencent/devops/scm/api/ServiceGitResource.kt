@@ -791,6 +791,6 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
-        gitProjectId: String,
+        gitProjectId: String
     ): Result<GitProjectInfo?>
 }
