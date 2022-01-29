@@ -11,10 +11,8 @@ import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -106,7 +104,7 @@ class TriggerMatcher @Autowired constructor(
         changeSet: Set<String>?,
         pipelineFilePath: String
     ): TriggerResult {
-        val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
+        val targetBranch = getBranch(context.gitEvent).second
 
         val gitRequestEvent = context.requestEvent
 
