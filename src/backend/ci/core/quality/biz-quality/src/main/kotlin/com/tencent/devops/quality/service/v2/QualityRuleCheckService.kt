@@ -31,12 +31,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -177,11 +179,16 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {
+        val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
+                "${buildCheckParams.buildId}|${buildCheckParams.position}")
+        watcher.start("ruleList")
         // 遍历项目下所有拦截规则
         val ruleList = ruleService.serviceListRuleByPosition(
             buildCheckParams.projectId,
             buildCheckParams.position
         )
+        watcher.stop()
+        LogUtils.printCostTimeWE(watcher = watcher)
 
         return doCheckRules(buildCheckParams, ruleList)
     }

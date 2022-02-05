@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -46,6 +47,7 @@ import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
@@ -219,6 +221,16 @@ class QualityRuleService @Autowired constructor(
 
     fun serviceListRules(projectId: String, startTime: LocalDateTime? = null): List<QualityRule> {
         val recordList = qualityRuleDao.list(dslContext, projectId, startTime)
+        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+    }
+
+    fun serviceListByRange(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
+        val recordList = qualityRuleDao.listByRange(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            templateId = templateId
+        )
         return batchGetRuleData(recordList?: listOf()) ?: listOf()
     }
 
@@ -761,14 +773,12 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
-        val ruleList = serviceListRules(projectId)
-        logger.info("get project rule list for $projectId, $pipelineId, $templateId: ${ruleList.map { it.name }}")
-        return ruleList.filter {
-            var result = false
-            if (!pipelineId.isNullOrBlank()) result = (result || it.range.contains(pipelineId))
-            if (!templateId.isNullOrBlank()) result = (result || it.templateRange.contains(templateId))
-            return@filter result
-        }
+        val watcher = Watcher(id = "QUALITY|getProjectRuleList|$projectId|$pipelineId|$templateId")
+        watcher.start("ruleList")
+        val ruleList = serviceListByRange(projectId, pipelineId, templateId)
+        watcher.stop()
+        LogUtils.printCostTimeWE(watcher = watcher)
+        return ruleList
     }
 
     private fun refreshRedis(projectId: String, ruleId: Long?) {
