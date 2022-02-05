@@ -378,7 +378,8 @@ class QualityRuleBuildHisService constructor(
         logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
-                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name || it?.status == null) {
+                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name ||
+                    it?.status == RuleInterceptResult.PASS.name) {
                     passFlag = true
                 } else {
                     passFlag = false

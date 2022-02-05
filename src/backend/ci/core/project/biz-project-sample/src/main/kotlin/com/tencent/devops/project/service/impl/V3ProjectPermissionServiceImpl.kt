@@ -54,11 +54,10 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
 ) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        return authProjectApi.isProjectUser(
+        return authProjectApi.checkProjectUser(
             user = userId,
             serviceCode = projectAuthServiceCode,
-            projectCode = projectCode,
-            group = null
+            projectCode = projectCode
         )
     }
 
