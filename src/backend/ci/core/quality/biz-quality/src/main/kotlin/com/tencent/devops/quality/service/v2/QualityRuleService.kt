@@ -807,7 +807,7 @@ class QualityRuleService @Autowired constructor(
         val pipelineStr = ruleRecord.indicatorRange
         val templateStr = ruleRecord.pipelineTemplateRange
         logger.info("refreshRedis $projectId| $ruleId| $pipelineStr| $templateStr")
-        if (pipelineStr != null) {
+        if (!pipelineStr.isNullOrBlank()) {
             val pipelineList = pipelineStr.split(",")
             pipelineList.forEach { pipelineId ->
                 val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
@@ -822,7 +822,7 @@ class QualityRuleService @Autowired constructor(
                 logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleId | $ruleList")
             }
         }
-        if (templateStr != null) {
+        if (!templateStr.isNullOrBlank()) {
             val templateList = templateStr.split(",")
             templateList.forEach { templateId ->
                 val filterRuleList = getProjectRuleList(projectId, null, templateId)
