@@ -191,7 +191,7 @@ class QualityRuleCheckService @Autowired constructor(
                 ruleService.serviceListByPipelineRange(
                     buildCheckParams.projectId,
                     buildCheckParams.pipelineId
-                )
+                ).filter { it.controlPoint.position.name == buildCheckParams.position }
             )
         }
         if (!templateId.isNullOrBlank()) {
@@ -199,7 +199,7 @@ class QualityRuleCheckService @Autowired constructor(
                 ruleService.serviceListByTemplateRange(
                     buildCheckParams.projectId,
                     buildCheckParams.templateId
-                )
+                ).filter { it.controlPoint.position.name == buildCheckParams.position }
             )
         }
         watcher.stop()
