@@ -209,11 +209,10 @@ class QualityRuleDao {
         }
     }
 
-    fun listByRange(
+    fun listByPipelineRange(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String?,
-        templateId: String?,
         enable: Boolean = true
     ): Result<TQualityRuleRecord>? {
         with(TQualityRule.T_QUALITY_RULE) {
@@ -222,6 +221,23 @@ class QualityRuleDao {
                 ENABLE.eq(enable)
             )
             if (pipelineId != null) conditions.add(INDICATOR_RANGE.like("%$pipelineId%"))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
+    fun listByTemplateRange(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String?,
+        enable: Boolean = true
+    ): Result<TQualityRuleRecord>? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                ENABLE.eq(enable)
+            )
             if (templateId != null) conditions.add(PIPELINE_TEMPLATE_RANGE.like("%$templateId%"))
             return dslContext.selectFrom(this)
                 .where(conditions)

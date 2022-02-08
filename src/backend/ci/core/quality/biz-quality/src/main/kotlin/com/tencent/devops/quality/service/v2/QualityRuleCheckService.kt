@@ -179,18 +179,33 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {
+        val pipelineId = buildCheckParams.pipelineId
+        val templateId = buildCheckParams.templateId
         val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
                 "${buildCheckParams.buildId}|${buildCheckParams.position}")
         watcher.start("ruleList")
-        // 遍历项目下所有拦截规则
-        val ruleList = ruleService.serviceListRuleByPosition(
-            buildCheckParams.projectId,
-            buildCheckParams.position
-        )
+        // 匹配拦截规则
+        val ruleList = mutableSetOf<QualityRule>()
+        if (!pipelineId.isNullOrBlank()) {
+            ruleList.addAll(
+                ruleService.serviceListByPipelineRange(
+                    buildCheckParams.projectId,
+                    buildCheckParams.pipelineId
+                )
+            )
+        }
+        if (!templateId.isNullOrBlank()) {
+            ruleList.addAll(
+                ruleService.serviceListByTemplateRange(
+                    buildCheckParams.projectId,
+                    buildCheckParams.templateId
+                )
+            )
+        }
         watcher.stop()
         LogUtils.printCostTimeWE(watcher = watcher)
 
-        return doCheckRules(buildCheckParams, ruleList)
+        return doCheckRules(buildCheckParams, ruleList.toList())
     }
 
     fun checkBuildHis(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {

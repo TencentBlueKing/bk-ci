@@ -224,11 +224,19 @@ class QualityRuleService @Autowired constructor(
         return batchGetRuleData(recordList?: listOf()) ?: listOf()
     }
 
-    fun serviceListByRange(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
-        val recordList = qualityRuleDao.listByRange(
+    fun serviceListByPipelineRange(projectId: String, pipelineId: String?): List<QualityRule> {
+        val recordList = qualityRuleDao.listByPipelineRange(
             dslContext = dslContext,
             projectId = projectId,
-            pipelineId = pipelineId,
+            pipelineId = pipelineId
+        )
+        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+    }
+
+    fun serviceListByTemplateRange(projectId: String, templateId: String?): List<QualityRule> {
+        val recordList = qualityRuleDao.listByTemplateRange(
+            dslContext = dslContext,
+            projectId = projectId,
             templateId = templateId
         )
         return batchGetRuleData(recordList?: listOf()) ?: listOf()
@@ -775,7 +783,17 @@ class QualityRuleService @Autowired constructor(
     fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
         val watcher = Watcher(id = "QUALITY|getProjectRuleList|$projectId|$pipelineId|$templateId")
         watcher.start("ruleList")
-        val ruleList = serviceListByRange(projectId, pipelineId, templateId)
+        val ruleList = when {
+            pipelineId != null -> {
+                serviceListByPipelineRange(projectId, pipelineId)
+            }
+            templateId != null -> {
+                serviceListByTemplateRange(projectId, templateId)
+            }
+            else -> {
+                serviceListRules(projectId)
+            }
+        }
         watcher.stop()
         LogUtils.printCostTimeWE(watcher = watcher)
         return ruleList
