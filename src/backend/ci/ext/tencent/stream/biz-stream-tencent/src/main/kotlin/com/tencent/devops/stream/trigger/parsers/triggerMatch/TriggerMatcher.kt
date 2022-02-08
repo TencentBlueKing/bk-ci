@@ -104,7 +104,7 @@ class TriggerMatcher @Autowired constructor(
         changeSet: Set<String>?,
         pipelineFilePath: String
     ): TriggerResult {
-        val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
+        val targetBranch = getBranch(context.gitEvent).second
 
         val gitRequestEvent = context.requestEvent
 
