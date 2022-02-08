@@ -140,7 +140,7 @@ class TGitNoteTriggerHandler(
         event.mergeRequest?.apply {
             startParams[PIPELINE_GIT_HEAD_REF] = target_branch
             startParams[PIPELINE_GIT_BASE_REF] = source_branch
-            startParams[PIPELINE_GIT_MR_URL] = url ?: ""
+            startParams[PIPELINE_GIT_MR_URL] = url ?: event.objectAttributes.url
             startParams[PIPELINE_GIT_MR_ID] = id.toString()
             startParams[PIPELINE_GIT_MR_IID] = iid.toString()
             startParams[PIPELINE_GIT_MR_TITLE] = title
