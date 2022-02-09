@@ -77,8 +77,8 @@ data class MatrixControlOption(
             logger.warn("convert Strategy from Yaml error. try parse with JSON. Error message: ${ignore.message}")
             convertStrategyJson(buildContext)
         }
-        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext)))
-        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext)))
+        matrixConfig.include!!.addAll(convertCase(EnvUtils.parseEnv(includeCaseStr, buildContext), buildContext))
+        matrixConfig.exclude!!.addAll(convertCase(EnvUtils.parseEnv(excludeCaseStr, buildContext), buildContext))
         return matrixConfig
     }
 
@@ -128,15 +128,9 @@ data class MatrixControlOption(
         }
     }
 
-    /**
-     * 根据[strategyStr]生成对应的矩阵参数表
-     */
-    private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
-        // 替换上下文 要考虑带fromJSON()的写法
-        val contextStr = ReplacementUtils.replace(
-            command = strategyStr ?: return MatrixConfig(
-                emptyMap(), mutableListOf(), mutableListOf()
-            ),
+    private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
+        return ReplacementUtils.replace(
+            command = command,
             replacement = object : ReplacementUtils.KeyReplacement {
                 override fun getReplacement(key: String): String? {
                     // 匹配fromJSON()
@@ -148,25 +142,56 @@ data class MatrixControlOption(
                 }
             }
         )
-        val matrixMap = JsonUtil.to<Map<String, Any>>(contextStr)
-        return MatrixConfig(
-            strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
-                object : TypeReference<Map<String, List<String>>?>() {}),
-            include = JsonUtil.anyTo(matrixMap["include"],
-                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
-            exclude = JsonUtil.anyTo(matrixMap["exclude"],
-                object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
+    }
+
+    /**
+     * 根据[strategyStr]生成对应的矩阵参数表
+     */
+    private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
+        // 替换上下文 要考虑带fromJSON()的写法
+        val contextStr = replaceJsonPattern(
+            command = strategyStr ?: return MatrixConfig(
+                emptyMap(), mutableListOf(), mutableListOf()
+            ),
+            buildContext = buildContext
         )
+        try {
+            // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
+            val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
+            return MatrixConfig(
+                strategy = JsonUtil.anyTo(matrixMap.filter { it.key != "include" && it.key != "exclude" }.toMap(),
+                    object : TypeReference<Map<String, List<String>>?>() {}),
+                include = JsonUtil.anyTo(matrixMap["include"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf(),
+                exclude = JsonUtil.anyTo(matrixMap["exclude"],
+                    object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
+            )
+        } catch (ignore: Exception) {
+            // 适用于不包含key的list类型JSON,这种情况只会是strategy
+            return MatrixConfig(
+                strategy = JsonUtil.to(contextStr),
+                include = mutableListOf(),
+                exclude = mutableListOf()
+            )
+        }
     }
 
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(str: String?): List<Map<String, String>> {
+    private fun convertCase(str: String?, buildContext: Map<String, String>?): List<Map<String, String>> {
         if (str.isNullOrBlank()) {
             return emptyList()
         }
-        val includeCaseList = YamlUtil.to<List<Map<String, Any>>>(str)
+        val includeCaseList = try {
+            YamlUtil.to<List<Map<String, Any>>>(str)
+        } catch (e: Exception) {
+            val contextStr = replaceJsonPattern(
+                command = str,
+                buildContext = buildContext ?: emptyMap()
+            )
+            JsonUtil.to(contextStr)
+        }
         return includeCaseList.map { map ->
             map.map {
                 it.key to it.value.toString()
