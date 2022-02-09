@@ -25,7 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.notify
+
 const val EXCHANGE_EVENT = "exchange_event"
+
 const val QUEUE_NOTIFY_RTX = "queue_notify_rtx"
 const val QUEUE_NOTIFY_WECHAT = "queue_notify_wechat"
 const val QUEUE_NOTIFY_EMAIL = "queue_notify_email"
