@@ -19,7 +19,10 @@ class ServiceTemplateAcrossResourceImpl @Autowired constructor(
         templateAcrossInfoService.batchCreateAcrossInfo(projectId, pipelineId, null, userId, templateAcrossInfos)
     }
 
-    override fun getBuildAcrossTemplateInfo(projectId: String, templateId: String): Result<List<BuildTemplateAcrossInfo>> {
+    override fun getBuildAcrossTemplateInfo(
+        projectId: String,
+        templateId: String
+    ): Result<List<BuildTemplateAcrossInfo>> {
         return Result(
             templateAcrossInfoService.getAcrossInfo(projectId, null, templateId)
         )
