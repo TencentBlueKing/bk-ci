@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.filter
 
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 
 /**
  * 正则包含过滤器，included中应为正则表达式
@@ -51,8 +52,12 @@ class RegexContainFilter(
             return true
         }
         included.forEach {
-            if (Pattern.compile(it).matcher(triggerOn).find()) {
-                return true
+            try {
+                if (Pattern.compile(it).matcher(triggerOn).find()) {
+                    return true
+                }
+            } catch (e: PatternSyntaxException) {
+                logger.warn("($it) syntax error :$e ")
             }
         }
         return false
