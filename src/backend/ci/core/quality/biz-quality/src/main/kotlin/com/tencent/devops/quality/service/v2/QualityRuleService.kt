@@ -221,7 +221,7 @@ class QualityRuleService @Autowired constructor(
 
     fun serviceListRules(projectId: String, startTime: LocalDateTime? = null): List<QualityRule> {
         val recordList = qualityRuleDao.list(dslContext, projectId, startTime)
-        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun serviceListByPipelineRange(projectId: String, pipelineId: String?): List<QualityRule> {
@@ -230,7 +230,7 @@ class QualityRuleService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun serviceListByTemplateRange(projectId: String, templateId: String?): List<QualityRule> {
@@ -239,17 +239,17 @@ class QualityRuleService @Autowired constructor(
             projectId = projectId,
             templateId = templateId
         )
-        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun serviceListRuleByPosition(projectId: String, position: String): List<QualityRule> {
         val recordList = qualityRuleDao.listByPosition(dslContext, projectId, position)
-        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun serviceListRuleByIds(projectId: String, ruleIds: Collection<Long>): List<QualityRule> {
         val recordList = qualityRuleDao.list(dslContext, projectId, ruleIds)
-        return batchGetRuleData(recordList?: listOf()) ?: listOf()
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun userGetRule(userId: String, projectId: String, ruleHashId: String): UserQualityRule {
