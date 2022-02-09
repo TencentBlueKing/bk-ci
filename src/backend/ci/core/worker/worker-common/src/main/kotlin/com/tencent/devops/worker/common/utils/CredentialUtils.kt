@@ -112,7 +112,7 @@ object CredentialUtils {
             return result
         }
         // 当前项目取不到查看是否有跨项目凭证
-        if (acrossProjectId != null) {
+        if (!acrossProjectId.isNullOrBlank()) {
             val acrossResult =
                 sdkApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
             if (acrossResult.isNotOk() || acrossResult.data == null) {

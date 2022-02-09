@@ -11,19 +11,19 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["BUILD_TEMPLATE_ACROSS"], description = "构建-模板跨项目使用资源")
-@Path("/build/template/across")
+@Path("/build/templates/across")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildTemplateAcrossResource {
 
     @ApiOperation("获取当前构建中的跨项目模板信息")
     @GET
-    @Path("/{templateId}")
+    @Path("")
     fun getBuildAcrossTemplateInfo(
         @ApiParam("projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
@@ -32,7 +32,7 @@ interface BuildTemplateAcrossResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
         @ApiParam(value = "模板ID", required = true)
-        @PathParam("templateId")
+        @QueryParam("templateId")
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>>
 }

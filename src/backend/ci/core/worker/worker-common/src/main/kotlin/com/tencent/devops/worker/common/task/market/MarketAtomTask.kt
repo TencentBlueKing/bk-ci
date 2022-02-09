@@ -171,7 +171,7 @@ open class MarketAtomTask : ITask() {
         val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
 
         // 解析跨项目模板信息
-        val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.stepId)
+        val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId)
 
         val atomParams = mutableMapOf<String, String>()
         try {
