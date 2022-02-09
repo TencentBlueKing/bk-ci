@@ -31,17 +31,20 @@ import com.tencent.devops.experience.pojo.AppNotifyMessage
 
 @SuppressWarnings("LongParameterList")
 object AppNotifyUtil {
+    /**
+     * 标题：“【${应用名}】 ${版本号} 更新啦”。
+     * 内容：“【${应用名}】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>”
+     */
     fun makeMessage(
-        projectName: String,
+        experienceName: String,
+        appVersion:String,
         experienceHashId: String,
-        name: String,
-        version: String,
         receiver: String
     ): AppNotifyMessage {
         val message = AppNotifyMessage()
         message.receiver = receiver
-        message.title = "【$projectName】最新体验版本分享"
-        message.body = "【$projectName】发布了最新体验版本，【$name-$version】诚邀您参与体验。点击查看>>"
+        message.title = "【$experienceName】 $appVersion 更新啦"
+        message.body = "【$experienceName】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>"
         message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"
         message.experienceHashId = experienceHashId
         return message

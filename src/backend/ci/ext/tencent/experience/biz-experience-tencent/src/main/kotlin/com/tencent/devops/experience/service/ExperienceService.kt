@@ -759,10 +759,9 @@ class ExperienceService @Autowired constructor(
 
             outerReceivers.forEach {
                 val appMessage = AppNotifyUtil.makeMessage(
-                    projectName = projectName,
                     experienceHashId = HashUtil.encodeLongId(experienceId),
-                    name = name,
-                    version = version,
+                    experienceName = name,
+                    appVersion = version,
                     receiver = it
                 )
                 experiencePushService.pushMessage(appMessage)
@@ -783,10 +782,9 @@ class ExperienceService @Autowired constructor(
 
             subscribeUsers.forEach {
                 val appMessage = AppNotifyUtil.makeMessage(
-                    projectName = projectName,
                     experienceHashId = HashUtil.encodeLongId(experienceId),
-                    name = name,
-                    version = version,
+                    experienceName = name,
+                    appVersion = version,
                     receiver = it
                 )
                 experiencePushService.pushMessage(appMessage)
@@ -828,10 +826,9 @@ class ExperienceService @Autowired constructor(
         }
         // 发送APP通知
         val appMessage = AppNotifyUtil.makeMessage(
-            projectName = projectName,
             experienceHashId = HashUtil.encodeLongId(experienceId),
-            name = name,
-            version = version,
+            experienceName = name,
+            appVersion = version,
             receiver = receiver
         )
         experiencePushService.pushMessage(appMessage)
