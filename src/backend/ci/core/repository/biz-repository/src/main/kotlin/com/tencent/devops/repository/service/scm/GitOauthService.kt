@@ -209,11 +209,10 @@ class GitOauthService @Autowired constructor(
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
-        val projectUserCheck = authProjectApi.isProjectUser(
+        val projectUserCheck = authProjectApi.checkProjectUser(
             user = userId,
             serviceCode = repoAuthServiceCode,
-            projectCode = buildBasicInfo.projectId,
-            group = null
+            projectCode = buildBasicInfo.projectId
         )
         if (!projectUserCheck) {
             throw ErrorCodeException(

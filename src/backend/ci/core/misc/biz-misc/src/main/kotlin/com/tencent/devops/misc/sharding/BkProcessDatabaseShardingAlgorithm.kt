@@ -43,6 +43,10 @@ class BkProcessDatabaseShardingAlgorithm : StandardShardingAlgorithm<String> {
         shardingValue: PreciseShardingValue<String>
     ): String {
         val routingName = shardingValue.value
+        if (routingName.isNullOrBlank()) {
+            // 如果分片键为空则路由到默认数据源
+            return DEFAULT_DATA_SOURCE_NAME
+        }
         // 从本地缓存获取路由规则
         var routingRule = BkShardingRoutingCacheUtil.getIfPresent(routingName)
         if (routingRule.isNullOrBlank()) {

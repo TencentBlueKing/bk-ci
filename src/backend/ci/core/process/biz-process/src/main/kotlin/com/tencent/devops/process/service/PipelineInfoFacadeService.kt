@@ -401,11 +401,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         try {
             watcher.start("isProjectManager")
             // 判断用户是否为项目管理员
-            val permission = BkAuthGroup.MANAGER
-            if (!pipelinePermissionService.isProjectUser(userId, projectId, permission)) {
+            if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
                 val defaultMessage = "管理员"
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${permission.value}",
+                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
                     defaultMessage = defaultMessage
                 )
                 throw ErrorCodeException(
@@ -663,6 +662,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
+        if (setting.projectId.isBlank()) {
+            setting.projectId = projectId
+        }
         setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
         pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
         return pipelineResult

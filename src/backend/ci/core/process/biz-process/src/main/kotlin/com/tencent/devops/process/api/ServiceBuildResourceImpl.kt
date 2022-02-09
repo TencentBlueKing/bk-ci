@@ -77,16 +77,18 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(engineVMBuildService.setStartUpVMStatus(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            buildStatus = status,
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMsg
-        ))
+        return Result(
+            engineVMBuildService.setStartUpVMStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                buildStatus = status,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
+        )
     }
 
     override fun manualStartupInfo(
@@ -140,19 +142,23 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            failedContainer = failedContainer,
-            skipFailedTask = skipFailedTask,
-            isMobile = false,
-            channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode),
-            checkManualStartup = checkManualStartup ?: false
-        )))
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.retry(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    failedContainer = failedContainer,
+                    skipFailedTask = skipFailedTask,
+                    isMobile = false,
+                    channelCode = channelCode,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    checkManualStartup = checkManualStartup ?: false
+                )
+            )
+        )
     }
 
     override fun manualShutdown(
@@ -391,15 +397,21 @@ class ServiceBuildResourceImpl @Autowired constructor(
     override fun getBatchBuildStatus(
         projectId: String,
         buildId: Set<String>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?
     ): Result<List<BuildHistory>> {
         if (buildId.isEmpty()) {
             return Result(listOf())
         }
         return Result(
             pipelineBuildFacadeService.getBatchBuildStatus(
-                projectId, buildId,
-                channelCode, ChannelCode.isNeedAuth(channelCode)
+                projectId = projectId,
+                buildIdSet = buildId,
+                channelCode = channelCode,
+                startBeginTime = startBeginTime,
+                endBeginTime = endBeginTime,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -562,6 +574,15 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 )
             )
         )
+    }
+
+    override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(pipelineBuildFacadeService.buildRestart(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId
+        ))
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

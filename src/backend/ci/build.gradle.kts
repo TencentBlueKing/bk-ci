@@ -79,7 +79,6 @@ allprojects {
     }
     // 兼容 Log4j
     configurations.forEach {
-        it.exclude("org.springframework.boot", "spring-boot-starter-logging")
         it.exclude("org.springframework.boot", "spring-boot-starter-tomcat")
         it.exclude("org.apache.tomcat", "tomcat-jdbc")
         it.exclude("org.slf4j", "log4j-over-slf4j")

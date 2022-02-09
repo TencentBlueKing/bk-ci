@@ -65,6 +65,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -1176,6 +1177,36 @@ class GitService @Autowired constructor(
             projectName = repoName,
             mrId = mrId
         )
+    }
+
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/groups/$id")
+        setToken(tokenType, url, token)
+        if (includeSubgroups != null) {
+            url.append("&include_subgroups=$includeSubgroups")
+        }
+        logger.info("getProjectGroupInfo url: $url")
+
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "getProjectGroupInfo $id, $includeSubgroups(${it.code()}): ${it.message()}"
+                )
+            }
+            val data = it.body()!!.string()
+            logger.info("getProjectGroupInfo response body: $data")
+            return JsonUtil.to(data, GitProjectGroupInfo::class.java)
+        }
     }
 
     override fun createGitTag(
