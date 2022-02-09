@@ -782,20 +782,24 @@ class QualityRuleService @Autowired constructor(
 
     fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
         val watcher = Watcher(id = "QUALITY|getProjectRuleList|$projectId|$pipelineId|$templateId")
-        watcher.start("ruleList")
-        val ruleList = when {
-            pipelineId != null -> {
-                serviceListByPipelineRange(projectId, pipelineId)
+        var ruleList: List<QualityRule>
+        try {
+            watcher.start("ruleList")
+            ruleList = when {
+                pipelineId != null -> {
+                    serviceListByPipelineRange(projectId, pipelineId)
+                }
+                templateId != null -> {
+                    serviceListByTemplateRange(projectId, templateId)
+                }
+                else -> {
+                    serviceListRules(projectId)
+                }
             }
-            templateId != null -> {
-                serviceListByTemplateRange(projectId, templateId)
-            }
-            else -> {
-                serviceListRules(projectId)
-            }
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500, errorThreshold = 3000)
         }
-        watcher.stop()
-        LogUtils.printCostTimeWE(watcher = watcher)
         return ruleList
     }
 

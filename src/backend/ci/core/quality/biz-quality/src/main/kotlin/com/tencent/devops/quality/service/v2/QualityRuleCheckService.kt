@@ -181,29 +181,32 @@ class QualityRuleCheckService @Autowired constructor(
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {
         val pipelineId = buildCheckParams.pipelineId
         val templateId = buildCheckParams.templateId
+        val ruleList = mutableSetOf<QualityRule>()
         val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
                 "${buildCheckParams.buildId}|${buildCheckParams.position}")
-        watcher.start("ruleList")
-        // 匹配拦截规则
-        val ruleList = mutableSetOf<QualityRule>()
-        if (!pipelineId.isNullOrBlank()) {
-            ruleList.addAll(
-                ruleService.serviceListByPipelineRange(
-                    buildCheckParams.projectId,
-                    buildCheckParams.pipelineId
-                ).filter { it.controlPoint.position.name == buildCheckParams.position }
-            )
+        try {
+            watcher.start("ruleList")
+            // 匹配拦截规则
+            if (!pipelineId.isNullOrBlank()) {
+                ruleList.addAll(
+                    ruleService.serviceListByPipelineRange(
+                        buildCheckParams.projectId,
+                        buildCheckParams.pipelineId
+                    ).filter { it.controlPoint.position.name == buildCheckParams.position }
+                )
+            }
+            if (!templateId.isNullOrBlank()) {
+                ruleList.addAll(
+                    ruleService.serviceListByTemplateRange(
+                        buildCheckParams.projectId,
+                        buildCheckParams.templateId
+                    ).filter { it.controlPoint.position.name == buildCheckParams.position }
+                )
+            }
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500, errorThreshold = 3000)
         }
-        if (!templateId.isNullOrBlank()) {
-            ruleList.addAll(
-                ruleService.serviceListByTemplateRange(
-                    buildCheckParams.projectId,
-                    buildCheckParams.templateId
-                ).filter { it.controlPoint.position.name == buildCheckParams.position }
-            )
-        }
-        watcher.stop()
-        LogUtils.printCostTimeWE(watcher = watcher)
 
         return doCheckRules(buildCheckParams, ruleList.toList())
     }
