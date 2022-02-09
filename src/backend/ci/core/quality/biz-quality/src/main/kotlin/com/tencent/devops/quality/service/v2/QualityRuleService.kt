@@ -565,7 +565,7 @@ class QualityRuleService @Autowired constructor(
             var indicators = listOf<QualityIndicator>()
             try {
                 indicators = ruleIndicators.map { indicatorsMap[it]!! }
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 logger.error("QUALITY|get rule indicator error", e)
             }
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
