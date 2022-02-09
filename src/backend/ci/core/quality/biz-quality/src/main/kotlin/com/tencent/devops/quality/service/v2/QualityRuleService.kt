@@ -540,6 +540,18 @@ class QualityRuleService @Autowired constructor(
         val templatePipelineCountMap = client.get(ServiceTemplateInstanceResource::class)
             .countTemplateInstanceDetail(projectId, templateIds).data ?: mapOf()
 
+        // 批量获取元数据信息
+        var ruleMetadataSet = mutableSetOf<Long>()
+        ruleRecordList?.forEach { record ->
+            val ruleDetail = ruleDetailMap[record.id]
+            val ruleIndicators = if (ruleDetail == null || ruleDetail.indicatorIds.isNullOrBlank()) listOf()
+            else ruleDetail.indicatorIds.split(",").map { it.toLong() }
+            ruleMetadataSet.addAll(ruleIndicators)
+        }
+        val indicatorsMap = indicatorService.serviceList(ruleMetadataSet).associateBy {
+            HashUtil.decodeIdToLong(it.hashId)
+        }
+
         val list = ruleRecordList?.map { rule ->
             // 获取所有流水线
             val ruleDetail = ruleDetailMap[rule.id]
@@ -550,7 +562,12 @@ class QualityRuleService @Autowired constructor(
             else ruleDetail.indicatorIds.split(",").map { it.toLong() }
 
             // get rule indicator map
-            val indicators = indicatorService.serviceList(ruleIndicators)
+            var indicators = listOf<QualityIndicator>()
+            try {
+                indicators = ruleIndicators.map { indicatorsMap[it]!! }
+            } catch(e: Exception) {
+                logger.error("QUALITY|get rule indicator error", e)
+            }
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
             val indicatorThresholds = ruleDetail?.indicatorThresholds?.split(",") ?: listOf()
