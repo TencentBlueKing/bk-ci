@@ -95,8 +95,8 @@ class PipelineBuildTemplateAcrossInfoDao {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
                 .and(TEMPLATE_ID.eq(templateId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .fetch()
         }
     }
@@ -125,8 +125,8 @@ class PipelineBuildTemplateAcrossInfoDao {
             return dslContext.update(this)
                 .set(BUILD_ID, buildId)
                 .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
                 .and(TEMPLATE_ID.eq(templateId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }
@@ -140,8 +140,8 @@ class PipelineBuildTemplateAcrossInfoDao {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
             return dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
                 .and(TEMPLATE_ID.eq(templateId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

@@ -14,29 +14,28 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_TEMPLATE_ACROSS"], description = "服务-模板跨项目使用资源")
-@Path("/service/template/across")
+@Path("/service/templates/across")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTemplateAcrossResource {
 
     @ApiOperation("批量创建当前构建中的跨项目模板信息")
     @POST
-    @Path("/{projectId}/{pipelineId}")
+    @Path("")
     fun batchCreate(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("projectId", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @ApiParam("pipelineId", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "跨项目模板信息", required = true)
         templateAcrossInfos: List<BuildTemplateAcrossInfo>
@@ -44,28 +43,28 @@ interface ServiceTemplateAcrossResource {
 
     @ApiOperation("获取当前构建中的跨项目模板信息")
     @GET
-    @Path("/{projectId}/{templateId}")
+    @Path("")
     fun getBuildAcrossTemplateInfo(
         @ApiParam("projectId", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @ApiParam(value = "模板ID", required = true)
-        @PathParam("templateId")
+        @QueryParam("templateId")
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>>
 
     @ApiOperation("修改跨项目模板信息")
     @PUT
-    @Path("/{projectId}/{pipelineId}/{templateId}")
+    @Path("")
     fun update(
         @ApiParam("projectId", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @ApiParam("pipelineId", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "模板ID", required = true)
-        @PathParam("templateId")
+        @QueryParam("templateId")
         templateId: String,
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
@@ -74,13 +73,13 @@ interface ServiceTemplateAcrossResource {
 
     @ApiOperation("删除跨项目模板信息")
     @DELETE
-    @Path("/{projectId}/{pipelineId}")
+    @Path("")
     fun delete(
         @ApiParam("projectId", required = true)
-        @PathParam("projectId")
+        @QueryParam("projectId")
         projectId: String,
         @ApiParam("pipelineId", required = true)
-        @PathParam("pipelineId")
+        @QueryParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "模板ID", required = true)
         @QueryParam("templateId")

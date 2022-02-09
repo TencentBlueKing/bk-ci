@@ -179,7 +179,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>> {
         val sb = StringBuilder(
-            "/ms/process/api/build/template/across/$templateId"
+            "/ms/process/api/build/template/across?templateId=$templateId"
         )
         val path = sb.toString()
         val request = buildGet(path)
