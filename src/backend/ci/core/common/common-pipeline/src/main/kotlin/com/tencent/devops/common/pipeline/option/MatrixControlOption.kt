@@ -93,15 +93,25 @@ data class MatrixControlOption(
         }
         result.putAll(matrixConfig.strategy ?: emptyMap())
         with(matrixConfig.include ?: mutableListOf()) {
-            this.addAll(convertCase(includeCaseStr))
-            if (this.size > 0) {
-                result["include"] = this
+            try {
+                this.addAll(convertCase(includeCaseStr))
+                if (this.size > 0) {
+                    result["include"] = this
+                }
+            } catch (e: Exception) {
+                logger.warn("this because of formJSON:${e.message}")
+                result["include"] = includeCaseStr ?: return@with
             }
         }
         with(matrixConfig.exclude ?: mutableListOf()) {
-            this.addAll(convertCase(excludeCaseStr))
-            if (this.size > 0) {
-                result["exclude"] = this
+            try {
+                this.addAll(convertCase(excludeCaseStr))
+                if (this.size > 0) {
+                    result["include"] = this
+                }
+            } catch (e: Exception) {
+                logger.warn("this because of formJSON:${e.message}")
+                result["exclude"] = excludeCaseStr ?: return@with
             }
         }
         return result
@@ -179,16 +189,17 @@ data class MatrixControlOption(
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(str: String?, buildContext: Map<String, String>?): List<Map<String, String>> {
+    private fun convertCase(str: String?, buildContext: Map<String, String>? = null): List<Map<String, String>> {
         if (str.isNullOrBlank()) {
             return emptyList()
         }
         val includeCaseList = try {
             YamlUtil.to<List<Map<String, Any>>>(str)
         } catch (e: Exception) {
+            // 这种情况应该只出现于fromJSON
             val contextStr = replaceJsonPattern(
                 command = str,
-                buildContext = buildContext ?: emptyMap()
+                buildContext = buildContext ?: throw Exception("empty buildContext")
             )
             JsonUtil.to(contextStr)
         }
