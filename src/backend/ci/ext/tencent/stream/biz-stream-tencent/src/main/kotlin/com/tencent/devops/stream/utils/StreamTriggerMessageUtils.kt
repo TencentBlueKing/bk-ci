@@ -24,6 +24,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamTriggerMessageUtils::class.java)
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun getEventMessageTitle(event: GitRequestEvent, gitProjectId: Long): String {
         val messageTitle = when (event.objectKind) {
             TGitObjectKind.MERGE_REQUEST.value -> {
