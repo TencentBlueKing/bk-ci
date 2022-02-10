@@ -44,4 +44,5 @@ object CommonVariables {
     const val CI_HEAD_BRANCH = "ci.head_branch"
     const val CI_BASE_BRANCH = "ci.base_branch"
     const val CI_START_TYPE = "ci.start_type"
+    const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
 }
