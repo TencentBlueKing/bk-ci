@@ -307,6 +307,57 @@ var2:
     }
 
     @Test
+    fun calculateValueMatrix7() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = YamlUtil.toYaml(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to listOf("amd64","arm64")
+                )
+            ),
+            includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
+            // -1
+            excludeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_exclude) }}",
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val buildContext = mapOf(
+            "depends.job1.outputs.matrix" to """
+            {"service": "${'$'}{{ fromJSON(depends.job1.outputs.service) }}","cpu":"${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}"}
+        """,
+            "depends.job1.outputs.matrix1" to JsonUtil.toJson(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
+                )
+            ),
+            "depends.job1.outputs.matrix_include" to """
+                [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
+            """,
+            "depends.job1.outputs.matrix_exclude" to """
+                [{"service":"project","cpu":"arm64"}]
+            """,
+            "depends.job1.outputs.service" to """
+                ["api","project","gateway"]
+            """.trim(),
+            "depends.job1.outputs.cpu" to """
+                ["amd64", "arm64"]
+            """.trim()
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 7
+        )
+    }
+
+    @Test
     fun calculateValueMatrix6() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
@@ -358,7 +409,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
     fun calculateValueMatrix5() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
-            strategyStr = JsonUtil.toJson(
+            strategyStr = YamlUtil.toYaml(
                 mapOf(
                     "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
                     "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
