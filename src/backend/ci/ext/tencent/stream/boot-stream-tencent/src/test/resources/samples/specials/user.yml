@@ -21,6 +21,9 @@ on:
   issues:
     action:
       - open
+  review:
+    types:
+      - merge_request
 variables:
   123_GIT_KEY: xxxxxx
   123_USERNAME: xxxxxxxxxx
