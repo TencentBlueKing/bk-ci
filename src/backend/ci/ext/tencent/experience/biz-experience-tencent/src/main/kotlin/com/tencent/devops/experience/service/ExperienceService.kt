@@ -808,7 +808,7 @@ class ExperienceService @Autowired constructor(
         if (notifyTypeList.contains(NotifyType.RTX)) {
             val message = RtxUtil.makeMessage(
                 projectName = projectName,
-                name = experienceName,
+                name = name,
                 version = version,
                 innerUrl = innerUrl,
                 outerUrl = outerUrl,
@@ -830,7 +830,7 @@ class ExperienceService @Autowired constructor(
         // 发送APP通知
         val appMessage = AppNotifyUtil.makeMessage(
             experienceHashId = HashUtil.encodeLongId(experienceId),
-            experienceName = name,
+            experienceName = experienceName,
             appVersion = version,
             receiver = receiver
         )
