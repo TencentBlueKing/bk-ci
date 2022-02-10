@@ -41,6 +41,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record4
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
@@ -213,6 +214,28 @@ class PipelineSettingDao {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
             return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
+    /**
+     * 获取简单的数据(避免select大字段)
+     *
+     * @return PIPELINE_ID, DESC, RUN_LOCK_TYPE, BUILD_NUM_RULE
+     */
+    fun getSimpleSettings(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        projectId: String? = null
+    ): Result<Record4<String, String, Int, String>> {
+        with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.select(PIPELINE_ID, DESC, RUN_LOCK_TYPE, BUILD_NUM_RULE).from(this)
                 .where(conditions)
                 .fetch()
         }
