@@ -22,10 +22,10 @@ triggerOn:
     - "branch"
   issues:
     action:
-      - open
+    - "open"
   review:
     types:
-      - merge_request
+    - "merge_request"
 variables:
   "123_GIT_KEY":
     value: "xxxxxx"
