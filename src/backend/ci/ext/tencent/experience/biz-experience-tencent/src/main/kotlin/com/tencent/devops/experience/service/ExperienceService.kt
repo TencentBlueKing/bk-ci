@@ -691,6 +691,7 @@ class ExperienceService @Autowired constructor(
 
             val projectId = experienceRecord.projectId
             val name = experienceRecord.name
+            val experienceName = experienceRecord.experienceName
             val version = experienceRecord.version
             val userId = experienceRecord.creator
             val platform = experienceRecord.platform
@@ -760,7 +761,7 @@ class ExperienceService @Autowired constructor(
             outerReceivers.forEach {
                 val appMessage = AppNotifyUtil.makeMessage(
                     experienceHashId = HashUtil.encodeLongId(experienceId),
-                    experienceName = name,
+                    experienceName = experienceName,
                     appVersion = version,
                     receiver = it
                 )
@@ -772,6 +773,7 @@ class ExperienceService @Autowired constructor(
                     notifyTypeList = notifyTypeList,
                     projectName = projectName,
                     name = name,
+                    experienceName = experienceName,
                     version = version,
                     innerUrl = innerUrl,
                     outerUrl = outerUrl,
@@ -783,7 +785,7 @@ class ExperienceService @Autowired constructor(
             subscribeUsers.forEach {
                 val appMessage = AppNotifyUtil.makeMessage(
                     experienceHashId = HashUtil.encodeLongId(experienceId),
-                    experienceName = name,
+                    experienceName = experienceName,
                     appVersion = version,
                     receiver = it
                 )
@@ -796,6 +798,7 @@ class ExperienceService @Autowired constructor(
         notifyTypeList: Set<NotifyType>,
         projectName: String,
         name: String,
+        experienceName: String,
         version: String,
         innerUrl: String,
         outerUrl: String,
@@ -805,7 +808,7 @@ class ExperienceService @Autowired constructor(
         if (notifyTypeList.contains(NotifyType.RTX)) {
             val message = RtxUtil.makeMessage(
                 projectName = projectName,
-                name = name,
+                name = experienceName,
                 version = version,
                 innerUrl = innerUrl,
                 outerUrl = outerUrl,
