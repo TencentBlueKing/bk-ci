@@ -25,8 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.configuration
-
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.gitci.GitProjectInfoService
 import com.tencent.devops.auth.service.gitci.StreamGitPermissionServiceImpl
