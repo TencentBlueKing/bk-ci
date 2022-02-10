@@ -45,6 +45,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
+import org.jolokia.util.Base64Util
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -82,7 +83,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
             projectId = projectId,
             userId = userId,
             templateId = templateId,
-            versionName = versionName
+            versionName = String(Base64Util.decode(versionName))
         ))
     }
 
