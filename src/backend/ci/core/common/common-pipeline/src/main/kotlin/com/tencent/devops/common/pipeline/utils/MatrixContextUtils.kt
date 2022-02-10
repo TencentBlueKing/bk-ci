@@ -106,6 +106,10 @@ object MatrixContextUtils {
                         "oneOf": [
                             {
                                 "type": "array"
+                            },
+                            {
+                                "type": "string",
+                                "pattern": "$strategyJsonPattern"
                             }
                         ]
                     }

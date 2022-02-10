@@ -122,20 +122,11 @@ data class MatrixControlOption(
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
-        return try {
-            // 兼容在strategy里塞入json格式的情况
-            val matrixConfig = JsonUtil.to(contextStr, MatrixConfig::class.java)
-            MatrixConfig(
-                strategy = matrixConfig.strategy ?: emptyMap(),
-                include = matrixConfig.include ?: mutableListOf(),
-                exclude = matrixConfig.exclude ?: mutableListOf()
-            )
-        } catch (ignore: Exception) {
-            MatrixConfig(
-                strategy = YamlUtil.to<Map<String, List<String>>>(contextStr),
-                include = mutableListOf(), exclude = mutableListOf()
-            )
-        }
+        return MatrixConfig(
+            strategy = JsonUtil.anyTo(YamlUtil.to<Map<String, List<String>>>(contextStr),
+                object : TypeReference<Map<String, List<String>>?>() {}),
+            include = mutableListOf(), exclude = mutableListOf()
+        )
     }
 
     private fun replaceJsonPattern(command: String, buildContext: Map<String, String>): String {
@@ -159,13 +150,16 @@ data class MatrixControlOption(
      */
     private fun convertStrategyJson(buildContext: Map<String, String>): MatrixConfig {
         // 替换上下文 要考虑带fromJSON()的写法
-        val contextStr = replaceJsonPattern(
-            command = strategyStr ?: return MatrixConfig(
+        if (strategyStr.isNullOrBlank()) {
+            return MatrixConfig(
                 emptyMap(), mutableListOf(), mutableListOf()
-            ),
-            buildContext = buildContext
-        )
+            )
+        }
         try {
+            val contextStr = replaceJsonPattern(
+                command = strategyStr,
+                buildContext = buildContext
+            )
             // 适用于matrix中是包含了key的map类型JSON，这种情况必包含strategy，可能包含include和exclude
             val matrixMap = JsonUtil.to<Map<String, List<Any>?>>(contextStr)
             return MatrixConfig(
@@ -177,11 +171,16 @@ data class MatrixControlOption(
                     object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
             )
         } catch (ignore: Exception) {
-            val str = JsonUtil.to<Map<String, String>>(contextStr)
             // 适用于不包含key的list类型JSON,这种情况只会是strategy
+            val str = YamlUtil.to<Map<String, String>>(strategyStr)
             return MatrixConfig(
                 strategy = str.map {
-                    it.key to JsonUtil.to<List<String>>(it.value)
+                    it.key to JsonUtil.to<List<String>>(
+                        replaceJsonPattern(
+                            command = it.value,
+                            buildContext = buildContext
+                        )
+                    )
                 }.toMap(),
                 include = mutableListOf(),
                 exclude = mutableListOf()
