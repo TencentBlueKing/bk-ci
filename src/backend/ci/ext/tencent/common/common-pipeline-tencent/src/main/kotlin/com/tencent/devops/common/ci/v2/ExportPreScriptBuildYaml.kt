@@ -45,7 +45,7 @@ data class ExportPreScriptBuildYaml(
     var variables: Map<String, String>? = null,
     var stages: List<PreStage>? = null,
     var jobs: Map<String, PreJob>? = null,
-    var steps: List<Step>? = null,
+    var steps: List<PreStep>? = null,
     var extends: Extends? = null,
     var resources: Resources?,
     var notices: List<GitNotices>?,

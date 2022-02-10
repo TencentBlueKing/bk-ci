@@ -18,7 +18,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
@@ -56,7 +55,7 @@ class TriggerMatcher @Autowired constructor(
     @Throws(TriggerBaseException::class)
     fun isMatch(
         context: StreamTriggerContext,
-        gitProjectInfo: GitCIProjectInfo
+        defaultBranch: String?
     ): TriggerResult {
         val newYaml = try {
             // 触发器需要将 on: 转为 TriggerOn:
@@ -93,7 +92,7 @@ class TriggerMatcher @Autowired constructor(
         } else {
             match(
                 context = context,
-                gitProjectInfo = gitProjectInfo,
+                defaultBranch = defaultBranch,
                 triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
                 changeSet = getChangeSet(context),
                 pipelineFilePath = context.pipeline.filePath
@@ -103,7 +102,7 @@ class TriggerMatcher @Autowired constructor(
 
     fun match(
         context: StreamTriggerContext,
-        gitProjectInfo: GitCIProjectInfo,
+        defaultBranch: String?,
         triggerOn: TriggerOn,
         changeSet: Set<String>?,
         pipelineFilePath: String
@@ -113,13 +112,13 @@ class TriggerMatcher @Autowired constructor(
         val gitRequestEvent = context.requestEvent
 
         // 判断是否是默认分支上的push，来判断是否注册定时任务
-        val isTime = if (gitRequestEvent.isDefaultBranchTrigger(gitProjectInfo.defaultBranch)) {
+        val isTime = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
             isSchedulesMatch(triggerOn, targetBranch, gitRequestEvent, context.pipeline)
         } else {
             false
         }
 
-        val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(gitProjectInfo.defaultBranch)) {
+        val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
             // 只有更改了delete相关流水线才做更新
             PathMatchUtils.isIncludePathMatch(listOf(pipelineFilePath), changeSet) &&
                 isDeleteMatch(triggerOn.delete, context.requestEvent, context.pipeline)

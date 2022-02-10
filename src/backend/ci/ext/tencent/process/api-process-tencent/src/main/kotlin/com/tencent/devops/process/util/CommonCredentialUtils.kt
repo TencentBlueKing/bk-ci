@@ -43,13 +43,14 @@ object CommonCredentialUtils {
         client: Client,
         projectId: String,
         credentialId: String,
-        type: CredentialType
+        type: CredentialType,
+        acrossProject: Boolean = false
     ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
-                encoder.encodeToString(pair.publicKey))
+            encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error("Fail to get the credential($credentialId) of project($projectId) " +
                 "because of ${credentialResult.message}")
@@ -60,6 +61,11 @@ object CommonCredentialUtils {
         if (type != credential.credentialType) {
             logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
             throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
+        }
+
+        if (acrossProject && !credential.allowAcrossProject) {
+            logger.warn("project $projectId credential $credentialId not allow across project use")
+            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
         val ticketMap = mutableMapOf<String, String>()

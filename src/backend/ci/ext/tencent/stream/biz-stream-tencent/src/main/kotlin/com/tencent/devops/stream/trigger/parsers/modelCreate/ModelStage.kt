@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPai
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -78,10 +79,12 @@ class ModelStage @Autowired constructor(
         finalStage: Boolean = false,
         resources: Resources? = null,
         changeSet: Set<String>? = null,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
         val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet)
+
         stage.jobs.forEachIndexed { jobIndex, job ->
             val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet)
             val elementList = modelElement.makeElementList(
@@ -110,7 +113,8 @@ class ModelStage @Autowired constructor(
                     projectCode = gitBasicSetting.projectCode!!,
                     finalStage = finalStage,
                     jobEnable = jobEnable,
-                    resources = resources
+                    resources = resources,
+                    buildTemplateAcrossInfo = jobBuildTemplateAcrossInfos?.get(job.id)
                 )
             }
         }
