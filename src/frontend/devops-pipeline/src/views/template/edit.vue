@@ -54,6 +54,7 @@
 </template>
 
 <script>
+    import { Base64 } from 'js-base64'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import Pipeline from '@/components/Pipeline'
     import AutoComplete from '@/components/atomFormField/AutoComplete'
@@ -249,7 +250,7 @@
                     await this.$store.dispatch('pipelines/deleteTemplateVersionByName', {
                         projectId: this.projectId,
                         templateId: this.templateId,
-                        versionName: row.versionName
+                        versionName: Base64.encode(row.versionName)
                     })
 
                     // this.requestTemplateList()
