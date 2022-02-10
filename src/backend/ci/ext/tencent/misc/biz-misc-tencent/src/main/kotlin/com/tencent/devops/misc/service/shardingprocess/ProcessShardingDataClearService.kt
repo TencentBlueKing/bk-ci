@@ -97,7 +97,6 @@ abstract class ProcessShardingDataClearService {
         if (getExecuteFlag(routingRule)) {
             getDSLContext()?.transaction { t ->
                 val context = DSL.using(t)
-                processShardingDataClearDao.deleteBuildHistoryByPipelineId(context, projectId, pipelineId)
                 processShardingDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
                 processShardingDataClearDao.deletePipelineFailureBuildByPipelineId(context, pipelineId)
                 processShardingDataClearDao.deletePipelineModelTaskByPipelineId(context, projectId, pipelineId)
@@ -132,6 +131,7 @@ abstract class ProcessShardingDataClearService {
                 processShardingDataClearDao.deleteBuildDetailByBuildId(context, buildId)
                 processShardingDataClearDao.deletePipelinePauseValueByBuildId(context, buildId)
                 processShardingDataClearDao.deleteReportByBuildId(context, projectId, pipelineId, buildId)
+                processShardingDataClearDao.deleteBuildHistoryByBuildId(context, buildId)
             }
         }
         return true
