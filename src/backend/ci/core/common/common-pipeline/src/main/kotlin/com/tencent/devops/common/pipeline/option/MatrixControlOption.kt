@@ -175,7 +175,7 @@ data class MatrixControlOption(
             val str = YamlUtil.to<Map<String, Any>>(strategyStr)
             return MatrixConfig(
                 strategy = str.map {
-                    it.key to when(it.value){
+                    it.key to when (it.value) {
                         is String -> JsonUtil.to<List<String>>(
                             replaceJsonPattern(
                                 command = it.value as String,

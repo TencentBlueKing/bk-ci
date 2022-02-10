@@ -313,7 +313,7 @@ var2:
             strategyStr = YamlUtil.toYaml(
                 mapOf(
                     "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
-                    "cpu" to listOf("amd64","arm64")
+                    "cpu" to listOf("amd64", "arm64")
                 )
             ),
             includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
