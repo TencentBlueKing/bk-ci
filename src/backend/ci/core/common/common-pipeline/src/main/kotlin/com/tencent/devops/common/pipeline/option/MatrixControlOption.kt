@@ -177,9 +177,12 @@ data class MatrixControlOption(
                     object : TypeReference<MutableList<Map<String, String>>?>() {}) ?: mutableListOf()
             )
         } catch (ignore: Exception) {
+            val str = JsonUtil.to<Map<String, String>>(contextStr)
             // 适用于不包含key的list类型JSON,这种情况只会是strategy
             return MatrixConfig(
-                strategy = JsonUtil.to(contextStr),
+                strategy = str.map {
+                    it.key to JsonUtil.to<List<String>>(it.value)
+                }.toMap(),
                 include = mutableListOf(),
                 exclude = mutableListOf()
             )
