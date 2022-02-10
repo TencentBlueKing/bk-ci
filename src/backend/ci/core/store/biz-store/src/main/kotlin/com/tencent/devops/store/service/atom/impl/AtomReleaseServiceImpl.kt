@@ -472,12 +472,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 更新红线标识
             val qualityFlag = getAtomQualityResult.errorCode == "0"
             marketAtomFeatureDao.updateAtomFeature(
-                context,
-                userId,
-                AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
+                dslContext = context,
+                userId = userId,
+                atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
             )
 
-            asyncHandleUpdateAtom(context, atomId, userId)
+            asyncHandleUpdateAtom(context = context, atomId = atomId, userId = userId, branch = branch)
         }
         return Result(atomId)
     }
@@ -497,7 +497,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     abstract fun asyncHandleUpdateAtom(
         context: DSLContext,
         atomId: String,
-        userId: String
+        userId: String,
+        branch: String? = null
     )
 
     private fun updateMarketAtom(
