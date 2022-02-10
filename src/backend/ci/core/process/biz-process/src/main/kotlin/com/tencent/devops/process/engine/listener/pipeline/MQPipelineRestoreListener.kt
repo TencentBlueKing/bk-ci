@@ -61,7 +61,8 @@ class MQPipelineRestoreListener @Autowired constructor(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version,
-                deleteFlag = false
+                deleteFlag = false,
+                restoreFlag = true
             )
             watcher.stop()
         } finally {
