@@ -170,7 +170,7 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.ISSUE.value,
             operationKind = "",
-            extensionAction = null,
+            extensionAction = gitIssueEvent.objectAttributes.action,
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
@@ -179,12 +179,12 @@ class GitRequestEventHandle @Autowired constructor(
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
-            userId = latestCommit?.author_name ?: "",
+            userId = gitIssueEvent.user.username,
             totalCommitCount = 1,
-            mergeRequestId = null,
+            mergeRequestId = gitIssueEvent.objectAttributes.iid.toLong(),
             event = e,
             description = "",
-            mrTitle = null,
+            mrTitle = gitIssueEvent.objectAttributes.title,
             gitEvent = gitIssueEvent
         )
     }
@@ -206,7 +206,7 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.REVIEW.value,
             operationKind = "",
-            extensionAction = null,
+            extensionAction = gitReviewEvent.state,
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
@@ -215,12 +215,16 @@ class GitRequestEventHandle @Autowired constructor(
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
-            userId = latestCommit?.author_name ?: "",
+            userId = if (gitReviewEvent.reviewer == null) {
+                gitReviewEvent.author.username
+            } else {
+                gitReviewEvent.reviewer!!.reviewer.username
+            },
             totalCommitCount = 1,
-            mergeRequestId = null,
+            mergeRequestId = gitReviewEvent.iid.toLong(),
             event = e,
             description = "",
-            mrTitle = null,
+            mrTitle = "",
             gitEvent = gitReviewEvent
         )
     }

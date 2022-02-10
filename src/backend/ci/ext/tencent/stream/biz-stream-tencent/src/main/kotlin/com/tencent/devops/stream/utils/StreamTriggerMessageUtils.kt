@@ -74,6 +74,12 @@ class StreamTriggerMessageUtils @Autowired constructor(
                     }
                 }
             }
+            TGitObjectKind.ISSUE.value -> {
+                "Issue [${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+            }
+            TGitObjectKind.REVIEW.value -> {
+                "Review [${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+            }
             else -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
