@@ -46,8 +46,8 @@ import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_C
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.util.StreamDispatchUtils
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -61,10 +61,6 @@ class ModelContainer @Autowired constructor(
     @Value("\${container.defaultImage:#{null}}")
     val defaultImage: String? = null
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ModelContainer::class.java)
-    }
-
     fun addVmBuildContainer(
         job: Job,
         elementList: List<Element>,
@@ -73,7 +69,8 @@ class ModelContainer @Autowired constructor(
         projectCode: String,
         finalStage: Boolean = false,
         jobEnable: Boolean = true,
-        resources: Resources? = null
+        resources: Resources? = null,
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
         val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
@@ -108,7 +105,8 @@ class ModelContainer @Autowired constructor(
                 projectCode = projectCode,
                 defaultImage = defaultImage,
                 resources = resources,
-                containsMatrix = dispatchInfo != null
+                containsMatrix = dispatchInfo != null,
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo
             ),
             matrixGroupFlag = job.strategy != null,
             matrixControlOption = getMatrixControlOption(job, dispatchInfo)

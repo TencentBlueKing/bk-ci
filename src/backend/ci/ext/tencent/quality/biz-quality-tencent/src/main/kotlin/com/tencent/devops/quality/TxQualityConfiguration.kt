@@ -37,7 +37,8 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.quality.bean.GitCIQualityPipelineUrlBeanImpl
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
-import com.tencent.devops.quality.service.GitCIQualityPermissionService
+import com.tencent.devops.quality.service.QualityPermissionService
+import com.tencent.devops.quality.service.StreamQualityPermissionServiceImpl
 import com.tencent.devops.quality.service.TxQualityPermissionService
 import com.tencent.devops.quality.service.TxV3QualityPermissionService
 import org.jooq.DSLContext
@@ -84,15 +85,19 @@ class TxQualityConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCIQualityPermissionService(
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamQualityPermissionService(
         client: Client,
         tokenCheckService: ClientTokenService,
         ruleDao: QualityRuleDao,
         groupDao: QualityNotifyGroupDao,
         dslContext: DSLContext
-    ) = GitCIQualityPermissionService(
-        client, tokenCheckService, ruleDao, groupDao, dslContext
+    ): QualityPermissionService = StreamQualityPermissionServiceImpl(
+        client = client,
+        tokenCheckService = tokenCheckService,
+        ruleDao = ruleDao,
+        groupDao = groupDao,
+        dslContext = dslContext
     )
 
     @Bean

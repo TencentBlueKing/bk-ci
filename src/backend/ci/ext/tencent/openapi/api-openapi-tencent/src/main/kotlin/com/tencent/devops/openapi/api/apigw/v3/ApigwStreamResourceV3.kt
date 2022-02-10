@@ -104,7 +104,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @ApiParam("每页多少条（最大50）", required = false, defaultValue = "10", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>>
@@ -224,7 +224,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页多少条（最大50）", required = false, defaultValue = "20", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("分支", required = false)
@@ -341,7 +341,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @ApiParam("每页多少条（最大50）", required = false, defaultValue = "10", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("排序条件", required = false)

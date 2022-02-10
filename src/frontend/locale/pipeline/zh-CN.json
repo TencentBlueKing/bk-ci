@@ -108,7 +108,7 @@
     "stageReviewDesc": "60天未审核自动结束该流水线并标记为Stage成功",
     "stageTimeoutLabel": "审批时间限制",
     "stageTimeoutError": "请输入1-720之间的整数",
-    "stageTimeoutDesc": "若超出时间仍未进行审批，视为审批通过。取值范围为：1-720之间的整数（单位：小时）",
+    "stageTimeoutDesc": "可通过设置\"审批时间限制\"来保护流水线任务，若超出时间仍未进行审批，视为审批不通过，流水线进入STAGE_SUCCESS状态，流程终止",
     "stageUserTriggers": "Stage审核人",
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",

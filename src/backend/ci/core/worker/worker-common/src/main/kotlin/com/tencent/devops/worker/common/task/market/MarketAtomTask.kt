@@ -89,6 +89,7 @@ import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
+import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -160,7 +161,6 @@ open class MarketAtomTask : ITask() {
         val props = JsonUtil.toMutableMap(atomData.props!!)
 
         // 解析输入参数
-
         val inputTemplate =
             if (props["input"] != null) {
                 props["input"] as Map<String, Map<String, Any>>
@@ -170,6 +170,9 @@ open class MarketAtomTask : ITask() {
 
         val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
 
+        // 解析跨项目模板信息
+        val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId)
+
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
@@ -177,7 +180,10 @@ open class MarketAtomTask : ITask() {
                 var valueStr = JsonUtil.toJson(value)
                 valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
                     override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                        return CredentialUtils.getCredentialContextValue(key) ?: if (doubleCurlyBraces) {
+                        return CredentialUtils.getCredentialContextValue(
+                            key = key,
+                            acrossProjectId = acrossInfo?.targetProjectId
+                        ) ?: if (doubleCurlyBraces) {
                             "\${{$key}}"
                         } else {
                             "\${$key}"
@@ -519,7 +525,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
             BuildType.WORKER -> {
@@ -531,7 +538,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
         }
@@ -588,7 +596,8 @@ open class MarketAtomTask : ITask() {
         val gateway: String,
         val buildId: String,
         val vmSeqId: String,
-        val fileGateway: String
+        val fileGateway: String,
+        val taskId: String
     )
 
     private fun writeInputFile(

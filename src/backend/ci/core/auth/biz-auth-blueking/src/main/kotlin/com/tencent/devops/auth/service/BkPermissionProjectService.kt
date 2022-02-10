@@ -47,4 +47,11 @@ class BkPermissionProjectService @Autowired constructor(
         }
         return authProjectApi.isProjectUser(userId, projectAuthServiceCode, projectCode, group)
     }
+
+    override fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        if (userId == "admin") {
+            return true
+        }
+        return super.checkProjectManager(userId, projectCode)
+    }
 }

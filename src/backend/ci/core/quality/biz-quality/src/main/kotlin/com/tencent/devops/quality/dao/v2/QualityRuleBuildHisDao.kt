@@ -178,30 +178,6 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun listTimeOutRuleCount(dslContext: DSLContext, dateTime: LocalDateTime): Int? {
-        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
-            dslContext.selectCount().from(this)
-                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
-                .and(CREATE_TIME.lt(dateTime))
-                .fetchOne(0, Int::class.java)
-        }
-    }
-
-    fun listTimeoutRule(
-        dslContext: DSLContext,
-        dateTime: LocalDateTime,
-        limit: Int,
-        offset: Int
-    ): Result<TQualityRuleBuildHisRecord> {
-        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
-            dslContext.selectFrom(this)
-                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
-                .and(CREATE_TIME.lt(dateTime))
-                .limit(limit).offset(offset)
-                .fetch()
-        }
-    }
-
     fun updateTimeoutRuleStatus(ruleBuildIds: Collection<Long>): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             innerDslContext.update(this)

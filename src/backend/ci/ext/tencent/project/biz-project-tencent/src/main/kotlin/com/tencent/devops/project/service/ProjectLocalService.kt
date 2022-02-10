@@ -41,7 +41,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -734,7 +733,7 @@ class ProjectLocalService @Autowired constructor(
         logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceCode")
         if (checkManager!!) {
             // 操作人必须为项目的管理员
-            if (!authProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
+            if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.error("$userId is not manager for project[$projectId]")
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.NOT_MANAGER,

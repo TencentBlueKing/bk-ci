@@ -29,9 +29,11 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -42,8 +44,10 @@ import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Strategy
+import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
 import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
@@ -93,7 +97,6 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
-import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -120,7 +123,11 @@ class TXPipelineExportService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TXPipelineExportService::class.java)
         private val yamlObjectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE))
             .apply {
-                registerModule(KotlinModule())
+                registerKotlinModule().setFilterProvider(
+                    SimpleFilterProvider().addFilter(
+                        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+                    )
+                )
             }
     }
 
@@ -688,8 +695,8 @@ class TXPipelineExportService @Autowired constructor(
         outputConflictMap: MutableMap<String, MutableList<List<PipelineExportV2YamlConflictMapItem>>>,
         pipelineExportV2YamlConflictMapItem: PipelineExportV2YamlConflictMapItem,
         exportFile: Boolean
-    ): List<V2Step> {
-        val stepList = mutableListOf<V2Step>()
+    ): List<PreStep> {
+        val stepList = mutableListOf<PreStep>()
 
         // 根据job里的elements统一查询数据库的store里的ATOM表prob字段
         val thirdPartyElementList = mutableListOf<ElementThirdPartySearchParam>()
@@ -740,7 +747,7 @@ class TXPipelineExportService @Autowired constructor(
                 LinuxScriptElement.classType -> {
                     val step = element as LinuxScriptElement
                     stepList.add(
-                        V2Step(
+                        PreStep(
                             name = step.name,
                             id = step.stepId,
                             // bat插件上的
@@ -771,7 +778,7 @@ class TXPipelineExportService @Autowired constructor(
                 WindowsScriptElement.classType -> {
                     val step = element as WindowsScriptElement
                     stepList.add(
-                        V2Step(
+                        PreStep(
                             name = step.name,
                             id = step.stepId,
                             // bat插件上的
@@ -844,7 +851,7 @@ class TXPipelineExportService @Autowired constructor(
                         exportFile = exportFile
                     )
                     if (!checkoutAtom) stepList.add(
-                        V2Step(
+                        PreStep(
                             name = step.name,
                             id = step.stepId,
                             // 插件上的
@@ -880,7 +887,7 @@ class TXPipelineExportService @Autowired constructor(
                         input
                     } else null
                     stepList.add(
-                        V2Step(
+                        PreStep(
                             name = step.name,
                             id = step.stepId,
                             // 插件上的
@@ -912,7 +919,7 @@ class TXPipelineExportService @Autowired constructor(
                 ManualReviewUserTaskElement.classType -> {
                     val step = element as ManualReviewUserTaskElement
                     stepList.add(
-                        V2Step(
+                        PreStep(
                             name = null,
                             id = step.stepId,
                             ifFiled = null,
@@ -934,7 +941,7 @@ class TXPipelineExportService @Autowired constructor(
                             "请在蓝盾研发商店查找推荐的替换插件！\n"
                     )
                     stepList.add(
-                        V2Step(
+                        PreStep(
                             name = null,
                             id = element.stepId,
                             ifFiled = null,
@@ -1298,7 +1305,7 @@ class TXPipelineExportService @Autowired constructor(
 
     private fun addCheckoutAtom(
         projectId: String,
-        stepList: MutableList<V2Step>,
+        stepList: MutableList<PreStep>,
         atomCode: String,
         step: MarketBuildAtomElement,
         output2Elements: MutableMap<String, MutableList<MarketBuildAtomElementWithLocation>>,
@@ -1354,7 +1361,7 @@ class TXPipelineExportService @Autowired constructor(
             inputMap.remove("authType")
 
             stepList.add(
-                V2Step(
+                PreStep(
                     name = step.name,
                     id = step.stepId,
                     // 插件上的

@@ -106,11 +106,11 @@ class ProcessMiscService @Autowired constructor(
         }
     }
 
-    fun getMinPipelineInfoIdListByProjectId(projectId: String): Long {
-        return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
+    fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
+        return processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
     }
 
-    fun getPipelineInfoIdListByPipelineId(projectId: String, pipelineId: String): Long {
+    fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
         return processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId)?.id ?: 0L
     }
 
