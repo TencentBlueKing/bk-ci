@@ -173,15 +173,6 @@ class ProcessShardingDataClearDao {
         }
     }
 
-    fun deleteBuildHistoryByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(PROJECT_ID.eq(projectId))
-                .execute()
-        }
-    }
-
     fun deletePipelineBuildSummaryByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(TPipelineBuildSummary.T_PIPELINE_BUILD_SUMMARY) {
             dslContext.deleteFrom(this)
@@ -283,6 +274,14 @@ class ProcessShardingDataClearDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildHistoryByBuildId(dslContext: DSLContext, buildId: String) {
+        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }
