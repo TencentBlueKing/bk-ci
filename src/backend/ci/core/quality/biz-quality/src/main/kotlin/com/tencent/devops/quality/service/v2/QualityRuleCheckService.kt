@@ -185,7 +185,7 @@ class QualityRuleCheckService @Autowired constructor(
         val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
                 "${buildCheckParams.buildId}|${buildCheckParams.position}")
         try {
-            watcher.start("ruleList")
+            watcher.start("listPipelineRange")
             // 匹配拦截规则
             if (!pipelineId.isNullOrBlank()) {
                 ruleList.addAll(
@@ -195,6 +195,8 @@ class QualityRuleCheckService @Autowired constructor(
                     ).filter { it.controlPoint.position.name == buildCheckParams.position }
                 )
             }
+            watcher.stop()
+            watcher.start("listTemplateRange")
             if (!templateId.isNullOrBlank()) {
                 ruleList.addAll(
                     ruleService.serviceListByTemplateRange(
@@ -203,6 +205,7 @@ class QualityRuleCheckService @Autowired constructor(
                     ).filter { it.controlPoint.position.name == buildCheckParams.position }
                 )
             }
+            watcher.stop()
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500, errorThreshold = 3000)
