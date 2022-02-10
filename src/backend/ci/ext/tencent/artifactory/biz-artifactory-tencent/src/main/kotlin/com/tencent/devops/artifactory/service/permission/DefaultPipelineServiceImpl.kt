@@ -68,7 +68,7 @@ class DefaultPipelineServiceImpl @Autowired constructor(
         permission: AuthPermission?
     ): Boolean {
         return if (pipelineId == null) {
-            authProjectApi.isProjectUser(userId, artifactoryAuthServiceCode, projectId, null)
+            authProjectApi.checkProjectUser(userId, artifactoryAuthServiceCode, projectId)
         } else {
             bkAuthPermissionApi.validateUserResourcePermission(
                 userId,

@@ -391,8 +391,11 @@ class QualityHistoryService @Autowired constructor(
         )
 
         val ruleIdList = recordList.map { it.ruleId }
-        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIdList.toSet())
-            .map { it.hashId to it.name }.toMap()
+        val ruleIdToNameMap = qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleIds = ruleIdList.toSet()
+        )?.map { it.id to it.name }?.toMap()
         val pipelineIdList = recordList.map { it.pipelineId }
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
@@ -416,7 +419,7 @@ class QualityHistoryService @Autowired constructor(
                 timestamp = it.createTime.timestamp(),
                 interceptResult = RuleInterceptResult.valueOf(it.result),
                 ruleHashId = hisRuleHashId,
-                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                ruleName = ruleIdToNameMap?.get(it.ruleId) ?: "",
                 pipelineId = it.pipelineId,
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,
