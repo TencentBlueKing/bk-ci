@@ -103,7 +103,7 @@ object MatrixContextUtils {
                 {
                     "type": "object",
                     "additionalProperties": {
-                        "oneOf": [
+                        "anyOf": [
                             {
                                 "type": "array"
                             },
