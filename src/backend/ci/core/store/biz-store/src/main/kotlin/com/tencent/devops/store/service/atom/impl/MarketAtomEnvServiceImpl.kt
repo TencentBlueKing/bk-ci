@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -318,7 +320,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             return Result(atomResult.status, atomResult.message ?: "")
         }
         val atom = atomResult.data ?: return Result(data = null)
-        if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
+        val classType = atom.classType
+        if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion ||
+            (classType != MarketBuildAtomElement.classType && classType != MarketBuildLessAtomElement.classType)
+        ) {
             // 如果是历史老插件则直接返回环境信息
             return Result(
                 AtomEnv(
