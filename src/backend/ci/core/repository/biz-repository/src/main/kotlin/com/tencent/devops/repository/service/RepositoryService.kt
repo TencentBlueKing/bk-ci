@@ -491,8 +491,10 @@ class RepositoryService @Autowired constructor(
         if (needToCheckToken(repository)) {
             /**
              * tGit 类型，去除凭据验证
+             *
+             * 2022/2/10 tgit类型验证凭证，并且验证失败时返回提示信息
              */
-            if ((repository !is CodeTGitRepository) and (repository !is GithubRepository)) {
+            if (repository !is GithubRepository) {
                 checkRepositoryToken(projectId, repository)
             }
         }
