@@ -28,27 +28,13 @@
 package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 
-interface YamlTriggerInterface<T> {
+interface YamlTriggerInterface {
 
     fun triggerBuild(
         context: StreamTriggerContext
     ): Boolean
-
-    fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String,
-        pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
-    ): T?
 
     fun checkYamlSchema(userId: String, yaml: String): Result<String>
 }

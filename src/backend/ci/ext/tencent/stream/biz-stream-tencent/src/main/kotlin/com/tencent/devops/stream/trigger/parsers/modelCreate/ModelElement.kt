@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
@@ -48,7 +47,6 @@ import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import javax.ws.rs.core.Response
@@ -90,15 +88,8 @@ class ModelElement @Autowired constructor(
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
-        val stepIdCheckList = mutableListOf<String?>()
         // 解析job steps
         job.steps!!.forEach { step ->
-            if (step.id !in stepIdCheckList) {
-                stepIdCheckList.add(step.id)
-            } else throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.STEP_ID_CONFLICT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.STEP_ID_CONFLICT_ERROR.formatErrorMessage
-            )
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
@@ -132,6 +123,7 @@ class ModelElement @Autowired constructor(
                     val data = mutableMapOf<String, Any>()
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
+                        id = step.taskId,
                         name = step.name ?: step.uses!!.split('@')[0],
                         stepId = step.id,
                         atomCode = step.uses!!.split('@')[0],
@@ -162,6 +154,7 @@ class ModelElement @Autowired constructor(
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
+                id = step.taskId,
                 name = step.name ?: "run",
                 stepId = step.id,
                 atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
@@ -171,6 +164,7 @@ class ModelElement @Autowired constructor(
             )
         } else {
             val linux = LinuxScriptElement(
+                id = step.taskId,
                 name = step.name ?: "run",
                 stepId = step.id,
                 scriptType = BuildScriptType.SHELL,
@@ -185,6 +179,7 @@ class ModelElement @Autowired constructor(
                     "linux" -> linux
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
+                        id = step.taskId,
                         name = step.name ?: "run",
                         stepId = step.id,
                         scriptType = BuildScriptType.BAT,
@@ -237,6 +232,7 @@ class ModelElement @Autowired constructor(
         data["input"] = inputMap
 
         return MarketBuildAtomElement(
+            id = step.taskId,
             name = step.name ?: "checkout",
             stepId = step.id,
             atomCode = "checkout",

@@ -139,7 +139,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
 
         val pipelineIds = mutableListOf<String>()
         if (iamInstanceList.contains("*")) {
-            pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
+            pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
             val ids = iamInstanceList.map { it.toInt() }
             pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
@@ -179,6 +179,10 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             group = group,
             serviceCode = bsPipelineAuthServiceCode
         )
+    }
+
+    override fun checkProjectManager(userId: String, projectId: String): Boolean {
+        return authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)
     }
 
     private fun findInstanceId(projectId: String, pipelineId: String): String {

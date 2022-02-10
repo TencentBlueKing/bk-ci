@@ -95,7 +95,11 @@ class LambdaDataService @Autowired constructor(
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
-        val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.pipelineId, event.buildId)
+        val history = lambdaPipelineBuildDao.getBuildHistory(
+            dslContext = dslContext,
+            projectId = event.projectId,
+            buildId = event.buildId
+        )
         if (history == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build history is not exist")
             return
@@ -209,6 +213,7 @@ class LambdaDataService @Autowired constructor(
                     val inputMap = mutableMapOf<String, String>()
                     when {
                         taskParamMap["@type"] == "linuxScript" -> {
+                            inputMap["name"] = taskParamMap["name"] as String
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                             inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
@@ -218,10 +223,12 @@ class LambdaDataService @Autowired constructor(
                             }
                         }
                         taskParamMap["@type"] == "windowsScript" -> {
+                            inputMap["name"] = taskParamMap["name"] as String
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                         }
                         taskParamMap["@type"] == "manualReviewUserTask" -> {
+                            inputMap["name"] = taskParamMap["name"] as String
                             inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
                             if (taskParamMap["params"] != null) {
                                 inputMap["desc"] = taskParamMap["params"] as String
