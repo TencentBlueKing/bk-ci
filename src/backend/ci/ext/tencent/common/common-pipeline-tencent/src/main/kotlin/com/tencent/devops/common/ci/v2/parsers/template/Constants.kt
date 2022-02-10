@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.v2.parsers.template
 
 object Constants {
     const val templateDirectory = ".ci/templates/"

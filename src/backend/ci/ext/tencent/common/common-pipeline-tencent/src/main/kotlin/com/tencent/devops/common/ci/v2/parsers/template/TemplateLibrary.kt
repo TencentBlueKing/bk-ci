@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.tencent.devops.common.ci.v2.Repositories
-import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
+import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 data class TemplateLibrary(

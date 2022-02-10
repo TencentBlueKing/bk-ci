@@ -25,23 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo
+package com.tencent.devops.common.ci.v2.parsers.template.models
 
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
-data class GetTemplateParam(
-    val gitRequestEventId: Long,
-    val token: String?,
-    val forkToken: String?,
-    val gitProjectId: Long,
-    val targetRepo: String?,
-    val ref: String?,
-    val personalAccessToken: String?,
-    val fileName: String,
-    val changeSet: Set<String>?,
-    val event: GitEvent?,
-    val templateType: TemplateType?,
-    // 正在被替换的远程库
-    val nowRemoteGitProjectId: String?
+// 不用被模板替换的Stage中的变量，直接通过Yaml生成Object
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class NoReplaceStagTemplate(
+    val name: String?,
+    val id: String?,
+    val label: String? = null,
+    @JsonProperty("if")
+    @ApiModelProperty(name = "if")
+    val ifField: String? = null,
+    @JsonProperty("fast-kill")
+    @ApiModelProperty(name = "fast-kill")
+    val fastKill: Boolean? = false
 )

@@ -25,14 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.tencent.devops.common.ci.v2.ParametersTemplateNull
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
+import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 object TemplateYamlUtil {
@@ -45,8 +45,8 @@ object TemplateYamlUtil {
         toPath: String? = null
     ): Boolean {
         val interSet = newKeys intersect keys
-        if (interSet.isEmpty() || (interSet.size == 1 && interSet.last() == Constants.TEMPLATE_KEY)) {
-            return true
+        return if (interSet.isEmpty() || (interSet.size == 1 && interSet.last() == Constants.TEMPLATE_KEY)) {
+            true
         } else {
             if (toPath == null) {
                 error(
@@ -64,7 +64,7 @@ object TemplateYamlUtil {
                     )
                 )
             }
-            return false
+            false
         }
     }
 

@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.ci.v2.Container
@@ -43,7 +43,7 @@ import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.TemplateInfo
 import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
-import com.tencent.devops.stream.trigger.template.pojo.TemplateDeepTreeNode
+import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 object YamlObjects {

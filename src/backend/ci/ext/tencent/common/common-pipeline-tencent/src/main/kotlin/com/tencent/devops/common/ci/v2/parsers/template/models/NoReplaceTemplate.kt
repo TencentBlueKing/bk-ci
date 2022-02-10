@@ -25,64 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo
+package com.tencent.devops.common.ci.v2.parsers.template.models
 
-class Graph<T>(
-    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
-) {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.ci.v2.Extends
+import com.tencent.devops.common.ci.v2.PreTriggerOn
+import com.tencent.devops.common.ci.v2.Resources
 
-    fun addEdge(fromPath: String, toPath: String) {
-        if (adj[fromPath] != null) {
-            adj[fromPath]!!.add(toPath)
-        } else {
-            adj[fromPath] = mutableListOf(toPath)
-        }
-    }
-
-    fun hasCyclic(): Boolean {
-        val visited = adj.map { it.key to false }.toMap().toMutableMap()
-        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
-
-        for (i in adj.keys) {
-            if (hasCyclicUtil(i, visited, recStack)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun hasCyclicUtil(
-        i: String,
-        visited: MutableMap<String, Boolean>,
-        recStack: MutableMap<String, Boolean>
-    ): Boolean {
-
-        if (recStack[i] == null || visited[i] == null) {
-            return false
-        }
-
-        if (recStack[i]!!) {
-            return true
-        }
-
-        if (visited[i]!!) {
-            return false
-        }
-
-        visited[i] = true
-
-        recStack[i] = true
-
-        val children = adj[i]!!
-
-        for (c in children) {
-            if (hasCyclicUtil(c, visited, recStack)) {
-                return true
-            }
-        }
-
-        recStack[i] = false
-
-        return false
-    }
-}
+// 不用被模板替换的流水线变量，直接通过Yaml生成Object
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class NoReplaceTemplate(
+    var version: String?,
+    var name: String?,
+    var label: List<String>? = null,
+    var triggerOn: PreTriggerOn?,
+    var extends: Extends?,
+    var resources: Resources?
+)

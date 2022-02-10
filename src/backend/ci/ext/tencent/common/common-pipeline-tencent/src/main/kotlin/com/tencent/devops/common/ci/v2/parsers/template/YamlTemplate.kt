@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.ci.v2.Extends
@@ -44,10 +44,10 @@ import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.TemplateInfo
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.enums.TemplateType
-import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
-import com.tencent.devops.stream.trigger.template.pojo.TemplateDeepTreeNode
-import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
+import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateDeepTreeNode
+import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 
 @Suppress("ALL")
 class YamlTemplate(
@@ -162,9 +162,13 @@ class YamlTemplate(
         // 需要替换模板的的递归替换
         if (templateObject[TemplateType.VARIABLE.content] != null) {
             replaceVariables(
-                YamlObjects.transValue(filePath, TemplateType.VARIABLE.text, templateObject[TemplateType.VARIABLE.content]),
-                preYamlObject,
-                deepTree
+                variables = YamlObjects.transValue(
+                    file = filePath,
+                    type = TemplateType.VARIABLE.text,
+                    value = templateObject[TemplateType.VARIABLE.content]
+                ),
+                preYamlObject = preYamlObject,
+                deepTree = deepTree
             )
         }
         if (templateObject[TemplateType.STAGE.content] != null) {
@@ -190,15 +194,20 @@ class YamlTemplate(
         }
         if (templateObject[TemplateType.FINALLY.content] != null) {
             replaceFinally(
-                YamlObjects.transValue(filePath, TemplateType.FINALLY.text, templateObject[TemplateType.FINALLY.content]),
-                preYamlObject,
-                deepTree
+                finally = YamlObjects.transValue(
+                    file = filePath,
+                    type = TemplateType.FINALLY.text,
+                    value = templateObject[TemplateType.FINALLY.content]
+                ),
+                preYamlObject = preYamlObject,
+                deepTree = deepTree
             )
         }
         // notices只用做一次模板替换没有嵌套模板
         if (templateObject["notices"] != null) {
             val notices = mutableListOf<GitNotices>()
-            val temNotices = YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
+            val temNotices =
+                YamlObjects.transValue<List<Map<String, Any?>>>(filePath, "notices", templateObject["notices"])
             temNotices.forEach {
                 notices.add(YamlObjects.getNotice(filePath, it))
             }
@@ -206,7 +215,8 @@ class YamlTemplate(
         }
 
         // 将不用替换的直接传入
-        val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, TemplateYamlMapper.toYaml(templateObject))
+        val newYaml =
+            YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, TemplateYamlMapper.toYaml(templateObject))
         preYamlObject.label = newYaml.label
         preYamlObject.resources = newYaml.resources
         // 用户没写就用模板的名字
@@ -305,7 +315,8 @@ class YamlTemplate(
         variables.forEach { (key, value) ->
             // 如果是模板文件则进行模板替换
             if (key == Constants.TEMPLATE_KEY) {
-                val toPathList = YamlObjects.transValue<List<Map<String, Any>>>(fromPath, TemplateType.VARIABLE.text, value)
+                val toPathList =
+                    YamlObjects.transValue<List<Map<String, Any>>>(fromPath, TemplateType.VARIABLE.text, value)
                 toPathList.forEach { item ->
                     val toPath = item[Constants.OBJECT_TEMPLATE_PATH].toString()
                     // 保存并检查是否存在循环引用模板
@@ -470,13 +481,16 @@ class YamlTemplate(
                     )
                 )
             } else {
-                stepList.add(YamlObjects.getStep(
-                    fromPath,
-                    step,
-                    TemplateInfo(
-                        remote = repo != null,
-                        remoteTemplateProjectId = repo?.repository
-                    )))
+                stepList.add(
+                    YamlObjects.getStep(
+                        fromPath,
+                        step,
+                        TemplateInfo(
+                            remote = repo != null,
+                            remoteTemplateProjectId = repo?.repository
+                        )
+                    )
+                )
             }
         }
         return stepList
@@ -507,7 +521,8 @@ class YamlTemplate(
             }
         }
 
-        val checkObject = YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, TemplateYamlMapper.toYaml(check))
+        val checkObject =
+            YamlObjects.getObjectFromYaml<PreTemplateStageCheck>(fromPath, TemplateYamlMapper.toYaml(check))
 
         checkObject.gates?.forEach { gate ->
             val toPath = gate.template
@@ -518,7 +533,8 @@ class YamlTemplate(
                 fromPath = fromPath,
                 deepTree = deepTree
             )
-            val gateTemplate = YamlObjects.getObjectFromYaml<GateTemplate>(toPath, TemplateYamlMapper.toYaml(templateObject))
+            val gateTemplate =
+                YamlObjects.getObjectFromYaml<GateTemplate>(toPath, TemplateYamlMapper.toYaml(templateObject))
             gateList.addAll(
                 gateTemplate.gates
             )

@@ -25,20 +25,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo
+package com.tencent.devops.common.ci.v2.parsers.template.models
 
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+class Graph<T>(
+    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
+) {
 
-data class TemplateProjectData(
-    val gitRequestEventId: Long,
-    // 发起者的库ID,用户名,分支
-    val triggerProjectId: Long,
-    // sourceProjectId，在fork时是源库的ID
-    val sourceProjectId: Long,
-    val triggerUserId: String,
-    val triggerRef: String,
-    val triggerToken: String,
-    val forkGitToken: String?,
-    val changeSet: Set<String>?,
-    val event: GitEvent?
-)
+    fun addEdge(fromPath: String, toPath: String) {
+        if (adj[fromPath] != null) {
+            adj[fromPath]!!.add(toPath)
+        } else {
+            adj[fromPath] = mutableListOf(toPath)
+        }
+    }
+
+    fun hasCyclic(): Boolean {
+        val visited = adj.map { it.key to false }.toMap().toMutableMap()
+        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
+
+        for (i in adj.keys) {
+            if (hasCyclicUtil(i, visited, recStack)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasCyclicUtil(
+        i: String,
+        visited: MutableMap<String, Boolean>,
+        recStack: MutableMap<String, Boolean>
+    ): Boolean {
+
+        if (recStack[i] == null || visited[i] == null) {
+            return false
+        }
+
+        if (recStack[i]!!) {
+            return true
+        }
+
+        if (visited[i]!!) {
+            return false
+        }
+
+        visited[i] = true
+
+        recStack[i] = true
+
+        val children = adj[i]!!
+
+        for (c in children) {
+            if (hasCyclicUtil(c, visited, recStack)) {
+                return true
+            }
+        }
+
+        recStack[i] = false
+
+        return false
+    }
+}

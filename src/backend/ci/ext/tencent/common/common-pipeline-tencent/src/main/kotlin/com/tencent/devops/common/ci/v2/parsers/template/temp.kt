@@ -25,22 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template.pojo
+package com.tencent.devops.common.ci.v2.parsers.template
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.ci.v2.Extends
-import com.tencent.devops.common.ci.v2.PreTriggerOn
-import com.tencent.devops.common.ci.v2.Resources
-
-// 不用被模板替换的流水线变量，直接通过Yaml生成Object
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class NoReplaceTemplate(
-    var version: String?,
-    var name: String?,
-    var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
-    var extends: Extends?,
-    var resources: Resources?
-)
+class temp

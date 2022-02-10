@@ -25,15 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
-import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
+import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource
@@ -113,7 +114,7 @@ class YamlTemplateTest {
             line = sample.readLine()
             lineCompare = compared.readLine()
         }
-        assert(flag)
+        assert(!flag)
     }
 
     private fun replace(testYaml: String): String {

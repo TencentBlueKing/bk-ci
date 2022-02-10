@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.tencent.devops.common.ci.v2.Repositories
-import com.tencent.devops.stream.trigger.template.pojo.Graph
+import com.tencent.devops.common.ci.v2.parsers.template.models.Graph
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 class TemplateGraph(
