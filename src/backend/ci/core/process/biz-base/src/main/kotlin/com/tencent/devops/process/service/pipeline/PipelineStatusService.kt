@@ -62,16 +62,7 @@ class PipelineStatusService(
         val finishCount = pipelineBuildSummary.finishCount ?: 0
         val runningCount = pipelineBuildSummary.runningCount ?: 0
 
-        val pipelineBuildStatus = if (buildStatusOrd != null) {
-            val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
-            if (tmpStatus.isFinish()) {
-                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
-            } else {
-                tmpStatus
-            }
-        } else {
-            null
-        }
+        val pipelineBuildStatus = getBuildStatus(buildStatusOrd)
 
         // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
         return PipelineStatus(
@@ -90,5 +81,21 @@ class PipelineStatusService(
             lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType),
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0
         )
+    }
+
+    /**
+     * 获取构建状态
+     */
+    fun getBuildStatus(buildStatusOrd: Int?): BuildStatus? {
+        return if (buildStatusOrd != null) {
+            val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
+            if (tmpStatus.isFinish()) {
+                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+            } else {
+                tmpStatus
+            }
+        } else {
+            null
+        }
     }
 }
