@@ -465,7 +465,7 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	varRequestCPU := o.conf.BcsCPUPerInstance
 	varRequestMem := o.conf.BcsMemPerInstance
 	blog.Info("getJSONFromTemplate:%+v", param.AttributeCondition)
-	for _, istItem := range o.conf.QueuePerInstance {
+	for _, istItem := range o.conf.InstanceType {
 		if !param.CheckQueueKey(istItem) {
 			continue
 		}
