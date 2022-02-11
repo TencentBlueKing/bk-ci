@@ -56,4 +56,22 @@ class ExperienceDownloadDetailDao {
                 .fetchAny()?.value1() ?: 0
         }
     }
+
+    fun countDownloadHistory(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String,
+        userId: String
+    ): Int {
+        with(TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(USER_ID.eq(userId))
+                .and(PLATFORM.eq(platform))
+                .fetchAny()?.value1() ?: 0
+        }
+    }
 }

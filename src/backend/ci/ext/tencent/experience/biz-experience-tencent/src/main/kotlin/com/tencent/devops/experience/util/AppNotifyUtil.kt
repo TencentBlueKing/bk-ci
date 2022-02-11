@@ -25,25 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    compile("com.amazonaws:aws-java-sdk-s3")
-    api("net.coobird:thumbnailator")
-    api("com.github.xingePush:xinge")
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:experience:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+package com.tencent.devops.experience.util
+
+import com.tencent.devops.experience.pojo.AppNotifyMessage
+
+@SuppressWarnings("LongParameterList")
+object AppNotifyUtil {
+    /**
+     * 标题：“【${应用名}】 ${版本号} 更新啦”。
+     * 内容：“【${应用名}】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>”
+     */
+    fun makeMessage(
+        experienceName: String,
+        appVersion: String,
+        experienceHashId: String,
+        receiver: String
+    ): AppNotifyMessage {
+        val message = AppNotifyMessage()
+        message.receiver = receiver
+        message.title = "【$experienceName】 $appVersion 更新啦"
+        message.body = "【$experienceName】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>"
+        message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"
+        message.experienceHashId = experienceHashId
+        return message
+    }
 }
