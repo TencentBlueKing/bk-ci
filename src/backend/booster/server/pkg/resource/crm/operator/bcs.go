@@ -134,7 +134,6 @@ func NewNodeInfoPool(cpu, mem, disk float64, istTypes []config.InstanceType) *No
 		nip.nodeBlockMap[key] = &NodeInfoBlock{
 			CPUPerInstance: istItem.CPUPerInstance,
 			MemPerInstance: istItem.MemPerInstance,
-			//CPURequestPerInstance: ist.CPURequestPerInstance,
 		}
 	}
 	return &nip

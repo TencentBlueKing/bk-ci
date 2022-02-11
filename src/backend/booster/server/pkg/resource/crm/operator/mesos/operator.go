@@ -425,7 +425,6 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	varMem := o.conf.BcsMemPerInstance
 	varRequestCPU := o.conf.BcsCPUPerInstance
 	varRequestMem := o.conf.BcsMemPerInstance
-	blog.Info("getJSONFromTemplate:%+v", param.AttributeCondition)
 	for _, istItem := range o.conf.InstanceType {
 		if !param.CheckQueueKey(istItem) {
 			continue
@@ -444,6 +443,7 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 		if istItem.MemRequestPerInstance > 0.0 {
 			varRequestMem = istItem.MemRequestPerInstance
 		}
+		break
 	}
 	data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU), -1)
 	data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", varMem), -1)

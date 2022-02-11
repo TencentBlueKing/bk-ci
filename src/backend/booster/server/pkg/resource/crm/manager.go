@@ -1118,12 +1118,13 @@ func (hwu *handlerWithUser) GetInstanceType(platform string, group string) *conf
 		if !(istItem.City == group && istItem.Platform == platform) {
 			continue
 		}
-		if istItem.CPUPerInstance != 0.0 {
+		if istItem.CPUPerInstance > 0.0 {
 			retIst.CPUPerInstance = istItem.CPUPerInstance
 		}
-		if istItem.MemPerInstance != 0.0 {
+		if istItem.MemPerInstance > 0.0 {
 			retIst.MemPerInstance = istItem.MemPerInstance
 		}
+		break
 	}
 	return &retIst
 }
