@@ -121,6 +121,11 @@ data class MatrixControlOption(
      * 根据[strategyStr]生成对应的矩阵参数表
      */
     private fun convertStrategyYaml(buildContext: Map<String, String>): MatrixConfig {
+        if (strategyStr.isNullOrBlank()) {
+            return MatrixConfig(
+                emptyMap(), mutableListOf(), mutableListOf()
+            )
+        }
         val contextStr = EnvUtils.parseEnv(strategyStr, buildContext)
         return MatrixConfig(
             strategy = JsonUtil.anyTo(YamlUtil.to<Map<String, List<String>>>(contextStr),
@@ -195,16 +200,16 @@ data class MatrixControlOption(
     /**
      * 传入[includeCaseStr]或[excludeCaseStr]的获得组合数组
      */
-    private fun convertCase(str: String?, buildContext: Map<String, String>? = null): List<Map<String, String>> {
-        if (str.isNullOrBlank()) {
+    private fun convertCase(caseStr: String?, buildContext: Map<String, String>? = null): List<Map<String, String>> {
+        if (caseStr.isNullOrBlank()) {
             return emptyList()
         }
         val includeCaseList = try {
-            YamlUtil.to<List<Map<String, Any>>>(str)
+            YamlUtil.to<List<Map<String, Any>>>(caseStr)
         } catch (e: Exception) {
             // 这种情况应该只出现于fromJSON
             val contextStr = replaceJsonPattern(
-                command = str,
+                command = caseStr,
                 buildContext = buildContext ?: throw Exception("empty buildContext")
             )
             JsonUtil.to(contextStr)
