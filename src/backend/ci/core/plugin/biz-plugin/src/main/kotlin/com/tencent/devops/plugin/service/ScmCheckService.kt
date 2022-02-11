@@ -100,9 +100,9 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     throw OperationException("不是Git 代码仓库")
             }
             // 红线评论分开发送
-            val qualityHistory = client.get(ServiceQualityInterceptResource::class)
+            val interceptHistory = client.get(ServiceQualityInterceptResource::class)
                 .listHistory(projectId, pipelineId, buildId).data
-            qualityHistory?.forEach { history ->
+            interceptHistory?.forEach { ruleIntercept ->
                 val request = CommitCheckRequest(
                     projectName = repo.projectName,
                     url = repo.url,
@@ -118,7 +118,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     description = description,
                     block = block,
                     mrRequestId = event.mergeRequestId,
-                    reportData = QualityUtils.getQualityGitMrResult(client, event, listOf(history.ruleHashId))
+                    reportData = QualityUtils.getQualityGitMrResult(client, event, ruleIntercept)
                 )
                 if (isOauth) {
                     client.get(ServiceScmOauthResource::class).addCommitCheck(request)

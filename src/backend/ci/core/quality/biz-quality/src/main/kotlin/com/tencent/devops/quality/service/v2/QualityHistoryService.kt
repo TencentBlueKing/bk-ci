@@ -207,7 +207,11 @@ class QualityHistoryService @Autowired constructor(
         )
     }
 
-    fun serviceListByBuildId(projectId: String, pipelineId: String, buildId: String): List<QualityRuleIntercept> {
+    fun serviceListByBuildId(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<QualityRuleIntercept> {
         val interceptHistory = historyDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
@@ -220,7 +224,7 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             ruleIds = ruleIdSet
         )?.map { it.id to it }?.toMap()
-        return interceptHistory.map {
+        return interceptHistory.distinctBy { it.ruleId }.map {
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
