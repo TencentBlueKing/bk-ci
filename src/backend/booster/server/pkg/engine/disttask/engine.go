@@ -1114,6 +1114,7 @@ func (de *disttaskEngine) sendMessageTaskStats(projectID string, stats MessageTa
 
 func (de *disttaskEngine) getPublicQueueByQueueName(queueName string) engine.StagingTaskQueue {
 	key := ""
+
 	switch getQueueNameHeader(queueName) {
 	case "":
 		key = publicQueueDefault

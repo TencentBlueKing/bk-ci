@@ -427,8 +427,6 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.ReplaceAll(data, templateVarName, param.Name)
 	data = strings.ReplaceAll(data, templateVarNamespace, param.Namespace)
 	data = strings.ReplaceAll(data, templateVarInstance, strconv.Itoa(param.Instance))
-	//data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", o.conf.BcsCPUPerInstance*1000))
-	//data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", o.conf.BcsMemPerInstance))
 	data = strings.ReplaceAll(data, templateVarRandPortNames, strings.Join(randPortsNames, ","))
 	data = insertYamlPorts(data, pm)
 	data = insertYamlEnv(data, param.Env)
@@ -469,18 +467,18 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 		if !param.CheckQueueKey(istItem) {
 			continue
 		}
-		if istItem.CPUPerInstance != 0.0 {
+		if istItem.CPUPerInstance > 0.0 {
 			varCPU = istItem.CPUPerInstance
 			varRequestCPU = istItem.CPUPerInstance
 		}
-		if istItem.MemPerInstance != 0.0 {
+		if istItem.MemPerInstance > 0.0 {
 			varMem = istItem.MemPerInstance
 			varRequestMem = istItem.MemPerInstance
 		}
-		if istItem.CPURequestPerInstance != 0.0 {
+		if istItem.CPURequestPerInstance > 0.0 {
 			varRequestCPU = istItem.CPURequestPerInstance
 		}
-		if istItem.MemRequestPerInstance != 0.0 {
+		if istItem.MemRequestPerInstance > 0.0 {
 			varRequestMem = istItem.MemRequestPerInstance
 		}
 	}
