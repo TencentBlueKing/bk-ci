@@ -221,9 +221,9 @@ persistence:
 log:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -263,9 +263,9 @@ log:
 auth:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -305,9 +305,9 @@ auth:
 agentless:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -347,9 +347,9 @@ agentless:
 dockerhost:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -389,9 +389,9 @@ dockerhost:
 artifactory:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -431,9 +431,9 @@ artifactory:
 dispatch:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -473,9 +473,9 @@ dispatch:
 dispatchDocker:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -515,9 +515,9 @@ dispatchDocker:
 dispatchKubernetes:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -557,9 +557,9 @@ dispatchKubernetes:
 environment:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -599,9 +599,9 @@ environment:
 image:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -641,9 +641,9 @@ image:
 misc:
   env:
     enabled: true
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -683,9 +683,9 @@ misc:
 monitoring:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -725,9 +725,9 @@ monitoring:
 notify:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -767,9 +767,9 @@ notify:
 openapi:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -809,9 +809,9 @@ openapi:
 plugin:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -851,9 +851,9 @@ plugin:
 process:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -893,9 +893,9 @@ process:
 project:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -935,9 +935,9 @@ project:
 quality:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -977,9 +977,9 @@ quality:
 repository:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1019,9 +1019,9 @@ repository:
 sign:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1061,9 +1061,9 @@ sign:
 store:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1103,9 +1103,9 @@ store:
 ticket:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1145,9 +1145,9 @@ ticket:
 websocket:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1187,9 +1187,9 @@ websocket:
 angetless:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1259,11 +1259,11 @@ turbo:
   priorityClassName: ""
   config:
     tbs:
-      rootpath: 
-      urltemplate: api/v1/{engine}/resource/{resource_type}
+      rootPath: 
+      urlTemplate: api/v1/{engine}/resource/{resource_type}
       dashboard: 
     devops:
-      rootpath: 
+      rootPath: 
   autoscaling:
     enabled: false
     minReplicas: 1
@@ -1314,9 +1314,9 @@ gateway:
 experience:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1356,9 +1356,9 @@ experience:
 external:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1398,9 +1398,9 @@ external:
 lambda:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1440,9 +1440,9 @@ lambda:
 monitoring:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1482,9 +1482,9 @@ monitoring:
 prebuild:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1524,9 +1524,9 @@ prebuild:
 statistics:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1566,9 +1566,9 @@ statistics:
 stream:
   enabled: true
   env:
-    JVM_XMS: 512m
+    jvmXms: 512m
     # JVM的-xmx , 不能大于 limits.memory
-    JVM_XMX: 1024m
+    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:

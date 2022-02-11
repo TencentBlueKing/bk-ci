@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.prebuild.env.JVM_XMS }}
+              value: {{ .Values.prebuild.env.JvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.prebuild.env.JVM_XMX }}
+              value: {{ .Values.prebuild.env.JvmXmx }}
           workingDir: /data/workspace/prebuild
           command:
             - "/bin/bash"

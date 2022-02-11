@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.external.env.JVM_XMS }}
+              value: {{ .Values.external.env.JvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.external.env.JVM_XMX }}
+              value: {{ .Values.external.env.JvmXmx }}
           workingDir: /data/workspace/external
           command:
             - "/bin/bash"
