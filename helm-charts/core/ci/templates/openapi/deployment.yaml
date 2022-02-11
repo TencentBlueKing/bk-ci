@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.openapi.env.JVM_XMS }}
+              value: {{ .Values.openapi.env.JvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.openapi.env.JVM_XMX }}
+              value: {{ .Values.openapi.env.JvmXmx }}
           workingDir: /data/workspace/openapi
           command:
             - "/bin/bash"

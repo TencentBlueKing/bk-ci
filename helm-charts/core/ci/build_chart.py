@@ -8,9 +8,9 @@ import sys
 files = os.listdir('.')
 replace_pattern = re.compile(r'__BK_[A-Z_]*__')
 replace_dict = {}
-config_parent = '../../support-files/templates/'
+config_parent = '../../../support-files/templates/'
 template_parent = './templates/configmap/tpl/'
-env_properties_file = '../../scripts/bkenv.properties'
+env_properties_file = '../../../scripts/bkenv.properties'
 output_value_yaml = './values.yaml'
 default_value_json = './build/values.json'
 default_value_yaml = './build/values.yaml'

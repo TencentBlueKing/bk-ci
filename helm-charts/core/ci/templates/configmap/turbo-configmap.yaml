@@ -65,7 +65,7 @@ data:
       server:
         port: 18080
     {{- if keys $.Values.turbo.config }}
-      {{- toYaml .Values.turbo.config | nindent 4 }}
+      {{- toYaml .Values.turbo.config | lower | nindent 4 }}
     {{- end}}
   quartz.properties: |-
     org.quartz.jobStore.isClustered=true

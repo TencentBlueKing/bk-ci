@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.dispatch.env.JVM_XMS }}
+              value: {{ .Values.dispatch.env.JvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.dispatch.env.JVM_XMX }}
+              value: {{ .Values.dispatch.env.JvmXmx }}
           workingDir: /data/workspace/dispatch
           command:
             - "/bin/bash"

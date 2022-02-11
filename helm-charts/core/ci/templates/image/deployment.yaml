@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.image.env.JVM_XMS }}
+              value: {{ .Values.image.env.JvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.image.env.JVM_XMX }}
+              value: {{ .Values.image.env.JvmXmx }}
           workingDir: /data/workspace/image
           command:
             - "/bin/bash"
