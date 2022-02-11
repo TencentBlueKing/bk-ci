@@ -380,7 +380,8 @@ stages:
     - name: null
       id: "step-PQmztHF"
       if: null
-      if-modify: null
+      if-modify:
+      - "asd/**"
       uses: null
       with: null
       timeout-minutes: null
@@ -476,7 +477,8 @@ stages:
     - name: null
       id: "step-tzXUE3y"
       if: null
-      if-modify: null
+      if-modify:
+      - "asd/**"
       uses: null
       with: null
       timeout-minutes: null
