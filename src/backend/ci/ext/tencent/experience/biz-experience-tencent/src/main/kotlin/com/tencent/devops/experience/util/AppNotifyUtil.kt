@@ -37,7 +37,7 @@ object AppNotifyUtil {
      */
     fun makeMessage(
         experienceName: String,
-        appVersion:String,
+        appVersion: String,
         experienceHashId: String,
         receiver: String
     ): AppNotifyMessage {
