@@ -421,29 +421,27 @@ func (o *operator) getJSONFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.Replace(data, templateVarName, param.Name, -1)
 	data = strings.Replace(data, templateVarNamespace, param.Namespace, -1)
 	data = strings.Replace(data, templateVarInstance, strconv.Itoa(param.Instance), -1)
-	//data = strings.Replace(data, templateVarCPU, fmt.Sprintf("%.2f", o.conf.BcsCPUPerInstance), -1)
-	//data = strings.Replace(data, templateVarMem, fmt.Sprintf("%.2f", o.conf.BcsMemPerInstance), -1)
 	varCPU := o.conf.BcsCPUPerInstance
 	varMem := o.conf.BcsMemPerInstance
 	varRequestCPU := o.conf.BcsCPUPerInstance
 	varRequestMem := o.conf.BcsMemPerInstance
 	blog.Info("getJSONFromTemplate:%+v", param.AttributeCondition)
-	for _, istItem := range o.conf.QueuePerInstance {
+	for _, istItem := range o.conf.InstanceType {
 		if !param.CheckQueueKey(istItem) {
 			continue
 		}
-		if istItem.CPUPerInstance != 0.0 {
+		if istItem.CPUPerInstance > 0.0 {
 			varCPU = istItem.CPUPerInstance
 			varRequestCPU = istItem.CPUPerInstance
 		}
-		if istItem.MemPerInstance != 0.0 {
+		if istItem.MemPerInstance > 0.0 {
 			varMem = istItem.MemPerInstance
 			varRequestMem = istItem.MemPerInstance
 		}
-		if istItem.CPURequestPerInstance != 0.0 {
+		if istItem.CPURequestPerInstance > 0.0 {
 			varRequestCPU = istItem.CPURequestPerInstance
 		}
-		if istItem.MemRequestPerInstance != 0.0 {
+		if istItem.MemRequestPerInstance > 0.0 {
 			varRequestMem = istItem.MemRequestPerInstance
 		}
 	}

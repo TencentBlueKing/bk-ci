@@ -108,7 +108,7 @@ type HandlerWithUser interface {
 	Release(resourceID string) error
 	AddBroker(name string, strategyType StrategyType, strategy BrokerStrategy,
 		param BrokerParam) error
-	GetQueueInstance(queuePerInstance config.QueuePerInstance) *config.QueuePerInstance
+	GetInstanceType(platform, group string) *config.InstanceType
 }
 
 // ResourceParam describe the request parameters to container resource manager.
@@ -392,7 +392,7 @@ func (rm *resourceManager) recover() error {
 		return err
 	}
 
-	rm.nodeInfoPool = op.NewNodeInfoPool(rm.conf.BcsCPUPerInstance, rm.conf.BcsMemPerInstance, 1, rm.conf.QueuePerInstance)
+	rm.nodeInfoPool = op.NewNodeInfoPool(rm.conf.BcsCPUPerInstance, rm.conf.BcsMemPerInstance, 1, rm.conf.InstanceType)
 
 	rm.registeredResourceMapLock.Lock()
 	defer rm.registeredResourceMapLock.Unlock()
@@ -1108,14 +1108,14 @@ func (hwu *handlerWithUser) AddBroker(
 }
 
 //ResourceManager return the rm
-func (hwu *handlerWithUser) GetQueueInstance(queuePerInstance config.QueuePerInstance) *config.QueuePerInstance {
-	//config.QueuePerInstance
-	retIst := config.QueuePerInstance{
+func (hwu *handlerWithUser) GetInstanceType(platform string, group string) *config.InstanceType {
+	//config.InstanceType
+	retIst := config.InstanceType{
 		CPUPerInstance: hwu.mgr.conf.BcsCPUPerInstance,
 		MemPerInstance: hwu.mgr.conf.BcsMemPerInstance,
 	}
-	for _, istItem := range hwu.mgr.conf.QueuePerInstance {
-		if !(istItem.City == queuePerInstance.City && istItem.Platform == queuePerInstance.Platform) {
+	for _, istItem := range hwu.mgr.conf.InstanceType {
+		if !(istItem.City == group && istItem.Platform == platform) {
 			continue
 		}
 		if istItem.CPUPerInstance != 0.0 {

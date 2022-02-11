@@ -86,8 +86,8 @@ type DirectResourceConfig struct {
 	MysqlTableOption string `json:"direct_resource_mysql_table_option" value:"" usage:"mysql table option"`
 }
 
-//QueuePerInstance define instance type of an instance
-type QueuePerInstance struct {
+//InstanceType define type of an instance
+type InstanceType struct {
 	Platform              string  `json:"platform"`
 	City                  string  `json:"city"`
 	CPUPerInstance        float64 `json:"cpu_per_instance"`
@@ -98,18 +98,18 @@ type QueuePerInstance struct {
 
 // ContainerResourceConfig defines configs for resource from bcs.
 type ContainerResourceConfig struct {
-	Enable              bool               `json:"crm_enable"`
-	Operator            string             `json:"crm_operator"`
-	BcsAPIToken         string             `json:"crm_bcs_api_token"`
-	BcsAPIAddress       string             `json:"crm_bcs_api_address"`
-	BcsCPUPerInstance   float64            `json:"crm_bcs_cpu_per_instance"`
-	BcsMemPerInstance   float64            `json:"crm_bcs_mem_per_instance"`
-	QueuePerInstance    []QueuePerInstance `json:"queue_per_instance"`
-	BcsClusterID        string             `json:"crm_bcs_cluster_id"`
-	BcsAppTemplate      string             `json:"crm_bcs_template_file"`
-	BcsGroupLabelKey    string             `json:"crm_bcs_group_label_key"`
-	BcsPlatformLabelKey string             `json:"crm_bcs_platform_label_key"`
-	BcsDisableWinHostNW bool               `json:"crm_bcs_disable_win_host_network"`
+	Enable              bool           `json:"crm_enable"`
+	Operator            string         `json:"crm_operator"`
+	BcsAPIToken         string         `json:"crm_bcs_api_token"`
+	BcsAPIAddress       string         `json:"crm_bcs_api_address"`
+	BcsCPUPerInstance   float64        `json:"crm_bcs_cpu_per_instance"`
+	BcsMemPerInstance   float64        `json:"crm_bcs_mem_per_instance"`
+	InstanceType        []InstanceType `json:"instance_type"`
+	BcsClusterID        string         `json:"crm_bcs_cluster_id"`
+	BcsAppTemplate      string         `json:"crm_bcs_template_file"`
+	BcsGroupLabelKey    string         `json:"crm_bcs_group_label_key"`
+	BcsPlatformLabelKey string         `json:"crm_bcs_platform_label_key"`
+	BcsDisableWinHostNW bool           `json:"crm_bcs_disable_win_host_network"`
 
 	MySQLStorage     string `json:"crm_resource_mysql"`
 	MySQLDatabase    string `json:"crm_resource_mysql_db"`

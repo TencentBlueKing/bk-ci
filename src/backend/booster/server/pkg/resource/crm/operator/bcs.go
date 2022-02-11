@@ -74,24 +74,12 @@ const (
 )
 
 //CheckQueueKey describe the function that get queue key from attributes
-func (param *BcsLaunchParam) CheckQueueKey(queuePerInstance config.QueuePerInstance) bool {
-	city, ok := param.AttributeCondition[AttributeKeyCity]
-	if !ok || city == "" {
-		city = "unknown_city"
-	}
-
-	platform := param.AttributeCondition[AttributeKeyPlatform]
-	if platform == "" {
-		platform = "default-platform"
-	}
-	if queuePerInstance.City == city && queuePerInstance.Platform == platform {
+func (param *BcsLaunchParam) CheckQueueKey(InstanceType config.InstanceType) bool {
+	platform, city := getInstanceKey(param.AttributeCondition)
+	if InstanceType.City == city && InstanceType.Platform == platform {
 		return true
 	}
 	return false
-}
-
-func convertQueueToBlockKey(queue2Ist config.QueuePerInstance) string {
-	return queue2Ist.Platform + "/" + queue2Ist.City
 }
 
 // InstanceFilterFunction describe the function that decide how many instance to launch/scale.
@@ -130,15 +118,19 @@ func (ni *NodeInfo) valid() bool {
 }
 
 // NewNodeInfoPool get a new node info pool
-func NewNodeInfoPool(cpu, mem, disk float64, queue2Ist []config.QueuePerInstance) *NodeInfoPool {
+func NewNodeInfoPool(cpu, mem, disk float64, istTypes []config.InstanceType) *NodeInfoPool {
 	nip := NodeInfoPool{
 		cpuPerInstance:  cpu,
 		memPerInstance:  mem,
 		diskPerInstance: disk,
 		nodeBlockMap:    make(map[string]*NodeInfoBlock, 1000),
 	}
-	for _, istItem := range queue2Ist {
-		key := convertQueueToBlockKey(istItem)
+	for _, istItem := range istTypes {
+		condition := map[string]string{
+			AttributeKeyCity:     istItem.City,
+			AttributeKeyPlatform: istItem.Platform,
+		}
+		key := getBlockKey(condition)
 		nip.nodeBlockMap[key] = &NodeInfoBlock{
 			CPUPerInstance: istItem.CPUPerInstance,
 			MemPerInstance: istItem.MemPerInstance,
@@ -177,14 +169,12 @@ func (nip *NodeInfoPool) GetStats() string {
 
 	message := ""
 	for city, block := range nip.nodeBlockMap {
-		cpuPerInstance, memPerInstance := nip.getNodeInstance(city)
-
 		message += fmt.Sprintf(
 			"\nCity: %s[cpuPerInstance: %.2f, memPerInstance:%.2f], available-instance: %d, report-instance: %d, noready-instance: %d "+
 				"CPU-Left: %.2f/%.2f, MEM-Left: %.2f/%.2f",
 			city,
-			cpuPerInstance,
-			memPerInstance,
+			block.CPUPerInstance,
+			block.MemPerInstance,
 			block.AvailableInstance-block.noReadyInstance,
 			block.AvailableInstance, block.noReadyInstance,
 			block.CPUTotal-block.CPUUsed,
@@ -414,16 +404,21 @@ type Endpoint struct {
 	Ports map[string]int
 }
 
-func getBlockKey(attributes map[string]string) string {
+func getInstanceKey(attributes map[string]string) (string, string) {
 	city, ok := attributes[AttributeKeyCity]
 	if !ok || city == "" {
 		city = "unknown_city"
 	}
 
-	platform := attributes[AttributeKeyPlatform]
+	platform, _ := attributes[AttributeKeyPlatform]
 	if platform == "" {
 		platform = "default-platform"
 	}
+	return platform, city
+}
+
+func getBlockKey(attributes map[string]string) string {
+	platform, city := getInstanceKey(attributes)
 	return platform + "/" + city
 }
 
