@@ -45,7 +45,8 @@ import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 object QualityUtils {
     fun getQualityGitMrResult(
         client: Client,
-        event: GitCommitCheckEvent
+        event: GitCommitCheckEvent,
+        ruleIds: List<String>
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
@@ -68,7 +69,7 @@ object QualityUtils {
         // value：指标、预期、结果、状态
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
         client.get(ServiceQualityInterceptResource::class)
-                .listHistory(projectId, pipelineId, buildId).data?.forEach { ruleIntercept ->
+                .listRuleHistory(projectId, pipelineId, buildId, ruleIds).data?.forEach { ruleIntercept ->
             ruleIntercept.resultMsg.forEach { interceptItem ->
                 val indicator = client.get(ServiceQualityIndicatorResource::class)
                         .get(projectId, interceptItem.indicatorId).data
