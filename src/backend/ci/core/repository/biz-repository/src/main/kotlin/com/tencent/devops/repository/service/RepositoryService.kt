@@ -1460,6 +1460,7 @@ class RepositoryService @Autowired constructor(
                 }
             }
             is CodeTGitRepository -> {
+                logger.info("code into codeTGitRepository")
                 when (repo.authType) {
                     RepoAuthType.SSH -> {
                         val token = list[0]
