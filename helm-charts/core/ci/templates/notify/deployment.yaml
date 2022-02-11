@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.notify.env.JVM_XMS }}
+              value: {{ .Values.notify.env.JvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.notify.env.JVM_XMX }}
+              value: {{ .Values.notify.env.JvmXmx }}
           workingDir: /data/workspace/notify
           command:
             - "/bin/bash"
