@@ -268,6 +268,7 @@ class QualityHistoryService @Autowired constructor(
                         detail = record.detail,
                         client = client
                     )
+                    logger.info("QUALITY|logPromt is: ${record.logPrompt}")
                 }
             }
             QualityRuleIntercept(
