@@ -74,6 +74,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
+    private val experiencePushService: ExperiencePushService,
     private val client: Client
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
@@ -176,6 +177,7 @@ class ExperienceDownloadService @Autowired constructor(
         val experienceHashId = HashUtil.encodeLongId(experienceId)
 
         val projectId = experienceRecord.projectId
+        val bundleIdentifier = experienceRecord.bundleIdentifier
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
@@ -198,8 +200,54 @@ class ExperienceDownloadService @Autowired constructor(
         val fileDetail = client.get(ServiceArtifactoryResource::class)
             .show(experienceRecord.creator, projectId, artifactoryType, path).data!!
 
+        isNeedSubscribe(
+            experienceId = experienceId,
+            userId = userId,
+            platform = platform,
+            bundleIdentifier = bundleIdentifier,
+            projectId = projectId
+        )
         addDownloadRecord(experienceRecord, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
+    }
+
+    // 若为公开体验、用户第一次下载且未订阅过，则订阅
+    private fun isNeedSubscribe(
+        experienceId: Long,
+        userId: String,
+        platform: PlatformEnum,
+        bundleIdentifier: String,
+        projectId: String
+    ) {
+        val experienceHashId = HashUtil.encodeLongId(experienceId)
+        val isPublicExperience = lazy {
+            experienceBaseService.isPublicExperience(experienceId)
+        }
+        val isFirstDownload = lazy {
+            experienceBaseService.isFirstDownload(
+                platform = platform.name,
+                bundleIdentifier = bundleIdentifier,
+                projectId = projectId,
+                userId = userId
+            )
+        }
+        val isNotSubscribe = lazy {
+            !experienceBaseService.isSubscribe(
+                experienceId = experienceId,
+                userId = userId,
+                platform = platform.name,
+                bundleIdentifier = bundleIdentifier,
+                projectId = projectId
+            )
+        }
+        if (isPublicExperience.value && isFirstDownload.value && isNotSubscribe.value) {
+            val subscribe = experiencePushService.subscribe(
+                userId = userId,
+                experienceHashId = experienceHashId,
+                platform = platform.id
+            )
+            logger.info("Subscribe Result: ${subscribe.message}")
+        }
     }
 
     fun getInnerDownloadUrl(userId: String, experienceId: Long): String {

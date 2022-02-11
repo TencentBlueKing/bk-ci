@@ -25,25 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    compile("com.amazonaws:aws-java-sdk-s3")
-    api("net.coobird:thumbnailator")
-    api("com.github.xingePush:xinge")
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:experience:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+package com.tencent.devops.experience.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("蓝盾APP消息类型")
+
+open class AppNotifyMessage {
+
+    @ApiModelProperty("消息id")
+    var messageId: Long = 0
+
+    @ApiModelProperty("experienceHashId")
+    var experienceHashId: String = ""
+
+    @ApiModelProperty("通知接收者")
+    var receiver: String = ""
+
+    @ApiModelProperty("设备token")
+    var token: String = ""
+
+    @ApiModelProperty("通知内容")
+    var body: String = ""
+
+    @ApiModelProperty("通知标题")
+    var title: String = ""
+
+    @ApiModelProperty("跳转路径")
+    var url: String = ""
+
+    @ApiModelProperty("平台")
+    var platform: String = ""
+    override fun toString(): String {
+        return String.format(
+            "id (%s), receiver(%s), token(%s), platform(%s), title(%s), body(%s) ,url(%s)",
+            messageId, receiver, token, platform, title, body, url
+        )
+    }
 }
