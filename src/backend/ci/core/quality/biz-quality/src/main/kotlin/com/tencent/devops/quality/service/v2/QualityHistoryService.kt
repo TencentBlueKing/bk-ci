@@ -225,7 +225,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
                 buildId = it.buildId,
-                ruleHashId = "",
+                ruleHashId = HashUtil.encodeLongId(it.ruleId),
                 ruleName = ruleMap?.get(it.ruleId)?.name ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
