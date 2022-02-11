@@ -74,13 +74,13 @@ import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -201,7 +201,8 @@ object ScriptYmlUtils {
         val resultValue = StringBuffer()
         var line = newValueLines.readLine()
         while (line != null) {
-            if (line.trim().startsWith("if") || line.trim().startsWith("- if")) {
+            val startString = line.trim().replace("\\s".toRegex(), "")
+            if (startString.startsWith("if:") || startString.startsWith("-if:")) {
                 val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
                 val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
                     .removeSuffix("\"")
