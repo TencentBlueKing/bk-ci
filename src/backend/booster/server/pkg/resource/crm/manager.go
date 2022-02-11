@@ -1109,7 +1109,6 @@ func (hwu *handlerWithUser) AddBroker(
 
 //ResourceManager return the rm
 func (hwu *handlerWithUser) GetInstanceType(platform string, group string) *config.InstanceType {
-	//config.InstanceType
 	retIst := config.InstanceType{
 		CPUPerInstance: hwu.mgr.conf.BcsCPUPerInstance,
 		MemPerInstance: hwu.mgr.conf.BcsMemPerInstance,

@@ -220,10 +220,10 @@ func (nip *NodeInfoPool) getNodeInstance(key string) (float64, float64) {
 	cpuPerInstance := nip.cpuPerInstance
 	memPerInstance := nip.memPerInstance
 	if _, ok := nip.nodeBlockMap[key]; ok {
-		if nip.nodeBlockMap[key].CPUPerInstance != 0.0 {
+		if nip.nodeBlockMap[key].CPUPerInstance > 0.0 {
 			cpuPerInstance = nip.nodeBlockMap[key].CPUPerInstance
 		}
-		if nip.nodeBlockMap[key].MemPerInstance != 0.0 {
+		if nip.nodeBlockMap[key].MemPerInstance > 0.0 {
 			memPerInstance = nip.nodeBlockMap[key].MemPerInstance
 		}
 	}
