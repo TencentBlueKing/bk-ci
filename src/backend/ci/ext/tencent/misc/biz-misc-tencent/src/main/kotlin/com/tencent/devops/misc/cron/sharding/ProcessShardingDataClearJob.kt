@@ -252,7 +252,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
                 pipelineId = pipelineId,
                 routingRule = routingRule
             )
-            totalHandleNum += DEFAULT_PAGE_SIZE
+            totalHandleNum += pipelineHistoryBuildIdList?.size ?: 0
         }
         // 按流水线ID清理分片数据
         clearService.clearShardingDataByPipelineId(projectId, pipelineId, routingRule)

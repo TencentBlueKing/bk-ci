@@ -38,6 +38,7 @@ import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateData
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateIndicatorMap
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateUpdateData
+import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -50,6 +51,7 @@ class QualityTemplateService @Autowired constructor(
     private val ruleTemplateDao: QualityRuleTemplateDao,
     private val indicatorService: QualityIndicatorService,
     private val controlPointService: QualityControlPointService,
+    private val qualityControlPointDao: QualityControlPointDao,
     private val ruleTemplateIndicatorDao: QualityTemplateIndicatorMapDao,
     private val indicatorDao: QualityIndicatorDao
 ) {
@@ -70,11 +72,15 @@ class QualityTemplateService @Autowired constructor(
 
     fun userList(projectId: String): List<RuleTemplate> {
         val templateList = ruleTemplateDao.listTemplateEnable(dslContext)
+        val controlPointRecords = qualityControlPointDao.list(
+            dslContext = dslContext,
+            elementType = templateList?.map { it.controlPoint } ?: listOf()
+        )
         return templateList?.map { record ->
             val indicatorIds = ruleTemplateIndicatorDao.queryTemplateMap(record.id, dslContext)
                 ?.map { item -> item.indicatorId } ?: listOf()
 
-            val controlPoint = controlPointService.serviceGet(record.controlPoint, projectId)
+            val controlPoint = controlPointService.serviceGet(controlPointRecords, projectId)
             val indicators = indicatorService.serviceList(indicatorIds)
             RuleTemplate(
                 hashId = HashUtil.encodeLongId(record.id),

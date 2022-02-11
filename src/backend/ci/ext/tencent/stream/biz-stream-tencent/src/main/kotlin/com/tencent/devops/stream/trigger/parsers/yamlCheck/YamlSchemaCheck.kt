@@ -46,7 +46,7 @@ import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
-import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService

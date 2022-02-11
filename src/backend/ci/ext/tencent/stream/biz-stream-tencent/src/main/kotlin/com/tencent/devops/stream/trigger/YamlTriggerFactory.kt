@@ -39,7 +39,7 @@ class YamlTriggerFactory @Autowired constructor(
     val requestTriggerV2: StreamYamlTrigger
 ) {
 
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface<*> {
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface {
         if (ymlVersion == null) {
             return requestTrigger
         }

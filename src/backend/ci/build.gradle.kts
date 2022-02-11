@@ -1,29 +1,16 @@
-import com.tencent.devops.utils.findPropertyOrNull
-
 plugins {
-    id("com.tencent.devops.boot") version "0.0.4"
+    id("com.tencent.devops.boot") version "0.0.5"
     detektCheck
 }
 
 allprojects {
     apply(plugin = "com.tencent.devops.boot")
 
-    // 特殊的maven仓库
-    project.findPropertyOrNull("mavenRepoUrl")?.let {
-        project.repositories {
-            all {
-                if (this is MavenArtifactRepository && this.name == "TencentMirrors") {
-                    this.setUrl(it)
-                }
-            }
-        }
-    }
-
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.7.0") +
-        if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理
     dependencyManagement {
@@ -32,6 +19,7 @@ allprojects {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
+            dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
@@ -63,12 +51,6 @@ allprojects {
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
             dependency("com.github.xingePush:xinge:${Versions.Xinge}")
-            dependencySet("io.github.openfeign:${Versions.Feign}") {
-                entry("feign-core")
-                entry("feign-jackson")
-                entry("feign-jaxrs")
-                entry("feign-okhttp")
-            }
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
@@ -77,15 +59,6 @@ allprojects {
             dependencySet("com.github.docker-java:${Versions.DockerJava}") {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
-            }
-            dependencySet("org.apache.logging.log4j:${Versions.log4j}") {
-                entry("log4j-api")
-                entry("log4j-core")
-                entry("log4j-to-slf4j")
-            }
-            dependencySet("ch.qos.logback:${Versions.Logback}") {
-                entry("logback-core")
-                entry("logback-classic")
             }
             dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
