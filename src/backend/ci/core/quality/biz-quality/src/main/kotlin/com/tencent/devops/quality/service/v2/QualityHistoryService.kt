@@ -278,8 +278,8 @@ class QualityHistoryService @Autowired constructor(
                 ruleName = ruleMap[it.ruleId]?.ruleName ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
-                checkTimes = it.checkTimes,
-                resultMsg = interceptList
+                resultMsg = interceptList,
+                checkTimes = it.checkTimes
             )
         }
     }
