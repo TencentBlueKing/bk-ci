@@ -56,5 +56,9 @@ class ContainerCmdLoop(
         pipelineEventDispatcher.dispatch(
             commandContext.event.copy(delayMills = DEFAULT_LOOP_TIME_MILLS, source = commandContext.latestSummary)
         )
+        // #5454 增加可视化的互斥状态打印
+        if (commandContext.latestSummary == "mutex_print") {
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
+        }
     }
 }

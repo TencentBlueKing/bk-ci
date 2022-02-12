@@ -31,10 +31,14 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 
 class DefaultPipelineUrlBeanImpl constructor(private val commonConfig: CommonConfig) : PipelineUrlBean {
+
+    @Suppress("LongParameterList")
     override fun genBuildDetailUrl(
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        position: String?,
+        stageId: String?,
         needShortUrl: Boolean
     ): String {
         return "${HomeHostUtil

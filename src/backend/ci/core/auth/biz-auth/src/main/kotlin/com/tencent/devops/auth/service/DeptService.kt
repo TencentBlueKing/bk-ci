@@ -49,4 +49,6 @@ interface DeptService {
     fun getUserParentDept(userId: String): Int
 
     fun getDeptByName(deptName: String, userId: String): DeptInfoVo?
+
+    fun getUserDeptInfo(userId: String): Set<String>
 }

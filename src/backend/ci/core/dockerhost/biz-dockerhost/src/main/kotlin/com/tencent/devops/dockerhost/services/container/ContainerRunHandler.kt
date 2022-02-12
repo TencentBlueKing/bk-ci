@@ -40,7 +40,6 @@ import com.tencent.devops.dockerhost.services.generator.DockerEnvLoader
 import com.tencent.devops.dockerhost.services.generator.DockerMountLoader
 import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.RandomUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -86,7 +85,7 @@ class ContainerRunHandler(
                     buildId = buildId,
                     red = true,
                     message = "启动构建环境失败，错误信息:${er.message}",
-                    tag = VMUtils.genStartVMTaskId(vmSeqId.toString()),
+                    tag = taskId(),
                     containerHashId = containerHashId
                 )
                 if (er is NotFoundException) {

@@ -1,0 +1,7 @@
+[v-cloak] {
+    display: none;
+}
+
+.panel.panel-box ul.list-justified>li {
+    width: 130px !important;
+}

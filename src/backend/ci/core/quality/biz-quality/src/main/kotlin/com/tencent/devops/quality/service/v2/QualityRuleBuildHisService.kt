@@ -43,16 +43,21 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
+import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
+import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
+import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.dao.HistoryDao
+import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import com.tencent.devops.quality.pojo.enum.RunElementType
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -60,12 +65,14 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
+@Suppress("NestedBlockDepth")
 class QualityRuleBuildHisService constructor(
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityIndicatorService: QualityIndicatorService,
     private val indicatorService: QualityIndicatorService,
     private val historyDao: HistoryDao,
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
+    private val qualityIndicatorDao: QualityIndicatorDao,
     private val dslContext: DSLContext,
     private val client: Client
 ) {
@@ -78,18 +85,46 @@ class QualityRuleBuildHisService constructor(
         pipelineId: String,
         ruleRequestList: List<RuleCreateRequestV3>
     ): List<RuleCreateResponseV3> {
+        logger.info("QUALITY|ruleRequestList is: $ruleRequestList")
         checkRuleRequest(ruleRequestList)
 
         return ruleRequestList.map { ruleRequest ->
+            // run插件先创建指标
+            // todo performance upsert indicator
+            val indicatorCreateList = ruleRequest.indicators.filter { it.atomCode == RunElementType.RUN.elementType }
+                .map {
+                    IndicatorCreate(
+                        name = it.enName,
+                        cnName = it.enName,
+                        desc = "",
+                        dataType = QualityDataType.INT,
+                        operation = enumValues<QualityOperation>().toList(),
+                        threshold = it.threshold,
+                        elementType = it.atomCode
+                    )
+            }
+            qualityIndicatorService.upsertIndicators(
+                userId = userId,
+                projectId = projectId,
+                indicatorCreateList = indicatorCreateList
+            )
+
             logger.info("start to create rule: $projectId, $pipelineId, ${ruleRequest.name}")
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
                 val indicatorMap = indicators.map { it.enName to it }.toMap()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName }).filter { it.enable ?: false }
-                    .forEach {
-                    val requestIndicator = indicatorMap[it.enName]
-                    checkThresholdType(requestIndicator!!, it)
+                indicatorService.serviceList(atomCode, indicators.map { it.enName })
+                    .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
+                    .filter { it.enable ?: false }.forEach {
+                    val requestIndicator = (indicatorMap[it.enName])!!
+
+                    // 使用上下文变量表示阈值时不检查类型
+                    if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
+                            requestIndicator.atomCode != RunElementType.RUN.elementType) {
+                        checkThresholdType(requestIndicator, it)
+                    }
+
                     indicatorIds.add(RuleCreateRequest.CreateRequestIndicator(
                         it.hashId,
                         requestIndicator.operation,
@@ -262,17 +297,48 @@ class QualityRuleBuildHisService constructor(
         return count
     }
 
-    fun convertGateKeepers(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3): Int {
-        var count = 0
+    fun convertVariables(ruleList: Collection<QualityRule>, buildCheckParamsV3: BuildCheckParamsV3) {
         ruleList.forEach { it ->
+            it.indicators.forEach { indicator ->
+                val realThreshold = EnvUtils.parseEnv(
+                    indicator.threshold,
+                    buildCheckParamsV3.runtimeVariable ?: mapOf()
+                )
+
+                if (indicator.isScriptElementIndicator()) {
+                    val realThresholdType = checkThresholdType(realThreshold)
+                    val userId = buildCheckParamsV3.runtimeVariable?.get("BK_CI_START_USER_ID")
+                    val indicatorUpdate = IndicatorUpdate(
+                        threshold = realThreshold,
+                        thresholdType = realThresholdType.name,
+                        type = IndicatorType.CUSTOM
+                    )
+                    if (userId.isNullOrBlank()) {
+                        throw QualityOpConfigException("userId is empty for start ci")
+                    }
+                    val indicatorUpdateCount = qualityIndicatorDao.update(
+                        userId = userId,
+                        id = HashUtil.decodeIdToLong(indicator.hashId),
+                        indicatorUpdate = indicatorUpdate,
+                        dslContext = dslContext
+                    )
+                    indicator.thresholdType = realThresholdType
+                    logger.info("QUALITY|update indicator type count is: $indicatorUpdateCount")
+                }
+                indicator.threshold = realThreshold
+            }
+            val indicatorCount = qualityRuleBuildHisDao.updateIndicatorThreshold(HashUtil.decodeIdToLong(it.hashId),
+                it.indicators.map { indicator -> indicator.threshold }.joinToString(","))
+            logger.info("QUALITY|convert_indicatorThreshold|${it.indicators}|COUNT|$indicatorCount")
+
             val gateKeepers = (it.gateKeepers ?: listOf()).map { user ->
                 EnvUtils.parseEnv(user, buildCheckParamsV3.runtimeVariable ?: mapOf())
             }
-            count = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
+            val gateKeeperCount = qualityRuleBuildHisDao.updateGateKeepers(HashUtil.decodeIdToLong(it.hashId),
                 gateKeepers?.joinToString(","))
-            logger.info("QUALITY|CONVERTGATEKEEPERS|$gateKeepers|COUNT|$count")
+
+            logger.info("QUALITY|convert_gateKeepers|$gateKeepers|COUNT|$gateKeeperCount")
         }
-        return count
     }
 
     fun updateStatusService(userId: String, ruleBuildId: Long, pass: Boolean): Boolean {
@@ -325,7 +391,8 @@ class QualityRuleBuildHisService constructor(
         logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
-                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name || it?.status == null) {
+                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name ||
+                    it?.status == RuleInterceptResult.PASS.name) {
                     passFlag = true
                 } else {
                     passFlag = false
@@ -397,6 +464,16 @@ class QualityRuleBuildHisService constructor(
                 stageId = it.stageId
             )
             rule
+        }
+    }
+
+    private fun checkThresholdType(threshold: String): QualityDataType {
+        return if (NumberUtils.isDigits(threshold)) {
+            QualityDataType.INT
+        } else if (threshold == "true" || threshold == "false") {
+            QualityDataType.BOOLEAN
+        } else {
+            QualityDataType.FLOAT
         }
     }
 }

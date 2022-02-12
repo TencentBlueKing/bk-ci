@@ -79,7 +79,7 @@ interface ApigwQualityResourceV3 {
         @ApiParam("页目", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目", required = false, defaultValue = "20")
+        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>>
@@ -182,7 +182,43 @@ interface ApigwQualityResourceV3 {
         @ApiParam("页号", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("页数", required = false, defaultValue = "20")
+        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<RuleInterceptHistory>>
+
+    @ApiOperation("获取Stream红线列表")
+    @Path("/ruleBuildHis/list")
+    @GET
+    fun listBuildHisRule(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("规则ID", required = false)
+        @QueryParam("ruleHashId")
+        ruleHashId: String?,
+        @ApiParam("开始时间", required = false)
+        @QueryParam("startTime")
+        startTime: Long?,
+        @ApiParam("截止时间", required = false)
+        @QueryParam("endTime")
+        endTime: Long?,
+        @ApiParam("页号", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>

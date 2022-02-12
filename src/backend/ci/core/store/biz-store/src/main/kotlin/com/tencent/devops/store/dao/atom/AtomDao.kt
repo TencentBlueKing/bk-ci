@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -42,11 +43,15 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
+import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
@@ -408,6 +413,7 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun getVersionsByAtomCode(
         dslContext: DSLContext,
         projectCode: String,
@@ -417,9 +423,9 @@ class AtomDao : AtomBaseDao() {
         val a = TAtom.T_ATOM.`as`("a")
         val b = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("b")
         val t = dslContext.select(
-            a.VERSION.`as`("version"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.ATOM_STATUS.`as`("atomStatus")
+            a.VERSION.`as`(KEY_VERSION),
+            a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+            a.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
         ).from(a)
             .where(
                 generateGetPipelineAtomCondition(
@@ -431,9 +437,9 @@ class AtomDao : AtomBaseDao() {
             )
             .union(
                 dslContext.select(
-                    a.VERSION.`as`("version"),
-                    a.CREATE_TIME.`as`("createTime"),
-                    a.ATOM_STATUS.`as`("atomStatus")
+                    a.VERSION.`as`(KEY_VERSION),
+                    a.CREATE_TIME.`as`(KEY_CREATE_TIME),
+                    a.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
                 ).from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
                     .where(
                         generateGetPipelineAtomCondition(
@@ -451,7 +457,35 @@ class AtomDao : AtomBaseDao() {
                     )
             )
             .asTable("t")
-        return dslContext.select().from(t).orderBy(t.field("createTime")!!.desc()).fetch()
+        val firstVersion = JooqUtils.subStr(
+            str = t.field(KEY_VERSION) as Field<String>,
+            delim = ".",
+            count = 1
+        ).`as`("firstVersion")
+        val secondVersion = JooqUtils.subStr(
+            str = JooqUtils.subStr(
+                str = t.field(KEY_VERSION) as Field<String>,
+                delim = ".",
+                count = -2
+            ),
+            delim = ".",
+            count = 1
+        ).`as`("secondVersion")
+        val thirdVersion = JooqUtils.subStr(
+            str = t.field(KEY_VERSION) as Field<String>,
+            delim = ".",
+            count = -1
+        ).`as`("thirdVersion")
+        return dslContext.select(
+            t.field(KEY_VERSION),
+            t.field(KEY_CREATE_TIME),
+            t.field(KEY_ATOM_STATUS),
+            firstVersion,
+            secondVersion,
+            thirdVersion
+        ).from(t)
+            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+            .fetch()
     }
 
     fun getPipelineAtoms(
@@ -779,13 +813,6 @@ class AtomDao : AtomBaseDao() {
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
                 .execute()
-        }
-    }
-
-    fun serviceListAllAtom(dslContext: DSLContext) {
-        with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where()
         }
     }
 

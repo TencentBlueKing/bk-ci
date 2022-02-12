@@ -180,6 +180,9 @@ interface ServicePTemplateResource {
     fun listTemplateById(
         @ApiParam("模板ID", required = true)
         templateIds: Collection<String>,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String?,
         @ApiParam("模版类型", required = false)
         @QueryParam("templateType")
         templateType: TemplateType?

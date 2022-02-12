@@ -171,7 +171,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             )
         )
 
-        val container = containerBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
         Preconditions.checkNotNull(
             container, BuildTaskException(
                 errorType = ErrorType.SYSTEM,
@@ -186,7 +186,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
-        containerBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
 
         dispatch(task, pipelineInfo!!, param, vmNames, container!!)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
@@ -219,7 +219,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 pipelineName = pipelineInfo.pipelineName,
                 userId = task.starter,
                 buildId = task.buildId,
-                buildNo = pipelineRuntimeService.getBuildInfo(task.buildId)!!.buildNum,
+                buildNo = pipelineRuntimeService.getBuildInfo(task.projectId, task.buildId)!!.buildNum,
                 vmSeqId = task.containerId,
                 taskName = param.name,
                 os = param.baseOS.name,
@@ -273,7 +273,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
         )
 
-        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.buildId))
+        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.projectId, task.buildId))
         return dispatchType
     }
 

@@ -46,6 +46,7 @@ data class PipelineBuildAtomTaskEvent(
     val buildId: String,
     val stageId: String,
     val containerId: String,
+    val containerHashId: String?,
     val containerType: String,
     val taskId: String,
     val taskParam: MutableMap<String, Any>,

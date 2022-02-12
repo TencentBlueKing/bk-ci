@@ -52,6 +52,11 @@ const (
 )
 
 func main() {
+	if len(os.Args) == 2 && os.Args[1] == "version" {
+		fmt.Println(config.AgentVersion)
+		systemutil.ExitProcess(0)
+	}
+
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()

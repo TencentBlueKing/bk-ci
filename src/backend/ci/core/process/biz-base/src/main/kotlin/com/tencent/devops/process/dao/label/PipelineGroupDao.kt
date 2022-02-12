@@ -45,7 +45,8 @@ class PipelineGroupDao {
         dslContext: DSLContext,
         projectId: String,
         name: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ): Long {
         logger.info("Create the pipeline group for project $projectId with name $name by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
@@ -57,7 +58,8 @@ class PipelineGroupDao {
                 CREATE_TIME,
                 UPDATE_TIME,
                 CREATE_USER,
-                UPDATE_USER
+                UPDATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -65,7 +67,8 @@ class PipelineGroupDao {
                     now,
                     now,
                     userId,
-                    userId
+                    userId,
+                    id
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -74,6 +77,7 @@ class PipelineGroupDao {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         name: String,
         userId: String
@@ -84,20 +88,21 @@ class PipelineGroupDao {
                 .set(NAME, name)
                 .set(UPDATE_USER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(groupId))
+                .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         userId: String
     ): Boolean {
         logger.info("Delete the pipeline group $groupId by user $userId")
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.deleteFrom(this)
-                .where(ID.eq(groupId))
+                .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
@@ -138,6 +143,18 @@ class PipelineGroupDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(ID.`in`(ids))
                 .fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        projectId: String,
+        groupId: Long
+    ): TPipelineGroupRecord? {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
+                .fetchOne()
         }
     }
 

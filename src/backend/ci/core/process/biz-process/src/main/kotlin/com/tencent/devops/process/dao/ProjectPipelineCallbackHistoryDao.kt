@@ -56,7 +56,8 @@ class ProjectPipelineCallbackHistoryDao {
         responseCode: Int?,
         responseBody: String?,
         startTime: Long,
-        endTime: Long
+        endTime: Long,
+        id: Long? = null
     ) {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             val now = LocalDateTime.now()
@@ -73,7 +74,8 @@ class ProjectPipelineCallbackHistoryDao {
                 RESPONSE_BODY,
                 START_TIME,
                 END_TIME,
-                CREATED_TIME
+                CREATED_TIME,
+                ID
             ).values(
                 projectId,
                 events,
@@ -86,18 +88,20 @@ class ProjectPipelineCallbackHistoryDao {
                 responseBody,
                 Timestamp(startTime).toLocalDateTime(),
                 Timestamp(endTime).toLocalDateTime(),
-                now
+                now,
+                id
             ).execute()
         }
     }
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ): TProjectPipelineCallbackHistoryRecord? {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

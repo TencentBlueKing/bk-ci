@@ -31,23 +31,22 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
-import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
-import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -82,7 +81,8 @@ import java.util.concurrent.Executors
     "ReturnCount",
     "MagicNumber",
     "ComplexMethod",
-    "LongMethod"
+    "LongMethod",
+    "LargeClass"
 )
 class QualityRuleCheckService @Autowired constructor(
     private val ruleService: QualityRuleService,
@@ -156,7 +156,7 @@ class QualityRuleCheckService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             templateId = null
-        ).filter { it.controlPoint?.name == atomCode }
+        ).filter { it.controlPoint.name == atomCode }
         val ruleList = ruleService.listMatchTask(filterRuleList)
         val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
@@ -172,20 +172,46 @@ class QualityRuleCheckService @Autowired constructor(
             projectId = projectId,
             pipelineId = null,
             templateId = templateId
-        ).filter { it.controlPoint?.name == atomCode }
+        ).filter { it.controlPoint.name == atomCode }
         val ruleList = ruleService.listMatchTask(filterRuleList)
         val isControlPoint = controlPointService.isControlPoint(atomCode, atomVersion, projectId)
         return AtomRuleResponse(isControlPoint, ruleList)
     }
 
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {
-        // 遍历项目下所有拦截规则
-        val ruleList = ruleService.serviceListRuleByPosition(
-            buildCheckParams.projectId,
-            buildCheckParams.position
-        )
+        val pipelineId = buildCheckParams.pipelineId
+        val templateId = buildCheckParams.templateId
+        val ruleList = mutableSetOf<QualityRule>()
+        val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
+                "${buildCheckParams.buildId}|${buildCheckParams.position}")
+        try {
+            watcher.start("listPipelineRange")
+            // 匹配拦截规则
+            if (!pipelineId.isNullOrBlank()) {
+                ruleList.addAll(
+                    ruleService.serviceListByPipelineRange(
+                        buildCheckParams.projectId,
+                        buildCheckParams.pipelineId
+                    ).filter { it.controlPoint.position.name == buildCheckParams.position }
+                )
+            }
+            watcher.stop()
+            watcher.start("listTemplateRange")
+            if (!templateId.isNullOrBlank()) {
+                ruleList.addAll(
+                    ruleService.serviceListByTemplateRange(
+                        buildCheckParams.projectId,
+                        buildCheckParams.templateId
+                    ).filter { it.controlPoint.position.name == buildCheckParams.position }
+                )
+            }
+            watcher.stop()
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500, errorThreshold = 3000)
+        }
 
-        return doCheckRules(buildCheckParams, ruleList)
+        return doCheckRules(buildCheckParams, ruleList.toList())
     }
 
     fun checkBuildHis(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
@@ -199,8 +225,8 @@ class QualityRuleCheckService @Autowired constructor(
         // 更新build id
         qualityRuleBuildHisService.updateBuildId(ruleBuildId, buildCheckParams.buildId)
 
-        // 更新gateKeepers
-        qualityRuleBuildHisService.convertGateKeepers(ruleList, buildCheckParams)
+        // 更新gateKeepers/ruleValue变量
+        qualityRuleBuildHisService.convertVariables(ruleList, buildCheckParams)
 
         val params = BuildCheckParams(
             buildCheckParams.projectId,
@@ -210,8 +236,9 @@ class QualityRuleCheckService @Autowired constructor(
             buildCheckParams.interceptName ?: "",
             System.currentTimeMillis(),
             "",
-            "",
+            buildCheckParams.position,
             buildCheckParams.templateId,
+            buildCheckParams.stageId ?: "",
             buildCheckParams.runtimeVariable
         )
         return doCheckRules(buildCheckParams = params, ruleList = ruleList)
@@ -221,7 +248,7 @@ class QualityRuleCheckService @Autowired constructor(
         with(buildCheckParams) {
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
-                if (!buildCheckParams.taskId.isBlank() && rule.controlPoint.name != buildCheckParams.taskId) {
+                if (buildCheckParams.taskId.isNotBlank() && rule.controlPoint.name != buildCheckParams.taskId) {
                     return@filter false
                 }
                 val gatewayId = rule.gatewayId ?: ""
@@ -239,7 +266,9 @@ class QualityRuleCheckService @Autowired constructor(
             val ruleInterceptList = resultPair.second
 
             // 异步后续的处理
-            executors.execute { checkPostHandle(buildCheckParams, ruleInterceptList, resultList) }
+            executors.execute {
+                checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
+            }
 
             // 记录结果
             val checkTimes = recordHistory(buildCheckParams, ruleInterceptList)
@@ -278,10 +307,17 @@ class QualityRuleCheckService @Autowired constructor(
 
             resultList.add(getRuleCheckSingleResult(rule.name, interceptRecordList, params))
             ruleInterceptList.add(Triple(rule, interceptResult, interceptRecordList))
-            if (!rule.gateKeepers.isNullOrEmpty() && !interceptResult) {
-                qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId),
-                    RuleInterceptResult.WAIT.name)
+
+            val status = if (interceptResult) {
+                RuleInterceptResult.PASS.name
+            } else {
+                if (rule.gateKeepers.isNullOrEmpty()) {
+                    RuleInterceptResult.FAIL.name
+                } else {
+                    RuleInterceptResult.WAIT.name
+                }
             }
+            qualityRuleBuildHisService.updateStatus(HashUtil.decodeIdToLong(rule.hashId), status)
         }
 
         return Pair(resultList, ruleInterceptList)
@@ -335,7 +371,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 if (!rule.gateKeepers.isNullOrEmpty() &&
                                     finalRule?.status == RuleInterceptResult.WAIT) {
                                     doRuleOperation(
-                                        this, resultList, QualityRule.RuleOp(
+                                        this,
+                                        resultList.filter { result -> result.ruleName == rule.name },
+                                        QualityRule.RuleOp(
                                             operation = RuleOperation.AUDIT,
                                             notifyTypeList = ruleOp.notifyTypeList,
                                             notifyGroupList = ruleOp.notifyGroupList,
@@ -351,7 +389,9 @@ class QualityRuleCheckService @Autowired constructor(
                         } else {
                             logger.info("op list is empty for rule and build: $buildId, $rule")
                             doRuleOperation(
-                                this, resultList, QualityRule.RuleOp(
+                                this,
+                                resultList.filter { result -> result.ruleName == rule.name },
+                                QualityRule.RuleOp(
                                     operation = rule.operation,
                                     notifyTypeList = rule.notifyTypeList,
                                     notifyGroupList = rule.notifyGroupList,
@@ -390,6 +430,8 @@ class QualityRuleCheckService @Autowired constructor(
                     endNotifyUserList = (ruleOp.notifyUserList ?: listOf()).map { user ->
                         EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
                     },
+                    position = buildCheckParams.position,
+                    stageId = buildCheckParams.stageId,
                     runtimeVariable = buildCheckParams.runtimeVariable
                 )
             } else {
@@ -401,11 +443,12 @@ class QualityRuleCheckService @Autowired constructor(
                     buildNo = buildNo,
                     createTime = createTime,
                     resultList = resultList,
-                    auditNotifyTypeList = ruleOp.notifyTypeList ?: listOf(),
                     auditNotifyUserList = (ruleOp.auditUserList
                         ?: listOf()).toSet().map { user ->
                         EnvUtils.parseEnv(user, runtimeVariable ?: mapOf())
                     },
+                    position = buildCheckParams.position,
+                    stageId = buildCheckParams.stageId,
                     runtimeVariable = buildCheckParams.runtimeVariable
                 )
             }
@@ -419,7 +462,7 @@ class QualityRuleCheckService @Autowired constructor(
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
-        val metadataMap = metadataList.map { it.enName to it }.toMap()
+        val metadataMap = metadataList.associateBy { it.enName }
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
@@ -447,7 +490,7 @@ class QualityRuleCheckService @Autowired constructor(
                             break
                         }
 
-                        if (it?.value != null && NumberUtils.isCreatable(it.value)) {
+                        if (it?.value != null && NumberUtils.isDigits(it.value)) {
                             val value = it.value.toInt()
                             result = (result ?: 0) + value
                             // 记录”查看详情“里面跳转的基础数据, 记录第一个
@@ -580,7 +623,7 @@ class QualityRuleCheckService @Autowired constructor(
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
             val buildId = params["buildId"] ?: ""
-            val taskId = getTaskId(projectId, pipelineId, params)
+            val taskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID] ?: ""
             if (taskId.isBlank()) {
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
@@ -590,28 +633,13 @@ class QualityRuleCheckService @Autowired constructor(
             } else {
                 val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
                 val fillDetailUrl = detailUrl.replace("##projectId##", projectId)
-                    .replace("##taskId##", taskId.toString())
+                    .replace("##taskId##", taskId)
                     .replace("##buildId##", buildId)
                     .replace("##detail##", record.detail!!)
-                "<a target='_blank' href='$fillDetailUrl'>查看详情</a>"
+                "<a target='_blank' href='/console$fillDetailUrl'>查看详情</a>"
             }
         } else {
             record.logPrompt ?: ""
-        }
-    }
-
-    private fun getTaskId(projectId: String, pipelineId: String, params: Map<String, String>): String {
-        val paramTaskId = params[CodeccUtils.BK_CI_CODECC_TASK_ID]
-
-        return if (paramTaskId.isNullOrBlank()) {
-            try {
-                client.get(ServiceCodeccElementResource::class).get(projectId, pipelineId).data?.taskId ?: ""
-            } catch (e: Exception) {
-                logger.warn("fail to get codecc task id: ${e.message}")
-                ""
-            }
-        } else {
-            paramTaskId
         }
     }
 
@@ -666,22 +694,20 @@ class QualityRuleCheckService @Autowired constructor(
         buildNo: String,
         createTime: LocalDateTime,
         resultList: List<RuleCheckSingleResult>,
-        auditNotifyTypeList: List<NotifyType>,
         auditNotifyUserList: List<String>,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
-        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
-        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, runtimeVariable)
+        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: ""
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
         // 获取通知用户集合
         val notifyUserSet = auditNotifyUserList.toMutableSet()
         val triggerUserId = runtimeVariable?.get(PIPELINE_START_WEBHOOK_USER_ID)
             ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
-
-        // 获取拦截列表
-        // val interceptList = getInterceptList(interceptRecordList)
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
@@ -701,7 +727,6 @@ class QualityRuleCheckService @Autowired constructor(
         val sendNotifyMessageTemplateRequest = SendNotifyMessageTemplateRequest(
             templateCode = PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2,
             receivers = notifyUserSet,
-            notifyType = auditNotifyTypeList.map { it.name }.toMutableSet(),
             cc = mutableSetOf(triggerUserId),
             titleParams = mapOf(
                 "projectName" to projectName,
@@ -736,11 +761,13 @@ class QualityRuleCheckService @Autowired constructor(
         endNotifyTypeList: List<NotifyType>,
         endNotifyGroupList: List<String>,
         endNotifyUserList: List<String>,
+        position: String,
+        stageId: String?,
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
-        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
-        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, runtimeVariable)
+        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: ""
+        val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
         // 获取通知用户集合
@@ -753,8 +780,9 @@ class QualityRuleCheckService @Autowired constructor(
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 
-        // 获取拦截列表
-        // val interceptList = getInterceptList(interceptRecordList)
+        if (triggerUserId.isNotBlank()) {
+            notifyUserSet.add(triggerUserId)
+        }
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
@@ -792,13 +820,6 @@ class QualityRuleCheckService @Autowired constructor(
         logger.info("[$buildId]|sendAuditNotification|result=$sendNotifyResult")
     }
 
-    private fun getInterceptList(interceptRecordList: List<QualityRuleInterceptRecord>): List<String> {
-        return interceptRecordList.filter { !it.pass }.map {
-            val oppositeOperationName = ThresholdOperationUtil.getOperationOppositeName(it.operation)
-            "${it.indicatorName}当前值(${it.actualValue}) $oppositeOperationName 期望值(${it.value})"
-        }
-    }
-
     fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
         val interceptList = historyService.serviceListByBuildIdAndResult(
             projectId = projectId,
@@ -812,7 +833,7 @@ class QualityRuleCheckService @Autowired constructor(
         val ruleRecordList = ruleService.serviceListRuleByIds(projectId, ruleIdList.toSet())
         ruleRecordList.forEach {
             val auditNotifyUserList = it.auditUserList ?: listOf()
-            if (it.controlPoint?.name == taskId) {
+            if (it.controlPoint.name == taskId) {
                 auditUserList.addAll(auditNotifyUserList)
             }
         }
@@ -823,15 +844,6 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
-    }
-
-    private fun getPipelineName(projectId: String, pipelineId: String): String {
-        val map = getPipelineIdToNameMap(projectId, setOf(pipelineId))
-        return map[pipelineId] ?: ""
-    }
-
-    private fun getPipelineIdToNameMap(projectId: String, pipelineIdSet: Set<String>): Map<String, String> {
-        return client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIdSet).data!!
     }
 
     companion object {

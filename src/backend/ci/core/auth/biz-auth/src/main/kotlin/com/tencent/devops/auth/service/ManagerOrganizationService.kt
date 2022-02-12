@@ -256,7 +256,7 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ManagerOrganizationService::class.java)
+        private val logger = LoggerFactory.getLogger(ManagerOrganizationService::class.java)
         const val createAction = "create"
         const val updateAction = "update"
     }

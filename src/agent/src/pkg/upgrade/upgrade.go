@@ -51,35 +51,35 @@ func DoPollAndUpgradeAgent() {
 func agentUpgrade() {
 	checkResult, err := api.CheckUpgrade()
 	if err != nil {
-		logs.Error("check upgrade err: ", err.Error())
+		logs.Error("[agentUpgrade]|check upgrade err: ", err.Error())
 		return
 	}
 	if !checkResult.IsOk() {
-		logs.Error("check upgrade failed: ", checkResult.Message)
+		logs.Error("[agentUpgrade]|check upgrade failed: ", checkResult.Message)
 		return
 	}
 
 	if checkResult.IsAgentDelete() {
-		logs.Info("agent is deleted, skip")
+		logs.Info("[agentUpgrade]|agent is deleted, skip")
 		return
 	}
 
 	if !(checkResult.Data).(bool) {
-		logs.Info("no need to upgrade agent, skip")
+		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
 	}
 
-	logs.Info("download upgrade files start")
+	logs.Info("[agentUpgrade]|download upgrade files start")
 	agentChanged, workerChanged, err := downloadUpgradeFiles()
 	if err != nil {
-		logs.Error("download upgrade files failed", err.Error())
+		logs.Error("[agentUpgrade]|download upgrade files failed", err.Error())
 		return
 	}
-	logs.Info("download upgrade files done")
+	logs.Info("[agentUpgrade]|download upgrade files done")
 
 	err = DoUpgradeOperation(agentChanged, workerChanged)
 	if err != nil {
-		logs.Error("do upgrade operation failed", err)
+		logs.Error("[agentUpgrade]|do upgrade operation failed", err)
 	}
 }
 
@@ -88,53 +88,57 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	upgradeDir := systemutil.GetUpgradeDir()
 	os.MkdirAll(upgradeDir, os.ModePerm)
 
-	logs.Info("download upgrader start")
+	logs.Info("[agentUpgrade]|download upgrader start")
 	_, err = api.DownloadUpgradeFile("upgrade/"+config.GetServerUpgraderFile(), upgradeDir+"/"+config.GetClientUpgraderFile())
 	if err != nil {
-		logs.Error("download upgrader failed", err)
+		logs.Error("[agentUpgrade]|download upgrader failed", err)
 		return false, false, errors.New("download upgrader failed")
 	}
-	logs.Info("download upgrader done")
+	logs.Info("[agentUpgrade]|download upgrader done")
 
-	logs.Info("download daemon start")
+	logs.Info("[agentUpgrade]|download daemon start")
 	newDaemonMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerDaemonFile(), upgradeDir+"/"+config.GetClientDaemonFile())
 	if err != nil {
-		logs.Error("download daemon failed", err)
+		logs.Error("[agentUpgrade]|download daemon failed", err)
 		return false, false, errors.New("download daemon failed")
 	}
-	logs.Info("download daemon done")
+	logs.Info("[agentUpgrade]|download daemon done")
 
-	logs.Info("download agent start")
+	logs.Info("[agentUpgrade]|download agent start")
 	newAgentMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), upgradeDir+"/"+config.GetClienAgentFile())
 	if err != nil {
-		logs.Error("download agent failed", err)
+		logs.Error("[agentUpgrade]|download agent failed", err)
 		return false, false, errors.New("download agent failed")
 	}
-	logs.Info("download agent done")
+	logs.Info("[agentUpgrade]|download agent done")
 
-	logs.Info("download worker start")
+	logs.Info("[agentUpgrade]|download worker start")
 	newWorkerMd5, err := api.DownloadUpgradeFile("jar/"+config.WorkAgentFile, upgradeDir+"/"+config.WorkAgentFile)
 	if err != nil {
-		logs.Error("download worker failed", err)
+		logs.Error("[agentUpgrade]|download worker failed", err)
 		return false, false, errors.New("download worker failed")
 	}
-	logs.Info("download worker done")
+	logs.Info("[agentUpgrade]|download worker done")
 
 	daemonMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClientDaemonFile())
 	if err != nil {
-		logs.Error("check daemon md5 failed", err)
+		logs.Error("[agentUpgrade]|check daemon md5 failed", err)
 		return false, false, errors.New("check daemon md5 failed")
 	}
 	agentMd5, err := fileutil.GetFileMd5(workDir + "/" + config.GetClienAgentFile())
 	if err != nil {
-		logs.Error("check agent md5 failed", err)
+		logs.Error("[agentUpgrade]|check agent md5 failed", err)
 		return false, false, errors.New("check agent md5 failed")
 	}
 	workerMd5, err := fileutil.GetFileMd5(workDir + "/" + config.WorkAgentFile)
 	if err != nil {
-		logs.Error("check worker md5 failed", err)
+		logs.Error("[agentUpgrade]|check worker md5 failed", err)
 		return false, false, errors.New("check agent md5 failed")
 	}
 
-	return agentMd5 != newAgentMd5 || daemonMd5 != newDaemonMd5, workerMd5 != newWorkerMd5,nil
+	logs.Info("newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
+	logs.Info("newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
+	logs.Info("newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
+	// #4686 devopsDaemon 暂时不考虑单独的替换升级，windows 无法自动升级，仅当devopsAgent有变化时升级。
+	return agentMd5 != newAgentMd5, workerMd5 != newWorkerMd5,nil
 }
