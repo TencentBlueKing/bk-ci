@@ -57,7 +57,7 @@ object ContainerUtils {
         return container.jobControlOption == null || container.jobControlOption!!.enable
     }
 
-    private const val mutexPrefix = "等待互斥锁(Mutex waiting)"
+    private const val mutexPrefix = "互斥中(Mutex waiting)"
 
     fun clearMutexContainerName(container: Container) {
         if (container.name.startsWith(mutexPrefix)) {

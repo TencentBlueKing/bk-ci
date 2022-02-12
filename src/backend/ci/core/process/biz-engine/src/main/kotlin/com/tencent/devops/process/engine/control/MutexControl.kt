@@ -214,7 +214,7 @@ class MutexControl @Autowired constructor(
         val lockedContainerMutexId = redisOperation.get(lockKey)
         // 当没有启用互斥组排队或者互斥组名字为空的时候，则直接排队失败
         if (!mutexGroup.queueEnable) {
-            logContainerMutex(container, mutexGroup, lockedContainerMutexId, msg = "未开启排队(Queue disabled)")
+            logContainerMutex(container, mutexGroup, lockedContainerMutexId, "未开启排队(Queue disabled)", isError = true)
             return ContainerMutexStatus.CANCELED
         }
         val containerMutexId = getMutexContainerId(buildId = container.buildId, containerId = container.containerId)
@@ -229,8 +229,8 @@ class MutexControl @Autowired constructor(
             // 排队等待时间为0的时候，立即超时, 退出队列，并失败, 没有就继续在队列中,timeOut时间为分钟
             if (mutexGroup.timeout == 0 || timeDiff > TimeUnit.MINUTES.toSeconds(mutexGroup.timeout.toLong())) {
                 logContainerMutex(
-                    container, mutexGroup, lockedContainerMutexId,
-                    msg = "排队超时(Queue timeout)[${mutexGroup.timeout} minutes]"
+                    container = container, mutexGroup = mutexGroup, lockedContainerMutexId = lockedContainerMutexId,
+                    msg = "排队超时(Queue timeout)[${mutexGroup.timeout} minutes]", isError = true
                 )
                 quitMutexQueue(
                     projectId = container.projectId,
@@ -254,12 +254,12 @@ class MutexControl @Autowired constructor(
             // 排队队列为0的时候，不做排队
             // 还没有在队列中，则判断队列的数量,如果超过了则排队失败,没有则进入队列.
             if (mutexGroup.queue == 0 || queueSize >= mutexGroup.queue) {
-                logContainerMutex(container, mutexGroup, lockedContainerMutexId, msg = "队列满(Queue full)")
+                logContainerMutex(container, mutexGroup, lockedContainerMutexId, "队列满(Queue full)", isError = true)
                 ContainerMutexStatus.CANCELED
             } else {
                 logContainerMutex(
                     container, mutexGroup, lockedContainerMutexId,
-                    msg = "当前排队数(Queuing)[${queueSize + 1}]. 入队等待(Job enqueue)"
+                    msg = "当前排队数(Queuing)[${queueSize + 1}]. 入队等待(Enqueue)"
                 )
                 // 则进入队列,并返回成功
                 enterMutexQueue(
@@ -297,7 +297,8 @@ class MutexControl @Autowired constructor(
         container: PipelineBuildContainer,
         mutexGroup: MutexGroup,
         lockedContainerMutexId: String?,
-        msg: String
+        msg: String,
+        isError: Boolean = false
     ) {
 
         val message = "互斥组Mutex[${mutexGroup.mutexGroupName}]|" + if (!lockedContainerMutexId.isNullOrBlank()) {
@@ -318,13 +319,23 @@ class MutexControl @Autowired constructor(
             msg
         }
 
-        buildLogPrinter.addYellowLine(
-            buildId = container.buildId,
-            message = message,
-            tag = VMUtils.genStartVMTaskId(container.containerId),
-            jobId = null,
-            executeCount = container.executeCount
-        )
+        if (isError) {
+            buildLogPrinter.addErrorLine(
+                buildId = container.buildId,
+                message = message,
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                jobId = null,
+                executeCount = container.executeCount
+            )
+        } else {
+            buildLogPrinter.addYellowLine(
+                buildId = container.buildId,
+                message = message,
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                jobId = null,
+                executeCount = container.executeCount
+            )
+        }
     }
 
     /**
