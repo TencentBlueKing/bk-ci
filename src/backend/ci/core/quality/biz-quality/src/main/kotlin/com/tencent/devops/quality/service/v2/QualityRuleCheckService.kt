@@ -260,11 +260,13 @@ class QualityRuleCheckService @Autowired constructor(
                 val containsInTemplate = rule.templateRange.contains(buildCheckParams.templateId)
                 return@filter (containsInPipeline || containsInTemplate)
             }
+            logger.info("QUALITY|filterRuleList is: $filterRuleList")
 
             val resultPair = doCheck(projectId, pipelineId, buildId, filterRuleList, runtimeVariable)
             val resultList = resultPair.first
             val ruleInterceptList = resultPair.second
 
+            logger.info("QUALITY|resultList is: $resultList, ruleInterceptList is: $ruleInterceptList")
             // 异步后续的处理
             executors.execute {
                 checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
@@ -332,7 +334,9 @@ class QualityRuleCheckService @Autowired constructor(
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
         // generate result
+        logger.info("QUALITY|ruleInterceptList is: $ruleInterceptList")
         val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
+        logger.info("QUALITY|failRule is: $failRule")
         val allPass = failRule.isEmpty()
         val allEnd = allPass || (!allPass && !failRule.any { it.operation == RuleOperation.AUDIT } &&
                 failRule.all { it.gateKeepers.isNullOrEmpty() })
