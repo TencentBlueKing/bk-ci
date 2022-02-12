@@ -57,6 +57,7 @@ const (
 	ConfigKeySlaveUser         = "devops.slave.user"
 	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
 	ConfigKeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
+	ConfigKeyDetectShell       = "devops.agent.detect.shell"
 	ConfigKeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	ConfigKeyBatchInstall      = "devops.agent.batch.install"
 )
@@ -73,6 +74,7 @@ type AgentConfig struct {
 	SlaveUser         string
 	CollectorOn       bool
 	TimeoutSec        int64
+	DetectShell       bool
 	IgnoreLocalIps    string
 	BatchInstallKey   string
 }
@@ -247,6 +249,7 @@ func LoadAgentConfig() error {
 	if err != nil {
 		timeout = 5
 	}
+	detectShell := conf.DefaultBool(ConfigKeyDetectShell, false)
 
 	ignoreLocalIps := strings.TrimSpace(conf.String(ConfigKeyIgnoreLocalIps))
 	if len(ignoreLocalIps) == 0 {
@@ -278,6 +281,8 @@ func LoadAgentConfig() error {
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
 	GAgentConfig.TimeoutSec = timeout
 	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
+	GAgentConfig.DetectShell = detectShell
+	logs.Info("DetectShell: ", GAgentConfig.DetectShell)
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
@@ -298,6 +303,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
 	content.WriteString(ConfigKeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
+	content.WriteString(ConfigKeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(ConfigKeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)

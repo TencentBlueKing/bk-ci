@@ -34,7 +34,7 @@ import (
 )
 
 func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &api.ThirdPartyBuildInfo{"pid", "bid", "1", ""}
+	buildInfo := &api.ThirdPartyBuildInfo{"pid", "bid", "1", "", ""}
 	file, err := writeStartBuildAgentScript(buildInfo)
 	if err != nil {
 		t.Error("error: ", err.Error())
