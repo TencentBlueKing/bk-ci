@@ -183,7 +183,7 @@ class QualityRuleCheckService @Autowired constructor(
         val templateId = buildCheckParams.templateId
         val ruleList = mutableSetOf<QualityRule>()
         val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
-                "${buildCheckParams.buildId}|${buildCheckParams.position}")
+                "${buildCheckParams.buildId}|$templateId")
         try {
             watcher.start("listPipelineRange")
             // 匹配拦截规则
@@ -266,7 +266,6 @@ class QualityRuleCheckService @Autowired constructor(
             val resultList = resultPair.first
             val ruleInterceptList = resultPair.second
 
-            logger.info("QUALITY|resultList is: $resultList, ruleInterceptList is: $ruleInterceptList")
             // 异步后续的处理
             executors.execute {
                 checkPostHandle(buildCheckParams, ruleInterceptList, resultList)
