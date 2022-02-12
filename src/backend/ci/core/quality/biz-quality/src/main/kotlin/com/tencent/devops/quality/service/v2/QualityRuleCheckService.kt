@@ -708,6 +708,7 @@ class QualityRuleCheckService @Autowired constructor(
         val notifyUserSet = auditNotifyUserList.toMutableSet()
         val triggerUserId = runtimeVariable?.get(PIPELINE_START_WEBHOOK_USER_ID)
             ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
+        notifyUserSet.add(triggerUserId)
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
@@ -734,7 +735,7 @@ class QualityRuleCheckService @Autowired constructor(
                 "buildNo" to buildNo
             ),
             bodyParams = mapOf(
-                "title" to "$pipelineName(#$buildNo)被拦截，待审核(审核人$notifyUserSet)",
+                "title" to "$pipelineName(#$buildNo)被拦截，待审核(审核人$auditNotifyUserList)",
                 "projectName" to projectName,
                 "cc" to triggerUserId,
                 "time" to time,
