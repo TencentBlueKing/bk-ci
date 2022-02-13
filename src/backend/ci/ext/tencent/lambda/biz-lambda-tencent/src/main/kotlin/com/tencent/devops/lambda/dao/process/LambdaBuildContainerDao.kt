@@ -36,6 +36,7 @@ class LambdaBuildContainerDao {
 
     fun getContainer(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String,
         containerId: String
@@ -45,6 +46,7 @@ class LambdaBuildContainerDao {
                 .where(BUILD_ID.eq(buildId))
                 .and(STAGE_ID.eq(stageId))
                 .and(CONTAINER_ID.eq(containerId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }

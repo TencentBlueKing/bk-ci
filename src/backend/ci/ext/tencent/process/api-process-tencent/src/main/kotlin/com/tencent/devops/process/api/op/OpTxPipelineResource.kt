@@ -29,4 +29,16 @@ interface OpTxPipelineResource {
         @QueryParam("creator")
         creator: String
     ): Result<Boolean>
+
+    @ApiOperation("修复流水线状态")
+    @PUT
+    @Path("/{pipelineId}/fixCheckOut")
+    fun fixPipelineCheckOut(
+        @ApiParam("stage数据失效时间", required = false)
+        @QueryParam("stageTimeoutDays")
+        stageTimeoutDays: Long?,
+        @ApiParam("构建数据失效时间", required = false)
+        @QueryParam("buildTimeoutDays")
+        buildTimeoutDays: Long?
+    ): Result<Int>
 }

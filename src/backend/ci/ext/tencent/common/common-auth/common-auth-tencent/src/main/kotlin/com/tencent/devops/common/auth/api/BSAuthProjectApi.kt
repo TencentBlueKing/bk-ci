@@ -65,6 +65,14 @@ class BSAuthProjectApi @Autowired constructor(
         }
     }
 
+    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+        return isProjectMember(user, projectCode, serviceCode)
+    }
+
+    override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+        return getProjectUsers(serviceCode, projectCode, BkAuthGroup.MANAGER).contains(userId)
+    }
+
     private fun isProjectMember(user: String, projectCode: String, serviceCode: AuthServiceCode): Boolean {
         logger.info("isProjectMember, user: $user, projectCode: $projectCode, serviceCode: $serviceCode")
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)

@@ -9,3 +9,5 @@ parameters:
 steps:
   - run: |
       echo "res_repoA_step_id_4 username ${{ parameters.username }}!"
+    if-modify:
+      - "asd/**"

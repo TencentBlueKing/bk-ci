@@ -31,29 +31,15 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.model.process.Tables
-import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
+import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
+import java.time.LocalDateTime
 
 @Repository
 class TencentPipelineBuildDao {
-
-    fun listSuccessBuild(
-        dslContext: DSLContext,
-        pipelineId: String,
-        buildNum: Int
-    ): Result<TPipelineBuildHistoryRecord> {
-        with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.eq(BuildStatus.SUCCEED.ordinal))
-                .and(BUILD_NUM.gt(buildNum))
-                .fetch()
-        }
-    }
 
     fun listScanPipelineBuildList(
         dslContext: DSLContext,
@@ -93,6 +79,35 @@ class TencentPipelineBuildDao {
                 where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
             }
             where.orderBy(END_TIME.desc())
+                .fetch()
+        }
+    }
+
+    fun listCheckOutErrorStage(
+        dslContext: DSLContext,
+        stageTimeoutDays: Long
+    ): Collection<TPipelineBuildStageRecord> {
+        return with(Tables.T_PIPELINE_BUILD_STAGE) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(BuildStatus.RUNNING.ordinal).and(END_TIME.isNotNull)
+                    .and(CHECK_OUT.notLike("%QUALITY_CHECK_WAIT%")))
+                .or(STATUS.eq(BuildStatus.RUNNING.ordinal)
+                    .and(CHECK_OUT.like("%QUALITY_CHECK_WAIT%"))
+                    .and(END_TIME.lt(LocalDateTime.now().minusDays(stageTimeoutDays)))
+                )
+                .fetch()
+        }
+    }
+
+    fun listRunningErrorBuild(
+        dslContext: DSLContext,
+        buildTimeoutDays: Long
+    ): Collection<TPipelineBuildHistoryRecord> {
+        return with(Tables.T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(STATUS.eq(BuildStatus.RUNNING.ordinal)
+                    .and(START_TIME.lt(LocalDateTime.now().minusDays(buildTimeoutDays)))
+                )
                 .fetch()
         }
     }

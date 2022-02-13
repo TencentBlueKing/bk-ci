@@ -93,11 +93,11 @@ open class PipelineTimerService @Autowired constructor(
         }
     }
 
-    open fun deleteTimer(pipelineId: String, userId: String): Result<Boolean> {
+    open fun deleteTimer(projectId: String, pipelineId: String, userId: String): Result<Boolean> {
         var count = 0
-        val timerRecord = pipelineTimerDao.get(dslContext, pipelineId)
+        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId)
         if (timerRecord != null) {
-            count = pipelineTimerDao.delete(dslContext, pipelineId)
+            count = pipelineTimerDao.delete(dslContext, projectId, pipelineId)
             // 终止定时器
             pipelineEventDispatcher.dispatch(
                 PipelineTimerChangeEvent(
@@ -113,8 +113,8 @@ open class PipelineTimerService @Autowired constructor(
         return if (count > 0) Result(true) else Result(ERROR_DEL_PIPELINE_TIMER.toInt(), "删除流水线${pipelineId}定时触发调度失败！")
     }
 
-    open fun get(pipelineId: String): PipelineTimer? {
-        val timerRecord = pipelineTimerDao.get(dslContext, pipelineId) ?: return null
+    open fun get(projectId: String, pipelineId: String): PipelineTimer? {
+        val timerRecord = pipelineTimerDao.get(dslContext, projectId, pipelineId) ?: return null
         return convert(timerRecord)
     }
 

@@ -51,6 +51,9 @@ interface UserOperationParamsResource {
         @ApiParam("模板ID", required = false)
         @QueryParam("templateId")
         id: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam("当前流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String
@@ -63,6 +66,9 @@ interface UserOperationParamsResource {
         @ApiParam("ccId", required = false)
         @QueryParam("ccId")
         id: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam("当前流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String

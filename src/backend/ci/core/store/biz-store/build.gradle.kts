@@ -39,4 +39,5 @@ dependencies {
     api(project(":core:store:model-store"))
     testImplementation(project(":core:common:common-test"))
     api("net.coobird:thumbnailator")
+    api("org.springframework.boot:spring-boot-starter-aop")
 }

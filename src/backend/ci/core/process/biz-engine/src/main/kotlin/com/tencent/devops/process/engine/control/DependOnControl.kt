@@ -66,8 +66,11 @@ class DependOnControl @Autowired constructor(
         var foundFailure = false
         var foundSkip = false
         var successCnt = 0
-        val jobStatusMap = pipelineContainerService.listContainers(container.buildId, container.stageId)
-            .associate { it.containerId to it.status }
+        val jobStatusMap = pipelineContainerService.listContainers(
+            projectId = container.projectId,
+            buildId = container.buildId,
+            stageId = container.stageId
+        ).associate { it.containerId to it.status }
 
         for (it in dependRel.entries) {
             val dependOnJobStatus = jobStatusMap[it.key]

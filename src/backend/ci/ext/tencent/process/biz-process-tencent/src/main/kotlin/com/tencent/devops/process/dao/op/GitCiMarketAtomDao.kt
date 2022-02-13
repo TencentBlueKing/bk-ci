@@ -45,30 +45,23 @@ class GitCiMarketAtomDao {
     ) {
         with(TPipelineGitciAtom.T_PIPELINE_GITCI_ATOM) {
             gitCiMarketAtomReq.atomCodeList.forEach {
-                val existAtomCodes = dslContext.selectFrom(this)
-                    .where(ATOM_CODE.eq(it))
-                    .fetch()
-                if (existAtomCodes.isNotEmpty) {
-                    dslContext.update(this)
-                        .set(DESC, gitCiMarketAtomReq.desc)
-                        .set(UPDATE_TIME, LocalDateTime.now())
-                        .set(MODIFY_USER, userId)
-                        .where(ATOM_CODE.eq(it))
-                        .execute()
-                } else {
-                    dslContext.insertInto(
+                dslContext.insertInto(
                     this,
-                        ATOM_CODE,
-                        DESC,
-                        UPDATE_TIME,
-                        MODIFY_USER
-                    ).values(
-                        it,
-                        gitCiMarketAtomReq.desc,
-                        LocalDateTime.now(),
-                        userId
-                    ).execute()
-                }
+                    ATOM_CODE,
+                    DESC,
+                    UPDATE_TIME,
+                    MODIFY_USER
+                ).values(
+                    it,
+                    gitCiMarketAtomReq.desc,
+                    LocalDateTime.now(),
+                    userId
+                )
+                    .onDuplicateKeyUpdate()
+                    .set(DESC, gitCiMarketAtomReq.desc)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(MODIFY_USER, userId)
+                    .execute()
             }
         }
     }

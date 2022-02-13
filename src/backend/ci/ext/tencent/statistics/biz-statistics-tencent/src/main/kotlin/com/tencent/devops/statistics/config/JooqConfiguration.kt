@@ -60,7 +60,6 @@ class JooqConfiguration {
         injectionPoint: InjectionPoint
     ): DSLContext {
         val annotatedElement: AnnotatedElement = injectionPoint.annotatedElement
-        println(annotatedElement.javaClass.name)
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
@@ -86,7 +85,7 @@ class JooqConfiguration {
 
     @Bean
     fun processJooqConfiguration(
-        @Qualifier("processDataSource")
+        @Qualifier("shardingDataSource")
         processDataSource: DataSource
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
