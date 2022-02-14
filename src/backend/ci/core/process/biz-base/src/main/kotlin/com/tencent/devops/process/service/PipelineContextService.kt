@@ -170,9 +170,8 @@ class PipelineContextService @Autowired constructor(
         buildStepContext(c, variables, contextMap, outputArrayMap)
 
         // #6071 如果当前job为矩阵则追加矩阵上下文
-        if (outputArrayMap != null && c.id?.let { it == containerId } != true) return
-        if (c.id?.let { it == containerId } == true) {
-            // in matrix
+        if (outputArrayMap != null && c.id?.let { it == containerId } == true) {
+            // current in matrix
             c.fetchMatrixContext()?.let { contextMap.putAll(it) }
         } else {
             // not in matrix
