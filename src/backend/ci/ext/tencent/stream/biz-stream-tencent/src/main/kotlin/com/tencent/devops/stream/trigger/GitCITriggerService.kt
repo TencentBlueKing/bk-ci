@@ -572,7 +572,7 @@ class GitCITriggerService @Autowired constructor(
                 }
                 // 源分支没有，目标分支有，变更列表没有，说明是目标分支新增的，加入文件列表
                 target !in sourceBranchYamlPathList && target !in changeSet -> {
-                    comparedMap[target] = CheckType.NO_TRIGGER
+                    comparedMap[target] = CheckType.NO_NEED_CHECK
                 }
             }
         }

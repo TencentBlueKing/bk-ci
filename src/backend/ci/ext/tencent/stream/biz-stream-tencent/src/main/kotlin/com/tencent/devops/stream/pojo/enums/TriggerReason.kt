@@ -70,9 +70,9 @@ enum class TriggerReason(val summary: String, val detail: String) {
     CREATE_QUALITY_RULRS_ERROR("Create quality rules error", "Create quality rules error: %s"),
     MR_BRANCH_FILE_ERROR(
         "Mr changelist files not incomplete. Stream not trigger.",
-        "In the case where the source branch has files and the target branch does not, " +
+        "In the case where the source branch has file %s and the target branch does not, " +
                 "there are none in the mr changelist" +
-                "Stream not trigger."
+                " .Stream not trigger."
     ),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",

@@ -64,7 +64,7 @@ class GitCITriggerServiceTest {
         val target = setOf("1", "2")
         val changeSet = setOf("1")
         val result = gitCITriggerService.checkMrYamlPathList(sources, target, changeSet)
-        val compare = mapOf("2" to CheckType.NO_TRIGGER, "3" to CheckType.NO_TRIGGER)
+        val compare = mapOf("2" to CheckType.NO_NEED_CHECK, "3" to CheckType.NO_TRIGGER)
         assert(result == compare)
     }
 }
