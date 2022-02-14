@@ -213,7 +213,7 @@ class GitRequestEventHandle @Autowired constructor(
             branch = defaultBranch,
             targetBranch = null,
             commitId = latestCommit?.id ?: "0",
-            commitMsg = latestCommit?.message,
+            commitMsg = gitNoteEvent.objectAttributes.note,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
             userId = latestCommit?.author_name ?: "",

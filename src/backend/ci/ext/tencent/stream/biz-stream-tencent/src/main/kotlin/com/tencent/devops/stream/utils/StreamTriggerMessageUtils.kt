@@ -74,6 +74,9 @@ class StreamTriggerMessageUtils @Autowired constructor(
                     }
                 }
             }
+            TGitObjectKind.NOTE.value -> {
+                "Note [${event.commitMsg?.take(7)}...] submitted by ${event.userId}"
+            }
             else -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
