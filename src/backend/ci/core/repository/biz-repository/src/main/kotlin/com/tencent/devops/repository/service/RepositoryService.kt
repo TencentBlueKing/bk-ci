@@ -984,7 +984,7 @@ class RepositoryService @Autowired constructor(
         val gitRepoIds =
             repositoryRecordList.filter {
                 it.type == ScmType.CODE_GIT.name ||
-                    it.type == ScmType.CODE_TGIT.name
+                        it.type == ScmType.CODE_TGIT.name
             }.map { it.repositoryId }.toSet()
         val gitAuthMap =
             repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
@@ -1393,12 +1393,14 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                            )
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                            )
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
@@ -1421,21 +1423,25 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                            )
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                            )
                         }
                         if (list.size < 3) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                            )
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                            )
                         }
                         scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
@@ -1464,12 +1470,14 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                            )
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                            )
                         }
                         val passPhrase = if (list.size > 2) {
                             val p = list[2]
@@ -1495,12 +1503,14 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                            )
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                            )
                         }
                         if (list.size < 3) {
                             logger.info("TGit check type is username+password,don't check, return")
@@ -1526,12 +1536,14 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                            )
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                            )
                         }
                         if (list.size < 3) {
                             logger.info("TGit check type is username+password,don't check, return")
@@ -1576,16 +1588,19 @@ class RepositoryService @Autowired constructor(
                 val username = list[0]
                 if (username.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                    )
                 }
                 if (list.size < 2) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                    )
                 }
                 val password = list[1]
                 if (password.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                    )
                 }
                 scmService.checkUsernameAndPassword(
                     projectName = repo.projectName,
