@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTXPipelineResourceV3 {
 
-    @ApiOperation("导出流水线yaml,gitci",tags = ["v3_app_pipeline_stream_yaml","v3_user_pipeline_stream_yaml"])
+    @ApiOperation("导出流水线yaml,gitci", tags = ["v3_app_pipeline_stream_yaml", "v3_user_pipeline_stream_yaml"])
     @GET
     @Path("/{pipelineId}/stream/yaml")
     fun exportPipelineGitCI(
