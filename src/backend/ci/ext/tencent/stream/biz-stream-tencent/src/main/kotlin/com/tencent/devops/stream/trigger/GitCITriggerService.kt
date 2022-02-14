@@ -547,6 +547,7 @@ class GitCITriggerService @Autowired constructor(
         return Pair(comparedMap.map { YamlPathListEntry(it.key, it.value) }, changeSet)
     }
 
+    @Suppress("ComplexMethod")
     fun checkMrYamlPathList(
         sourceBranchYamlPathList: Set<String>,
         targetBranchYamlPathList: Set<String>,
