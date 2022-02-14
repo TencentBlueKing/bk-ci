@@ -1503,7 +1503,7 @@ class RepositoryService @Autowired constructor(
                                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         if (list.size < 3) {
-                            logger.info("工蜂外网，username+password校验方式，不校验，直接返回")
+                            logger.info("TGit check type is username+password,don't check, return")
                             return
                         }
                         val password = list[2]
@@ -1534,7 +1534,7 @@ class RepositoryService @Autowired constructor(
                                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY))
                         }
                         if (list.size < 3) {
-                            logger.info("工蜂外网，username+password校验方式，不校验，直接返回")
+                            logger.info("TGit check type is username+password,don't check, return")
                             return
                         }
                         val password = list[2]
