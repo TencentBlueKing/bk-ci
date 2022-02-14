@@ -149,8 +149,6 @@ class QualityIndicatorService @Autowired constructor(
         return serviceListIndicatorRecord(indicatorRecords)
     }
 
-
-
     fun serviceListALL(indicatorIds: Collection<Long>): List<QualityIndicator> {
         val indicatorTMap = indicatorDao.listByIds(dslContext, indicatorIds)?.map { it.id to it }?.toMap()
         return indicatorIds.map { id ->
