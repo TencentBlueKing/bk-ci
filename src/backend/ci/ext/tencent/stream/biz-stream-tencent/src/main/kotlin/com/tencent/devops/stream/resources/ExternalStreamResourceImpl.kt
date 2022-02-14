@@ -71,7 +71,6 @@ class ExternalStreamResourceImpl(
                     userId = oauthUserId,
                     projectId = gitProjectId!!.toString()
                 )
-
             }
             return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
         }
