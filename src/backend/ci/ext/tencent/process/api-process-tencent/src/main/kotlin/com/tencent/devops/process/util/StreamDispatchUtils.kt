@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
@@ -103,7 +104,8 @@ object StreamDispatchUtils {
         defaultImage: String,
         resources: Resources? = null,
         context: Map<String, String>? = null,
-        containsMatrix: Boolean? = false
+        containsMatrix: Boolean? = false,
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ): DispatchType {
 
         val poolName = EnvUtils.parseEnv(job.runsOn.poolName, context ?: mapOf())
@@ -169,12 +171,7 @@ object StreamDispatchUtils {
                     var user = ""
                     var password = ""
                     if (!container.credentials.isNullOrEmpty()) {
-                        val ticketsMap = CommonCredentialUtils.getCredential(
-                            client = client,
-                            projectId = projectCode,
-                            credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                            type = CredentialType.USERNAME_PASSWORD
-                        )
+                        val ticketsMap = getTicket(client, projectCode, container, context, buildTemplateAcrossInfo)
                         user = ticketsMap["v1"] as String
                         password = ticketsMap["v2"] as String
                     }
@@ -201,6 +198,36 @@ object StreamDispatchUtils {
         } else {
             throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
         }
+    }
+
+    private fun getTicket(
+        client: Client,
+        projectCode: String,
+        container: Container2,
+        context: Map<String, String>?,
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
+    ): MutableMap<String, String> {
+        val ticketsMap = try {
+            CommonCredentialUtils.getCredential(
+                client = client,
+                projectId = projectCode,
+                credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
+                type = CredentialType.USERNAME_PASSWORD
+            )
+        } catch (ignore: Exception) {
+            // 没有跨项目的模板引用就直接扔出错误
+            if (buildTemplateAcrossInfo == null) {
+                throw ignore
+            }
+            CommonCredentialUtils.getCredential(
+                client = client,
+                projectId = buildTemplateAcrossInfo.targetProjectId,
+                credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
+                type = CredentialType.USERNAME_PASSWORD,
+                acrossProject = true
+            )
+        }
+        return ticketsMap
     }
 
     private fun getEnvName(client: Client, poolName: String, pools: List<ResourcesPools>?): String {

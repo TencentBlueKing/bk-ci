@@ -295,7 +295,7 @@ class ProcessShardingDataSourceConfig {
                 password = datasourcePassword
                 driverClassName = Driver::class.java.name
                 minimumIdle = 1
-                maximumPoolSize = 5
+                maximumPoolSize = 30
                 idleTimeout = 60000
                 connectionInitSql = datasourceInitSql
                 leakDetectionThreshold = datasourceLeakDetectionThreshold
