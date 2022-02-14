@@ -25,25 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.experience.pojo
 
-interface PipelineUrlBean {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    /**
-     * 生成构建详情访问链接
-     */
-    @Suppress("LongParameterList")
-    fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String?,
-        stageId: String?,
-        needShortUrl: Boolean = true
-    ): String
+@ApiModel("蓝盾APP消息类型")
 
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+open class AppNotifyMessage {
+
+    @ApiModelProperty("消息id")
+    var messageId: Long = 0
+
+    @ApiModelProperty("experienceHashId")
+    var experienceHashId: String = ""
+
+    @ApiModelProperty("通知接收者")
+    var receiver: String = ""
+
+    @ApiModelProperty("设备token")
+    var token: String = ""
+
+    @ApiModelProperty("通知内容")
+    var body: String = ""
+
+    @ApiModelProperty("通知标题")
+    var title: String = ""
+
+    @ApiModelProperty("跳转路径")
+    var url: String = ""
+
+    @ApiModelProperty("平台")
+    var platform: String = ""
+    override fun toString(): String {
+        return String.format(
+            "id (%s), receiver(%s), token(%s), platform(%s), title(%s), body(%s) ,url(%s)",
+            messageId, receiver, token, platform, title, body, url
+        )
+    }
 }

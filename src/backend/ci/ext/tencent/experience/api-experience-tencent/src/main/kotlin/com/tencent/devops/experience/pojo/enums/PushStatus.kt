@@ -25,25 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.experience.pojo.enums
 
-interface PipelineUrlBean {
+enum class PushStatus(val status: Int) {
+    SENDING(0),
+    SUCCESS(1),
+    FAILURE(2);
 
-    /**
-     * 生成构建详情访问链接
-     */
-    @Suppress("LongParameterList")
-    fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String?,
-        stageId: String?,
-        needShortUrl: Boolean = true
-    ): String
-
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    companion object {
+        fun get(status: Int): PushStatus {
+            values().forEach {
+                if (status == it.status) return it
+            }
+            throw IllegalArgumentException("No enum for constant $status")
+        }
+    }
 }

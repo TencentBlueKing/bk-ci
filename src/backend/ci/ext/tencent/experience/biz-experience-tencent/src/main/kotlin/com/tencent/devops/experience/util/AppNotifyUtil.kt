@@ -25,25 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.experience.util
 
-interface PipelineUrlBean {
+import com.tencent.devops.experience.pojo.AppNotifyMessage
 
+@SuppressWarnings("LongParameterList")
+object AppNotifyUtil {
     /**
-     * 生成构建详情访问链接
+     * 标题：“【${应用名}】 ${版本号} 更新啦”。
+     * 内容：“【${应用名}】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>”
      */
-    @Suppress("LongParameterList")
-    fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String?,
-        stageId: String?,
-        needShortUrl: Boolean = true
-    ): String
-
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
+    fun makeMessage(
+        experienceName: String,
+        appVersion: String,
+        experienceHashId: String,
+        receiver: String
+    ): AppNotifyMessage {
+        val message = AppNotifyMessage()
+        message.receiver = receiver
+        message.title = "【$experienceName】 $appVersion 更新啦"
+        message.body = "【$experienceName】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>"
+        message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"
+        message.experienceHashId = experienceHashId
+        return message
+    }
 }

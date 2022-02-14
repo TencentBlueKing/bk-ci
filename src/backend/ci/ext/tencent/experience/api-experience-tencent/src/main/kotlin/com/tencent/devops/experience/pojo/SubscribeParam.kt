@@ -25,25 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.bean
+package com.tencent.devops.experience.pojo
 
-interface PipelineUrlBean {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    /**
-     * 生成构建详情访问链接
-     */
-    @Suppress("LongParameterList")
-    fun genBuildDetailUrl(
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        position: String?,
-        stageId: String?,
-        needShortUrl: Boolean = true
-    ): String
-
-    /**
-     * 生成手机侧的构建详情访问链接
-     */
-    fun genAppBuildDetailUrl(projectCode: String, pipelineId: String, buildId: String): String
-}
+@ApiModel("订阅参数")
+data class SubscribeParam(
+    @ApiModelProperty("experienceHashId", required = true)
+    val experienceHashId: String
+)

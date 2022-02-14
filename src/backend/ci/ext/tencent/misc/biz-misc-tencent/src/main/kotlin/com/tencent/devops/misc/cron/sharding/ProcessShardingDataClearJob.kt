@@ -243,7 +243,7 @@ class ProcessShardingDataClearJob @Autowired constructor(
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,
                 handlePageSize = DEFAULT_PAGE_SIZE,
-                isCompletelyDelete = false
+                isCompletelyDelete = true
             )
             doClearShardingDataByBuildId(
                 pipelineHistoryBuildIdList = pipelineHistoryBuildIdList,
