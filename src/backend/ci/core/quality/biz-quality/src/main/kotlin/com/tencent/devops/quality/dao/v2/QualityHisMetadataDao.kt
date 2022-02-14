@@ -38,6 +38,7 @@ import org.springframework.stereotype.Repository
 @Repository@Suppress("ALL")
 class QualityHisMetadataDao {
 
+    // todo can be removed
     fun saveHisOriginMetadata(
         dslContext: DSLContext,
         projectId: String,

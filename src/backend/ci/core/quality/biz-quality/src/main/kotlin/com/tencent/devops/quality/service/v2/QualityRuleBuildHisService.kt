@@ -90,6 +90,7 @@ class QualityRuleBuildHisService constructor(
 
         return ruleRequestList.map { ruleRequest ->
             // run插件先创建指标
+            // todo performance upsert indicator
             val indicatorCreateList = ruleRequest.indicators.filter { it.atomCode == RunElementType.RUN.elementType }
                 .map {
                     IndicatorCreate(

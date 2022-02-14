@@ -110,7 +110,8 @@ open class ScriptTask : ITask() {
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
-                charsetType = charsetType
+                charsetType = charsetType,
+                taskId = buildTask.taskId
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
