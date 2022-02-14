@@ -97,7 +97,7 @@ class ModelStage @Autowired constructor(
         resources: Resources? = null,
         changeSet: Set<String>? = null,
         pipeline: GitProjectPipeline,
-        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
+        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?,
         elementNames: MutableList<QualityElementInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
