@@ -358,22 +358,20 @@ func (m *Mgr) ensureFiles(
 		}
 		r = append(r, f.Targetrelativepath)
 
-		if fd.Servers != nil && len(fd.Servers) > 0 {
-			for _, s := range fd.Servers {
-				if s == nil {
-					continue
-				}
-				count++
-				go func(err chan<- error, host *dcProtocol.Host, req *dcSDK.BKDistFileSender) {
-					t := time.Now().Local()
-					err <- m.ensureSingleFile(handler, host, req, sandbox)
-					d := time.Now().Local().Sub(t)
-					if d > 200*time.Millisecond {
-						blog.Infof("remote: single file cost time for work(%s) from pid(%d) to server(%s): %s, %s",
-							m.work.ID(), pid, host.Server, d.String(), req.Files[0].FilePath)
-					}
-				}(wg, s, sender)
+		for _, s := range fd.Servers {
+			if s == nil {
+				continue
 			}
+			count++
+			go func(err chan<- error, host *dcProtocol.Host, req *dcSDK.BKDistFileSender) {
+				t := time.Now().Local()
+				err <- m.ensureSingleFile(handler, host, req, sandbox)
+				d := time.Now().Local().Sub(t)
+				if d > 200*time.Millisecond {
+					blog.Infof("remote: single file cost time for work(%s) from pid(%d) to server(%s): %s, %s",
+						m.work.ID(), pid, host.Server, d.String(), req.Files[0].FilePath)
+				}
+			}(wg, s, sender)
 		}
 
 		// 分发额外的内容
