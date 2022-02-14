@@ -27,13 +27,11 @@
 package com.tencent.devops.openapi.service
 
 import com.google.common.cache.CacheBuilder
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-class IndexService @Autowired constructor(
-) {
+class IndexService {
     private val indexCache = CacheBuilder.newBuilder()
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
