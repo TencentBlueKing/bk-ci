@@ -112,7 +112,7 @@ class StreamBasicSettingService @Autowired constructor(
             return false
         }
 
-        val userUpdateInfo = updateProjectOrganizationInfo(userId, gitProjectId.toString())
+        val userUpdateInfo = updateProjectOrganizationInfo(gitProjectId.toString(), userId)
 
         setting.creatorBgName = userUpdateInfo.bgName
         setting.creatorDeptName = userUpdateInfo.deptName
@@ -156,8 +156,8 @@ class StreamBasicSettingService @Autowired constructor(
 
     // 更新项目组织架构信息
     fun updateProjectOrganizationInfo(
-        userId: String? = null,
-        projectId: String
+        projectId: String,
+        userId: String? = null
     ): UserDeptDetail {
         var userUpdateInfo = UserDeptDetail(
             bgId = "0",
