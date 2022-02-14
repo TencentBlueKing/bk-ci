@@ -39,10 +39,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.api.util.*
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -1463,7 +1460,7 @@ class RepositoryService @Autowired constructor(
                 logger.info("code into codeTGitRepository")
                 when (repo.authType) {
                     RepoAuthType.SSH -> {
-                        logger.info("repoAUthType is ssh")
+                        logger.info("repoAUthType is ssh | list is ${JsonUtil.toJson(list)} | size is ${list.size}")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
@@ -1494,7 +1491,7 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     RepoAuthType.HTTP -> {
-                        logger.info("repoAUthType is http")
+                        logger.info("repoAUthType is http | list is ${JsonUtil.toJson(list)} | size is ${list.size}")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
@@ -1525,7 +1522,7 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     RepoAuthType.HTTPS -> {
-                        logger.info("repoAUthType is https")
+                        logger.info("repoAUthType is https | list is ${JsonUtil.toJson(list)} | size is ${list.size}")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
