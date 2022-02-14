@@ -187,6 +187,42 @@ class StreamBasicSettingService @Autowired constructor(
         )
     }
 
+    // 更新项目组织架构信息
+    fun updateProjectOrganizationInfo(userId: String, projectId: String) {
+        if (!userId.isNullOrBlank()) {
+            var userUpdateInfo = UserDeptDetail(
+                bgId = "0",
+                bgName = "",
+                deptId = "0",
+                deptName = "",
+                centerId = "0",
+                centerName = "",
+                groupId = "0",
+                groupName = ""
+            )
+
+            val userResult =
+                client.get(ServiceTxUserResource::class).get(userId)
+            if (userResult.isNotOk()) {
+                logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
+                // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
+                val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
+                if (null != userInfo) {
+                    userUpdateInfo = userInfo
+                }
+            } else {
+                val userInfo = userResult.data!!
+                userUpdateInfo = userInfo
+            }
+            // 更新项目的组织架构信息
+            updateProjectInfo(
+                userId = userId,
+                projectId = GitCIUtils.GITLABLE + projectId,
+                userDeptDetail = userUpdateInfo
+            )
+        }
+    }
+
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
         streamBasicSettingDao.updateOauthSetting(
             dslContext = dslContext,

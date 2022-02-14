@@ -65,6 +65,13 @@ class ExternalStreamResourceImpl(
                     userId = userId,
                     oauthUserId = oauthUserId
                 )
+
+                // 更新项目信息
+                basicSettingService.updateProjectOrganizationInfo(
+                    userId = oauthUserId,
+                    projectId = gitProjectId!!.toString()
+                )
+
             }
             return Response.temporaryRedirect(UriBuilder.fromUri(gitOauthCallback.redirectUrl).build()).build()
         }
