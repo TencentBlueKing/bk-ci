@@ -260,7 +260,8 @@ class GitCITriggerService @Autowired constructor(
                 gitRequestEvent = gitRequestEvent,
                 gitToken = gitToken,
                 targetBranch = event.object_attributes.target_branch,
-                mrId = event.object_attributes.id
+                mrId = event.object_attributes.id,
+                merged = isMerged
             )
         } else {
             Pair(
@@ -495,17 +496,9 @@ class GitCITriggerService @Autowired constructor(
         targetBranch: String,
         gitRequestEvent: GitRequestEvent,
         gitToken: String,
-        mrId: Long
+        mrId: Long,
+        merged: Boolean
     ): Pair<List<YamlPathListEntry>, Set<String>> {
-        // 获取源分支文件列表
-        val sourceBranchYamlPathList = getYamlPathList(
-            isFork = isFork,
-            forkGitToken = forkGitToken,
-            gitRequestEvent = gitRequestEvent,
-            mrEvent = true,
-            gitToken = gitToken,
-            ref = gitRequestEvent.commitId
-        ).toSet()
         // 获取目标分支的文件列表
         val targetBranchYamlPathList = getYamlPathList(
             isFork = isFork,
@@ -535,6 +528,21 @@ class GitCITriggerService @Autowired constructor(
             }
         )?.files?.filter { !it.deletedFile }?.map { it.newPath }?.toSet() ?: emptySet()
 
+        // 已经merged的直接返回目标分支的文件列表即可
+        if (merged) {
+            return Pair(targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }, changeSet)
+        }
+
+        // 获取源分支文件列表
+        val sourceBranchYamlPathList = getYamlPathList(
+            isFork = isFork,
+            forkGitToken = forkGitToken,
+            gitRequestEvent = gitRequestEvent,
+            mrEvent = true,
+            gitToken = gitToken,
+            ref = gitRequestEvent.commitId
+        ).toSet()
+
         val comparedMap = checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, changeSet)
         return Pair(comparedMap.map { YamlPathListEntry(it.key, it.value) }, changeSet)
     }
@@ -558,6 +566,10 @@ class GitCITriggerService @Autowired constructor(
                 // 源分支有，目标分支有，变更列表有，需要校验版本
                 source in targetBranchYamlPathList && source in changeSet -> {
                     comparedMap[source] = CheckType.NEED_CHECK
+                }
+                // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
+                source in targetBranchYamlPathList && source !in changeSet -> {
+                    comparedMap[source] = CheckType.NO_NEED_CHECK
                 }
             }
         }
