@@ -88,7 +88,7 @@ class StreamBasicSettingService @Autowired constructor(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             pipelineIds = agentBuilds.data!!.records.map { it.pipelineId }.toList().distinct()
-        ).map { it.pipelineId to it }.toMap()
+        ).associateBy { it.pipelineId }
         val agentBuildDetails = agentBuilds.data!!.records.map {
             it.copy(pipelineName = pipelines[it.pipelineId]?.displayName ?: it.pipelineName)
         }
@@ -111,46 +111,13 @@ class StreamBasicSettingService @Autowired constructor(
             logger.info("git repo not exists.")
             return false
         }
-        if (!userId.isNullOrBlank()) {
-            var userUpdateInfo = UserDeptDetail(
-                bgId = "0",
-                bgName = "",
-                deptId = "0",
-                deptName = "",
-                centerId = "0",
-                centerName = "",
-                groupId = "0",
-                groupName = ""
-            )
 
-            val userResult =
-                client.get(ServiceTxUserResource::class).get(userId)
-            if (userResult.isNotOk()) {
-                logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
-                // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
-                val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
-                if (null != userInfo) {
-                    setting.creatorBgName = userInfo.bgName
-                    setting.creatorDeptName = userInfo.deptName
-                    setting.creatorCenterName = userInfo.centerName
+        val userUpdateInfo = updateProjectOrganizationInfo(userId, gitProjectId.toString())
 
-                    userUpdateInfo = userInfo
-                }
-            } else {
-                val userInfo = userResult.data!!
-                setting.creatorBgName = userInfo.bgName
-                setting.creatorDeptName = userInfo.deptName
-                setting.creatorCenterName = userInfo.centerName
+        setting.creatorBgName = userUpdateInfo.bgName
+        setting.creatorDeptName = userUpdateInfo.deptName
+        setting.creatorCenterName = userUpdateInfo.centerName
 
-                userUpdateInfo = userInfo
-            }
-            // 更新项目的组织架构信息
-            updateProjectInfo(
-                userId = userId,
-                projectId = GitCIUtils.GITLABLE + gitProjectId.toString(),
-                userDeptDetail = userUpdateInfo
-            )
-        }
         streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -188,19 +155,21 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     // 更新项目组织架构信息
-    fun updateProjectOrganizationInfo(userId: String, projectId: String) {
+    fun updateProjectOrganizationInfo(
+        userId: String? = null,
+        projectId: String
+    ): UserDeptDetail {
+        var userUpdateInfo = UserDeptDetail(
+            bgId = "0",
+            bgName = "",
+            deptId = "0",
+            deptName = "",
+            centerId = "0",
+            centerName = "",
+            groupId = "0",
+            groupName = ""
+        )
         if (!userId.isNullOrBlank()) {
-            var userUpdateInfo = UserDeptDetail(
-                bgId = "0",
-                bgName = "",
-                deptId = "0",
-                deptName = "",
-                centerId = "0",
-                centerName = "",
-                groupId = "0",
-                groupName = ""
-            )
-
             val userResult =
                 client.get(ServiceTxUserResource::class).get(userId)
             if (userResult.isNotOk()) {
@@ -221,6 +190,7 @@ class StreamBasicSettingService @Autowired constructor(
                 userDeptDetail = userUpdateInfo
             )
         }
+        return userUpdateInfo
     }
 
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
