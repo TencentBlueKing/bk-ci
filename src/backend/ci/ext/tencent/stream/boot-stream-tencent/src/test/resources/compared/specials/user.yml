@@ -20,6 +20,9 @@ triggerOn:
   delete:
     types:
     - "branch"
+  issues:
+    action:
+    - "open"
 variables:
   "123_GIT_KEY":
     value: "xxxxxx"
