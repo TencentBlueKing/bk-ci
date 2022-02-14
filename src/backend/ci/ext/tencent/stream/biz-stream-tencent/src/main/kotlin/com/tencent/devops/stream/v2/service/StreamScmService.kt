@@ -481,7 +481,8 @@ class StreamScmService @Autowired constructor(
         gitToken: String,
         gitRequestEvent: GitRequestEvent,
         filePath: String,
-        isMrEvent: Boolean = false
+        isMrEvent: Boolean = false,
+        ref: String?
     ): List<GitFileInfo> {
         val gitProjectId = getProjectId(isMrEvent, gitRequestEvent)
         return retryFun(
@@ -492,7 +493,7 @@ class StreamScmService @Autowired constructor(
                     gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
                     path = filePath,
                     token = gitToken,
-                    ref = getTriggerBranch(gitRequestEvent.branch)
+                    ref = ref
                 ).data ?: emptyList()
             }
         )
@@ -628,7 +629,7 @@ class StreamScmService @Autowired constructor(
         ).data
     }
 
-    private fun getTriggerBranch(branch: String): String {
+    fun getTriggerBranch(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
