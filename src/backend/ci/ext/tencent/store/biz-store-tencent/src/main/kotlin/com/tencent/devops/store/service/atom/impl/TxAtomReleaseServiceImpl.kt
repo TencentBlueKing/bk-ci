@@ -527,6 +527,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return processInfo
     }
 
+    @SuppressWarnings("ComplexMethod")
     private fun runPipeline(context: DSLContext, atomId: String, userId: String, branch: String? = null): Boolean {
         val atomRecord = marketAtomDao.getAtomRecordById(context, atomId) ?: return false
         val atomCode = atomRecord.atomCode
