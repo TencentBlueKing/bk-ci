@@ -359,6 +359,9 @@ func (m *Mgr) ensureFiles(
 		r = append(r, f.Targetrelativepath)
 
 		for _, s := range fd.Servers {
+			if s == nil {
+				continue
+			}
 			count++
 			go func(err chan<- error, host *dcProtocol.Host, req *dcSDK.BKDistFileSender) {
 				t := time.Now().Local()
