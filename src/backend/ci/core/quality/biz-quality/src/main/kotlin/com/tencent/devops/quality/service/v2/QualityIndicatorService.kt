@@ -168,30 +168,22 @@ class QualityIndicatorService @Autowired constructor(
     ): List<QualityIndicator> {
         return if (enNameSet.isNotEmpty()) {
             val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
-            val indicatorTMap = indicatorDao.listByElementType(
+            val indicatorRecords = indicatorDao.listByElementType(
                 dslContext = dslContext,
                 elementType = elementType,
                 type = null,
                 enNameSet = enNameSet,
                 projectId = tempProjectId
-            )?.map { it.enName to it }?.toMap()
-            enNameSet.map { enName ->
-                val indicator = indicatorTMap?.get(enName) ?: throw OperationException("indicator $enName is not exist")
-                val metadataIds = convertMetaIds(indicator?.metadataIds)
-                // todo 优化此处查询逻辑
-                val metadata = metadataService.serviceListMetadata(metadataIds).map {
-                    QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
-                }
-                convertRecord(indicator, metadata)
-            }
+            )
+            serviceListIndicatorRecord(indicatorRecords)
         } else {
-            indicatorDao.listByElementType(dslContext, elementType, type = null, enNameSet = enNameSet)?.map { indicator ->
-                val metadataIds = convertMetaIds(indicator.metadataIds)
-                val metadata = metadataService.serviceListMetadata(metadataIds).map {
-                    QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
-                }
-                convertRecord(indicator, metadata)
-            } ?: listOf()
+            val indicatorRecords = indicatorDao.listByElementType(
+                dslContext = dslContext,
+                elementType = elementType,
+                type = null,
+                enNameSet = enNameSet
+            )
+            serviceListIndicatorRecord(indicatorRecords)
         }
     }
 
