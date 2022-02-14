@@ -28,10 +28,12 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -170,7 +172,7 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.ISSUE.value,
             operationKind = "",
-            extensionAction = gitIssueEvent.objectAttributes.action,
+            extensionAction = TGitIssueAction.getDesc(gitIssueEvent.objectAttributes.action),
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
@@ -206,7 +208,11 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.REVIEW.value,
             operationKind = "",
-            extensionAction = gitReviewEvent.state,
+            extensionAction = when (gitReviewEvent.event) {
+                TGitReviewEventKind.CREATE.value -> "created"
+                TGitReviewEventKind.INVITE.value -> "updated"
+                else -> gitReviewEvent.state
+            },
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
