@@ -67,7 +67,7 @@ class PipelineBuildTaskDao {
                     CONTAINER_HASH_ID,
                     TASK_SEQ,
                     TASK_ID,
-//                    STEP_ID,
+                    STEP_ID,
                     TASK_TYPE,
                     TASK_ATOM,
                     SUB_PROJECT_ID,
@@ -91,7 +91,7 @@ class PipelineBuildTaskDao {
                         buildTask.containerHashId,
                         buildTask.taskSeq,
                         buildTask.taskId,
-//                        buildTask.stepId,
+                        buildTask.stepId,
                         buildTask.taskType,
                         buildTask.taskAtom,
                         buildTask.subProjectId,
@@ -121,7 +121,7 @@ class PipelineBuildTaskDao {
                     .set(CONTAINER_ID, it.containerId)
                     .set(TASK_NAME, it.taskName)
                     .set(TASK_ID, it.taskId)
-//                    .set(STEP_ID, it.stepId)
+                    .set(STEP_ID, it.stepId)
                     .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams, formatted = false))
                     .set(TASK_TYPE, it.taskType)
                     .set(TASK_ATOM, it.taskAtom)
@@ -168,7 +168,7 @@ class PipelineBuildTaskDao {
                     .set(STAGE_ID, it.stageId)
                     .set(CONTAINER_ID, it.containerId)
                     .set(TASK_NAME, it.taskName)
-//                    .set(STEP_ID, it.stepId)
+                    .set(STEP_ID, it.stepId)
                     .set(TASK_PARAMS, it.taskParams)
                     .set(TASK_TYPE, it.taskType)
                     .set(TASK_ATOM, it.taskAtom)
@@ -286,7 +286,7 @@ class PipelineBuildTaskDao {
                 containerType = containerType,
                 taskSeq = taskSeq,
                 taskId = taskId,
-//                stepId = stepId,
+                stepId = stepId,
                 taskName = taskName,
                 taskType = taskType,
                 taskAtom = taskAtom,
