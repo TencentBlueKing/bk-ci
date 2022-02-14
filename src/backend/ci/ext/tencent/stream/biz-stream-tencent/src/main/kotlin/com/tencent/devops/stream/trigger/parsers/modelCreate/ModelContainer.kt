@@ -46,9 +46,8 @@ import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_C
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.util.StreamDispatchUtils
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -62,10 +61,6 @@ class ModelContainer @Autowired constructor(
     @Value("\${container.defaultImage:#{null}}")
     val defaultImage: String? = null
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ModelContainer::class.java)
-    }
-
     fun addVmBuildContainer(
         job: Job,
         elementList: List<Element>,
@@ -73,9 +68,10 @@ class ModelContainer @Autowired constructor(
         jobIndex: Int,
         projectCode: String,
         finalStage: Boolean = false,
-        changeSet: Set<String>? = null,
-        resources: Resources? = null
-    ): VMBuildContainer {
+        jobEnable: Boolean = true,
+        resources: Resources? = null,
+        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
+    ) {
         val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
@@ -97,7 +93,11 @@ class ModelContainer @Autowired constructor(
             maxRunningMinutes = job.timeoutMinutes ?: 900,
             buildEnv = StreamDispatchUtils.getBuildEnv(job),
             customBuildEnv = job.env,
-            jobControlOption = getJobControlOption(job = job, changeSet = changeSet, finalStage = finalStage),
+            jobControlOption = getJobControlOption(
+                job = job,
+                jobEnable = jobEnable,
+                finalStage = finalStage
+            ),
             dispatchType = StreamDispatchUtils.getDispatchType(
                 client = client,
                 objectMapper = objectMapper,
@@ -105,13 +105,13 @@ class ModelContainer @Autowired constructor(
                 projectCode = projectCode,
                 defaultImage = defaultImage,
                 resources = resources,
-                containsMatrix = dispatchInfo != null
+                containsMatrix = dispatchInfo != null,
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo
             ),
             matrixGroupFlag = job.strategy != null,
             matrixControlOption = getMatrixControlOption(job, dispatchInfo)
         )
         containerList.add(vmContainer)
-        return vmContainer
     }
 
     private fun getMatrixControlOption(
@@ -162,7 +162,7 @@ class ModelContainer @Autowired constructor(
         elementList: List<Element>,
         containerList: MutableList<Container>,
         jobIndex: Int,
-        changeSet: Set<String>? = null,
+        jobEnable: Boolean = true,
         finalStage: Boolean = false
     ) {
 
@@ -182,7 +182,7 @@ class ModelContainer @Autowired constructor(
                 canRetry = false,
                 jobControlOption = getJobControlOption(
                     job = job,
-                    changeSet = changeSet,
+                    jobEnable = jobEnable,
                     finalStage = finalStage
                 ),
                 mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
@@ -192,7 +192,7 @@ class ModelContainer @Autowired constructor(
 
     private fun getJobControlOption(
         job: Job,
-        changeSet: Set<String>? = null,
+        jobEnable: Boolean = true,
         finalStage: Boolean = false
     ): JobControlOption {
         return if (!job.ifField.isNullOrBlank()) {
@@ -212,7 +212,7 @@ class ModelContainer @Autowired constructor(
                 )
             } else {
                 JobControlOption(
-                    enable = PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet),
+                    enable = jobEnable,
                     timeout = job.timeoutMinutes,
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = job.ifField.toString(),
@@ -224,7 +224,7 @@ class ModelContainer @Autowired constructor(
             }
         } else {
             JobControlOption(
-                enable = PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet),
+                enable = jobEnable,
                 timeout = job.timeoutMinutes,
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,

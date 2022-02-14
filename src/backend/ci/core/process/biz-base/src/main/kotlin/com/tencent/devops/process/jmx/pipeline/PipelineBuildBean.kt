@@ -110,14 +110,6 @@ class PipelineBuildBean @Autowired constructor(
     @ManagedAttribute
     fun getOtherStartCount() = otherStart.get()
 
-    @ManagedAttribute
-    fun getActiveBuildCount(): Int {
-        val epoch = System.currentTimeMillis()
-        val runningCount: Int = pipelineRuntimeService.totalRunningBuildCount()
-        logger.info("It took ${System.currentTimeMillis() - epoch}ms to list $runningCount build instances")
-        return runningCount
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildBean::class.java)
     }

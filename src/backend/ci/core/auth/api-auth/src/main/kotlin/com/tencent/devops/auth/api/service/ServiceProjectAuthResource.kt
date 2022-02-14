@@ -108,6 +108,21 @@ interface ServiceProjectAuthResource {
         group: BkAuthGroup? = null
     ): Result<Boolean>
 
+    @GET
+    @Path("/{projectCode}/users/{userId}/checkProjectManager")
+    @ApiOperation("判断是否是项目管理员")
+    fun checkProjectManager(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("userId")
+        @ApiParam("用户Id", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String
+    ): Result<Boolean>
+
     @POST
     @Path("/{projectCode}/createUser")
     @ApiOperation("添加用户到指定项目指定分组")

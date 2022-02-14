@@ -40,6 +40,7 @@ import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityIndicatorDao {
+    // todo performance
     fun listByType(dslContext: DSLContext, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectFrom(this)

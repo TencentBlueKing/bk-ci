@@ -5,6 +5,7 @@ import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.common.Constants.ALL_ACTION
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +15,8 @@ import java.util.concurrent.TimeUnit
 @Service
 class IamCacheService @Autowired constructor(
     @Autowired(required = false)
-    val policyService: PolicyService?
+    val policyService: PolicyService?,
+    val groupService: AuthGroupService
 ) {
 
     // 用户-管理员项目 缓存， 5分钟有效时间
@@ -40,6 +42,11 @@ class IamCacheService @Autowired constructor(
         .maximumSize(1000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build<String, String>()
+
+    private val projectGroupCache = CacheBuilder.newBuilder()
+        .maximumSize(500)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String, List<String>>()
 
     // 通过all_action 判断是否为项目管理员, 优先查缓存, 缓存时效10分钟
     fun checkProjectManager(userId: String, projectCode: String): Boolean {
@@ -132,6 +139,15 @@ class IamCacheService @Autowired constructor(
         return
     }
 
+    fun getProjectGroup(projectCode: String): List<String> {
+        if (projectGroupCache.getIfPresent(projectCode) != null) {
+            return projectGroupCache.getIfPresent(projectCode)!!
+        }
+        val groupIds = groupService.getGroupByProject(projectCode)?.map { it.relationId } ?: emptyList()
+        projectGroupCache.put(projectCode, groupIds)
+        return groupIds
+    }
+
     private fun getProjectIamData(action: String, userId: String): List<String> {
         val managerActionDto = ActionDTO()
         managerActionDto.id = action
@@ -142,6 +158,6 @@ class IamCacheService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(IamCacheService::class.java)
+        private val logger = LoggerFactory.getLogger(IamCacheService::class.java)
     }
 }

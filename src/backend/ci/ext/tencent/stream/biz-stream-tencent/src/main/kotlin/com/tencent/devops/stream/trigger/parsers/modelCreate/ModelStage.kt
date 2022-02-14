@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPai
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -96,14 +97,19 @@ class ModelStage @Autowired constructor(
         resources: Resources? = null,
         changeSet: Set<String>? = null,
         pipeline: GitProjectPipeline,
+        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
         elementNames: MutableList<QualityElementInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
+        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet)
+
         stage.jobs.forEachIndexed { jobIndex, job ->
+            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet)
             val elementList = modelElement.makeElementList(
                 job = job,
                 gitBasicSetting = gitBasicSetting,
                 changeSet = changeSet,
+                jobEnable = jobEnable,
                 event = event
             )
 
@@ -113,7 +119,7 @@ class ModelStage @Autowired constructor(
                     elementList = elementList,
                     containerList = containerList,
                     jobIndex = jobIndex,
-                    changeSet = changeSet,
+                    jobEnable = jobEnable,
                     finalStage = finalStage
                 )
             } else {
@@ -124,8 +130,9 @@ class ModelStage @Autowired constructor(
                     jobIndex = jobIndex,
                     projectCode = gitBasicSetting.projectCode!!,
                     finalStage = finalStage,
-                    changeSet = changeSet,
-                    resources = resources
+                    jobEnable = jobEnable,
+                    resources = resources,
+                    buildTemplateAcrossInfo = jobBuildTemplateAcrossInfos?.get(job.id)
                 )
             }
 
@@ -150,8 +157,7 @@ class ModelStage @Autowired constructor(
                 customCondition = stage.ifField.toString()
             )
         }
-        stageControlOption =
-            stageControlOption.copy(enable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet))
+        stageControlOption = stageControlOption.copy(enable = stageEnable)
 
         val stageId = VMUtils.genStageId(stageIndex)
         return Stage(

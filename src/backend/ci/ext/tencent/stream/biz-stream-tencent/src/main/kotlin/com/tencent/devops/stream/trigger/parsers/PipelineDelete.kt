@@ -38,6 +38,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -173,10 +174,17 @@ class PipelineDelete @Autowired constructor(
                 !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)) {
                 logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
-                processClient.delete(
-                    gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
-                    channelCode
+                val pipelineInfoResult = processClient.getPipelineInfo(
+                    projectId = gitProjectConf.projectCode!!,
+                    pipelineId = pipelineId,
+                    channelCode = channelCode
                 )
+                if (pipelineInfoResult.data != null) {
+                    processClient.delete(
+                        gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
+                        channelCode
+                    )
+                }
                 // 删除相关的构建记录
                 gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
             }

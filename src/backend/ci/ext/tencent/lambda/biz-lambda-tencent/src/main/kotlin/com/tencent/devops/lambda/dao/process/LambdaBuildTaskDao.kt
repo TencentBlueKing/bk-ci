@@ -37,6 +37,7 @@ class LambdaBuildTaskDao {
 
     fun getTask(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         taskId: String
     ): TPipelineBuildTaskRecord? {
@@ -44,17 +45,20 @@ class LambdaBuildTaskDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }
 
     fun getTaskByBuildId(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String
     ): Result<TPipelineBuildTaskRecord> {
         with(TPipelineBuildTask.T_PIPELINE_BUILD_TASK) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }
     }

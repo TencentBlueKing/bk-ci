@@ -66,7 +66,7 @@ import org.springframework.jmx.export.MBeanExporter
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
 class GitCIAuthAutoConfiguration {
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
