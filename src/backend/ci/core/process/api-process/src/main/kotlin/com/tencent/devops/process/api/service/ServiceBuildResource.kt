@@ -72,6 +72,17 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ServiceBuildResource {
+    @ApiOperation("通过buildId获取流水线pipelineId")
+    @GET
+    @Path("/getPipelineIdFromBuildId")
+    fun getPipelineIdFromBuildId(
+        @ApiParam(value = "项目ID", required = true)
+        @HeaderParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<String>
 
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
