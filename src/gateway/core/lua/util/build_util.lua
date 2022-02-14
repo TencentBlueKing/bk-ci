@@ -76,7 +76,7 @@ function _M:auth_agent()
                     ngx.exit(401)
                     return
                 else
-                    auth_cache.set(cache_key, redRes, 60)
+                    auth_cache:set(cache_key, redRes, 60)
                     cache_value = redRes
                 end
             end
@@ -198,7 +198,7 @@ function _M:auth_docker()
                     ngx.exit(401)
                     return
                 else
-                    auth_cache.set(cache_key, redRes, 60)
+                    auth_cache:set(cache_key, redRes, 60)
                     cache_value = redRes
                 end
             end
@@ -313,7 +313,7 @@ function _M:auth_plugin_agent()
                     ngx.exit(401)
                     return
                 else
-                    auth_cache.set(cache_key, redRes, 60)
+                    auth_cache:set(cache_key, redRes, 60)
                     cache_value = redRes
                 end
             end
@@ -420,7 +420,7 @@ function _M:auth_macos(checkVersion)
                     ngx.exit(401)
                     return
                 else
-                    auth_cache.set(cache_key, redRes, 60)
+                    auth_cache:set(cache_key, redRes, 60)
                     cache_value = redRes
                 end
             end
@@ -539,7 +539,7 @@ function _M:auth_other()
                     ngx.exit(401)
                     return
                 else
-                    auth_cache.set(cache_key, redRes, 60)
+                    auth_cache:set(cache_key, redRes, 60)
                     cache_value = redRes
                 end
             end
