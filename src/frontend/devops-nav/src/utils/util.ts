@@ -151,6 +151,10 @@ export function getServiceAliasByPath (path: string): string {
     return execRes[2] || path
 }
 
+export function isAbsoluteUrl (url) {
+    return /^(http(s)?:)?\/\//.test(url)
+}
+
 export class HttpError extends Error {
     code = 500
     constructor (code, message = 'http request error message') {

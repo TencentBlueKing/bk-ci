@@ -61,6 +61,12 @@ interface BuildFileResource {
     @GET
     @Path("/file/download")
     fun downloadFile(
+        @ApiParam("projectCode", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectCode: String,
+        @ApiParam("pipelineId", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        pipelineId: String,
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,

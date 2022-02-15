@@ -76,8 +76,9 @@ class CheckConditionalSkipContainerCmd constructor(
      * 检查[ContainerContext.container]是否被按条件跳过
      */
     fun checkIfSkip(containerContext: ContainerContext): Boolean {
-        if (containerContext.containerTasks.isEmpty()) {
-            return true // 无任务
+        if (containerContext.containerTasks.isEmpty() &&
+            containerContext.container.matrixGroupFlag != true) {
+            return true // 非构建矩阵且无任务
         }
         // condition check
         val container = containerContext.container
@@ -91,9 +92,10 @@ class CheckConditionalSkipContainerCmd constructor(
                 skipFinallyStageJob(container, jobControlOption, containerContext.event.previousStageStatus)
             } else {
                 val contextMap = pipelineContextService.buildContext(
-                    container.buildId,
-                    container.containerId,
-                    containerContext.variables
+                    projectId = container.projectId,
+                    buildId = container.buildId,
+                    containerId = container.containerId,
+                    variables = containerContext.variables
                 )
                 ControlUtils.checkJobSkipCondition(
                     conditions = conditions,
@@ -136,7 +138,7 @@ class CheckConditionalSkipContainerCmd constructor(
                 buildId = container.buildId,
                 message = "Skip when ${jobControlOption.runCondition} previous stage status is $previousStatus",
                 tag = container.stageId,
-                jobId = container.containerId,
+                jobId = container.containerHashId,
                 executeCount = container.executeCount
             )
         }

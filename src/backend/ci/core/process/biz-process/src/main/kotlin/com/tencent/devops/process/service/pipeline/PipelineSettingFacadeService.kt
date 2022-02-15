@@ -95,6 +95,7 @@ class PipelineSettingFacadeService @Autowired constructor(
 
         pipelineGroupService.updatePipelineLabel(
             userId = userId,
+            projectId = setting.projectId,
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
@@ -108,7 +109,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         channelCode: ChannelCode = ChannelCode.BS,
         version: Int = 0
     ): PipelineSetting {
-        var settingInfo = pipelineRepositoryService.getSetting(pipelineId)
+        var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
         groups.forEach {
@@ -178,8 +179,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         )
     }
 
-    fun getSettingInfo(pipelineId: String): PipelineSetting? {
-        return pipelineRepositoryService.getSetting(pipelineId)
+    fun getSettingInfo(projectId: String, pipelineId: String): PipelineSetting? {
+        return pipelineRepositoryService.getSetting(projectId, pipelineId)
     }
 
     private fun checkEditPermission(userId: String, projectId: String, pipelineId: String, message: String) {

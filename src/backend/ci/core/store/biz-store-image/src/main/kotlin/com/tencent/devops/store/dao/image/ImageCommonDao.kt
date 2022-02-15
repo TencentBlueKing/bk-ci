@@ -49,6 +49,14 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStorePublicFlagByCode(dslContext: DSLContext, storeCode: String): Boolean {
+        return with(TImageFeature.T_IMAGE_FEATURE) {
+            dslContext.select(PUBLIC_FLAG).from(this)
+                .where(IMAGE_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)!!
+        }
+    }
+
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TImage.T_IMAGE) {
             dslContext.select(IMAGE_CODE.`as`("storeCode")).from(this)

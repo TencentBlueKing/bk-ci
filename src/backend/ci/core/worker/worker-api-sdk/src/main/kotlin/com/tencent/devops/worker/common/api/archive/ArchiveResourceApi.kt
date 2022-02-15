@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -43,6 +44,10 @@ import java.io.File
 
 @Suppress("UNUSED")
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
+
+    override fun getRealm(): String {
+        return REALM_LOCAL
+    }
 
     override fun getFileDownloadUrls(
         userId: String,
@@ -96,7 +101,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传自定义文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
+            val obj = JsonParser.parseString(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException("上传自定义文件失败")
             }
@@ -122,7 +127,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val response = request(request, "上传流水线文件失败")
         try {
-            val obj = JsonParser().parse(response).asJsonObject
+            val obj = JsonParser.parseString(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
@@ -177,7 +182,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadFile(
         url: String,
-        destPath: String,
         file: File,
         headers: Map<String, String>?,
         isVmBuildEnv: Boolean

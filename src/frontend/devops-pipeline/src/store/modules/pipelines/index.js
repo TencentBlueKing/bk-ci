@@ -47,7 +47,7 @@ const getters = {}
 const mutations = {}
 const actions = {}
 
-modules.map(v => {
+modules.forEach(v => {
     assign(state, v.state)
     assign(getters, v.getters)
     assign(mutations, v.mutations)

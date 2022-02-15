@@ -36,7 +36,7 @@ dependencies {
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk16")
+    api("org.bouncycastle:bcprov-jdk15on")
     api("com.github.fge:json-schema-validator")
     api("com.google.guava:guava")
     api("com.squareup.okhttp3:okhttp")
@@ -49,4 +49,5 @@ dependencies {
     api("com.vdurmont:emoji-java")
     api("org.apache.lucene:lucene-core")
     api("org.apache.commons:commons-csv")
+    api("com.github.ben-manes.caffeine:caffeine")
 }

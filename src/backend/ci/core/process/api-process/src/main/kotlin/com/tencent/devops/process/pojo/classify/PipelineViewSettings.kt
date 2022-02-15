@@ -27,8 +27,15 @@
 
 package com.tencent.devops.process.pojo.classify
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线视图设置模型")
 data class PipelineViewSettings(
+    @ApiModelProperty("当前视图id", required = false)
     val currentViewId: String?,
+    @ApiModelProperty("当前视图列表", required = false)
     val currentViews: List<PipelineViewIdAndName>,
+    @ApiModelProperty("视图分类列表：项目视图，系统视图，个人视图等分类。分类下包含下面的视图", required = false)
     val viewClassifies: List<PipelineViewClassify>
 )

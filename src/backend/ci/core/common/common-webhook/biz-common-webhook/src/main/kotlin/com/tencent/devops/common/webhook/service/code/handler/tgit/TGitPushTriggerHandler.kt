@@ -41,13 +41,13 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -88,7 +88,11 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
     }
 
     override fun getMessage(event: GitPushEvent): String {
-        return event.commits[0].message
+        return if (event.commits.isNullOrEmpty()) {
+            ""
+        } else {
+            event.commits!![0].message
+        }
     }
 
     override fun preMatch(event: GitPushEvent): ScmWebhookMatcher.MatchResult {
@@ -117,11 +121,11 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
         with(webHookParams) {
             val skipCiFilter = SkipCiFilter(
                 pipelineId = pipelineId,
-                triggerOnMessage = event.commits[0].message
+                triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits
             val eventPaths = mutableSetOf<String>()
-            commits.forEach { commit ->
+            commits?.forEach { commit ->
                 eventPaths.addAll(commit.added ?: listOf())
                 eventPaths.addAll(commit.removed ?: listOf())
                 eventPaths.addAll(commit.modified ?: listOf())
@@ -129,7 +133,7 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
                 excludeCommitMsg,
-                commits.first().message,
+                commits?.first()?.message ?: "",
                 pipelineId
             )
             val pathFilter = PathFilterFactory.newPathFilter(
@@ -158,7 +162,7 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND] = event.action_kind ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = event.operation_kind ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
-        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits))
+        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits ?: emptyList()))
         return startParams
     }
 }

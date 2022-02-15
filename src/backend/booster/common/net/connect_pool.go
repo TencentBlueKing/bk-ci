@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package net
 
 import (
@@ -178,7 +187,7 @@ func (cb *circuitBreaker) check(wg *sync.WaitGroup) {
 
 func (cb *circuitBreaker) doSuccess() {
 	cb.failureTime = 0
-	cb.successTime++
+	cb.successTime += 1
 	if cb.status == cbClose && cb.successTime >= cb.breakerTryTimes {
 		cb.status = cbOpen
 	}
@@ -187,7 +196,7 @@ func (cb *circuitBreaker) doSuccess() {
 
 func (cb *circuitBreaker) doFailure() {
 	cb.successTime = 0
-	cb.failureTime++
+	cb.failureTime += 1
 	if cb.status == cbOpen && cb.failureTime >= cb.breakerFailTimes {
 		cb.status = cbClose
 	}

@@ -45,10 +45,12 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostDebugLock
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
-import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
@@ -76,7 +78,8 @@ class DockerHostDebugService @Autowired constructor(
     private val storeImageService: StoreImageService,
     private val gray: Gray,
     private val defaultImageConfig: DefaultImageConfig,
-    private val dockerHostProxyService: DockerHostProxyService
+    private val dockerHostProxyService: DockerHostProxyService,
+    private val objectMapper: ObjectMapper
 ) {
 
     private val grayFlag: Boolean = gray.isGray()
@@ -84,186 +87,147 @@ class DockerHostDebugService @Autowired constructor(
     fun startDebug(
         dockerIp: String,
         userId: String,
-        projectId: String,
-        pipelineId: String,
-        vmSeqId: String,
         poolNo: Int,
-        imageCode: String?,
-        imageVersion: String?,
-        imageName: String?,
-        buildEnv: Map<String, String>?,
-        imageType: ImageType?,
-        credentialId: String?
+        debugStartParam: DebugStartParam
     ) {
-        val stopWatch = StopWatch()
-        var imageRepoInfo: ImageRepoInfo? = null
-        var finalCredentialId = credentialId
-        var credentialProject = projectId
+        with(debugStartParam) {
+            val stopWatch = StopWatch()
+            var imageRepoInfo: ImageRepoInfo? = null
+            var finalCredentialId = credentialId
+            var credentialProject = projectId
 
-        stopWatch.start("getImageRepoInfo")
-        if (imageType == ImageType.BKSTORE) {
-            imageRepoInfo = storeImageService.getImageRepoInfo(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = null,
+            val imageTypeEnum = ImageType.getType(debugStartParam.imageType)
+            stopWatch.start("getImageRepoInfo")
+            if (imageTypeEnum == ImageType.BKSTORE) {
+                imageRepoInfo = storeImageService.getImageRepoInfo(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = null,
+                    imageCode = imageCode,
+                    imageVersion = imageVersion,
+                    defaultPrefix = defaultImageConfig.dockerBuildImagePrefix
+                )
+                if (imageRepoInfo.ticketId.isNotBlank()) {
+                    finalCredentialId = imageRepoInfo.ticketId
+                }
+                credentialProject = imageRepoInfo.ticketProject
+            }
+            stopWatch.stop()
+
+            val dockerImage = getDebugDockerImage(imageRepoInfo, debugStartParam)
+
+            stopWatch.start("get credentialId")
+            val (userName, password) = getUserNameAndPassword(
+                imageType = imageTypeEnum,
+                finalCredentialId = finalCredentialId,
+                credentialProject = credentialProject,
+                containerPool = containerPool
+            )
+            stopWatch.stop()
+
+            val newImageType = getFormatImageType(
+                imageTypeEnum = imageTypeEnum,
+                imageRepoInfo = imageRepoInfo,
                 imageCode = imageCode,
                 imageVersion = imageVersion,
-                defaultPrefix = defaultImageConfig.dockerBuildImagePrefix
+                containerPool = containerPool
             )
-            if (imageRepoInfo.ticketId.isNotBlank()) {
-                finalCredentialId = imageRepoInfo.ticketId
-            }
-            credentialProject = imageRepoInfo.ticketProject
-        }
-        stopWatch.stop()
 
-        val dockerImage = when (imageType) {
-            ImageType.THIRD -> imageName!!
-            ImageType.BKSTORE -> {
-                // 研发商店镜像一定含name与tag
-                if (imageRepoInfo!!.repoUrl.isBlank()) {
-                    // dockerhub镜像名称不带斜杠前缀
-                    imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
-                } else {
-                    // 无论蓝盾还是第三方镜像此处均需完整路径
-                    imageRepoInfo.repoUrl + "/" + imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
-                }
-            }
-            else -> when (imageName) {
-                DockerVersion.TLINUX1_2.value -> {
-                    defaultImageConfig.getTLinux1_2CompleteUri()
-                }
-                DockerVersion.TLINUX2_2.value -> {
-                    defaultImageConfig.getTLinux2_2CompleteUri()
-                }
-                else -> {
-                    if (defaultImageConfig.dockerBuildImagePrefix.isNullOrBlank()) {
-                        imageName?.trim()?.removePrefix("/")
-                    } else {
-                        "${defaultImageConfig.dockerBuildImagePrefix}/bkdevops/$imageName"
-                    }!!
-                }
-            }
-        }
-        LOG.info("$pipelineId|dockerHostDebug|$dockerImage|$imageCode|$imageVersion|$credentialId|$credentialProject")
-        var userName: String? = null
-        var password: String? = null
-        stopWatch.start("get credentialId")
-        if (imageType == ImageType.THIRD && !finalCredentialId.isNullOrBlank()) {
-            val ticketsMap =
-                CommonUtils.getCredential(
-                    client = client,
-                    projectId = credentialProject,
-                    credentialId = finalCredentialId!!,
-                    type = CredentialType.USERNAME_PASSWORD
-                )
-            userName = ticketsMap["v1"] as String
-            password = ticketsMap["v2"] as String
-        }
-        stopWatch.stop()
-
-        val newImageType = when (imageType) {
-            null -> ImageType.BKDEVOPS.type
-            ImageType.THIRD -> imageType.type
-            ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
-            ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
-            else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion,imageType:$imageType")
-        }
-
-        stopWatch.start("get buildEnvs")
-        val buildEnvStr = if (null != buildEnv && buildEnv.isNotEmpty()) {
-            try {
-                val buildEnvs = client.get(ServiceContainerAppResource::class).getApp("linux")
-                val buildEnvResult = mutableListOf<BuildEnv>()
-                if (!(!buildEnvs.isOk() && null != buildEnvs.data && buildEnvs.data!!.isNotEmpty())) {
-                    for (buildEnvParam in buildEnv) {
-                        for (buildEnv1 in buildEnvs.data!!) {
-                            if (buildEnv1.name == buildEnvParam.key && buildEnv1.version == buildEnvParam.value) {
-                                buildEnvResult.add(buildEnv1)
+            stopWatch.start("get buildEnvs")
+            val buildEnvStr = if (null != buildEnv && buildEnv!!.isNotEmpty()) {
+                try {
+                    val buildEnvs = client.get(ServiceContainerAppResource::class).getApp("linux")
+                    val buildEnvResult = mutableListOf<BuildEnv>()
+                    if (!(!buildEnvs.isOk() && null != buildEnvs.data && buildEnvs.data!!.isNotEmpty())) {
+                        for (buildEnvParam in buildEnv!!) {
+                            for (buildEnv1 in buildEnvs.data!!) {
+                                if (buildEnv1.name == buildEnvParam.key && buildEnv1.version == buildEnvParam.value) {
+                                    buildEnvResult.add(buildEnv1)
+                                }
                             }
                         }
                     }
+                    ObjectMapper().writeValueAsString(buildEnvResult)
+                } catch (e: Exception) {
+                    LOG.error("$pipelineId|$vmSeqId| start debug. get build env failed msg: $e")
+                    ""
                 }
-                ObjectMapper().writeValueAsString(buildEnvResult)
-            } catch (e: Exception) {
-                LOG.error("$pipelineId|$vmSeqId| start debug. get build env failed msg: $e")
+            } else {
                 ""
             }
-        } else {
-            ""
-        }
-        stopWatch.stop()
+            stopWatch.stop()
 
-        LOG.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr. stopWatch: $stopWatch")
+            LOG.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr. stopWatch: $stopWatch")
 
-        // 根据dockerIp定向调用dockerhost
-        val requestBody = ContainerInfo(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            vmSeqId = vmSeqId,
-            poolNo = poolNo,
-            status = PipelineTaskStatus.RUNNING.status,
-            imageName = dockerImage,
-            containerId = "",
-            address = "",
-            token = "",
-            buildEnv = buildEnvStr,
-            registryUser = userName,
-            registryPwd = password,
-            imageType = newImageType
-        )
+            // 根据dockerIp定向调用dockerhost
+            val requestBody = ContainerInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                vmSeqId = vmSeqId,
+                poolNo = poolNo,
+                status = PipelineTaskStatus.RUNNING.status,
+                imageName = dockerImage,
+                containerId = "",
+                address = "",
+                token = cmd ?: "/bin/sh",
+                buildEnv = buildEnvStr,
+                registryUser = userName,
+                registryPwd = password,
+                imageType = newImageType
+            )
 
-        val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = "/api/docker/debug/start",
-            dockerHostIp = dockerIp
-        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .build()
+            val request = dockerHostProxyService.getDockerHostProxyRequest(
+                dockerHostUri = "/api/docker/debug/start",
+                dockerHostIp = dockerIp
+            ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+                .build()
 
-        LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}")
-        OkhttpUtils.doLongHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
-            LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
-            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-            when {
-                response["status"] == 0 -> {
-                    val containerId = response["data"].toString()
-                    pipelineDockerDebugDao.insertDebug(
-                        dslContext = dslContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        vmSeqId = vmSeqId,
-                        poolNo = poolNo,
-                        status = PipelineTaskStatus.RUNNING,
-                        token = "",
-                        imageName = dockerImage.trim(),
-                        hostTag = dockerIp,
-                        containerId = containerId,
-                        buildEnv = buildEnvStr,
-                        registryUser = userName,
-                        registryPwd = password,
-                        imageType = newImageType,
-                        imagePublicFlag = imageRepoInfo?.publicFlag,
-                        imageRDType = imageRepoInfo?.rdType
-                    )
-                }
-                response["status"] == 1 -> {
-                    // 母机负载过高
-                    LOG.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
-                    throw ErrorCodeException(
-                        errorCode = "2103505",
-                        defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
-                        params = arrayOf(pipelineId)
-                    )
-                }
-                else -> {
-                    val msg = response["message"]
-                    LOG.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
-                    throw ErrorCodeException(
-                        errorCode = "2103503",
-                        defaultMessage = "Start debug Docker VM failed.",
-                        params = arrayOf(pipelineId)
-                    )
+            LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}")
+            OkhttpUtils.doLongHttp(request).use { resp ->
+                val responseBody = resp.body()!!.string()
+                LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
+                val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+                when {
+                    response["status"] == 0 -> {
+                        val containerId = response["data"].toString()
+                        pipelineDockerDebugDao.insertDebug(
+                            dslContext = dslContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            vmSeqId = vmSeqId,
+                            poolNo = poolNo,
+                            status = PipelineTaskStatus.RUNNING,
+                            token = "",
+                            imageName = dockerImage.trim(),
+                            hostTag = dockerIp,
+                            containerId = containerId,
+                            buildEnv = buildEnvStr,
+                            registryUser = userName,
+                            registryPwd = password,
+                            imageType = newImageType,
+                            imagePublicFlag = imageRepoInfo?.publicFlag,
+                            imageRDType = imageRepoInfo?.rdType
+                        )
+                    }
+                    response["status"] == 1 -> {
+                        // 母机负载过高
+                        LOG.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
+                        throw ErrorCodeException(
+                            errorCode = "2103505",
+                            defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
+                            params = arrayOf(pipelineId)
+                        )
+                    }
+                    else -> {
+                        val msg = response["message"]
+                        LOG.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
+                        throw ErrorCodeException(
+                            errorCode = "2103503",
+                            defaultMessage = "Start debug Docker VM failed.",
+                            params = arrayOf(pipelineId)
+                        )
+                    }
                 }
             }
         }
@@ -401,6 +365,99 @@ class DockerHostDebugService @Autowired constructor(
                 imageType = debugTask.imageType
             )
         )
+    }
+
+    private fun getDebugDockerImage(
+        imageRepoInfo: ImageRepoInfo?,
+        debugStartParam: DebugStartParam
+    ): String {
+        with(debugStartParam) {
+            if (containerPool != null) {
+                val containerPool: Pool = objectMapper.readValue(debugStartParam.containerPool!!)
+                return containerPool.container!!
+            }
+
+            val dockerImage = when (ImageType.getType(imageType)) {
+                ImageType.THIRD -> imageName!!
+                ImageType.BKSTORE -> {
+                    // 研发商店镜像一定含name与tag
+                    if (imageRepoInfo!!.repoUrl.isBlank()) {
+                        // dockerhub镜像名称不带斜杠前缀
+                        imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                    } else {
+                        // 无论蓝盾还是第三方镜像此处均需完整路径
+                        imageRepoInfo.repoUrl + "/" + imageRepoInfo.repoName + ":" + imageRepoInfo.repoTag
+                    }
+                }
+                else -> when (imageName) {
+                    DockerVersion.TLINUX1_2.value -> {
+                        defaultImageConfig.getTLinux1_2CompleteUri()
+                    }
+                    DockerVersion.TLINUX2_2.value -> {
+                        defaultImageConfig.getTLinux2_2CompleteUri()
+                    }
+                    else -> {
+                        if (defaultImageConfig.dockerBuildImagePrefix.isNullOrBlank()) {
+                            imageName?.trim()?.removePrefix("/")
+                        } else {
+                            "${defaultImageConfig.dockerBuildImagePrefix}/bkdevops/$imageName"
+                        }!!
+                    }
+                }
+            }
+            LOG.info("$pipelineId|dockerHostDebug|$dockerImage|$imageCode|$imageVersion|$credentialId")
+
+            return dockerImage
+        }
+    }
+
+    private fun getUserNameAndPassword(
+        imageType: ImageType,
+        finalCredentialId: String?,
+        credentialProject: String,
+        containerPool: String?
+    ): Pair<String?, String?> {
+        var userName: String? = null
+        var password: String? = null
+
+        if (containerPool != null) {
+            val pool: Pool = objectMapper.readValue(containerPool)
+            return Pair(pool.credential?.user, pool.credential?.password)
+        }
+
+        if (imageType == ImageType.THIRD && !finalCredentialId.isNullOrBlank()) {
+            val ticketsMap =
+                CommonUtils.getCredential(
+                    client = client,
+                    projectId = credentialProject,
+                    credentialId = finalCredentialId!!,
+                    type = CredentialType.USERNAME_PASSWORD
+                )
+            userName = ticketsMap["v1"] as String
+            password = ticketsMap["v2"] as String
+        }
+
+        return Pair(userName, password)
+    }
+
+    private fun getFormatImageType(
+        imageRepoInfo: ImageRepoInfo?,
+        imageTypeEnum: ImageType,
+        imageCode: String?,
+        imageVersion: String?,
+        containerPool: String?
+    ): String? {
+        if (containerPool != null) {
+            return null
+        }
+
+        return when (imageTypeEnum) {
+            ImageType.THIRD -> imageTypeEnum.type
+            ImageType.BKDEVOPS -> ImageType.BKDEVOPS.type
+            ImageType.BKSTORE -> imageRepoInfo!!.sourceType.type
+            else -> throw UnknownImageType("imageCode:$imageCode,imageVersion:$imageVersion," +
+                    "imageType:$imageTypeEnum")
+        }
     }
 
     @Scheduled(initialDelay = 45 * 1000, fixedDelay = 600 * 1000)

@@ -85,6 +85,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/check")
     @GET
     fun check(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -101,6 +104,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/acrossProjectCopy")
     @POST
     fun acrossProjectCopy(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -123,6 +129,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/properties")
     @GET
     fun properties(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -145,6 +154,9 @@ interface ServiceArtifactoryResource {
         @ApiParam("版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
+        @ApiParam("创建用户", required = false)
+        @QueryParam("creatorId")
+        creatorId: String?,
         @ApiParam("下载用户", required = true)
         @QueryParam("userId")
         userId: String,
@@ -189,6 +201,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/{artifactoryType}/show")
     @GET
     fun show(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -254,6 +269,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/searchFileAndPropertyByAnd")
     @POST
     fun searchFileAndPropertyByAnd(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -272,6 +290,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/searchFileAndPropertyByOr")
     @POST
     fun searchFileAndPropertyByOr(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -318,6 +339,9 @@ interface ServiceArtifactoryResource {
     @Path("/{projectId}/searchCustomFiles")
     @POST
     fun searchCustomFiles(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,

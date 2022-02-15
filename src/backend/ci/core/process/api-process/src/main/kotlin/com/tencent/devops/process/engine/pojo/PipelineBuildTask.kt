@@ -52,13 +52,15 @@ data class PipelineBuildTask(
     val executeCount: Int? = 1,
     var starter: String,
     val approver: String?,
+    var subProjectId: String?,
     var subBuildId: String?,
     val startTime: LocalDateTime? = null,
     val endTime: LocalDateTime? = null,
     var errorType: ErrorType? = null,
     var errorCode: Int? = null,
     var errorMsg: String? = null,
-    val atomCode: String? = null
+    val atomCode: String? = null,
+    val stepId: String? = null
 ) {
     fun getTaskParam(paramName: String): String {
         return if (taskParams[paramName] != null) {

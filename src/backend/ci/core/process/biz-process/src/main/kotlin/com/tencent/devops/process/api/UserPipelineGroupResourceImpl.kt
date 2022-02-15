@@ -53,37 +53,33 @@ class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineG
         return Result(pipelineGroupService.updateGroup(userId, pipelineGroup))
     }
 
-    override fun deleteGroup(userId: String, groupId: String): Result<Boolean> {
-        return Result(pipelineGroupService.deleteGroup(userId, groupId))
+    override fun deleteGroup(userId: String, projectId: String, groupId: String): Result<Boolean> {
+        return Result(pipelineGroupService.deleteGroup(userId, projectId, groupId))
     }
 
-    override fun addLabel(userId: String, pipelineLabel: PipelineLabelCreate): Result<Boolean> {
-        return Result(pipelineGroupService.addLabel(userId, pipelineLabel))
+    override fun addLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelCreate): Result<Boolean> {
+        return Result(pipelineGroupService.addLabel(userId, projectId, pipelineLabel))
     }
 
-    override fun deleteLabel(userId: String, labelId: String): Result<Boolean> {
-        return Result(pipelineGroupService.deleteLabel(userId, labelId))
+    override fun deleteLabel(userId: String, projectId: String, labelId: String): Result<Boolean> {
+        return Result(pipelineGroupService.deleteLabel(userId, projectId, labelId))
     }
 
-    override fun updateLabel(userId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
-        return Result(pipelineGroupService.updateLabel(userId, pipelineLabel))
+    override fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
+        return Result(pipelineGroupService.updateLabel(userId, projectId, pipelineLabel))
     }
 
-    /*
-    override fun getViews(userId: String, projectId: String): Result<List<PipelineView>> {
-        return Result(pipelineGroupService.getViews(userId, projectId))
+    override fun updatePipelineLabel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        labelIds: List<String>
+    ): Result<Boolean> {
+        return try {
+            pipelineGroupService.updatePipelineLabel(userId, projectId, pipelineId, labelIds)
+            Result(true)
+        } catch (e: Exception) {
+            Result(data = false, message = e.message)
+        }
     }
-
-    override fun addView(userId: String, pipelineView: PipelineViewCreate): Result<PipelineViewId> {
-        return Result(PipelineViewId(pipelineGroupService.addView(userId, pipelineView)))
-    }
-
-    override fun deleteView(userId: String, viewId: String): Result<Boolean> {
-        return Result(pipelineGroupService.deleteView(userId, viewId))
-    }
-
-    override fun updateView(userId: String, pipelineView: PipelineViewUpdate): Result<Boolean> {
-        return Result(pipelineGroupService.updateView(userId, pipelineView))
-    }
-    */
 }

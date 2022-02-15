@@ -88,6 +88,20 @@ class EnvShareProjectDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        envName: String,
+        mainProjectId: String
+    ): List<TEnvShareProjectRecord> {
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(ENV_NAME.eq(envName))
+                .and(MAIN_PROJECT_ID.eq(mainProjectId))
+                .fetch()
+        }
+    }
+
+    @SuppressWarnings("LongParameterList")
     fun batchSave(
         dslContext: DSLContext,
         userId: String,
@@ -117,7 +131,7 @@ class EnvShareProjectDao {
                     envId,
                     envName,
                     mainProjectId,
-                    it.gitProjectId,
+                    it.getFinalProjectId(),
                     it.name,
                     it.type.name,
                     userId,
@@ -125,7 +139,7 @@ class EnvShareProjectDao {
                     now
                 ).onDuplicateKeyUpdate()
                     .set(ENV_NAME, envName)
-                    .set(SHARED_PROJECT_NAME, it.gitProjectId)
+                    .set(SHARED_PROJECT_NAME, it.getFinalProjectId())
                     .set(TYPE, it.type.name)
                     .set(CREATOR, userId)
                     .set(UPDATE_TIME, now)

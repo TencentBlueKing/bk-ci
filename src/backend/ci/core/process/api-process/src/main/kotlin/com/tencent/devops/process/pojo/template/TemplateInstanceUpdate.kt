@@ -29,14 +29,21 @@ package com.tencent.devops.process.pojo.template
 
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * deng
  * 2019-01-08
  */
+@ApiModel("")
 data class TemplateInstanceUpdate(
+    @ApiModelProperty("流水线id", required = false)
     val pipelineId: String,
+    @ApiModelProperty("流水线那名称", required = false)
     val pipelineName: String,
+    @ApiModelProperty("构建版本号", required = false)
     val buildNo: BuildNo?,
+    @ApiModelProperty("流水线变量列表", required = false)
     val param: List<BuildFormProperty>?
 )

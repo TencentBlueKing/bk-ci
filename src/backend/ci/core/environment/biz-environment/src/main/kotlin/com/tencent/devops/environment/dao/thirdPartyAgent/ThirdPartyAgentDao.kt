@@ -39,6 +39,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import org.jooq.UpdateSetMoreStep
 
 @Repository
 @Suppress("ALL")
@@ -313,7 +314,6 @@ class ThirdPartyAgentDao {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
-                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }
     }
@@ -442,6 +442,35 @@ class ThirdPartyAgentDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(OS.eq(os.name))
                 .fetch()
+        }
+    }
+
+    fun refreshGateway(dslContext: DSLContext, oldToNewMap: Map<String, String>) {
+        with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
+            dslContext.transaction { configuration ->
+                val updates = mutableListOf<UpdateSetMoreStep<TEnvironmentThirdpartyAgentRecord>>()
+                val transactionContext = DSL.using(configuration)
+                transactionContext.selectFrom(this).fetch().forEach { record ->
+                    oldToNewMap.forEach { (old, new) ->
+                        val update = transactionContext.update(this)
+                            .set(CREATED_TIME, record.createdTime)
+                        var needUpdate = false
+                        if (record.gateway.contains(old)) {
+                            update.set(GATEWAY, record.gateway.replace(old, new))
+                            needUpdate = true
+                        }
+                        if (record.fileGateway.contains(old)) {
+                            update.set(FILE_GATEWAY, record.fileGateway.replace(old, new))
+                            needUpdate = true
+                        }
+                        if (needUpdate) {
+                            update.where(ID.eq(record.id))
+                            updates.add(update)
+                        }
+                    }
+                }
+                transactionContext.batch(updates).execute()
+            }
         }
     }
 }

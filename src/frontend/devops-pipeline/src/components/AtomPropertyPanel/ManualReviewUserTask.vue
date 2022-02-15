@@ -29,7 +29,7 @@
                                 {{ output.description }}
                             </div>
                         </bk-popover>
-                        <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
+                        <copy-icon :value="bkVarWrapper(namespace ? `${namespace}_${key}` : key)"></copy-icon>
                     </p>
                 </div>
             </div>

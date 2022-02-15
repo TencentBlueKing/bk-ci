@@ -33,16 +33,16 @@ import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
-import com.tencent.devops.common.webhook.service.code.filter.UrlFilter
+import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
@@ -65,7 +65,11 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getRevision(event: GitTagPushEvent): String {
-        return event.commits[0].id
+        return if (event.commits.isNullOrEmpty()) {
+            ""
+        } else {
+            event.commits!![0].id
+        }
     }
 
     override fun getRepoName(event: GitTagPushEvent): String {
@@ -77,7 +81,11 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getMessage(event: GitTagPushEvent): String {
-        return event.commits[0].message
+        return if (event.commits.isNullOrEmpty()) {
+            ""
+        } else {
+            event.commits!![0].message
+        }
     }
 
     override fun retrieveParams(
@@ -91,7 +99,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = event.total_commits_count
         startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.user_name
         startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = event.create_from ?: ""
-        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits))
+        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits ?: emptyList()))
         return startParams
     }
 
@@ -103,7 +111,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            val urlFilter = UrlFilter(
+            val urlFilter = GitUrlFilter(
                 pipelineId = pipelineId,
                 triggerOnUrl = getUrl(event),
                 repositoryUrl = repository.url,

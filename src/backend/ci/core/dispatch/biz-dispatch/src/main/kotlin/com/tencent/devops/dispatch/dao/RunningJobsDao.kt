@@ -40,24 +40,21 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
+@Repository
 class RunningJobsDao {
 
     fun getAgentRunningJobs(
         dslContext: DSLContext,
-        projectId: String,
         buildId: String,
-        vmSeqId: String?
-    ): Result<TDispatchRunningJobsRecord?> {
+        vmSeqId: String,
+        executeCount: Int
+    ): TDispatchRunningJobsRecord? {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
-            val condition = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
-                .and(AGENT_START_TIME.isNotNull)
-            if (!vmSeqId.isNullOrBlank()) {
-                condition.and(VM_SEQ_ID.eq(vmSeqId))
-            }
-            return condition.fetch()
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetchOne()
         }
     }
 
@@ -98,16 +95,6 @@ class RunningJobsDao {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             return dslContext.selectCount().from(this)
                 .where(VM_TYPE.eq(jobQuotaVmType.name))
-                .and(PROJECT_ID.notLike("git_%"))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    fun getSystemGitCiRunningJobCount(dslContext: DSLContext, jobQuotaVmType: JobQuotaVmType): Int {
-        with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
-            return dslContext.selectCount().from(this)
-                .where(VM_TYPE.eq(jobQuotaVmType.name))
-                .and(PROJECT_ID.like("git_%"))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -117,7 +104,8 @@ class RunningJobsDao {
         projectId: String,
         jobQuotaVmType: JobQuotaVmType,
         buildId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        executeCount: Int
     ) {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             val now = LocalDateTime.now()
@@ -126,6 +114,7 @@ class RunningJobsDao {
                 VM_TYPE,
                 BUILD_ID,
                 VM_SEQ_ID,
+                EXECUTE_COUNT,
                 CREATED_TIME
             )
                 .values(
@@ -133,6 +122,7 @@ class RunningJobsDao {
                     jobQuotaVmType.name,
                     buildId,
                     vmSeqId,
+                    executeCount,
                     now
                 )
                 .execute()
@@ -141,33 +131,31 @@ class RunningJobsDao {
 
     fun delete(
         dslContext: DSLContext,
-        projectId: String,
         buildId: String,
-        vmSeqId: String?
+        vmSeqId: String,
+        executeCount: Int
     ) {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
-            val condition = dslContext.deleteFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
-            if (!vmSeqId.isNullOrBlank()) {
-                condition.and(VM_SEQ_ID.eq(vmSeqId))
-            }
-            condition.execute()
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .execute()
         }
     }
 
     fun updateAgentStartTime(
         dslContext: DSLContext,
-        projectId: String,
         buildId: String,
-        vmSeqId: String
+        vmSeqId: String,
+        executeCount: Int
     ) {
         with(TDispatchRunningJobs.T_DISPATCH_RUNNING_JOBS) {
             dslContext.update(this)
                 .set(AGENT_START_TIME, LocalDateTime.now())
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
                 .and(VM_SEQ_ID.eq(vmSeqId))
+                .and(EXECUTE_COUNT.eq(executeCount))
                 .execute()
         }
     }

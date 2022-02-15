@@ -124,17 +124,17 @@
                 timer: -1,
                 docsLink: `${DOCS_URL_PREFIX}/store/store-home`,
                 progressStatus: [{
-                    'name': this.$t('store.开始'),
-                    'step': 1,
-                    'status': 'success'
+                    name: this.$t('store.开始'),
+                    step: 1,
+                    status: 'success'
                 }, {
-                    'name': this.$t('store.审核中'),
-                    'step': 2,
-                    'status': 'doing'
+                    name: this.$t('store.审核中'),
+                    step: 2,
+                    status: 'doing'
                 }, {
-                    'name': this.$t('store.结束'),
-                    'step': 3,
-                    'status': 'undo'
+                    name: this.$t('store.结束'),
+                    step: 3,
+                    status: 'undo'
                 }],
                 loading: {
                     isLoading: false,
@@ -449,10 +449,10 @@
                 width: 100%;
             }
             .markdown-editor-show.info-value {
-                /deep/ .v-note-panel {
+                ::v-deep .v-note-panel {
                     border: none;
                 }
-                /deep/ .v-show-content {
+                ::v-deep .v-show-content {
                     background: #FAFBFD;
                 }
             }

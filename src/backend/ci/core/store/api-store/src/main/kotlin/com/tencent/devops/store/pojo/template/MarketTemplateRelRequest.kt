@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.template
 
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,5 +37,6 @@ data class MarketTemplateRelRequest(
     @ApiModelProperty("项目编码", required = true)
     val projectCode: String,
     @ApiModelProperty("模板名称", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val templateName: String
 )

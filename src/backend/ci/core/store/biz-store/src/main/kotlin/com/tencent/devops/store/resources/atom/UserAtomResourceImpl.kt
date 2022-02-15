@@ -62,6 +62,7 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         keyword: String?,
         queryProjectAtomFlag: Boolean,
         fitOsFlag: Boolean?,
+        queryFitAgentBuildLessAtomFlag: Boolean?,
         page: Int,
         pageSize: Int
     ): Result<AtomResp<AtomRespItem>?> {
@@ -77,6 +78,7 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
             recommendFlag = recommendFlag,
             keyword = keyword,
             queryProjectAtomFlag = queryProjectAtomFlag,
+            queryFitAgentBuildLessAtomFlag = queryFitAgentBuildLessAtomFlag,
             fitOsFlag = fitOsFlag,
             page = page,
             pageSize = pageSize

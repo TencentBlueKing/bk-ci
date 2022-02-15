@@ -102,6 +102,9 @@ interface UserAtomResource {
         @ApiParam("是否适配操作系统标识", required = false)
         @QueryParam("fitOsFlag")
         fitOsFlag: Boolean? = true,
+        @ApiParam("查询支持有编译环境下的无编译环境插件标识", required = false)
+        @QueryParam("queryFitAgentBuildLessAtomFlag")
+        queryFitAgentBuildLessAtomFlag: Boolean? = true,
         @ApiParam("页码", required = true)
         @QueryParam("page")
         page: Int = 1,

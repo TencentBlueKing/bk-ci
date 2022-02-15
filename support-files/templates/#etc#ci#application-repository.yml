@@ -49,3 +49,5 @@ scm:
     tGit:
       apiUrl: https://git.tencent.com/api/v3
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
+    p4:
+      p4HookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/p4/commit

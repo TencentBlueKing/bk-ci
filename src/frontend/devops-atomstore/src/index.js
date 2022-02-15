@@ -27,7 +27,7 @@ const Vue = window.Vue
 Vue.use(mavonEditor)
 
 window.Pages = window.Pages || {}
-window.Pages['store'] = {
+window.Pages.store = {
     title: '研发商店',
     routes,
     store

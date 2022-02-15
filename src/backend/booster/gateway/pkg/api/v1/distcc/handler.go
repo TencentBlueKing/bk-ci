@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package distcc
 
 import (
@@ -6,13 +15,13 @@ import (
 	"strconv"
 	"strings"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonMySQL "build-booster/common/mysql"
-	commonTypes "build-booster/common/types"
-	"build-booster/gateway/pkg/api"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/distcc"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/distcc"
 
 	"github.com/emicklei/go-restful"
 )
@@ -22,14 +31,16 @@ func ListTask(req *restful.Request, resp *restful.Response) {
 	opts, err := getListOptions(req, "TASK")
 	if err != nil {
 		blog.Errorf("list task get options failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+			Message: err.Error()})
 		return
 	}
 
 	taskList, length, err := defaultMySQL.ListTask(opts)
 	if err != nil {
 		blog.Errorf("list task failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListTaskFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListTaskFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -41,14 +52,16 @@ func ListProject(req *restful.Request, resp *restful.Response) {
 	opts, err := getListOptions(req, "PROJECT")
 	if err != nil {
 		blog.Errorf("list project get options failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+			Message: err.Error()})
 		return
 	}
 
 	projectList, length, err := defaultMySQL.ListProject(opts)
 	if err != nil {
 		blog.Errorf("list project failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListProjectFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListProjectFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -85,7 +98,8 @@ func UpdateProject(req *restful.Request, resp *restful.Response) {
 
 	if projectType.Operator == "" {
 		blog.Errorf("update project failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
@@ -100,10 +114,12 @@ func UpdateProject(req *restful.Request, resp *restful.Response) {
 
 	var record []byte
 	_ = codec.EncJSON(projectType.RawData, &record)
-	blog.Infof("receive a project update: ID(%s) Operator(%s) Data: %s", projectID, projectType.Operator, string(record))
+	blog.Infof("receive a project update: ID(%s) Operator(%s) Data: %s",
+		projectID, projectType.Operator, string(record))
 	if err := defaultMySQL.CreateOrUpdateProjectSetting(&projectType.Data, projectType.RawData); err != nil {
 		blog.Errorf("update project failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateProjectFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateProjectFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -121,7 +137,8 @@ func DeleteProject(req *restful.Request, resp *restful.Response) {
 
 	if projectType.Operator == "" {
 		blog.Errorf("delete project failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
@@ -129,7 +146,8 @@ func DeleteProject(req *restful.Request, resp *restful.Response) {
 	blog.Infof("receive a project delete: ID(%s) Operator(%s)", projectID, projectType.Operator)
 	if err := defaultMySQL.DeleteProjectSetting(projectID); err != nil {
 		blog.Errorf("delete project failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteProjectFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteProjectFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -148,7 +166,8 @@ func ListWhitelist(req *restful.Request, resp *restful.Response) {
 	whitelistList, _, err := defaultMySQL.ListWhitelist(opts)
 	if err != nil {
 		blog.Errorf("list whitelist failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWhiteListFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWhiteListFailed,
+			Message: err.Error()})
 		return
 	}
 	for _, wl := range whitelistList {
@@ -171,7 +190,8 @@ func UpdateWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if whitelistType.Operator == "" {
 		blog.Errorf("update whitelist failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
@@ -179,7 +199,8 @@ func UpdateWhitelist(req *restful.Request, resp *restful.Response) {
 	for _, wl := range whiteList {
 		if err := wl.CheckData(); err != nil {
 			blog.Errorf("update whitelist check data failed: %v", err)
-			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+				Message: err.Error()})
 			return
 		}
 	}
@@ -190,7 +211,8 @@ func UpdateWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if err := defaultMySQL.PutWhitelist(whiteList); err != nil {
 		blog.Errorf("update whitelist failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateWhiteListFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateWhiteListFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -202,13 +224,15 @@ func DeleteWhitelist(req *restful.Request, resp *restful.Response) {
 	var whitelistType DeleteWhitelistType
 	if err := codec.DecJSONReader(req.Request.Body, &whitelistType); err != nil {
 		blog.Errorf("delete whitelist get data failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+			Message: err.Error()})
 		return
 	}
 
 	if whitelistType.Operator == "" {
 		blog.Errorf("delete whitelist failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 	keys := whitelistType.Data
@@ -224,7 +248,8 @@ func DeleteWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if err := defaultMySQL.DeleteWhitelist(keys); err != nil {
 		blog.Errorf("delete whitelist failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteWhiteListFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteWhiteListFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -236,7 +261,8 @@ func ListGcc(req *restful.Request, resp *restful.Response) {
 	opts, err := getListOptions(req, "GCC")
 	if err != nil {
 		blog.Errorf("list gcc get options failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+			Message: err.Error()})
 		return
 	}
 
@@ -255,13 +281,15 @@ func UpdateGcc(req *restful.Request, resp *restful.Response) {
 	var gccType UpdateGccType
 	if err := codec.DecJSONReader(req.Request.Body, &gccType); err != nil {
 		blog.Errorf("update gcc get data failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+			Message: err.Error()})
 		return
 	}
 
 	if gccType.Operator == "" {
 		blog.Errorf("update gcc failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
@@ -277,7 +305,8 @@ func UpdateGcc(req *restful.Request, resp *restful.Response) {
 
 	if err := defaultMySQL.PutGcc(&gcc); err != nil {
 		blog.Errorf("update gcc failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateGccFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateGccFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -295,7 +324,8 @@ func DeleteGcc(req *restful.Request, resp *restful.Response) {
 
 	if gccType.Operator == "" {
 		blog.Errorf("delete gcc failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
@@ -303,7 +333,8 @@ func DeleteGcc(req *restful.Request, resp *restful.Response) {
 	blog.Infof("receive a gcc delete: gccVersion(%s) Operator(%s)", gccVersion, gccType.Operator)
 	if err := defaultMySQL.DeleteGcc(gccVersion); err != nil {
 		blog.Errorf("delete gcc failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteGccFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteGccFailed,
+			Message: err.Error()})
 		return
 	}
 

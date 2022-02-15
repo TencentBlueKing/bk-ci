@@ -117,7 +117,7 @@ class BuildLogPrinter(
         genLogPrintPrintResource().addLogLine(
             buildId = buildId,
             logMessage = genLogMessage(
-                message = message,
+                message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -138,7 +138,7 @@ class BuildLogPrinter(
         genLogPrintPrintResource().addLogLine(
             buildId = buildId,
             logMessage = genLogMessage(
-                message = message,
+                message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -158,6 +158,23 @@ class BuildLogPrinter(
     ) = addLine(
         buildId = buildId,
         message = Ansi().bold().fgYellow().a(message).reset().toString(),
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
+
+    @Suppress("UNUSED")
+    fun addGreenLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String?,
+        executeCount: Int,
+        subTag: String? = null
+    ) = addLine(
+        buildId = buildId,
+        message = Ansi().bold().fgGreen().a(message).reset().toString(),
         tag = tag,
         subTag = subTag,
         jobId = jobId,
@@ -187,35 +204,17 @@ class BuildLogPrinter(
         executeCount: Int? = null,
         subTag: String? = null
     ) {
-        updateLogStatus(
-            buildId = buildId,
-            finished = true,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-    }
-
-    private fun updateLogStatus(
-        buildId: String,
-        finished: Boolean,
-        tag: String,
-        subTag: String? = null,
-        jobId: String? = null,
-        executeCount: Int?
-    ) {
         try {
             genLogPrintPrintResource().updateLogStatus(
                 buildId = buildId,
-                finished = finished,
+                finished = true,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId ?: "",
                 executeCount = executeCount
             )
         } catch (e: Exception) {
-            logger.error("[$buildId]|updateLogStatus error|finished=$finished", e)
+            logger.error("[$buildId]|stopLog fail", e)
         }
     }
 
@@ -242,5 +241,11 @@ class BuildLogPrinter(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildLogPrinter::class.java)
+
+        private const val LOG_DEBUG_FLAG = "##[debug]"
+
+        private const val LOG_ERROR_FLAG = "##[error]"
+        @Suppress("UNUSED")
+        private const val LOG_WARN_FLAG = "##[warning]"
     }
 }

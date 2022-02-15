@@ -18,8 +18,6 @@ import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Propagation
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 @Suppress("NAME_SHADOWING", "MaxLineLength")
@@ -46,7 +44,6 @@ class TurboPlanInstanceService @Autowired constructor(
     /**
      * 根据方案id和客户端ip查找，如果没有则新增，如果有则返回
      */
-    @Transactional(propagation = Propagation.REQUIRED)
     fun upsertInstanceByPlanIdAndIp(
         turboPlanId: String,
         projectId: String,

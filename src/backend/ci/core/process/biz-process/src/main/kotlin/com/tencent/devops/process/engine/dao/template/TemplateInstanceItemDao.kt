@@ -36,23 +36,26 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("LongParameterList")
 @Repository
 class TemplateInstanceItemDao {
 
     fun createTemplateInstanceItem(
         dslContext: DSLContext,
+        projectId: String,
         baseId: String,
         instances: List<TemplateInstanceUpdate>,
         status: String,
         userId: String
     ) {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
-            val addStep = instances.map {
+            instances.map {
                 val buildNo = it.buildNo
                 val param = it.param
                 dslContext.insertInto(
                     this,
                     ID,
+                    PROJECT_ID,
                     PIPELINE_ID,
                     PIPELINE_NAME,
                     BUILD_NO_INFO,
@@ -64,6 +67,7 @@ class TemplateInstanceItemDao {
                 )
                     .values(
                         UUIDUtil.generate(),
+                        projectId,
                         it.pipelineId,
                         it.pipelineName,
                         buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) },
@@ -73,8 +77,16 @@ class TemplateInstanceItemDao {
                         userId,
                         userId
                     )
+                    .onDuplicateKeyUpdate()
+                    .set(PIPELINE_NAME, it.pipelineName)
+                    .set(BUILD_NO_INFO, buildNo?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(STATUS, status)
+                    .set(PARAM, param?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(BASE_ID, baseId)
+                    .set(CREATOR, userId)
+                    .set(MODIFIER, userId)
+                    .execute()
             }
-            dslContext.batch(addStep).execute()
         }
     }
 
@@ -98,13 +110,14 @@ class TemplateInstanceItemDao {
 
     fun getTemplateInstanceItemListByBaseId(
         dslContext: DSLContext,
+        projectId: String,
         baseId: String,
         descFlag: Boolean,
         page: Int,
         pageSize: Int
     ): Result<TTemplateInstanceItemRecord>? {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
-            val baseStep = dslContext.selectFrom(this).where(BASE_ID.eq(baseId))
+            val baseStep = dslContext.selectFrom(this).where(BASE_ID.eq(baseId).and(PROJECT_ID.eq(projectId)))
             if (descFlag) {
                 baseStep.orderBy(CREATE_TIME.desc())
             } else {
@@ -116,26 +129,31 @@ class TemplateInstanceItemDao {
 
     fun getTemplateInstanceItemCountByBaseId(
         dslContext: DSLContext,
+        projectId: String,
         baseId: String
     ): Long {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
-            return dslContext.selectCount().from(this).where(BASE_ID.eq(baseId)).fetchOne(0, Long::class.java)!!
+            return dslContext.selectCount().from(this)
+                .where(BASE_ID.eq(baseId).and(PROJECT_ID.eq(projectId)))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
     fun getTemplateInstanceItemListByPipelineIds(
         dslContext: DSLContext,
+        projectId: String,
         pipelineIds: Collection<String>
     ): Result<TTemplateInstanceItemRecord>? {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
-            return dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds)).fetch()
+            return dslContext.selectFrom(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId))).fetch()
         }
     }
 
-    fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
+    fun deleteByBaseId(dslContext: DSLContext, projectId: String, baseId: String) {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
             dslContext.deleteFrom(this)
-                .where(BASE_ID.eq(baseId))
+                .where(BASE_ID.eq(baseId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

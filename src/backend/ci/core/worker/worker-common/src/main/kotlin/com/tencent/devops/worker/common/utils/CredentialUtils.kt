@@ -30,7 +30,10 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
@@ -48,11 +51,20 @@ object CredentialUtils {
 
     private val sdkApi = ApiFactory.create(CredentialSDKApi::class)
 
-    fun getCredential(buildId: String, credentialId: String, showErrorLog: Boolean = true): List<String> {
-        return getCredentialWithType(credentialId, showErrorLog).first
+    fun getCredential(
+        buildId: String,
+        credentialId: String,
+        showErrorLog: Boolean = true,
+        acrossProjectId: String? = null
+    ): List<String> {
+        return getCredentialWithType(credentialId, showErrorLog, acrossProjectId).first
     }
 
-    fun getCredentialWithType(credentialId: String, showErrorLog: Boolean = true): Pair<List<String>, CredentialType> {
+    fun getCredentialWithType(
+        credentialId: String,
+        showErrorLog: Boolean = true,
+        acrossProjectId: String? = null
+    ): Pair<List<String>, CredentialType> {
         if (credentialId.trim().isEmpty()) {
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
@@ -62,15 +74,7 @@ object CredentialUtils {
         }
         try {
             val pair = DHUtil.initKey()
-            val encoder = Base64.getEncoder()
-            logger.info("Start to get the credential($credentialId)")
-
-            val result = sdkApi.get(credentialId, encoder.encodeToString(pair.publicKey))
-
-            if (result.isNotOk() || result.data == null) {
-                logger.error("Fail to get the credential($credentialId) because of ${result.message}")
-                throw NotFoundException(result.message!!)
-            }
+            val result = requestCredential(credentialId, pair, acrossProjectId)
 
             val credential = result.data!!
             val list = ArrayList<String>()
@@ -95,16 +99,44 @@ object CredentialUtils {
         }
     }
 
-    fun getCredentialContextValue(key: String): String? {
+    private fun requestCredential(
+        credentialId: String,
+        pair: DHKeyPair,
+        acrossProjectId: String?
+    ): Result<CredentialInfo> {
+        val encoder = Base64.getEncoder()
+        logger.info("Start to get the credential($credentialId|$acrossProjectId)")
+
+        val result = sdkApi.get(credentialId, encoder.encodeToString(pair.publicKey))
+        if (result.isOk() && result.data != null) {
+            return result
+        }
+        // 当前项目取不到查看是否有跨项目凭证
+        if (!acrossProjectId.isNullOrBlank()) {
+            val acrossResult =
+                sdkApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
+            if (acrossResult.isNotOk() || acrossResult.data == null) {
+                logger.error("Fail to get the across project($acrossProjectId) " +
+                    "credential($credentialId) because of ${result.message}")
+                throw NotFoundException(result.message!!)
+            }
+            return acrossResult
+        }
+
+        logger.error("Fail to get the credential($credentialId) because of ${result.message}")
+        throw NotFoundException(result.message!!)
+    }
+
+    fun getCredentialContextValue(key: String, acrossProjectId: String? = null): String? {
         val ticketId = getCredentialKey(key)
         if (ticketId == key) {
             return null
         }
 
         return try {
-            val valueTypePair = getCredentialWithType(ticketId, false)
+            val valueTypePair = getCredentialWithType(ticketId, false, acrossProjectId)
             val value = getCredentialValue(valueTypePair.first, valueTypePair.second, key)
-            logger.info("get credential context value, key: $key, value: $value")
+            logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId, value: $value")
             value
         } catch (ignore: Exception) {
             logger.warn("凭证ID变量($ticketId)不存在", ignore.message)

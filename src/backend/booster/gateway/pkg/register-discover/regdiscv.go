@@ -1,4 +1,13 @@
-package register_discover
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
+package rd
 
 import (
 	"context"
@@ -9,11 +18,11 @@ import (
 	"sync"
 	"time"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	"build-booster/common/ssl"
-	"build-booster/gateway/config"
-	"build-booster/gateway/pkg/types"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
+	"github.com/Tencent/bk-ci/src/booster/gateway/config"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/types"
 
 	etcdClient "github.com/coreos/etcd/clientv3"
 	etcdConcurrency "github.com/coreos/etcd/clientv3/concurrency"
@@ -89,6 +98,7 @@ type etcdRegisterDiscover struct {
 	serverMutex   sync.RWMutex
 }
 
+// Quit stop the connections to etcd
 func (erd *etcdRegisterDiscover) Quit() error {
 	if erd.session != nil {
 		return erd.session.Close()
@@ -98,12 +108,14 @@ func (erd *etcdRegisterDiscover) Quit() error {
 	return nil
 }
 
+// AddObserver subscribe an observer to receive role change event
 func (erd *etcdRegisterDiscover) AddObserver(observer chan types.RoleType) error {
 	blog.Infof("AddObserver [%+v]", observer)
 	erd.observerEvents = append(erd.observerEvents, observer)
 	return nil
 }
 
+// Run run rd
 func (erd *etcdRegisterDiscover) Run() error {
 	blog.Infof("Run etcd")
 	// register server info to etcd
@@ -121,6 +133,7 @@ func (erd *etcdRegisterDiscover) Run() error {
 	return nil
 }
 
+// IsMaster check whether I am the master
 func (erd *etcdRegisterDiscover) IsMaster() (bool, *types.ServerInfo, error) {
 	erd.roleMutex.RLock()
 	defer erd.roleMutex.RUnlock()
@@ -128,6 +141,7 @@ func (erd *etcdRegisterDiscover) IsMaster() (bool, *types.ServerInfo, error) {
 	return erd.role == types.ServerMaster, erd.leader, nil
 }
 
+// GetServers get all servers registered in etcd
 func (erd *etcdRegisterDiscover) GetServers() ([]*types.ServerInfo, error) {
 	erd.serverMutex.RLock()
 	defer erd.serverMutex.RUnlock()
@@ -135,6 +149,7 @@ func (erd *etcdRegisterDiscover) GetServers() ([]*types.ServerInfo, error) {
 	return erd.servers, nil
 }
 
+// IsServerIP check if the given ip is one of the servers' ip
 func (erd *etcdRegisterDiscover) IsServerIP(ip string) (bool, error) {
 	servers, err := erd.GetServers()
 	if err != nil {

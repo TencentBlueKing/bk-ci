@@ -4,6 +4,8 @@ plugins {
 }
 
 repositories {
+    mavenLocal()
+    maven(url = "https://plugins.gradle.org/m2/")
     mavenCentral()
     jcenter()
 }

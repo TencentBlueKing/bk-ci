@@ -28,7 +28,7 @@ $itemHeight: 42px;
 $serialSize: 42px;
 $iconSize: 42px;
 $lineStyle: solid;
-$StagePadding: $StageMargin / 2;
+$StagePadding: $StageMargin * 0.5;
 $addBtnSize: 18px;
 $dotR: 10px;
 $smalldotR: 6px;
@@ -38,8 +38,8 @@ $shortLine: $StagePadding;
 $stageBGColor: #f5f5f5;
 
 $containerMargin: 20px;
-$addIconLeftMargin: $StageMargin / 2 - $reviewIconSize / 2;
-$addIconRightMargin: $reviewIconSize / 2 + $StageMargin / 2;
+$addIconLeftMargin: $StageMargin * 0.5 - $reviewIconSize * 0.5;
+$addIconRightMargin: $reviewIconSize * 0.5 + $StageMargin * 0.5;
 $addIconLeft: -$addIconRightMargin;
 $appendIconRight: -$addIconLeftMargin - $addBtnSize;
 
@@ -68,11 +68,11 @@ $appendIconRight: -$addIconLeftMargin - $addBtnSize;
     &:after {
         content: '';
         position: absolute;
-        left: ($size - 2px) / 2;
-        top: ($size - 8px) / 2;
+        left: ($size - 2px) * 0.5;
+        top: ($size - 8px) * 0.5;
         @if $outline {
-            left: ($size - 2px - 2px) / 2;
-            top: ($size - 2px - 8px) / 2;
+            left: ($size - 2px - 2px) * 0.5;
+            top: ($size - 2px - 8px) * 0.5;
         }
         height: 8px;
         width: 2px;
@@ -108,8 +108,8 @@ $appendIconRight: -$addIconLeftMargin - $addBtnSize;
 
 .connect-line {
     position: absolute;
-    width: $svgWidth;
-    top: $itemHeight / 2 - 2;
+    // width: $svgWidth;
+    top: $itemHeight * 0.5 - 2;
     stroke: $primaryColor;
     stroke-width: 1;
     fill: none;

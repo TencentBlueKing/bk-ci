@@ -37,6 +37,7 @@ enum class JobQuotaVmType(val displayName: String) {
     OTHER("私有构建机或集群"),
     AGENTLESS("无编译环境"),
     DOCKER_GITCI("工蜂CI构建机"),
+    DOCKER_STREAM("STREAM构建机"),
     ALL("所有类型");
 
     companion object {

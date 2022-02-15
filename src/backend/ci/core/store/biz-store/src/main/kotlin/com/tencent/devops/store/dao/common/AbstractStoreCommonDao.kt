@@ -45,6 +45,11 @@ abstract class AbstractStoreCommonDao {
         storeCode: String
     ): String?
 
+    abstract fun getStorePublicFlagByCode(
+        dslContext: DSLContext,
+        storeCode: String
+    ): Boolean
+
     abstract fun getStoreCodeListByName(
         dslContext: DSLContext,
         storeName: String

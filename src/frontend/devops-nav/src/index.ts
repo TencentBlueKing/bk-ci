@@ -1,6 +1,5 @@
 /// <reference path='./typings/index.d.ts' />
 
-import 'core-js/es7/array'
 import Vue from 'vue'
 
 import createRouter from '@/router'

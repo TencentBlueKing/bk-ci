@@ -6,7 +6,7 @@
                 <span :class="['item-name', { 'g-store-text-underline': statistic.tips }]"
                     v-bk-tooltips="{ content: statistic.tips, disabled: !statistic.tips }"
                 >{{ statistic.label }}</span>
-                <p :class="{ 'item-value': true, 'statistic-link': statistic.linkName }" @click="goToLink(statistic.linkName)">{{ statistic.value }}</p>
+                <p :class="{ 'item-value': true, 'g-text-link': statistic.linkName }" @click="goToLink(statistic.linkName)">{{ statistic.value }}</p>
             </h5>
         </li>
     </ul>
@@ -58,10 +58,11 @@
                 }).then((res) => {
                     this.statisticList = [
                         { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
-                        { name: 'pipeline-count',
-                          label: this.$t('store.流水线个数'),
-                          value: res.pipelineCnt,
-                          linkName: 'statisticPipeline'
+                        {
+                            name: 'pipeline-count',
+                            label: this.$t('store.流水线个数'),
+                            value: res.pipelineCnt,
+                            linkName: 'statisticPipeline'
                         },
                         { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
                         { name: 'rate', label: this.$t('store.评分'), value: res.score || '--' },
@@ -115,13 +116,6 @@
                     margin-top: .03rem;
                     box-sizing: border-box;
                     height: .3rem;
-                }
-                .statistic-link {
-                    cursor: pointer;
-                    color: #3a84ff;
-                    &:hover {
-                        border-bottom: 1px solid #3a84ff;
-                    }
                 }
             }
         }

@@ -78,6 +78,7 @@ const val NAME = "name" // 名称
 const val FAIL_NUM = "failNum" // 失败数量
 const val VERSION = "version" // 版本号
 const val TYPE = "type" // 类型
+const val OUTPUT_DESC = "description" // 插件输出字段描述
 const val COMPONENT = "component" // 组件
 const val PIPELINE_URL = "pipelineUrl" // 流水线链接
 const val ARTIFACT = "artifact" // 构件
@@ -103,6 +104,7 @@ const val AND = "and" // 和
 const val OR = "or" // 或
 const val TIMETOSELECT = "timetoSelect" // 时必选
 const val API_ACCESS_TOKEN_PROPERTY = "access_token"
+const val MASTER = "master" // 主干
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

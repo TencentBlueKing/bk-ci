@@ -27,16 +27,20 @@
 
 package com.tencent.devops.common.client.ms
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 class MicroServiceTarget<T> constructor(
@@ -45,6 +49,20 @@ class MicroServiceTarget<T> constructor(
     private val consulClient: ConsulDiscoveryClient,
     private val tag: String?
 ) : FeignTarget<T> {
+    private val msCache =
+        CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(1, TimeUnit.SECONDS)
+            .build(object : CacheLoader<String, List<ServiceInstance>>() {
+                override fun load(s: String): List<ServiceInstance> {
+                    val instances = consulClient.getInstances(s)
+                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$s]服务提供者")
+                    if (instances.isEmpty()) {
+                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$s]服务提供者")
+                    }
+                    return instances
+                }
+            })
 
     private val errorInfo =
         MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
@@ -52,18 +70,15 @@ class MicroServiceTarget<T> constructor(
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
     private fun choose(serviceName: String): ServiceInstance {
-
-        val instances = consulClient.getInstances(serviceName)
-            ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]服务提供者")
-        if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]服务提供者")
-        }
-
+        val instances = msCache.get(serviceName)
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
         val consulContentTag = ConsulContent.getConsulContent()
         val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
+            if (consulContentTag != tag) {
+                logger.info("MicroService content:${ConsulContent.getConsulContent()} local:$tag")
+            }
             consulContentTag
         } else tag
 
@@ -105,4 +120,8 @@ class MicroServiceTarget<T> constructor(
     override fun name() = serviceName
 
     private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
+    }
 }

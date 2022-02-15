@@ -46,7 +46,7 @@ class ServiceBuildPermissionResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<Boolean> {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: return Result(false)
         return when {
             buildInfo.projectId != projectId -> {

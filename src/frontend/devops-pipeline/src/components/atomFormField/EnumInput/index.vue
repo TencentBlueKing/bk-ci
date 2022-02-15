@@ -44,7 +44,7 @@
 <style lang="scss" scoped>
     .bkdevops-radio {
         width: 100%;
-        /deep/ .bk-radio-text {
+        ::v-deep .bk-radio-text {
             width: calc(100% - 21px);
             height: 20px;
             line-height: 20px;
