@@ -73,5 +73,5 @@ data class SignHistory(
     @ApiModelProperty("错误信息", required = false)
     val errorMessage: String?,
     @ApiModelProperty("创建时间", required = false)
-    var ipaSignInfo: IpaSignInfo?
+    var ipaSignInfoStr: String?
 )

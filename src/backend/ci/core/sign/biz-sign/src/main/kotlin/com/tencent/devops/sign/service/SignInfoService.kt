@@ -92,7 +92,7 @@ class SignInfoService(
                 val history = signHistoryDao.convert(it)
                 val content = signIpaInfoDao.getSignInfoRecord(dslContext, history.resignId)
                 content?.let { info ->
-                    history.ipaSignInfo = decodeIpaSignInfo(info.requestContent, objectMapper)
+                    history.ipaSignInfoStr = String(Base64Util.decode(info.requestContent))
                 }
                 history
             }

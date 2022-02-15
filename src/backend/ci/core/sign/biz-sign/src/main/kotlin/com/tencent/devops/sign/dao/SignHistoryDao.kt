@@ -262,7 +262,7 @@ class SignHistoryDao {
                 zipFinishTime = zipFinishTime?.timestampmilli(),
                 archiveFinishTime = archiveFinishTime?.timestampmilli(),
                 errorMessage = errorMessage,
-                ipaSignInfo = null
+                ipaSignInfoStr = null
             )
         }
     }
