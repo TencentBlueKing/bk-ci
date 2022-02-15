@@ -72,6 +72,6 @@ data class SignHistory(
     val archiveFinishTime: Long?,
     @ApiModelProperty("错误信息", required = false)
     val errorMessage: String?,
-    @ApiModelProperty("创建时间", required = false)
+    @ApiModelProperty("签名任务请求原文", required = false)
     var ipaSignInfoStr: String?
 )
