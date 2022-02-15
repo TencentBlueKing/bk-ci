@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwBuildResourceV4 {
     @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v4_app_build_status", "v4_user_build_status"])
     @GET
-    @Path("/builds/status")
+    @Path("/build_status")
     fun getStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
