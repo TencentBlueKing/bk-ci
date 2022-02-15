@@ -53,7 +53,8 @@ import java.time.LocalTime
 class SignInfoService(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,
-    private val signHistoryDao: SignHistoryDao
+    private val signHistoryDao: SignHistoryDao,
+    private val objectMapper: ObjectMapper
 ) {
 
     fun listHistory(
@@ -88,7 +89,12 @@ class SignInfoService(
         return SQLPage(
             count,
             records.map {
-                signHistoryDao.convert(it)
+                val history = signHistoryDao.convert(it)
+                val content = signIpaInfoDao.getSignInfoRecord(dslContext, history.resignId)
+                content?.let { info ->
+                    history.ipaSignInfo = decodeIpaSignInfo(info.requestContent, objectMapper)
+                }
+                history
             }
         )
     }
