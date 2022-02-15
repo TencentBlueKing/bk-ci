@@ -247,6 +247,17 @@ class ExperiencePublicDao {
         }
     }
 
+    fun getByRecordId(
+        dslContext: DSLContext,
+        recordId: Long
+    ): TExperiencePublicRecord? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(RECORD_ID.eq(recordId))
+                .fetchOne()
+        }
+    }
+
     @SuppressWarnings("ALL")
     fun updateById(
         dslContext: DSLContext,

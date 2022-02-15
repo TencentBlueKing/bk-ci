@@ -55,6 +55,8 @@ data class AppExperienceDetail(
     val canExperience: Boolean,
     @ApiModelProperty("是否在线", required = true)
     val online: Boolean,
+    @ApiModelProperty("是否订阅", required = true)
+    val subscribe: Boolean,
     @ApiModelProperty("更新日志", required = true)
     val changeLog: List<ExperienceChangeLog>,
     @ApiModelProperty("体验名称", required = true)
