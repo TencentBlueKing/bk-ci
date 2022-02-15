@@ -510,23 +510,18 @@ class GitCITriggerService @Autowired constructor(
         ).toSet()
 
         // 获取mr请求的变更文件列表，用来给后面判断
-        // 由于前面提交无流水线锁，所以这个出错需要解锁
-        val changeSet = triggerExceptionService.handleErrorCode(
-            request = gitRequestEvent,
-            commitCheck = CommitCheck(
-                isNoPipelineCheck = true,
-                block = false,
-                state = GitCICommitCheckState.FAILURE
-            ),
-            action = {
-                streamScmService.getMergeRequestChangeInfo(
-                    userId = null,
-                    token = gitToken,
-                    gitProjectId = gitRequestEvent.gitProjectId,
-                    mrId = mrId
-                )
+        val changeSet = streamScmService.getMergeRequestChangeInfo(
+            userId = null,
+            token = gitToken,
+            gitProjectId = gitRequestEvent.gitProjectId,
+            mrId = mrId
+        )?.files?.map {
+            if (it.deletedFile) {
+                it.oldPath
+            } else {
+                it.newPath
             }
-        )?.files?.filter { !it.deletedFile }?.map { it.newPath }?.toSet() ?: emptySet()
+        }?.toSet() ?: emptySet()
 
         // 已经merged的直接返回目标分支的文件列表即可
         if (merged) {
