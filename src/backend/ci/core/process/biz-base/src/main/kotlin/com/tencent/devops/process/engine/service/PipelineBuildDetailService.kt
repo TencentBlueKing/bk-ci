@@ -102,10 +102,13 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(pipelineBuildDao.getBuildInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId)) ?: return null
+        val buildInfo = pipelineBuildDao.convert(
+            pipelineBuildDao.getBuildInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        ) ?: return null
 
         val latestVersion = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId)?.version ?: -1
 
@@ -117,7 +120,8 @@ class PipelineBuildDetailService @Autowired constructor(
         if (refreshStatus) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
             if (checkPassDays(buildInfo.startTime) &&
-                (buildInfo.status.isFailure() || buildInfo.status.isCancel())) {
+                (buildInfo.status.isFailure() || buildInfo.status.isCancel())
+            ) {
                 ModelUtils.refreshCanRetry(model)
             }
         }
@@ -398,5 +402,13 @@ class PipelineBuildDetailService @Autowired constructor(
             buildStatus = BuildStatus.RUNNING,
             operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
+    }
+
+    fun getBuildDetailPipelineId(projectId: String, buildId: String): String? {
+        return pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )?.pipelineId
     }
 }
