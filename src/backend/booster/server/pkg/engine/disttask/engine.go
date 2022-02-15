@@ -382,19 +382,19 @@ func (de *disttaskEngine) getClusterID(queueName string) string {
 }
 
 func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
-	queueKey := config.InstanceType{
+	istKey := config.InstanceType{
 		Platform: getPlatform(queueName),
-		City:     getQueueNamePure(queueName),
+		Group:    getQueueNamePure(queueName),
 	}
 	switch getQueueNameHeader(queueName) {
 	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
-		ist := de.k8sCrmMgr.GetInstanceType(queueKey.Platform, queueKey.City)
+		ist := de.k8sCrmMgr.GetInstanceType(istKey.Platform, istKey.Group)
 		return ist.CPUPerInstance, ist.MemPerInstance
 	case queueNameHeaderVMMac:
-		ist := de.dcMacMgr.GetInstanceType(queueKey.Platform, queueKey.City)
+		ist := de.dcMacMgr.GetInstanceType(istKey.Platform, istKey.Group)
 		return ist.CPUPerInstance, ist.MemPerInstance
 	default:
-		ist := de.crmMgr.GetInstanceType(queueKey.Platform, queueKey.City)
+		ist := de.crmMgr.GetInstanceType(istKey.Platform, istKey.Group)
 		return ist.CPUPerInstance, ist.MemPerInstance
 	}
 }

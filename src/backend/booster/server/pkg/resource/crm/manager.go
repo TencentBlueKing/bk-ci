@@ -1114,7 +1114,7 @@ func (hwu *handlerWithUser) GetInstanceType(platform string, group string) *conf
 		MemPerInstance: hwu.mgr.conf.BcsMemPerInstance,
 	}
 	for _, istItem := range hwu.mgr.conf.InstanceType {
-		if !(istItem.City == group && istItem.Platform == platform) {
+		if !(istItem.Group == group && istItem.Platform == platform) {
 			continue
 		}
 		if istItem.CPUPerInstance > 0.0 {

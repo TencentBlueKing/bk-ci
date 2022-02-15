@@ -89,7 +89,7 @@ type DirectResourceConfig struct {
 //InstanceType define type of an instance
 type InstanceType struct {
 	Platform              string  `json:"platform"`
-	City                  string  `json:"city"`
+	Group                 string  `json:"group"`
 	CPUPerInstance        float64 `json:"cpu_per_instance"`
 	MemPerInstance        float64 `json:"mem_per_instance"`
 	CPURequestPerInstance float64 `json:"cpu_request_per_instance,omitempty"`

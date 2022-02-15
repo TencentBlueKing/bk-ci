@@ -76,7 +76,7 @@ const (
 //CheckQueueKey describe the function that get queue key from attributes
 func (param *BcsLaunchParam) CheckQueueKey(instanceType config.InstanceType) bool {
 	platform, city := getInstanceKey(param.AttributeCondition)
-	if instanceType.City == city && instanceType.Platform == platform {
+	if instanceType.Group == city && instanceType.Platform == platform {
 		return true
 	}
 	return false
@@ -127,7 +127,7 @@ func NewNodeInfoPool(cpu, mem, disk float64, istTypes []config.InstanceType) *No
 	}
 	for _, istItem := range istTypes {
 		condition := map[string]string{
-			AttributeKeyCity:     istItem.City,
+			AttributeKeyCity:     istItem.Group,
 			AttributeKeyPlatform: istItem.Platform,
 		}
 		key := getBlockKey(condition)
