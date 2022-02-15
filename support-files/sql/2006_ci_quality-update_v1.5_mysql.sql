@@ -33,7 +33,7 @@ BEGIN
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_QUALITY_HIS_DETAIL_METADATA'
                         AND COLUMN_NAME = 'TASK_ID') THEN
-        ALTER TABLE T_QUALITY_HIS_DETAIL_METADATA ADD COLUMN `TASK_ID` varchar(34) not null default '1' COMMENT '任务节点id' ;
+        ALTER TABLE T_QUALITY_HIS_DETAIL_METADATA ADD COLUMN `TASK_ID` varchar(34) DEFAULT NULL COMMENT '任务节点id';
     END IF;
 	
 	IF NOT EXISTS(SELECT 1
