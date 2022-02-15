@@ -358,6 +358,7 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 		task.Operator.LeastInstance = (int(task.InheritSetting.LeastCPU) + int(cpuPerInstance) - 1) /
 			int(cpuPerInstance)
 	}
+
 	task.Operator.RequestCPUPerUnit = cpuPerInstance
 	task.Operator.RequestMemPerUnit = memPerInstance
 	task.Operator.RequestProcessPerUnit = ev.ProcessPerUnit
@@ -733,8 +734,15 @@ func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 	task.Workers = workerList
 	task.Stats.WorkerCount = len(task.Workers)
 
-	task.Stats.CPUTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestCPUPerUnit
-	task.Stats.MemTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestMemPerUnit
+	cpuPerInstance, memPerInstance := de.getResource(task.InheritSetting.QueueName)
+	if cpuPerInstance <= 0 {
+		cpuPerInstance = task.Operator.RequestCPUPerUnit
+	}
+	if memPerInstance <= 0 {
+		memPerInstance = task.Operator.RequestMemPerUnit
+	}
+	task.Stats.CPUTotal = float64(task.Stats.WorkerCount) * cpuPerInstance
+	task.Stats.MemTotal = float64(task.Stats.WorkerCount) * memPerInstance
 
 	if err = de.updateTask(task); err != nil {
 		blog.Errorf("engine(%s) try checking service info, update crm task(%s) failed: %v",
