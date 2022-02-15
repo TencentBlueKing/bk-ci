@@ -52,9 +52,17 @@ import kotlin.collections.set
 
 object CommonUtils {
 
-    private val simpleCnLanList = listOf("ZH_CN", "ZH-CN")
+    const val ZH_CN = "ZH_CN" // 简体中文
 
-    private val twCnLanList = listOf("ZH_TW", "ZH-TW", "ZH_HK", "ZH-HK")
+    const val ZH_TW = "ZH_TW" // 台湾繁体中文
+
+    private const val EN = "EN" // 英文
+
+    private const val ZH_HK = "ZH_HK" // 香港繁体中文
+
+    private val simpleCnLanList = listOf(ZH_CN, "ZH-CN")
+
+    private val twCnLanList = listOf(ZH_TW, "ZH-TW", ZH_HK, "ZH-HK")
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
@@ -143,27 +151,30 @@ object CommonUtils {
 
     /**
      * 获取语言信息
+     * @return local语言信息
      */
     private fun getOriginLocale(): String {
+        // 从request请求中获取本地语言信息
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         return if (null != attributes) {
             val request = attributes.request
             val cookieLan = CookieUtil.getCookieValue(request, "blueking_language")
             cookieLan ?: LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
         } else {
-            "ZH_CN" // 取不到语言信息默认为中文
+            ZH_CN // 取不到语言信息默认为中文
         }
     }
 
     /**
      * 获取蓝盾能处理的语言信息
+     * @return 蓝盾语言信息
      */
     fun getBkLocale(): String {
         val locale = getOriginLocale()
         return when {
-            simpleCnLanList.contains(locale.toUpperCase()) -> "ZH_CN" // 简体中文
-            twCnLanList.contains(locale.toUpperCase()) -> "ZH_TW" // 繁体中文
-            else -> "EN" // 英文描述
+            simpleCnLanList.contains(locale.toUpperCase()) -> ZH_CN // 简体中文
+            twCnLanList.contains(locale.toUpperCase()) -> ZH_TW // 繁体中文
+            else -> EN // 英文描述
         }
     }
 

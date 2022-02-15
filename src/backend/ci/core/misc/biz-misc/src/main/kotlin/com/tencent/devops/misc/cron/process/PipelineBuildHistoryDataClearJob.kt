@@ -243,7 +243,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         projectDataClearConfigService: ProjectDataClearConfigService
     ) {
         // 获取当前项目下流水线记录的最小主键ID值
-        var minId = processMiscService.getMinPipelineInfoIdListByProjectId(projectId)
+        var minId = processMiscService.getMinPipelineInfoIdByProjectId(projectId)
         do {
             logger.info("pipelineBuildHistoryPastDataClear clearPipelineBuildData projectId:$projectId,minId:$minId")
             val pipelineIdList = processMiscService.getPipelineIdListByProjectId(
@@ -253,8 +253,10 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             )
             if (!pipelineIdList.isNullOrEmpty()) {
                 // 重置minId的值
-                minId =
-                    processMiscService.getPipelineInfoIdListByPipelineId(pipelineIdList[pipelineIdList.size - 1]) + 1
+                minId = processMiscService.getPipelineInfoIdByPipelineId(
+                    projectId = projectId,
+                    pipelineId = pipelineIdList[pipelineIdList.size - 1]
+                ) + 1
             }
             val deletePipelineIdList = if (pipelineIdList.isNullOrEmpty()) {
                 null
@@ -325,11 +327,12 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null
     ) {
-        val totalBuildCount = processMiscService.getTotalBuildCount(pipelineId, maxBuildNum, maxStartTime)
+        val totalBuildCount = processMiscService.getTotalBuildCount(projectId, pipelineId, maxBuildNum, maxStartTime)
         logger.info("pipelineBuildHistoryDataClear|$projectId|$pipelineId|totalBuildCount=$totalBuildCount")
         var totalHandleNum = 0
         while (totalHandleNum < totalBuildCount) {
             val pipelineHistoryBuildIdList = processMiscService.getHistoryBuildIdList(
+                projectId = projectId,
                 pipelineId = pipelineId,
                 totalHandleNum = totalHandleNum,
                 handlePageSize = DEFAULT_PAGE_SIZE,
@@ -340,7 +343,7 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
             pipelineHistoryBuildIdList?.forEach { buildId ->
                 // 依次删除process表中的相关构建记录(T_PIPELINE_BUILD_HISTORY做为基准表，
                 // 为了保证构建流水记录删干净，T_PIPELINE_BUILD_HISTORY记录要最后删)
-                processDataClearService.clearBaseBuildData(buildId)
+                processDataClearService.clearBaseBuildData(projectId, buildId)
                 repositoryDataClearService.clearBuildData(buildId)
                 if (isCompletelyDelete) {
                     dispatchDataClearService.clearBuildData(buildId)

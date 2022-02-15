@@ -125,7 +125,12 @@ data class StagePauseCheck(
                 group.reviewTime = null
                 group.operator = null
                 group.params = null
+                group.suggest = null
             }
+        }
+        if (init) {
+            status = null
+            checkTimes = null
         }
     }
 

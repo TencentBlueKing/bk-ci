@@ -28,6 +28,7 @@ import {
 export function parsePathAlias (type, path, authType, svnType) {
     let reg = ''
     let msg = ''
+    let nameMatchIndex = 3
     const codelibLocaleObj = window.devops.$i18n.t('codelib')
 
     switch (true) {
@@ -43,9 +44,14 @@ export function parsePathAlias (type, path, authType, svnType) {
             reg = /^http\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
-        case isGitLab(type):
-            reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
-            msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
+        case isGitLab(type) && authType === 'HTTP':
+            reg = /^(http|https)?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
+            msg = `${codelibLocaleObj.httpOrHttpsRule}${type}${codelibLocaleObj.address}`
+            nameMatchIndex = 4
+            break
+        case isGitLab(type) && authType === 'SSH':
+            reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
+            msg = `${codelibLocaleObj.gitlabSshRule}${type}${codelibLocaleObj.address}`
             break
         case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'):
             reg = /^https\:\/\/git(\.code)?(\.tencent)\.com[\:|\/](.*)\.git$/
@@ -58,9 +64,9 @@ export function parsePathAlias (type, path, authType, svnType) {
     }
 
     const matchResult = path.match(reg)
-
+    
     return matchResult ? {
-        alias: matchResult[3]
+        alias: matchResult[nameMatchIndex]
     } : {
         msg
     }

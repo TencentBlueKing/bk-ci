@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWeb
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
@@ -61,6 +62,7 @@ abstract class WebHookTriggerElementBizPlugin<T : WebHookTriggerElement> constru
     override fun beforeDelete(element: T, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
             pipelineWebhookService.deleteWebhook(
+                projectId = param.projectId,
                 pipelineId = param.pipelineId,
                 taskId = element.id!!,
                 userId = param.userId
@@ -151,5 +153,15 @@ class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
         if (channelCode != ChannelCode.CODECC && !element.data.input.hookUrl.isNullOrBlank()) {
             element.data.input.hookUrl = null
         }
+    }
+}
+
+@ElementBiz
+class CodeP4WebHookTriggerElementBizPlugin constructor(
+    pipelineWebhookService: PipelineWebhookService
+) : WebHookTriggerElementBizPlugin<CodeP4WebHookTriggerElement>(pipelineWebhookService) {
+
+    override fun elementClass(): Class<CodeP4WebHookTriggerElement> {
+        return CodeP4WebHookTriggerElement::class.java
     }
 }

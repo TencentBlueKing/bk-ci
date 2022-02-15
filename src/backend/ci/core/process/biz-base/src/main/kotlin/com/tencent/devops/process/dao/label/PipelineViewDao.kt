@@ -48,7 +48,8 @@ class PipelineViewDao {
         isProject: Boolean,
         filterByPipelineName: String,
         filterByCreator: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
@@ -61,7 +62,8 @@ class PipelineViewDao {
                 FILTER_BY_CREATOR,
                 CREATE_TIME,
                 UPDATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -71,7 +73,8 @@ class PipelineViewDao {
                     filterByCreator,
                     now,
                     now,
-                    userId
+                    userId,
+                    id
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -85,7 +88,8 @@ class PipelineViewDao {
         logic: String,
         isProject: Boolean,
         filters: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ): Long {
         with(TPipelineView.T_PIPELINE_VIEW) {
             val now = LocalDateTime.now()
@@ -100,7 +104,8 @@ class PipelineViewDao {
                 FILTERS,
                 CREATE_TIME,
                 UPDATE_TIME,
-                CREATE_USER
+                CREATE_USER,
+                ID
             )
                 .values(
                     projectId,
@@ -112,7 +117,8 @@ class PipelineViewDao {
                     filters,
                     now,
                     now,
-                    userId
+                    userId,
+                    id
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -121,6 +127,7 @@ class PipelineViewDao {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         viewId: Long,
         name: String,
         isProject: Boolean,
@@ -134,13 +141,14 @@ class PipelineViewDao {
                 .set(FILTER_BY_PIPEINE_NAME, filterByPipelineName)
                 .set(FILTER_BY_CREATOR, filterByCreator)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(viewId))
+                .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         viewId: Long,
         name: String,
         logic: String,
@@ -156,18 +164,19 @@ class PipelineViewDao {
                 .set(FILTER_BY_CREATOR, "")
                 .set(FILTERS, filters)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(viewId))
+                .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
 
     fun delete(
         dslContext: DSLContext,
+        projectId: String,
         viewId: Long
     ): Boolean {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.deleteFrom(this)
-                .where(ID.eq(viewId))
+                .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
@@ -220,11 +229,13 @@ class PipelineViewDao {
 
     fun list(
         dslContext: DSLContext,
+        projectId: String,
         viewIds: Set<Long>
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(viewIds))
+                .and(PROJECT_ID.eq(projectId))
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
@@ -245,10 +256,10 @@ class PipelineViewDao {
         }
     }
 
-    fun get(dslContext: DSLContext, viewId: Long): TPipelineViewRecord? {
+    fun get(dslContext: DSLContext, projectId: String, viewId: Long): TPipelineViewRecord? {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(viewId))
+                .where(ID.eq(viewId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

@@ -47,7 +47,7 @@
             },
             itemTargetUrl: {
                 type: String,
-                default: `/codelib/{projectId}/`
+                default: '/codelib/{projectId}/'
             },
             searchable: {
                 type: Boolean,
@@ -143,7 +143,7 @@
                     } else {
                         // 多选selector时处理******,现在的处理方式是，把多选的数组遍历，看里面的每一项是否在list，若不在则加一项***
                         this.value = this.value.length ? this.value : []
-                        this.value.map(value => {
+                        this.value.forEach(value => {
                             if (value !== '' && this.list.filter(item => item.id === value).length === 0) {
                                 this.list.splice(0, 0, {
                                     id: value,

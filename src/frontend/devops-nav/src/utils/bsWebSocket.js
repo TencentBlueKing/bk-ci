@@ -1,5 +1,5 @@
 import SockJS from 'sockjs-client'
-import * as cookie from 'js-cookie'
+import cookie from 'js-cookie'
 const Stomp = require('stompjs/lib/stomp.js').Stomp
 
 function uuid () {

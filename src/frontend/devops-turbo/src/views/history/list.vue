@@ -190,6 +190,8 @@
                 this.pipelineId = []
                 this.status = []
                 this.timeRange = []
+                this.startTime = ''
+                this.endTime = ''
                 this.getHistoryList()
             },
 
@@ -248,7 +250,7 @@
     .jump-link {
         vertical-align: sub;
     }
-    /deep/ .bk-table-row {
+    ::v-deep .bk-table-row {
         cursor: pointer;
     }
 </style>

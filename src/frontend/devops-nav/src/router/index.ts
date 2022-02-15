@@ -3,7 +3,7 @@ import Router, { RouteMeta } from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
-import * as cookie from 'js-cookie'
+import cookie from 'js-cookie'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -139,10 +139,10 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     return router
 }
 
-function updateHeaderConfig (meta: RouteMeta) {
+function updateHeaderConfig (routeMeta: RouteMeta) {
     return {
-        showProjectList: meta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof meta.showProjectList === 'undefined'),
-        showNav: meta.showNav || (window.currentPage && window.currentPage.show_nav && typeof meta.showNav === 'undefined')
+        showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
+        showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')
     }
 }
 
@@ -162,10 +162,13 @@ function initProjectId (to): string {
         const projectId: string = getProjectId(params)
         const lastMatched = matched[matched.length - 1]
         
-        const options = projectId ? {
-            ...params,
-            projectId
-        } : params
+        const options = projectId
+            ? {
+                ...params,
+                projectId
+            }
+            : params
+
         return matched.length ? compilePath(lastMatched.path)(options) : to.path
     } catch (e) {
         console.log(e)

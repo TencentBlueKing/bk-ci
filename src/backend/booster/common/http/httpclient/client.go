@@ -1,6 +1,11 @@
 /*
-Copyright 2017 Authors All rights reserved
-*/
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
 
 package httpclient
 
@@ -12,8 +17,8 @@ import (
 	"net/http"
 	"time"
 
-	http2 "build-booster/common/http"
-	"build-booster/common/ssl"
+	http2 "github.com/Tencent/bk-ci/src/booster/common/http"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
 )
 
 // HttpResponse define the information of the http response
@@ -185,7 +190,11 @@ func (client *HTTPClient) Patch(url string, header http.Header, data []byte) (*H
 // Request do request and return body.
 func (client *HTTPClient) Request(url, method string, header http.Header, data []byte) ([]byte, error) {
 	rsp, err := client.RequestEx(url, method, header, data)
-	return rsp.Reply, err
+	if err != nil {
+		return nil, err
+	}
+
+	return rsp.Reply, nil
 }
 
 // RequestEx do request and return HttpResponse.

@@ -267,7 +267,7 @@
                 const { $store, loading } = this
                 const params = []
 
-                pipeline.map(item => {
+                pipeline.forEach(item => {
                     params.push({
                         id: item
                     })
@@ -331,7 +331,7 @@
 
             handlePipelineParams (data) {
                 this.pipelineNameList.splice(0, this.pipelineNameList.length)
-                this.hashVal.map((item, index) => {
+                this.hashVal.forEach((item, index) => {
                     const pipelineItem = {
                         pipelineId: data[item].pipelineId,
                         pipelineName: data[item].pipelineName,
@@ -528,6 +528,7 @@
 
 <style lang="scss">
     @import './../../scss/conf';
+    @import '@/scss/mixins/ellipsis';
 
     .pipeline-subpages {
         min-height: 100%;
@@ -725,11 +726,29 @@
             .pipeline-params-content {
                 padding: 10px 20px 25px;
                 background-color: #fff;
-                .bk-form-item {
+                .bk-form {
+                    display: flex;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    padding-top: 10px;
+                }
+                .bk-form-content {
+                    position: relative;
                     float: left;
-                    margin-top: 20px;
-                    width: 46%;
-                    height: 40px;
+                    margin-left: 0;
+                    width: 100%;
+                }
+                .bk-form-item {
+                    margin-top: 0;
+                    width: 48%;
+                }
+                .bk-label {
+                    width: 100%;
+                    text-align: left;
+                    @include ellipsis();
+                }
+                .bk-form .bk-form-item:before, .bk-form:after {
+                    display: none;
                 }
             }
             .template-params-content {

@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.constant.KEY_WEIGHT
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomFeature
 import com.tencent.devops.model.store.tables.TClassify
@@ -85,13 +86,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.net.URLDecoder
 import java.time.LocalDateTime
 
@@ -107,7 +108,8 @@ class AtomDao : AtomBaseDao() {
         atomRequest: AtomCreateRequest
     ) {
         with(TAtom.T_ATOM) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 NAME,
                 ATOM_CODE,
@@ -130,7 +132,8 @@ class AtomDao : AtomBaseDao() {
                 CREATOR,
                 MODIFIER
             )
-                .values(id,
+                .values(
+                    id,
                     atomRequest.name,
                     atomRequest.atomCode,
                     classType,
@@ -195,8 +198,10 @@ class AtomDao : AtomBaseDao() {
      */
     fun countReleaseAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
-                .and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this).where(
+                ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
+                    .and(CLASSIFY_ID.eq(classifyId))
+            ).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -211,8 +216,10 @@ class AtomDao : AtomBaseDao() {
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         return dslContext.selectCount().from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
-            .where(a.ATOM_STATUS.`in`(atomStatusList)
-                .and(a.CLASSIFY_ID.eq(classifyId)))
+            .where(
+                a.ATOM_STATUS.`in`(atomStatusList)
+                    .and(a.CLASSIFY_ID.eq(classifyId))
+            )
             .fetchOne(0, Int::class.java)!!
     }
 
@@ -405,17 +412,17 @@ class AtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(atomName)) conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8")))
-        if (null != atomType) conditions.add(ATOM_TYPE.eq(atomType.type.toByte()))
-        if (!StringUtils.isEmpty(serviceScope) && !"all".equals(
-                serviceScope,
-                true
-            )
-        ) conditions.add(SERVICE_SCOPE.contains(serviceScope))
-        if (!StringUtils.isEmpty(os) && !"all".equals(os, true)) conditions.add(OS.contains(os))
-        if (null != category) conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte()))
-        if (!StringUtils.isEmpty(classifyId)) conditions.add(CLASSIFY_ID.eq(classifyId))
-        if (null != atomStatus) conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte()))
+        atomName?.let { conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8"))) }
+        atomType?.let { conditions.add(ATOM_TYPE.eq(atomType.type.toByte())) }
+        serviceScope?.let {
+            if (!"all".equals(serviceScope, true)) {
+                conditions.add(SERVICE_SCOPE.contains(serviceScope))
+            }
+        }
+        os?.let { if (!"all".equals(os, true)) conditions.add(OS.contains(os)) }
+        category?.let { conditions.add(CATEGROY.eq(AtomCategoryEnum.valueOf(category).category.toByte())) }
+        classifyId?.let { conditions.add(CLASSIFY_ID.eq(classifyId)) }
+        atomStatus?.let { conditions.add(ATOM_STATUS.eq(atomStatus.status.toByte())) }
         return conditions
     }
 
@@ -441,6 +448,7 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun getVersionsByAtomCode(
         dslContext: DSLContext,
         projectCode: String,
@@ -484,7 +492,35 @@ class AtomDao : AtomBaseDao() {
                     )
             )
             .asTable("t")
-        return dslContext.select().from(t).orderBy(t.field(KEY_CREATE_TIME)!!.desc()).fetch()
+        val firstVersion = JooqUtils.subStr(
+            str = t.field(KEY_VERSION) as Field<String>,
+            delim = ".",
+            count = 1
+        ).`as`("firstVersion")
+        val secondVersion = JooqUtils.subStr(
+            str = JooqUtils.subStr(
+                str = t.field(KEY_VERSION) as Field<String>,
+                delim = ".",
+                count = -2
+            ),
+            delim = ".",
+            count = 1
+        ).`as`("secondVersion")
+        val thirdVersion = JooqUtils.subStr(
+            str = t.field(KEY_VERSION) as Field<String>,
+            delim = ".",
+            count = -1
+        ).`as`("thirdVersion")
+        return dslContext.select(
+            t.field(KEY_VERSION),
+            t.field(KEY_CREATE_TIME),
+            t.field(KEY_ATOM_STATUS),
+            firstVersion,
+            secondVersion,
+            thirdVersion
+        ).from(t)
+            .orderBy(firstVersion.plus(0).desc(), secondVersion.plus(0).desc(), thirdVersion.plus(0).desc())
+            .fetch()
     }
 
     fun getPipelineAtoms(
@@ -995,22 +1031,6 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    fun convertString(str: String?): Map<String, Any> {
-        return if (!StringUtils.isEmpty(str)) {
-            JsonUtil.getObjectMapper().readValue(str, Map::class.java) as Map<String, Any>
-        } else {
-            mapOf()
-        }
-    }
-
-    fun serviceListAllAtom(dslContext: DSLContext) {
-        with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where()
-        }
-    }
-
     fun getRecentAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
@@ -1200,8 +1220,8 @@ class AtomDao : AtomBaseDao() {
     fun getDefaultAtoms(dslContext: DSLContext, atomList: List<String>): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                    .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
-                    .fetch()
+                .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
+                .fetch()
         }
     }
 

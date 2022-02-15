@@ -38,6 +38,10 @@
             bashConf: {
                 type: Object,
                 default: () => ({})
+            },
+            defaultHeight: {
+                type: Number,
+                default: 360
             }
         },
         data () {
@@ -52,16 +56,20 @@
                 const top = getActualTop(this.$el)
                 const { clientHeight } = document.body
                 if (newVal) {
-                    this.height = Math.max(clientHeight - 10, 360)
+                    this.height = Math.max(clientHeight - 10, this.defaultHeight)
                 } else {
-                    this.height = Math.max(clientHeight - top - 180, 360)
+                    this.height = Math.max(clientHeight - top - 180, this.defaultHeight)
                 }
             }
         },
         mounted () {
             const top = getActualTop(this.$el)
             const { clientHeight } = document.body
-            this.height = Math.max(clientHeight - top - 180, 360)
+            if (this.defaultHeight !== 360) {
+                this.height = this.defaultHeight
+            } else {
+                this.height = Math.max(clientHeight - top - 180, this.defaultHeight)
+            }
             this.getInitValue()
         },
         methods: {
@@ -78,7 +86,7 @@
                             return response.data
                         case response.data && response.data.record && typeof response.data.record === 'string':
                             return response.data.record
-                        default:
+                        default: {
                             const path = dataPath.split('.')
                             let result = response
                             let pos = 0
@@ -92,6 +100,7 @@
                             } else {
                                 throw Error(this.$t('editPage.failToGetData'))
                             }
+                        }
                     }
                 } catch (e) {
                     console.error(e)

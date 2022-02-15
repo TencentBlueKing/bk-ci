@@ -42,6 +42,7 @@ import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
+import com.tencent.devops.dockerhost.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -88,12 +89,13 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        pipelineTaskId: String?,
         dockerRunParam: DockerRunParam,
         request: HttpServletRequest
     ): Result<DockerRunResponse> {
         checkReq(request)
         logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerRun...")
-        return Result(dockerService.dockerRun(projectId, pipelineId, vmSeqId, buildId, dockerRunParam))
+        return Result(dockerService.dockerRun(projectId, pipelineId, vmSeqId, buildId, pipelineTaskId, dockerRunParam))
     }
 
     override fun getDockerRunLogs(
@@ -144,8 +146,11 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     }
 
     override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
-        logger.warn("Stop the container, containerId: ${dockerHostBuildInfo.containerId}")
-        dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+        ThreadPoolUtils.getInstance().run {
+            logger.info("Start stop the container, containerId: ${dockerHostBuildInfo.containerId}")
+            dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+            logger.info("Stop the container success, containerId: ${dockerHostBuildInfo.containerId}")
+        }
 
         return Result(true)
     }

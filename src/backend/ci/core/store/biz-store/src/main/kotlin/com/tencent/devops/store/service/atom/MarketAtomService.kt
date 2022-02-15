@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
@@ -43,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 
 @Suppress("ALL")
 interface MarketAtomService {
@@ -83,8 +85,8 @@ interface MarketAtomService {
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?>
 
     /**
@@ -164,6 +166,13 @@ interface MarketAtomService {
     ): String
 
     /**
+     * 获取插件output参数列表
+     */
+    fun getAtomOutput(
+        atomCode: String
+    ): List<AtomOutput>
+
+    /**
      * 获得插件依赖关系
      */
     fun getAtomsRely(getRelyAtom: GetRelyAtom): Map<String, Map<String, Any>>
@@ -172,4 +181,9 @@ interface MarketAtomService {
      * 查找带post属性的插件
      */
     fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp>
+
+    /**
+     * 根据插件标识获取插件回显版本信息
+     */
+    fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo>
 }

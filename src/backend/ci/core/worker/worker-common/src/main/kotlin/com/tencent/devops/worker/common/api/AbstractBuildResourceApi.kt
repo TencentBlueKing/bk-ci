@@ -43,6 +43,7 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.ArchiveUtils
 import io.undertow.util.StatusCodes
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -53,13 +54,14 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpMethod
 import java.io.File
-import java.io.FileOutputStream
 import java.net.ConnectException
 import java.net.HttpRetryException
 import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.net.UnknownHostException
+import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
@@ -173,7 +175,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         }
     }
 
-    private fun download(response: Response, destPath: File) {
+    private fun download(response: Response, destPath: File, retryCount: Int = DEFAULT_RETRY_TIME) {
         if (response.code() == StatusCodes.NOT_FOUND) {
             throw RemoteServiceException("文件不存在")
         }
@@ -181,17 +183,27 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             LoggerService.addNormalLine(response.body()!!.string())
             throw RemoteServiceException("获取文件失败")
         }
-        if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
+        val dest = destPath.toPath()
+        if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
         LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
+        val body = response.body() ?: return
+        val contentLength = body.contentLength()
+        if (contentLength != -1L) {
+            LoggerService.addNormalLine("download ${dest.fileName} " +
+                ArchiveUtils.humanReadableByteCountBin(contentLength))
+        }
 
-        response.body()!!.byteStream().use { bs ->
-            val buf = ByteArray(BYTE_ARRAY_SIZE)
-            var len = bs.read(buf)
-            FileOutputStream(destPath).use { fos ->
-                while (len != -1) {
-                    fos.write(buf, 0, len)
-                    len = bs.read(buf)
-                }
+        // body copy时可能会出现readTimeout，即便http请求已正常响应
+        try {
+            body.byteStream().use { bs ->
+                Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.warn("Failed to copy download body, try to retry.")
+            if (retryCount > 0) {
+                download(response, destPath, retryCount - 1)
+            } else {
+                throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
             }
         }
     }
@@ -202,10 +214,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val MultipartFormData = MediaType.parse("multipart/form-data")
         private const val EMPTY = ""
         private const val DEFAULT_RETRY_TIME = 5
-        private const val sleepTimeMills = 5000L
-        private const val BYTE_ARRAY_SIZE = 4096
+        private const val sleepTimeMills = 500L
         private const val CONNECT_TIMEOUT = 5L
-        private const val READ_TIMEOUT = 1500L
+        private const val READ_TIMEOUT = 60L
         private const val WRITE_TIMEOUT = 60L
         private val retryCodes = arrayOf(502, 503, 504)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)!!

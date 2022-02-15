@@ -27,27 +27,42 @@
 
 package com.tencent.devops.project.resources
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.SearchInstanceResponseDTO
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.callback.AuthConstants
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class AuthProjectService @Autowired constructor(
     val projectService: ProjectService,
-    val authTokenApi: AuthTokenApi
+    val authTokenApi: AuthTokenApi,
+    val client: Client,
+    val tokenService: ClientTokenService
 ) {
+
+    // 项目-管理员列表 缓存， 5分钟有效时间
+    private val projectManager = CacheBuilder.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String, List<String>>()
 
     fun getProjectList(page: PageInfoDTO?, token: String): ListInstanceResponseDTO {
         logger.info("getProjectList page $page, token: $token ")
@@ -72,17 +87,27 @@ class AuthProjectService @Autowired constructor(
         return result.buildListInstanceResult(projectInfo, count)
     }
 
-    fun getProjectInfo(idList: List<String>, token: String): FetchInstanceInfoResponseDTO {
-        logger.info("getProjectInfo ids[$idList]")
+    fun getProjectInfo(
+        idList: List<String>,
+        token: String,
+        attribute: List<String>
+    ): FetchInstanceInfoResponseDTO {
+        logger.info("getProjectInfo ids[$idList], attribute[$attribute]")
         authTokenApi.checkToken(token)
         val ids = idList.toSet()
         val projectInfo = projectService.list(ids)
         val entityList = mutableListOf<InstanceInfoDTO>()
+
         projectInfo?.map {
+            val approve = if (attribute.contains(APPROVE_KEY)) {
+                getProjectManager(it.projectCode)
+            } else {
+                emptyList()
+            }
             val entity = InstanceInfoDTO()
             entity.id = it.englishName
             entity.displayName = it.projectName
-            entity.iamApprover = arrayListOf(it.creator)
+            entity.iamApprover = approve
             entityList.add(entity)
         }
         logger.info("entityInfo $entityList")
@@ -111,7 +136,25 @@ class AuthProjectService @Autowired constructor(
         return result.buildSearchInstanceResult(projectInfo, count)
     }
 
+    private fun getProjectManager(projectCode: String): List<String> {
+        if (projectManager.getIfPresent(projectCode) != null) {
+            return projectManager.getIfPresent(projectCode)!!
+        }
+
+        val routerTag = projectService.getByEnglishName(projectCode)!!.routerTag
+        val managerUser = ConsulContent.invokeByTag(routerTag) {
+            client.get(ServiceProjectAuthResource::class).getProjectUsers(
+                token = tokenService.getSystemToken(null)!!,
+                projectCode = projectCode,
+                group = BkAuthGroup.MANAGER
+            ).data ?: emptyList()
+        }
+        projectManager.put(projectCode, managerUser)
+        return managerUser
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(AuthProjectService::class.java)
+        const val APPROVE_KEY = "_bk_iam_approver_"
     }
 }

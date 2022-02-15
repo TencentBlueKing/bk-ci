@@ -42,12 +42,14 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
+import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -57,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@type")
 @JsonSubTypes(
+    JsonSubTypes.Type(value = MatrixStatusElement::class, name = MatrixStatusElement.classType),
     JsonSubTypes.Type(value = CodeGitWebHookTriggerElement::class, name = CodeGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitlabWebHookTriggerElement::class, name = CodeGitlabWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeSVNWebHookTriggerElement::class, name = CodeSVNWebHookTriggerElement.classType),
@@ -79,7 +82,8 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
-        name = CodeGitGenericWebHookTriggerElement.classType)
+        name = CodeGitGenericWebHookTriggerElement.classType),
+    JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
 abstract class Element(
@@ -94,6 +98,7 @@ abstract class Element(
     open var version: String = "1.*",
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
     open var additionalOptions: ElementAdditionalOptions? = null,
+    open var stepId: String? = null, // 用于上下文键值设置
     open var errorType: String? = null,
     open var errorCode: Int? = null,
     open var errorMsg: String? = null
@@ -106,7 +111,7 @@ abstract class Element(
     open fun getTaskAtom(): String = ""
 
     open fun genTaskParams(): MutableMap<String, Any> {
-        return JsonUtil.toMutableMapSkipEmpty(this)
+        return JsonUtil.toMutableMap(this)
     }
 
     open fun cleanUp() {}

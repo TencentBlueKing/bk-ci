@@ -28,8 +28,10 @@
 package com.tencent.devops.store.api.image.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.api.image.op.pojo.ImageInitRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -45,5 +47,8 @@ interface OpImageInitResource {
     @ApiOperation("预置镜像初始化")
     @POST
     @Path("/init")
-    fun imageInit(): Result<Boolean>
+    fun imageInit(
+        @ApiParam("第三方镜像市场初始化参数", required = false)
+        imageInitRequest: ImageInitRequest?
+    ): Result<Boolean>
 }

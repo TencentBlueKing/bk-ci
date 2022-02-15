@@ -82,6 +82,7 @@ class ApiAspect(
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
                 "projectId" -> projectId = parameterValue[index]?.toString()
+                "projectCode" -> projectId = parameterValue[index]?.toString()
                 "appCode" -> appCode = parameterValue[index]?.toString()
                 "apigwType" -> apigwType = parameterValue[index]?.toString()
                 else -> Unit
@@ -109,7 +110,9 @@ class ApiAspect(
                     message = "Permission denied: apigwType[$apigwType],appCode[$appCode],ProjectId[$projectId]"
                 )
             }
+        }
 
+        if (projectId != null) {
             // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
             val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
             if (!projectConsulTag.isNullOrEmpty()) {

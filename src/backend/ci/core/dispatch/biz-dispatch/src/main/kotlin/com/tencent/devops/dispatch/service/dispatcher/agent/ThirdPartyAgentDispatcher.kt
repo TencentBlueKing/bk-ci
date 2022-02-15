@@ -29,6 +29,8 @@ package com.tencent.devops.dispatch.service.dispatcher.agent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -312,8 +314,24 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     .getAgentsByEnvId(event.projectId, dispatchType.envName)
             }
             AgentType.NAME -> {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvName(event.projectId, dispatchType.envName)
+                try {
+                    client.get(ServiceThirdPartyAgentResource::class)
+                        .getAgentsByEnvName(event.projectId, dispatchType.envName)
+                } catch (e: Exception) {
+                    onFailBuild(
+                        client = client,
+                        buildLogPrinter = buildLogPrinter,
+                        event = event,
+                        errorType = ErrorCodeEnum.GET_VM_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.GET_VM_ERROR.errorCode,
+                        errorMsg = if (e is RemoteServiceException) {
+                            e.errorMessage
+                        } else {
+                            e.message ?: "${ErrorCodeEnum.GET_VM_ERROR.formatErrorMessage}(${dispatchType.envName})"
+                        }
+                    )
+                    Result(null)
+                }
             }
         }
 
@@ -412,7 +430,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             /**
              * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
              */
-            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
                     "开始查找最近构建使用过并且当前没有任何任务的空闲构建机...")
             if (startEmptyAgents(
                     event = event,
@@ -432,7 +450,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     "${event.buildId}|${event.vmSeqId}]" +
                     " Start to check the available task agents of pre build agents"
             )
-            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
                     "开始查找最近构建使用过的并且当前构建任务没有达到最大构建数的空闲构建机...")
             /**
              * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
@@ -450,7 +468,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 return
             }
 
-            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
                     "开始查找没有任何任务的空闲构建机...")
             /**
              * 根据哪些agent没有任何任务
@@ -468,7 +486,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 return
             }
 
-            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
                     "开始查找当前构建任务还没到达最大并行数构建机...")
             /**
              * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
@@ -499,7 +517,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${event.buildId}|${event.vmSeqId} " +
-                        "构建集群中没有合适的构建机可以使用，请检查环境管理配置.")
+                        " 构建机繁忙，等待超时（queue-timeout-minutes=${event.queueTimeoutMinutes}）")
         } finally {
             redisLock.unlock()
         }
@@ -513,7 +531,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         errorCodeEnum: ErrorCodeEnum?,
         errorMessage: String?
     ) {
-        if (event.retryTime > 60) {
+        if (event.retryTime > 6 * (event.queueTimeoutMinutes ?: 10)) {
             // 置为失败
             onFailBuild(
                 client = client,
@@ -530,6 +548,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             )
             return
         }
+        logDebug(buildLogPrinter, event, "retry: ${event.retryTime + 1} | 构建机繁忙，正在重试中")
+
         event.retryTime += 1
         event.delayMills = 10000
         pipelineEventDispatcher.dispatch(event)

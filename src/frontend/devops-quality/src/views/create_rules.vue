@@ -235,7 +235,7 @@
                                                 指标所需插件完整
                                             </p>
                                             <p class="atom-tips" v-if="checkAtomCount(props.row.existElement)">
-                                                <span class="mark-circle"></span>有多个控制点插件。请将需配置红线的控制点插件别名开头加上红线ID+下划线
+                                                <span class="mark-circle"></span>有多个控制点插件。请将需配置红线的控制点插件别名开头加上控制点前缀+下划线
                                             </p>
                                             <p v-if="props.row.isSetPipeline">-</p>
                                         </template>
@@ -503,11 +503,11 @@
                     }
                 },
                 handlerList: {
-                    'LT': '<',
-                    'LE': '<=',
-                    'EQ': '=',
-                    'GT': '>',
-                    'GE': '>='
+                    LT: '<',
+                    LE: '<=',
+                    EQ: '=',
+                    GT: '>',
+                    GE: '>='
                 },
                 localCreateForm: {},
                 baseForm: {
@@ -531,7 +531,7 @@
                 // 权限配置
                 emptyTipsConfig: {
                     title: '没有权限',
-                    desc: `你在该项目下没有【创建】拦截规则权限，请切换项目访问或申请`,
+                    desc: '你在该项目下没有【创建】拦截规则权限，请切换项目访问或申请',
                     btns: [
                         {
                             type: 'primary',
@@ -733,7 +733,7 @@
                 })
             },
             getIndicatorName (indicator) {
-                const enName = indicator.type === 'CUSTOM' ? `(${indicator.enName})` : ``
+                const enName = indicator.type === 'CUSTOM' ? `(${indicator.enName})` : ''
                 return `${indicator.cnName}${enName}`
             },
             selectMetadata (index) {
@@ -840,7 +840,7 @@
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('quality/getControlPoint', { element })
+                    const res = await this.$store.dispatch('quality/getControlPoint', { element, projectId: this.projectId })
 
                     // 控制点处理
                     this.createRuleForm.controlPointName = res.name
@@ -920,7 +920,7 @@
                         projectId: this.projectId
                     })
 
-                    res.records.map(item => {
+                    res.records.forEach(item => {
                         if (!this.groupList.some(group => group.groupHashId === item.groupHashId)) {
                             this.groupList.push(item)
                         }
@@ -937,11 +937,13 @@
             },
             async requestRuleTemplate () {
                 try {
-                    const res = await this.$store.dispatch('quality/requestRuleTemplate')
+                    const res = await this.$store.dispatch('quality/requestRuleTemplate', {
+                        projectId: this.projectId
+                    })
 
                     this.fastTypeRuleList.splice(0, this.fastTypeRuleList.length)
                     if (res.length) {
-                        res.map(item => {
+                        res.forEach(item => {
                             this.fastTypeRuleList.push(item)
                         })
                     }
@@ -1049,7 +1051,7 @@
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
                 }
-                this.createRuleForm.indicators.map(item => {
+                this.createRuleForm.indicators.forEach(item => {
                     params.indicatorIds.push(item.hashId)
                 })
                 this.showPipelineList = false
@@ -1060,7 +1062,7 @@
 
                     this.createRuleForm.pipelineList = this.createRuleForm.pipelineList.filter(item => item.type !== 'pipeline')
 
-                    res.map(item => {
+                    res.forEach(item => {
                         item.isRefresh = false
                         item.type = 'pipeline'
                         if (this.pipelineSetting && item.pipelineId === this.pipelineSetting.pipelineId) {
@@ -1094,7 +1096,7 @@
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
                 }
-                this.createRuleForm.indicators.map(item => {
+                this.createRuleForm.indicators.forEach(item => {
                     params.indicatorIds.push(item.hashId)
                 })
                 this.showTemplateList = false
@@ -1105,7 +1107,7 @@
 
                     this.createRuleForm.pipelineList = this.createRuleForm.pipelineList.filter(item => item.type !== 'template')
 
-                    res.map(item => {
+                    res.forEach(item => {
                         item.isRefresh = false
                         item.type = 'template'
                         if (this.pipelineSetting && item.templateId === this.pipelineSetting.templateId) {

@@ -28,17 +28,17 @@
 package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.HttpRetryUtils
+import com.tencent.devops.common.util.HttpRetryUtils
 import org.slf4j.LoggerFactory
 
 object EngineService {
@@ -59,28 +59,12 @@ object EngineService {
             throw RemoteServiceException("Report builder startup status failed")
         }
         val ret = result.data ?: throw RemoteServiceException("Report builder startup status failed")
-        val ciToken = buildApi.getCiToken()
-        return if (ciToken.isBlank()) {
-            ret
-        } else {
-            BuildVariables(
-                buildId = ret.buildId,
-                vmSeqId = ret.vmSeqId,
-                vmName = ret.vmName,
-                projectId = ret.projectId,
-                pipelineId = ret.pipelineId,
-                variables = ret.variables.plus(mapOf(
-                    CI_TOKEN_CONTEXT to ciToken,
-                    JOB_OS_CONTEXT to AgentEnv.getOS().name
-                )),
-                buildEnvs = ret.buildEnvs,
-                containerId = ret.containerId,
-                containerHashId = ret.containerHashId,
-                variablesWithType = ret.variablesWithType,
-                timeoutMills = ret.timeoutMills,
-                containerType = ret.containerType
-            )
-        }
+
+        // #5277 将Job上下文传入本次agent任务
+        val jobContext = buildApi.getJobContext().toMutableMap()
+        jobContext[JOB_OS_CONTEXT] = AgentEnv.getOS().name
+
+        return ret.copy(variables = ret.variables.plus(jobContext))
     }
 
     fun claimTask(): BuildTask {
@@ -111,13 +95,13 @@ object EngineService {
         }
     }
 
-    fun endBuild() {
+    fun endBuild(buildVariables: BuildVariables) {
         var retryCount = 0
         val result = HttpRetryUtils.retry {
             if (retryCount > 0) {
                 logger.warn("retry|time=$retryCount|endBuild")
             }
-            buildApi.endTask(retryCount++)
+            buildApi.endTask(buildVariables, retryCount++)
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to end build task")
@@ -150,6 +134,20 @@ object EngineService {
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to report timeout")
+        }
+    }
+
+    fun submitError(errorInfo: ErrorInfo) {
+        var retryCount = 0
+        val result = HttpRetryUtils.retry {
+            if (retryCount > 0) {
+                logger.warn("retry|time=$retryCount|submitError")
+            }
+            retryCount++
+            buildApi.submitError(errorInfo)
+        }
+        if (result.isNotOk()) {
+            throw RemoteServiceException("Failed to submit error")
         }
     }
 }

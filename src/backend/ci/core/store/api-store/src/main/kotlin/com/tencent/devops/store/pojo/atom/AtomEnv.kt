@@ -45,6 +45,8 @@ data class AtomEnv(
     val creator: String,
     @ApiModelProperty("插件版本号", required = true)
     val version: String,
+    @ApiModelProperty("是否是公共插件", required = true)
+    val publicFlag: Boolean,
     @ApiModelProperty("插件简介", required = false)
     val summary: String?,
     @ApiModelProperty("插件说明文档链接", required = false)

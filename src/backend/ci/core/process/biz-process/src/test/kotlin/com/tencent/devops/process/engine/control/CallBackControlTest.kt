@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -48,11 +49,13 @@ class CallBackControlTest : TestBase() {
     private val pipelineBuildDetailService: PipelineBuildDetailService = mock()
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val projectPipelineCallBackService: ProjectPipelineCallBackService = mock()
+    private val client: Client = mock()
 
     private val callBackControl = CallBackControl(
         pipelineBuildDetailService = pipelineBuildDetailService,
         pipelineRepositoryService = pipelineRepositoryService,
-        projectPipelineCallBackService = projectPipelineCallBackService
+        projectPipelineCallBackService = projectPipelineCallBackService,
+        client = client
     )
 
     private val testUrl = "https://mock/callback"
@@ -84,7 +87,7 @@ class CallBackControlTest : TestBase() {
             executeTime = 100
         )
 
-        whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
+        whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))
             .thenReturn(modelDetail)
     }
 

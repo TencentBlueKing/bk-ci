@@ -88,7 +88,7 @@ class PushFileServiceExt @Autowired constructor(
         try {
             // 下载目标文件到本地
             val downloadFiles = fileService.downloadFileTolocal(
-                projectId, pipelineId, buildId, fileResourceInfo.fileName,
+                userId, projectId, pipelineId, buildId, fileResourceInfo.fileName,
                 fileResourceInfo.isCustom!!
             ).toMutableList()
             val filePath = mutableListOf<String>()

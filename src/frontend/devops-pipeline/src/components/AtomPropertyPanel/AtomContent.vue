@@ -161,6 +161,7 @@
         props: {
             elementIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
@@ -240,8 +241,8 @@
                 return getContainers(stage)
             },
             container () {
-                const { containerIndex, containers, getContainer } = this
-                return getContainer(containers, containerIndex)
+                const { containerIndex, containerGroupIndex, containers, getContainer } = this
+                return getContainer(containers, containerIndex, containerGroupIndex)
             },
             element () {
                 const { container, elementIndex, getElement } = this
@@ -537,7 +538,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },

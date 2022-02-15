@@ -5,7 +5,6 @@
                                                                            [atomCls(atom)]: true,
                                                                            'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
                                                                            'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
-                                                                           'arrival-atom': atom.status,
                                                                            'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
             }"
                 @click.stop="showPropertyPanel(index)"
@@ -63,7 +62,8 @@
                 </section>
 
                 <section class="atom-section quality-atom"
-                    :class="{ 'is-review': atom.isReviewing,
+                    :class="{ 'is-in-group': containerGroupIndex !== undefined,
+                              'is-review': atom.isReviewing,
                               'is-success': (atom.status === 'SUCCEED' || atom.status === 'REVIEW_PROCESSED'),
                               'is-fail': (atom.status === 'QUALITY_CHECK_FAIL' || atom.status === 'REVIEW_ABORT') }"
                     v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
@@ -104,6 +104,7 @@
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             containerStatus: String,
             containerDisabled: Boolean,
             editable: {
@@ -162,7 +163,7 @@
                     atoms.forEach(atom => {
                         if (Array.isArray(this.curMatchRules) && this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -212,13 +213,14 @@
 
             continueExecute (elementIndex) {
                 if (this.isExecStop) return
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     showPanelType: 'PAUSE',
                     editingElementPos: {
                         stageIndex,
                         containerIndex,
+                        containerGroupIndex,
                         elementIndex
                     }
                 })
@@ -314,12 +316,13 @@
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {
                         stageIndex,
                         containerIndex,
+                        containerGroupIndex,
                         elementIndex
                     }
                 })
@@ -469,7 +472,7 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            width: 240px;
+            // width: 240px;
             height: $itemHeight;
             margin: 0 0 11px 0;
             background-color: white;
@@ -695,6 +698,13 @@
                     width: 100px;
                 }
             }
+            &.is-in-group {
+               .atom-title {
+                    &:after {
+                        width: 76px;
+                    }
+                }
+            }
             &.is-success {
                 border-color: $successColor;
                 .atom-title {
@@ -811,9 +821,15 @@
                 &.SKIP,
                 &.REVIEWING {
                     border-color: $warningColor;
-                    
                     .atom-icon {
                         color: $warningColor;
+                    }
+                    &:before {
+                        background: $warningColor;
+                    }
+                    &:after {
+                        border: 2px solid $warningColor;
+                        background: white;
                     }
                 }
                 &.FAILED,
@@ -825,13 +841,26 @@
                     .atom-icon {
                         color: $dangerColor;
                     }
+                    &:before {
+                        background: $dangerColor;
+                    }
+                    &:after {
+                        border: 2px solid $dangerColor;
+                        background: white;
+                    }
                 }
                 &.SUCCEED,
                 &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    
                     .atom-icon {
                         color: $successColor;
+                    }
+                    &:before {
+                        background: $successColor;
+                    }
+                    &:after {
+                        border: 2px solid $successColor;
+                        background: white;
                     }
                 }
                 &.PAUSE {
@@ -840,15 +869,13 @@
                     .atom-icon {
                         color: $pauseColor;
                     }
-                }
-            }
-            .arrival-atom {
-                &:before {
-                    background: $successColor;
-                }
-                &:after {
-                    border: 2px solid $successColor;
-                    background: white;
+                    &:before {
+                        background: $pauseColor;
+                    }
+                    &:after {
+                        border: 2px solid $pauseColor;
+                        background: white;
+                    }
                 }
             }
             .qualitt-next-atom {

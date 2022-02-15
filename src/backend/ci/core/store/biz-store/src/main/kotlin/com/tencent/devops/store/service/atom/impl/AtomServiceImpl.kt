@@ -113,6 +113,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
@@ -202,9 +203,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     page = null,
                     pageSize = null
                 ).data
-                return elementMapData?.records?.map {
-                    it.atomCode to it.name
-                }?.toMap() ?: mapOf()
+                return elementMapData?.records?.associate { it.atomCode to it.name } ?: mapOf()
             }
         })
 
@@ -349,6 +348,13 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName
             )
+            // 社区版插件归档bkrepo后删除local参数
+            var logoUrl = it["logoUrl"] as? String
+            logoUrl = if (logoUrl?.contains("?") == true) {
+                logoUrl.plus("&logo=true")
+            } else {
+                logoUrl?.plus("?logo=true")
+            }
             val categoryFlag = it[KEY_CATEGORY] as Byte
             val atomType = it[KEY_ATOM_TYPE] as Byte
             val atomStatus = it[KEY_ATOM_STATUS] as Byte
@@ -366,7 +372,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 classType = classType,
                 serviceScope = serviceScopeList,
                 os = osList,
-                logoUrl = it[KEY_LOGO_URL] as? String,
+                logoUrl = logoUrl,
                 icon = it[KEY_ICON] as? String,
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
@@ -474,7 +480,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 null
             }
         }
-        if (atomStatus == null) {
+        if (atomStatus == null && !VersionUtils.isLatestVersion(version)) {
             atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
         }
         val pipelineAtomRecord = if (projectCode != null) {
@@ -524,14 +530,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     logoUrl = pipelineAtomRecord.logoUrl,
                     icon = pipelineAtomRecord.icon,
                     summary = pipelineAtomRecord.summary,
-                    serviceScope = if (!pipelineAtomRecord.serviceScope.isNullOrBlank()) {
-                        JsonUtil.getObjectMapper()
-                            .readValue(pipelineAtomRecord.serviceScope, List::class.java) as List<String>
-                    } else null,
+                    serviceScope =
+                    JsonUtil.toOrNull(pipelineAtomRecord.serviceScope, List::class.java) as List<String>?,
                     jobType = pipelineAtomRecord.jobType,
-                    os = if (!pipelineAtomRecord.os.isNullOrBlank()) {
-                        JsonUtil.getObjectMapper().readValue(pipelineAtomRecord.os, List::class.java) as List<String>
-                    } else null,
+                    os = JsonUtil.toOrNull(pipelineAtomRecord.os, List::class.java) as List<String>?,
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
                     classifyName = atomClassify?.classifyName,
@@ -548,8 +550,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     htmlTemplateVersion = pipelineAtomRecord.htmlTemplateVersion,
                     buildLessRunFlag = pipelineAtomRecord.buildLessRunFlag,
                     weight = pipelineAtomRecord.weight,
-                    props = atomDao.convertString(pipelineAtomRecord.props),
-                    data = atomDao.convertString(pipelineAtomRecord.data),
+                    props = pipelineAtomRecord.props?.let {
+                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                            ?.decorate(pipelineAtomRecord.props) as Map<String, Any>?
+                    },
+                    data = pipelineAtomRecord.data?.let {
+                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                            ?.decorate(pipelineAtomRecord.data) as Map<String, Any>?
+                    },
                     recommendFlag = atomFeature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
                     createTime = pipelineAtomRecord.createTime.timestampmilli(),
@@ -737,20 +745,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
                             context, userId, AtomFeatureRequest(
-                            atomCode = atomCode,
-                            recommendFlag = recommendFlag,
-                            yamlFlag = atomUpdateRequest.yamlFlag,
-                            qualityFlag = atomUpdateRequest.qualityFlag
-                        )
+                                atomCode = atomCode,
+                                recommendFlag = recommendFlag,
+                                yamlFlag = atomUpdateRequest.yamlFlag,
+                                qualityFlag = atomUpdateRequest.qualityFlag
+                            )
                         )
                     } else {
                         atomFeatureDao.addAtomFeature(
                             context, userId, AtomFeatureRequest(
-                            atomCode = atomCode,
-                            recommendFlag = recommendFlag,
-                            yamlFlag = atomUpdateRequest.yamlFlag,
-                            qualityFlag = atomUpdateRequest.qualityFlag
-                        )
+                                atomCode = atomCode,
+                                recommendFlag = recommendFlag,
+                                yamlFlag = atomUpdateRequest.yamlFlag,
+                                qualityFlag = atomUpdateRequest.qualityFlag
+                            )
                         )
                     }
                 }

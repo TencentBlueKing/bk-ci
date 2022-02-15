@@ -27,13 +27,24 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 @Suppress("ALL")
+@ApiModel("Agent心跳上报模型")
 data class HeartbeatResponse(
+    @ApiModelProperty("主版本")
     val masterVersion: String,
+    @ApiModelProperty("从属版本")
     val slaveVersion: String,
+    @ApiModelProperty("构建机状态")
     val AgentStatus: String,
+    @ApiModelProperty("通道数量")
     val ParallelTaskCount: Int,
+    @ApiModelProperty("环境变量")
     val envs: Map<String, String>,
+    @ApiModelProperty("网关地址")
     val gateway: String? = "",
+    @ApiModelProperty("文件网关路径")
     val fileGateway: String? = ""
 )

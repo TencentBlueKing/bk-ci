@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.dao
 
+import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
@@ -161,6 +162,67 @@ class PipelineDockerIPInfoDao {
         }
     }
 
+    fun updateBuildLessLoad(
+        dslContext: DSLContext,
+        dockerIp: String,
+        dockerIpInfoVO: DockerIpInfoVO
+    ) {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            val preRecord = dslContext.selectFrom(this)
+                .where(DOCKER_IP.eq(dockerIp))
+                .and(DOCKER_HOST_PORT.eq(dockerIpInfoVO.dockerHostPort))
+                .fetchAny()
+            if (preRecord != null) {
+                dslContext.update(this)
+                    .set(USED_NUM, dockerIpInfoVO.usedNum)
+                    .set(CPU_LOAD, dockerIpInfoVO.averageCpuLoad)
+                    .set(MEM_LOAD, dockerIpInfoVO.averageMemLoad)
+                    .set(DISK_LOAD, dockerIpInfoVO.averageDiskLoad)
+                    .set(DISK_IO_LOAD, dockerIpInfoVO.averageDiskIOLoad)
+                    .set(ENABLE, dockerIpInfoVO.enable)
+                    .set(GRAY_ENV, dockerIpInfoVO.grayEnv)
+                    .set(CLUSTER_NAME, dockerIpInfoVO.clusterType!!.name)
+                    .set(GMT_MODIFIED, LocalDateTime.now())
+                    .where(DOCKER_IP.eq(dockerIp))
+                    .and(DOCKER_HOST_PORT.eq(dockerIpInfoVO.dockerHostPort))
+                    .execute()
+            } else {
+                dslContext.insertInto(
+                    this,
+                    DOCKER_IP,
+                    DOCKER_HOST_PORT,
+                    CAPACITY,
+                    USED_NUM,
+                    CPU_LOAD,
+                    MEM_LOAD,
+                    DISK_LOAD,
+                    DISK_IO_LOAD,
+                    ENABLE,
+                    GRAY_ENV,
+                    SPECIAL_ON,
+                    CLUSTER_NAME,
+                    GMT_CREATE,
+                    GMT_MODIFIED
+                ).values(
+                    dockerIp,
+                    dockerIpInfoVO.dockerHostPort,
+                    dockerIpInfoVO.capacity,
+                    dockerIpInfoVO.usedNum,
+                    dockerIpInfoVO.averageCpuLoad,
+                    dockerIpInfoVO.averageMemLoad,
+                    dockerIpInfoVO.averageDiskLoad,
+                    dockerIpInfoVO.averageDiskIOLoad,
+                    dockerIpInfoVO.enable,
+                    dockerIpInfoVO.grayEnv,
+                    dockerIpInfoVO.specialOn,
+                    dockerIpInfoVO.clusterType?.name,
+                    LocalDateTime.now(),
+                    LocalDateTime.now()
+                ).execute()
+            }
+        }
+    }
+
     fun updateDockerIpStatus(
         dslContext: DSLContext,
         dockerIp: String,
@@ -254,26 +316,52 @@ class PipelineDockerIPInfoDao {
     fun getDockerIpList(
         dslContext: DSLContext,
         enable: Boolean,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType? = null
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            val conditions =
+                mutableListOf<Condition>(
+                    ENABLE.eq(enable),
+                    GRAY_ENV.eq(grayEnv)
+                )
+
+            if (clusterName != null) {
+                conditions.add(CLUSTER_NAME.eq(clusterName.name))
+            }
+
             return dslContext.selectFrom(this)
-                .where(ENABLE.eq(enable))
-                .and(GRAY_ENV.eq(grayEnv))
+                .where(conditions)
                 .fetch()
         }
     }
 
     fun getEnableDockerIpCount(
         dslContext: DSLContext,
-        grayEnv: Boolean
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType
     ): Long {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
+                .and(CLUSTER_NAME.eq(clusterName.name))
                 .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun getAllDockerIpCount(
+        dslContext: DSLContext,
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType
+    ): Long? {
+        with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(GRAY_ENV.eq(grayEnv))
+                .and(CLUSTER_NAME.eq(clusterName.name))
+                .fetchOne(0, Long::class.java)
         }
     }
 

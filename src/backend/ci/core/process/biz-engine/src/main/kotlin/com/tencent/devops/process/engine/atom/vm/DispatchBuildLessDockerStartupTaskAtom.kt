@@ -88,7 +88,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     ): AtomResponse {
         var atomResponse: AtomResponse
         try {
-            atomResponse = startUpDocker(task)
+            atomResponse = startUpDocker(task, param)
             buildLogPrinter.stopLog(
                 buildId = task.buildId,
                 tag = task.taskId,
@@ -129,7 +129,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         return atomResponse
     }
 
-    fun startUpDocker(task: PipelineBuildTask): AtomResponse {
+    fun startUpDocker(task: PipelineBuildTask, param: NormalContainer): AtomResponse {
         val projectId = task.projectId
         val pipelineId = task.pipelineId
         val buildId = task.buildId
@@ -148,7 +148,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        val container = containerBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -158,15 +158,20 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        containerBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
 
-        dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!)
+        dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
 
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
-    private fun dispatch(container: Container, task: PipelineBuildTask, pipelineInfo: PipelineInfo) {
+    private fun dispatch(
+        container: Container,
+        task: PipelineBuildTask,
+        pipelineInfo: PipelineInfo,
+        param: NormalContainer
+    ) {
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(
             container = container,
@@ -191,7 +196,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 dispatchType = DockerDispatchType(DockerVersion.CUSTOMIZE.value),
                 zone = getBuildZone(container),
                 atoms = atoms,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                customBuildEnv = param.matrixContext
             )
         )
     }

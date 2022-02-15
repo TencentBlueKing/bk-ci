@@ -28,20 +28,26 @@
 package com.tencent.devops.repository.pojo.gitlab
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class GitlabFileInfo(
+    @ApiModelProperty(name = "file_name")
     @JsonProperty("file_name")
     val fileName: String,
+    @ApiModelProperty(name = "file_path")
     @JsonProperty("file_path")
     val filePath: String,
     val size: Int,
     val encoding: String,
     val content: String,
     val ref: String,
+    @ApiModelProperty(name = "blob_id")
     @JsonProperty("blob_id")
     val blobId: String,
+    @ApiModelProperty(name = "commit_id")
     @JsonProperty("commit_id")
     val commitId: String,
+    @ApiModelProperty(name = "last_commit_id")
     @JsonProperty("last_commit_id")
     val lastCommitId: String
 )

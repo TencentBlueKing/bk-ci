@@ -81,15 +81,9 @@ class JobQuotaManagerService @Autowired constructor(
             return JobQuotaProject(
                 projectId = projectId,
                 vmType = jobQuotaVmType,
-                runningJobMax = if (isGitCiProject(projectId)) {
-                    systemDefault.runningJobMaxGitCiProject
-                } else { systemDefault.runningJobMaxProject },
-                runningTimeJobMax = if (isGitCiProject(projectId)) {
-                    systemDefault.runningTimeJobMaxGitCi
-                } else { systemDefault.runningTimeJobMax },
-                runningTimeProjectMax = if (isGitCiProject(projectId)) {
-                    systemDefault.runningTimeJobMaxProjectGitCi
-                } else { systemDefault.runningTimeJobMaxProject },
+                runningJobMax = systemDefault.runningJobMaxProject,
+                runningTimeJobMax = systemDefault.runningTimeJobMax,
+                runningTimeProjectMax = systemDefault.runningTimeJobMaxProject,
                 createdTime = now,
                 updatedTime = now,
                 operator = ""

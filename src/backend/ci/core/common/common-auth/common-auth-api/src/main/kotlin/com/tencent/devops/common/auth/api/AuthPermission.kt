@@ -28,8 +28,8 @@
 package com.tencent.devops.common.auth.api
 
 enum class AuthPermission(val value: String, val alias: String) {
-    CREATE("create", "创建"),              // 流水线，凭据，证书，代码仓库
-    DEPLOY("deploy", "部署"),              // 流水线，容器，自定义目录
+    CREATE("create", "创建"), // 流水线，凭据，证书，代码仓库
+    DEPLOY("deploy", "部署"), // 流水线，容器，自定义目录
     EDIT("edit", "编辑"), // 流水线，凭据，证书，代码仓库
     DOWNLOAD("download", "下载"), // 流水线
     DELETE("delete", "删除"), // 流水线，自定义目录，凭据，证书，代码仓库
@@ -45,6 +45,7 @@ enum class AuthPermission(val value: String, val alias: String) {
     ENABLE("enable", "停用/启用"), // 质量红线
 
     VIEWS_MANAGER("views_manager", "视图管理"), // 项目视图管理
+    WEB_CHECK("webcheck", "页面按钮校验"), // 页面按钮校验
     MANAGE("manage", "管理"); // 项目管理
 
     companion object {

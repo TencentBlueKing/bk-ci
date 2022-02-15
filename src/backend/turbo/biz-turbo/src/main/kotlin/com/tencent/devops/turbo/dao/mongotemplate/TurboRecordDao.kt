@@ -208,6 +208,31 @@ class TurboRecordDao @Autowired constructor(
         mongoTemplate.updateFirst(query, update, TTurboRecordEntity::class.java)
     }
 
+
+    /**
+     * 更新记录状态
+     */
+    fun updateRecordStatusForPlugin(
+        buildId: String,
+        status: String,
+        user: String
+    ) {
+        val query = Query()
+        query.addCriteria(Criteria.where("build_id").`is`(buildId))
+            .addCriteria(
+                Criteria.where("status").nin(
+                    EnumDistccTaskStatus.FINISH.getTBSStatus(),
+                    EnumDistccTaskStatus.FAILED.getTBSStatus()
+                )
+            )
+        val update = Update()
+        update.set("status", status)
+            .set("updated_date", LocalDateTime.now())
+            .set("updated_by", user)
+        mongoTemplate.updateFirst(query, update, TTurboRecordEntity::class.java)
+    }
+
+
     /**
      * 通过方案id寻找记录清单
      */

@@ -35,6 +35,19 @@ const customeRules = {
             return repeatNum <= 1
         }
     },
+    // 不同时为空
+    atlestNotEmpty: {
+        validate: function (value, args) {
+            console.log(args, 'not')
+            let notEmptyNum = 0
+            for (const i in args) {
+                if (args[i]) {
+                    notEmptyNum++
+                }
+            }
+            return notEmptyNum > 0
+        }
+    },
     pullmode: {
         validate: function (value, args) {
             return typeof value === 'object' && value.type !== '' && value.value !== ''
@@ -57,12 +70,12 @@ const customeRules = {
     },
     mutualGroup: {
         validate: function (value, args) {
-            return /^[A-Za-z0-9]+$/g.test(value) || /^\${(.*)}$/g.test(value)
+            return /^[A-Za-z0-9]+$/g.test(value) || (typeof value === 'string' && value.isBkVar())
         }
     },
     nonVarRule: {
         validate: function (value, args) {
-            return !/^\${(.*)}$/g.test(value)
+            return !(value.isBkVar())
         }
     },
     notStartWithBKCI: {
@@ -88,7 +101,7 @@ function ExtendsCustomRules (_extends) {
         return
     }
     for (const key in customeRules) {
-        if (customeRules.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(customeRules, key)) {
             _extends(key, customeRules[key])
         }
     }

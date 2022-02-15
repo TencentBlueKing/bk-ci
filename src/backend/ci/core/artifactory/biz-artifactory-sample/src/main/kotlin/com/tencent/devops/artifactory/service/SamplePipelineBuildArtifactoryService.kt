@@ -47,18 +47,29 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val defaultBkRepoClient: DefaultBkRepoClient
 ) : PipelineBuildArtifactoryService {
 
-    override fun getArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
+    override fun getArtifactList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<FileInfo> {
         return if (defaultBkRepoClient.useBkRepo()) {
-            getBkRepoArtifactoryList(projectId, pipelineId, buildId)
+            getBkRepoArtifactoryList(userId, projectId, pipelineId, buildId)
         } else {
             getLocalArtifactList(projectId, pipelineId, buildId)
         }
     }
 
-    private fun getBkRepoArtifactoryList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {
-        logger.info("getBkRepoArtifactoryList, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+    private fun getBkRepoArtifactoryList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<FileInfo> {
+        logger.info("getBkRepoArtifactoryList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, " +
+            "buildId: $buildId")
         val nodeList = defaultBkRepoClient.queryByNameAndMetadata(
-            userId = BkRepoUtils.BKREPO_DEFAULT_USER,
+            userId = userId,
             projectId = projectId,
             repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, BkRepoUtils.REPO_NAME_CUSTOM),
             fileNames = listOf(),
@@ -98,15 +109,6 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         }
         return fileInfoList
     }
-
-    override fun synArtifactoryInfo(
-        userId: String,
-        artifactList: List<FileInfo>,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        buildNum: Int
-    ) = Unit
 
     companion object {
         private val logger = LoggerFactory.getLogger(SamplePipelineBuildArtifactoryService::class.java)

@@ -28,7 +28,9 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -38,7 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService,
-    val permissionExtService: PermissionExtService
+    val permissionExtService: PermissionExtService,
+    val permissionGrantService: PermissionGrantService
 ) : ServicePermissionAuthResource {
 
     override fun validateUserActionPermission(
@@ -78,6 +81,33 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 relationResourceType = relationResourceType
             )
         )
+    }
+
+    override fun batchValidateUserResourcePermissionByRelation(
+        userId: String,
+        token: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?,
+        action: List<String>
+    ): Result<Boolean> {
+        var actionCheckPermission = true
+        action.forEach {
+            val checkActionPermission = permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = it,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = relationResourceType
+            )
+            if (!checkActionPermission) {
+                actionCheckPermission = false
+                return@forEach
+            }
+        }
+        return Result(actionCheckPermission)
     }
 
     override fun getUserResourceByPermission(
@@ -130,5 +160,17 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceCode = resourceCode,
                 resourceName = resourceName
             ))
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        token: String,
+        projectCode: String,
+        grantInstance: GrantInstanceDTO
+    ): Result<Boolean> {
+        return Result(permissionGrantService.grantInstancePermission(
+            projectId = projectCode,
+            grantInfo = grantInstance
+        ))
     }
 }

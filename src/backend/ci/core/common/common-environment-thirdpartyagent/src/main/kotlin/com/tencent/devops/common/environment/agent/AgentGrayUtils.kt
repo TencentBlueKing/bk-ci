@@ -29,24 +29,21 @@ package com.tencent.devops.common.environment.agent
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import org.slf4j.LoggerFactory
 
+@SuppressWarnings("TooManyFunctions")
 class AgentGrayUtils constructor(
-    private val redisOperation: RedisOperation,
-    private val gray: Gray
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AgentGrayUtils::class.java)
 
         private const val CURRENT_AGENT_MASTER_VERSION = "environment.thirdparty.agent.master.version"
-        private const val GRAY_CURRENT_AGENT_MASTERT_VERSION = "environment.thirdparty.agent.gray.master.version"
 
         private const val CURRENT_AGENT_VERSION = "environment.thirdparty.agent.verison"
-        private const val GRAY_CURRENT_AGENT_VERSION = "environment.thirdparty.agent.gray.version"
 
         private const val CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:can_upgrade"
-        private const val GREY_CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:grey_can_upgrade"
+
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
 
@@ -120,51 +117,54 @@ class AgentGrayUtils constructor(
     fun setCanUpgradeAgents(agentIds: List<Long>) {
         logger.info("setCanUpgradeAgents, agentIds: $agentIds")
         val canUpgradeAgentSetKey = getCanUpgradeAgentSetKey()
-        val existingAgentIds = (redisOperation.getSetMembers(canUpgradeAgentSetKey) ?: setOf()).map {
+        val existingAgentIds = (redisOperation.getSetMembers(
+            key = canUpgradeAgentSetKey,
+            isDistinguishCluster = true
+        ) ?: setOf()).map {
             it.toLong()
         }
         val newAgentIds = agentIds.toSet()
         val toAddAgentIds = newAgentIds.filterNot { existingAgentIds.contains(it) }
         if (toAddAgentIds.isNotEmpty()) {
             toAddAgentIds.forEach {
-                redisOperation.addSetValue(canUpgradeAgentSetKey, it.toString())
+                redisOperation.addSetValue(
+                    key = canUpgradeAgentSetKey,
+                    item = it.toString(),
+                    isDistinguishCluster = true
+                )
             }
         }
         val toDeleteAgents = existingAgentIds.filterNot { newAgentIds.contains(it) }
         if (toDeleteAgents.isNotEmpty()) {
             toDeleteAgents.forEach {
-                redisOperation.removeSetMember(canUpgradeAgentSetKey, it.toString())
+                redisOperation.removeSetMember(
+                    key = canUpgradeAgentSetKey,
+                    item = it.toString(),
+                    isDistinguishCluster = true
+                )
             }
         }
     }
 
     fun getCanUpgradeAgents(): List<Long> {
-        return (redisOperation.getSetMembers(getCanUpgradeAgentSetKey())
-            ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
+        return (
+            redisOperation.getSetMembers(
+                key = getCanUpgradeAgentSetKey(),
+                isDistinguishCluster = true
+            )
+                ?: setOf()).filter { it.isNotBlank() }.map { it.toLong() }
     }
 
     fun getAgentMasterVersionKey(): String {
-        return if (gray.isGray()) {
-            GRAY_CURRENT_AGENT_MASTERT_VERSION
-        } else {
-            CURRENT_AGENT_MASTER_VERSION
-        }
+        return CURRENT_AGENT_MASTER_VERSION
     }
 
-    fun getCanUpgradeAgentSetKey(): String {
-        return if (gray.isGray()) {
-            GREY_CAN_UPGRADE_AGENT_SET_KEY
-        } else {
-            CAN_UPGRADE_AGENT_SET_KEY
-        }
+    private fun getCanUpgradeAgentSetKey(): String {
+        return CAN_UPGRADE_AGENT_SET_KEY
     }
 
     fun getAgentVersionKey(): String {
-        return if (gray.isGray()) {
-            GRAY_CURRENT_AGENT_VERSION
-        } else {
-            CURRENT_AGENT_VERSION
-        }
+        return CURRENT_AGENT_VERSION
     }
 
     fun getDefaultGateway(): String? {
@@ -189,5 +189,13 @@ class AgentGrayUtils constructor(
 
     fun getMaxParallelUpgradeCount(): Int {
         return redisOperation.get(PARALLEL_UPGRADE_COUNT)?.toInt() ?: DEFAULT_PARALLEL_UPGRADE_COUNT
+    }
+
+    fun getParallelUpgradeCountKey(): String {
+        return PARALLEL_UPGRADE_COUNT
+    }
+
+    fun getDefaultParallelUpgradeCount(): Int {
+        return DEFAULT_PARALLEL_UPGRADE_COUNT
     }
 }

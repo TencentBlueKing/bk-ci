@@ -28,9 +28,15 @@
 package com.tencent.devops.repository.pojo
 
 import com.tencent.devops.scm.pojo.Project
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("根据用户获取项目返回模型")
 data class AuthorizeResult(
+    @ApiModelProperty("状态")
     val status: Int,
+    @ApiModelProperty("url地址")
     val url: String = "",
+    @ApiModelProperty("项目列表")
     val project: MutableList<Project> = mutableListOf()
 )

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.api.service
 
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -113,6 +114,32 @@ interface ServicePermissionAuthResource {
         relationResourceType: String? = null
     ): Result<Boolean>
 
+    @POST
+    @Path("/projects/{projectCode}/relation/validate/batch")
+    @ApiOperation("校验用户是否有action的权限")
+    fun batchValidateUserResourcePermissionByRelation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源code", required = true)
+        resourceCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型", required = true)
+        resourceType: String,
+        @QueryParam("relationResourceType")
+        @ApiParam("关联资源,一般为Project", required = false)
+        relationResourceType: String? = null,
+        @ApiParam("action类型列表", required = true)
+        action: List<String>
+    ): Result<Boolean>
+
     @GET
     @Path("/projects/{projectCode}/action/instance")
     @ApiOperation("获取用户某项目下指定资源action的实例列表")
@@ -171,10 +198,26 @@ interface ServicePermissionAuthResource {
         @ApiParam("资源类型")
         resourceType: String,
         @QueryParam("resourceCode")
-        @ApiParam("资源类型")
+        @ApiParam("资源Code")
         resourceCode: String,
         @QueryParam("resourceName")
         @ApiParam("资源名称")
         resourceName: String
+    ): Result<Boolean>
+
+    @Path("/projects/{projectCode}/grant")
+    @POST
+    @ApiOperation("授权实例级别权限")
+    fun grantInstancePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("操作用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Id")
+        projectCode: String,
+        grantInstance: GrantInstanceDTO
     ): Result<Boolean>
 }

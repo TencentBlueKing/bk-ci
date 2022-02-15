@@ -49,7 +49,9 @@ class CheckMutexContainerCmd(
     }
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.matrixGroupFlag != true // 矩阵组不做互斥判断
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -62,22 +64,23 @@ class CheckMutexContainerCmd(
     private fun mutexCheck(commandContext: ContainerContext) {
         val event = commandContext.event
         val container = commandContext.container
-        val mutexResult = mutexControl.checkContainerMutex(
-            mutexGroup = commandContext.mutexGroup,
-            container = container
-        )
+        val mutexResult = mutexControl.acquireMutex(mutexGroup = commandContext.mutexGroup, container = container)
         with(event) {
             when (mutexResult) {
                 ContainerMutexStatus.CANCELED -> {
                     LOG.info("ENGINE|$buildId|${event.source}|MUTEX_CANCEL|$stageId|j($containerId)")
                     // job互斥失败处理
                     commandContext.buildStatus = BuildStatus.FAILED
-                    commandContext.latestSummary = "j($containerId)_mutex_cancel"
+                    commandContext.latestSummary = "mutex_cancel"
                     commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 ContainerMutexStatus.WAITING -> {
-                    commandContext.latestSummary = "j($containerId)_mutex_delay"
+                    commandContext.latestSummary = "mutex_delay"
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
+                }
+                ContainerMutexStatus.FIRST_LOG -> { // #5454 增加可视化的互斥状态打印
+                    commandContext.latestSummary = "mutex_print"
+                    commandContext.cmdFlowState = CmdFlowState.LOOP
                 }
                 else -> { // 正常运行
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行

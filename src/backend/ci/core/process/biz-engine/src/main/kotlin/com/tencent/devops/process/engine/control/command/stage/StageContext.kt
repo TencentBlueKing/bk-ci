@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage
 
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.control.command.CmdContext
+import com.tencent.devops.process.command.CmdContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
