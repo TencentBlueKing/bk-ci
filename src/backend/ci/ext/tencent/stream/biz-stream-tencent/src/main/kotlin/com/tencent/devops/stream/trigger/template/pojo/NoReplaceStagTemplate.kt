@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.template.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 // 不用被模板替换的Stage中的变量，直接通过Yaml生成Object
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -39,7 +40,9 @@ data class NoReplaceStagTemplate(
     val id: String?,
     val label: String? = null,
     @JsonProperty("if")
+    @ApiModelProperty(name = "if")
     val ifField: String? = null,
     @JsonProperty("fast-kill")
+    @ApiModelProperty(name = "fast-kill")
     val fastKill: Boolean? = false
 )

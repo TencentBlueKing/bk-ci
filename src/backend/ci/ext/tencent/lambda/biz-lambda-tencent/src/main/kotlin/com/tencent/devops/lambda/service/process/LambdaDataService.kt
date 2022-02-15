@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.lambda.service.process
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryConfig
@@ -41,6 +42,7 @@ import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -53,6 +55,7 @@ import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIS
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
+import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
@@ -87,16 +90,21 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineTemplateDao: LambdaPipelineTemplateDao,
     private val lambdaBuildTaskDao: LambdaBuildTaskDao,
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
+    private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
-        val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, event.buildId)
+        val history = lambdaPipelineBuildDao.getBuildHistory(
+            dslContext = dslContext,
+            projectId = event.projectId,
+            buildId = event.buildId
+        )
         if (history == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build history is not exist")
             return
         }
-        val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, event.buildId)
+        val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, event.projectId, event.buildId)
         if (model == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
             return
@@ -107,7 +115,12 @@ class LambdaDataService @Autowired constructor(
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
-        val task = lambdaBuildTaskDao.getTask(dslContext, event.buildId, event.taskId)
+        val task = lambdaBuildTaskDao.getTask(
+            dslContext = dslContext,
+            projectId = event.projectId,
+            buildId = event.buildId,
+            taskId = event.taskId
+        )
         if (task == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
             return
@@ -119,12 +132,12 @@ class LambdaDataService @Autowired constructor(
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
         makeUpBuildVOs.forEach {
             with(it) {
-                val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, buildId)
+                val history = lambdaPipelineBuildDao.getBuildHistory(dslContext, projectId, buildId)
                 if (history == null) {
                     logger.warn("[$projectId|$buildId] The build history is not exist")
                     return false
                 }
-                val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, buildId)
+                val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, projectId, buildId)
                 if (model == null) {
                     logger.warn("[$projectId|$buildId] Fail to get the pipeline detail model")
                     return false
@@ -141,7 +154,7 @@ class LambdaDataService @Autowired constructor(
     fun makeUpBuildTasks(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
         makeUpBuildVOs.forEach {
             with(it) {
-                val taskList = lambdaBuildTaskDao.getTaskByBuildId(dslContext, buildId)
+                val taskList = lambdaBuildTaskDao.getTaskByBuildId(dslContext, projectId, buildId)
                 taskList.forEach { it1 ->
                     pushTaskDetail(it1)
                 }
@@ -149,20 +162,6 @@ class LambdaDataService @Autowired constructor(
         }
 
         return true
-    }
-
-    private fun getAtomCodeFromTask(task: TPipelineBuildTaskRecord): String {
-        return if (!task.taskAtom.isNullOrBlank()) {
-            task.taskAtom
-        } else {
-            val taskParams = JsonUtil.toMutableMapSkipEmpty(task.taskParams ?: "{}")
-            if (taskParams.keys.contains("atomCode")) {
-                taskParams["atomCode"] as String
-            } else {
-                logger.warn("unexpected taskParams with no atomCode:${task.taskParams}")
-                ""
-            }
-        }
     }
 
     private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
@@ -177,6 +176,7 @@ class LambdaDataService @Autowired constructor(
                     Thread.sleep(3000)
                     val buildContainer = lambdaBuildContainerDao.getContainer(
                         dslContext = dslContext,
+                        projectId = task.projectId,
                         buildId = task.buildId,
                         stageId = task.stageId,
                         containerId = task.containerId
@@ -198,6 +198,10 @@ class LambdaDataService @Autowired constructor(
                             costTime = buildContainer.cost.toLong(),
                             executeCount = buildContainer.executeCount,
                             conditions = JSONObject(JsonUtil.toMap(buildContainer.conditions)),
+                            errorType = task.errorType,
+                            errorCode = task.errorCode,
+                            errorMsg = task.errorMsg,
+                            baseOS = taskParamMap["baseOS"] as String,
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
 
@@ -209,6 +213,7 @@ class LambdaDataService @Autowired constructor(
                     val inputMap = mutableMapOf<String, String>()
                     when {
                         taskParamMap["@type"] == "linuxScript" -> {
+                            inputMap["name"] = taskParamMap["name"] as String
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                             inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
@@ -218,10 +223,12 @@ class LambdaDataService @Autowired constructor(
                             }
                         }
                         taskParamMap["@type"] == "windowsScript" -> {
+                            inputMap["name"] = taskParamMap["name"] as String
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
                         }
                         taskParamMap["@type"] == "manualReviewUserTask" -> {
+                            inputMap["name"] = taskParamMap["name"] as String
                             inputMap["reviewUsers"] = taskParamMap["reviewUsers"] as String
                             if (taskParamMap["params"] != null) {
                                 inputMap["desc"] = taskParamMap["params"] as String
@@ -238,10 +245,12 @@ class LambdaDataService @Autowired constructor(
                 } else {
                     JSONObject(JsonUtil.toMap(task.taskParams))
                 }
+
                 val dataPlatTaskDetail = DataPlatTaskDetail(
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
                     projectEnglishName = task.projectId,
+                    vmSeqId = task.containerId,
                     type = "task",
                     itemId = task.taskId,
                     atomCode = task.atomCode,
@@ -418,15 +427,14 @@ class LambdaDataService @Autowired constructor(
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*pipelineId*/, String/*templateId*/>(
             object : CacheLoader<String, String>() {
-                override fun load(pipelineId: String): String {
-                    return lambdaPipelineTemplateDao.getTemplate(dslContext, pipelineId)?.templateId ?: ""
+                override fun load(cacheKey: String): String {
+                    val arrs = cacheKey.split("::")
+                    val projectId = arrs[0]
+                    val pipelineId = arrs[1]
+                    return lambdaPipelineTemplateDao.getTemplate(dslContext, projectId, pipelineId)?.templateId ?: ""
                 }
             }
         )
-
-    private fun getBuildInfo(buildId: String): BuildInfo? {
-        return convert(lambdaPipelineBuildDao.getBuildHistory(dslContext, buildId))
-    }
 
     private fun genBuildDetail(
         projectInfo: ProjectOrganize,
@@ -434,14 +442,15 @@ class LambdaDataService @Autowired constructor(
         buildDetailRecord: TPipelineBuildDetailRecord
     ): DataPlatBuildDetail {
         return with(buildDetailRecord) {
+            val projectId = projectInfo.projectId
             DataPlatBuildDetail(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
                 buildId = buildId,
-                templateId = templateCache.get(pipelineId),
+                templateId = templateCache.get("$projectId::$pipelineId"),
                 bgName = projectInfo.bgName,
                 deptName = projectInfo.deptName,
                 centerName = projectInfo.centerName,
-                projectId = projectInfo.projectId,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum,
                 model = model,
@@ -476,7 +485,10 @@ class LambdaDataService @Autowired constructor(
                 parentTaskId = t.parentTaskId,
                 channelCode = ChannelCode.valueOf(t.channel),
                 errorInfoList = null,
-                executeTime = t.executeTime ?: 0
+                executeTime = t.executeTime ?: 0,
+                buildParameters = t.buildParameters?.let {
+                    self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                }
             )
         }
     }
@@ -493,13 +505,20 @@ class LambdaDataService @Autowired constructor(
             } else {
                 Duration.between(startTime, endTime).toMillis()
             }
+
+            val labelList = mutableListOf<String>()
+            val projectId = projectInfo.projectId
+            lambdaPipelineLabelDao.getLables(dslContext, projectId, pipelineId)?.forEach { label ->
+                labelList.add(label["name"] as String)
+            }
+
             DataPlatBuildHistory(
                 washTime = LocalDateTime.now().format(dateTimeFormatter),
-                templateId = templateCache.get(pipelineId),
+                templateId = templateCache.get("$projectId::$pipelineId"),
                 bgName = projectInfo.bgName,
                 deptName = projectInfo.deptName,
                 centerName = projectInfo.centerName,
-                projectId = projectInfo.projectId,
+                projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 userId = triggerUser ?: startUser,
@@ -531,7 +550,9 @@ class LambdaDataService @Autowired constructor(
                 recommendVersion = recommendVersion,
                 retry = isRetry ?: false,
                 errorInfoList = errorInfo,
-                startUser = startUser
+                startUser = startUser,
+                channel = channel,
+                labels = labelList
             )
         }
     }

@@ -37,18 +37,21 @@ import org.springframework.stereotype.Component
 class BkRepoConfig {
 
     // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl}")
+    @Value("\${bkrepo.bkrepoApiUrl:}")
     val bkrepoApiUrl: String = ""
 
+    // 蓝盾新仓库静态资源仓库名称
+    @Value("\${bkrepo.staticRepoName:static}")
+    val bkrepoStaticRepoName: String = "static"
+
     // 蓝盾新仓库执行包仓库名称
-    @Value("\${bkrepo.pkgRepoName}")
-    val bkrepoPkgRepoName: String = ""
+    @Value("\${bkrepo.pkgRepoName:generic-local}")
+    val bkrepoPkgRepoName: String = "generic-local"
 
     // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.dockerRepoName}")
-    val bkrepoDockerRepoName: String = ""
+    @Value("\${bkrepo.dockerRepoName:docker-local}")
+    val bkrepoDockerRepoName: String = "docker-local"
 
-    // 蓝盾新仓库docker仓库名称
     @Value("\${bkrepo.logRepoCredentialsKey:}")
     lateinit var logRepoCredentialsKey: String
 }

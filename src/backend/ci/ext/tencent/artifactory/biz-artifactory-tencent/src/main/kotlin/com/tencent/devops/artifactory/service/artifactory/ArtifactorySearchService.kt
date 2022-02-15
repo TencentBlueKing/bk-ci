@@ -193,6 +193,7 @@ class ArtifactorySearchService @Autowired constructor(
     }
 
     override fun serviceSearchFileAndProperty(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean?,
@@ -225,6 +226,7 @@ class ArtifactorySearchService @Autowired constructor(
     }
 
     override fun serviceSearchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         searchProps: List<Property>,
         customized: Boolean?

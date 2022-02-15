@@ -28,16 +28,23 @@
 package com.tencent.devops.stream.trigger.template
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
+import com.tencent.devops.common.ci.v2.GitNotices
+import com.tencent.devops.common.ci.v2.MetaData
+import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.PreStep
+import com.tencent.devops.common.ci.v2.Repositories
+import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
-import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
+import com.tencent.devops.common.ci.v2.TemplateInfo
 import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
-import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
+import com.tencent.devops.stream.trigger.template.pojo.TemplateDeepTreeNode
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 object YamlObjects {
 
@@ -48,11 +55,15 @@ object YamlObjects {
         )
     }
 
-    fun getStep(fromPath: String, step: Map<String, Any>): Step {
-        return Step(
+    fun getStep(fromPath: String, step: Map<String, Any>, repo: TemplateInfo?): PreStep {
+        return PreStep(
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
             ifFiled = step["if"]?.toString(),
+            ifModify = if (step["if-modify"] is List<*>) {
+                val ifModifyList = step["if-modify"] as List<*>
+                ifModifyList.map { it.toString() }.toList()
+            } else null,
             uses = step["uses"]?.toString(),
             with = if (step["with"] == null) {
                 null
@@ -68,7 +79,21 @@ object YamlObjects {
                 transValue<Map<String, Any?>>(fromPath, "env", step["env"])
             },
             run = step["run"]?.toString(),
-            checkout = step["checkout"]?.toString()
+            checkout = step["checkout"]?.toString(),
+            yamlMetaData = if (step["yamlMetaData"] == null) {
+                MetaData(templateInfo = repo)
+            } else {
+                getYamlMetaData(fromPath, step["yamlMetaData"]!!)
+            }
+        )
+    }
+
+    fun getResourceExclusiveDeclaration(fromPath: String, resource: Any): ResourceExclusiveDeclaration {
+        val resourceMap = transValue<Map<String, Any?>>(fromPath, "resource-exclusive-declaration", resource)
+        return ResourceExclusiveDeclaration(
+            label = getNotNullValue(key = "label", mapName = "resource-exclusive-declaration", map = resourceMap),
+            queueLength = resourceMap["queue-length"]?.toString()?.toInt(),
+            timeoutMinutes = resourceMap["timeout-minutes"]?.toString()?.toInt()
         )
     }
 
@@ -109,51 +134,75 @@ object YamlObjects {
         )
     }
 
-    fun getStrategy(fromPath: String, strategy: Any?): Strategy {
+    fun getStrategy(fromPath: String, strategy: Any?): Strategy? {
         val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
+        val matrix = strategyMap["matrix"] ?: return null
         return Strategy(
-            matrix = strategyMap["matrix"],
+            matrix = matrix,
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
-            maxParallel = getNullValue("max-parallel", strategyMap)
+            maxParallel = getNullValue("max-parallel", strategyMap)?.toInt()
+        )
+    }
+
+    fun getNotice(fromPath: String, notice: Map<String, Any?>): GitNotices {
+        return GitNotices(
+            type = notice["type"].toString(),
+            title = notice["title"]?.toString(),
+            ifField = notice["if"]?.toString(),
+            content = notice["content"]?.toString(),
+            receivers = if (notice["receivers"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "receivers", notice["receivers"]).toSet()
+            },
+            ccs = if (notice["ccs"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "ccs", notice["ccs"]).toSet()
+            },
+            chatId = if (notice["chat-id"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "receivers", notice["chat-id"]).toSet()
+            }
+        )
+    }
+
+    fun getYamlMetaData(fromPath: String, yamlMetaData: Any): MetaData {
+        val metaData = transValue<Map<String, String>>(fromPath, "yamlMetaData", yamlMetaData)
+        if (metaData["templateInfo"] == null) {
+            return MetaData(templateInfo = null)
+        }
+        val templateInfo = transValue<Map<String, Any?>>(fromPath, "templateInfo", metaData["templateInfo"]!!)
+        return MetaData(
+            templateInfo = TemplateInfo(
+                remote = getNotNullValue("remote", "templateInfo", templateInfo).toBoolean(),
+                remoteTemplateProjectId = getNullValue("remoteTemplateProjectId", templateInfo)
+            )
         )
     }
 
     inline fun <reified T> getObjectFromYaml(path: String, template: String): T {
         return try {
-            YamlUtil.getObjectMapper().readValue(template, object : TypeReference<T>() {})
+            TemplateYamlMapper.getObjectMapper().readValue(template, object : TypeReference<T>() {})
         } catch (e: Exception) {
-            throw YamlFormatException(YamlTemplate.YAML_FORMAT_ERROR.format(path, e.message))
+            throw YamlFormatException(Constants.YAML_FORMAT_ERROR.format(path, e.message))
         }
     }
 
-    fun checkTemplate(path: String, yaml: String, type: TemplateType) {
-        val yamlMap = getObjectFromYaml<Map<String, Any?>>(path, yaml)
-        if (type == TemplateType.EXTEND) {
-            // extend后不能包含on
-            if (yamlMap.contains("on")) {
-                error(YamlTemplate.EXTENDS_TEMPLATE_ON_ERROR.format(path))
-            }
-            // extend后不能接extend模板
-            if (yamlMap.contains("extends")) {
-                error(YamlTemplate.EXTENDS_TEMPLATE_EXTENDS_ERROR.format(path))
-            }
-        } else {
-            yamlMap.forEach { (key, _) ->
-                if (key != "parameters" && key != "resources" && key != type.content) {
-                    error(YamlTemplate.TEMPLATE_KEYWORDS_ERROR.format(path, type.text, type.content))
-                }
-            }
-        }
-    }
-
-    private inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
+    inline fun <reified T> transValue(file: String, type: String, value: Any?, repo: Repositories? = null): T {
         if (value == null) {
-            throw YamlFormatException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
         }
         return try {
             value as T
         } catch (e: Exception) {
-            throw YamlFormatException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
+            val newFile = if (repo == null) {
+                "${Constants.templateDirectory}$file"
+            } else {
+                "${repo.repository}/${Constants.templateDirectory}$file"
+            }
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(newFile, type))
         }
     }
 
@@ -164,7 +213,7 @@ object YamlObjects {
             return try {
                 map[key] as T
             } catch (e: Exception) {
-                throw YamlFormatException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
+                throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
             }
         }
     }
@@ -179,13 +228,120 @@ object YamlObjects {
 
     private fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
         return if (map[key] == null) {
-            throw YamlFormatException(YamlTemplate.ATTR_MISSING_ERROR.format(key, mapName))
+            throw YamlFormatException(Constants.ATTR_MISSING_ERROR.format(key, mapName))
         } else {
             map[key].toString()
         }
     }
+}
 
-    private fun error(content: String) {
-        throw YamlFormatException(content)
-    }
+fun YamlTemplate.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
+    return PreStage(
+        name = stage["name"]?.toString(),
+        label = stage["label"],
+        ifField = stage["if"]?.toString(),
+        ifModify = if (stage["if-modify"] is List<*>) {
+            val ifModifyList = stage["if-modify"] as List<*>
+            ifModifyList.map { it.toString() }.toList()
+        } else null,
+        fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
+        jobs = if (stage["jobs"] == null) {
+            null
+        } else {
+            val jobs = YamlObjects.transValue<Map<String, Any>>(fromPath, TemplateType.JOB.text, stage["jobs"])
+            val map = mutableMapOf<String, PreJob>()
+            jobs.forEach { (key, value) ->
+                // 检查根文件处jobId重复
+                val newJob = this.replaceJobTemplate(mapOf(key to value), filePath, deepTree)
+                if (key == Constants.TEMPLATE_KEY) {
+                    TemplateYamlUtil.checkDuplicateKey(filePath = filePath, keys = jobs.keys, newKeys = newJob.keys)
+                }
+                map.putAll(newJob)
+            }
+            map
+        },
+        checkIn = if (stage["check-in"] != null) {
+            this.replaceStageCheckTemplate(
+                stageName = stage["name"]?.toString() ?: "",
+                check = YamlObjects.transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-in"]),
+                fromPath = filePath,
+                deepTree = deepTree
+            )
+        } else {
+            null
+        },
+        checkOut = if (stage["check-out"] != null) {
+            this.replaceStageCheckTemplate(
+                stageName = stage["name"]?.toString() ?: "",
+                check = YamlObjects.transValue<Map<String, Any>>(fromPath, TemplateType.GATE.text, stage["check-out"]),
+                fromPath = filePath,
+                deepTree = deepTree
+            )
+        } else {
+            null
+        }
+    )
+}
+
+// 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
+fun YamlTemplate.getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
+    return PreJob(
+        name = job["name"]?.toString(),
+        runsOn = job["runs-on"],
+        resourceExclusiveDeclaration = if (job["resource-exclusive-declaration"] == null) {
+            null
+        } else {
+            YamlObjects.getResourceExclusiveDeclaration(fromPath, job["resource-exclusive-declaration"]!!)
+        },
+        container = if (job["container"] == null) {
+            null
+        } else {
+            YamlObjects.getContainer(fromPath, job["container"]!!)
+        },
+        services = if (job["services"] == null) {
+            null
+        } else {
+            YamlObjects.getService(fromPath, job["services"]!!)
+        },
+        ifField = job["if"]?.toString(),
+        ifModify = if (job["if-modify"] is List<*>) {
+            val ifModifyList = job["if-modify"] as List<*>
+            ifModifyList.map { it.toString() }.toList()
+        } else null,
+        steps = if (job["steps"] == null) {
+            null
+        } else {
+            val steps = YamlObjects.transValue<List<Map<String, Any>>>(fromPath, TemplateType.STEP.text, job["steps"])
+            val list = mutableListOf<PreStep>()
+            steps.forEach {
+                list.addAll(this.replaceStepTemplate(listOf(it), filePath, deepTree))
+            }
+            list
+        },
+        timeoutMinutes = YamlObjects.getNullValue("timeout-minutes", job)?.toInt(),
+        env = if (job["env"] == null) {
+            null
+        } else {
+            YamlObjects.transValue<Map<String, String>>(fromPath, "env", job["env"])
+        },
+        continueOnError = YamlObjects.getNullValue("continue-on-error", job)?.toBoolean(),
+        strategy = if (job["strategy"] == null) {
+            null
+        } else {
+            YamlObjects.getStrategy(fromPath, job["strategy"])
+        },
+        dependOn = if (job["depend-on"] == null) {
+            null
+        } else {
+            YamlObjects.transValue<List<String>>(fromPath, "depend-on", job["depend-on"])
+        },
+        yamlMetaData = if (job["yamlMetaData"] == null) {
+            MetaData(templateInfo = TemplateInfo(
+                remote = repo != null,
+                remoteTemplateProjectId = repo?.repository
+            ))
+        } else {
+            YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!!)
+        }
+    )
 }

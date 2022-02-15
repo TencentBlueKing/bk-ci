@@ -38,7 +38,7 @@ import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.util.CommonUtils
+import com.tencent.devops.process.util.CommonCredentialUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -72,7 +72,12 @@ class LunaPushFileTaskAtom @Autowired constructor(
         val pipelineId = task.pipelineId
         val userId = task.starter
 
-        val ticketsMap = CommonUtils.getCredential(client, projectId, ticketId, CredentialType.APPID_SECRETKEY)
+        val ticketsMap = CommonCredentialUtils.getCredential(
+            client = client,
+            projectId = projectId,
+            credentialId = ticketId,
+            type = CredentialType.APPID_SECRETKEY
+        )
 
         val uploadParams = LunaUploadParam(
             userId,
@@ -82,6 +87,7 @@ class LunaPushFileTaskAtom @Autowired constructor(
                 destFileDir
             ),
             ArtifactorySearchParam(
+                userId,
                 projectId,
                 pipelineId,
                 buildId,

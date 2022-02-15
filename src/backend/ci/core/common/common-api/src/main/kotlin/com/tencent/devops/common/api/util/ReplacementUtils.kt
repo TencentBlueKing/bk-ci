@@ -56,10 +56,10 @@ object ReplacementUtils {
             val template = if (line.trim().startsWith("#")) {
                 line
             } else {
-                // 先处理${} 单个花括号的情况
-                val lineTmp = parseTemplate(line, replacement, contextMap)
-                // 再处理${{}} 双花括号的情况
-                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
+                // 先处理${{}} 双花括号的情况
+                val lineTmp = parseWithDoubleCurlyBraces(line, replacement, contextMap)
+                // 再处理${} 单个花括号的情况
+                parseTemplate(lineTmp, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -145,7 +145,8 @@ object ReplacementUtils {
                 if (tokenValue == null) {
                     tokenValue = "\${$token}"
                 } else {
-                    if (depth > 0 && tokenValue.startsWith("\${")) {
+                    // 去掉tokenValue.startsWith("\${")是考虑存在XXX_${{xxxx}}这种有前缀的情况
+                    if (depth > 0) {
                         tokenValue = parseTemplate(tokenValue, replacement, contextMap, depth - 1)
                     }
                 }
@@ -188,7 +189,8 @@ object ReplacementUtils {
                 if (tokenValue == null) {
                     tokenValue = "\${{$token}}"
                 } else {
-                    if (depth > 0 && tokenValue.startsWith("\${")) {
+                    // 去掉tokenValue.startsWith是考虑有xxx_${{xxx}前缀的情况
+                    if (depth > 0) {
                         tokenValue = parseWithDoubleCurlyBraces(tokenValue, replacement, contextMap, depth - 1)
                     }
                 }

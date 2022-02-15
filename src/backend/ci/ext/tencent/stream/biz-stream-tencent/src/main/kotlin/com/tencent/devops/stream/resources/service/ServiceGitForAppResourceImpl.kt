@@ -5,14 +5,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.v2.service.GitCIAppService
+import com.tencent.devops.stream.v2.service.StreamAppService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitForAppResourceImpl @Autowired constructor(
-    val gitCIAppService: GitCIAppService
+    val streamAppService: StreamAppService
 ) : ServiceGitForAppResource {
     override fun getGitCIProjectList(
         userId: String,
@@ -20,11 +20,11 @@ class ServiceGitForAppResourceImpl @Autowired constructor(
         pageSize: Int,
         searchName: String?
     ): Result<Pagination<AppProjectVO>> {
-        return Result(gitCIAppService.getGitCIProjectList(userId, page, pageSize, searchName))
+        return Result(streamAppService.getGitCIProjectList(userId, page, pageSize, searchName))
     }
 
     override fun getGitCIPipeline(projectId: String, pipelineId: String): Result<GitProjectPipeline?> {
-        return Result(gitCIAppService.getGitCIPipeline(projectId, pipelineId))
+        return Result(streamAppService.getGitCIPipeline(projectId, pipelineId))
     }
 
     override fun getGitCIPipelines(
@@ -34,6 +34,6 @@ class ServiceGitForAppResourceImpl @Autowired constructor(
         sortType: PipelineSortType?,
         search: String?
     ): Result<Pagination<GitProjectPipeline>> {
-        return Result(gitCIAppService.getGitCIPipelines(projectId, page, pageSize, sortType, search))
+        return Result(streamAppService.getGitCIPipelines(projectId, page, pageSize, sortType, search))
     }
 }

@@ -108,15 +108,21 @@ class ExperienceAppService(
         appVersion: String?,
         organization: String?
     ): AppExperienceDetail {
-        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        var experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        var experience = experienceDao.get(dslContext, experienceId)
+        val projectId = experience.projectId
+        val bundleIdentifier = experience.bundleIdentifier
+        val platform = experience.platform
+        val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-
-        val isPublic = experienceBaseService.isPublic(experienceId, isOuter)
+        val isPublic = !isOuter && newestRecordId != null
+        // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
+        if (newestRecordId != null && newestRecordId != experienceId) {
+            experienceId = newestRecordId
+            experience = experienceDao.get(dslContext, experienceId)
+        }
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
-
-        val experience = experienceDao.get(dslContext, experienceId)
-
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
@@ -125,9 +131,7 @@ class ExperienceAppService(
                 errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
-
-        val projectId = experience.projectId
-        val bundleIdentifier = experience.bundleIdentifier
+        val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId, platform, bundleIdentifier, projectId)
         val isExpired = DateUtil.isExpired(experience.endDate)
         val logoUrl = UrlUtil.toOuterPhotoAddr(experience.logoUrl)
         val projectName = experience.projectId
@@ -168,11 +172,12 @@ class ExperienceAppService(
             shareUrl = shareUrl,
             name = projectName,
             packageName = experience.name,
-            platform = PlatformEnum.valueOf(experience.platform),
+            platform = PlatformEnum.valueOf(platform),
             version = version,
             expired = isExpired,
             canExperience = isPublic || isInPrivate,
             online = experience.online,
+            subscribe = isSubscribe,
             changeLog = changeLog,
             experienceName = experienceName,
             versionTitle = versionTitle,
@@ -304,7 +309,8 @@ class ExperienceAppService(
         if (experience.size == 0L) {
             executorService.submit {
                 val fileDetail =
-                    client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data
+                    client.get(ServiceArtifactoryResource::class)
+                        .show(experience.creator, projectId, artifactoryType, path).data
                 if (null != fileDetail) {
                     experienceDao.updateSize(dslContext, experience.id, fileDetail.size)
                     experience.size = fileDetail.size

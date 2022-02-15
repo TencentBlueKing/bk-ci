@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.pojo.v2
 
 import com.tencent.devops.stream.pojo.Repository
+import com.tencent.devops.stream.pojo.v2.project.CIInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -66,7 +67,21 @@ data class GitCIBasicSetting(
     @ApiModelProperty("Stream开启人所在部门")
     var creatorDeptName: String?,
     @ApiModelProperty("Stream开启人所在中心")
-    var creatorCenterName: String?
+    var creatorCenterName: String?,
+    @ApiModelProperty("GIT项目的描述信息")
+    val gitProjectDesc: String?,
+    @ApiModelProperty("GIT项目的头像信息")
+    val gitProjectAvatar: String?,
+    @ApiModelProperty("带有名空间的项目名称")
+    val nameWithNamespace: String,
+    @ApiModelProperty("带有名空间的项目路径")
+    val pathWithNamespace: String?,
+    @ApiModelProperty("项目最后一次构建的CI信息")
+    val lastCiInfo: CIInfo?,
+    @ApiModelProperty("项目下构建是否发送commitCheck")
+    val enableCommitCheck: Boolean = true,
+    @ApiModelProperty("项目下构建是否发送mrComment")
+    val enableMrComment: Boolean = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("蓝盾工蜂页面修改配置")

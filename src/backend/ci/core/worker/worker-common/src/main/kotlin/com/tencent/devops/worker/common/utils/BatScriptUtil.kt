@@ -33,6 +33,8 @@ import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.io.FileInputStream
+import java.nio.channels.FileLock
 import java.nio.charset.Charset
 
 object BatScriptUtil {
@@ -75,6 +77,7 @@ object BatScriptUtil {
         stepId: String? = null,
         charsetType: String? = null
     ): String {
+        var fileLock: FileLock? = null
         try {
             val file = getCommandFile(
                 buildId = buildId,
@@ -84,6 +87,8 @@ object BatScriptUtil {
                 workspace = workspace,
                 charsetType = charsetType
             )
+
+            fileLock = tryLock(file) // 拿不锁也照样执行
             return CommandLineUtils.execute(
                 command = "cmd.exe /C \"${file.canonicalPath}\"",
                 workspace = dir,
@@ -98,8 +103,19 @@ object BatScriptUtil {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"
             logger.warn(errorInfo, ignore)
             throw ignore
+        } finally {
+            fileLock?.release()
         }
     }
+
+    private fun tryLock(file: File, shared: Boolean = true): FileLock? =
+        try {
+            logger.info("lock file ${file.absolutePath}")
+            FileInputStream(file).channel.tryLock(0, file.length(), shared)
+        } catch (ignore: Exception) { // 异常忽略，不应该让执行失败
+            logger.warn("lock ${file.absolutePath} fail: ", ignore)
+            null
+        }
 
     @Suppress("ALL")
     fun getCommandFile(

@@ -27,27 +27,41 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
+@JsonFilter(YamlMetaDataJsonFilter)
 data class PreJob(
     // val job: JobDetail,
     val name: String?,
+    @JsonProperty("resource-exclusive-declaration")
+    val resourceExclusiveDeclaration: ResourceExclusiveDeclaration? = null,
+    @ApiModelProperty(name = "runs-on")
     @JsonProperty("runs-on")
     val runsOn: Any?,
     val container: Container?,
     val services: Map<String, Service>? = null,
+    @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifField: String? = null,
-    val steps: List<Step>?,
+    @ApiModelProperty(name = "if-modify")
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
+    val steps: List<PreStep>?,
+    @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = null,
     val env: Map<String, String>? = emptyMap(),
+    @ApiModelProperty(name = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean? = null,
     val strategy: Strategy? = null,
+    @ApiModelProperty(name = "depend-on")
     @JsonProperty("depend-on")
-    val dependOn: List<String>? = null
-)
+    val dependOn: List<String>? = null,
+    override val yamlMetaData: MetaData? = null
+) : YamlMetaData

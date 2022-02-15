@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
@@ -46,19 +47,34 @@ import java.util.Random
 @Service
 class PipelineBuildExtTencentService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : PipelineBuildExtService {
 
-    override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
+    override fun buildExt(task: PipelineBuildTask, variables: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
         val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
             val turboTaskId = getTurboTask(task.projectId, task.pipelineId, task.taskId)
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
+            extMap["turbo.task.id"] = turboTaskId
         }
 
-        extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
+        extMap.putAll(pipelineContextService.buildContext(
+            projectId = task.projectId,
+            buildId = task.buildId,
+            containerId = task.containerId,
+            variables = variables
+        ))
+        extMap["ci.build_url"] = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = false
+        )
         return extMap
     }
 

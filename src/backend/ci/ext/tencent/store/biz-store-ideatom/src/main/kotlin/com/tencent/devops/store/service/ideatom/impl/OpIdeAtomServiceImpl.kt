@@ -66,6 +66,7 @@ import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.OpIdeAtomService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -549,16 +550,30 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val dbVersion = atomRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = atomRecord.atomStatus == IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
-            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion
-            else storeCommonService.getRequireVersion(
-                dbVersion = dbVersion,
-                releaseType = releaseType
-            )
-        if (version != requireVersion) {
+        val requireVersionList =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+                listOf(dbVersion)
+            } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    ideAtomDao.getIdeAtom(
+                        dslContext = dslContext,
+                        atomCode = atomRecord.atomCode,
+                        version = VersionUtils.convertLatestVersion(version)
+                    )?.version
+                } else {
+                    null
+                }
+                storeCommonService.getRequireVersion(
+                    reqVersion = reqVersion,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType
+                )
+            }
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
-                params = arrayOf(version, requireVersion)
+                params = arrayOf(version, requireVersionList.toString())
             )
         }
         // 判断最近一个IDE插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本

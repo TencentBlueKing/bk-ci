@@ -52,6 +52,14 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStorePublicFlagByCode(dslContext: DSLContext, storeCode: String): Boolean {
+        return with(TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE) {
+            dslContext.select(PUBLIC_FLAG).from(this)
+                .where(SERVICE_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)!!
+        }
+    }
+
     override fun getStoreCodeListByName(dslContext: DSLContext, storeName: String): Result<out Record>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.select(SERVICE_CODE.`as`("storeCode")).from(this)

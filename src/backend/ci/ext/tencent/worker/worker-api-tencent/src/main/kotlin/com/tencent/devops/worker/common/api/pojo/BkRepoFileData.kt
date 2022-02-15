@@ -28,12 +28,16 @@
 package com.tencent.devops.worker.common.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkRepoFileData(
     @JsonProperty("code")
+    @ApiModelProperty(name = "code")
     var code: Int,
     @JsonProperty("message")
+    @ApiModelProperty(name = "message")
     var message: String?,
     @JsonProperty("data")
+    @ApiModelProperty(name = "data")
     var data: List<BkRepoFile>
 )

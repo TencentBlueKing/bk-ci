@@ -33,13 +33,16 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -172,11 +175,25 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getCommitChangeFileList(
+        token: String,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>> {
+        return Result(
+            gitCiService.getChangeFileList(token, gitProjectId, from, to, straight, page, pageSize)
+        )
+    }
+
     override fun getProjectMembersAll(
         gitProjectId: String,
         page: Int,
         pageSize: Int,
-        query: String?
+        search: String?
     ): Result<List<GitMember>> {
         return Result(
             gitCiService.getGitCIAllMembers(
@@ -184,8 +201,28 @@ class ServiceGitCiResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
-                query = query
+                query = search
             )
         )
+    }
+
+    override fun addMrComment(token: String, gitProjectId: String, mrId: Long, mrBody: MrCommentBody) {
+        gitCiService.addMrComment(token = token, gitProjectId = gitProjectId, mrId = mrId, mrBody = mrBody)
+    }
+
+    override fun getProjectGroupsList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeGroup>> {
+        return Result(gitCiService.getProjectGroupList(
+            accessToken = accessToken,
+            page = page,
+            pageSize = pageSize,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        ))
     }
 }

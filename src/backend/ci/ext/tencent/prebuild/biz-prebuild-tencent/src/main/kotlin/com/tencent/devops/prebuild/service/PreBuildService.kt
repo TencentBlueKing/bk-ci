@@ -27,7 +27,6 @@
 
 package com.tencent.devops.prebuild.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
@@ -74,7 +73,6 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentRe
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
-import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
@@ -88,12 +86,12 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
 
 @Service
 class PreBuildService @Autowired constructor(
@@ -119,7 +117,6 @@ class PreBuildService @Autowired constructor(
         agentId: ThirdPartyAgentStaticInfo
     ): BuildId {
         val model = createPipelineModel(userId, preProjectId, startUpReq, yaml, agentId)
-        logger.warn("model info v1: ${ObjectMapper().writeValueAsString(model)}")
         val pipelineId = createOrUpdatePipeline(userId, preProjectId, startUpReq, model)
         val projectId = getUserProjectId(userId)
 
@@ -374,6 +371,7 @@ class PreBuildService @Autowired constructor(
 
     fun getBuildDetail(userId: String, preProjectId: String, buildId: String): Result<ModelDetail> {
         val preProjectRecord = getPreProjectInfo(preProjectId, userId)
+
         return client.get(ServiceBuildResource::class)
             .getBuildDetail(
                 userId,
@@ -461,15 +459,14 @@ class PreBuildService @Autowired constructor(
         return preProjectRecord
     }
 
-    fun getCodeccReport(userId: String, buildId: String) =
-        client.get(UserCodeccResource::class).getCodeccReport(buildId)
-
     fun getOrCreateUserProject(userId: String, accessToken: String): UserProject {
         val projectResult =
             client.get(ServiceTxProjectResource::class).getPreUserProject(userId, accessToken)
+
         if (projectResult.isNotOk()) {
             throw RuntimeException("get user project err")
         }
+
         val project = projectResult.data!!
         return UserProject(
             project.id,
@@ -558,8 +555,8 @@ class PreBuildService @Autowired constructor(
 
     fun getAgent(userId: String, os: OS, ip: String, hostName: String): ThirdPartyAgentStaticInfo? {
         val listPreAgentResult =
-            client.get(ServicePreBuildAgentResource::class)
-                .listPreBuildAgent(userId, getUserProjectId(userId), os)
+            client.get(ServicePreBuildAgentResource::class).listPreBuildAgent(userId, getUserProjectId(userId), os)
+
         if (listPreAgentResult.isNotOk()) {
             logger.error("list prebuild agent failed")
             throw OperationException("list prebuild agent failed")
@@ -628,9 +625,11 @@ class PreBuildService @Autowired constructor(
         )
 
     fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
-        val record =
-            preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext)
-                ?: return null
+        val record = preBuildVersionDao.getVersion(
+            pluginType = pluginType.name,
+            dslContext = dslContext
+        ) ?: return null
+
         return PrePluginVersion(
             version = record.version,
             desc = record.desc,
@@ -641,14 +640,15 @@ class PreBuildService @Autowired constructor(
     }
 
     fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
-        val record =
-            preBuildVersionDao.getVersion(
-                pluginType = prePluginVersion.pluginType.name,
-                dslContext = dslContext
-            )
+        val record = preBuildVersionDao.getVersion(
+            pluginType = prePluginVersion.pluginType.name,
+            dslContext = dslContext
+        )
+
         if (record != null) {
             throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
         }
+
         return with(prePluginVersion) {
             preBuildVersionDao.create(
                 version = version,

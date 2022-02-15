@@ -6,6 +6,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,7 +22,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         streamTriggerBuildReq: StreamTriggerBuildReq
-    ): Result<Boolean> {
+    ): Result<TriggerBuildResult> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
@@ -33,11 +34,15 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
                 homepage = null,
                 gitHttpUrl = null,
                 gitSshUrl = null,
-                branch = branch,
+                branch = branch ?: "",
                 customCommitMsg = customCommitMsg,
                 yaml = yaml,
                 description = description,
-                commitId = commitId
+                commitId = commitId,
+                payload = payload,
+                scmType = scmType,
+                eventType = eventType,
+                objectKind = objectKind
             )
         }
         return Result(manualTriggerService.triggerBuild(userId, pipelineId, new))

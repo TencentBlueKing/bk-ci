@@ -69,6 +69,7 @@ open class BkRepoDownloadService @Autowired constructor(
     private val shortUrlService: ShortUrlService
 ) : RepoDownloadService {
     override fun serviceGetExternalDownloadUrl(
+        creatorId: String?,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
@@ -76,10 +77,13 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed")
+        logger.info(
+            "serviceGetExternalDownloadUrl, creatorId: $creatorId, userId:$userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, path: $path, ttl: $ttl, directed: $directed"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val url = bkRepoService.externalDownloadUrl(
+            creatorId = creatorId ?: userId,
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
@@ -97,8 +101,10 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, " +
-            "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info(
+            "serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, " +
+                    "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
@@ -113,8 +119,10 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         permits: Int?
     ): List<Url> {
-        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId," +
-            " artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits")
+        logger.info(
+            "serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId," +
+                    " artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits"
+        )
         val normalizedPaths = mutableSetOf<String>()
         argPathSet.forEach { path ->
             normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
@@ -183,8 +191,10 @@ open class BkRepoDownloadService @Autowired constructor(
         ttl: Int,
         downloadUsers: String
     ) {
-        logger.info("shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers")
+        logger.info(
+            "shareUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, ttl: $ttl, downloadUsers: $downloadUsers"
+        )
         val path = PathUtils.checkAndNormalizeAbsPath(argPath)
 
         when (artifactoryType) {
@@ -266,39 +276,33 @@ open class BkRepoDownloadService @Autowired constructor(
             }
         }
 
-        val accessUserId = when {
-            !userId.isNullOrBlank() -> {
-                userId
-            }
-            !crossProjectId.isNullOrBlank() -> {
-                client.get(ServicePipelineResource::class)
-                    .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-            }
-            else -> {
-                null
-            }
+        val accessUserId = if (!userId.isNullOrBlank()) {
+            userId
+        } else {
+            client.get(ServicePipelineResource::class)
+                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         }
-        logger.info("accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
-                "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+        logger.info(
+            "accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
+                    "targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId"
+        )
 
         // 校验用户权限, auth权限优化实施后可以去掉
-        if (accessUserId != null) {
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
-                    accessUserId,
-                    targetProjectId
-                )
-            ) {
-                throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
-            }
-            if (artifactoryType == ArtifactoryType.PIPELINE) {
-                pipelineService.validatePermission(
-                    userId = accessUserId,
-                    projectId = targetProjectId,
-                    pipelineId = targetPipelineId,
-                    permission = AuthPermission.DOWNLOAD,
-                    message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
-                )
-            }
+        if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                accessUserId,
+                targetProjectId
+            )
+        ) {
+            throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
+        }
+        if (artifactoryType == ArtifactoryType.PIPELINE) {
+            pipelineService.validatePermission(
+                userId = accessUserId,
+                projectId = targetProjectId,
+                pipelineId = targetPipelineId,
+                permission = AuthPermission.DOWNLOAD,
+                message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+            )
         }
 
         val regex = Pattern.compile(",|;")
@@ -316,7 +320,7 @@ open class BkRepoDownloadService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                userId = accessUserId ?: "",
+                userId = accessUserId,
                 projectId = targetProjectId,
                 repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
                 filePaths = listOf(filePath),
@@ -333,7 +337,7 @@ open class BkRepoDownloadService @Autowired constructor(
         fileList.forEach {
             val repoName = RepoUtils.getRepoByType(artifactoryType)
             val shareUri = bkRepoClient.createShareUri(
-                userId = accessUserId ?: "",
+                creatorId = accessUserId,
                 projectId = targetProjectId,
                 repoName = repoName,
                 fullPath = it.fullPath,

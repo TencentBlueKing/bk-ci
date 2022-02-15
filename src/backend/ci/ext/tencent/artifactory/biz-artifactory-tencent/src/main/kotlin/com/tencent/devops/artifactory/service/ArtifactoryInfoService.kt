@@ -28,7 +28,6 @@
 package com.tencent.devops.artifactory.service
 
 import com.tencent.devops.artifactory.dao.ArtifactoryInfoDao
-import com.tencent.devops.artifactory.pojo.ArtifactoryCreateInfo
 import com.tencent.devops.artifactory.pojo.ArtifactoryInfo
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.TrendInfoDto
@@ -105,18 +104,6 @@ class ArtifactoryInfoService @Autowired constructor(
         } else {
             return buildArtifactoryInfo(artifactoryInfo.get(0))
         }
-    }
-
-    fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Int {
-        var count = 0
-
-        count = artifactoryInfoDao.batchCreate(infoList, dslContext)
-
-        if (count == 0) {
-            logger.error("批量添加artifactoryInfo失败")
-        }
-
-        return count
     }
 
     // 获取时间范围内构建条数--buildId去重

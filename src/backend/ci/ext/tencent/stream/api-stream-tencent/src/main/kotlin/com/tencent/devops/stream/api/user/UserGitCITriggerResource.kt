@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.GitYamlString
+import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V2TriggerBuildReq
 import com.tencent.devops.stream.pojo.v2.V2BuildYaml
 import io.swagger.annotations.Api
@@ -64,7 +65,7 @@ interface UserGitCITriggerResource {
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
         triggerBuildReq: V2TriggerBuildReq
-    ): Result<Boolean>
+    ): Result<TriggerBuildResult>
 
     @ApiOperation("校验yaml格式")
     @POST
@@ -75,17 +76,6 @@ interface UserGitCITriggerResource {
         userId: String,
         @ApiParam("yaml内容", required = true)
         yaml: GitYamlString
-    ): Result<String>
-
-    @ApiOperation("保存yaml格式")
-    @POST
-    @Path("/yaml-schema/save")
-    fun saveYamlSchema(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("yamlSchema", required = true)
-        yamlSchema: String
     ): Result<String>
 
     @ApiOperation("获取yaml schema")

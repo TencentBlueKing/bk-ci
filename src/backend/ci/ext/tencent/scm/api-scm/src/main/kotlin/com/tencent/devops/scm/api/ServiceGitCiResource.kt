@@ -31,19 +31,23 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.MrCommentBody
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -76,7 +80,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的token")
+    @ApiOperation("销毁项目的token")
     @DELETE
     @Path("/clearToken")
     fun clearToken(
@@ -145,7 +149,7 @@ interface ServiceGitCiResource {
         gitProjectId: String
     ): Result<String?>
 
-    @ApiOperation("获取指定项目详细信息")
+    @ApiOperation("获取指定项目详细信息(简略)")
     @GET
     @Path("/getProjectInfo")
     fun getProjectInfo(
@@ -276,4 +280,69 @@ interface ServiceGitCiResource {
         @QueryParam("useAccessToken")
         useAccessToken: Boolean
     ): Result<GitCodeFileInfo>
+
+    @ApiOperation("获取两次提交的差异文件列表")
+    @GET
+    @Path("/getCommitChangeFileList")
+    fun getCommitChangeFileList(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "旧commit")
+        @QueryParam("from")
+        from: String,
+        @ApiParam(value = "新commit")
+        @QueryParam("to")
+        to: String,
+        @ApiParam(value = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @QueryParam("straight")
+        straight: Boolean? = false,
+        @ApiParam(value = "页码")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页大小")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>>
+
+    @ApiOperation("添加mr评论")
+    @POST
+    @Path("/addMrComment")
+    fun addMrComment(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "mrId")
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam(value = "mr评论请求体")
+        mrBody: MrCommentBody
+    )
+
+    @ApiOperation("获取用户所有项目组列表，分页获取")
+    @GET
+    @Path("/getProjectGroupsList")
+    fun getProjectGroupsList(
+        @ApiParam("oauth accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数,最大值100", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("若为true则只返回owner为当前用户的group")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的group列表中，当前用户的group访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeGroup>>
 }

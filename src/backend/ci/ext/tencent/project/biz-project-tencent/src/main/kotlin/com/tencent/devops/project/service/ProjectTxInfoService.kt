@@ -27,17 +27,31 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.ProjectOrganization
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.dao.ProjectFreshDao
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectTxInfoService @Autowired constructor(
     val projectDao: ProjectDao,
+    val projectFreshDao: ProjectFreshDao,
     val dslContext: DSLContext
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectTxInfoService::class.java)
+        private const val MAX_PROJECT_NAME_LENGTH = 64
+    }
+
     fun getProjectOrganizations(projectCode: String): ProjectOrganization? {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: return null
         return ProjectOrganization(
@@ -52,5 +66,64 @@ class ProjectTxInfoService @Autowired constructor(
                 deptId = projectInfo.deptId,
                 deptName = projectInfo.deptName
         )
+    }
+
+    fun updateProjectName(
+        userId: String,
+        projectCode: String,
+        projectName: String
+    ): Boolean {
+        // projectName表字段长度调整到64位限制
+        if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                errorCode = ProjectMessageCode.NAME_TOO_LONG
+            )
+        }
+        if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
+                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
+            )
+        }
+        return projectFreshDao.updateProjectName(
+            dslContext = dslContext,
+            userId = userId,
+            englishName = projectCode,
+            projectName = projectName
+        ) > 0
+    }
+
+    fun getProjectInfoByProjectName(
+        userId: String,
+        projectName: String
+    ): TProjectRecord? {
+        logger.info("PROJECT|userId|$userId|projectName|$projectName")
+        if (projectName.isEmpty()) {
+            throw ErrorCodeException(
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                errorCode = ProjectMessageCode.NAME_EMPTY
+            )
+        }
+
+        return projectFreshDao.getProjectInfoByProjectName(
+            dslContext = dslContext,
+            userId = userId,
+            projectName = projectName
+        )
+    }
+
+    fun bindProjectDept(
+        userId: String,
+        projectCode: String,
+        projectDeptInfo: ProjectDeptInfo
+    ): Boolean {
+        projectFreshDao.bindProjectDept(
+            dslContext = dslContext,
+            projectId = projectCode,
+            projectDeptInfo = projectDeptInfo,
+            updateUser = userId
+        )
+        return true
     }
 }

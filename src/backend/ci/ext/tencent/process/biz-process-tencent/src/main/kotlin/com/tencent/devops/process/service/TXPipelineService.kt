@@ -162,14 +162,14 @@ class TXPipelineService @Autowired constructor(
         watch.stop()
 
         watch.start("s_r_summary")
-        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode)
+        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(projectId, channelCode)
         watch.stop()
 
         watch.start("s_r_fav")
         val skipPipelineIdsNew = mutableListOf<String>()
-        if (pipelineBuildSummary.isNotEmpty) {
-            pipelineBuildSummary.forEach {
-                skipPipelineIdsNew.add(it["PIPELINE_ID"] as String)
+        if (buildPipelineRecords.isNotEmpty) {
+            buildPipelineRecords.forEach {
+                skipPipelineIdsNew.add(it.pipelineId)
             }
         }
         if (skipPipelineIds.isNotEmpty()) {
@@ -186,18 +186,22 @@ class TXPipelineService @Autowired constructor(
         var count = 0L
         try {
 
-            val list = if (pipelineBuildSummary.isNotEmpty) {
+            val list = if (buildPipelineRecords.isNotEmpty) {
 
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                val pipelines =
-                    pipelineListFacadeService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
-                val allFilterPipelines =
-                    pipelineListFacadeService.filterViewPipelines(
-                        pipelines,
-                        filterByPipelineName,
-                        filterByCreator,
-                        filterByLabels
-                    )
+                val pipelines = pipelineListFacadeService.buildPipelines(
+                    pipelineInfoRecords = buildPipelineRecords,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    projectId = projectId
+                )
+                val allFilterPipelines = pipelineListFacadeService.filterViewPipelines(
+                    projectId = projectId,
+                    pipelines = pipelines,
+                    filterByName = filterByPipelineName,
+                    filterByCreator = filterByCreator,
+                    filterByLabels = filterByLabels
+                )
 
                 val hasPipelines = allFilterPipelines.isNotEmpty()
 
@@ -696,7 +700,7 @@ class TXPipelineService @Autowired constructor(
             } else {
                 when (agentsResult.data!![0].os) {
                     "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
+                    "WINDOWS" -> VMBaseOS.WINDOWS
                     else -> VMBaseOS.LINUX
                 }
             }
@@ -752,7 +756,7 @@ class TXPipelineService @Autowired constructor(
             } else {
                 when (agentResult.data!!.os) {
                     "MACOS" -> VMBaseOS.MACOS
-                    "WINDOWNS" -> VMBaseOS.WINDOWS
+                    "WINDOWS" -> VMBaseOS.WINDOWS
                     else -> VMBaseOS.LINUX
                 }
             }
@@ -1080,7 +1084,7 @@ class TXPipelineService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
             Response.Status.BAD_REQUEST,
             "流水线已不存在！"
         )
@@ -1092,7 +1096,7 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 流水线名称: ${model.name} \n")
         yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
+        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请在stream项目设置下重新添加凭据：https://iwiki.woa.com/p/800638064 ！  \n")
         yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
         if (isGitCI) {
             yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），" +

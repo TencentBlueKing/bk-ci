@@ -36,7 +36,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DOING
 import com.tencent.devops.common.api.constant.END
 import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.constant.MASTER
 import com.tencent.devops.common.api.constant.NUM_FIVE
 import com.tencent.devops.common.api.constant.NUM_FOUR
 import com.tencent.devops.common.api.constant.NUM_ONE
@@ -49,9 +51,12 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.pipeline.pojo.AtomMarketInitPipelineReq
@@ -71,12 +76,14 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
+import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
+import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
@@ -95,6 +102,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
+import java.util.Date
 import java.util.concurrent.Executors
 
 @Service
@@ -210,18 +218,30 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         projectCode: String,
         atomCode: String,
         atomVersion: String,
-        repositoryHashId: String,
-        fileName: String
+        fileName: String,
+        repositoryHashId: String?,
+        branch: String?
     ): String? {
-        logger.info("getFileStr projectCode is:$projectCode,atomCode is:$atomCode,atomVersion is:$atomVersion")
-        logger.info("getFileStr repositoryHashId is:$repositoryHashId,fileName is:$fileName")
+        logger.info("getFileStr $projectCode|$atomCode|$atomVersion|$fileName|$repositoryHashId|$branch")
         val atomPackageSourceType = getAtomPackageSourceType(atomCode)
         val fileStr = if (atomPackageSourceType == AtomPackageSourceTypeEnum.REPO) {
             // 从工蜂拉取文件
-            client.get(ServiceGitRepositoryResource::class).getFileContent(
-                repositoryHashId,
-                fileName, null, null, null
-            ).data
+            try {
+                client.get(ServiceGitRepositoryResource::class).getFileContent(
+                    repoId = repositoryHashId!!,
+                    filePath = fileName,
+                    reversion = null,
+                    branch = branch,
+                    repositoryType = null
+                ).data
+            } catch (ignore: RemoteServiceException) {
+                logger.warn("getFileContent fileName:$fileName,branch:$branch error", ignore)
+                if (ignore.httpStatus == HTTP_404 || ignore.errorCode == HTTP_404) {
+                    ""
+                } else {
+                    throw ignore
+                }
+            }
         } else {
             // 直接从仓库拉取文件
             marketAtomArchiveService.getFileStr(projectCode, atomCode, atomVersion, fileName)
@@ -230,9 +250,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return fileStr
     }
 
-    override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String) {
+    override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String, branch: String?) {
         // 执行构建流水线
-        runPipeline(context, atomId, userId)
+        runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
     }
 
     override fun validateUpdateMarketAtomReq(
@@ -336,6 +356,24 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return processInfo
     }
 
+    override fun doCancelReleaseBus(userId: String, atomId: String) {
+        val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
+        val storeBuildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId) ?: return
+        // 获取插件的初始化项目
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomRecord.atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )!!
+        // 插件打包流水线取消构建
+        client.get(ServiceBuildResource::class).serviceShutdown(
+            pipelineId = storeBuildInfoRecord.pipelineId,
+            projectId = initProjectCode,
+            buildId = storeBuildInfoRecord.buildId,
+            channelCode = ChannelCode.AM
+        )
+    }
+
     override fun getPreValidatePassTestStatus(atomCode: String, atomId: String, atomStatus: Byte): Byte {
         val storeType = StoreTypeEnum.ATOM.name
         val codeccFlag = txStoreCodeccService.getCodeccFlag(StoreTypeEnum.ATOM.name)
@@ -347,6 +385,26 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // codecc开关关闭，无需进行codecc扫描
             val isNormalUpgrade = marketAtomCommonService.getNormalUpgradeFlag(atomCode, atomStatus.toInt())
             if (isNormalUpgrade) AtomStatusEnum.RELEASED.status.toByte() else AtomStatusEnum.AUDITING.status.toByte()
+        }
+    }
+
+    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
+        val date = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
+        val tagName = "prod-v${atomReleaseRequest.version}-$date"
+        val branch = if (atomReleaseRequest.branch.isNullOrBlank()) MASTER else atomReleaseRequest.branch
+        val createGitTagResult = client.get(ServiceGitRepositoryResource::class).createGitTag(
+            userId = userId,
+            repoId = atomReleaseRequest.repositoryHashId!!,
+            tagName = tagName,
+            ref = branch!!,
+            tokenType = TokenTypeEnum.PRIVATE_KEY
+        )
+        logger.info("createGitTagResult is :$createGitTagResult")
+        if (createGitTagResult.isNotOk() || createGitTagResult.data == false) {
+            throw ErrorCodeException(
+                errorCode = createGitTagResult.status.toString(),
+                defaultMessage = createGitTagResult.message
+            )
         }
     }
 
@@ -370,6 +428,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val atomName = atomRecord.name
         val atomVersion = atomRecord.version
         val repoId = atomRecord.repositoryHashId
+        val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val atomPackageSourceType =
             if (repoId.isBlank()) AtomPackageSourceTypeEnum.UPLOAD else AtomPackageSourceTypeEnum.REPO
         val getAtomConfResult = getAtomConfig(
@@ -378,7 +437,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomCode = atomCode,
             atomVersion = atomVersion,
             repositoryHashId = repoId,
-            userId = userId
+            userId = userId,
+            branch = branch
         )
         logger.info("rebuild, getAtomConfResult: $getAtomConfResult")
         if (getAtomConfResult.errorCode != "0") {
@@ -400,7 +460,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             fieldCheckConfirmFlag = atomRebuildRequest.fieldCheckConfirmFlag
         )
         val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
-            StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("execution")
+            StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
         )
         // 解析quality.json
         val getAtomQualityResult = getAtomQualityConfig(
@@ -409,7 +469,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             atomName = atomName,
             atomVersion = atomVersion,
             repositoryHashId = atomRecord.repositoryHashId,
-            userId = userId
+            userId = userId,
+            branch = branch
         )
         logger.info("rebuild, getAtomQualityResult: $getAtomQualityResult")
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
@@ -436,7 +497,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
             // 执行构建流水线
-            runPipeline(context, atomId, userId)
+            runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
         }
         return Result(true)
     }
@@ -466,21 +527,23 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return processInfo
     }
 
-    private fun runPipeline(context: DSLContext, atomId: String, userId: String): Boolean {
+    @SuppressWarnings("ComplexMethod")
+    private fun runPipeline(context: DSLContext, atomId: String, userId: String, branch: String? = null): Boolean {
         val atomRecord = marketAtomDao.getAtomRecordById(context, atomId) ?: return false
         val atomCode = atomRecord.atomCode
         val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
-        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
-            context,
-            atomCode,
-            StoreTypeEnum.ATOM.type.toByte()
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = context,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
         )!! // 查找新增插件时关联的项目
         val repositoryHashId = atomRecord.repositoryHashId
         val commitId = handleCodeccTask(
             userId = userId,
             repositoryHashId = repositoryHashId,
             atomCode = atomCode,
-            atomId = atomId
+            atomId = atomId,
+            branch = branch ?: MASTER
         )
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
@@ -493,12 +556,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 atomId = atomId,
                 atomCode = atomCode,
                 version = atomRecord.version,
+                atomStatus = AtomStatusEnum.getAtomStatus(atomRecord.atomStatus.toInt()),
                 language = language,
                 commitId = commitId
             )
             val pipelineModelConfig = businessConfigDao.get(context, StoreTypeEnum.ATOM.name, "initBuildPipeline", "PIPELINE_MODEL")
             var pipelineModel = pipelineModelConfig!!.configValue
-            var pipelineName = "am-$projectCode-$atomCode-${System.currentTimeMillis()}"
+            var pipelineName = "am-$initProjectCode-$atomCode-${System.currentTimeMillis()}"
             if (pipelineName.toCharArray().size > 128) {
                 pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
             }
@@ -509,7 +573,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 "language" to language,
                 "script" to StringEscapeUtils.escapeJava(script),
                 "repositoryHashId" to atomRecord.repositoryHashId,
-                "repositoryPath" to (buildInfo.value2() ?: "")
+                "repositoryPath" to (buildInfo.value2() ?: ""),
+                "branch" to (branch ?: MASTER)
             )
             // 将流水线模型中的变量替换成具体的值
             paramMap.forEach { (key, value) ->
@@ -521,7 +586,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 atomBaseInfo = atomBaseInfo
             )
             val atomMarketInitPipelineResp = client.get(ServicePipelineInitResource::class)
-                .initAtomMarketPipeline(userId, projectCode, atomMarketInitPipelineReq).data
+                .initAtomMarketPipeline(userId, initProjectCode, atomMarketInitPipelineReq).data
             logger.info("the atomMarketInitPipelineResp is:$atomMarketInitPipelineResp")
             if (null != atomMarketInitPipelineResp) {
                 storePipelineRelDao.add(context, atomCode, StoreTypeEnum.ATOM, atomMarketInitPipelineResp.pipelineId)
@@ -540,6 +605,29 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)
             }
         } else {
+            val buildInfoRecord = storePipelineBuildRelDao.getStorePipelineBuildRel(dslContext, atomId)
+            // 判断插件版本最近一次的构建是否完成
+            val buildResult = if (buildInfoRecord != null) {
+                client.get(ServiceBuildResource::class).getBuildStatus(
+                    userId = userId,
+                    projectId = initProjectCode,
+                    pipelineId = buildInfoRecord.pipelineId,
+                    buildId = buildInfoRecord.buildId,
+                    channelCode = ChannelCode.AM
+                ).data
+            } else {
+                null
+            }
+            if (buildResult != null) {
+                val buildStatus = BuildStatus.parse(buildResult.status)
+                if (!buildStatus.isFinish()) {
+                    // 最近一次构建还未完全结束，给出错误提示
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                        params = arrayOf(atomRecord.name, atomRecord.version)
+                    )
+                }
+            }
             // 触发执行流水线
             val startParams = mutableMapOf<String, String>() // 启动参数
             startParams["atomCode"] = atomCode
@@ -547,27 +635,28 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams["language"] = language
             startParams["script"] = script
             startParams["commitId"] = commitId
+            startParams["branch"] = branch ?: MASTER
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
-                userId, projectCode, atomPipelineRelRecord.pipelineId, startParams,
+                userId, initProjectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {
                 storePipelineBuildRelDao.add(context, atomId, atomPipelineRelRecord.pipelineId, buildIdObj.id)
                 marketAtomDao.setAtomStatusById(
-                    context,
-                    atomId,
-                    AtomStatusEnum.BUILDING.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    atomId = atomId,
+                    atomStatus = AtomStatusEnum.BUILDING.status.toByte(),
+                    userId = userId,
+                    msg = null
                 ) // 构建中
             } else {
                 marketAtomDao.setAtomStatusById(
-                    context,
-                    atomId,
-                    AtomStatusEnum.BUILD_FAIL.status.toByte(),
-                    userId,
-                    null
+                    dslContext = context,
+                    atomId = atomId,
+                    atomStatus = AtomStatusEnum.BUILD_FAIL.status.toByte(),
+                    userId = userId,
+                    msg = null
                 ) // 构建失败
             }
             // 通过websocket推送状态变更消息
@@ -580,13 +669,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         userId: String,
         repositoryHashId: String,
         atomCode: String,
-        atomId: String
+        atomId: String,
+        branch: String?
     ): String {
         // 获取插件代码库最新提交记录
         val getRepoRecentCommitInfoResult = client.get(ServiceGitRepositoryResource::class).getRepoRecentCommitInfo(
             userId = userId,
             repoId = repositoryHashId,
-            sha = "master",
+            sha = branch ?: MASTER,
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
         logger.info("handleCodeccTask  atomId:$atomId,getRepoRecentCommitInfoResult: $getRepoRecentCommitInfoResult")
@@ -622,7 +712,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             // 把代码扫描构建ID存入redis
             redisOperation.set(
                 key = "$STORE_REPO_CODECC_BUILD_KEY_PREFIX:${StoreTypeEnum.ATOM.name}:$atomCode:$atomId",
-                value = buildId!!,
+                value = buildId,
                 expired = false
             )
         }

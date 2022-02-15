@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.v2
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * model
@@ -37,21 +38,25 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MrRule(
+    @ApiModelProperty(name = "source-branches-ignore")
     @JsonProperty("source-branches-ignore")
     val sourceBranchesIgnore: List<String>? = null,
 
+    @ApiModelProperty(name = "target-branches")
     @JsonProperty("target-branches")
     val targetBranches: List<String>? = null,
 
     val paths: List<String>? = null,
 
-    @JsonProperty("path-ignore")
+    @ApiModelProperty(name = "paths-ignore")
+    @JsonProperty("paths-ignore")
     val pathsIgnore: List<String>? = null,
 
     val action: List<String>? = null,
 
     val users: List<String>? = null,
 
+    @ApiModelProperty(name = "users-ignore")
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null
 )

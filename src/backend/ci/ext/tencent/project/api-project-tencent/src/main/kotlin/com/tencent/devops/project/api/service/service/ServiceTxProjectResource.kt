@@ -39,6 +39,7 @@ import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -375,5 +376,46 @@ interface ServiceTxProjectResource {
         @ApiParam("关联系统ID", required = true)
         @QueryParam("relationId")
         relationId: String
+    ): Result<Boolean>
+
+    @POST
+    @Path("{projectCode}/update/name")
+    @ApiOperation("修改项目名称")
+    fun updateProjectName(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("关联系统ID", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/getProjectInfoByProjectName")
+    @ApiOperation("根据项目名称查询项目信息")
+    fun getProjectInfoByProjectName(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<ProjectVO>?
+
+    @PUT
+    @Path("/{projectCode}/bind/organization")
+    @ApiOperation("绑定项目组织信息")
+    fun bindProjectOrganization(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目名称", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("项目组织信息", required = true)
+        projectDeptInfo: ProjectDeptInfo
     ): Result<Boolean>
 }

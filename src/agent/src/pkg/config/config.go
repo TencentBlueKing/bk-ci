@@ -250,7 +250,7 @@ func LoadAgentConfig() error {
 
 	ignoreLocalIps := strings.TrimSpace(conf.String(ConfigKeyIgnoreLocalIps))
 	if len(ignoreLocalIps) == 0 {
-		ignoreLocalIps = "127.0.0.1"
+		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
 	}
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.String(ConfigKeyBatchInstall))

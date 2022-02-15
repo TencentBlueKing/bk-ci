@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
-import com.tencent.devops.common.environment.agent.pojo.agent.RawCcNode
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
 import okhttp3.MediaType
 import okhttp3.Request
@@ -130,21 +129,6 @@ class EsbAgentClient {
         )
     }
 
-    fun getCcNodeByIps(userId: String, nodeIps: List<String>): List<RawCcNode> {
-        val requestData = mapOf(
-            "app_code" to appCode,
-            "app_secret" to appSecret,
-            "operator" to userId,
-            "output_type" to "json",
-            "exact_search" to 1,
-            "method" to "getTopoModuleHostList",
-            "host_std_req_column" to listOf("AssetID", "InnerIP", "Operator", "BakOperator", "HostName", "OSName"),
-            "host_std_key_values" to mapOf("InnerIP" to nodeIps.joinToString(","))
-        )
-
-        return queryCcNode(requestData)
-    }
-
     fun queryCmdbNode(requestData: Map<String, Any>): CmdbServerPage {
         val url = "http://open.oa.com/component/compapi/cmdb/get_query_info/"
 
@@ -218,47 +202,6 @@ class EsbAgentClient {
             allOperators.size == 1 -> allOperators[0]
             bakOperator.length > 255 -> allOperators.subList(0, 9).joinToString(";")
             else -> allOperators.joinToString(";")
-        }
-    }
-
-    fun queryCcNode(requestData: Map<String, Any>): List<RawCcNode> {
-        val url = "http://open.oa.com/component/compapi/cc/get_query_info/"
-
-        val requestBody = ObjectMapper().writeValueAsString(requestData)
-        logger.info("POST url: $url")
-        logger.info("requestBody: $requestBody")
-
-        val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
-        OkhttpUtils.doHttp(request).use { response ->
-            try {
-                val responseBody = response.body()?.string()
-                logger.info("responseBody: $responseBody")
-
-                val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
-                if (responseData["result"] == false) {
-                    val msg = responseData["msg"]
-                    logger.error("get cc nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "查询 CC 节点失败")
-                }
-
-                val ipInfoList = responseData["data"] as List<Map<String, *>>
-                return ipInfoList.filterNot { (it["InnerIP"] as String).isNullOrBlank() }.map {
-                    val displayIpInfo = getAndSetDisplayIp(it["InnerIP"] as String)
-                    RawCcNode(
-                        name = it["HostName"] as String,
-                        assetID = it["AssetID"] as String,
-                        operator = it["Operator"] as String,
-                        bakOperator = it["BakOperator"] as String,
-                        ip = displayIpInfo.second[0],
-                        displayIp = displayIpInfo.first,
-                        osName = it["OSName"] as String,
-                        agentStatus = false
-                    )
-                }
-            } catch (e: Exception) {
-                logger.error("get cc nodes failed", e)
-                throw OperationException("获取CC节点列表失败")
-            }
         }
     }
 
@@ -352,54 +295,5 @@ class EsbAgentClient {
                 "paging_info" to mapOf("page_size" to limit, "start_index" to start, "return_total_rows" to 1)
             )
         )
-    }
-
-    fun getUserCCNodes(userId: String): List<RawCcNode> {
-        val nodeList = mutableListOf<RawCcNode>()
-        nodeList.addAll(getCcNodeByOperator(userId, false))
-        nodeList.addAll(getCcNodeByOperator(userId, true))
-        val noDuplicateNodeList = nodeList.associateBy { it.displayIp }.values.toList()
-
-        // 根据 gseAgent 状态重新设置IP
-        val displayIp2IpsMap = noDuplicateNodeList.map { it.displayIp }.associate { Pair(it, it.split(";")) }
-        val allInnerIp = mutableSetOf<String>()
-
-        displayIp2IpsMap.forEach {
-            allInnerIp.addAll(it.value)
-        }
-
-        val ipStatusMap = getAgentStatus(DEFAULT_SYTEM_USER, allInnerIp)
-        noDuplicateNodeList.forEach { node ->
-            val ips = displayIp2IpsMap.getValue(node.displayIp)
-            ips.forEach lit@{ ip ->
-                if (ipStatusMap[ip] == true) {
-                    node.ip = ip
-                    node.agentStatus = true
-                    return@lit
-                }
-            }
-        }
-        return noDuplicateNodeList
-    }
-
-    private fun getCcNodeByOperator(userId: String, isBakOperator: Boolean): List<RawCcNode> {
-        val operatorCondition = if (isBakOperator) {
-            mapOf("BakOperator" to userId)
-        } else {
-            mapOf("Operator" to userId)
-        }
-
-        val requestData = mapOf(
-            "app_code" to appCode,
-            "app_secret" to appSecret,
-            "operator" to userId,
-            "output_type" to "json",
-            "exact_search" to 1,
-            "method" to "getTopoModuleHostList",
-            "host_std_req_column" to listOf("AssetID", "InnerIP", "Operator", "BakOperator", "HostName", "OSName"),
-            "host_std_key_values" to operatorCondition
-        )
-
-        return queryCcNode(requestData)
     }
 }

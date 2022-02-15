@@ -42,6 +42,7 @@ import com.tencent.devops.project.pojo.AddManagerRequest
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
+import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -51,7 +52,9 @@ import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.ProjectTxInfoService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.util.ProjectUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -64,10 +67,11 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
     private val projectIamV0Service: ProjectIamV0Service,
-    private val projectTagService: ProjectTagService
+    private val projectTagService: ProjectTagService,
+    private val projectTxService: ProjectTxInfoService
 ) : ServiceTxProjectResource {
 
-    @Value("\${auto.tag:#{null}}")
+    @Value("\${tag.auto:#{null}}")
     val autoTag: String? = null
 
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
@@ -320,13 +324,21 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-        return Result(projectIamV0Service.createPipelinePermission(
-            createUser = createUser,
+//        return Result(projectIamV0Service.createPipelinePermission(
+//            createUser = createUser,
+//            projectId = createInfo.projectId,
+//            userId = createInfo.userId,
+//            permission = createInfo.permission,
+//            resourceType = createInfo.resourceType,
+//            resourceTypeCode = createInfo.resourceTypeCode
+//        ))
+        return Result(projectLocalService.grantInstancePermission(
+            userId = createUser,
             projectId = createInfo.projectId,
-            userId = createInfo.userId,
-            permission = createInfo.permission,
             resourceType = createInfo.resourceType,
-            resourceTypeCode = createInfo.resourceTypeCode
+            resourceCode = createInfo.resourceTypeCode,
+            permission = createInfo.permission,
+            createUserList = arrayListOf(createInfo.userId)
         ))
     }
 
@@ -346,8 +358,11 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             resourceTypeCode = createInfo.resourceTypeCode
         ))
     }
-
-    override fun getProjectRoles(projectCode: String, organizationType: String, organizationId: Long): Result<List<BKAuthProjectRolesResources>> {
+    override fun getProjectRoles(
+        projectCode: String,
+        organizationType: String,
+        organizationId: Long
+    ): Result<List<BKAuthProjectRolesResources>> {
         return Result(projectLocalService.getProjectRole(
             organizationType = organizationType,
             organizationId = organizationId,
@@ -358,6 +373,32 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     override fun bindRelationSystem(projectCode: String, relationId: String): Result<Boolean> {
         projectLocalService.updateRelationId(projectCode, relationId)
         return Result(true)
+    }
+
+    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+        return Result(projectTxService.updateProjectName(userId, projectCode, projectName))
+    }
+
+    override fun getProjectInfoByProjectName(userId: String, projectName: String): Result<ProjectVO>? {
+
+        val tProjectRecord = projectTxService.getProjectInfoByProjectName(
+            userId = userId,
+            projectName = projectName
+        ) ?: return null
+
+        return Result(ProjectUtils.packagingBean(tProjectRecord, setOf()))
+    }
+
+    override fun bindProjectOrganization(
+        userId: String,
+        projectCode: String,
+        projectDeptInfo: ProjectDeptInfo
+    ): Result<Boolean> {
+        return Result(projectTxService.bindProjectDept(
+            userId = userId,
+            projectCode = projectCode,
+            projectDeptInfo = projectDeptInfo
+        ))
     }
 
     companion object {

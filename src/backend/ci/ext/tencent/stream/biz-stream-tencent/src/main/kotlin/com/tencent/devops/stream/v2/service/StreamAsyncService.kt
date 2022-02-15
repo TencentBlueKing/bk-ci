@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service
 class StreamAsyncService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamPipelineBranchDao: StreamPipelineBranchDao,
-    private val scmService: ScmService
+    private val scmService: StreamScmService
 ) {
     companion object {
         private const val pageSize = 1000L

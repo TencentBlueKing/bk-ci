@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -53,6 +54,7 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -204,6 +206,10 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getToken(gitProjectId: Long): Result<GitToken> {
         return Result(gitService.getToken(gitProjectId.toString()))
+    }
+
+    override fun getUserInfoByToken(token: String): Result<GitUserInfo> {
+        return Result(gitService.getUserInfoByToken(token))
     }
 
     override fun getGitCIFileContent(
@@ -414,5 +420,37 @@ class ServiceGitResourceImpl @Autowired constructor(
             mrId = mrId
         )
         return Result(true)
+    }
+
+    override fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return gitService.createGitTag(
+            repoName = repoName,
+            tagName = tagName,
+            ref = ref,
+            token = token,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo> {
+        return Result(
+            gitService.getProjectGroupInfo(
+                id = id,
+                includeSubgroups = includeSubgroups,
+                token = token,
+                tokenType = tokenType
+            )
+        )
     }
 }

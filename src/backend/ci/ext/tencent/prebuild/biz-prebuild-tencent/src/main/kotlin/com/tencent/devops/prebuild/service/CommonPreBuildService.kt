@@ -23,10 +23,11 @@ open class CommonPreBuildService constructor(
         private val logger = LoggerFactory.getLogger(CommonPreBuildService::class.java)
     }
 
-    protected fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
+    private fun getPipelineByName(userId: String, preProjectId: String): Pipeline? {
         try {
             val pipelineList = client.get(ServicePipelineResource::class)
                 .list(userId, getUserProjectId(userId), 1, 1000).data!!.records
+
             pipelineList.forEach {
                 if (it.pipelineName == preProjectId) {
                     return it

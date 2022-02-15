@@ -28,16 +28,22 @@
 package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class GitCICreateFile(
     @JsonProperty("file_path")
+    @ApiModelProperty(name = "file_path")
     val filePath: String,
     @JsonProperty("branch_name")
+    @ApiModelProperty(name = "branch_name")
     val branch: String,
     @JsonProperty("encoding")
+    @ApiModelProperty(name = "encoding")
     val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
     @JsonProperty("content")
+    @ApiModelProperty(name = "content")
     val content: String,
     @JsonProperty("commit_message")
+    @ApiModelProperty(name = "commit_message")
     val commitMessage: String
 )

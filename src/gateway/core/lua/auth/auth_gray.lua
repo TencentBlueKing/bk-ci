@@ -1,3 +1,4 @@
+   
 -- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
 -- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
 -- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
@@ -37,15 +38,6 @@ if tag == "gray" then
     ngx.header["X-DEVOPS-GRAY"] = "true"
 else
     ngx.header["X-DEVOPS-GRAY"] = "false"
-end
-
--- TODO 临时功能 , stream切换后要删除
-local route_tag = ngx.var.route_tag
-ngx.var.stream_folder = "gitci"
-if route_tag ~= '' and route_tag ~= nil then
-    if string.find(route_tag, "stream") then
-        ngx.var.stream_folder = "stream"
-    end
 end
 
 ngx.exit(200)

@@ -507,6 +507,18 @@ class TemplateDao {
         }
     }
 
+    fun listTemplateByIds(
+        dslContext: DSLContext,
+        templateList: List<String>
+    ): Result<TTemplateRecord> {
+        with(TTemplate.T_TEMPLATE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(templateList))
+                .orderBy(CREATED_TIME.desc())
+                .fetch()
+        }
+    }
+
     /**
      * 批量获取模版的最新版本
      */
@@ -537,7 +549,7 @@ class TemplateDao {
             .on(a.ID.eq(b.field(KEY_ID, String::class.java)))
             .where(a.CREATED_TIME.eq(b.field(KEY_CREATE_TIME, LocalDateTime::class.java)))
             .and(a.ID.`in`(templateList))
-            .and(a.PROJECT_ID.eq(projectId))
+            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
             .fetch()
     }
 

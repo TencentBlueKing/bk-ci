@@ -34,12 +34,12 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCIRequestResource
 import com.tencent.devops.stream.pojo.GitRequestHistory
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIV2RequestService
+import com.tencent.devops.stream.v2.service.StreamRequestService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIRequestResourceImpl @Autowired constructor(
-    private val gitCIV2RequestService: GitCIV2RequestService
+    private val streamRequestService: StreamRequestService
 ) : UserGitCIRequestResource {
     override fun getMergeBuildList(
         userId: String,
@@ -49,7 +49,7 @@ class UserGitCIRequestResourceImpl @Autowired constructor(
     ): Result<Page<GitRequestHistory>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        return Result(gitCIV2RequestService.getRequestList(userId, gitProjectId, page, pageSize))
+        return Result(streamRequestService.getRequestList(userId, gitProjectId, page, pageSize))
     }
 
     private fun checkParam(userId: String) {

@@ -30,16 +30,21 @@ package com.tencent.devops.project.service.impl
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.devops.auth.api.ServiceRoleMemberResource
 import com.tencent.devops.auth.api.ServiceRoleResource
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.tof.TOFService
@@ -90,7 +95,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         logger.info("getProject role $projectCode $projectRelationId")
 
         // 应用态checkManager为false，且操作人为“”,需替换为项目的修改人(修改人肯定有权限)
-        val currencyCreateUser = if (!checkManager || createUser.isNullOrBlank()) {
+        val currencyCreateUser = if (!checkManager || createUser.isBlank()) {
             projectInfo.creator
         } else {
             createUser
@@ -125,10 +130,15 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             try {
                 tofService.getStaffInfo(it)
             } catch (ope: OperationException) {
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
+                logger.warn("getStaffInfo fail $it $projectCode")
+                throw ope
             } catch (e: Exception) {
-                logger.warn("createUser2Project fail, userId[$it]", e)
-                return false
+                logger.warn("getStaffInfo fail, userId[$it]", e)
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(
+                    messageCode = QUERY_USER_INFO_FAIL,
+                    defaultMessage = e.message,
+                    params = arrayOf(it)
+                ))
             }
             memberList.add(
                 RoleMemberDTO(
@@ -150,12 +160,44 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         // 添加用户到用户组
         client.get(ServiceRoleMemberResource::class).createRoleMember(
             userId = currencyCreateUser,
-            projectId = projectRelationId!!.toInt(),
-            roleId = relationGroupId!!,
+            projectId = projectRelationId.toInt(),
+            roleId = relationGroupId,
             managerGroup = managerFlag,
             members = memberList,
             checkGradeManager = checkManager
         )
+        return true
+    }
+
+    override fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        userList: List<String>
+    ): Boolean {
+        logger.info("grantInstancePermission $userId|$projectId|$action|$resourceType|$resourceCode|$userList")
+        // 此处做保护,防止用户一次加太多用户
+        if (userList.size > TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE) {
+            logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
+            throw ParamBlankException("授权用户数越界:${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
+        }
+        userList.forEach {
+            val grantInstanceDTO = GrantInstanceDTO(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                permission = action,
+                createUser = it,
+                resourceName = null
+            )
+            client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+                userId = userId,
+                projectCode = projectId,
+                token = tokenService.getSystemToken(null)!!,
+                grantInstance = grantInstanceDTO
+            ).data
+        }
         return true
     }
 

@@ -59,8 +59,8 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         path: String,
         ttl: Int?
     ): Result<List<String>> {
-        var pipelineId = ""
-        var buildId = ""
+        var pipelineId: String? = null
+        var buildId: String? = null
         var subPath = path
         if (artifactoryType == ArtifactoryType.PIPELINE) {
             val pathList = path.split("/")

@@ -37,19 +37,20 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.user.TXUserReportResource
+import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.user.TXUserReportResource
-import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
-import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +62,7 @@ import javax.ws.rs.core.Response
 class GitCIDetailService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val repositoryConfService: GitRepositoryConfService,
@@ -77,7 +78,7 @@ class GitCIDetailService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): GitCIModelDetail? {
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
@@ -97,11 +98,11 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, realEvent, modelDetail)
+        return GitCIModelDetail(pipeline, GitRequestEventReq(realEvent), modelDetail)
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
@@ -117,7 +118,7 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, realEvent, modelDetail)
+        return GitCIModelDetail(pipeline, GitRequestEventReq(realEvent), modelDetail)
     }
 
     fun batchGetBuildHistory(
@@ -125,7 +126,7 @@ class GitCIDetailService @Autowired constructor(
         gitProjectId: Long,
         buildIds: List<String>
     ): Map<String, GitCIBuildHistory> {
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
@@ -148,7 +149,7 @@ class GitCIDetailService @Autowired constructor(
             infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,
                 pipelineId = pipeline.pipelineId,
-                gitRequestEvent = realEvent,
+                gitRequestEvent = GitRequestEventReq(realEvent),
                 buildHistory = it
             )
         }
@@ -163,7 +164,7 @@ class GitCIDetailService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): FileInfoPage<FileInfo> {
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
@@ -191,7 +192,7 @@ class GitCIDetailService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
@@ -231,7 +232,7 @@ class GitCIDetailService @Autowired constructor(
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )
@@ -255,7 +256,7 @@ class GitCIDetailService @Autowired constructor(
         pipelineId: String
     ): GitProjectPipeline? {
         logger.info("get pipeline with pipelineId: $pipelineId, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
             return null

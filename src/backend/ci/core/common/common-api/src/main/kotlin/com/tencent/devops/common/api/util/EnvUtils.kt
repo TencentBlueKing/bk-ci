@@ -62,10 +62,10 @@ object EnvUtils {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
-        // 先处理${} 单个花括号的情况
-        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap, depth = 1)
-        // 再处理${{}} 双花括号的情况
-        return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap, depth = 1)
+        // 先处理${{}} 双花括号的情况
+        val value = parseWithDoubleCurlyBraces(command, data, isEscape, contextMap, depth = 1)
+        // 再处理${} 单个花括号的情况
+        return parseWithSingleCurlyBraces(value, data, replaceWithEmpty, isEscape, contextMap, depth = 1)
     }
 
     private fun parseWithDoubleCurlyBraces(
@@ -160,7 +160,8 @@ object EnvUtils {
             } else if (c == '}') {
                 val value = data[token.toString()] ?: contextMap?.get(token.toString())
                 if (value != null) {
-                    if (depth > 0 && value.startsWith("\${")) {
+                    // 去掉value.startsWith("\${")是考虑以xxx_${{xxx}}前缀的情况
+                    if (depth > 0) {
                         newValue.append(
                             parseWithSingleCurlyBraces(
                                 command = value,
@@ -210,7 +211,8 @@ object EnvUtils {
                 val tokenStr = token.toString().trim()
                 val value = data[tokenStr] ?: contextMap?.get(tokenStr)
                 if (value != null) {
-                    if (depth > 0 && value.startsWith("\${{")) {
+                    // 去掉value.startsWith是考虑xxx_${{xxx}}前缀的情况
+                    if (depth > 0) {
                         newValue.append(parseWithDoubleCurlyBraces(value, data, escape, contextMap, depth - 1))
                     } else {
                         newValue.append(value)

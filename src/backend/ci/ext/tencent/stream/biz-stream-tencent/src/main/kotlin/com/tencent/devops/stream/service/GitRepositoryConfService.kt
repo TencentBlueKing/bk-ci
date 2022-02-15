@@ -31,7 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.pojo.GitRepositoryConf
 import com.tencent.devops.stream.pojo.RtxCustomProperty
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -47,7 +47,7 @@ class GitRepositoryConfService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val gitCISettingDao: GitCISettingDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitRepositoryConfService::class.java)
@@ -105,7 +105,7 @@ class GitRepositoryConfService @Autowired constructor(
     }
 
     fun getGitCIConf(gitProjectId: Long): GitRepositoryConf? {
-        val repo = gitCIBasicSettingService.getGitCIConf(gitProjectId) ?: return null
+        val repo = streamBasicSettingService.getGitCIConf(gitProjectId) ?: return null
         with(repo) {
             return GitRepositoryConf(
                 gitProjectId = gitProjectId,

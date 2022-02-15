@@ -50,6 +50,7 @@ class FileServiceExt @Autowired constructor(
     private val gatewayUrl: String? = null
 
     override fun downloadFileTolocal(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -63,7 +64,7 @@ class FileServiceExt @Autowired constructor(
         fileName.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
-            val fileList = bkRepoClient.matchBkRepoFile("", path, projectId, pipelineId, buildId, isCustom)
+            val fileList = bkRepoClient.matchBkRepoFile(userId, path, projectId, pipelineId, buildId, isCustom)
             val repoName = if (isCustom) "custom" else "pipeline"
             fileList.forEach { bkrepoFile ->
                 logger.info("BKRepoFile匹配到文件：(${bkrepoFile.displayPath})")

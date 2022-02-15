@@ -97,12 +97,12 @@ class WetestTaskAtom @Autowired constructor(
         containerId = task.containerHashId ?: ""
         executeCount = task.executeCount ?: 1
 
-        val pipelineCreateUser = pipelineRepositoryService.getPipelineInfo(pipelineId)?.creator
+        val pipelineCreateUser = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.creator
         if (pipelineCreateUser.isNullOrEmpty()) {
             buildLogPrinter.addRedLine(buildId, "获取流水线创建人失败", elementId, task.containerHashId, task.executeCount ?: 1)
             throw RuntimeException("获取流水线创建人失败， pipelineId = （$pipelineId）")
         }
-        val (accessId, accessToken) = CommonUtils.getCredential(pipelineCreateUser!!)
+        val (accessId, accessToken) = CommonUtils.getCredential(pipelineCreateUser)
         this.accessId = accessId
         this.accessToken = accessToken
 
@@ -160,6 +160,7 @@ class WetestTaskAtom @Autowired constructor(
             val preTestApkIds = if (!preTestApkFilesStr.isBlank() && !preTestArchiveType.isNullOrBlank()) {
                 preTestApkFilesStr.split(",").map { it.trim() }.map {
                     val preParam = ArtifactorySearchParam(
+                        userId = task.starter,
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
@@ -324,6 +325,7 @@ class WetestTaskAtom @Autowired constructor(
         return if (!testAccountFile.isNullOrBlank()) {
             buildLogPrinter.addLine(buildId, "正在获取用户的数据: $testAccountFile($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
             val excelFile = jfrogService.downloadFile(ArtifactorySearchParam(
+                userId = task.starter,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -346,6 +348,7 @@ class WetestTaskAtom @Autowired constructor(
         return if (!scriptPath.isNullOrBlank()) {
             buildLogPrinter.addLine(buildId, "上传相应的脚本到wetest: $scriptPath($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
             val param = ArtifactorySearchParam(
+                userId = task.starter,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -366,6 +369,7 @@ class WetestTaskAtom @Autowired constructor(
     private fun uploadApp(sourcePath: String, sourceType: String, type: String, task: PipelineBuildTask): Map<String, Any> {
         buildLogPrinter.addLine(buildId, "上传相应的包到wetest: $sourcePath($sourceType)", elementId, task.containerHashId, task.executeCount ?: 1)
         val param = ArtifactorySearchParam(
+            userId = task.starter,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

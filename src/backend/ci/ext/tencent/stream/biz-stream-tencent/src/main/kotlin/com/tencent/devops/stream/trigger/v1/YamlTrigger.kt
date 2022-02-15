@@ -37,16 +37,15 @@ import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.EnvironmentVariables
-import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.utils.GitCIWebHookMatcher
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,37 +63,34 @@ class YamlTrigger @Autowired constructor(
     private val repositoryConfService: GitRepositoryConfService,
     private val gitCIEventSaveService: GitCIEventService,
     private val yamlBuild: YamlBuild
-) : YamlTriggerInterface<CIBuildYaml> {
+) : YamlTriggerInterface {
 
     override fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String,
-        changeSet: Set<String>?
+        context: StreamTriggerContext
     ): Boolean {
+        // TODO: 暂时先全部展开，后续函数全替换为上下文参数即可去掉
+        val (event, gitRequestEvent, _, gitProjectPipeline, originYaml, _) = context
+
         val yamlObject = prepareCIBuildYaml(
-            gitToken = gitToken,
-            forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
-            filePath = filePath,
+            filePath = gitProjectPipeline.filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName,
-            event = null,
-            changeSet = null
+            pipelineName = gitProjectPipeline.displayName
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         logger.info("normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-        gitProjectPipeline.displayName =
-            if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
+        gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
+            yamlObject.name!!
+        } else {
+            gitProjectPipeline.filePath.removeSuffix(
+                ".yml"
+            )
+        }
 
         if (isMatch(event, gitRequestEvent, yamlObject).first) {
             logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
@@ -102,7 +98,7 @@ class YamlTrigger @Autowired constructor(
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
-                originYaml = originYaml!!,
+                originYaml = originYaml,
                 parsedYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
@@ -131,7 +127,7 @@ class YamlTrigger @Autowired constructor(
             gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
-                pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
+                pipelineId = gitProjectPipeline.pipelineId.ifBlank { null },
                 pipelineName = gitProjectPipeline.displayName,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
@@ -158,17 +154,13 @@ class YamlTrigger @Autowired constructor(
         return Pair(matcher.isMatch(ymlObject.trigger!!, ymlObject.mr!!), false)
     }
 
-    override fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
+    fun prepareCIBuildYaml(
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?
+        pipelineName: String?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {
@@ -215,7 +207,7 @@ class YamlTrigger @Autowired constructor(
 
         // 检测services镜像
         if (yamlObject.services != null) {
-            yamlObject.services!!.forEachIndexed { index, it ->
+            yamlObject.services!!.forEachIndexed { _, it ->
                 // 判断镜像格式是否合法
                 val (imageName, imageTag) = it.parseImage()
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
@@ -92,4 +93,7 @@ class TxAuthConfiguration {
         redisOperation: RedisOperation,
         objectMapper: ObjectMapper
     ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+
+    @Bean
+    fun grantServiceImpl() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }

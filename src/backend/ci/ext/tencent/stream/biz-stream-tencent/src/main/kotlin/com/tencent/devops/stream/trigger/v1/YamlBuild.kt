@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -75,10 +76,10 @@ import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.BuildConfig
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.utils.GitCIParameterUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
@@ -86,24 +87,25 @@ import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.BK_CI_REF
-import com.tencent.devops.scm.pojo.BK_CI_REPOSITORY
-import com.tencent.devops.scm.pojo.BK_CI_REPO_OWNER
-import com.tencent.devops.scm.pojo.BK_CI_RUN
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_REF
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPOSITORY
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPO_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -139,6 +141,7 @@ class YamlBuild @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(YamlBuild::class.java)
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
+        const val BK_REPO_GIT_EVENT_CONTENT = "BK_CI_EVENT_CONTENT"
     }
 
     @Value("\${gitci.v2GitUrl:#{null}}")
@@ -183,7 +186,7 @@ class YamlBuild @Autowired constructor(
         val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer =
             TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
+        val stage1 = Stage(listOf(triggerContainer), VMUtils.genStageId(1))
         stageList.add(stage1)
 
         // 第二个stage，services初始化
@@ -206,7 +209,7 @@ class YamlBuild @Autowired constructor(
                 }
             }
 
-            stageList.add(Stage(containerList, "stage-$stageIndex"))
+            stageList.add(Stage(containerList, VMUtils.genStageId(stageIndex)))
         }
         return Model(
             name = GitCIPipelineUtils.genBKPipelineName(gitProjectConf.gitProjectId),
@@ -518,7 +521,6 @@ class YamlBuild @Autowired constructor(
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
-            startParams["BK_CI_EVENT_CONTENT"] = event.event
             objectMapper.readValue<GitEvent>(event.event)
         } catch (e: Exception) {
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
@@ -527,6 +529,10 @@ class YamlBuild @Autowired constructor(
         when (originEvent) {
             is GitPushEvent -> {
                 startParams[BK_CI_REF] = originEvent.ref
+                startParams[BK_REPO_GIT_EVENT_CONTENT] = JsonUtil.toJson(
+                    bean = originEvent.copy(commits = null),
+                    formatted = false
+                )
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = originEvent.after
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
@@ -534,6 +540,10 @@ class YamlBuild @Autowired constructor(
             }
             is GitTagPushEvent -> {
                 startParams[BK_CI_REF] = originEvent.ref
+                startParams[BK_REPO_GIT_EVENT_CONTENT] = JsonUtil.toJson(
+                    bean = originEvent.copy(commits = null),
+                    formatted = false
+                )
 //                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
 //                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = originEvent.operation_kind ?: ""
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
@@ -560,6 +570,7 @@ class YamlBuild @Autowired constructor(
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
                 startParams[BK_REPO_GIT_WEBHOOK_MR_IID] = originEvent.object_attributes.iid.toString()
+                startParams[BK_REPO_GIT_EVENT_CONTENT] = event.event
             }
         }
 

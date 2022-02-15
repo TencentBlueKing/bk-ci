@@ -63,12 +63,18 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val artifactoryInfoService: ArtifactoryInfoService
 ) : ServiceArtifactoryResource {
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
+    override fun check(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
         checkParam(projectId)
-        return Result(bkRepoService.check(projectId, artifactoryType, path))
+        return Result(bkRepoService.check(userId, projectId, artifactoryType, path))
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -76,17 +82,25 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         targetPath: String
     ): Result<Count> {
         checkParam(projectId)
-        return Result(bkRepoService.acrossProjectCopy(projectId, artifactoryType, path, targetProjectId, targetPath))
+        return Result(
+            bkRepoService.acrossProjectCopy(userId, projectId, artifactoryType, path, targetProjectId, targetPath)
+        )
     }
 
-    override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+    override fun properties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<Property>> {
         checkParam(projectId)
-        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
     override fun externalUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
+        creatorId: String?,
         userId: String,
         path: String,
         ttl: Int,
@@ -97,7 +111,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             throw BadRequestException("Path must end with ipa or apk")
         }
         val isDirected = directed ?: false
-        return Result(bkRepoDownloadService.serviceGetExternalDownloadUrl(userId, projectId, artifactoryType, path,
+        return Result(bkRepoDownloadService.serviceGetExternalDownloadUrl(creatorId, userId,
+            projectId, artifactoryType, path,
             ttl, isDirected))
     }
 
@@ -128,9 +143,14 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             isDirected))
     }
 
-    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+    override fun show(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
         checkParam(projectId)
-        return Result(bkRepoService.show(projectId, artifactoryType, path))
+        return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
     override fun search(
@@ -164,6 +184,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByAnd(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -172,21 +193,23 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndProperty(projectId, searchProps)
+        val result = bkRepoSearchService.serviceSearchFileAndProperty(userId, projectId, searchProps)
         return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
     override fun searchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
         searchProps: List<Property>
     ): Result<FileInfoPage<FileInfo>> {
-        logger.info("searchFileAndPropertyByOr, projectId: $projectId, page: $page, pageSize: $pageSize, searchProps: $searchProps")
+        logger.info("searchFileAndPropertyByOr, projectId: $projectId, " +
+                "page: $page, pageSize: $pageSize, searchProps: $searchProps")
         checkParam(projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
-        val result = bkRepoSearchService.serviceSearchFileAndPropertyByOr(projectId, searchProps)
+        val result = bkRepoSearchService.serviceSearchFileAndPropertyByOr(userId, projectId, searchProps)
         return Result(FileInfoPage(0, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
@@ -212,9 +235,13 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun searchCustomFiles(projectId: String, condition: CustomFileSearchCondition): Result<List<String>> {
+    override fun searchCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): Result<List<String>> {
         checkParam(projectId)
-        return Result(bkRepoService.listCustomFiles(projectId, condition))
+        return Result(bkRepoService.listCustomFiles(userId, projectId, condition))
     }
 
     override fun getJforgInfoByteewTime(
@@ -234,20 +261,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         fileInfo: FileInfo,
         dataFrom: Int
     ): Result<Long> {
-        checkInfoParam(buildId, pipelineId, fileInfo)
-        val id = artifactoryInfoService.createInfo(
-            buildId = buildId,
-            pipelineId = pipelineId,
-            projectId = projectId,
-            buildNum = buildNum,
-            fileInfo = fileInfo,
-            dataFrom = dataFrom
-        )
-        return Result(id)
+        return Result(0)
     }
 
     override fun batchCreateArtifactoryInfo(infoList: List<ArtifactoryCreateInfo>): Result<Int> {
-        return Result(artifactoryInfoService.batchCreateArtifactoryInfo(infoList))
+        return Result(0)
     }
 
     private fun checkInfoParam(buildId: String, pipelineId: String, fileInfo: FileInfo) {
@@ -284,7 +302,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         taskId: String
     ): Result<String> {
         val url =
-            "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/$projectId/$pipelineId/$buildId/$taskId"
+            "${HomeHostUtil.innerApiHost()}/ms/artifactory/api-html/user/reports/" +
+                    "$projectId/$pipelineId/$buildId/$taskId"
         return Result(url)
     }
 

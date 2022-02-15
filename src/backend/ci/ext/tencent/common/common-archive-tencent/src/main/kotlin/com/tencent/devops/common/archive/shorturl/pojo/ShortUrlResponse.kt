@@ -28,10 +28,13 @@
 package com.tencent.devops.common.archive.shorturl.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class ShortUrlResponse(
     @JsonProperty("result_code")
+    @ApiModelProperty(name = "result_code")
     val retCode: Int,
     @JsonProperty("short_url")
+    @ApiModelProperty(name = "short_url")
     val shortUrl: String
 )

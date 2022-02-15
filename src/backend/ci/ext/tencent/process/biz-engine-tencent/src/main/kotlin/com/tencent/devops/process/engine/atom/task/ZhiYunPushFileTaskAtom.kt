@@ -90,6 +90,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
                 codeUrl = codeRepoUrl
             ),
             ArtifactorySearchParam(
+                userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,

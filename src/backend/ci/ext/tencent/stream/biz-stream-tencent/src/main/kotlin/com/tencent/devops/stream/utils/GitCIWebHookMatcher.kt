@@ -29,10 +29,10 @@ package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.ci.yaml.MergeRequest
 import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
@@ -151,7 +151,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
     private fun isExcludePathMatch(trigger: Trigger): Boolean {
         if (trigger.paths?.exclude != null && trigger.paths!!.exclude!!.isNotEmpty()) {
             logger.info("Exclude path set ($trigger.paths.exclude)")
-            (event as GitPushEvent).commits.forEach { commit ->
+            (event as GitPushEvent).commits?.forEach { commit ->
                 commit.added?.forEach { path ->
                     trigger.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
@@ -186,7 +186,7 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         if (trigger.paths?.include != null && trigger.paths!!.include!!.isNotEmpty()) {
             logger.info("Include path set(${trigger.paths!!.include})")
             run outside@{
-                (event as GitPushEvent).commits.forEach { commit ->
+                (event as GitPushEvent).commits?.forEach { commit ->
                     commit.added?.forEach { path ->
                         trigger.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {

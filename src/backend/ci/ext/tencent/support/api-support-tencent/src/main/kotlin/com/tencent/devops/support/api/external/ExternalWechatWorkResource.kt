@@ -85,4 +85,45 @@ interface ExternalWechatWorkResource {
         @ApiParam(value = "回调密文", required = false)
         reqData: String?
     ): Result<String>
+
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_XML)
+    @ApiOperation("企业微信机器人回调接口(POST)")
+    @POST
+    @Path("/robot/callback")
+    fun robotCallback(
+        @ApiParam(value = "消息体签名", required = true)
+        @QueryParam(value = "msg_signature")
+        signature: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam(value = "timestamp")
+        timestamp: Long,
+        @ApiParam(value = "随机数字串", required = true)
+        @QueryParam(value = "nonce")
+        nonce: String,
+        @ApiParam(value = "回调密文", required = true)
+        reqData: String?
+    ): Result<Boolean>
+
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.TEXT_XML)
+    @ApiOperation("企业微信机器人回调接口(GET)")
+    @GET
+    @Path("/robot/callback")
+    fun robotCallback(
+        @ApiParam(value = "消息体签名", required = true)
+        @QueryParam(value = "msg_signature")
+        signature: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam(value = "timestamp")
+        timestamp: Long,
+        @ApiParam(value = "随机数字串", required = true)
+        @QueryParam(value = "nonce")
+        nonce: String,
+        @ApiParam(value = "随机加密字符串", required = true)
+        @QueryParam(value = "echostr")
+        echoStr: String,
+        @ApiParam(value = "回调密文", required = false)
+        reqData: String?
+    ): String
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.scm.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * {
@@ -66,26 +67,36 @@ data class GitCIFileCommit(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Commit(
     @JsonProperty("author_email")
+    @ApiModelProperty(name = "author_email")
     val authorEmail: String?,
     @JsonProperty("author_name")
+    @ApiModelProperty(name = "author_name")
     val authorName: String?,
     @JsonProperty("authored_date")
+    @ApiModelProperty(name = "authored_date")
     val authoredDate: String?,
     @JsonProperty("committed_date")
+    @ApiModelProperty(name = "committed_date")
     val committedDate: String?,
     @JsonProperty("committer_email")
+    @ApiModelProperty(name = "committer_email")
     val committerEmail: String?,
     @JsonProperty("committer_name")
+    @ApiModelProperty(name = "committer_name")
     val committerName: String?,
     @JsonProperty("created_at")
+    @ApiModelProperty(name = "created_at")
     val createdAt: String,
     val id: String,
     val message: String?,
     @JsonProperty("parent_ids")
+    @ApiModelProperty(name = "parent_ids")
     val parentIds: List<String>?,
     @JsonProperty("short_id")
+    @ApiModelProperty(name = "short_id")
     val shortId: String?,
     val title: String?,
     @JsonProperty("scroll_object_id")
+    @ApiModelProperty(name = "scroll_object_id")
     val scrollObjectId: Any?
 )

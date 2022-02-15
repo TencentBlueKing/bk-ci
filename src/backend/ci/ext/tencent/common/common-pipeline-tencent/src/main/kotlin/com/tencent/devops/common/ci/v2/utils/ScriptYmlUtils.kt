@@ -28,46 +28,53 @@
 package com.tencent.devops.common.ci.v2.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
-import com.tencent.devops.common.ci.v2.MrRule
-import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.PreTriggerOn
-import com.tencent.devops.common.ci.v2.PushRule
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.Stage
-import com.tencent.devops.common.ci.v2.TagRule
-import com.tencent.devops.common.ci.v2.TriggerOn
-import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.common.api.expression.ExpressionException
+import com.tencent.devops.common.api.expression.Lex
+import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
+import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.PreStep
+import com.tencent.devops.common.ci.v2.PreTriggerOn
+import com.tencent.devops.common.ci.v2.PushRule
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.SchedulesRule
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Service
+import com.tencent.devops.common.ci.v2.Stage
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitMergeExtensionActionKind
+import com.tencent.devops.common.ci.v2.TagRule
+import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.YamlTransferData
+import com.tencent.devops.common.ci.v2.YmlVersion
+import com.tencent.devops.common.ci.v2.add
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.stageCheck.Flow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
+import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -75,17 +82,15 @@ import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
 
-@Suppress("ALL")
+@Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
 
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
-    private const val dockerHubUrl = ""
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-    private const val stageNamespace = "stage-"
     private const val jobNamespace = "job-"
     private const val stepNamespace = "step-"
 
@@ -93,10 +98,13 @@ object ScriptYmlUtils {
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
 
+    private const val PARAMETERS_PREFIX = "parameters."
+
     /**
      * 1、解决锚点
      * 2、yml string层面的格式化填充
      */
+    // TODO: 删除GitCi微服务后需要修改这里，锚点替换在schema检查已经做了
     @Throws(JsonProcessingException::class)
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
@@ -117,7 +125,7 @@ object ScriptYmlUtils {
             val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
-            logger.error("Check yaml version failed. return null")
+            logger.warn("Check yaml version failed. return null")
             null
         }
     }
@@ -138,6 +146,7 @@ object ScriptYmlUtils {
     }
 
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
+
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -146,15 +155,14 @@ object ScriptYmlUtils {
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
-            val realValue = settingMap[matcher.group(1).trim()]
-            // realValue为空时，保留默认value值，解决${ci.buildNum}的二次转换场景
-            newValue = newValue!!.replace(matcher.group(), realValue ?: value)
+            val realValue = settingMap[matcher.group(1).trim()] ?: continue
+            newValue = newValue!!.replace(matcher.group(), realValue)
         }
-
+        logger.info("STREAM|parseVariableValue value :$value; settingMap: $settingMap;newValue: $newValue")
         return newValue
     }
 
-    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String? {
+    fun parseParameterValue(value: String?, settingMap: Map<String, Any?>, paramType: ParametersType): String {
         if (value.isNullOrBlank()) {
             return ""
         }
@@ -175,67 +183,76 @@ object ScriptYmlUtils {
                 if (realValue is List<*>) {
                     newValue = newValue!!.replace(matcher.group(), JsonUtil.toJson(realValue))
                 } else {
-                    newValue = newValue!!.replace(matcher.group(), realValue.toString())
+                    newValue = newValue!!.replace(matcher.group(), StringEscapeUtils.escapeJava(realValue.toString()))
                 }
             }
         }
-        return newValue
+        // 替换if中没有加括号的
+        val resultValue = replaceIfParameters(newValue, settingMap)
+        return resultValue.toString()
     }
 
-//    fun parseImage(imageNameInput: String): Triple<String, String, String> {
-//        val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
-//        val arry = imageNameStr.split(":")
-//        if (arry.size == 1) {
-//            val str = imageNameStr.split("/")
-//            return if (str.size == 1) {
-//                Triple(dockerHubUrl, imageNameStr, "latest")
-//            } else {
-//                Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-//            }
-//        } else if (arry.size == 2) {
-//            val str = imageNameStr.split("/")
-//            when {
-//                str.size == 1 -> return Triple(dockerHubUrl, arry[0], arry[1])
-//                str.size >= 2 -> return if (str[0].contains(":")) {
-//                    Triple(str[0], imageNameStr.substringAfter(str[0] + "/"), "latest")
-//                } else {
-//                    if (str.last().contains(":")) {
-//                        val nameTag = str.last().split(":")
-//                        Triple(
-//                            str[0],
-//                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
-//                            nameTag[1]
-//                        )
-//                    } else {
-//                        Triple(str[0], str.last(), "latest")
-//                    }
-//                }
-//                else -> {
-//                    logger.error("image name invalid: $imageNameStr")
-//                    throw Exception("image name invalid.")
-//                }
-//            }
-//        } else if (arry.size == 3) {
-//            val str = imageNameStr.split("/")
-//            if (str.size >= 2) {
-//                val tail = imageNameStr.removePrefix(str[0] + "/")
-//                val nameAndTag = tail.split(":")
-//                if (nameAndTag.size != 2) {
-//                    logger.error("image name invalid: $imageNameStr")
-//                    throw Exception("image name invalid.")
-//                }
-//                return Triple(str[0], nameAndTag[0], nameAndTag[1])
-//            } else {
-//                logger.error("image name invalid: $imageNameStr")
-//                throw Exception("image name invalid.")
-//            }
-//        } else {
-//            logger.error("image name invalid: $imageNameStr")
-//            throw Exception("image name invalid.")
-//        }
-//    }
+    @Suppress("NestedBlockDepth")
+    private fun replaceIfParameters(
+        newValue: String?,
+        settingMap: Map<String, Any?>
+    ): StringBuffer {
+        val newValueLines = BufferedReader(StringReader(newValue!!))
+        val resultValue = StringBuffer()
+        var line = newValueLines.readLine()
+        while (line != null) {
+            val startString = line.trim().replace("\\s".toRegex(), "")
+            if (startString.startsWith("if:") || startString.startsWith("-if:")) {
+                val ifPrefix = line.substring(0 until line.indexOfFirst { it == ':' } + 1)
+                val condition = line.substring(line.indexOfFirst { it == '"' } + 1 until line.length).trimEnd()
+                    .removeSuffix("\"")
+                // 去掉花括号
+                val baldExpress = condition.replace("\${{", "").replace("}}", "").trim()
+                val originItems: List<Word>
+                // 先语法分析
+                try {
+                    originItems = Lex(baldExpress.toList().toMutableList()).getToken()
+                } catch (e: Exception) {
+                    logger.info("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                    throw ExpressionException("expression=$baldExpress|reason=Grammar Invalid: ${e.message}")
+                }
+                // 替换变量
+                val items = mutableListOf<Word>()
+                originItems.forEach {
+                    if (it.symbol == "ident") {
+                        items.add(Word(replaceParameters(it, settingMap), it.symbol))
+                    } else {
+                        items.add(Word(it.str, it.symbol))
+                    }
+                }
+                val itemsStr = items.joinToString(" ") { it.str }
+                resultValue.append("$ifPrefix \"${itemsStr}\"").append("\n")
+            } else {
+                resultValue.append(line).append("\n")
+            }
+            line = newValueLines.readLine()
+        }
+        return resultValue
+    }
 
-    fun formatYamlCustom(yamlStr: String): String {
+    private fun replaceParameters(
+        it: Word,
+        settingMap: Map<String, Any?>
+    ) = if (it.str.startsWith(PARAMETERS_PREFIX)) {
+        val realValue = settingMap[it.str] ?: it.str
+        if (realValue is List<*>) {
+            // ["test"]->[test]
+            JsonUtil.toJson(realValue).replace("\"", "")
+                .replace("[ ", "[")
+                .replace(" ]", "]")
+        } else {
+            StringEscapeUtils.escapeJava(realValue.toString())
+        }
+    } else {
+        it.str
+    }
+
+    private fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
@@ -252,60 +269,19 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml, yaml: String) {
-        checkVariable(preScriptBuildYaml)
-        checkStage(preScriptBuildYaml)
-        checkExtend(yaml)
-    }
-
-    private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
-        if (preScriptBuildYaml.variables == null) {
-            return
-        }
-
-        preScriptBuildYaml.variables.forEach {
-            val keyRegex = Regex("^[0-9a-zA-Z_]+$")
-            if (!keyRegex.matches(it.key)) {
-                throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
-            }
-        }
-    }
-
-    private fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
-        if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
-            (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
-        ) {
-            throw YamlFormatException("stages, jobs, steps不能并列存在，只能存在其一")
-        }
-    }
-
-    private fun checkExtend(yaml: String) {
-        val yamlMap = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<Map<String, Any?>>() {})
-        if (yamlMap["extends"] == null) {
-            return
-        }
-        yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version" &&
-                t != "resources" && t != "name" && t != "on") {
-                throw YamlFormatException("使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources")
-            }
-        }
-    }
-
-    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
+    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml, transferData: YamlTransferData?): List<Stage> {
         return when {
             preScriptBuildYaml.steps != null -> {
+                val jobId = randomString(jobNamespace)
                 listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(stageNamespace),
                         jobs = listOf(
                             Job(
-                                id = randomString(jobNamespace),
+                                id = jobId,
                                 name = "job1",
                                 runsOn = RunsOn(),
-                                steps = formatSteps(preScriptBuildYaml.steps)
+                                steps = preStepsToSteps(jobId, preScriptBuildYaml.steps, transferData)
                             )
                         ),
                         checkIn = null,
@@ -317,31 +293,36 @@ object ScriptYmlUtils {
                 listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(stageNamespace),
-                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs),
+                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs, transferData),
                         checkIn = null,
                         checkOut = null
                     )
                 )
             }
             else -> {
-                preStages2Stages(preScriptBuildYaml.stages as List<PreStage>)
+                preStages2Stages(preScriptBuildYaml.stages as List<PreStage>, transferData)
             }
         }
     }
 
-    private fun preJobs2Jobs(preJobs: Map<String, PreJob>?): List<Job> {
+    private fun preJobs2Jobs(preJobs: Map<String, PreJob>?, transferData: YamlTransferData?): List<Job> {
         if (preJobs == null) {
             return emptyList()
         }
 
         val jobs = mutableListOf<Job>()
-        preJobs.forEach { (t, u) ->
+        preJobs.forEach { (index, preJob) ->
+
+            // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
+            if (index.length > 64) {
+                throw YamlFormatException("job.id 超过长度限制64 $index")
+            }
+
             // 检测job env合法性
-            GitCIEnvUtils.checkEnv(u.env)
+            GitCIEnvUtils.checkEnv(preJob.env)
 
             val services = mutableListOf<Service>()
-            u.services?.forEach { (key, value) ->
+            preJob.services?.forEach { (key, value) ->
                 services.add(
                     Service(
                         serviceId = key,
@@ -353,19 +334,24 @@ object ScriptYmlUtils {
 
             jobs.add(
                 Job(
-                    id = t,
-                    name = u.name,
-                    runsOn = formatRunsOn(u.runsOn),
+                    id = index,
+                    name = preJob.name,
+                    resourceExclusiveDeclaration = preJob.resourceExclusiveDeclaration,
+                    runsOn = formatRunsOn(preJob.runsOn),
                     services = services,
-                    ifField = u.ifField,
-                    steps = formatSteps(u.steps),
-                    timeoutMinutes = u.timeoutMinutes,
-                    env = u.env,
-                    continueOnError = u.continueOnError,
-                    strategy = u.strategy,
-                    dependOn = u.dependOn
+                    ifField = preJob.ifField,
+                    ifModify = preJob.ifModify,
+                    steps = preStepsToSteps(index, preJob.steps, transferData),
+                    timeoutMinutes = preJob.timeoutMinutes,
+                    env = preJob.env,
+                    continueOnError = preJob.continueOnError,
+                    strategy = preJob.strategy,
+                    dependOn = preJob.dependOn
                 )
             )
+
+            // 为每个job增加可能的模板信息
+            transferData?.add(index, TemplateType.JOB, preJob.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return jobs
@@ -380,10 +366,12 @@ object ScriptYmlUtils {
             val runsOn = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
             return if (runsOn.container != null) {
                 try {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
+                    val container =
+                        YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container::class.java)
                     runsOn.copy(container = container)
                 } catch (e: Exception) {
-                    val container = YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
+                    val container =
+                        YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(runsOn.container), Container2::class.java)
                     runsOn.copy(container = container)
                 }
             } else {
@@ -396,71 +384,72 @@ object ScriptYmlUtils {
         }
     }
 
-    private fun formatSteps(oldSteps: List<Step>?): List<Step> {
+    private fun preStepsToSteps(
+        jobId: String,
+        oldSteps: List<PreStep>?,
+        transferData: YamlTransferData?
+    ): List<Step> {
         if (oldSteps == null) {
             return emptyList()
         }
 
         val stepList = mutableListOf<Step>()
         val stepIdSet = mutableSetOf<String>()
-        oldSteps.forEach {
-            if (it.uses == null && it.run == null && it.checkout == null) {
+        oldSteps.forEach { preStep ->
+            if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
                 throw YamlFormatException("step必须包含uses或run或checkout!")
             }
 
             // 校验stepId唯一性
-            if (it.id != null && stepIdSet.contains(it.id)) {
-                throw YamlFormatException("请确保step.id唯一性!(${it.id})")
-            } else if (it.id != null && !stepIdSet.contains(it.id)) {
-                stepIdSet.add(it.id)
+            if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
+                throw YamlFormatException("请确保step.id唯一性!(${preStep.id})")
+            } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
+                stepIdSet.add(preStep.id)
             }
 
             // 检测step env合法性
-            GitCIEnvUtils.checkEnv(it.env)
+            GitCIEnvUtils.checkEnv(preStep.env)
 
+            val taskId = "e-${UUIDUtil.generate()}"
             stepList.add(
                 Step(
-                    name = it.name,
-                    id = it.id ?: randomString(stepNamespace),
-                    ifFiled = it.ifFiled,
-                    uses = it.uses,
-                    with = it.with,
-                    timeoutMinutes = it.timeoutMinutes,
-                    continueOnError = it.continueOnError,
-                    retryTimes = it.retryTimes,
-                    env = it.env,
-                    run = it.run,
-                    checkout = it.checkout
+                    name = preStep.name,
+                    id = preStep.id,
+                    ifFiled = preStep.ifFiled,
+                    ifModify = preStep.ifModify,
+                    uses = preStep.uses,
+                    with = preStep.with,
+                    timeoutMinutes = preStep.timeoutMinutes,
+                    continueOnError = preStep.continueOnError,
+                    retryTimes = preStep.retryTimes,
+                    env = preStep.env,
+                    run = preStep.run,
+                    checkout = preStep.checkout,
+                    taskId = taskId
                 )
             )
+
+            transferData?.add(taskId, TemplateType.STEP, preStep.yamlMetaData?.templateInfo?.remoteTemplateProjectId)
         }
 
         return stepList
     }
 
-    private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
+    private fun preStages2Stages(preStageList: List<PreStage>?, transferData: YamlTransferData?): List<Stage> {
         if (preStageList == null) {
             return emptyList()
         }
 
         val stageList = mutableListOf<Stage>()
-        val stageIdSet = mutableSetOf<String>()
         preStageList.forEach {
-            // 校验stageId唯一性
-            if (it.id != null && stageIdSet.contains(it.id)) {
-                throw YamlFormatException("请确保stage.id唯一性!(${it.id})")
-            } else if (it.id != null && !stageIdSet.contains(it.id)) {
-                stageIdSet.add(it.id)
-            }
-
             stageList.add(
                 Stage(
-                    id = it.id ?: randomString(stageNamespace),
                     name = it.name,
                     label = formatStageLabel(it.label),
                     ifField = it.ifField,
+                    ifModify = it.ifModify,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>),
+                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>, transferData),
                     checkIn = formatStageCheck(it.checkIn),
                     checkOut = formatStageCheck(it.checkOut)
                 )
@@ -527,28 +516,36 @@ object ScriptYmlUtils {
     /**
      * 预处理对象转化为合法对象
      */
-    fun normalizeGitCiYaml(preScriptBuildYaml: PreScriptBuildYaml, filePath: String): ScriptBuildYaml {
+    fun normalizeGitCiYaml(
+        preScriptBuildYaml: PreScriptBuildYaml,
+        filePath: String,
+        transferData: YamlTransferData = YamlTransferData()
+    ): Pair<ScriptBuildYaml, YamlTransferData> {
         val stages = formatStage(
-            preScriptBuildYaml
+            preScriptBuildYaml,
+            transferData
         )
 
         val thisTriggerOn = formatTriggerOn(preScriptBuildYaml.triggerOn)
 
-        return ScriptBuildYaml(
-            name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
-                preScriptBuildYaml.name!!
-            } else {
-                filePath.removeSuffix(".yml")
-            },
-            version = preScriptBuildYaml.version,
-            triggerOn = thisTriggerOn,
-            variables = preScriptBuildYaml.variables,
-            extends = preScriptBuildYaml.extends,
-            resource = preScriptBuildYaml.resources,
-            notices = preScriptBuildYaml.notices,
-            stages = stages,
-            finally = preJobs2Jobs(preScriptBuildYaml.finally),
-            label = preScriptBuildYaml.label ?: emptyList()
+        return Pair(
+            ScriptBuildYaml(
+                name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
+                    preScriptBuildYaml.name!!
+                } else {
+                    filePath
+                },
+                version = preScriptBuildYaml.version,
+                triggerOn = thisTriggerOn,
+                variables = preScriptBuildYaml.variables,
+                extends = preScriptBuildYaml.extends,
+                resource = preScriptBuildYaml.resources,
+                notices = preScriptBuildYaml.notices,
+                stages = stages,
+                finally = preJobs2Jobs(preScriptBuildYaml.finally, transferData),
+                label = preScriptBuildYaml.label ?: emptyList()
+            ),
+            transferData
         )
     }
 
@@ -574,70 +571,58 @@ object ScriptYmlUtils {
             )
         }
 
-        var pushRule: PushRule? = null
-        var tagRule: TagRule? = null
-        var mrRule: MrRule? = null
-        var schedulesRule: SchedulesRule? = null
+        return TriggerOn(
+            push = pushRule(preTriggerOn),
+            tag = tagRule(preTriggerOn),
+            mr = mrRule(preTriggerOn),
+            schedules = schedulesRule(preTriggerOn),
+            delete = deleteRule(preTriggerOn)
+        )
+    }
 
-        if (preTriggerOn.push != null) {
-            val push = preTriggerOn.push
-            try {
-                pushRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(push),
-                    PushRule::class.java
+    private fun deleteRule(
+        preTriggerOn: PreTriggerOn
+    ): DeleteRule? {
+        if (preTriggerOn.delete != null) {
+            val delete = preTriggerOn.delete
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(delete),
+                    DeleteRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                try {
-                    val pushObj = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(push),
-                        List::class.java
-                    ) as ArrayList<String>
-
-                    pushRule = PushRule(
-                        branches = pushObj,
-                        branchesIgnore = null,
-                        paths = null,
-                        pathsIgnore = null,
-                        users = null,
-                        usersIgnore = null
-                    )
-                } catch (e: Exception) {
-                    logger.error("Format triggerOn pushRule failed.", e)
-                }
+                logger.error("Format triggerOn schedulesRule failed.", e)
+                null
             }
         }
+        return null
+    }
 
-        if (preTriggerOn.tag != null) {
-            val tag = preTriggerOn.tag
-            try {
-                tagRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(tag),
-                    TagRule::class.java
+    private fun schedulesRule(
+        preTriggerOn: PreTriggerOn
+    ): SchedulesRule? {
+        if (preTriggerOn.schedules != null) {
+            val schedules = preTriggerOn.schedules
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(schedules),
+                    SchedulesRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                try {
-                    val tagList = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(tag),
-                        List::class.java
-                    ) as ArrayList<String>
-
-                    tagRule = TagRule(
-                        tags = tagList,
-                        tagsIgnore = null,
-                        fromBranches = null,
-                        users = null,
-                        usersIgnore = null
-                    )
-                } catch (e: Exception) {
-                    logger.error("Format triggerOn tagRule failed.", e)
-                }
+                logger.error("Format triggerOn schedulesRule failed.", e)
+                null
             }
         }
+        return null
+    }
 
+    private fun mrRule(
+        preTriggerOn: PreTriggerOn
+    ): MrRule? {
         if (preTriggerOn.mr != null) {
             val mr = preTriggerOn.mr
-            try {
-                mrRule = YamlUtil.getObjectMapper().readValue(
+            return try {
+                YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(mr),
                     MrRule::class.java
                 )
@@ -648,7 +633,7 @@ object ScriptYmlUtils {
                         List::class.java
                     ) as ArrayList<String>
 
-                    mrRule = MrRule(
+                    MrRule(
                         targetBranches = mrList,
                         sourceBranchesIgnore = null,
                         paths = null,
@@ -658,35 +643,83 @@ object ScriptYmlUtils {
                     )
                 } catch (e: Exception) {
                     logger.error("Format triggerOn mrRule failed.", e)
+                    null
                 }
             }
         }
+        return null
+    }
 
-        if (preTriggerOn.schedules != null) {
-            val schedules = preTriggerOn.schedules
-            try {
-                schedulesRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(schedules),
-                    SchedulesRule::class.java
+    private fun tagRule(
+        preTriggerOn: PreTriggerOn
+    ): TagRule? {
+        if (preTriggerOn.tag != null) {
+            val tag = preTriggerOn.tag
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(tag),
+                    TagRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn schedulesRule failed.", e)
+                try {
+                    val tagList = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(tag),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    TagRule(
+                        tags = tagList,
+                        tagsIgnore = null,
+                        fromBranches = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn tagRule failed.", e)
+                    null
+                }
             }
         }
+        return null
+    }
 
-        return TriggerOn(
-            push = pushRule,
-            tag = tagRule,
-            mr = mrRule,
-            schedules = schedulesRule
-        )
+    private fun pushRule(
+        preTriggerOn: PreTriggerOn
+    ): PushRule? {
+        if (preTriggerOn.push != null) {
+            val push = preTriggerOn.push
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(push),
+                    PushRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                try {
+                    val pushObj = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(push),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    PushRule(
+                        branches = pushObj,
+                        branchesIgnore = null,
+                        paths = null,
+                        pathsIgnore = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn pushRule failed.", e)
+                    null
+                }
+            }
+        }
+        return null
     }
 
     fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
-        val schemaNode =
-            jsonNodeFromString(schema)
-        val jsonNode =
-            jsonNodeFromString(yamlJson)
+        val schemaNode = jsonNodeFromString(schema)
+        val jsonNode = jsonNodeFromString(yamlJson)
         val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
         val itr = report.iterator()
         val sb = java.lang.StringBuilder()
@@ -699,30 +732,7 @@ object ScriptYmlUtils {
         return Pair(report.isSuccess, sb.toString())
     }
 
-    fun getPreScriptBuildYamlSchema(): String {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        val schema = mapper.generateJsonSchema(PreScriptBuildYaml::class.java)
-        /*schema.schemaNode.with("properties").with("steps").put("item", CiYamlUtils.getAbstractTaskSchema())
-        schema.schemaNode.with("properties").with("services").put("item", CiYamlUtils.getAbstractServiceSchema())
-        schema.schemaNode.with("properties")
-            .with("stages")
-            .with("items")
-            .with("properties")
-            .with("stage")
-            .with("items")
-            .with("properties")
-            .with("job")
-            .with("properties")
-            .with("steps")
-            .put("item", CiYamlUtils.getAbstractTaskSchema())*/
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
-    }
-
     fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)
-
-    fun validateSchema(schema: String): Boolean =
-        validateJson(schema)
 
     fun validateJson(json: String): Boolean {
         try {
@@ -773,9 +783,13 @@ object ScriptYmlUtils {
         }
     }
 
+    /**
+     * 标准化处理，并裁剪PreCI不支持的特性
+     */
     fun normalizePreCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
         val stages = formatStage(
-            preScriptBuildYaml
+            preScriptBuildYaml,
+            null
         )
 
         return ScriptBuildYaml(
@@ -787,7 +801,7 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preJobs2Jobs(preScriptBuildYaml.finally),
+            finally = preJobs2Jobs(preScriptBuildYaml.finally, null),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }

@@ -29,15 +29,20 @@ package com.tencent.devops.stream.pojo.rtxCustom
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RtxTokenResponse(
     @JsonProperty("errcode")
+    @ApiModelProperty(name = "errcode")
     val errCode: Long,
     @JsonProperty("errmsg")
+    @ApiModelProperty(name = "errmsg")
     val errMsg: String,
     @JsonProperty("access_token")
+    @ApiModelProperty(name = "access_token")
     val accessToken: String,
     @JsonProperty("expires_in")
+    @ApiModelProperty(name = "expires_in")
     val expiresIn: Long
 )

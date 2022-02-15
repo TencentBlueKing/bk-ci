@@ -12,10 +12,12 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = arrayOf("OP_STREAM_SERVICES"), description = "stream basic setting 管理")
+@Api(tags = ["OP_STREAM_SERVICES"], description = "stream basic setting 管理")
 @Path("/op/basic/setting")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -36,4 +38,24 @@ interface OpGitCIBasicSettingResource {
     @GET
     @Path("/fixInfo")
     fun fixProjectInfo(): Result<Int>
+
+    @ApiOperation("修改stream项目信息")
+    @POST
+    @Path("/{gitProjectId}/update")
+    fun updateBasicSetting(
+        @ApiParam(value = "项目id", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "是否开启commitCheck", required = true)
+        @QueryParam("enableCommitCheck")
+        enableCommitCheck: Boolean?,
+        @ApiParam(value = "是否开启MrComment", required = true)
+        @QueryParam("enableMrComment")
+        enableMrComment: Boolean?
+    ): Result<Boolean>
+
+    @ApiOperation("填充存量流水线的带有名空间的项目名称")
+    @GET
+    @Path("/fixNameSpace")
+    fun fixProjectNameSpace(): Result<Int>
 }

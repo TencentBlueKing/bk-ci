@@ -28,16 +28,22 @@
 package com.tencent.devops.common.auth.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 data class BkAuthTokenCreateRequest(
     @JsonProperty("env_name")
+    @ApiModelProperty(name = "env_name")
     val envName: String,
     @JsonProperty("app_code")
+    @ApiModelProperty(name = "app_code")
     val appCode: String,
     @JsonProperty("app_secret")
+    @ApiModelProperty(name = "app_secret")
     val appSecret: String,
     @JsonProperty("id_provider")
+    @ApiModelProperty(name = "id_provider")
     val idProvider: String,
     @JsonProperty("grant_type")
+    @ApiModelProperty(name = "grant_type")
     val grantType: String
 )

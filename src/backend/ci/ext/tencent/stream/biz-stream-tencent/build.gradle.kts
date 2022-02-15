@@ -48,7 +48,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:stream:model-stream-tencent"))
     api(project(":ext:tencent:scm:api-scm"))
-    api(project(":core:repository:api-repository"))
+    api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":core:plugin:api-plugin"))
     api(project(":core:quality:api-quality"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
@@ -65,11 +65,17 @@ dependencies {
 //    api("org.apache.poi:poi"
 //    api("org.apache.poi:poi-ooxml"
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api(group = "javax.websocket", name = "javax.websocket-api", version = "1.1")
+    api("com.github.ben-manes.caffeine:caffeine")
+    api(group = "javax.websocket", name = "javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("com.vmware:vijava")
     api("org.json:json")
-    api(group = "org.apache.ant", name = "ant", version = "1.10.5")
+    api(group = "org.apache.ant", name = "ant")
+    api(project(":core:common:common-webhook:biz-common-webhook"))
+
+    // jsonschema
+    api("com.networknt:json-schema-validator")
+
     testImplementation(project(":core:common:common-test"))
 }

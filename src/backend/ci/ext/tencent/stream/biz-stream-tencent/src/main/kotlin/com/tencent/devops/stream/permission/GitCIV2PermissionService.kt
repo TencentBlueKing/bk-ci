@@ -33,7 +33,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.stream.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -51,7 +51,7 @@ import javax.ws.rs.core.Response
 class GitCIV2PermissionService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val tokenCheckService: ClientTokenService
 ) {
     // 校验只需要工蜂不需要OAuth的
@@ -101,9 +101,9 @@ class GitCIV2PermissionService @Autowired constructor(
     fun checkEnableGitCI(
         gitProjectId: Long
     ) {
-        val result = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableCi ?: false
-        if (!result) {
-            throw GitCINoEnableException(gitProjectId.toString())
+        val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+        if (setting == null || !setting.enableCi) {
+            throw GitCINoEnableException(setting?.name ?: gitProjectId.toString())
         }
     }
 

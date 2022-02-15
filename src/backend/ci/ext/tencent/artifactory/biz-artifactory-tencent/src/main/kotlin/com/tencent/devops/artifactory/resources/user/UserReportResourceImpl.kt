@@ -63,6 +63,6 @@ class UserReportResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-        bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
+        bkRepoReportService.get(userId, projectId, pipelineId, buildId, elementId, path)
     }
 }

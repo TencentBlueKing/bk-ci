@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.service
 
 interface ReportService {
     fun get(
+        userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,

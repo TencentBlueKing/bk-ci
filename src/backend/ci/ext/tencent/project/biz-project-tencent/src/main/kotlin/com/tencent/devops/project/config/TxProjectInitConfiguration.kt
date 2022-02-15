@@ -34,11 +34,13 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.GitCIProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V0ProjectExtPermissionServiceImpl
 import com.tencent.devops.project.service.impl.TxV0ProjectPermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -82,17 +84,25 @@ class TxProjectInitConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun txProjectPermissionServiceImpl(
         objectMapper: ObjectMapper,
-        projectIamV0Service: ProjectIamV0Service
-    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service)
+        projectIamV0Service: ProjectIamV0Service,
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service, bsPipelineAuthServiceCode)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
     fun gitCIProjectPermissionServiceImpl(
         objectMapper: ObjectMapper,
-        projectIamV0Service: ProjectIamV0Service
-    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service)
+        projectIamV0Service: ProjectIamV0Service,
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    ) = V0ProjectExtPermissionServiceImpl(objectMapper, projectIamV0Service, bsPipelineAuthServiceCode)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCiProjectPermission() = GitCIProjectPermissionService()
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamProjectPermissionService(
+        client: Client,
+        tokenService: ClientTokenService
+    ): ProjectPermissionService = StreamProjectPermissionServiceImpl(
+        client = client,
+        tokenService = tokenService
+    )
 }

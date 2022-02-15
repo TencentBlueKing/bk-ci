@@ -27,49 +27,38 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushActionKind
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitPushOperationKind
-import com.tencent.devops.stream.dao.GitRequestEventDao
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
-import com.tencent.devops.stream.pojo.git.GitMergeRequestEvent
-import com.tencent.devops.stream.pojo.git.GitPushEvent
-import com.tencent.devops.stream.pojo.git.GitTagPushEvent
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class TriggerParameter @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val gitRequestEventDao: GitRequestEventDao
+    private val gitRequestEventHandle: GitRequestEventHandle
 ) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
-    }
+    private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
 
-    fun saveGitRequestEvent(event: GitEvent, e: String): GitRequestEvent? {
+    fun getGitRequestEvent(event: GitEvent, e: String): GitRequestEvent? {
         when (event) {
             is GitPushEvent -> {
                 if (!pushEventFilter(event)) {
                     return null
                 }
-                val gitRequestEvent = GitRequestEventHandle.createPushEvent(event, e)
-                val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-                gitRequestEvent.id = id
-                return gitRequestEvent
+                return gitRequestEventHandle.createPushEvent(event, e)
             }
             is GitTagPushEvent -> {
-                if (event.total_commits_count <= 0) {
-                    logger.info("Git web hook no commit(${event.total_commits_count})")
+                if (!tagPushEventFilter(event)) {
                     return null
                 }
-                val gitRequestEvent = GitRequestEventHandle.createTagPushEvent(event, e)
-                val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-                gitRequestEvent.id = id
-                return gitRequestEvent
+                return gitRequestEventHandle.createTagPushEvent(event, e)
             }
             is GitMergeRequestEvent -> {
                 // 目前不支持Mr信息更新的触发
@@ -80,25 +69,36 @@ class TriggerParameter @Autowired constructor(
                     return null
                 }
 
-                val gitRequestEvent = GitRequestEventHandle.createMergeEvent(event, e)
-                val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-                gitRequestEvent.id = id
-                return gitRequestEvent
+                return gitRequestEventHandle.createMergeEvent(event, e)
             }
         }
         logger.info("event invalid: $event")
         return null
     }
 
+    @SuppressWarnings("ReturnCount")
     private fun pushEventFilter(event: GitPushEvent): Boolean {
         // 放开删除分支操作为了流水线删除功能
-        if (event.operation_kind == TGitPushOperationKind.DELETE.value &&
-            event.action_kind == TGitPushActionKind.DELETE_BRANCH.value
-        ) {
+        if (event.isDeleteBranch()) {
             return true
         }
         if (event.total_commits_count <= 0) {
-            logger.info("Git web hook no commit(${event.total_commits_count})")
+            logger.info("${event.checkout_sha} Git push web hook no commit(${event.total_commits_count})")
+            return false
+        }
+        if (GitUtils.isPrePushBranch(event.ref)) {
+            logger.info("Git web hook is pre-push event|branchName=${event.ref}")
+            return false
+        }
+        return true
+    }
+
+    private fun tagPushEventFilter(event: GitTagPushEvent): Boolean {
+        if (event.isDeleteTag()) {
+            return true
+        }
+        if (event.total_commits_count <= 0) {
+            logger.info("Git tag web hook no commit(${event.total_commits_count})")
             return false
         }
         return true

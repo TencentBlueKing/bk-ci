@@ -31,22 +31,26 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
+import com.github.dockerjava.api.model.Driver
 import com.github.dockerjava.api.model.HostConfig
+import com.github.dockerjava.api.model.Mount
+import com.github.dockerjava.api.model.MountType
 import com.github.dockerjava.api.model.Volume
+import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
-import com.github.dockerjava.okhttp.OkDockerHttpClient
-import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
-import com.tencent.devops.dockerhost.dispatch.DockerHostDebugResourceApi
+import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
+import com.tencent.devops.dockerhost.services.AbstractDockerHostBuildService
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
@@ -59,8 +63,8 @@ import java.io.File
 class DockerHostDebugService(
     private val dockerHostConfig: DockerHostConfig,
     private val alertApi: AlertApi,
-    private val dockerHostDebugResourceApi: DockerHostDebugResourceApi
-) {
+    private val dockerHostBuildApi: DockerHostBuildResourceApi
+) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     private val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
     private val TURBO_PATH = "/data/bkdevops/apps/turbo/1.0"
@@ -75,65 +79,20 @@ class DockerHostDebugService(
 
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
-/*    private val dockerHostDebugApi: DockerHostDebugResourceApi = DockerHostDebugResourceApi(dockerHostConfig.grayEnv)
-    private val alertApi: AlertApi =
-        AlertApi(dockerHostConfig.grayEnv)*/
-
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
             .withDockerConfig(dockerHostConfig.dockerConfig)
             .withApiVersion(dockerHostConfig.apiVersion)
             .build()
 
-    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(300000)
-        .build()
+    override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
+        return ""
+    }
+
+    override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        logger.info("Stop container ${dockerHostBuildInfo.containerId}")
+    }
 
     private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
-
-    fun startDebug(): ContainerInfo? {
-        val result = dockerHostDebugResourceApi.startDebug(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun endDebug(): ContainerInfo? {
-        val result = dockerHostDebugResourceApi.endDebug(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun reportDebugContainerId(pipelineId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = dockerHostDebugResourceApi.reportDebugContainerId(pipelineId, vmSeqId, containerId)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("reportDebugContainerId return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean? = false, msg: String? = ""): Boolean {
-        val result = dockerHostDebugResourceApi.rollbackDebug(pipelineId, vmSeqId, shutdown, msg)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("rollbackDebug return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
 
     fun createContainer(containerInfo: ContainerInfo): String {
         try {
@@ -197,18 +156,49 @@ class DockerHostDebugService(
             }
             logger.info("envList is: $envList; PATH is $PATH")
 
+            val qpcGitProjectList = dockerHostBuildApi.getQpcGitProjectList(
+                projectId = containerInfo.projectId,
+                buildId = containerInfo.pipelineId,
+                vmSeqId = containerInfo.vmSeqId,
+                poolNo = containerInfo.poolNo
+            )?.data
+
+            var qpcUniquePath = ""
+            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+                qpcUniquePath = qpcGitProjectList.first()
+            }
+
             val tailPath = getTailPath(containerInfo)
-            val binds = mutableListOf(Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/", volumeMavenRepo),
-                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/", volumeNpmPrefix),
-                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/", volumeNpmCache),
-                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/", volumeCcache),
+            val binds = mutableListOf(
+                    Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeMavenRepo),
+                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeNpmPrefix),
+                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeNpmCache),
+                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeCcache),
                     Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
                     Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/", volumeGradleCache),
-                    Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
+                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/",
+                        volumeGradleCache))
+
+            if (qpcUniquePath.isBlank()) {
+                binds.add(Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
+            }
+
             if (enableProjectShare(containerInfo.projectId)) {
                 binds.add(Bind(getProjectShareDir(containerInfo.projectId), volumeProjectShare))
             }
+
+            val hostConfig = HostConfig().withBinds(binds).withNetworkMode("bridge")
+            mountOverlayfs(
+                pipelineId = containerInfo.pipelineId,
+                vmSeqId = containerInfo.vmSeqId.toInt(),
+                poolNo = containerInfo.poolNo,
+                qpcUniquePath = qpcUniquePath,
+                hostConfig = hostConfig
+            )
 
             // 脚本解析器类型
             val cmd = if (containerInfo.token.isEmpty()) {
@@ -236,7 +226,7 @@ class DockerHostDebugService(
                     )
                 )
                 .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeSleep)
-                .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge"))
+                .withHostConfig(hostConfig)
                 .exec()
 
             logger.info("Created container $container")
@@ -287,6 +277,48 @@ class DockerHostDebugService(
             logger.error("Get container num failed")
         }
         return 0
+    }
+
+    fun mountOverlayfs(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        qpcUniquePath: String?,
+        hostConfig: HostConfig
+    ) {
+        if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+            val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
+            val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
+            val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
+
+            if (!File(upperDir).exists()) {
+                File(upperDir).mkdirs()
+            }
+
+            if (!File(workDir).exists()) {
+                File(workDir).mkdirs()
+            }
+
+            if (!File(lowerDir).exists()) {
+                File(lowerDir).mkdirs()
+            }
+
+            val mount = Mount().withType(MountType.VOLUME)
+                .withTarget(dockerHostConfig.volumeWorkspace)
+                .withVolumeOptions(
+                    VolumeOptions().withDriverConfig(
+                        Driver().withName("local").withOptions(
+                            mapOf(
+                                "type" to "overlay",
+                                "device" to "overlay",
+                                "o" to "lowerdir=$lowerDir,upperdir=$upperDir,workdir=$workDir"
+                            )
+                        )
+                    )
+                )
+
+            hostConfig.withMounts(listOf(mount))
+        }
     }
 
     private fun getWorkspace(pipelineId: String, vmSeqId: String): String {

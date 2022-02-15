@@ -28,10 +28,12 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.pojo.BranchBuilds
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.stream.pojo.BranchBuilds
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -39,7 +41,6 @@ import org.jooq.Result
 import org.jooq.SelectConditionStep
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Suppress("ComplexCondition")
 @Repository
@@ -93,59 +94,6 @@ class GitRequestEventBuildDao {
             ).returning(ID)
                 .fetchOne()!!
             return record.id
-        }
-    }
-
-    fun saveWhole(
-        dslContext: DSLContext,
-        eventId: Long,
-        originYaml: String,
-        parsedYaml: String,
-        normalizedYaml: String,
-        gitProjectId: Long,
-        branch: String,
-        objectKind: String,
-        triggerUser: String,
-        commitMsg: String?,
-        sourceGitProjectId: Long?,
-        pipelineId: String,
-        buildId: String,
-        buildStatus: BuildStatus,
-        version: String?
-    ) {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            dslContext.insertInto(
-                this,
-                EVENT_ID,
-                ORIGIN_YAML,
-                PARSED_YAML,
-                NORMALIZED_YAML,
-                GIT_PROJECT_ID,
-                BRANCH,
-                OBJECT_KIND,
-                COMMIT_MESSAGE,
-                TRIGGER_USER,
-                SOURCE_GIT_PROJECT_ID,
-                PIPELINE_ID,
-                BUILD_ID,
-                BUILD_STATUS,
-                VERSION
-            ).values(
-                eventId,
-                originYaml,
-                parsedYaml,
-                normalizedYaml,
-                gitProjectId,
-                branch,
-                objectKind,
-                commitMsg,
-                triggerUser,
-                sourceGitProjectId,
-                pipelineId,
-                buildId,
-                buildStatus.name,
-                version
-            ).execute()
         }
     }
 
@@ -281,7 +229,7 @@ class GitRequestEventBuildDao {
             "GROUP BY BRANCH, SOURCE_GIT_PROJECT_ID\n" +
             "order by EVENT_ID desc"
         val result = dslContext.fetch(sql)
-        return if (null == result || result.isEmpty()) {
+        return if (result.isEmpty()) {
             emptyList()
         } else {
             val branchBuildsList = mutableListOf<BranchBuilds>()
@@ -311,14 +259,14 @@ class GitRequestEventBuildDao {
         pageSize: Int?,
         keyword: String?
     ): List<TGitRequestEventBuildRecord> {
-        var buildRecords = listOf<TGitRequestEventBuildRecord>()
+        var buildRecords: List<TGitRequestEventBuildRecord>
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(BUILD_ID.isNotNull)
                 .and(GIT_PROJECT_ID.eq(gitProjectId))
             if (!keyword.isNullOrBlank()) {
                 // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (keyword!!.contains(":")) {
+                if (keyword.contains(":")) {
                     dsl.and(BRANCH.like("%${keyword.split(":")[1]}%"))
                         .and(SOURCE_GIT_PROJECT_ID.isNotNull)
                         .and(SOURCE_GIT_PROJECT_ID.notEqual(gitProjectId))
@@ -349,7 +297,7 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getRequestEventBuildList(
+    fun getRequestEventBuildListCount(
         dslContext: DSLContext,
         gitProjectId: Long,
         branchName: String?,
@@ -357,14 +305,59 @@ class GitRequestEventBuildDao {
         triggerUser: String?,
         pipelineId: String?,
         event: String?
+    ): Int {
+        return getRequestEventBuildRecords(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            branchName = branchName,
+            sourceGitProjectId = sourceGitProjectId,
+            triggerUser = triggerUser,
+            pipelineId = pipelineId,
+            event = event
+        ).count()
+    }
+
+    fun getRequestEventBuildList(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        branchName: String?,
+        sourceGitProjectId: Long?,
+        triggerUser: String?,
+        pipelineId: String?,
+        event: String?,
+        limit: Int,
+        offset: Int
     ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return getRequestEventBuildRecords(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                branchName = branchName,
+                sourceGitProjectId = sourceGitProjectId,
+                triggerUser = triggerUser,
+                pipelineId = pipelineId,
+                event = event
+            ).orderBy(EVENT_ID.desc()).limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    private fun getRequestEventBuildRecords(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        branchName: String?,
+        sourceGitProjectId: Long?,
+        triggerUser: String?,
+        pipelineId: String?,
+        event: String?
+    ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
             if (!branchName.isNullOrBlank()) {
                 // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (sourceGitProjectId != null && branchName!!.contains(":")) {
+                if (sourceGitProjectId != null && branchName.contains(":")) {
                     dsl.and(BRANCH.eq(branchName.split(":")[1]))
                         .and(SOURCE_GIT_PROJECT_ID.eq(sourceGitProjectId))
                 } else {
@@ -380,8 +373,7 @@ class GitRequestEventBuildDao {
             if (!event.isNullOrBlank()) {
                 dsl.and(OBJECT_KIND.eq(event))
             }
-            return dsl.orderBy(EVENT_ID.desc())
-                .fetch()
+            return dsl
         }
     }
 
@@ -665,6 +657,24 @@ class GitRequestEventBuildDao {
                             .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
                     )
                 ).fetch()
+        }
+    }
+
+    fun getLatestPipelineByDuration(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Map<String, String> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext
+                .select(ORIGIN_YAML)
+                .distinctOn(this.PIPELINE_ID)
+                .from(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .fetch().map {
+                    it.getValue(PIPELINE_ID) to it.getValue(ORIGIN_YAML)
+                }.toMap()
         }
     }
 }

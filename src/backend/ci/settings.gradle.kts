@@ -293,6 +293,7 @@ include(":ext:tencent:monitoring:model-monitoring")
 include(":ext:tencent:monitoring:model-monitoring-tencent")
 
 include(":ext:tencent:quality")
+include(":ext:tencent:quality:api-quality-tencent")
 include(":ext:tencent:quality:biz-quality-tencent")
 include(":ext:tencent:quality:boot-quality-tencent")
 
@@ -358,6 +359,7 @@ include(":ext:tencent:prebuild:model-prebuild")
 
 include(":ext:tencent:process")
 include(":ext:tencent:process:api-process-tencent")
+include(":ext:tencent:process:biz-base-tencent")
 include(":ext:tencent:process:biz-engine-tencent")
 include(":ext:tencent:process:biz-process-tencent")
 include(":ext:tencent:process:boot-process-tencent")
@@ -384,12 +386,6 @@ include(":ext:tencent:experience:api-experience-tencent")
 include(":ext:tencent:experience:biz-experience-tencent")
 include(":ext:tencent:experience:boot-experience-tencent")
 include(":ext:tencent:experience:model-experience-tencent")
-
-include(":ext:tencent:gitci")
-include(":ext:tencent:gitci:api-gitci-tencent")
-include(":ext:tencent:gitci:biz-gitci-tencent")
-include(":ext:tencent:gitci:boot-gitci-tencent")
-include(":ext:tencent:gitci:model-gitci-tencent")
 
 include(":ext:tencent:stream")
 include(":ext:tencent:stream:api-stream-tencent")
@@ -448,6 +444,9 @@ include(":ext:tencent:auth:api-auth-tencent")
 include(":ext:tencent:auth:biz-auth-tencent")
 include(":ext:tencent:auth:sdk-auth-tencent")
 include(":ext:tencent:auth:boot-auth-tencent")
+
+include(":ext:tencent:buildless")
+include(":ext:tencent:buildless:boot-buildless-tencent")
 
 include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")

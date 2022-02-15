@@ -29,8 +29,9 @@ package com.tencent.devops.stream.mq.streamTrigger
 
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
-import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
+import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,7 +39,7 @@ import org.springframework.stereotype.Service
 @Service
 class StreamTriggerListener @Autowired constructor(
     private val triggerExceptionService: TriggerExceptionService,
-    private val yamlTriggerV2: YamlTriggerV2
+    private val streamYamlTrigger: StreamYamlTrigger
 ) {
 
     companion object {
@@ -59,15 +60,15 @@ class StreamTriggerListener @Autowired constructor(
                 event = event.event,
                 pipeline = event.gitProjectPipeline,
                 action = {
-                    yamlTriggerV2.triggerBuild(
-                        gitToken = event.gitToken,
-                        forkGitToken = event.forkGitToken,
-                        gitRequestEvent = event.gitRequestEvent,
-                        gitProjectPipeline = event.gitProjectPipeline,
-                        event = event.event,
-                        originYaml = event.originYaml,
-                        filePath = event.filePath,
-                        changeSet = event.changeSet
+                    streamYamlTrigger.triggerBuild(
+                        StreamTriggerContext(
+                            gitEvent = event.event,
+                            requestEvent = event.gitRequestEvent,
+                            streamSetting = event.gitCIBasicSetting,
+                            pipeline = event.gitProjectPipeline,
+                            originYaml = event.originYaml!!,
+                            mrChangeSet = event.changeSet
+                        )
                     )
                 },
                 commitCheck = CommitCheck(

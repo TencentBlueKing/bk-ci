@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -38,7 +39,6 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
-import com.tencent.devops.project.utils.BG_IEG_ID
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -47,8 +47,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.servlet.http.HttpServletRequest
 
-@Suppress("UNUSED")
+@Suppress("UNUSED", "LongParameterList", "LongMethod")
 @Service
 class UserProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -69,40 +70,6 @@ class UserProjectServiceImpl @Autowired constructor(
     @Value("\${project.container.bgId::#{null}}")
     private var containerbgId: String? = null
 
-    override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
-        val tServiceRecord = serviceDao.select(dslContext, serviceId)
-        if (tServiceRecord != null) {
-            val isIEGMember = tofService.getUserDeptDetail(userId).bgId == BG_IEG_ID
-
-            return Result(
-                ServiceVO(
-                    id = tServiceRecord.id ?: 0,
-                    name = tServiceRecord.name,
-                    link = tServiceRecord.link,
-                    linkNew = tServiceRecord.linkNew,
-                    status = tServiceRecord.status,
-                    injectType = tServiceRecord.injectType,
-                    iframeUrl = tServiceRecord.iframeUrl,
-                    grayIframeUrl = tServiceRecord.grayIframeUrl,
-                    cssUrl = tServiceRecord.cssUrl,
-                    jsUrl = tServiceRecord.jsUrl,
-                    grayCssUrl = tServiceRecord.grayCssUrl,
-                    grayJsUrl = tServiceRecord.grayJsUrl,
-                    showProjectList = tServiceRecord.showProjectList,
-                    showNav = tServiceRecord.showNav,
-                    projectIdType = tServiceRecord.projectIdType,
-                    collected = favoriteDao.countFavorite(dslContext, userId, tServiceRecord.id) > 0,
-                    logoUrl = tServiceRecord.logoUrl,
-                    webSocket = tServiceRecord.webSocket,
-                    hidden = isServiceHidden(tServiceRecord.name, isIEGMember),
-                    weigHt = tServiceRecord.weight ?: 0
-                )
-            )
-        } else {
-            return Result(405, "无限ID,获取服务信息失败")
-        }
-    }
-
     override fun listService(userId: String, projectId: String?): Result<ArrayList<ServiceListVO>> {
         logger.info("listService interface:userId[$userId],projectId[$projectId]")
 
@@ -122,8 +89,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
             val request = attributes?.request
             val bkToken = request?.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
-            logger.info("listService interface request :$request")
-            logger.info("listService interface bkToken :$bkToken")
+            val replaceMap = getReplaceMapByRequest()
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
                 val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
@@ -133,38 +99,13 @@ class UserProjectServiceImpl @Autowired constructor(
                 s?.forEach { it ->
                     val status = it.status
                     val favor = favorServices.contains(it.id)
-                    var newWindow = false
-                    var newWindowUrl = ""
-                    if (it.name.contains("容器服务") && it.injectType.toLowerCase().trim() == "iframe" && request != null && bkToken != null && !containerUrl.isNullOrBlank() && !containerbgId.isNullOrBlank()) {
-                        logger.info("listService interface:enter container.")
-                        val containerUrlList = containerUrl!!.split("[,;]".toRegex())
-                        val containerbgIdList = containerbgId!!.split("[,;]".toRegex())
-                        logger.info("listService interface containerUrlList:$containerUrlList")
-                        logger.info("listService interface containerbgIdList:$containerbgIdList")
-                        if (containerbgIdList.isNotEmpty() && containerUrlList.isNotEmpty() && containerUrlList.size == containerbgIdList.size) {
-                            val userDeptDetail = tofService.getUserDeptDetail(userId)
-                            run breaking@{
-                                containerbgIdList.forEachIndexed { index, bgId ->
-                                    if (bgId == userDeptDetail.bgId) {
-                                        newWindowUrl = containerUrlList[index]
-                                        newWindow = true
-                                        return@breaking
-                                    }
-                                }
-                            }
-                        }
-
-                        val originalHost = request.getHeader("Origin")
-
-                        logger.info("listService interface original hots:$originalHost")
-                        if (!containerIegUrl.isNullOrBlank() && !originalHost.isNullOrBlank() && originalHost.contains(
-                                containerIegUrl!!
-                            )
-                        ) {
-                            logger.info("listService interface change newWindow to false")
-                            newWindow = false
-                        }
-                    }
+                    val (newWindow, newWindowUrl) = getNewWindow(
+                        tServiceRecord = it,
+                        request = request,
+                        bkToken = bkToken,
+                        userId = userId,
+                        replaceMap = replaceMap
+                    )
                     services.add(
                         ServiceVO(
                             id = it.id,
@@ -173,22 +114,30 @@ class UserProjectServiceImpl @Autowired constructor(
                             linkNew = it.linkNew ?: "",
                             status = status,
                             injectType = it.injectType ?: "",
-                            iframeUrl = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
-                            grayIframeUrl = it.grayIframeUrl ?: "",
-                            cssUrl = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
-                            jsUrl = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
-                            grayCssUrl = it.grayCssUrl ?: "",
-                            grayJsUrl = it.grayJsUrl ?: "",
+                            iframeUrl = replaceUrl(
+                                url = genUrl(url = it.iframeUrl, grayUrl = it.grayIframeUrl, projectId = projectId),
+                                replaceMap = replaceMap
+                            ),
+                            grayIframeUrl = replaceUrl(url = it.grayIframeUrl ?: "", replaceMap = replaceMap),
+                            cssUrl = replaceUrl(
+                                url = genUrl(url = it.cssUrl, grayUrl = it.grayCssUrl, projectId = projectId),
+                                replaceMap = replaceMap
+                            ),
+                            jsUrl = replaceUrl(
+                                url = genUrl(url = it.jsUrl, grayUrl = it.grayJsUrl, projectId = projectId),
+                                replaceMap = replaceMap
+                            ),
+                            grayCssUrl = replaceUrl(url = it.grayCssUrl ?: "", replaceMap = replaceMap),
+                            grayJsUrl = replaceUrl(url = it.grayJsUrl ?: "", replaceMap = replaceMap),
                             showProjectList = it.showProjectList ?: false,
                             showNav = it.showNav ?: false,
                             projectIdType = it.projectIdType ?: "",
                             collected = favor,
                             weigHt = it.weight ?: 0,
-                            logoUrl = it.logoUrl,
+                            logoUrl = replaceUrl(url = it.logoUrl ?: "", replaceMap = replaceMap),
                             webSocket = it.webSocket,
                             newWindow = newWindow,
                             newWindowUrl = newWindowUrl
-
                         )
                     )
                 }
@@ -197,7 +146,8 @@ class UserProjectServiceImpl @Autowired constructor(
                     ServiceListVO(
                         title = typeName,
                         weigHt = serviceType.weight ?: 0,
-                        children = services.sortedByDescending { it.weigHt })
+                        children = services.sortedByDescending { it.weigHt }
+                    )
                 )
             }
 
@@ -205,6 +155,60 @@ class UserProjectServiceImpl @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list services")
         }
+    }
+
+    @SuppressWarnings("ComplexCondition", "ComplexMethod")
+    private fun getNewWindow(
+        tServiceRecord: TServiceRecord,
+        request: HttpServletRequest?,
+        bkToken: String?,
+        userId: String,
+        replaceMap: Map<String, String>
+    ): Pair<Boolean, String> {
+        var newWindow = tServiceRecord.newWindow
+        var newWindowUrl = tServiceRecord.newWindowurl
+        if (tServiceRecord.name.contains("容器服务") &&
+            tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
+            request != null &&
+            bkToken != null &&
+            !containerUrl.isNullOrBlank() &&
+            !containerbgId.isNullOrBlank()
+        ) {
+            logger.info("listService interface:enter container.")
+            val containerUrlList = containerUrl!!.split("[,;]".toRegex())
+            val containerBgIdList = containerbgId!!.split("[,;]".toRegex())
+            logger.info("listService interface containerUrlList:$containerUrlList")
+            logger.info("listService interface containerBgIdList:$containerBgIdList")
+            if (containerBgIdList.isNotEmpty() &&
+                containerUrlList.isNotEmpty() &&
+                containerUrlList.size == containerBgIdList.size
+            ) {
+                val userDeptDetail = tofService.getUserDeptDetail(userId)
+                run breaking@{
+                    containerBgIdList.forEachIndexed { index, bgId ->
+                        if (bgId == userDeptDetail.bgId) {
+                            newWindowUrl = containerUrlList[index]
+                            newWindow = true
+                            return@breaking
+                        }
+                    }
+                }
+            }
+
+            val originalHost = request.getHeader("Origin")
+
+            logger.info("listService interface original hots:$originalHost")
+            if (!containerIegUrl.isNullOrBlank() &&
+                !originalHost.isNullOrBlank() &&
+                originalHost.contains(containerIegUrl!!)
+            ) {
+                logger.info("listService interface change newWindow to false")
+                newWindow = false
+            }
+        } else { // --story=869578789 蓝盾服务支持动态启用woa和https 补充：不对容器服务等这类独立窗口弹开的网站做域名替换
+            newWindowUrl = replaceUrl(newWindowUrl, replaceMap)
+        }
+        return Pair(newWindow, newWindowUrl)
     }
 
     override fun syncService(userId: String, services: List<ServiceListVO>) {
@@ -219,15 +223,42 @@ class UserProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun isServiceHidden(serviceName: String, isIEGMember: Boolean): Boolean {
-        return !(if (serviceName.contains("(Monitor)", false) || serviceName.contains("(BCS)", false)) {
-            isIEGMember
-        } else {
-            true
-        })
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(UserProjectServiceImpl::class.java)
+        private val MAP = mapOf("http://" to "https://", ".oa.com" to ".woa.com")
+        private val regex = Regex("((http[s]?://)([-a-z0-9A-Z]+\\.)+([w]?oa\\.com)).*")
+    }
+
+    private fun getReplaceMapByRequest(): Map<String, String> {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        if (null != attributes) {
+            val request = attributes.request
+            request.getHeader("referer")?.let { referer ->
+                val replaceMap = MAP.toMutableMap()
+                if (referer.trim().startsWith("http://")) { // 如果此时用户访问的不是https，则不做https替换
+                    replaceMap.remove("http://")
+                }
+
+                if (referer.contains(".oa.com")) { // 如果访问是oa.com 则不做woa替换
+                    replaceMap.remove(".oa.com")
+                }
+                return replaceMap
+            }
+        }
+        return MAP
+    }
+
+    private fun replaceUrl(url: String, replaceMap: Map<String, String> = MAP): String {
+        var result = url
+        val matcher = regex.toPattern().matcher(url)
+        while (matcher.find()) {
+            var tmp = matcher.group(1)
+            replaceMap.forEach { replace -> tmp = tmp.replace(replace.key, replace.value) }
+
+            if (tmp != matcher.group(1)) {
+                result = result.replaceFirst(matcher.group(1), tmp)
+            }
+        }
+        return result
     }
 }

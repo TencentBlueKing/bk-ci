@@ -40,9 +40,8 @@ loadBalanceUtil = require("util.loadbalance_util")
 accessControlUtil = require("util.access_control_util")
 securityUtil = require("util.security_util")
 ciAuthUtil = require("util.ci_auth_util")
-
-math.randomseed(ngx.now() * 1000)
-uuid.seed()
+buildUtil = require("util.build_util")
+cjson = require("cjson")
 
 local ok_table = {status = 0, data = true}
 

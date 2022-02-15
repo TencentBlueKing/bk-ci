@@ -329,7 +329,7 @@ class SecurityTaskAtom @Autowired constructor(
             executeCount = task.executeCount ?: 1
         )
         // 获取文件信息，并上传文件
-        val jfrogFile = client.get(ServiceArtifactoryResource::class).show(task.projectId, type, apkFile).data!!
+        val jfrogFile = client.get(ServiceArtifactoryResource::class).show(userId, task.projectId, type, apkFile).data!!
 
         val uploadParams = UploadParams(
             filePath = "/" + apkFile.removePrefix("/"),

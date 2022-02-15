@@ -27,23 +27,34 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.ServiceGitOauthResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitBasicSettingResourceImpl @Autowired constructor(
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
-    private val permissionService: GitCIV2PermissionService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val permissionService: GitCIV2PermissionService,
+    private val client: Client
 ) : UserGitBasicSettingResource {
 
     override fun enableGitCI(
@@ -52,17 +63,18 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
-        val gitProjectId = projectInfo.gitProjectId.toLong()
+        val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
+        checkCommonUser(userId)
         permissionService.checkGitCIAndOAuth(
             userId = userId,
             projectId = projectId
         )
-        val setting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
-            gitCIBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled, projectInfo)
+            streamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
         } else {
-            gitCIBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableCi = enabled
             )
@@ -74,7 +86,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIPermission(userId, projectId)
-        return Result(gitCIBasicSettingService.getGitCIConf(gitProjectId))
+        return Result(streamBasicSettingService.getGitCIConf(gitProjectId))
     }
 
     override fun saveGitCIConf(
@@ -87,7 +99,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkGitCIPermission(userId = userId, projectId = projectId)
         permissionService.checkEnableGitCI(gitProjectId)
         return Result(
-            gitCIBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = gitCIUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = gitCIUpdateSetting.buildPushedBranches,
@@ -96,21 +108,82 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateEnableUser(userId: String, projectId: String): Result<Boolean> {
+    override fun updateEnableUser(
+        userId: String,
+        projectId: String,
+        authUserId: String
+    ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        checkCommonUser(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
-            gitCIBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                enableUserId = userId
+                userId = userId,
+                authUserId = authUserId
             )
         )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?
+    ): Result<AuthorizeResult> {
+        return client.get(ServiceGitOauthResource::class).isOAuth(
+            userId = userId,
+            redirectUrlType = redirectUrlType,
+            redirectUrl = redirectUrl,
+            gitProjectId = gitProjectId,
+            refreshToken = refreshToken
+        )
+    }
+
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        checkParam(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+    }
+
+    private fun checkNodeId(nodeHashId: String) {
+        if (nodeHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
+        }
+    }
+
+    private fun checkProjectId(projectId: String) {
+        if (projectId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
+        }
     }
 
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+    }
+
+    // 判断用户是否公共账号，并且存在，否则提示用户注册
+    private fun checkCommonUser(userId: String) {
+        // get接口先查本地，再查tof
+        val userResult =
+            client.get(ServiceTxUserResource::class).get(userId)
+        if (userResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
+            )
         }
     }
 }

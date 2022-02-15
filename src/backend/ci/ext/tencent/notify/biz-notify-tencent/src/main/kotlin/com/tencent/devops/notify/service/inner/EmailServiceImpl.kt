@@ -91,7 +91,9 @@ class EmailServiceImpl @Autowired constructor(
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val tofConfs = configuration.getConfigurations(emailNotifyMessageWithOperation.tofSysId)
         val result = when (tof4SecurityInfo.enable) {
+            // TOF4可用时
             true ->
+                // 若是带附件
                 if (emailNotifyPost.codeccAttachFileContent != null)
                     tof4Service.postCodeccEmailFormData(
                         TOF4_EMAIL_URL_WITH_ATTACH,

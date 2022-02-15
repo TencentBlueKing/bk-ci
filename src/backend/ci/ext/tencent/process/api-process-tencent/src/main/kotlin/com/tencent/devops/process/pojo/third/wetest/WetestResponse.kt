@@ -38,13 +38,13 @@ import io.swagger.annotations.ApiModelProperty
  */
 @ApiModel("wetest响应信息")
 data class WetestResponse(
-    @ApiModelProperty("任务id，失败则不返回", required = false)
+    @ApiModelProperty("任务id，失败则不返回", required = false, name = "taskid")
     @JsonProperty("taskid", required = false, defaultValue = "")
     val taskId: String?,
-    @ApiModelProperty("请求结果，0为成功")
+    @ApiModelProperty("请求结果，0为成功", name = "ret")
     @JsonProperty("ret")
     val ret: String,
-    @ApiModelProperty("提示信息")
+    @ApiModelProperty("提示信息", name = "msg")
     @JsonProperty("msg")
     val msg: String
 )

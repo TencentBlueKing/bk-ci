@@ -28,10 +28,10 @@
 package com.tencent.devops.process.service.code
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary

@@ -49,3 +49,7 @@ data class GitProjectPipeline(
     @ApiModelProperty("自己一次构建分支", required = false)
     val latestBuildBranch: String?
 )
+
+fun GitProjectPipeline.isExist(): Boolean {
+    return pipelineId.isNotBlank()
+}

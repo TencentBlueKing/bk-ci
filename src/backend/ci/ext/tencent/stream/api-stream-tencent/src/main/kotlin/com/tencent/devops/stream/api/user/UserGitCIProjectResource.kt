@@ -30,6 +30,7 @@ package com.tencent.devops.stream.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
@@ -78,4 +79,16 @@ interface UserGitCIProjectResource {
         @QueryParam("sort")
         sort: GitCodeBranchesSort?
     ): Pagination<ProjectCIInfo>
+
+    @ApiOperation("获取用户最近访问的项目")
+    @GET
+    @Path("/history")
+    fun getProjectsHistory(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("多少条记录", required = false, defaultValue = "4")
+        @QueryParam("pageSize")
+        size: Long?
+    ): Result<List<ProjectCIInfo>>
 }

@@ -27,8 +27,7 @@
 
 package com.tencent.devops.stream.trigger.v1
 
-import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -171,11 +170,12 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 )
             }
             // 推送启动构建消息,当人工触发时不推送构建消息
-            if (event.objectKind != OBJECT_KIND_MANUAL) {
+            if (event.objectKind != TGitObjectKind.OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
                     commitId = event.commitId,
                     description = event.description ?: "",
                     mergeRequestId = event.mergeRequestId ?: 0L,
+                    pipelineId = pipeline.pipelineId,
                     buildId = buildId,
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,
@@ -269,7 +269,7 @@ abstract class YamlBaseBuild<T> @Autowired constructor(
                 installAtomReq = InstallAtomReq(projectCodes, atomCode)
             )
         } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
+            logger.warn("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
     }

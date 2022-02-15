@@ -32,6 +32,10 @@ object MQ {
     // 接受流水线结束的广播事件
     const val QUEUE_PIPELINE_BUILD_FINISH_STREAM = "q.engine.pipeline.build.stream"
 
+    // 接受stage审核和红线的广播事件
+    const val QUEUE_PIPELINE_BUILD_REVIEW_STREAM = "q.engine.pipeline.build.review.stream"
+    const val QUEUE_PIPELINE_BUILD_QUALITY_CHECK_STREAM = "q.engine.pipeline.build.quality.check.stream"
+
     // Stream webhook请求
     const val EXCHANGE_STREAM_REQUEST_EVENT = "e.stream.request.event"
     const val ROUTE_STREAM_REQUEST_EVENT = "r.stream.request.event"
@@ -46,4 +50,11 @@ object MQ {
     const val EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT = "e.stream.trigger.pipeline.event"
     const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
     const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
+
+    // 定时变更广播exchange ====================================
+    const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
+    const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"
+
+    const val ROUTE_STREAM_TIMER = "r.engine.stream.timer"
+    const val QUEUE_STREAM_TIMER = "q.engine.stream.timer"
 }

@@ -48,11 +48,11 @@ import javax.ws.rs.NotFoundException
 class BkRepoBuildCustomDirService @Autowired constructor(
     private val bkRepoClient: BkRepoClient
 ) : BuildCustomDirService {
-    override fun list(projectId: String, path: String): List<FileInfo> {
-        logger.info("list, projectId: $projectId, path: $path")
+    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
+        logger.info("list, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileList = bkRepoClient.listFile(
-            userId = "",
+            userId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR),
             path = normalizedPath
@@ -62,32 +62,32 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         return JFrogUtil.sort(fileList)
     }
 
-    override fun show(projectId: String, path: String): FileDetail {
-        logger.info("show, projectId: $projectId, path: $path")
+    override fun show(userId: String, projectId: String, path: String): FileDetail {
+        logger.info("show, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        val fileDetail = bkRepoClient.getFileDetail("", projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
+        val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
             ?: throw NotFoundException("文件不存在")
         return RepoUtils.toFileDetail(fileDetail)
     }
 
-    override fun mkdir(projectId: String, path: String) {
-        logger.info("mkdir, projectId: $projectId, path: $path")
+    override fun mkdir(userId: String, projectId: String, path: String) {
+        logger.info("mkdir, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
-        bkRepoClient.mkdir("", projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), normalizedPath)
+        bkRepoClient.mkdir(userId, projectId, RepoUtils.getRepoByType(ArtifactoryType.CUSTOM_DIR), normalizedPath)
     }
 
-    override fun rename(projectId: String, fromPath: String, toPath: String) {
-        logger.info("rename, projectId: $projectId, srcPath: $fromPath, toPath: $toPath")
+    override fun rename(userId: String, projectId: String, fromPath: String, toPath: String) {
+        logger.info("rename, userId: $userId, projectId: $projectId, srcPath: $fromPath, toPath: $toPath")
         val normalizedFromPath = PathUtils.checkAndNormalizeAbsPath(fromPath)
         val normalizedToPath = PathUtils.checkAndNormalizeAbsPath(toPath)
-        bkRepoClient.rename("", projectId, RepoUtils.CUSTOM_REPO, normalizedFromPath, normalizedToPath)
+        bkRepoClient.rename(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedFromPath, normalizedToPath)
     }
 
-    override fun copy(projectId: String, combinationPath: CombinationPath) {
+    override fun copy(userId: String, projectId: String, combinationPath: CombinationPath) {
         logger.info("copy, projectId: $projectId, combinationPath: $combinationPath")
         val normalizeDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
         if (combinationPath.srcPaths.size > 1) {
-            val destFileInfo = bkRepoClient.getFileDetail("", projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
+            val destFileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
                 throw OperationException("目标路径应为文件夹")
             }
@@ -101,7 +101,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
             }
 
             bkRepoClient.copy(
-                "",
+                userId,
                 projectId,
                 RepoUtils.CUSTOM_REPO,
                 normalizedSrcPath,
@@ -112,8 +112,8 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun move(projectId: String, combinationPath: CombinationPath) {
-        logger.info("move, projectId: $projectId, combinationPath: $combinationPath")
+    override fun move(userId: String, projectId: String, combinationPath: CombinationPath) {
+        logger.info("move, userId: $userId, projectId: $projectId, combinationPath: $combinationPath")
         val normalizedDestPath = PathUtils.checkAndNormalizeAbsPath(combinationPath.destPath)
 
         combinationPath.srcPaths.map { srcPath ->
@@ -131,7 +131,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
             }
 
             bkRepoClient.move(
-                "",
+                userId,
                 projectId,
                 RepoUtils.CUSTOM_REPO,
                 normalizedSrcPath,
@@ -140,12 +140,12 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun delete(projectId: String, pathList: PathList) {
-        logger.info("delete, projectId: $projectId, pathList: $pathList")
+    override fun delete(userId: String, projectId: String, pathList: PathList) {
+        logger.info("delete, userId: $userId, projectId: $projectId, pathList: $pathList")
         pathList.paths.map { path ->
             val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
             bkRepoClient.delete(
-                "",
+                userId,
                 projectId,
                 RepoUtils.CUSTOM_REPO,
                 normalizedPath

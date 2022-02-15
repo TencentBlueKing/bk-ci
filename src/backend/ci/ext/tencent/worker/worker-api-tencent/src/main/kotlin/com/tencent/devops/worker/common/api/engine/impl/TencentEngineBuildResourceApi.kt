@@ -29,7 +29,9 @@ package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
@@ -48,7 +50,9 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         return identifyUrl("/ms/engine/$path?retryCount=$retryCount")
     }
 
-    override fun getCiToken(): String {
+    override fun getJobContext(): Map<String, String> {
+        // 在此方法累加需要传入的上下文变量，可以调多处接口获取并累加
+        val context = mutableMapOf<String, String>()
         try {
             val projectId = AgentEnv.getProjectId()
             if (projectId.startsWith("git_")) {
@@ -57,29 +61,31 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                 val request = buildGet(url)
                 val responseContent = request(request, "获取工蜂CI项目Token失败！")
                 val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
-                return gitToken.data?.accessToken ?: ""
+                context[CI_TOKEN_CONTEXT] = gitToken.data?.accessToken ?: ""
             }
         } catch (e: Exception) {
-            logger.error("get ci token failed.", e)
+            logger.error("get context failed: ", e)
         }
-
-        return super.getCiToken()
+        return context
     }
 
-    override fun getCiUrl(): String {
+    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
+        // #5277 对所有job下变量做收尾处理，可以在try区域内逐步追加
         try {
             val projectId = AgentEnv.getProjectId()
-            if (projectId.startsWith("git_")) {
-                val url = "/ms/gitci/api/build/getCiUrl?projectId=$projectId"
-                val request = buildGet(url)
+            val gitToken = buildVariables.variables[CI_TOKEN_CONTEXT]
+            if (projectId.startsWith("git_") && !gitToken.isNullOrBlank()) {
+                val url = "/ms/repository/api/build/gitci/clearToken?token=$gitToken"
+                val request = buildDelete(url)
                 val responseContent = request(request, "获取工蜂CI项目Token失败！")
-                val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
-                return gitToken.data?.accessToken ?: ""
+                val result = objectMapper.readValue<Result<Boolean>>(responseContent)
+                if (result.data == true) {
+                    logger.info("ci token for project[$projectId] is cleared.")
+                }
             }
         } catch (e: Exception) {
-            logger.error("get ci token failed.", e)
+            logger.error("get context failed: ", e)
         }
-
-        return super.getCiToken()
+        return workerEnd(retryCount)
     }
 }

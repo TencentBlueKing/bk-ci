@@ -37,9 +37,9 @@ import com.tencent.devops.process.dao.TencentPipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.service.PipelineInfoFacadeService
-import com.tencent.devops.process.service.PipelineTaskService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -125,8 +125,8 @@ class CodeccTransferService @Autowired constructor(
             return "$pipelineId do not contains new codecc element"
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId)!!
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)!!
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         logger.info("get pipeline info for pipeline: $pipelineId, $pipelineInfo")
         var needUpdate = false
         model.stages.forEach { stage ->
@@ -221,7 +221,13 @@ class CodeccTransferService @Autowired constructor(
             endTimeEndTime
         )
         val result = mutableListOf<BuildBasicInfo>()
+        val buildIds = mutableSetOf<String>()
         list.forEach {
+            val buildId = it.buildId
+            if (buildIds.contains(buildId)) {
+                return@forEach
+            }
+            buildIds.add(buildId)
             result.add(genBuildBaseInfo(it))
         }
         return result

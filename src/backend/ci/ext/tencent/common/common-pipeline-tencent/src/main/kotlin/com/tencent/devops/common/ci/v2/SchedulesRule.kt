@@ -36,9 +36,9 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SchedulesRule(
-    val cron: String? = null,
+    val cron: String,
 
     val branches: List<String>? = null,
 
-    val always: Boolean? = null
+    val always: Boolean? = false
 )

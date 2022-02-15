@@ -29,7 +29,6 @@ package com.tencent.devops.experience
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-
 @MicroService
 class Application
 

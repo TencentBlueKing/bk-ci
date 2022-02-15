@@ -122,7 +122,7 @@ class BkRepoCustomDirService @Autowired constructor(
             }
 
             bkRepoClient.copy(
-                "",
+                userId,
                 projectId,
                 RepoUtils.CUSTOM_REPO,
                 normalizedSrcPath,

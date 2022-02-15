@@ -29,6 +29,8 @@ package com.tencent.devops.common.auth.api.v3
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -36,6 +38,7 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
@@ -173,7 +176,27 @@ class TxV3AuthPermissionApi @Autowired constructor(
         userIdList: List<String>,
         supplier: (() -> List<String>)?
     ): Boolean {
-        TODO("Not yet implemented")
+        // 此处做保护,防止用户一次加太多用户
+        if (userIdList.size > GRANT_USER_MAX_SIZE) {
+            logger.warn("grant instance user too long $projectCode|$resourceCode|$resourceType|$userIdList")
+            throw ParamBlankException("授权用户数越界:$GRANT_USER_MAX_SIZE")
+        }
+        userIdList.forEach {
+            val grantInstanceDTO = GrantInstanceDTO(
+                resourceType = resourceType.value,
+                resourceCode = resourceCode,
+                permission = permission.value,
+                createUser = it,
+                resourceName = null
+            )
+            client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+                userId = userId,
+                projectCode = projectCode,
+                token = tokenService.getSystemToken(null)!!,
+                grantInstance = grantInstanceDTO
+            ).data ?: false
+        }
+        return true
     }
 
     private fun allActionPermission(
@@ -206,5 +229,10 @@ class TxV3AuthPermissionApi @Autowired constructor(
 
     private fun buildAllActionKey(user: String, projectCode: String): String {
         return "$user-$projectCode"
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(TxV3AuthPermissionApi::class.java)
+        const val GRANT_USER_MAX_SIZE = 10
     }
 }

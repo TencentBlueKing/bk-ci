@@ -30,9 +30,9 @@ package com.tencent.devops.stream.pojo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class GitCITriggerLock(redisOperation: RedisOperation, gitProjectId: Long, pipelineId: String) :
+class GitCITriggerLock(redisOperation: RedisOperation, gitProjectId: Long, filePath: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:gitProject:$gitProjectId:pipeline:$pipelineId",
+        lockKey = "lock:gitProject:$gitProjectId:filePath:$filePath",
         expiredTimeInSeconds = 60
     )

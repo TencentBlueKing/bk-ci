@@ -4,25 +4,38 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind.Companion.OBJECT_KIND_OPENAPI
+import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.api.GitCIDetailResource
 import com.tencent.devops.stream.api.GitCIHistoryResource
 import com.tencent.devops.stream.api.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
+import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.TriggerBuildResult
+import com.tencent.devops.stream.pojo.enums.GitCIProjectType
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.openapi.api.apigw.v3.ApigwStreamResourceV3
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
+import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwStreamResourceV3Impl @Autowired constructor(
     val client: Client
 ) : ApigwStreamResourceV3 {
+
+    companion object {
+        private const val MAX_PAGE_SIZE = 50
+    }
 
     override fun triggerStartup(
         appCode: String?,
@@ -31,12 +44,12 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         gitProjectId: String,
         pipelineId: String,
         streamTriggerBuildReq: StreamTriggerBuildReq
-    ): Result<Boolean> {
+    ): Result<TriggerBuildResult> {
         return client.get(ServiceStreamTriggerResource::class).triggerStartup(
             userId = userId,
             projectId = "git_$gitProjectId",
             pipelineId = pipelineId,
-            streamTriggerBuildReq = streamTriggerBuildReq
+            streamTriggerBuildReq = streamTriggerBuildReq.copy(objectKind = OBJECT_KIND_OPENAPI)
         )
     }
 
@@ -63,12 +76,17 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>> {
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
         return client.get(GitCIPipelineResource::class).getPipelineList(
             userId = userId,
             gitProjectId = gitProjectId,
             keyword = keyword,
             page = page,
-            pageSize = pageSize
+            pageSize = realPageSize
         )
     }
 
@@ -137,6 +155,8 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         gitProjectId: Long,
+        startBeginTime: String?,
+        endBeginTime: String?,
         page: Int?,
         pageSize: Int?,
         branch: String?,
@@ -144,6 +164,11 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?
     ): Result<Page<GitCIBuildHistory>> {
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
         return client.get(GitCIHistoryResource::class).getHistoryBuildList(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -151,8 +176,10 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             triggerUser = triggerUser,
             branch = branch,
             sourceGitProjectId = sourceGitProjectId,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime,
             page = page,
-            pageSize = pageSize
+            pageSize = realPageSize
         )
     }
 
@@ -193,6 +220,50 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = gitProjectId,
             gitCIUpdateSetting = gitCIUpdateSetting
+        )
+    }
+
+    override fun validateGitProject(userId: String, request: GitUserValidateRequest): Result<GitUserValidateResult?> {
+        return client.get(ServiceGitBasicSettingResource::class).validateGitProject(
+            userId = userId,
+            request = request
+        )
+    }
+
+    override fun updateEnableUser(
+        userId: String,
+        gitProjectId: String,
+        authUserId: String
+    ): Result<Boolean> {
+        return client.get(ServiceGitBasicSettingResource::class).updateEnableUser(
+            userId = userId,
+            projectId = "git_$gitProjectId",
+            authUserId = authUserId
+        )
+    }
+
+    override fun getProjects(
+        userId: String,
+        type: GitCIProjectType?,
+        search: String?,
+        page: Int?,
+        pageSize: Int?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<ProjectCIInfo>> {
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
+        return client.get(ServiceGitCIProjectResource::class).getProjects(
+            userId = userId,
+            type = type,
+            search = search,
+            page = page,
+            pageSize = realPageSize,
+            orderBy = orderBy,
+            sort = sort
         )
     }
 }

@@ -54,7 +54,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         pass = "__REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
         database = __REDIS_DB__, -- 默认选择db0
         max_idle_time = 600000, -- 保留在连接池的时间
-        pool_size = 10 -- 连接池的大小
+        pool_size = 40, -- 连接池的大小
+        backlog = 10 -- 池外连接最大值
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__IAM_IP0__",
@@ -85,7 +86,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         password = "__INFLUXDB_PASSWORD__"
     },
     itlogin = {ip = "__BKCI_ITLOGIN_IP__", port = "__BKCI_ITLOGIN_PORT__", host = "__BKCI_ITLOGIN_HOST__"},
-    bkrepo = {domain = "__BKREPO_HOST__", user = "__BKREPO_USER__", password = "__BKREPO_PASSWORD__"},
+    bkrepo = {
+        domain = "__BKREPO_HOST__",
+        user = "__BKREPO_USER__",
+        password = "__BKREPO_PASSWORD__",
+        static_domain = "__BKREPO_STATIC_HOST__"
+    },
     prebuild = {domain = "__BKCI_PREBUILD_FQDN__", port = "__BKCI_PREBUILD_PORT__"},
     dayuHost = "__BKCI_DAYU_URL__",
     externalHost = "__BKCI_EXTERNAL_HOST__",

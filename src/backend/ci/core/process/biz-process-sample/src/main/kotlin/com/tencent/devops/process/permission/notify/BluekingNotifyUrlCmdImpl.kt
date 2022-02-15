@@ -12,6 +12,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("NestedBlockDepth")
 class BluekingNotifyUrlCmdImpl @Autowired constructor(
     val pipelineRepositoryService: PipelineRepositoryService,
     val pipelineRuntimeService: PipelineRuntimeService,

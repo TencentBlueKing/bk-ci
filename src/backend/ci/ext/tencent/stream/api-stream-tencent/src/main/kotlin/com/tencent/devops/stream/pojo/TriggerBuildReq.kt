@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -53,13 +55,34 @@ data class TriggerBuildReq(
     @ApiModelProperty("描述")
     val description: String?,
     @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null
+    val commitId: String? = null,
+    @ApiModelProperty("事件请求体")
+    val payload: String? = null,
+    @ApiModelProperty("模拟代码库类型")
+    val scmType: ScmType = ScmType.CODE_GIT,
+    @ApiModelProperty("模拟代码事件类型")
+    val eventType: String? = null,
+    val objectKind: String = TGitObjectKind.OBJECT_KIND_MANUAL
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("V2TriggerBuild请求")
 data class V2TriggerBuildReq(
     @ApiModelProperty("蓝盾项目ID")
     val projectId: String,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String?,
+    @ApiModelProperty("yaml")
+    val yaml: String?,
+    @ApiModelProperty("描述")
+    val description: String?,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null
+)
+
+@ApiModel("V2AppTriggerBuild请求")
+data class V2AppTriggerBuildReq(
     @ApiModelProperty("分支")
     val branch: String,
     @ApiModelProperty("Custom commit message")

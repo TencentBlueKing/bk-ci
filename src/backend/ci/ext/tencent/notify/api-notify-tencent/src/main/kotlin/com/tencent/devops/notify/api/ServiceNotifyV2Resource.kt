@@ -54,5 +54,8 @@ interface ServiceNotifyV2Resource {
     @ApiOperation("发送电子邮件通知")
     @POST
     @Path("/email")
-    fun sendEmailNotify(@ApiParam(value = "电子邮件信息内容", required = true) message: EmailNotifyMessage): Result<Boolean>
+    fun sendEmailNotify(
+        @ApiParam(value = "电子邮件信息内容", required = true)
+        message: EmailNotifyMessage
+    ): Result<Boolean>
 }

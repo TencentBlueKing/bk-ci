@@ -30,7 +30,7 @@ package com.tencent.devops.stream.dao
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -125,7 +125,8 @@ class GitRequestEventDao {
                         record.description
                     },
                     mrTitle = record.mrTitle,
-                    gitEvent = null
+                    gitEvent = null,
+                    commitAuthorName = null
                 )
             }
         }
@@ -168,7 +169,8 @@ class GitRequestEventDao {
                         record.description
                     },
                     mrTitle = record.mrTitle,
-                    gitEvent = null
+                    gitEvent = null,
+                    commitAuthorName = null
                 )
             }
         }
@@ -211,7 +213,8 @@ class GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null
+                        gitEvent = null,
+                        commitAuthorName = null
                     )
                 )
             }
@@ -257,7 +260,8 @@ class GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null
+                        gitEvent = null,
+                        commitAuthorName = null
                     )
                 )
             }
@@ -343,7 +347,8 @@ class GitRequestEventDao {
                             it.description
                         },
                         mrTitle = it.mrTitle,
-                        gitEvent = null
+                        gitEvent = null,
+                        commitAuthorName = null
                     )
                 )
             }

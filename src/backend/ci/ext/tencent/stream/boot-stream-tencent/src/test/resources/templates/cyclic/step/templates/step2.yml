@@ -9,6 +9,6 @@ steps:
       username: STEP6
   - run: |
       echo "cyc_step_id_2 username ${{ parameters.username }}!"
-#  - template: cyclic/step/templates/step6.yml
-#    parameters:
-#      username: STEP6
+  - template: cyclic/step/templates/step6.yml
+    parameters:
+      username: STEP6

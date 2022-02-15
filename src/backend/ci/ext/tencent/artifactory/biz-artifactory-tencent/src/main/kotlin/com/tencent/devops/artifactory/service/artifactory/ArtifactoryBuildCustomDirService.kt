@@ -55,7 +55,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
     private val pipelineService: PipelineService,
     private val jFrogService: JFrogService
 ) : BuildCustomDirService {
-    override fun list(projectId: String, path: String): List<FileInfo> {
+    override fun list(userId: String, projectId: String, path: String): List<FileInfo> {
         logger.info("list, projectId: $projectId, path: $path")
         val normalizePath = JFrogUtil.normalize(path)
         if (!JFrogUtil.isValid(normalizePath)) {
@@ -83,7 +83,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         return JFrogUtil.sort(fileInfoList)
     }
 
-    override fun show(projectId: String, path: String): FileDetail {
+    override fun show(userId: String, projectId: String, path: String): FileDetail {
         logger.info("show, projectId: $projectId, path: $path")
         val normalizePath = JFrogUtil.normalize(path)
         if (!JFrogUtil.isValid(normalizePath)) {
@@ -140,7 +140,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun mkdir(projectId: String, path: String) {
+    override fun mkdir(userId: String, projectId: String, path: String) {
         logger.info("mkdir, projectId: $projectId, path: $path")
         val normalizedPath = JFrogUtil.normalize(path)
         if (!JFrogUtil.isValid(normalizedPath)) {
@@ -164,7 +164,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         jFrogService.mkdir(folderPath)
     }
 
-    override fun rename(projectId: String, fromPath: String, toPath: String) {
+    override fun rename(userId: String, projectId: String, fromPath: String, toPath: String) {
         logger.info("rename, projectId: $projectId, fromPath: $fromPath, toPath: $toPath")
         val srcPath = JFrogUtil.normalize(fromPath)
         val destPath = JFrogUtil.normalize(toPath)
@@ -184,7 +184,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         jFrogService.move(realSrcPath, realDestPath)
     }
 
-    override fun copy(projectId: String, combinationPath: CombinationPath) {
+    override fun copy(userId: String, projectId: String, combinationPath: CombinationPath) {
         logger.info("copy, projectId: $projectId, combinationPath: $combinationPath")
         val destPath = JFrogUtil.normalize(combinationPath.destPath)
         if (!JFrogUtil.isValid(destPath)) {
@@ -221,7 +221,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun move(projectId: String, combinationPath: CombinationPath) {
+    override fun move(userId: String, projectId: String, combinationPath: CombinationPath) {
         logger.info("move, projectId: $projectId, combinationPath: $combinationPath")
         val destPath = JFrogUtil.normalize(combinationPath.destPath)
         if (!JFrogUtil.isValid(destPath)) {
@@ -252,7 +252,7 @@ class ArtifactoryBuildCustomDirService @Autowired constructor(
         }
     }
 
-    override fun delete(projectId: String, pathList: PathList) {
+    override fun delete(userId: String, projectId: String, pathList: PathList) {
         logger.info("delete, projectId: $projectId, pathList: $pathList")
         pathList.paths.map {
             val path = JFrogUtil.normalize(it)

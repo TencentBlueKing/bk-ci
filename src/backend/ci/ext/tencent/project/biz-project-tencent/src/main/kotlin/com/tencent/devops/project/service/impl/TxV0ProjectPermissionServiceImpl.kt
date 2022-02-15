@@ -78,7 +78,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             authTokenApi.getAccessToken(bsProjectAuthServiceCode)
         } else accessToken
         val authUrl = "$authUrl/projects?access_token=$newAccessToken"
-        logger.info("create project $authUrl $userId $accessToken $newAccessToken")
+        logger.info("create project $authUrl $userId,use userAccessToken${newAccessToken == accessToken}")
         if (userDeptDetail != null) {
             param["bg_id"] = userDeptDetail.bgId
             param["dept_id"] = userDeptDetail.deptId

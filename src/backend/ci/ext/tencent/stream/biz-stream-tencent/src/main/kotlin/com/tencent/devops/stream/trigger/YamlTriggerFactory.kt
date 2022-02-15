@@ -29,17 +29,17 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.stream.trigger.v1.YamlTrigger
-import com.tencent.devops.stream.trigger.v2.YamlTriggerV2
+import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class YamlTriggerFactory @Autowired constructor(
     val requestTrigger: YamlTrigger,
-    val requestTriggerV2: YamlTriggerV2
+    val requestTriggerV2: StreamYamlTrigger
 ) {
 
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface<*> {
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): YamlTriggerInterface {
         if (ymlVersion == null) {
             return requestTrigger
         }

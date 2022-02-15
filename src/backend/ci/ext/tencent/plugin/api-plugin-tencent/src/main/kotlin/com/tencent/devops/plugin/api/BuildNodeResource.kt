@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
+import com.tencent.devops.environment.pojo.NodeWithPermission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
@@ -64,4 +66,28 @@ interface BuildNodeResource {
         @ApiParam("节点 hashIds", required = true)
         nodeHashIds: List<String>
     ): Result<List<NodeBaseInfo>>
+
+    @ApiOperation("获取用户有权限使用的服务器列表")
+    @GET
+    @Path("/listUsableServerNodes")
+    fun listUsableServerNodes(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_BUILD_ID)
+        buildId: String
+    ): Result<List<NodeWithPermission>>
+
+    @ApiOperation("获取流水线最后修改用户有权限使用的服务器列表")
+    @GET
+    @Path("/listPipelineUsableServerNodes")
+    fun listUsableServerNodesByLastUpdateUser(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @HeaderParam(AUTH_HEADER_PIPELINE_ID)
+        pipelineId: String
+    ): Result<List<NodeWithPermission>>
 }

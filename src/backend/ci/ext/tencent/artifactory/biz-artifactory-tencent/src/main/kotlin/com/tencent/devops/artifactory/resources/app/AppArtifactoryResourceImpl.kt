@@ -199,7 +199,16 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<FileDetailForApp> {
         checkParameters(userId, projectId, path)
-        val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
+        val fileDetail = try {
+            bkRepoService.show(userId, projectId, artifactoryType, path)
+        } catch (e: Exception) {
+            logger.error("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                defaultMessage = "请联系流水线负责人授予下载构件权限。"
+            )
+        }
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
@@ -248,7 +257,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         path: String
     ): Result<List<Property>> {
         checkParameters(userId, projectId, path)
-        return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
+        return Result(bkRepoService.getProperties(userId, projectId, artifactoryType, path))
     }
 
     override fun externalUrl(
@@ -277,7 +286,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String,
         experienceHashId: String?,
-        organization: String?
+        organization: String?,
+        ttl: Int?
     ): String {
         checkParameters(userId, projectId, path)
         if (!path.endsWith(".ipa")) {
@@ -288,7 +298,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             projectId = projectId,
             artifactoryType = artifactoryType,
             argPath = path,
-            ttl = 24 * 3600,
+            ttl = ttl ?: (24 * 3600),
             directed = false,
             experienceHashId = experienceHashId,
             organization = organization

@@ -107,7 +107,7 @@ class BkRepoService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail =
-            bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+            bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException("文件不存在")
 
         return RepoUtils.toFileDetail(fileDetail)
@@ -135,25 +135,33 @@ class BkRepoService @Autowired constructor(
     }
 
     override fun setProperties(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
         properties: Map<String, String>
     ) {
-        logger.info("setProperties, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, properties: $properties")
+        logger.info("setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+            "argPath: $argPath, properties: $properties")
         if (properties.isEmpty()) {
             logger.info("property empty")
             return
         }
         val path = PathUtils.checkAndNormalizeAbsPath(argPath)
-        bkRepoClient.setMetadata("admin", projectId, RepoUtils.getRepoByType(artifactoryType), path, properties)
+        bkRepoClient.setMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path, properties)
     }
 
-    override fun getProperties(projectId: String, artifactoryType: ArtifactoryType, path: String): List<Property> {
-        logger.info("getProperties, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
+    override fun getProperties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): List<Property> {
+        logger.info("getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
+            " path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val matadataMap =
-            bkRepoClient.listMetadata("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+            bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
 
         val propertyList = mutableListOf<Property>()
         matadataMap.forEach {
@@ -185,10 +193,9 @@ class BkRepoService @Autowired constructor(
         var targetProjectId = projectId
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
+        val lastModifyUser = client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         if (!crossProjectId.isNullOrBlank()) {
-            val lastModifyUser = client.get(ServicePipelineResource::class)
-                .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-
             targetProjectId = crossProjectId!!
             if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
                     lastModifyUser,
@@ -234,7 +241,7 @@ class BkRepoService @Autowired constructor(
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
-                userId = "",
+                userId = lastModifyUser,
                 projectId = projectId,
                 repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
                 filePaths = listOf(filePath),
@@ -266,7 +273,8 @@ class BkRepoService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<AppFileInfo> {
-        logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+        logger.info("getBuildFileList, userId: $userId, projectId: $projectId," +
+                " pipelineId: $pipelineId, buildId: $buildId")
         pipelineService.validatePermission(
             userId,
             projectId,
@@ -381,7 +389,7 @@ class BkRepoService @Autowired constructor(
         logger.info("getFilePipelineInfo, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val metadataMap =
-            bkRepoClient.listMetadata("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
+            bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
             throw RuntimeException("元数据(pipelineId)不存在")
         }
@@ -401,9 +409,9 @@ class BkRepoService @Autowired constructor(
         return RepoUtils.toFileDetail(fileDetail)
     }
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
+    override fun check(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean {
         logger.info("check, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
-        bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), path)
+        bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path)
             ?: return false
         return true
     }
@@ -426,7 +434,7 @@ class BkRepoService @Autowired constructor(
                 }
             }
             val pipelineIdToNameMap = pipelineService.getPipelineNames(projectId, pipelineIdList.toSet())
-            val buildIdToNameMap = pipelineService.getBuildNames(buildIdList.toSet())
+            val buildIdToNameMap = pipelineService.getBuildNames(projectId, buildIdList.toSet())
 
             val fileInfoList = mutableListOf<FileInfo>()
             fileList.forEach {
@@ -516,8 +524,12 @@ class BkRepoService @Autowired constructor(
         throw OperationException("not supported")
     }
 
-    override fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String> {
-        logger.info("listCustomFiles, projectId: $projectId, condition: $condition")
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): List<String> {
+        logger.info("listCustomFiles, userId: $userId, projectId: $projectId, condition: $condition")
         var pathNamePairs = mutableListOf<Pair<String, String>>()
         if (!condition.glob.isNullOrEmpty()) {
             condition.glob!!.split(",").map { globItem ->
@@ -532,7 +544,7 @@ class BkRepoService @Autowired constructor(
             }
         }
         val fileList = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
-            userId = "",
+            userId = userId,
             projectId = projectId,
             repoNames = listOf(RepoUtils.CUSTOM_REPO),
             pathNamePairs = pathNamePairs,
@@ -556,14 +568,14 @@ class BkRepoService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId)
 
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
-        val buildNo = pipelineService.getBuildName(buildId)
+        val buildNo = pipelineService.getBuildName(projectId, buildId)
         val fromPath = "$pipelineId/$buildId"
         val toPath = "_from_pipeline/$pipelineName/$buildNo"
 
         copyToCustomReq.files.forEach { file ->
             val fileName = file.removePrefix("/")
             bkRepoClient.copy(
-                "",
+                userId,
                 projectId,
                 RepoUtils.getRepoByType(ArtifactoryType.PIPELINE),
                 "$fromPath/$fileName",
@@ -580,6 +592,7 @@ class BkRepoService @Autowired constructor(
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -587,7 +600,6 @@ class BkRepoService @Autowired constructor(
         targetPath: String
     ): Count {
         logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, targetProjectId: $targetProjectId, targetPath: $targetPath")
-        var userId = ""
         val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
         val pathNamePair = if (absPath.endsWith("/")) {
             Pair(absPath, "*")
@@ -627,15 +639,17 @@ class BkRepoService @Autowired constructor(
     }
 
     fun externalDownloadUrl(
+        creatorId: String,
         userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
+                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
-            userId = userId,
+            creatorId = creatorId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             fullPath = fullPath,
@@ -646,7 +660,7 @@ class BkRepoService @Autowired constructor(
         return StringUtil.chineseUrlEncode(
             "${
                 HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-            }/bkrepo/api/external/repository$shareUri&download=true"
+            }/bkrepo/api/external/repository$shareUri&download=true&userId=$userId"
         )
     }
 
@@ -659,7 +673,7 @@ class BkRepoService @Autowired constructor(
     ): String {
         logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
-            userId = userId,
+            creatorId = userId,
             projectId = projectId,
             repoName = RepoUtils.getRepoByType(artifactoryType),
             fullPath = path,

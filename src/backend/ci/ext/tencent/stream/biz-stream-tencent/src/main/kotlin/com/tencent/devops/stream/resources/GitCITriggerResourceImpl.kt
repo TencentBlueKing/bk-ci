@@ -55,7 +55,9 @@ class GitCITriggerResourceImpl @Autowired constructor(
         triggerBuildReq: TriggerBuildReq
     ): Result<Boolean> {
         checkParam(userId)
-        return Result(manualTriggerService.triggerBuild(userId, pipelineId, triggerBuildReq))
+        val result = manualTriggerService.triggerBuild(userId, pipelineId, triggerBuildReq)
+        logger.info("STREAM|$userId|$pipelineId|triggerBuildReq=$triggerBuildReq|result=$result")
+        return Result(true)
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {

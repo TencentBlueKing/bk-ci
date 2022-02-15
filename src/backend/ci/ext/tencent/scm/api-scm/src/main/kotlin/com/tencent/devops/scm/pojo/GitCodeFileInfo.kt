@@ -30,6 +30,7 @@ package com.tencent.devops.scm.pojo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /**
 {
@@ -48,19 +49,27 @@ import io.swagger.annotations.ApiModel
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeFileInfo(
     @JsonProperty("file_name")
+    @ApiModelProperty(name = "file_name")
     val fileName: String,
     @JsonProperty("file_path")
+    @ApiModelProperty(name = "file_path")
     val filePath: String,
     @JsonProperty("size")
+    @ApiModelProperty(name = "size")
     val size: Int,
     @JsonProperty("ref")
+    @ApiModelProperty(name = "ref")
     val ref: String,
     @JsonProperty("blob_id")
+    @ApiModelProperty(name = "blob_id")
     val blobId: String,
     @JsonProperty("commit_id")
+    @ApiModelProperty(name = "commit_id")
     val commitId: String,
     @JsonProperty("content")
+    @ApiModelProperty(name = "content")
     val content: String,
     @JsonProperty("encoding")
+    @ApiModelProperty(name = "encoding")
     val encoding: String
 )

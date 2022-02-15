@@ -63,13 +63,14 @@ class MigCDNService @Autowired constructor(
             val path = if (fileParams.custom) "/${it.removePrefix("/")}" else "/${fileParams.pipelineId}/${fileParams.buildId}/${it.removePrefix("/")}"
 
             val param = ArtifactorySearchParam(
-                    migCDNUploadParam.fileParams.projectId,
-                    migCDNUploadParam.fileParams.pipelineId,
-                    migCDNUploadParam.fileParams.buildId,
-                    it,
-                    migCDNUploadParam.fileParams.custom,
-                    migCDNUploadParam.fileParams.executeCount,
-                    migCDNUploadParam.fileParams.elementId
+                migCDNUploadParam.operator,
+                migCDNUploadParam.fileParams.projectId,
+                migCDNUploadParam.fileParams.pipelineId,
+                migCDNUploadParam.fileParams.buildId,
+                it,
+                migCDNUploadParam.fileParams.custom,
+                migCDNUploadParam.fileParams.executeCount,
+                migCDNUploadParam.fileParams.elementId
             )
 
             val fileMatched = jfrogService.matchFiles(param).map {

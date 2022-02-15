@@ -32,10 +32,10 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("NOC告警通知用户信息")
 data class NocNoticeUserInfo(
-    @ApiModelProperty("用户名", required = true)
+    @ApiModelProperty("用户名", required = true, name = "username")
     @JsonProperty("username")
     val username: String,
-    @ApiModelProperty("手机号", required = false)
+    @ApiModelProperty("手机号", required = false, name = "mobile_phone")
     @JsonProperty("mobile_phone")
     val mobilePhone: String? = null
 )

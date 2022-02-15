@@ -34,12 +34,12 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.common.ci.v2.enums.gitEventKind.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.dao.GitUserMessageDao
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.stream.v2.service.GitCIV2WebsocketService
+import com.tencent.devops.stream.v2.dao.StreamUserMessageDao
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -53,11 +53,11 @@ import org.springframework.stereotype.Service
 class GitCIEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmClient: ScmClient,
-    private val userMessageDao: GitUserMessageDao,
+    private val userMessageDao: StreamUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
-    private val websocketService: GitCIV2WebsocketService,
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val eventMessageUtil: StreamTriggerMessageUtils
 ) {
@@ -111,10 +111,12 @@ class GitCIEventService @Autowired constructor(
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
+        val gitBasicSetting = streamBasicSettingService.getGitCIConf(gitProjectId)
+            ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
         // 人工触发不发送
-        if (event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck) {
-            val gitBasicSetting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
-                ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
+        if (gitBasicSetting.enableCommitCheck &&
+            event.objectKind != TGitObjectKind.MANUAL.value && sendCommitCheck
+        ) {
             val realBlock = gitBasicSetting.enableMrBlock && commitCheckBlock
             scmClient.pushCommitCheckWithBlock(
                 commitId = event.commitId,
@@ -125,7 +127,7 @@ class GitCIEventService @Autowired constructor(
                 context = "$filePath@${event.objectKind.toUpperCase()}",
                 description = TriggerReason.getTriggerReason(reason)?.summary ?: reason,
                 gitCIBasicSetting = gitBasicSetting,
-                jumpRequest = true
+                jumpNotification = true
             )
         }
         return saveNotBuildEvent(

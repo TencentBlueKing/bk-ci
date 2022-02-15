@@ -29,7 +29,11 @@ package com.tencent.devops.stream.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -94,13 +98,58 @@ interface UserGitBasicSettingResource {
 
     @ApiOperation("修改项目启动人")
     @POST
-    @Path("/{projectId}/user")
+    @Path("/{projectId}/reset/oauth")
     fun updateEnableUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam(value = "目标授权人", required = true)
+        @QueryParam("authUserId")
+        authUserId: String
     ): Result<Boolean>
+
+    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
+    @GET
+    @Path("/isOauth")
+    fun isOAuth(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("重定向url类型", required = false)
+        @QueryParam("redirectUrlType")
+        redirectUrlType: RedirectUrlTypeEnum?,
+        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
+        @QueryParam("redirectUrl")
+        redirectUrl: String?,
+        @ApiParam(value = "工蜂项目Id", required = false)
+        @QueryParam("gitProjectId")
+        gitProjectId: Long? = null,
+        @ApiParam(value = "是否刷新token", required = false)
+        @QueryParam("refreshToken")
+        refreshToken: Boolean? = false
+    ): Result<AuthorizeResult>
+
+    @ApiOperation("获取第三方构建机任务")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentBuilds")
+    fun listAgentBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("第几页", required = false)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页条数", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>>
 }

@@ -30,16 +30,17 @@ package com.tencent.devops.stream.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.BranchBuildHistory
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
+import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.enums.BranchType
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIBasicSettingService
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +51,7 @@ import javax.ws.rs.core.Response
 class GitCIBranchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
+    private val streamBasicSettingService: StreamBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val pipelineResourceDao: GitPipelineResourceDao
@@ -64,7 +65,7 @@ class GitCIBranchService @Autowired constructor(
     fun getBranchBuildList(userId: String, gitProjectId: Long, defaultBranch: String?): List<BranchBuildHistory> {
         val default = (defaultBranch ?: "master").removePrefix("refs/heads/")
         logger.info("get branch build list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingService.getGitCIConf(gitProjectId)
+        val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
 
         val branchBuildsList = gitRequestEventBuildDao.getBranchBuildList(dslContext, gitProjectId)
@@ -106,7 +107,7 @@ class GitCIBranchService @Autowired constructor(
                 gitCIBuildHistoryList.add(GitCIBuildHistory(
                     displayName = pipeline.displayName,
                     pipelineId = pipeline.pipelineId,
-                    gitRequestEvent = gitRequestEvent,
+                    gitRequestEvent = GitRequestEventReq(gitRequestEvent),
                     buildHistory = history
                 ))
             }

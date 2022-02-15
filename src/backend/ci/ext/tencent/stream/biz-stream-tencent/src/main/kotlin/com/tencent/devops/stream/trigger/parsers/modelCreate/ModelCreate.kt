@@ -33,24 +33,29 @@ import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.YamlTransferData
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
+import com.tencent.devops.stream.trigger.StreamTriggerCache
+import com.tencent.devops.stream.v2.service.StreamOauthService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -60,7 +65,10 @@ import org.springframework.stereotype.Component
 class ModelCreate @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
-    private val modelStage: ModelStage
+    private val modelStage: ModelStage,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamScmService: StreamScmService,
+    private val oauthService: StreamOauthService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -74,7 +82,10 @@ class ModelCreate @Autowired constructor(
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        changeSet: Set<String>? = null,
+        webhookParams: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData? = null
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
@@ -91,22 +102,6 @@ class ModelCreate @Autowired constructor(
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
 
-        if (yaml.triggerOn?.schedules != null &&
-            yaml.triggerOn?.schedules!!.cron != null
-        ) {
-            val timerTrigger = TimerTriggerElement(
-                id = "T-1-1-2",
-                name = "定时触发",
-                advanceExpression = listOf(
-                    yaml.triggerOn!!.schedules!!.cron!!
-                )
-            )
-            timerTrigger.additionalOptions = ElementAdditionalOptions(
-                runCondition = RunCondition.PRE_TASK_SUCCESS
-            )
-            triggerElementList.add(timerTrigger)
-        }
-
         val originEvent = try {
             objectMapper.readValue<GitEvent>(event.event)
         } catch (e: Exception) {
@@ -119,8 +114,12 @@ class ModelCreate @Autowired constructor(
             gitBasicSetting = gitBasicSetting,
             event = event,
             v2GitUrl = v2GitUrl,
-            originEvent = originEvent
+            originEvent = originEvent,
+            webhookParams = webhookParams,
+            yamlTransferData = yamlTransferData
         )
+
+        val jobBuildTemplateAcrossInfos = yamlTransferData?.getJobTemplateAcrossInfo(event.id!!, event.gitProjectId)
 
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -133,19 +132,27 @@ class ModelCreate @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "Stage-0")
+        // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
+        var stageIndex = 1
+        val stageId = VMUtils.genStageId(stageIndex++)
+        val stage1 = Stage(listOf(triggerContainer), id = stageId, name = stageId)
         stageList.add(stage1)
 
         // 其他的stage
-        yaml.stages.forEachIndexed { stageIndex, stage ->
-            stageList.add(modelStage.createStage(
-                stage = stage,
-                event = event,
-                gitBasicSetting = gitBasicSetting,
-                stageIndex = stageIndex + 1,
-                resources = yaml.resource,
-                pipeline = pipeline
-            ))
+        yaml.stages.forEach { stage ->
+            stageList.add(
+                modelStage.createStage(
+                    stage = stage,
+                    event = event,
+                    gitBasicSetting = gitBasicSetting,
+                    // stream的stage标号从1开始，后续都加1
+                    stageIndex = stageIndex++,
+                    resources = yaml.resource,
+                    changeSet = changeSet,
+                    pipeline = pipeline,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
+                )
+            )
         }
         // 添加finally
         if (!yaml.finally.isNullOrEmpty()) {
@@ -153,7 +160,6 @@ class ModelCreate @Autowired constructor(
                 modelStage.createStage(
                     stage = com.tencent.devops.common.ci.v2.Stage(
                         name = "Finally",
-                        id = null,
                         label = emptyList(),
                         ifField = null,
                         fastKill = false,
@@ -163,9 +169,11 @@ class ModelCreate @Autowired constructor(
                     ),
                     event = event,
                     gitBasicSetting = gitBasicSetting,
+                    stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    pipeline = pipeline
+                    pipeline = pipeline,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
                 )
             )
         }
@@ -207,10 +215,12 @@ class ModelCreate @Autowired constructor(
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
                     if (pipelineGroup != null) {
                         client.get(UserPipelineGroupResource::class).addLabel(
-                            event.userId, PipelineLabelCreate(
-                            groupId = pipelineGroup.id,
-                            name = it
-                        )
+                            userId = event.userId,
+                            projectId = gitBasicSetting.projectCode!!,
+                            pipelineLabel = PipelineLabelCreate(
+                                groupId = pipelineGroup.id,
+                                name = it
+                            )
                         )
                     }
                 }
@@ -249,5 +259,39 @@ class ModelCreate @Autowired constructor(
         }
 
         return null
+    }
+
+    private fun YamlTransferData.getJobTemplateAcrossInfo(
+        gitRequestEventId: Long,
+        gitProjectId: Long
+    ): Map<String, BuildTemplateAcrossInfo> {
+        // 临时保存远程项目id的映射，就不用去redis里面查了
+        val remoteProjectIdMap = mutableMapOf<String, String>()
+        templateData.transferDataMap.values.forEach { objectData ->
+            if (objectData.remoteProjectId in remoteProjectIdMap.keys) {
+                return@forEach
+            }
+            // 将pathWithPathSpace转为数字id
+            remoteProjectIdMap[objectData.remoteProjectId] = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitRequestEventId = gitRequestEventId,
+                gitProjectId = objectData.remoteProjectId,
+                token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
+                useAccessToken = true,
+                getProjectInfo = streamScmService::getProjectInfoRetry
+            ).gitProjectId.toString().let { "git_$it" }
+        }
+
+        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
+        templateData.transferDataMap.filter { it.value.templateType == TemplateType.JOB }
+            .forEach { (objectId, objectData) ->
+                results[objectId] = BuildTemplateAcrossInfo(
+                    templateId = templateData.templateId,
+                    templateType = TemplateAcrossInfoType.JOB,
+                    // 因为已经将jobId转为了map所以这里不保存，节省空间
+                    templateInstancesIds = emptyList(),
+                    targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
+                )
+            }
+        return results
     }
 }

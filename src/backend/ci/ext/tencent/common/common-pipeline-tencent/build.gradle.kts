@@ -32,6 +32,8 @@ dependencies {
     api(project(":ext:tencent:common:common-archive-tencent"))
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api("org.apache.ant:ant")
+    api("org.apache.commons:commons-text")
     api("org.yaml:snakeyaml")
     api("com.github.fge:json-schema-validator")
+    api(project(":core:common:common-webhook:api-common-webhook"))
 }

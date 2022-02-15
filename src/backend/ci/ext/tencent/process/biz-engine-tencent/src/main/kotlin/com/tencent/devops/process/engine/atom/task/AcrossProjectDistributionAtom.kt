@@ -77,8 +77,9 @@ class AcrossProjectDistributionAtom @Autowired constructor(
         logger.info("[$buildId]|param=$param")
 
         val result =
-                client.get(ServiceArtifactoryResource::class)
-                        .acrossProjectCopy(projectId, artifactoryType, relativePath, targetProjectId, targetPath)
+            client.get(ServiceArtifactoryResource::class).acrossProjectCopy(
+                task.starter, projectId, artifactoryType, relativePath, targetProjectId, targetPath
+            )
 
         return if (result.isOk()) {
             buildLogPrinter.addLine(buildId, "跨项目构件分发成功，共分发了${result.data}个文件", task.taskId, task.containerHashId, task.executeCount ?: 1)

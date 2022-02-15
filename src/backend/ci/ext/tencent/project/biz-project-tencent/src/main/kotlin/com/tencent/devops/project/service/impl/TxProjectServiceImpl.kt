@@ -40,7 +40,6 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -62,6 +61,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -98,17 +98,30 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val projectDataSourceAssignService: ProjectDataSourceAssignService,
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
+) : AbsProjectServiceImpl(
+    projectPermissionService = projectPermissionService,
+    dslContext = dslContext,
+    projectDao = projectDao,
+    projectJmxApi = projectJmxApi,
+    redisOperation = redisOperation,
+    gray = gray,
+    client = client,
+    projectDispatcher = projectDispatcher,
+    authPermissionApi = authPermissionApi,
+    projectAuthServiceCode = projectAuthServiceCode,
+    projectDataSourceAssignService = projectDataSourceAssignService
+) {
 
     @Value("\${iam.v0.url:#{null}}")
     private var v0IamUrl: String = ""
 
-    @Value("\${v3.tag:#{null}}")
+    @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
 
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
@@ -131,7 +144,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
 
         val englishNames = getProjectFromAuth(userId, accessToken)
-        if (englishNames == null || englishNames.isEmpty()) {
+        if (englishNames.isEmpty()) {
             return null
         }
         if (!englishNames.contains(projectVO!!.englishName)) {
@@ -146,7 +159,7 @@ class TxProjectServiceImpl @Autowired constructor(
         try {
 
             val englishNames = getProjectFromAuth(userId, accessToken).toSet()
-            if (englishNames == null || englishNames.isEmpty()) {
+            if (englishNames.isEmpty()) {
                 return emptyList()
             }
             logger.info("项目列表：$englishNames")
@@ -161,7 +174,22 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
-        return tofService.getUserDeptDetail(userId, "") // 获取用户机构信息
+        try {
+            return tofService.getUserDeptDetail(userId, "")
+        } catch (e: OperationException) {
+            // stream场景下会传公共账号,tof不存在公共账号
+            logger.warn("getDeptInfo: $e")
+            return UserDeptDetail(
+                bgId = "0",
+                bgName = "",
+                centerId = "0",
+                centerName = "",
+                deptId = "0",
+                deptName = "",
+                groupId = "0",
+                groupName = ""
+            )
+        }
     }
 
     override fun createExtProjectInfo(
@@ -239,19 +267,15 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
-        val appName = if (projectUpdateInfo.ccAppId != null && projectUpdateInfo.ccAppId!! > 0) {
-            tofService.getCCAppName(projectUpdateInfo.ccAppId!!)
-        } else {
-            null
-        }
-        projectUpdateInfo.ccAppName = appName
+        return
     }
 
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code()}, " +
+                    "message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
@@ -265,12 +289,11 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        val group = if (permission == AuthPermission.MANAGE) {
-            BkAuthGroup.MANAGER
+        return if (permission == AuthPermission.MANAGE) {
+            bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
         } else {
-            null
+            bsAuthProjectApi.checkProjectUser(userId, bsPipelineAuthServiceCode, projectCode)
         }
-        return bsAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectCode, group)
     }
 
     override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
@@ -289,7 +312,9 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
         val bgId = if (projectCreateInfo.bgId == 0L) userDeptDetail.bgId.toLong() else projectCreateInfo.bgId
         val deptId = if (projectCreateInfo.deptId == 0L) userDeptDetail.deptId.toLong() else projectCreateInfo.deptId
-        val centerId = if (projectCreateInfo.centerId == 0L) userDeptDetail.centerId.toLong() else projectCreateInfo.centerId
+        val centerId = if (projectCreateInfo.centerId == 0L) {
+            userDeptDetail.centerId.toLong()
+        } else projectCreateInfo.centerId
         val bgName = if (projectCreateInfo.bgName.isNullOrEmpty()) userDeptDetail.bgName else projectCreateInfo.bgName
         val deptName = if (projectCreateInfo.deptName.isNullOrEmpty()) userDeptDetail.deptName else projectCreateInfo.deptName
         val centerName = if (projectCreateInfo.centerName.isNullOrEmpty()) userDeptDetail.centerName else projectCreateInfo.centerName
@@ -372,8 +397,6 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private const val Width = 128
-        private const val Height = 128
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
     }
 }

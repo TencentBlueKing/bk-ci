@@ -134,7 +134,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return ""
     }
 
-    override fun downloadFileToLocal(filePath: String, response: HttpServletResponse) {
+    override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
         TODO("not implemented")
     }
 
@@ -164,7 +164,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         TODO("not implemented")
     }
 
-    override fun downloadFile(filePath: String, outputStream: OutputStream) {
+    override fun downloadFile(userId: String, filePath: String, outputStream: OutputStream) {
         logger.info("downloadFile, filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
@@ -178,7 +178,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         return httpResponse.body()!!.byteStream()
     }
 
-    override fun downloadFile(filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse, logo: Boolean?) {
         logger.info("downloadFile filePath: $filePath")
         if (filePath.contains("..")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf("filePath"))
@@ -206,7 +206,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             buildId = buildId
         )
         val destPath = result.substring(getBasePath().length)
-        downloadFile(destPath, response)
+        downloadFile(userId, destPath, response)
     }
 
     private fun getFileHttpResponse(filePath: String): okhttp3.Response {
@@ -251,6 +251,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
             "buildId: $buildId, artifactoryType: $artifactoryType, customFilePath : $customFilePath, " +
             "fileChannelType :$fileChannelType")
         val param = ArtifactorySearchParam(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -264,6 +265,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun getFileDownloadUrls(
+        userId: String,
         filePath: String,
         artifactoryType: ArtifactoryType,
         fileChannelType: FileChannelTypeEnum,
@@ -290,7 +292,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         val buildId = if (isCustom(artifactoryType)) "" else dataList[3]
         val customFilePath = if (isCustom(artifactoryType)) dataList[2] else dataList[4]
         return getFileDownloadUrls(
-            userId = "",
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -337,6 +339,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -384,7 +387,7 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         }
     }
 
-    override fun deleteFile(filePath: String) {
+    override fun deleteFile(userId: String, filePath: String) {
         jFrogService.tryDelete("${getBasePath()}$filePath")
     }
 

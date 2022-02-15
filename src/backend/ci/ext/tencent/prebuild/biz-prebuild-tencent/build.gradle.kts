@@ -37,7 +37,6 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:plugin:codecc-plugin:api-codecc"))
-    api(project(":ext:tencent:plugin:api-plugin-tencent"))
     api("com.github.docker-java:docker-java")
     api("org.apache.httpcomponents:httpclient")
     api("org.glassfish.jersey.core:jersey-client")
@@ -46,7 +45,6 @@ dependencies {
     api("org.glassfish.jersey.core:jersey-common")
     api("org.slf4j:slf4j-api")
     api("com.squareup.okhttp3:okhttp")
-    api("com.tencent.devops.ci-plugins:sigar")
     api("com.fasterxml.jackson.module:jackson-module-jsonSchema")
 
 
@@ -74,4 +72,5 @@ dependencies {
     api("com.vmware:vijava")
     api("org.json:json")
     testImplementation(project(":core:common:common-test"))
+    testImplementation("org.mockito:mockito-inline")
 }

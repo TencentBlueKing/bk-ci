@@ -1,7 +1,7 @@
 version: "v2.0"
 name: "Backend"
 on:
-  mr: [ integration ]
+  mr: [ integration,integration-stream ]
 
 stages:
 - name: "PreMR"

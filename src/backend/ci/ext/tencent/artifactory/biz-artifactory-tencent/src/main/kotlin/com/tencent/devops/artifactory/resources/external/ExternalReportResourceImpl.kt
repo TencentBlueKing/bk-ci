@@ -30,13 +30,16 @@ package com.tencent.devops.artifactory.resources.external
 import com.tencent.devops.artifactory.api.external.ExternalReportResource
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoReportService
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ExternalReportResourceImpl @Autowired constructor(
-    private val bkRepoReportService: BkRepoReportService
+    private val bkRepoReportService: BkRepoReportService,
+    private val client: Client
 ) : ExternalReportResource {
 
     @Value("\${artifactory.report.email.suffix:#{null}}")
@@ -75,6 +78,8 @@ class ExternalReportResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-        bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
+        val userId = client.get(ServicePipelineResource::class)
+            .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+        bkRepoReportService.get(userId, projectId, pipelineId, buildId, elementId, path)
     }
 }

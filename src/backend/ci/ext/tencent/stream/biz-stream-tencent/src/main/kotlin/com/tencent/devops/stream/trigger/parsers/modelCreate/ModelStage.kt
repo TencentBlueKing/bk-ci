@@ -43,6 +43,8 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPair
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -52,6 +54,7 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -72,16 +75,35 @@ class ModelStage @Autowired constructor(
         stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
-        stageIndex: Int = 0,
+        stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
-        pipeline: GitProjectPipeline
+        changeSet: Set<String>? = null,
+        pipeline: GitProjectPipeline,
+        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
+        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet)
+
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = modelElement.makeElementList(job, gitBasicSetting, event)
+            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet)
+            val elementList = modelElement.makeElementList(
+                job = job,
+                gitBasicSetting = gitBasicSetting,
+                changeSet = changeSet,
+                jobEnable = jobEnable,
+                event = event
+            )
+
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                modelContainer.addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
+                modelContainer.addNormalContainer(
+                    job = job,
+                    elementList = elementList,
+                    containerList = containerList,
+                    jobIndex = jobIndex,
+                    jobEnable = jobEnable,
+                    finalStage = finalStage
+                )
             } else {
                 modelContainer.addVmBuildContainer(
                     job = job,
@@ -90,7 +112,9 @@ class ModelStage @Autowired constructor(
                     jobIndex = jobIndex,
                     projectCode = gitBasicSetting.projectCode!!,
                     finalStage = finalStage,
-                    resources = resources
+                    jobEnable = jobEnable,
+                    resources = resources,
+                    buildTemplateAcrossInfo = jobBuildTemplateAcrossInfos?.get(job.id)
                 )
             }
         }
@@ -103,13 +127,15 @@ class ModelStage @Autowired constructor(
                 customCondition = stage.ifField.toString()
             )
         }
+        stageControlOption = stageControlOption.copy(enable = stageEnable)
 
+        val stageId = VMUtils.genStageId(stageIndex)
         return Stage(
-            id = stage.id,
+            id = stageId,
             name = stage.name ?: if (finalStage) {
                 "Final"
             } else {
-                "Stage-$stageIndex"
+                VMUtils.genStageId(stageIndex - 1)
             },
             tag = stage.label,
             fastKill = stage.fastKill,
@@ -120,13 +146,15 @@ class ModelStage @Autowired constructor(
                 stageCheck = stage.checkIn,
                 position = ControlPointPosition.BEFORE_POSITION,
                 event = event,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             ),
             checkOut = createStagePauseCheck(
                 stageCheck = stage.checkOut,
                 position = ControlPointPosition.AFTER_POSITION,
                 event = event,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             )
         )
     }
@@ -135,15 +163,16 @@ class ModelStage @Autowired constructor(
         stageCheck: StageCheck?,
         position: String,
         event: GitRequestEvent,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        stageId: String
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
+        check.timeout = stageCheck.timeoutHours
         if (stageCheck.reviews?.flows?.isNotEmpty() == true) {
             check.manualTrigger = true
             check.reviewDesc = stageCheck.reviews?.description
             check.reviewParams = createReviewParams(stageCheck.reviews?.variables)
-            check.timeout = stageCheck.timeoutHours
             check.reviewGroups = stageCheck.reviews?.flows?.map { it ->
                 StageReviewGroup(name = it.name, reviewers = it.reviewers)
             }?.toMutableList()
@@ -153,7 +182,8 @@ class ModelStage @Autowired constructor(
                 stageCheck = stageCheck,
                 event = event,
                 position = position,
-                pipeline = pipeline
+                pipeline = pipeline,
+                stageId = stageId
             )
         }
         return check
@@ -190,7 +220,8 @@ class ModelStage @Autowired constructor(
         stageCheck: StageCheck,
         event: GitRequestEvent,
         position: String,
-        pipeline: GitProjectPipeline
+        pipeline: GitProjectPipeline,
+        stageId: String
     ): List<String>? {
         // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
         val operations = mapOf(
@@ -254,11 +285,13 @@ class ModelStage @Autowired constructor(
                     range = listOf(pipeline.pipelineId),
                     templateRange = null,
                     gatewayId = null,
-                    opList = opList
+                    opList = opList,
+                    stageId = stageId,
+                    gateKeepers = gate.continueOnFail?.gatekeepers
                 )
             )
         }
-        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList creat gates")
+        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList create gates")
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,

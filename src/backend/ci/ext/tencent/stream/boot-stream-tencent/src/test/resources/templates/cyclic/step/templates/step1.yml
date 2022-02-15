@@ -9,6 +9,6 @@ steps:
   - template: cyclic/step/templates/step2.yml
     parameters:
       username: CYC_STEP4
-#  - template: cyclic/step/templates/step5.yml
-#    parameters:
-#      username: CYC_STEP5
+  - template: cyclic/step/templates/step5.yml
+    parameters:
+      username: CYC_STEP5

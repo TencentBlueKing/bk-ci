@@ -247,6 +247,17 @@ class ExperiencePublicDao {
         }
     }
 
+    fun getByRecordId(
+        dslContext: DSLContext,
+        recordId: Long
+    ): TExperiencePublicRecord? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(RECORD_ID.eq(recordId))
+                .fetchOne()
+        }
+    }
+
     @SuppressWarnings("ALL")
     fun updateById(
         dslContext: DSLContext,
@@ -270,6 +281,21 @@ class ExperiencePublicDao {
                 .let { if (null == downloadTime) it else it.set(DOWNLOAD_TIME, downloadTime) }
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun getByBundleId(
+        dslContext: DSLContext,
+        projectId: String,
+        platform: String,
+        bundleIdentifier: String
+    ): TExperiencePublicRecord? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PLATFORM.eq(platform))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .fetchAny()
         }
     }
 
@@ -364,6 +390,23 @@ class ExperiencePublicDao {
                 .orderBy(UPDATE_TIME.desc())
                 .limit(10000)
                 .fetch()
+        }
+    }
+
+    fun getNewestRecordId(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String
+    ): Long? {
+        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(PLATFORM.eq(platform))
+                .fetchOne()?.recordId
         }
     }
 }

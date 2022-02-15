@@ -102,8 +102,8 @@ class ProjectLocalService @Autowired constructor(
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
-    @Value("\${gitCI.tag:#{null}}")
-    private val gitCI: String? = null
+    @Value("\${tag.stream:#{null}}")
+    private val streamTag: String? = null
 
     fun listForApp(
         userId: String,
@@ -116,7 +116,7 @@ class ProjectLocalService @Autowired constructor(
 
         // 先查询GITCI的项目
         if (page == 1) {
-            val gitCIProjectList = ConsulContent.invokeByTag(gitCI) {
+            val gitCIProjectList = ConsulContent.invokeByTag(streamTag) {
                 try {
                     client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 100, searchName)
                 } catch (e: Exception) {
@@ -502,7 +502,8 @@ class ProjectLocalService @Autowired constructor(
             //        httpClient.newCall(request).execute().use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code()} , " +
+                                "message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
@@ -587,8 +588,8 @@ class ProjectLocalService @Autowired constructor(
                 channel = ProjectChannelCode.GITCI
             )
 
-            // GitCI项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
-            projectTagService.updateTagByProject(projectCreateInfo.englishName, gitCI)
+            // stream项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, streamTag)
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
@@ -605,7 +606,7 @@ class ProjectLocalService @Autowired constructor(
         roleId: Int?,
         roleName: String?
     ): Boolean {
-        logger.info("[createUser2ProjectByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectCode]")
+        logger.info("[createUser2ProjectByApp] organization|$organizationType|$organizationId|$userId|$projectCode")
         var bgId: Long? = null
         var deptId: Long? = null
         var centerId: Long? = null
@@ -624,7 +625,7 @@ class ProjectLocalService @Autowired constructor(
             centerId = centerId
         )
         if (projectList.isEmpty()) {
-            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            logger.error("organizationInfo:|$organizationType|$organizationId| not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
 
@@ -644,14 +645,8 @@ class ProjectLocalService @Autowired constructor(
                 userIds = arrayListOf(userId),
                 checkManager = false
             )
-//            return projectIamV0Service.createUser2ProjectImpl(
-//                userIds = arrayListOf(userId),
-//                projectId = projectCode,
-//                roleId = roleId,
-//                roleName = roleName
-//            )
         } else {
-            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            logger.error("organizationInfo|$organizationType|$organizationId] not project[$projectCode] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
     }
@@ -661,14 +656,10 @@ class ProjectLocalService @Autowired constructor(
         organizationId: Long,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        logger.info("[getProjectRole] organizationType[$organizationType], organizationId[$organizationId] projectCode[$projectId]")
+        logger.info("[getProjectRole] organizationInfo|$organizationType|$organizationId|$projectId")
         val projectList = getProjectListByOrg("", organizationType, organizationId)
         if (projectList.isEmpty()) {
-            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
-        }
-        if (projectList.isEmpty()) {
-            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            logger.error("organizationInfo|$organizationType|$organizationId not project[$projectId] permission ")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
         var queryProject: ProjectVO? = null
@@ -698,10 +689,9 @@ class ProjectLocalService @Autowired constructor(
         resourceType: String,
         resourceTypeCode: String
     ): Boolean {
-        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
         val projectList = getProjectListByOrg(userId, organizationType, organizationId)
         if (projectList.isEmpty()) {
-            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            logger.error("organization:Type$organizationType|Id$organizationId|not project[$projectId] permission")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
         }
         var isCreate = false
@@ -712,34 +702,66 @@ class ProjectLocalService @Autowired constructor(
             }
         }
         if (!isCreate) {
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER, params = arrayOf(userId, projectId))))
         }
         val createUserList = userId.split(",")
+        return grantInstancePermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            resourceCode = resourceTypeCode,
+            createUserList = createUserList,
+            checkManager = false
+        )
+    }
 
+    fun updateRelationId(projectCode: String, relationId: String) {
+        projectDao.updateRelationByCode(dslContext, projectCode, relationId)
+    }
+
+    fun grantInstancePermission(
+        userId: String,
+        projectId: String,
+        permission: String,
+        resourceType: String,
+        resourceCode: String,
+        createUserList: List<String>,
+        checkManager: Boolean? = true
+    ): Boolean {
+        logger.info("createpipeline|$userId|$projectId|$permission|$resourceType|$resourceCode")
+        if (checkManager!!) {
+            // 操作人必须为项目的管理员
+            if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
+                logger.error("$userId is not manager for project[$projectId]")
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.NOT_MANAGER,
+                    params = arrayOf(userId, projectId))))
+            }
+        }
+
+        // 必须用户在项目下才能授权
         createUserList?.forEach {
             if (!projectPermissionService.verifyUserProjectPermission(
                     accessToken = null,
                     projectCode = projectId,
                     userId = userId)) {
                 logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
+                    params = arrayOf(userId, projectId))))
             }
         }
 
-        // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
-        return projectIamV0Service.createPermission(
+        return projectExtPermissionService.grantInstancePermission(
             userId = userId,
             projectId = projectId,
-            permission = permission,
+            action = permission,
             resourceType = resourceType,
-            authServiceCode = bsPipelineAuthServiceCode,
-            resourceTypeCode = resourceTypeCode,
+            resourceCode = resourceCode,
             userList = createUserList
         )
-    }
-
-    fun updateRelationId(projectCode: String, relationId: String) {
-        projectDao.updateRelationByCode(dslContext, projectCode, relationId)
     }
 
     private fun getProjectListByOrg(

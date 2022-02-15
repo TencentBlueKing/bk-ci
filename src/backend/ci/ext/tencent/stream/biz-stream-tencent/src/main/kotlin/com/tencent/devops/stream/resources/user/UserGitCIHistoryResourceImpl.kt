@@ -36,12 +36,12 @@ import com.tencent.devops.stream.pojo.GitCIBuildBranch
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.v2.GitCIBuildHistorySearch
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.GitCIV2HistoryService
+import com.tencent.devops.stream.v2.service.StreamHistoryService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIHistoryResourceImpl @Autowired constructor(
-    private val gitCIHistoryService: GitCIV2HistoryService
+    private val gitCIHistoryService: StreamHistoryService
 ) : UserGitCIHistoryResource {
     override fun getHistoryBuildList(
         userId: String,

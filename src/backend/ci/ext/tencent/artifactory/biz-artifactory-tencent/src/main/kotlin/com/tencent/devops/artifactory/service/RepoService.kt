@@ -52,13 +52,19 @@ interface RepoService {
     fun setDockerProperties(projectId: String, imageName: String, tag: String, properties: Map<String, String>)
 
     fun setProperties(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         argPath: String,
         properties: Map<String, String>
     )
 
-    fun getProperties(projectId: String, artifactoryType: ArtifactoryType, argPath: String): List<Property>
+    fun getProperties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPath: String
+    ): List<Property>
 
     fun getPropertiesByRegex(
         projectId: String,
@@ -84,9 +90,10 @@ interface RepoService {
 
     fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail
 
-    fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean
+    fun check(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Boolean
 
     fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -96,7 +103,7 @@ interface RepoService {
 
     fun createDockerUser(projectCode: String): DockerUser
 
-    fun listCustomFiles(projectId: String, condition: CustomFileSearchCondition): List<String>
+    fun listCustomFiles(userId: String, projectId: String, condition: CustomFileSearchCondition): List<String>
 
     fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq)
 }

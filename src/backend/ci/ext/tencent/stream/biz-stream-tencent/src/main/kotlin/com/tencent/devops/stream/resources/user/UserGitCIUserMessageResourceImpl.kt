@@ -33,12 +33,12 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCIUserMessageResource
 import com.tencent.devops.stream.pojo.v2.message.UserMessageRecord
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
-import com.tencent.devops.stream.v2.service.GitUserMessageService
+import com.tencent.devops.stream.v2.service.StreamUserMessageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIUserMessageResourceImpl @Autowired constructor(
-    private val gitUserMessageService: GitUserMessageService
+    private val streamUserMessageService: StreamUserMessageService
 ) : UserGitCIUserMessageResource {
     override fun getUserMessages(
         userId: String,
@@ -49,7 +49,7 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<Page<UserMessageRecord>> {
         return Result(
-            gitUserMessageService.getMessages(
+            streamUserMessageService.getMessages(
                 projectId = projectId,
                 userId = userId,
                 messageType = messageType,
@@ -61,14 +61,14 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
     }
 
     override fun getUserMessagesNoreadCount(userId: String, projectId: String?): Result<Int> {
-        return Result(data = gitUserMessageService.getNoReadMessageCount(projectId, userId))
+        return Result(data = streamUserMessageService.getNoReadMessageCount(projectId, userId))
     }
 
     override fun readMessage(userId: String, id: Int, projectId: String?): Result<Boolean> {
-        return Result(gitUserMessageService.readMessage(userId = userId, id = id, projectId = projectId))
+        return Result(streamUserMessageService.readMessage(userId = userId, id = id, projectId = projectId))
     }
 
     override fun readAllMessages(userId: String, projectId: String?): Result<Boolean> {
-        return Result(gitUserMessageService.readAllMessage(projectId, userId = userId))
+        return Result(streamUserMessageService.readAllMessage(projectId, userId = userId))
     }
 }

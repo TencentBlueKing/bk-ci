@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Step(
@@ -34,6 +35,8 @@ data class Step(
     val id: String?,
     @JsonProperty("if")
     val ifFiled: String?,
+    @JsonProperty("if-modify")
+    val ifModify: List<String>? = null,
     val uses: String?,
     val with: Map<String, Any?>?,
     @JsonProperty("timeout-minutes")
@@ -44,5 +47,8 @@ data class Step(
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
-    val checkout: String?
+    val checkout: String?,
+    // 在系统内唯一标识step唯一性，不参与yaml打印
+    @JsonIgnore
+    val taskId: String? = null
 )

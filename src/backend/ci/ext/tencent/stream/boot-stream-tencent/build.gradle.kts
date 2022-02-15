@@ -27,4 +27,5 @@
 
 dependencies {
     api(project(":ext:tencent:stream:biz-stream-tencent"))
+    testImplementation(project(":core:common:common-test"))
 }

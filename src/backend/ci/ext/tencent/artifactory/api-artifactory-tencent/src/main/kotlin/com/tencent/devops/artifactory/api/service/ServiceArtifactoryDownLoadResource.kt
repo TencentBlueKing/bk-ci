@@ -62,12 +62,12 @@ interface ServiceArtifactoryDownLoadResource {
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_PROJECT_ID)
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @HeaderParam(AUTH_HEADER_PIPELINE_ID)
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
+        pipelineId: String?,
+        @ApiParam("构建ID", required = false)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
-        buildId: String,
+        buildId: String?,
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String?,
