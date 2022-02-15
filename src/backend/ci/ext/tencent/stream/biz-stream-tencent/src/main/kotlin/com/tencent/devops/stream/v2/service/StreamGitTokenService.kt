@@ -29,10 +29,10 @@ package com.tencent.devops.stream.v2.service
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
 
 @Service
 class StreamGitTokenService @Autowired constructor(
@@ -61,7 +61,9 @@ class StreamGitTokenService @Autowired constructor(
             } finally {
                 updateLock.unlock()
             }
-        } else token
+        } else {
+            token
+        }
     }
 
     // TODO 暂时不加入销毁逻辑

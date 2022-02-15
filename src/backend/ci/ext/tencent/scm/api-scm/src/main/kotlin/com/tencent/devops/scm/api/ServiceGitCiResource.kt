@@ -89,6 +89,18 @@ interface ServiceGitCiResource {
         token: String
     ): Result<Boolean>
 
+    @ApiOperation("刷新项目的token")
+    @DELETE
+    @Path("/refreshToken")
+    fun refreshToken(
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: GitToken
+    ): Result<GitToken>
+
     @ApiOperation("获取GitCode项目成员信息")
     @GET
     @Path("/getMembers")
