@@ -28,72 +28,56 @@
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.YamlTransferData
-import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateEvent
+import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateInner
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
-import com.tencent.devops.stream.trigger.StreamTriggerCache
-import com.tencent.devops.stream.v2.service.StreamOauthService
-import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component
-class ModelCreate @Autowired constructor(
-    private val client: Client,
-    private val objectMapper: ObjectMapper,
-    private val modelStage: ModelStage,
-    private val streamTriggerCache: StreamTriggerCache,
-    private val streamScmService: StreamScmService,
-    private val oauthService: StreamOauthService
+class ModelCreate constructor(
+    val client: Client,
+    val objectMapper: ObjectMapper,
+    val inner: ModelCreateInner
 ) {
 
-    @Value("\${rtx.v2GitUrl:#{null}}")
-    private val v2GitUrl: String? = null
+    private val modelStage = ModelStage(client, objectMapper, inner)
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelCreate::class.java)
     }
 
     fun createPipelineModel(
-        event: GitRequestEvent,
-        gitBasicSetting: GitCIBasicSetting,
+        event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
         pipeline: GitProjectPipeline,
+        pipelineParams: List<BuildFormProperty>,
         changeSet: Set<String>? = null,
-        webhookParams: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData? = null
     ): Model {
         // 流水线插件标签设置
-        val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
+        val labelList = preparePipelineLabels(event, yaml)
 
         // 预安装插件市场的插件
-        ModelCommon.installMarketAtom(client, gitBasicSetting, event.userId, GitCiCodeRepoTask.atomCode)
-        ModelCommon.installMarketAtom(client, gitBasicSetting, event.userId, DockerRunDevCloudTask.atomCode)
-        ModelCommon.installMarketAtom(client, gitBasicSetting, event.userId, ServiceJobDevCloudTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, GitCiCodeRepoTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, DockerRunDevCloudTask.atomCode)
+        ModelCommon.installMarketAtom(client, event.projectCode, event.userId, ServiceJobDevCloudTask.atomCode)
 
         val stageList = mutableListOf<Stage>()
 
@@ -102,24 +86,17 @@ class ModelCreate @Autowired constructor(
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
 
-        val originEvent = try {
-            objectMapper.readValue<GitEvent>(event.event)
-        } catch (e: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+        val jobBuildTemplateAcrossInfos = if (yamlTransferData != null && event.streamData != null &&
+            event.gitData != null
+        ) {
+            inner.getJobTemplateAcrossInfo(
+                yamlTransferData = yamlTransferData,
+                gitRequestEventId = event.streamData!!.requestEventId,
+                gitProjectId = event.gitData!!.gitProjectId
+            )
+        } else {
             null
         }
-
-        val params = ModelParameters.createPipelineParams(
-            yaml = yaml,
-            gitBasicSetting = gitBasicSetting,
-            event = event,
-            v2GitUrl = v2GitUrl,
-            originEvent = originEvent,
-            webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData
-        )
-
-        val jobBuildTemplateAcrossInfos = yamlTransferData?.getJobTemplateAcrossInfo(event.id!!, event.gitProjectId)
 
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -129,7 +106,7 @@ class ModelCreate @Autowired constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            params = params
+            params = pipelineParams
         )
 
         // 蓝盾引擎会将stageId从1开始顺序强制重写，因此在生成model时保持一致
@@ -144,7 +121,6 @@ class ModelCreate @Autowired constructor(
                 modelStage.createStage(
                     stage = stage,
                     event = event,
-                    gitBasicSetting = gitBasicSetting,
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
@@ -168,7 +144,6 @@ class ModelCreate @Autowired constructor(
                         checkOut = null
                     ),
                     event = event,
-                    gitBasicSetting = gitBasicSetting,
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
@@ -179,7 +154,7 @@ class ModelCreate @Autowired constructor(
         }
 
         return Model(
-            name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
+            name = GitCIPipelineUtils.genBKPipelineName(event.projectCode),
             desc = "",
             stages = stageList,
             labels = labelList,
@@ -190,8 +165,7 @@ class ModelCreate @Autowired constructor(
 
     @Suppress("NestedBlockDepth")
     private fun preparePipelineLabels(
-        event: GitRequestEvent,
-        gitBasicSetting: GitCIBasicSetting,
+        event: ModelCreateEvent,
         yaml: ScriptBuildYaml
     ): List<String> {
         val gitCIPipelineLabels = mutableListOf<String>()
@@ -199,7 +173,7 @@ class ModelCreate @Autowired constructor(
         try {
             // 获取当前项目下存在的标签组
             val pipelineGroups = client.get(UserPipelineGroupResource::class)
-                .getGroups(event.userId, gitBasicSetting.projectCode!!)
+                .getGroups(event.userId, event.projectCode)
                 .data
 
             yaml.label?.forEach {
@@ -207,16 +181,16 @@ class ModelCreate @Autowired constructor(
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
                         event.userId, PipelineGroupCreate(
-                        projectId = gitBasicSetting.projectCode!!,
-                        name = it
-                    )
+                            projectId = event.projectCode,
+                            name = it
+                        )
                     )
 
-                    val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
+                    val pipelineGroup = getPipelineGroup(it, event.userId, event.projectCode)
                     if (pipelineGroup != null) {
                         client.get(UserPipelineGroupResource::class).addLabel(
                             userId = event.userId,
-                            projectId = gitBasicSetting.projectCode!!,
+                            projectId = event.projectCode,
                             pipelineLabel = PipelineLabelCreate(
                                 groupId = pipelineGroup.id,
                                 name = it
@@ -226,11 +200,11 @@ class ModelCreate @Autowired constructor(
                 }
 
                 // 保证标签已创建成功后，取label加密ID
-                val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
+                val pipelineGroup = getPipelineGroup(it, event.userId, event.projectCode)
                 gitCIPipelineLabels.add(pipelineGroup!!.labels[0].id)
             }
         } catch (e: Exception) {
-            logger.warn("${event.userId}|${gitBasicSetting.projectCode!!} preparePipelineLabels error.", e)
+            logger.warn("${event.userId}|${event.projectCode} preparePipelineLabels error.", e)
         }
 
         return gitCIPipelineLabels
@@ -259,39 +233,5 @@ class ModelCreate @Autowired constructor(
         }
 
         return null
-    }
-
-    private fun YamlTransferData.getJobTemplateAcrossInfo(
-        gitRequestEventId: Long,
-        gitProjectId: Long
-    ): Map<String, BuildTemplateAcrossInfo> {
-        // 临时保存远程项目id的映射，就不用去redis里面查了
-        val remoteProjectIdMap = mutableMapOf<String, String>()
-        templateData.transferDataMap.values.forEach { objectData ->
-            if (objectData.remoteProjectId in remoteProjectIdMap.keys) {
-                return@forEach
-            }
-            // 将pathWithPathSpace转为数字id
-            remoteProjectIdMap[objectData.remoteProjectId] = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                gitRequestEventId = gitRequestEventId,
-                gitProjectId = objectData.remoteProjectId,
-                token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
-                useAccessToken = true,
-                getProjectInfo = streamScmService::getProjectInfoRetry
-            ).gitProjectId.toString().let { "git_$it" }
-        }
-
-        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
-        templateData.transferDataMap.filter { it.value.templateType == TemplateType.JOB }
-            .forEach { (objectId, objectData) ->
-                results[objectId] = BuildTemplateAcrossInfo(
-                    templateId = templateData.templateId,
-                    templateType = TemplateAcrossInfoType.JOB,
-                    // 因为已经将jobId转为了map所以这里不保存，节省空间
-                    templateInstancesIds = emptyList(),
-                    targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
-                )
-            }
-        return results
     }
 }

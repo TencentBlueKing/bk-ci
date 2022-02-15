@@ -25,33 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.common.ci.v2.parsers.modelCreate
 
-object GitCIPipelineUtils {
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.common.ci.v2.YamlTransferData
+import org.springframework.beans.factory.annotation.Value
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
+interface ModelCreateInner {
+    // 控制run插件是否是研发商店插件
+    val marketRunTask: Boolean
+    // 研发商店的run插件的code
+    val runPlugInAtomCode: String?
+    // 研发商店的run插件的版本
+    val runPlugInVersion: String?
 
-    fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
+    // 获取job跨项目信息
+    fun getJobTemplateAcrossInfo(
+        yamlTransferData: YamlTransferData,
+        gitRequestEventId: Long,
+        gitProjectId: Long
+    ): Map<String, BuildTemplateAcrossInfo>
 
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
+    // 获取job的service的devcloud输入
+    @Throws(RuntimeException::class)
+    fun getServiceJobDevCloudInput(
+        image: String,
+        imageName: String,
+        imageTag: String,
+        params: String
+    ): ServiceJobDevCloudInput?
 
-    fun genGitCIV2BuildUrl(
-        homePage: String,
-        gitProjectId: Long,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+    // 通过 checkout: self 来构造checkout插件的输入参数
+    fun makeCheckoutSelf(
+        inputMap: MutableMap<String, Any?>,
+        event: ModelCreateEvent
+    )
 }

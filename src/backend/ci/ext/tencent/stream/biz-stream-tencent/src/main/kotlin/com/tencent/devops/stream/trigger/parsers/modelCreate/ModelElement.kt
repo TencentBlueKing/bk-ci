@@ -28,11 +28,12 @@
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.Step
+import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateEvent
+import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateInner
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -43,36 +44,14 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.stream.dao.GitCIServicesConfDao
-import com.tencent.devops.stream.dao.GitCISettingDao
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import javax.ws.rs.core.Response
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component
-class ModelElement @Autowired constructor(
-    private val client: Client,
-    private val dslContext: DSLContext,
-    private val gitServicesConfDao: GitCIServicesConfDao,
-    private val gitCISettingDao: GitCISettingDao
+class ModelElement constructor(
+    val client: Client,
+    val inner: ModelCreateInner
 ) {
-
-    @Value("\${stream.marketRun.enable:#{false}}")
-    private val marketRunTask: Boolean = false
-
-    @Value("\${stream.marketRun.atomCode:#{null}}")
-    private val runPlugInAtomCode: String? = null
-
-    @Value("\${stream.marketRun.atomVersion:#{null}}")
-    private val runPlugInVersion: String? = null
-
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
         private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"
@@ -81,10 +60,9 @@ class ModelElement @Autowired constructor(
     @Suppress("ComplexMethod", "NestedBlockDepth")
     fun makeElementList(
         job: Job,
-        gitBasicSetting: GitCIBasicSetting,
         changeSet: Set<String>? = null,
         jobEnable: Boolean = true,
-        event: GitRequestEvent
+        event: ModelCreateEvent
     ): MutableList<Element> {
         // 解析service
         val elementList = makeServiceElementList(job)
@@ -117,7 +95,7 @@ class ModelElement @Autowired constructor(
                     makeRunElement(step, job, additionalOptions)
                 }
                 step.checkout != null -> {
-                    makeCheckoutElement(step, gitBasicSetting, event).copy(additionalOptions = additionalOptions)
+                    makeCheckoutElement(step, event).copy(additionalOptions = additionalOptions)
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
@@ -138,7 +116,7 @@ class ModelElement @Autowired constructor(
 
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-                ModelCommon.installMarketAtom(client, gitBasicSetting, event.userId, element.getAtomCode())
+                ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
             }
         }
 
@@ -150,15 +128,15 @@ class ModelElement @Autowired constructor(
         job: Job,
         additionalOptions: ElementAdditionalOptions
     ): Element {
-        return if (marketRunTask) {
+        return if (inner.marketRunTask) {
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
                 id = step.taskId,
                 name = step.name ?: "run",
                 stepId = step.id,
-                atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
-                version = runPlugInVersion ?: throw RuntimeException("runPlugInVersion must exist"),
+                atomCode = inner.runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
+                version = inner.runPlugInVersion ?: throw RuntimeException("runPlugInVersion must exist"),
                 data = data,
                 additionalOptions = additionalOptions
             )
@@ -193,8 +171,7 @@ class ModelElement @Autowired constructor(
 
     private fun makeCheckoutElement(
         step: Step,
-        gitBasicSetting: GitCIBasicSetting,
-        event: GitRequestEvent
+        event: ModelCreateEvent
     ): MarketBuildAtomElement {
         // checkout插件装配
         val inputMap = mutableMapOf<String, Any?>()
@@ -214,14 +191,14 @@ class ModelElement @Autowired constructor(
 
         // 非mr和tag触发下根据commitId拉取本地工程代码
         if (step.checkout == "self") {
-            makeCheckoutSelf(inputMap, gitBasicSetting, event)
+            inner.makeCheckoutSelf(inputMap, event)
         } else {
             inputMap["repositoryUrl"] = step.checkout!!
         }
 
         // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
         if (inputMap["authType"] == null) {
-            inputMap["authUserId"] = gitBasicSetting.enableUserId
+            inputMap["authUserId"] = event.streamData?.enableUserId
             inputMap["authType"] = STREAM_CHECK_AUTH_TYPE
         }
 
@@ -241,47 +218,6 @@ class ModelElement @Autowired constructor(
         )
     }
 
-    private fun makeCheckoutSelf(
-        inputMap: MutableMap<String, Any?>,
-        gitBasicSetting: GitCIBasicSetting,
-        event: GitRequestEvent
-    ) {
-        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl.ifBlank {
-            gitCISettingDao.getSetting(dslContext, gitBasicSetting.gitProjectId)?.gitHttpUrl
-        }
-
-        when (event.objectKind) {
-            TGitObjectKind.MERGE_REQUEST.value ->
-                inputMap["pullType"] = "BRANCH"
-            TGitObjectKind.TAG_PUSH.value -> {
-                inputMap["pullType"] = "TAG"
-                inputMap["refName"] = event.branch
-            }
-            TGitObjectKind.PUSH.value -> {
-                inputMap["pullType"] = "BRANCH"
-                inputMap["refName"] = event.branch
-            }
-            TGitObjectKind.MANUAL.value -> {
-                if (event.commitId.isNotBlank()) {
-                    inputMap["pullType"] = "COMMIT_ID"
-                    inputMap["refName"] = event.commitId
-                } else {
-                    inputMap["pullType"] = "BRANCH"
-                    inputMap["refName"] = event.branch
-                }
-            }
-            // 定时触发根据传入的分支参数触发
-            TGitObjectKind.SCHEDULE.value -> {
-                inputMap["pullType"] = "BRANCH"
-                inputMap["refName"] = event.branch
-            }
-            else -> {
-                inputMap["pullType"] = "COMMIT_ID"
-                inputMap["refName"] = event.commitId
-            }
-        }
-    }
-
     private fun makeServiceElementList(job: Job): MutableList<Element> {
         val elementList = mutableListOf<Element>()
 
@@ -290,32 +226,24 @@ class ModelElement @Autowired constructor(
             job.services!!.forEach {
                 val (imageName, imageTag) = ScriptYmlUtils.parseServiceImage(it.image)
 
-                val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-                    ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
-                if (!record.enable) {
-                    throw RuntimeException("镜像版本不可用")
-                }
-
                 val params = if (it.with.password.isNullOrBlank()) {
                     "{\"env\":{\"MYSQL_ALLOW_EMPTY_PASSWORD\":\"yes\"}}"
                 } else {
                     "{\"env\":{\"MYSQL_ROOT_PASSWORD\":\"${it.with.password}\"}}"
                 }
 
-                val serviceJobDevCloudInput = ServiceJobDevCloudInput(
-                    it.image,
-                    record.repoUrl,
-                    record.repoUsername,
-                    record.repoPwd,
-                    params,
-                    record.env
-                )
+                val serviceJobDevCloudInput = inner.getServiceJobDevCloudInput(it.image, imageName, imageTag, params)
+
                 val servicesElement = MarketBuildAtomElement(
                     name = "创建${it.image}服务",
                     status = null,
                     atomCode = ServiceJobDevCloudTask.atomCode,
                     version = "1.*",
-                    data = mapOf("input" to serviceJobDevCloudInput, "namespace" to (it.serviceId ?: ""))
+                    data = if (serviceJobDevCloudInput != null) {
+                        mapOf("input" to serviceJobDevCloudInput, "namespace" to (it.serviceId ?: ""))
+                    } else {
+                        mapOf("namespace" to (it.serviceId ?: ""))
+                    }
                 )
 
                 elementList.add(servicesElement)

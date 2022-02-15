@@ -48,14 +48,11 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.util.StreamDispatchUtils
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component
-class ModelContainer @Autowired constructor(
-    private val client: Client,
-    private val objectMapper: ObjectMapper
+class ModelContainer constructor(
+    val client: Client,
+    val objectMapper: ObjectMapper
 ) {
     // 公共镜像默认从配置获取
     @Value("\${container.defaultImage:#{null}}")
@@ -94,9 +91,7 @@ class ModelContainer @Autowired constructor(
             buildEnv = StreamDispatchUtils.getBuildEnv(job),
             customBuildEnv = job.env,
             jobControlOption = getJobControlOption(
-                job = job,
-                jobEnable = jobEnable,
-                finalStage = finalStage
+                job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
             dispatchType = StreamDispatchUtils.getDispatchType(
                 client = client,
@@ -181,9 +176,7 @@ class ModelContainer @Autowired constructor(
                 conditions = null,
                 canRetry = false,
                 jobControlOption = getJobControlOption(
-                    job = job,
-                    jobEnable = jobEnable,
-                    finalStage = finalStage
+                    job = job, jobEnable = jobEnable, finalStage = finalStage
                 ),
                 mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
             )

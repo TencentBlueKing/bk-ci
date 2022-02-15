@@ -25,33 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.tencent.devops.common.ci.v2.parsers.modelCreate
 
-object GitCIPipelineUtils {
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
+@ApiModel("将yaml转为蓝盾model需要的参数")
+data class ModelCreateEvent(
+    @ApiModelProperty("用户ID")
+    val userId: String,
+    @ApiModelProperty("蓝盾项目ID")
+    val projectCode: String,
+    val gitData: GitData? = null,
+    val streamData: StreamData? = null
+)
 
-    fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
+@ApiModel("来自git相关的数据")
+data class GitData(
+    val repositoryUrl: String,
+    val gitProjectId: Long,
+    val commitId: String,
+    val branch: String
+)
 
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
-
-    fun genGitCIV2BuildUrl(
-        homePage: String,
-        gitProjectId: Long,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
-}
+// 其他微服务需要可以将其抽象为接口根据泛型使用
+@ApiModel("来自stream服务的相关数据")
+data class StreamData(
+    val enableUserId: String,
+    val requestEventId: Long,
+    val objectKind: TGitObjectKind
+)

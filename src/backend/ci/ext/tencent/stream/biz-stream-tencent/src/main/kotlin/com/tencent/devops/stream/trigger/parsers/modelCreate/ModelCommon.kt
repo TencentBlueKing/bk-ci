@@ -30,7 +30,6 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.slf4j.LoggerFactory
@@ -63,13 +62,13 @@ object ModelCommon {
 
     fun installMarketAtom(
         client: Client,
-        gitCIBasicSetting: GitCIBasicSetting,
+        projectCode: String,
         userId: String,
         atomCode: String,
         channelCode: ChannelCode = ChannelCode.GIT
     ) {
         val projectCodes = ArrayList<String>()
-        projectCodes.add(gitCIBasicSetting.projectCode!!)
+        projectCodes.add(projectCode)
         try {
             client.get(ServiceMarketAtomResource::class).installAtom(
                 userId = userId,

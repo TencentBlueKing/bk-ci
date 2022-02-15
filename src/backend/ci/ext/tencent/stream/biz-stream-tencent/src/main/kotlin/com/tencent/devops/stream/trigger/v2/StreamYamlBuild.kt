@@ -28,6 +28,8 @@
 package com.tencent.devops.stream.trigger.v2
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -55,12 +57,15 @@ import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
 import com.tencent.devops.stream.service.GitCIPipelineService
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreate
+import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
@@ -68,10 +73,12 @@ import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
 class StreamYamlBuild @Autowired constructor(
+    private val objectMapper: ObjectMapper,
     private val streamYamlBaseBuild: StreamYamlBaseBuild,
     private val dslContext: DSLContext,
     private val streamBasicSettingDao: StreamBasicSettingDao,
@@ -82,6 +89,9 @@ class StreamYamlBuild @Autowired constructor(
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService
 ) {
+
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBuild::class.java)
@@ -292,6 +302,14 @@ class StreamYamlBuild @Autowired constructor(
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
+        val modelParams = getModelParams(
+            event = event,
+            yaml = yaml,
+            gitBasicSetting = gitBasicSetting,
+            webhookParams = params,
+            yamlTransferData = yamlTransferData
+        )
+
         // create or refresh pipeline
         val model = modelCreate.createPipelineModel(
             event = event,
@@ -331,5 +349,30 @@ class StreamYamlBuild @Autowired constructor(
         )
         logger.info("savePipeline pipeline:$pipeline, model: $model")
         streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
+    }
+
+    private fun getModelParams(
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml,
+        gitBasicSetting: GitCIBasicSetting,
+        webhookParams: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData
+    ): List<BuildFormProperty> {
+        val originEvent = try {
+            objectMapper.readValue<GitEvent>(event.event)
+        } catch (e: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+            null
+        }
+
+        val params = ModelParameters.createPipelineParams(
+            yaml = yaml,
+            gitBasicSetting = gitBasicSetting,
+            event = event,
+            v2GitUrl = v2GitUrl,
+            originEvent = originEvent,
+            webhookParams = webhookParams,
+            yamlTransferData = yamlTransferData
+        )
     }
 }

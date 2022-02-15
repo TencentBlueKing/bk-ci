@@ -47,25 +47,25 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateEvent
+import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateInner
 
-@Component
-class ModelStage @Autowired constructor(
-    private val client: Client,
-    private val modelContainer: ModelContainer,
-    private val modelElement: ModelElement
+class ModelStage constructor(
+    val client: Client,
+    val objectMapper: ObjectMapper,
+    val inner: ModelCreateInner
 ) {
+    private val modelContainer = ModelContainer(client, objectMapper)
+    private val modelElement = ModelElement(client, inner)
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
@@ -73,8 +73,7 @@ class ModelStage @Autowired constructor(
 
     fun createStage(
         stage: GitCIV2Stage,
-        event: GitRequestEvent,
-        gitBasicSetting: GitCIBasicSetting,
+        event: ModelCreateEvent,
         stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
@@ -89,7 +88,6 @@ class ModelStage @Autowired constructor(
             val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet)
             val elementList = modelElement.makeElementList(
                 job = job,
-                gitBasicSetting = gitBasicSetting,
                 changeSet = changeSet,
                 jobEnable = jobEnable,
                 event = event
@@ -110,7 +108,7 @@ class ModelStage @Autowired constructor(
                     elementList = elementList,
                     containerList = containerList,
                     jobIndex = jobIndex,
-                    projectCode = gitBasicSetting.projectCode!!,
+                    projectCode = event.projectCode,
                     finalStage = finalStage,
                     jobEnable = jobEnable,
                     resources = resources,
@@ -162,7 +160,7 @@ class ModelStage @Autowired constructor(
     private fun createStagePauseCheck(
         stageCheck: StageCheck?,
         position: String,
-        event: GitRequestEvent,
+        event: ModelCreateEvent,
         pipeline: GitProjectPipeline,
         stageId: String
     ): StagePauseCheck? {
@@ -218,7 +216,7 @@ class ModelStage @Autowired constructor(
      */
     private fun createRules(
         stageCheck: StageCheck,
-        event: GitRequestEvent,
+        event: ModelCreateEvent,
         position: String,
         pipeline: GitProjectPipeline,
         stageId: String
@@ -246,7 +244,10 @@ class ModelStage @Autowired constructor(
                     }
                 }
                 if (op.isBlank()) {
-                    logger.warn("GitProject: ${event.gitProjectId} event: ${event.id} rule: $rule not find operations")
+                    logger.warn(
+                        "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId} " +
+                                "rule: $rule not find operations"
+                    )
                     return@GateEach
                 }
                 val enNameAndthreshold = mid.split(op)
@@ -291,11 +292,14 @@ class ModelStage @Autowired constructor(
                 )
             )
         }
-        logger.info("GitProject: ${event.gitProjectId} event: ${event.id} ruleList: $ruleList create gates")
+        logger.info(
+            "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId}" +
+                    " ruleList: $ruleList create gates"
+        )
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,
-                projectId = "git_${event.gitProjectId}",
+                projectId = event.projectCode,
                 pipelineId = pipeline.pipelineId,
                 ruleList = ruleList
             ).data
