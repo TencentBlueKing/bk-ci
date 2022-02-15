@@ -34,7 +34,7 @@ backendImage:
   pullSecrets: []
 
 # 日志采集配置
-bklogConfig:
+bkLogConfig:
   enabled: false
   service:
     dataId: 1

@@ -1,11 +1,11 @@
-{{- if .Values.bklogConfig.enabled }}
+{{- if .Values.bkLogConfig.enabled }}
 # Service Log
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
   name: {{ include "common.names.fullname" . }}-bklog-service
 spec:
-  dataId: {{ .Values.bklogConfig.service.dataId }}
+  dataId: {{ .Values.bkLogConfig.service.dataId }}
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
@@ -32,7 +32,7 @@ kind: BkLogConfig
 metadata:
   name: {{ include "common.names.fullname" . }}-bklog-gateway-access
 spec:
-  dataId: {{ .Values.bklogConfig.gatewayAccess.dataId }}
+  dataId: {{ .Values.bkLogConfig.gatewayAccess.dataId }}
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:
@@ -55,7 +55,7 @@ kind: BkLogConfig
 metadata:
   name: {{ include "common.names.fullname" . }}-bklog-gateway-error
 spec:
-  dataId: {{ .Values.bklogConfig.gatewayError.dataId }}
+  dataId: {{ .Values.bkLogConfig.gatewayError.dataId }}
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:

@@ -1,11 +1,11 @@
-{{- if .Values.bklogConfig.turbo.enabled }}
+{{- if .Values.bkLogConfig.turbo.enabled }}
 # Service Log
 apiVersion: bk.tencent.com/v1alpha1
 kind: BkLogConfig
 metadata:
   name: {{ include "common.names.fullname" . }}-bklog-service
 spec:
-  dataId: {{ .Values.bklogConfig.turbo.dataId }}
+  dataId: {{ .Values.bkLogConfig.turbo.dataId }}
   logConfigType: container_log_config
   namespace: {{ .Release.Namespace }}
   labelSelector:

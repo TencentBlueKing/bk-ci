@@ -73,12 +73,12 @@ $ helm uninstall bkci
 ## 蓝鲸日志采集配置
 |参数|描述|默认值|
 |---|---|---|
-| `bklogConfig.enabled` | 是否开启日志采集 | `false` |
-| `bklogConfig.service.dataId` | 服务日志采集ID | `1` |
-| `bklogConfig.gatewayAccess.dataId` | 网关访问日志采集ID | `1` |
-| `bklogConfig.gatewayError.dataId` | 网关异常日志采集ID | `1` |
-| `bklogConfig.turbo.enabled` | 是否开启turbo的日志采集 | `false` |
-| `bklogConfig.turbo.dataId` | turbo日志采集ID | `1` |
+| `bkLogConfig.enabled` | 是否开启日志采集 | `false` |
+| `bkLogConfig.service.dataId` | 服务日志采集ID | `1` |
+| `bkLogConfig.gatewayAccess.dataId` | 网关访问日志采集ID | `1` |
+| `bkLogConfig.gatewayError.dataId` | 网关异常日志采集ID | `1` |
+| `bkLogConfig.turbo.enabled` | 是否开启turbo的日志采集 | `false` |
+| `bkLogConfig.turbo.dataId` | turbo日志采集ID | `1` |
 
 ## 蓝鲸监控配置
 |参数|描述|默认值|
