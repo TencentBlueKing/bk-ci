@@ -53,8 +53,7 @@ import java.time.LocalTime
 class SignInfoService(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,
-    private val signHistoryDao: SignHistoryDao,
-    private val objectMapper: ObjectMapper
+    private val signHistoryDao: SignHistoryDao
 ) {
 
     fun listHistory(
