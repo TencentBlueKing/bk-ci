@@ -54,35 +54,33 @@ class StreamGitTokenService @Autowired constructor(
 
     fun getToken(gitProjectId: Long): String {
         val projectId = getGitTokenKey(gitProjectId)
-        var token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
+        val token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
         val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
-        // 设置过期时间为一天2个小时
+        // 设置过期时间为一天12个小时
         val validTime = TimeUnit.DAYS.toSeconds(1) + TimeUnit.HOURS.toSeconds(12)
         return if (token == null) {
-            updateLock.lock()
-            try {
+            updateLock.use {
+                updateLock.lock()
                 val newToken = streamScmService.getToken(gitProjectId.toString())
                 logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
                 val objJsonStr = JsonUtil.toJson(newToken, false)
                 redisOperation.set(projectId, objJsonStr, validTime)
                 newToken.accessToken
-            } finally {
-                updateLock.unlock()
             }
         } else {
             // 如果过期，获取使用refreshToken去刷新token
-            updateLock.lock()
-            try {
-                if (isExpire(token)) {
-                    token = streamScmService.refreshToken(gitProjectId.toString(), token)
-                    logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${token.accessToken}")
-                    val objJsonStr = JsonUtil.toJson(token, false)
+            if (isExpire(token)) {
+                updateLock.use {
+                    updateLock.lock()
+                    val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token)
+                    logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
+                    val objJsonStr = JsonUtil.toJson(refreshToken, false)
                     redisOperation.set(projectId, objJsonStr, validTime)
+                    refreshToken.accessToken
                 }
-            } finally {
-                updateLock.unlock()
+            } else {
+                token.accessToken
             }
-            token.accessToken
         }
     }
 
