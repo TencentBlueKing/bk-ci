@@ -97,7 +97,7 @@ class StreamScmService @Autowired constructor(
     fun refreshToken(projectId: String, gitToken: GitToken): GitToken {
         return retryFun(
             log = "$projectId refresh token fail",
-            apiErrorCode = ErrorCodeEnum.GET_TOKEN_ERROR,
+            apiErrorCode = ErrorCodeEnum.REFRESH_TOKEN_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).refreshToken(projectId, gitToken).data!!
             }

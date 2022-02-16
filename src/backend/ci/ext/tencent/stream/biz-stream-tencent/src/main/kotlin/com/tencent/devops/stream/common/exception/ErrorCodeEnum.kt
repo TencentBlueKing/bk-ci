@@ -42,6 +42,8 @@ enum class ErrorCodeEnum(
     // 工蜂接口请求错误
     DEVNET_TIMEOUT_ERROR(ErrorType.THIRD_PARTY, 2129003, "request DEVNET gateway timeout"),
     GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "get token from git error %s"),
+    REFRESH_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "refresh token from git error %s"),
+
     GET_YAML_CONTENT_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129004,
