@@ -29,7 +29,7 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-logger
+import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineGroupUpdate

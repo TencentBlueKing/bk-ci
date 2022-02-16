@@ -37,7 +37,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-mulHTE9"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -69,7 +69,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-EotY66d"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -109,7 +109,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-TUQEvvD"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -149,7 +149,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-e0QGoMP"
+      id: null
       if: null
       if-modify: null
       uses: null

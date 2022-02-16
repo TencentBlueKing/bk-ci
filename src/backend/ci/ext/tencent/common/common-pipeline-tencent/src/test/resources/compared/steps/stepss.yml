@@ -22,7 +22,7 @@ stages:
   if: null
   fast-kill: false
   jobs:
-  - id: "job-FyqGoTv"
+  - id: "job-0aOKjQV"
     name: "job1"
     resource-exclusive-declaration: null
     runs-on:
@@ -460,7 +460,7 @@ stages:
       run: null
       checkout: null
     - name: null
-      id: "step-E2Fjxhy"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -472,7 +472,7 @@ stages:
       run: "echo \"template_step_id_1 username world!\"\n"
       checkout: null
     - name: null
-      id: "step-FA7uFzb"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -484,7 +484,7 @@ stages:
       run: "echo \"cyc_step_id_1 username CYC_STEP1!\"\n"
       checkout: null
     - name: null
-      id: "step-NAf7q8v"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -496,7 +496,7 @@ stages:
       run: "echo \"cyc_step_id_3 username STEP6!\"\n"
       checkout: null
     - name: null
-      id: "step-h2XGafe"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -508,7 +508,7 @@ stages:
       run: "echo \"cyc_step_id_2 username CYC_STEP4!\"\n"
       checkout: null
     - name: null
-      id: "step-ytJvOfL"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -520,7 +520,7 @@ stages:
       run: "echo \"cyc_step_id_6 username STEP6!\"\n"
       checkout: null
     - name: null
-      id: "step-UnJijtP"
+      id: null
       if: null
       if-modify: null
       uses: null

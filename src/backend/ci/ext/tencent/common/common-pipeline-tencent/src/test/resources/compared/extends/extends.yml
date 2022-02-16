@@ -66,7 +66,7 @@ stages:
       run: null
       checkout: null
     - name: null
-      id: "step-wrAX8st"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -100,7 +100,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-SN1T7Kt"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -133,7 +133,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-96ZHcgq"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -165,7 +165,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-9u6NgAg"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -197,7 +197,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-Ly5fs4J"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -229,7 +229,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-oPE4Yyu"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -261,7 +261,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-RPYSG2G"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -273,7 +273,7 @@ stages:
       run: "echo \"res_repoA_job_id_2 username RES_JOB!\"\n"
       checkout: null
     - name: null
-      id: "step-EKudXXj"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -334,7 +334,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-lu5SVUM"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -366,7 +366,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-4BB5nvC"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -378,7 +378,7 @@ stages:
       run: "echo \"res_repoA_stage_id_1_job_id_2 stagename STAGENAME\"\n"
       checkout: null
     - name: null
-      id: "step-PQmztHF"
+      id: null
       if: null
       if-modify:
       - "asd/**"
@@ -431,7 +431,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-333TlwZ"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -463,7 +463,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-o9nol3E"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -475,7 +475,7 @@ stages:
       run: "echo \"res_repoA_stage_id_2_job_id_2 stagename STAGENAME\"\n"
       checkout: null
     - name: null
-      id: "step-tzXUE3y"
+      id: null
       if: null
       if-modify:
       - "asd/**"
@@ -516,7 +516,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-jfqyBga"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -556,7 +556,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-C5iV79e"
+      id: null
       if: null
       if-modify: null
       uses: null

@@ -37,7 +37,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-24vQnKQ"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -52,7 +52,7 @@ stages:
       run: "echo \"hello 1\"\n"
       checkout: null
     - name: "腾讯代码分析(官方-代码分析工作组)"
-      id: "step-77lAxqm"
+      id: "check"
       if: "true == true"
       if-modify: null
       uses: "CodeccCheckAtomDebug@4.*"

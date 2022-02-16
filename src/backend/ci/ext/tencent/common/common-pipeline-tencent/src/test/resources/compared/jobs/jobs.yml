@@ -40,7 +40,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-r62Ne4i"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -52,7 +52,7 @@ stages:
       run: "echo \"template_step_id_1 username world!\"\n"
       checkout: null
     - name: null
-      id: "step-UVdaZYH"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -64,7 +64,7 @@ stages:
       run: "echo \"cyc_step_id_1 username CYC_STEP1!\"\n"
       checkout: null
     - name: null
-      id: "step-ziZPMLj"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -76,7 +76,7 @@ stages:
       run: "echo \"cyc_step_id_3 username STEP6!\"\n"
       checkout: null
     - name: null
-      id: "step-SikP2y3"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -88,7 +88,7 @@ stages:
       run: "echo \"cyc_step_id_2 username CYC_STEP4!\"\n"
       checkout: null
     - name: null
-      id: "step-ro92lAS"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -100,7 +100,7 @@ stages:
       run: "echo \"cyc_step_id_6 username STEP6!\"\n"
       checkout: null
     - name: null
-      id: "step-9qaGM5A"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -112,7 +112,7 @@ stages:
       run: "echo \"cyc_step_id_5 username CYC_STEP5!\"\n"
       checkout: null
     - name: null
-      id: "step-uGZ39Ro"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -147,7 +147,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-lC9hwH3"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -159,7 +159,7 @@ stages:
       run: "echo \"root_stage_id_1, root_job_id_2\"\n"
       checkout: null
     - name: null
-      id: "step-lLDaAzs"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -171,7 +171,7 @@ stages:
       run: "echo \"res_repoA_step_id_1 username RES_STEP!\"\n"
       checkout: null
     - name: null
-      id: "step-y29NQf9"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -183,7 +183,7 @@ stages:
       run: "echo \"res_repoB_step_id_6 username STEP6!\"\n"
       checkout: null
     - name: null
-      id: "step-s0PO6jX"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -195,7 +195,7 @@ stages:
       run: "echo \"res_repoB_step_id_1 username RES_REPOA_STEP1!\"\n"
       checkout: null
     - name: null
-      id: "step-3V8wMuU"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -207,7 +207,7 @@ stages:
       run: "echo \"res_repoA_step_id_3 username RES_REPOA_STEP1_STEP3!\"\n"
       checkout: null
     - name: null
-      id: "step-1NADDc5"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -219,7 +219,7 @@ stages:
       run: "echo \"res_repoB_step_id_6 username STEP6!\"\n"
       checkout: null
     - name: null
-      id: "step-4a6u8l2"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -252,7 +252,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-C2RRhXy"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -284,7 +284,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-eokXjHC"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -316,7 +316,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-C9sOcUg"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -348,7 +348,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-pR8JrHN"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -380,7 +380,7 @@ stages:
     if: null
     steps:
     - name: null
-      id: "step-7EARYnA"
+      id: null
       if: null
       if-modify: null
       uses: null
@@ -392,7 +392,7 @@ stages:
       run: "echo \"res_repoA_job_id_2 username RES_JOB!\"\n"
       checkout: null
     - name: null
-      id: "step-8NtjUpl"
+      id: null
       if: null
       if-modify: null
       uses: null
