@@ -39,13 +39,12 @@ import com.tencent.devops.openapi.utils.ApiGatewayPubFile
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.jce.provider.JCERSAPublicKey
+import org.bouncycastle.openssl.PEMReader
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
-import java.security.KeyFactory
 import java.security.Security
-import java.security.spec.X509EncodedKeySpec
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.Response
@@ -99,9 +98,9 @@ class TencentApigwApiFilter(
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
-            requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Request bkapi jwt is empty.").build()
+            requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
+                .entity("Request bkapi jwt is empty.")
+                .build()
             )
             return false
         }
@@ -150,9 +149,9 @@ class TencentApigwApiFilter(
                         requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                     }
                 } else if (apiType == ApiType.USER) {
-                    requestContext.abortWith(
-                        Response.status(Response.Status.BAD_REQUEST)
-                            .entity("Request don't has user's access_token.").build()
+                    requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Request don't has user's access_token.")
+                        .build()
                     )
                     return false
                 }
@@ -199,6 +198,7 @@ class TencentApigwApiFilter(
     }
 
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): Map<String, Any> {
+        var reader: PEMReader? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
@@ -206,11 +206,11 @@ class TencentApigwApiFilter(
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubInner().toByteArray()
             }
             Security.addProvider(BouncyCastleProvider())
-            val keyFactory = KeyFactory.getInstance("RSA")
-            val pemParser = PEMParser(InputStreamReader(ByteArrayInputStream(key)))
-            val publicKey = keyFactory.generatePublic(X509EncodedKeySpec(pemParser.readPemObject().content))
-            val jwtParser = Jwts.parserBuilder().setSigningKey(publicKey).build()
-            val parse = jwtParser.parseClaimsJws(bkApiJwt)
+            val bais = ByteArrayInputStream(key)
+            reader = PEMReader(InputStreamReader(bais)) { "".toCharArray() }
+            val keyPair = reader.readObject() as JCERSAPublicKey
+            val jwtParser = Jwts.parser().setSigningKey(keyPair)
+            val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JsonUtil.toMap(parse.body)
         } catch (ignored: Exception) {
@@ -220,6 +220,8 @@ class TencentApigwApiFilter(
                 defaultMessage = "Parse jwt failed",
                 params = arrayOf(bkApiJwt)
             )
+        } finally {
+            reader?.close()
         }
     }
 }
