@@ -60,6 +60,6 @@ abstract class AbsPermissionGrantServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionGrantServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionGrantServiceImpl::class.java)
     }
 }

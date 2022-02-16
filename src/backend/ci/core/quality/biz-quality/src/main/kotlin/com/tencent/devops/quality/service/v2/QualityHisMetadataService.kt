@@ -61,6 +61,7 @@ class QualityHisMetadataService @Autowired constructor(
             buildIds = setOf(buildId),
             projectId = projectId
         ).data?.get(buildId) ?: "0"
+        // todo performance can be removed
         hisMetadataDao.saveHisOriginMetadata(
             dslContext = dslContext,
             projectId = projectId,
