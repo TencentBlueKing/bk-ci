@@ -1232,12 +1232,12 @@ turbo:
     repository: bkci-turbo
     tag: 0.0.16
     pullPolicy: IfNotPresent
-    pullSecrets: [ ]
+    pullSecrets: []
   replicaCount: 1
-  hostAliases: [ ]
+  hostAliases: []
   resources:
-    limits: { }
-    requests: { }
+    limits: {}
+    requests: {}
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
@@ -1250,20 +1250,20 @@ turbo:
   nodeAffinityPreset:
     type: ""
     key: ""
-    values: [ ]
-  affinity: { }
-  nodeSelector: { }
-  tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     tbs:
-      rootPath: 
+      rootPath: ""
       urlTemplate: api/v1/{engine}/resource/{resource_type}
-      dashboard: 
+      dashboard: ""
     devops:
-      rootPath: 
+      rootPath: ""
   autoscaling:
     enabled: false
     minReplicas: 1
