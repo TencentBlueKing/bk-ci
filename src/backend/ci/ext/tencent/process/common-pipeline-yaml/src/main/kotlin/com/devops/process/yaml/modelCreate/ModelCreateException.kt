@@ -25,34 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.parsers.modelCreate
+package com.devops.process.yaml.modelCreate
 
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+abstract class ModelCreateException(message: String) : RuntimeException(message)
 
-@ApiModel("将yaml转为蓝盾model需要的参数")
-data class ModelCreateEvent(
-    @ApiModelProperty("用户ID")
-    val userId: String,
-    @ApiModelProperty("蓝盾项目ID")
-    val projectCode: String,
-    val gitData: GitData? = null,
-    val streamData: StreamData? = null
-)
-
-@ApiModel("来自git相关的数据")
-data class GitData(
-    val repositoryUrl: String,
-    val gitProjectId: Long,
-    val commitId: String,
-    val branch: String
-)
-
-// 其他微服务需要可以将其抽象为接口根据泛型使用
-@ApiModel("来自stream服务的相关数据")
-data class StreamData(
-    val enableUserId: String,
-    val requestEventId: Long,
-    val objectKind: TGitObjectKind
-)
+class QualityRulesException(message: String, val errorCode: String? = null) : ModelCreateException(message)

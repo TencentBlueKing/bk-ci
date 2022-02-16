@@ -25,16 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.parsers.modelCreate
+package com.devops.process.yaml.modelCreate
 
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.YamlTransferData
-import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateEvent
-import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateInner
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -42,8 +41,6 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
@@ -64,12 +61,10 @@ class ModelCreate constructor(
     }
 
     fun createPipelineModel(
+        modelName: String,
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
-        pipeline: GitProjectPipeline,
-        pipelineParams: List<BuildFormProperty>,
-        changeSet: Set<String>? = null,
-        yamlTransferData: YamlTransferData? = null
+        pipelineParams: List<BuildFormProperty>
     ): Model {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, yaml)
@@ -86,13 +81,11 @@ class ModelCreate constructor(
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
 
-        val jobBuildTemplateAcrossInfos = if (yamlTransferData != null && event.streamData != null &&
-            event.gitData != null
-        ) {
+        val jobBuildTemplateAcrossInfos = if (event.yamlTransferData != null && event.streamData != null) {
             inner.getJobTemplateAcrossInfo(
-                yamlTransferData = yamlTransferData,
-                gitRequestEventId = event.streamData!!.requestEventId,
-                gitProjectId = event.gitData!!.gitProjectId
+                yamlTransferData = event.yamlTransferData,
+                gitRequestEventId = event.streamData.requestEventId,
+                gitProjectId = event.streamData.gitProjectId
             )
         } else {
             null
@@ -124,8 +117,6 @@ class ModelCreate constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    changeSet = changeSet,
-                    pipeline = pipeline,
                     jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
                 )
             )
@@ -147,14 +138,13 @@ class ModelCreate constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    pipeline = pipeline,
                     jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
                 )
             )
         }
 
         return Model(
-            name = GitCIPipelineUtils.genBKPipelineName(event.projectCode),
+            name = modelName,
             desc = "",
             stages = stageList,
             labels = labelList,

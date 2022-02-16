@@ -25,31 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+package com.devops.process.yaml.utils
 
-object GitCIPipelineUtils {
+import java.util.regex.Pattern
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
-
-    fun genGitCIV2BuildUrl(
-        homePage: String,
-        gitProjectId: Long,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
+object PathMatchUtils {
+    fun isIncludePathMatch(pathList: List<String>?, fileChangeSet: Set<String>?): Boolean {
+        if (pathList.isNullOrEmpty()) {
+            return true
         }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
+
+        fileChangeSet?.forEach { path ->
+            pathList.forEach { includePath ->
+                if (isPathMatch(path, includePath)) {
+                    return true
+                }
+            }
         }
-        return "$url/#$gitProjectId"
+        return false
     }
 
-    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+    /**
+     * Check if the path match
+     * example:
+     * fullPath: a/1.txt
+     * prefixPath: a/
+     */
+    private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
+        val fullPathList = fullPath.removePrefix("/").split("/")
+        val prefixPathList = prefixPath.removePrefix("/").split("/")
+        if (fullPathList.size < prefixPathList.size) {
+            return false
+        }
+
+        for (i in prefixPathList.indices) {
+            val pattern = Pattern.compile(prefixPathList[i].replace("*", "\\S*"))
+            val matcher = pattern.matcher(fullPathList[i])
+            if (prefixPathList[i] != "*" && !matcher.matches()) {
+                return false
+            }
+        }
+
+        return true
+    }
 }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml

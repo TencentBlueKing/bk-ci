@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.parsers.modelCreate
+package com.devops.process.yaml.modelCreate
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.ci.v2.JobRunsOnType
@@ -45,19 +45,17 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.stream.common.exception.QualityRulesException
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.enums.GitCINotifyType
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import org.slf4j.LoggerFactory
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
+import com.devops.process.yaml.utils.PathMatchUtils
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateEvent
-import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateInner
+import com.tencent.devops.common.notify.enums.NotifyType
 
 class ModelStage constructor(
     val client: Client,
@@ -77,18 +75,16 @@ class ModelStage constructor(
         stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
-        changeSet: Set<String>? = null,
-        pipeline: GitProjectPipeline,
         jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
-        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet)
+        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, event.changeSet)
 
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, changeSet)
+            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, event.changeSet)
             val elementList = modelElement.makeElementList(
                 job = job,
-                changeSet = changeSet,
+                changeSet = event.changeSet,
                 jobEnable = jobEnable,
                 event = event
             )
@@ -140,20 +136,22 @@ class ModelStage constructor(
             stageControlOption = stageControlOption,
             containers = containerList,
             finally = finalStage,
-            checkIn = createStagePauseCheck(
-                stageCheck = stage.checkIn,
-                position = ControlPointPosition.BEFORE_POSITION,
-                event = event,
-                pipeline = pipeline,
-                stageId = stageId
-            ),
-            checkOut = createStagePauseCheck(
-                stageCheck = stage.checkOut,
-                position = ControlPointPosition.AFTER_POSITION,
-                event = event,
-                pipeline = pipeline,
-                stageId = stageId
-            )
+            checkIn = event.pipelineInfo?.let {
+                createStagePauseCheck(
+                    stageCheck = stage.checkIn,
+                    position = ControlPointPosition.BEFORE_POSITION,
+                    event = event,
+                    stageId = stageId
+                )
+            },
+            checkOut = event.pipelineInfo?.let {
+                createStagePauseCheck(
+                    stageCheck = stage.checkOut,
+                    position = ControlPointPosition.AFTER_POSITION,
+                    event = event,
+                    stageId = stageId
+                )
+            }
         )
     }
 
@@ -161,7 +159,6 @@ class ModelStage constructor(
         stageCheck: StageCheck?,
         position: String,
         event: ModelCreateEvent,
-        pipeline: GitProjectPipeline,
         stageId: String
     ): StagePauseCheck? {
         if (stageCheck == null) return null
@@ -180,7 +177,6 @@ class ModelStage constructor(
                 stageCheck = stageCheck,
                 event = event,
                 position = position,
-                pipeline = pipeline,
                 stageId = stageId
             )
         }
@@ -218,7 +214,6 @@ class ModelStage constructor(
         stageCheck: StageCheck,
         event: ModelCreateEvent,
         position: String,
-        pipeline: GitProjectPipeline,
         stageId: String
     ): List<String>? {
         // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
@@ -260,7 +255,7 @@ class ModelStage constructor(
             }
             val opList = mutableListOf<RuleCreateRequestV3.CreateRequestOp>()
             gate.notifyOnFail.forEach NotifyEach@{ notify ->
-                val type = GitCINotifyType.getNotifyByYaml(notify.type) ?: return@NotifyEach
+                val type = getNotifyByYaml(notify.type) ?: return@NotifyEach
                 opList.add(
                     RuleCreateRequestV3.CreateRequestOp(
                         operation = RuleOperation.END,
@@ -283,7 +278,7 @@ class ModelStage constructor(
                     desc = "",
                     indicators = indicators,
                     position = position,
-                    range = listOf(pipeline.pipelineId),
+                    range = listOf(event.pipelineInfo!!.pipelineId),
                     templateRange = null,
                     gatewayId = null,
                     opList = opList,
@@ -300,7 +295,7 @@ class ModelStage constructor(
             val resultList = client.get(ServiceQualityRuleResource::class).create(
                 userId = event.userId,
                 projectId = event.projectCode,
-                pipelineId = pipeline.pipelineId,
+                pipelineId = event.pipelineInfo!!.pipelineId,
                 ruleList = ruleList
             ).data
             if (!resultList.isNullOrEmpty()) return resultList.map { it.ruleBuildId }
@@ -321,5 +316,20 @@ class ModelStage constructor(
             rule.substring(0 until index),
             rule.substring((index + 1) until rule.length)
         )
+    }
+
+    // 获取蓝盾通知支持的类型
+    private fun getNotifyByYaml(yamlText: String): NotifyType? {
+        return when (yamlText) {
+            "email" -> {
+                NotifyType.EMAIL
+            }
+            "wework-message" -> {
+                NotifyType.RTX
+            }
+            else -> {
+                return null
+            }
+        }
     }
 }

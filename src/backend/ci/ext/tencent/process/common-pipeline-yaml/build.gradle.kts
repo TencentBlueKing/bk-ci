@@ -25,31 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.utils
+dependencies {
+    api(project(":core:common:common-webhook:biz-common-webhook"))
+    api(project(":core:store:api-store"))
+    api(project(":core:quality:api-quality"))
 
-object GitCIPipelineUtils {
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
+    api(project(":ext:tencent:process:api-process-tencent"))
+}
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
-
-    fun genGitCIV2BuildUrl(
-        homePage: String,
-        gitProjectId: Long,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genGitCIV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+plugins {
+    `task-deploy-to-maven`
 }

@@ -25,28 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.parsers.modelCreate
+package com.devops.process.yaml.modelCreate.inner
 
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.v2.YamlTransferData
-import org.springframework.beans.factory.annotation.Value
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 
+/**
+ * ModelCreata的内部类，用来放一些不同使用者的不同方法和参数
+ */
 interface ModelCreateInner {
     // 控制run插件是否是研发商店插件
     val marketRunTask: Boolean
+
     // 研发商店的run插件的code
     val runPlugInAtomCode: String?
+
     // 研发商店的run插件的版本
     val runPlugInVersion: String?
 
-    // 获取job跨项目信息
+    /**
+     * 获取job级别的跨项目模板共享凭证信息
+     * @param yamlTransferData yaml模板装换的中间数据
+     * @param gitRequestEventId stream的requestEvent ID
+     * @param gitProjectId stream中绑定的git仓库id
+     */
     fun getJobTemplateAcrossInfo(
         yamlTransferData: YamlTransferData,
         gitRequestEventId: Long,
         gitProjectId: Long
     ): Map<String, BuildTemplateAcrossInfo>
 
-    // 获取job的service的devcloud输入
+    //
+    /**
+     * 获取job的service的devcloud输入
+     * @param image 镜像信息 mysql:5.1
+     * @param imageName 镜像名称 mysql
+     * @param imageTag 镜像版本 5.1
+     * @param params 镜像参数
+     */
     @Throws(RuntimeException::class)
     fun getServiceJobDevCloudInput(
         image: String,
@@ -55,7 +72,11 @@ interface ModelCreateInner {
         params: String
     ): ServiceJobDevCloudInput?
 
-    // 通过 checkout: self 来构造checkout插件的输入参数
+    /**
+     * 通过 checkout: self 来构造checkout插件的输入参数
+     * @param inputMap 插件需要的输入参数
+     * @param event model创建的总事件
+     */
     fun makeCheckoutSelf(
         inputMap: MutableMap<String, Any?>,
         event: ModelCreateEvent

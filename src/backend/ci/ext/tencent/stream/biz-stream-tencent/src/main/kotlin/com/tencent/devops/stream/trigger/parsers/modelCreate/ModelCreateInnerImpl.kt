@@ -27,11 +27,11 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.ci.v2.enums.TemplateType
-import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateEvent
-import com.tencent.devops.common.ci.v2.parsers.modelCreate.ModelCreateInner
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
