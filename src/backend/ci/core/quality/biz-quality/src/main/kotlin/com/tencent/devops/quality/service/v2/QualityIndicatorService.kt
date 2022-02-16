@@ -166,25 +166,18 @@ class QualityIndicatorService @Autowired constructor(
         enNameSet: Collection<String>,
         projectId: String? = null
     ): List<QualityIndicator> {
-        return if (enNameSet.isNotEmpty()) {
-            val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
-            val indicatorRecords = indicatorDao.listByElementType(
-                dslContext = dslContext,
-                elementType = elementType,
-                type = null,
-                enNameSet = enNameSet,
-                projectId = tempProjectId
-            )
-            serviceListIndicatorRecord(indicatorRecords)
-        } else {
-            val indicatorRecords = indicatorDao.listByElementType(
-                dslContext = dslContext,
-                elementType = elementType,
-                type = null,
-                enNameSet = enNameSet
-            )
-            serviceListIndicatorRecord(indicatorRecords)
+        val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
+        val indicatorRecords = indicatorDao.listByElementType(
+            dslContext = dslContext,
+            elementType = elementType,
+            type = null,
+            enNameSet = enNameSet,
+            projectId = tempProjectId
+        )?.associateBy { it.enName }
+        val allIndicatorRecords = enNameSet.map {
+            indicatorRecords?.get(it) ?: throw OperationException("indicator id $it is not exist")
         }
+        return serviceListIndicatorRecord(allIndicatorRecords)
     }
 
     fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
