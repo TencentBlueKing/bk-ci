@@ -24,37 +24,26 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.auth.configuration
+package com.tencent.devops.openapi.service
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitProjectInfoService
-import com.tencent.devops.auth.service.gitci.StreamGitPermissionServiceImpl
-import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.google.common.cache.CacheBuilder
+import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
-@Configuration
-class StreamLocalConfiguration {
+@Service
+class IndexService {
+    private val indexCache = CacheBuilder.newBuilder()
+        .maximumSize(100000)
+        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .build<String/*buildId*/, String>()
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun tgitStreamPermissionService(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitProjectInfoService
-    ) = StreamGitPermissionServiceImpl(client, managerService, projectInfoService)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun tgitStreamProjectPermissionService(
-        streamPermissionService: StreamPermissionServiceImpl
-    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
-
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitProjectInfoService(client)
+    fun getHandle(buildId: String, action: () -> String): String {
+        var index = indexCache.getIfPresent(buildId)
+        if (index != null) {
+            return index
+        }
+        index = action()
+        indexCache.put(buildId, index)
+        return index
+    }
 }
