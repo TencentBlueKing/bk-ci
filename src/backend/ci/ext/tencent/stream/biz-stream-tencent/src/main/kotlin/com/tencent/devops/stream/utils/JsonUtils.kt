@@ -26,17 +26,18 @@
  */
 
 package com.tencent.devops.stream.utils
-
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.repository.pojo.oauth.GitToken
 
 object JsonUtils {
-    val mapper = ObjectMapper()
+    val mapper = jacksonObjectMapper()
 
     fun objectToString(obj: Any): String {
         return mapper.writeValueAsString(obj)
     }
-    fun stringToObject(str: String) {
+
+    fun <T> stringToObject(str: String): GitToken {
         return mapper.readValue(str)
     }
 }
