@@ -79,6 +79,7 @@ class StreamGitTokenService @Autowired constructor(
                     refreshToken.accessToken
                 }
             } else {
+                // 未过期，直接返回token
                 token.accessToken
             }
         }
