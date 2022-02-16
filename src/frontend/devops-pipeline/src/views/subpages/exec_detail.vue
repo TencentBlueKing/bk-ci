@@ -86,13 +86,18 @@
                 <bk-radio :value="true">{{ $t('editPage.retryFailJobs') }}</bk-radio>
             </bk-radio-group>
         </bk-dialog>
+
+        <check-atom-dialog
+            :is-show-check-dialog="isShowCheckDialog"
+            :toggle-check="toggleCheckDialog"
+            :element="currentAtom"
+        ></check-atom-dialog>
     </section>
 </template>
 
 <script>
     import { mapState, mapActions } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
-    import BkPipeline from '../../../../bk-pipeline'
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
     import outputOption from '@/components/outputOption'
@@ -109,10 +114,10 @@
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import CheckAtomDialog from '@/components/CheckAtomDialog'
 
     export default {
         components: {
-            BkPipeline,
             StagePropertyPanel,
             viewPart,
             codeRecord,
@@ -125,7 +130,8 @@
             stageReviewPanel,
             Logo,
             MiniMap,
-            AtomPropertyPanel
+            AtomPropertyPanel,
+            CheckAtomDialog
         },
         mixins: [pipelineOperateMixin, pipelineConstMixin],
 
@@ -138,6 +144,8 @@
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
+                isShowCheckDialog: false,
+                currentAtom: {},
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -192,6 +200,7 @@
                         editable: false,
                         isExecDetail: true,
                         userName: this.$userInfo.username,
+                        cancelUserId: this.execDetail && this.execDetail.cancelUserId,
                         pipeline: this.execDetail && this.execDetail.model,
                         matchRules: this.curMatchRules
                     },
@@ -393,6 +402,17 @@
                     done()
                 }
             },
+            toggleCheckDialog (isShow = false) {
+                this.isShowCheckDialog = isShow
+                if (!isShow) {
+                    this.currentAtom = {}
+                }
+            },
+            async reviewAtom (atom) {
+                // 人工审核
+                this.currentAtom = atom
+                this.toggleCheckDialog(true)
+            },
             async handleContinue ({ taskId, skip = false }, done) {
                 this.retryTaskId = taskId
                 this.skipTask = skip
@@ -402,6 +422,7 @@
             async handleExec ({
                 stageIndex,
                 containerIndex,
+                containerGroupIndex,
                 isContinue,
                 elementIndex,
                 showPanelType,
@@ -440,10 +461,10 @@
                         editingElementPos: {
                             stageIndex,
                             containerIndex,
+                            containerGroupIndex,
                             elementIndex
                         }
                     })
-                    done()
                 }
             },
             handleRetry ({ taskId, skip = false }) {
@@ -537,7 +558,7 @@
         }
         .inner-header-title > i {
             font-size: 12px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             font-style: normal;
         }
         .pipeline-detail-wrapper .inner-header {

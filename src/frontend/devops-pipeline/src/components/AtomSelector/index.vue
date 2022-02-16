@@ -410,7 +410,7 @@
                 margin-left: 3px;
                 color: $primaryColor;
                 &.spin-icon {
-                    color: $fontLigtherColor
+                    color: $fontLighterColor
                 }
             }
             > h3 {
@@ -491,7 +491,7 @@
             &.disabled {
                 .atom-info-content,
                 .atom-info-content .desc {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
             }
             .atom-logo {
@@ -500,7 +500,7 @@
                 font-size: 50px;
                 line-height: 50px;
                 margin-right: 15px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 .devops-icon {
                     fill: currentColor
                 }
@@ -524,7 +524,7 @@
                     .allow-os-list {
                         margin-left: 10px;
                         .os-tag {
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                             font-size: 14px;
                             padding-right: 4px;
                             vertical-align: top;

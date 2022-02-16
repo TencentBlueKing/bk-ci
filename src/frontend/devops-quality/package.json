@@ -3,7 +3,6 @@
   "version": "1.0.1",
   "description": "",
   "dependencies": {
-    "undefined": "/Users/roychen/Desktop/bk-ci/src/frontend/pipeline",
     "vue-echarts": "^3.0.9",
     "vuex-class": "^0.3.0"
   },
@@ -42,10 +41,9 @@
     "mini-css-extract-plugin": "^2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
-    "style-loader": "^0.23.0",
+    "style-loader": "^3.3.1",
     "vue-loader": "^15.9.8",
     "vue-property-decorator": "^6.0.0",
-    "vue-style-loader": "^3.0.3",
     "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
   },

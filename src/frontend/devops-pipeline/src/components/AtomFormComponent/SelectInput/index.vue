@@ -277,7 +277,7 @@
             position: absolute;
             right: 20px;
             top: 10px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             &.icon-close-circle-shape {
                 cursor: pointer;
             }
@@ -315,7 +315,7 @@
                 //     }
 
                 //     &[disabled] {
-                //         color: $fontLigtherColor;
+                //         color: $fontLighterColor;
                 //     }
                 // }
                 .option-group-name {
@@ -341,7 +341,7 @@
                     }
 
                     &[disabled] {
-                        color: $fontLigtherColor;
+                        color: $fontLighterColor;
                     }
                 }
                 .bk-select-extension a {

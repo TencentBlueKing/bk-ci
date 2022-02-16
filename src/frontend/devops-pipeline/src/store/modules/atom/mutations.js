@@ -141,7 +141,10 @@ export default {
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
-        if (state.pipeline) Vue.set(state.pipeline, 'editing', editing)
+        if (state.pipeline && state.pipeline.editing !== editing) {
+            debugger
+            Vue.set(state.pipeline, 'editing', editing)
+        }
         return state
     },
     [SET_CONTAINER_DETAIL]: (state, { containerTypeList, containerModalMap }) => {

@@ -8,6 +8,7 @@
             'editing': editable
         }"
     >
+        <Logo v-if="stageIndex !== 0" size="12" name="right-shape" class="container-connect-triangle" />
         <template v-if="containerIndex === 0">
             <cruveLine v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="58" :height="60"></cruveLine>
             <cruve-line class="first-connect-line connect-line right" style="margin-left: 2px" :width="58" :direction="false" :height="60"></cruve-line>
@@ -19,6 +20,7 @@
         <Component
             :is="jobComponentName"
             v-bind="jobComponentProps"
+            v-on="$listeners"
         />
     </div>
 </template>
@@ -26,6 +28,7 @@
 <script>
     import MatrixGroup from './MatrixGroup'
     import Job from './Job'
+    import Logo from './Logo'
     import CruveLine from './CruveLine'
     import {
         getOuterHeight
@@ -35,6 +38,7 @@
         components: {
             CruveLine,
             MatrixGroup,
+            Logo,
             Job
         },
         props: {
@@ -71,6 +75,10 @@
                 type: Function,
                 required: true
             },
+            cancelUserId: {
+                type: String,
+                default: 'unknow'
+            },
             userName: {
                 type: String,
                 default: 'unknow'
@@ -104,18 +112,8 @@
                         : {
                             container: this.container
                         }),
-                    stageIndex: this.stageIndex,
-                    containerDisabled: this.containerDisabled,
-                    containerIndex: this.containerIndex,
-                    containerLength: this.containerLength,
-                    stageDisabled: this.stageDisabled,
-                    editable: this.editable,
-                    isPreview: this.isPreview,
-                    handleChange: this.handleChange,
-                    userName: this.userName,
-                    matchRules: this.matchRules,
-                    canSkipElement: this.canSkipElement,
-                    updateCruveConnectHeight: this.updateCruveConnectHeight
+                    updateCruveConnectHeight: this.updateCruveConnectHeight,
+                    ...this.$props
                 }
             }
         },
@@ -167,21 +165,12 @@
             border-radius: 50%;
         }
         // 三角箭头
-        &:before {
-            font-family: 'bk-icons-linear' !important;
-            content: "\e94d";
+        .container-connect-triangle {
             position: absolute;
-            font-size: 13px;
             color: $primaryColor;
-            left: -10px;
+            left: -9px;
             top: math.div($itemHeight, 2) - math.div(13px, 2) + 1;
             z-index: 2;
-        }
-
-        &.first-stage-container {
-            &:before {
-                display: none;
-            }
         }
 
         .connect-line {

@@ -15,15 +15,36 @@
                 </span>
             </p>
             <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!canSkipElement"></container-type>
-            <span :title="$t('editPage.copyJob')" v-if="showCopyJob && !container.isError" class="devops-icon copyJob" @click.stop="copyContainer">
-                <Logo name="copy" size="18"></Logo>
-            </span>
+            <Logo
+                v-if="showCopyJob && !container.isError"
+                :title="t('copyJob')"
+                class="copyJob"
+                @click.stop="handleCopyContainer"
+                name="clipboard"
+                size="16"
+            />
             <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
             <span @click.stop v-if="canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="disabled"></bk-checkbox>
             </span>
+            <Logo
+                v-if="editable && container.matrixGroupFlag"
+                name="matrix"
+                size="16"
+                class="matrix-flag-icon"
+            >
+            </Logo>
+            <Logo
+                v-if="showMatrixFold"
+                name="angle-circle-down"
+                size="18"
+                @click.stop="toggleShowAtom"
+                :class="[showAtomList ? 'open' : '', container.status || 'readonly', 'fold-atom-icon']"
+            >
+            </Logo>
         </h3>
         <atom-list
+            v-if="showAtomList || !showMatrixFold"
             :stage="stage"
             :container="container"
             :editable="editable"
@@ -31,8 +52,10 @@
             :can-skip-element="canSkipElement"
             :stage-index="stageIndex"
             :handle-change="handleChange"
+            :cancel-user-id="cancelUserId"
             :user-name="userName"
             :container-index="containerIndex"
+            :container-group-index="containerGroupIndex"
             :container-status="container.status"
             :match-rules="matchRules"
             :container-disabled="disabled"
@@ -50,6 +73,8 @@
         getDependOnDesc,
         isObject
     } from './util'
+    import { localeMixins } from './locale'
+    
     import {
         DELETE_EVENT_NAME,
         COPY_EVENT_NAME,
@@ -59,7 +84,7 @@
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
-    import Logo from '@/components/Logo'
+    import Logo from './Logo'
 
     export default {
         components: {
@@ -68,7 +93,12 @@
             AtomList,
             Logo
         },
+        mixins: [localeMixins],
         props: {
+            stage: {
+                type: Object,
+                requiured: true
+            },
             container: {
                 type: Object,
                 requiured: true
@@ -83,6 +113,10 @@
                 type: Boolean,
                 default: true
             },
+            isExecDetail: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -95,6 +129,10 @@
                 type: Function,
                 required: true
             },
+            cancelUserId: {
+                type: String,
+                default: 'unknow'
+            },
             userName: {
                 type: String,
                 default: 'unknow'
@@ -102,7 +140,8 @@
             matchRules: {
                 type: Array,
                 default: []
-            }
+            },
+            updateCruveConnectHeight: Function
         },
         emits: [
             DELETE_EVENT_NAME,
@@ -113,6 +152,7 @@
             return {
                 showContainerName: false,
                 showAtomName: false,
+                showAtomList: false,
                 cruveHeight: 0
             }
         },
@@ -136,7 +176,7 @@
                     const { matrixContext, status, name } = this.container
                     const suffix = isObject(matrixContext) ? Object.values(matrixContext).join(', ') : ''
                     const isPrepare = (status === STATUS_MAP.PREPARE_ENV && this.containerGroupIndex === undefined)
-                    return isPrepare ? this.$t('editPage.prepareEnv') : `${name}${suffix ? `(${suffix})` : ''}`
+                    return isPrepare ? this.t('prepareEnv') : `${name}${suffix ? `(${suffix})` : ''}`
                 } catch (error) {
                     return 'unknow'
                 }
@@ -155,8 +195,12 @@
             },
             
             dependOnValue () {
+                if (isTriggerContainer(this.container)) return ''
                 const val = getDependOnDesc(this.container)
-                return `${this.$t('storeMap.dependOn')} 【${val}】`
+                return `${this.t('dependOn')} 【${val}】`
+            },
+            showMatrixFold () {
+                return this.isExecDetail && this.containerGroupIndex !== undefined
             }
         },
         watch: {
@@ -176,12 +220,16 @@
             }
         },
         methods: {
+            toggleShowAtom () {
+                this.showAtomList = !this.showAtomList
+                this.updateCruveConnectHeight()
+            },
             deleteJob () {
-                const { containerIndex, stageIndex, containerLength } = this
-
+                const { containerIndex, stageIndex, isOnlyOneContainer } = this
+                
                 this.$emit(DELETE_EVENT_NAME, {
                     stageIndex,
-                    containerIndex: containerLength === 1 ? undefined : containerIndex
+                    containerIndex: isOnlyOneContainer ? undefined : containerIndex
                 })
             },
             showContainerPanel () {
@@ -191,7 +239,7 @@
                     containerGroupIndex: this.containerGroupIndex
                 })
             },
-            copyContainer () {
+            handleCopyContainer () {
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
                     const container = {
@@ -218,7 +266,7 @@
                     console.error(e)
                     this.$showTips({
                         theme: 'error',
-                        message: this.$t('editPage.copyJobFail')
+                        message: this.t('copyJobFail')
                     })
                 }
             }
@@ -230,42 +278,11 @@
     @use "sass:math";
     @import "./index";
     .devops-stage-container {
-        text-align: left;
-        margin: 16px 20px 0 20px;
-        position: relative;
-
-        // 实心圆点
-        &:after {
-            content: '';
-            width: $smalldotR;
-            height: $smalldotR;
-            position: absolute;
-            right: math.div(-$smalldotR, 2);
-            top: math.div($itemHeight, 2) - (math.div($smalldotR, 2) - 1);
-            background: $primaryColor;
-            border-radius: 50%;
-        }
-        // 三角箭头
-        &:before {
-            font-family: 'bk-icons-linear' !important;
-            content: "\e94d";
-            position: absolute;
-            font-size: 13px;
-            color: $primaryColor;
-            left: -10px;
-            top: math.div($itemHeight, 2) - math.div(13px, 2) + 1;
-            z-index: 2;
-        }
-
-        &.first-stage-container {
-            &:before {
-                display: none;
-            }
-        }
         .container-title {
             display: flex;
             height: $itemHeight;
             background: #33333f;
+            cursor: pointer;
             color: white;
             font-size: 14px;
             align-items: center;
@@ -289,18 +306,29 @@
             input[type=checkbox] {
                 border-radius: 3px;
             }
-            .debug-btn {
+            .matrix-flag-icon {
                 position: absolute;
-                height: 100%;
-                right: 0;
+                top: 0px;
+                font-size: 16px;
+            }
+            .fold-atom-icon {
+                position: absolute;
+                background: white;
+                border-radius: 50%;
+                bottom: -10px;
+                left: 44%;
+                transition: all .3s ease;
+                &.open {
+                    transform: rotate(-180deg);
+                }
             }
             .copyJob {
                 display: none;
                 margin-right: 10px;
-                fill: #c4c6cd;
+                color: $fontLighterColor;
                 cursor: pointer;
                 &:hover {
-                    fill: $primaryColor;
+                    color: $primaryColor;
                 }
             }
             .close {

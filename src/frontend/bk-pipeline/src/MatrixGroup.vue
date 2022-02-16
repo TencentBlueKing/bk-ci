@@ -4,7 +4,7 @@
             <div class="matrix-name" @click.stop="toggleMatrixOpen">
                 <i :class="matrixToggleCls"></i>
                 <span :class="matrixTitleCls">
-                    {{$t('editPage.jobMatrix')}}
+                    {{t('jobMatrix')}}
                 </span>
             </div>
             <div class="matrix-status">
@@ -22,17 +22,8 @@
                 v-for="(job, jobIndex) in computedJobs"
                 :key="job.containerId"
                 :container="job"
-                :stage-index="stageIndex"
-                :container-index="containerIndex"
                 :container-group-index="jobIndex"
-                :container-length="containerLength"
-                :stage-disabled="stageDisabled"
-                :editable="editable"
-                :is-preview="isPreview"
-                :handle-change="handleChange"
-                :user-name="userName"
-                :match-rules="matchRules"
-                :can-skip-element="canSkipElement"
+                v-bind="$props"
             >
             </Job>
         </section>
@@ -44,13 +35,20 @@
     import StatusIcon from './StatusIcon'
     import Job from './Job'
     import { STATUS_MAP, CLICK_EVENT_NAME } from './constants'
-    import { getDependOnDesc, eventBus } from './util'
+    import { getDependOnDesc, eventBus, isTriggerContainer } from './util'
+    import { localeMixins } from './locale'
+    
     export default {
         components: {
             StatusIcon,
             Job
         },
+        mixins: [localeMixins],
         props: {
+            stage: {
+                type: Object,
+                requiured: true
+            },
             matrix: {
                 type: Object,
                 required: true
@@ -64,6 +62,10 @@
                 type: Boolean,
                 default: true
             },
+            isExecDetail: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -75,6 +77,10 @@
             handleChange: {
                 type: Function,
                 required: true
+            },
+            cancelUserId: {
+                type: String,
+                default: 'unknow'
             },
             userName: {
                 type: String,
@@ -88,7 +94,7 @@
         },
         data () {
             return {
-                isMatrixOpen: false
+                isMatrixOpen: true
             }
         },
         computed: {
@@ -123,11 +129,13 @@
                 return this.matrix.groupContainers.map(container => {
                     container.elements = container.elements.map((element, index) => {
                         const eleItem = this.matrix.elements[index] || {}
-                        return Object.assign(element, eleItem, element, {
+                        return {
+                            ...eleItem,
+                            ...element,
                             '@type': eleItem['@type'],
                             classType: eleItem.classType,
                             atomCode: eleItem.atomCode
-                        })
+                        }
                     })
                     return container
                 })
@@ -136,8 +144,9 @@
                 return this.computedJobs.length > 0
             },
             dependOnValue () {
+                if (isTriggerContainer(this.matrix)) return ''
                 const val = getDependOnDesc(this.matrix)
-                return `${this.$t('storeMap.dependOn')} 【${val}】`
+                return `${this.t('dependOn')} 【${val}】`
             }
         },
         methods: {

@@ -20,16 +20,13 @@ import { pluginUrlParse } from '@/utils/pipelineConst'
 const atomFieldMixin = {
     props: {
         type: {
-            type: String,
-            required: true
+            type: String
         },
         name: {
-            type: String,
-            required: true
+            type: String
         },
         value: {
             type: String,
-            required: true,
             default: ''
         },
         disabled: {

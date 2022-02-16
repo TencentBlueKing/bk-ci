@@ -42,7 +42,7 @@
     "devops-quality",
     "devops-nav",
     "devops-turbo",
-    "@bkui/pipeline"
+    "bk-pipeline"
   ],
   "dependencies": {
     "cross-env": "^7.0.3",

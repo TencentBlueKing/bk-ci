@@ -122,7 +122,7 @@
             height: 100%;
 
             .devops-icon {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 padding-left: 16px;
                 cursor: pointer;
                 &:hover,

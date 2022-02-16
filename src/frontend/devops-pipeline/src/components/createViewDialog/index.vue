@@ -437,7 +437,7 @@
                 position: relative;
                 top: 2px;
                 left: 2px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
             }
             .bk-tooltip-inner {
                 max-width: 268px;

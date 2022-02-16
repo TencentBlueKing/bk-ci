@@ -20,7 +20,7 @@
                     :match-rules="curMatchRules"
                     @change="handlePipelineChange"
                     @add-atom="addAtom"
-                    @click="handleAtomClick"
+                    @click="handlePipelineClick"
                     @add-stage="handleAddStage"
                     @stage-check="handleStageCheck"
                 >
@@ -87,7 +87,6 @@
 
 <script>
     import { mapState, mapActions, mapGetters } from 'vuex'
-    import BkPipeline from '../../../bk-pipeline'
     import AtomPropertyPanel from './AtomPropertyPanel'
     import ContainerPropertyPanel from './ContainerPropertyPanel'
     import StagePropertyPanel from './StagePropertyPanel'
@@ -97,7 +96,6 @@
 
     export default {
         components: {
-            BkPipeline,
             StagePropertyPanel,
             AtomPropertyPanel,
             ContainerPropertyPanel,
@@ -268,7 +266,7 @@
                     }
                 })
             },
-            handleAtomClick (args) {
+            handlePipelineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: args

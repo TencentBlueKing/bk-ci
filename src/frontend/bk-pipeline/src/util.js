@@ -99,7 +99,7 @@ export function convertMStoString (ms) {
 }
 
 export function checkContainerType (typeName) {
-    return (containerType) => containerType === typeName
+    return (container) => container['@type'] === typeName
 }
 
 /**
@@ -122,7 +122,8 @@ export const isNormalContainer = checkContainerType(NORMAL_CONTAINER_TYPE)
 
 export function getDependOnDesc (job) {
     try {
-        const { status, jobControlOption: { dependOnType, dependOnId, dependOnName } } = job
+        const { status, jobControlOption = {} } = job
+        const { dependOnType, dependOnId, dependOnName } = jobControlOption
         if (status !== STATUS_MAP.DEPENDENT_WAITING) return ''
         let val = ''
         if (dependOnType === 'ID') {
@@ -132,11 +133,49 @@ export function getDependOnDesc (job) {
         }
         return val
     } catch (e) {
-        console.log(e)
+        console.log(job, e)
         return ''
     }
 }
 
 export function isObject (o) {
     return o !== null && typeof o === 'object' && !Array.isArray(o)
+}
+
+export function getStatusCls (status) {
+    switch (status) {
+        case STATUS_MAP.QUEUE:
+        case STATUS_MAP.RUNNING:
+        case STATUS_MAP.REVIEWING:
+        case STATUS_MAP.PREPARE_ENV:
+        case STATUS_MAP.LOOP_WAITING:
+        case STATUS_MAP.DEPENDENT_WAITING:
+        case STATUS_MAP.CALL_WAITING:
+            return 'DOING'
+        case STATUS_MAP.UNEXEC:
+        case STATUS_MAP.DISABLED:
+        case STATUS_MAP.WAITING:
+            return 'NORMAL'
+        case STATUS_MAP.CANCELED:
+        case STATUS_MAP.REVIEW_ABORT:
+        case STATUS_MAP.TRY_FINALLY:
+        case STATUS_MAP.QUEUE_CACHE:
+        case STATUS_MAP.SKIP:
+            return 'WARNING'
+        case STATUS_MAP.FAILED:
+        case STATUS_MAP.TERMINATE:
+        case STATUS_MAP.HEARTBEAT_TIMEOUT:
+        case STATUS_MAP.QUALITY_CHECK_FAIL:
+        case STATUS_MAP.QUEUE_TIMEOUT:
+        case STATUS_MAP.EXEC_TIMEOUT:
+            return 'FAILED'
+        case STATUS_MAP.SUCCEED:
+        case STATUS_MAP.REVIEW_PROCESSED:
+        case STATUS_MAP.STAGE_SUCCESS:
+            return 'SUCCESS'
+        case STATUS_MAP.PAUSE:
+            return 'PAUSE'
+        default:
+            return ''
+    }
 }

@@ -47,7 +47,7 @@
                     </section>
                 </triggers>
 
-                <div :class="{ 'more-operation-entry': true, 'active': isDropmenuShow }">
+                <div :class="{ 'more-operation-entry': true }">
                     <show-tooltip placement="bottom-end" :content="$t('subpage.saveTempTooltips')" key="more_operation" name="more_operation" style="z-index: 1">
                         <div class="entry-btn">
                             <i class="entry-circle" v-for="i in [1, 2, 3]" :key="i" />
@@ -128,7 +128,7 @@
                 dialogConfig: {
                     title: '',
                     loading: false,
-                    formData: [],
+                    formData: {},
                     formConfig: [],
                     handleDialogConfirm: () => {},
                     handleDialogCancel: () => {}
@@ -617,7 +617,7 @@
                         font-size: 10px;
 
                         &[disabled] {
-                            color: $fontLigtherColor;
+                            color: $fontLighterColor;
                             cursor: auto;
                         }
                     }
@@ -657,7 +657,7 @@
             height: 100%;
 
             .devops-icon {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 padding-left: 16px;
                 cursor: pointer;
                 &:hover,

@@ -132,7 +132,7 @@
         }
         .empty-row {
             padding-left: 18px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
         }
     }
     .left-render {

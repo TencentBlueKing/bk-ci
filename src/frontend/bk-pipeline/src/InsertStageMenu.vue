@@ -1,8 +1,8 @@
 <template>
     <span class="insert-stage direction">
-        <div class="click-item" @click.stop="handleClick">
+        <div class="click-item" @click.stop="handleClick(false)">
             <span>
-                {{ $t('editPage.insertStage') }}
+                {{ t('insertStage') }}
             </span>
         </div>
         <div
@@ -13,15 +13,18 @@
             @click.stop="!disableFinally && handleClick(true)"
         >
             <span>
-                {{ $t('editPage.insertFinallyStage') }}
+                {{ t('insertFinallyStage') }}
             </span>
         </div>
     </span>
 </template>
 
 <script>
+    import { localeMixins } from './locale'
+    
     export default {
         name: 'insert-stage-menu',
+        mixins: [localeMixins],
         props: {
             editStage: {
                 type: Function,

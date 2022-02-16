@@ -81,12 +81,10 @@
 </template>
 
 <script>
-    import BkPipeline from '../../../../bk-pipeline'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
 
     export default {
         components: {
-            BkPipeline,
             KeyValueNormal
         },
         props: {

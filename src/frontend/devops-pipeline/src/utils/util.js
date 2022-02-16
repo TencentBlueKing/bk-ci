@@ -531,7 +531,7 @@ export function debounce (fn, interval = DEFAULT_TIME_INTERVAL) {
     return (...args) => {
         clearTimeout(timer)
         timer = setTimeout(() => {
-            clearTimeout(timer)
+            timer = null
             return fn(...args)
         }, interval)
     }

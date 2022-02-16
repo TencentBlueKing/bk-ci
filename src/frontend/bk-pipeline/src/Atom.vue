@@ -1,45 +1,33 @@
 <template>
     <li
         :key="atom.id"
-        :class="{
-            'atom-item': true,
-            [atomStatusCls]: true,
-            'arrival-atom': atom.status,
-            'quality-item': isQualityGateAtom,
-            'last-quality-item': isLastQualityAtom,
-            'quality-prev-atom': isPrevAtomQuality
-        }"
+        :class="atomCls"
         @click.stop="handleAtomClick(index)"
     >
-        <section
+        <template
             v-if="isQualityGateAtom"
-            :class="{
-                'atom-section quality-atom': true,
-                'is-review': atom.isReviewing,
-                [qualityStatus]: !!qualityStatus
-            }"
         >
-            <span class="atom-title">{{ $t('details.quality.quality') }}</span>
-            <span
-                v-if="atom.isReviewing && !isBusy"
-                :class="{
-                    'handler-list': true,
-                    'disabled-review': atom.isReviewing && !hasReviewPerm
-                }"
-            >
-                <span class="revire-btn continue-excude" @click.stop="qualityApprove('PROCESS')">{{ $t('resume') }}</span>
-                <span class="review-btn stop-excude" @click.stop="qualityApprove('ABORT')">{{ $t('terminate') }}</span>
+            <span class="atom-title">
+                <i></i>
+                <span>{{ t('quality') }}</span>
+                <i></i>
             </span>
-            <i class="devops-icon icon-circle-2-1 executing-job" v-if="atom.isReviewing && isBusy"></i>
-        </section>
-        <section
+            <template v-if="atom.isReviewing">
+                <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
+                <span
+                    v-else
+                    :class="{
+                        'handler-list': true,
+                        'disabled-review': atom.isReviewing && !hasReviewPerm
+                    }"
+                >
+                    <span class="revire-btn" @click.stop="qualityApprove('PROCESS')">{{ t('resume') }}</span>
+                    <span class="review-btn" @click.stop="qualityApprove('ABORT')">{{ t('terminate') }}</span>
+                </span>
+            </template>
+        </template>
+        <template
             v-else
-            :class="{
-                'atom-item atom-section normal-atom': true,
-                'is-error': atom.isError,
-                'is-intercept': isQualityCheckAtom,
-                'template-compare-atom': atom.templateModify
-            }"
         >
             <status-icon
                 v-if="!isSkip && !!atomStatus"
@@ -53,8 +41,9 @@
                 :src="atom.atomIcon"
                 :class="logoCls"
             />
-            <logo v-else
+            <Logo v-else
                 :class="logoCls"
+                :is-atom-icon="true"
                 :name="svgAtomIcon"
                 size="18"
             />
@@ -62,26 +51,29 @@
                 <span
                     :title="atom.name"
                     :class="{ 'skip-name': isSkip }"
-                >{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
+                >
+                    {{ atom.atomCode ? atom.name : t('pendingAtom') }}
+                </span>
             </p>
-            <bk-popover v-if="atom.isReviewing" placement="top">
+            <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
+            <bk-popover v-else-if="atom.isReviewing" placement="top">
                 <span
                     @click.stop="reviewAtom"
                     class="atom-reviewing-tips atom-operate-area"
-                    :disabled="hasReviewPerm"
-                >{{ $t('editPage.toCheck') }}</span>
+                    :disabled="!hasReviewPerm"
+                >{{ t('manualCheck') }}</span>
                 <template slot="content">
-                    <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
+                    <p>{{ t('checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
                 </template>
             </bk-popover>
-            <bk-popover v-else-if="atom.status === 'REVIEW_ABORT'" placement="top">
-                <span class="atom-review-diasbled-tips">{{ $t('editPage.aborted') }}</span>
+            <bk-popover v-else-if="isReviewAbort" placement="top">
+                <span class="atom-review-diasbled-tips">{{ t('aborted') }}</span>
                 <template slot="content">
-                    <p>{{ $t('editPage.abortTips') }}{{ $t('editPage.checkUser') }}{{ execDetail.cancelUserId }}</p>
+                    <p>{{ t('abortTips') }}{{ t('checkUser') }}{{ cancelUserId }}</p>
                 </template>
             </bk-popover>
             <template v-else-if="atom.status === 'PAUSE'">
-                <bk-popover placement="top" disabled="!Array.isArray(atom.pauseReviewers)">
+                <bk-popover placement="top" :disabled="!Array.isArray(atom.pauseReviewers)">
                     <span
                         :class="[
                             { 'disabled': isBusy || !hasExecPerm },
@@ -89,75 +81,74 @@
                         ]"
                         @click.stop="atomExecute(true)"
                     >
-                        {{ $t('resume') }}
+                        {{ t('resume') }}
                     </span>
                     <template slot="content">
-                        <p>{{ $t('editPage.checkUser') }}{{ pauseReviewerStr }}</p>
+                        <p>{{ t('checkUser') }}{{ pauseReviewerStr }}</p>
                     </template>
                 </bk-popover>
                 <span @click.stop="atomExecute(false)" class="pause-button">
-                    <i v-if="isBusy" class="devops-icon icon-circle-2-1 executing-job" />
-                    <span v-else>{{ $t('pause') }}</span>
+                    <span>{{ t('stop') }}</span>
                 </span>
             </template>
-            <span v-else class="atom-operate-area">
-                <i v-if="isBusy" class="devops-icon icon-circle-2-1 executing-job" />
-                <template v-else>
-                    <span
-                        v-if="atom.canRetry"
-                        @click.stop="skipOrRetry(false)"
-                    >
-                        {{ $t('retry') }}
+            <span class="atom-operate-area">
+                <span
+                    v-if="atom.canRetry"
+                    @click.stop="skipOrRetry(false)"
+                >
+                    {{ t('retry') }}
+                </span>
+                <span
+                    v-if="atom.canSkip"
+                    @click.stop="skipOrRetry(true)"
+                >
+                    {{ t('SKIP') }}
+                </span>
+                <bk-popover
+                    v-else-if="!isSkip && !isWaiting && atom.elapsed"
+                    placement="top"
+                    :disabled="!atom.elapsed"
+                >
+                    <span class="atom-execute-time">
+                        <span v-if="isElapsedGt1h">&gt;</span>
+                        {{ isElapsedGt1h ? '1h' : formatTime }}
                     </span>
-                    <span
-                        v-if="atom.canSkip"
-                        @click.stop="skipOrRetry(true)"
-                    >
-                        {{ $t('details.statusMap.SKIP') }}
-                    </span>
-                    <bk-popover
-                        v-else-if="!isSkip && !isWaiting && atom.elapsed"
-                        placement="top"
-                        :disabled="!atom.elapsed"
-                    >
-                        <span class="atom-execute-time">
-                            <span v-if="isElapsedGt1h">&gt;</span>
-                            {{ isElapsedGt1h ? '1h' : formatTime }}
-                        </span>
-                        <template slot="content">
-                            <p>{{ formatTime }}</p>
-                        </template>
-                    </bk-popover>
-                </template>
+                    <template slot="content">
+                        <p>{{ formatTime }}</p>
+                    </template>
+                </bk-popover>
             </span>
-            <span
+            
+            <Logo
                 v-if="editable && stageIndex !== 0 && !atom.isError"
-                class="devops-icon copy"
-                :title="$t('editPage.copyAtom')"
+                name="clipboard"
+                class="copy"
+                size="14"
+                :title="t('copyAtom')"
                 @click.stop="copyAtom"
-            >
-                <Logo name="copy" size="18"></Logo>
-            </span>
+            />
+            
             <template v-if="editable">
                 <i @click.stop="deleteAtom(false)" class="add-plus-icon close" />
-                <i v-if="atom.isError" class="devops-icon icon-exclamation-triangle-shape" />
+                <Logo v-if="atom.isError" class="atom-invalid-icon" name="exclamation-triangle-shape" />
             </template>
             <span v-if="canSkipElement" @click.stop="">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="atom.canElementSkip" :disabled="isSkip" />
             </span>
-        </section>
+        </template>
     </li>
 </template>
 
 <script>
     import { bkPopover, bkCheckbox } from 'bk-magic-vue'
     import StatusIcon from './StatusIcon'
-    import Logo from '@/components/Logo'
+    import Logo from './Logo'
     import {
         eventBus,
         hashID,
         convertMStoString
     } from './util'
+    import { localeMixins } from './locale'
     import {
         CLICK_EVENT_NAME,
         COPY_EVENT_NAME,
@@ -167,7 +158,8 @@
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
         ATOM_QUALITY_CHECK_EVENT_NAME,
-        ATOM_REVIEW_EVENT_NAME
+        ATOM_REVIEW_EVENT_NAME,
+        STATUS_MAP
     } from './constants'
 
     export default {
@@ -178,6 +170,7 @@
             bkPopover,
             bkCheckbox
         },
+        mixins: [localeMixins],
         props: {
             stage: {
                 type: Object,
@@ -199,6 +192,7 @@
                 type: Number,
                 requiured: true
             },
+            containerGroupIndex: Number,
             atomIndex: {
                 type: Number,
                 requiured: true
@@ -209,6 +203,10 @@
             isLastAtom: Boolean,
             prevAtom: {
                 type: Object
+            },
+            cancelUserId: {
+                type: String,
+                default: 'unknow'
             },
             userName: {
                 type: String,
@@ -226,9 +224,12 @@
             }
         },
         computed: {
+            isReviewAbort () {
+                return this.atom.status === STATUS_MAP.REVIEW_ABORT
+            },
             isHookAtom () {
                 try {
-                    return this.atom.additionalOptions.elementPostInfo
+                    return !!this.atom.additionalOptions.elementPostInfo
                 } catch (error) {
                     return false
                 }
@@ -242,10 +243,10 @@
             },
             qualityStatus () {
                 switch (true) {
-                    case ['SUCCEED', 'REVIEW_PROCESSED'].includes(this.atom.status):
-                        return 'is-success'
-                    case ['QUALITY_CHECK_FAIL', 'REVIEW_ABORT'].includes(this.atom.status):
-                        return 'is-fail'
+                    case [STATUS_MAP.SUCCEED, STATUS_MAP.REVIEW_PROCESSED].includes(this.atom.status):
+                        return STATUS_MAP.SUCCEED
+                    case [STATUS_MAP.QUALITY_CHECK_FAIL, STATUS_MAP.REVIEW_ABORT].includes(this.atom.status):
+                        return STATUS_MAP.FAILED
                 }
                 return ''
             },
@@ -258,12 +259,13 @@
             isPrevAtomQuality () {
                 return this.prevAtom !== null && this.isQualityGate(this.prevAtom)
             },
+            
             atomStatus () {
                 try {
                     if (this.atom.status) {
                         return this.atom.status
                     }
-                    return this.isWaiting ? 'WAITING' : ''
+                    return this.isWaiting ? STATUS_MAP.WAITING : ''
                 } catch (error) {
                     return ''
                 }
@@ -271,9 +273,9 @@
             atomStatusCls () {
                 try {
                     if (this.atom.additionalOptions && this.atom.additionalOptions.enable === false) {
-                        return 'DISABLED'
+                        return STATUS_MAP.DISABLED
                     }
-                    return this.atom.status ? this.atom.status : ''
+                    return this.atomStatus
                 } catch (error) {
                     console.error('get atom cls error', error)
                     return ''
@@ -285,9 +287,25 @@
                     'skip-icon': this.isSkip
                 }
             },
+            atomCls () {
+                return {
+                    readonly: !this.editable,
+                    'bk-pipeline-atom': true,
+                    'trigger-atom': this.stageIndex === 0,
+                    [STATUS_MAP.REVIEWING]: this.atom.isReviewing,
+                    [this.qualityStatus]: this.isQualityGateAtom && !!this.qualityStatus,
+                    [this.atomStatusCls]: !!this.atomStatusCls,
+                    'quality-atom': this.isQualityGateAtom,
+                    'is-error': this.atom.isError,
+                    'is-intercept': this.isQualityCheckAtom,
+                    'template-compare-atom': this.atom.templateModify,
+                    'last-quality-atom': this.isLastQualityAtom,
+                    'quality-prev-atom': this.isPrevAtomQuality
+                }
+            },
             svgAtomIcon () {
                 if (this.isHookAtom) {
-                    return 'icon-build-hooks'
+                    return 'build-hooks'
                 }
                 const { atomCode } = this.atom
                 if (!atomCode) {
@@ -362,7 +380,7 @@
         
                 this.isBusy = true
                 const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = this
-                        
+
                 await this.asyncEvent(ATOM_EXEC_EVENT_NAME, {
                     stageIndex,
                     containerIndex,
@@ -426,3 +444,259 @@
         }
     }
 </script>
+
+<style lang="scss">
+@import "./index";
+.bk-pipeline-atom {
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: $itemHeight;
+    margin: 0 0 11px 0;
+    background-color: white;
+    border-radius: 2px;
+    font-size: 14px;
+    transition: all .4s ease-in-out;
+    z-index: 2;
+    border: 1px solid $fontLighterColor;
+
+    &.trigger-atom {
+        &:before,
+        &:after {
+            display: none;
+        }
+    }
+
+    &:first-child {
+        &:before {
+            top: -16px;
+        }
+    }
+    &:before {
+        content: '';
+        position: absolute;
+        height: 14px;
+        width: 2px;
+        background: $fontLighterColor;
+        top: -12px;
+        left: 22px;
+        z-index: 1;
+    }
+
+    &:after {
+        content: '';
+        position: absolute;
+        height: 4px;
+        width: 4px;
+        border: 2px solid $fontLighterColor;
+        border-radius: 50%;
+        background: white !important;
+        top: -5px;
+        left: 19px;
+        z-index: 2;
+    }
+
+    &.is-intercept {
+        border-color: $warningColor;
+        &:hover {
+            border-color: $warningColor;
+        }
+    }
+
+    &.is-error {
+        border-color: $dangerColor;
+        color: $dangerColor;
+        &:hover {
+            .atom-invalid-icon {
+                display: none;
+            }
+        }
+        .atom-invalid-icon {
+            margin: 0 12px;
+        }
+    }
+
+    &:not(.readonly):hover{
+        border-color: $primaryColor;
+        .atom-icon.skip-icon {
+            color: $fontLighterColor;
+        }
+        .atom-icon,
+        .atom-name {
+            color: $primaryColor;
+        }
+        .add-plus-icon.close,
+        .copy {
+            cursor: pointer;
+            display: block;
+        }
+    }
+    .atom-icon {
+        text-align: center;
+        margin: 0 14.5px;
+        font-size: 18px;
+        width: 18px;
+        fill: currentColor;
+    }
+    .atom-icon.skip-icon {
+        color: $fontLighterColor;
+    }
+    .atom-name span.skip-name {
+        text-decoration: line-through;
+        color: $fontLighterColor;
+        &:hover {
+            color: $fontLighterColor;
+        }
+    }
+    .pause-button {
+        margin-right: 8px;
+        color: $primaryColor;
+    }
+
+    .add-plus-icon.close {
+        @include add-plus-icon(#fff, #fff, #c4c6cd, 16px, true);
+        @include add-plus-icon-hover($dangerColor, $dangerColor, white);
+        display: none;
+        margin-right: 10px;
+        border: none;
+        transform: rotate(45deg);
+        &:before, &:after {
+            left: 7px;
+            top: 4px;
+        }
+    }
+
+    .copy {
+        display: none;
+        margin-right: 10px;
+        color: $fontLighterColor;
+        &:hover {
+            color: $primaryColor;
+        }
+    }
+
+    > .atom-name {
+        flex: 1;
+        color: $fontWeightColor;
+        @include ellipsis();
+        max-width: 188px;
+        span:hover {
+            color: $primaryColor;
+        }
+    }
+    .disabled {
+        cursor: not-allowed;
+        color: $fontLighterColor;
+    }
+
+    .atom-operate-area {
+        margin: 0 8px 0 2px;
+        color: $primaryColor;
+    }
+
+    .atom-reviewing-tips {
+        &[disabled] {
+            cursor: not-allowed;
+            color: #c3cdd7;
+        }
+    }
+
+    .atom-review-diasbled-tips {
+        color: #c3cdd7;
+        margin: 0 8px 0 2px;
+    }
+    
+    .atom-canskip-checkbox {
+        margin-right: 6px;
+    }
+    
+    &.quality-atom {
+        display: flex;
+        justify-content: center;
+        border-color: transparent;
+        height: 24px;
+        background: transparent;
+        border-color: transparent !important;
+        font-size: 12px;
+        &:before {
+            height: 40px;
+            z-index: 8;
+        }
+        &:after {
+            display: none;
+        }
+        &.last-quality-atom {
+           &:before {
+                height: 22px;
+            }
+        }
+        .atom-title {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            margin-left: 22px;
+            > span {
+                border-radius: 12px;
+                font-weight: bold;
+                border: 1px solid $fontLighterColor;
+                padding: 0 12px;
+                margin: 0 4px;
+            }
+            > i {
+                height: 0;
+                flex: 1;
+                border-top: 2px dashed $fontLighterColor;
+            }
+        }
+        
+        .handler-list {
+            position: absolute;
+            right: 0;
+            span {
+                color: $primaryColor;
+                font-size: 12px;
+                &:first-child {
+                    margin-right: 5px;
+                }
+            }
+        }
+        .executing-job {
+            position: absolute;
+            top: 6px;
+            right: 42px;
+            &:before {
+                display: inline-block;
+                animation: rotating infinite .6s ease-in-out;
+            }
+        }
+        .disabled-review span {
+            color: $fontLighterColor;
+            cursor: default;
+        }
+    }
+    &.readonly {
+        background-color: white;
+        .atom-name:hover {
+            span {
+                color: $fontWeightColor;
+            }
+            .skip-name {
+                text-decoration: line-through;
+                color: $fontLighterColor;
+            }
+        }
+        
+        &.quality-prev-atom {
+            &:before {
+                height: 24px;
+                top: -23px;
+            }
+        }
+        
+    }
+}
+
+</style>

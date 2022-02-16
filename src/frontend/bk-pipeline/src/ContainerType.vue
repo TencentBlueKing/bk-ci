@@ -1,6 +1,9 @@
 <template>
     <span class="container-type">
-        <i v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{containerType.content}}</i>
+        <span v-if="!containerType.showIcon" v-bk-tooltips="containerType.tooltip">
+            {{containerType.content}}
+        </span>
+        <Logo v-else v-bk-tooltips="containerType.tooltip" v-bind="containerType.iconProps">{{containerType.content}}</Logo>
     </span>
 </template>
 <script>
@@ -10,11 +13,19 @@
         isTriggerContainer,
         isNormalContainer
     } from './util'
+    import Logo from './Logo'
     import { bkTooltips } from 'bk-magic-vue'
+    import { localeMixins } from './locale'
 
     export default {
         name: 'container-type',
-        directives: [bkTooltips],
+        directives: {
+            bkTooltips
+        },
+        components: {
+            Logo
+        },
+        mixins: [localeMixins],
         props: {
             container: Object
         },
@@ -27,53 +38,54 @@
                 let tooltip = {
                     disabled: true
                 }
+                let showIcon = true
                 switch (true) {
                     case container.systemElapsed !== undefined || container.elementElapsed !== undefined: {
                         const systemElapsed = convertElapsed(container.systemElapsed)
                         const elementElapsed = convertElapsed(container.elementElapsed)
                         const elapsedSum = systemElapsed + elementElapsed
                         const lt1Hour = elapsedSum < 36e5
-
                         tooltip = {
-                            content: `${this.$t('editPage.userTime')}：${convertMStoString(elementElapsed)} + ${this.$t('editPage.systemTime')}： ${convertMStoString(systemElapsed)}`
+                            content: `${this.t('userTime')}：${convertMStoString(elementElapsed)} + ${this.t('systemTime')}： ${convertMStoString(systemElapsed)}`
                         }
                         content = lt1Hour ? convertMStoString(elapsedSum) : '>1h'
+                        showIcon = false
                         break
                     }
                     case container.isError:
                         iconProps = {
-                            class: 'devops-icon icon-exclamation-triangle-shape is-danger'
+                            name: 'exclamation-triangle-shape',
+                            class: 'is-danger'
                         }
                         break
                     case isVmContainer(container):
                         iconProps = {
-                            class: `devops-icon icon-${baseOS.toLowerCase()}`,
+                            name: baseOS.toLowerCase(),
                             title: vmNames.join(',')
                         }
                         break
                     case isNormalContainer(container):
                         iconProps = {
-                            class: 'devops-icon icon-none'
+                            name: 'none'
                         }
                         break
                     case isTriggerContainer(container):
-                        content = `${elements.length} ${this.$t('settings.item')}`
+                        content = `${elements.length} ${this.t('item')}`
+                        showIcon = false
                         break
                 }
                 return {
                     iconProps,
                     tooltip,
-                    content
+                    content,
+                    showIcon
                 }
             }
         },
         methods: {
             convertElapsed (val) {
-                try {
-                    return parseInt(val, 10)
-                } catch (error) {
-                    return 0
-                }
+                const numVal = parseInt(val, 10)
+                return Number.isInteger(numVal) ? numVal : 0
             }
         }
     }

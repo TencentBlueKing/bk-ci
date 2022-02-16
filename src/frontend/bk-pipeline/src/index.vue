@@ -1,5 +1,5 @@
 <template>
-    <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="devops-stage-list">
+    <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="bk-pipeline">
         <Stage
             class="list-item"
             v-for="(stage, index) in computedStage"
@@ -12,6 +12,7 @@
             :has-finally-stage="hasFinallyStage"
             :stage-index="index"
             :user-name="userName"
+            :cancel-user-id="cancelUserId"
             :handle-change="updatePipeline"
             :stage-length="computedStage.length"
             :containers="stage.containers"
@@ -56,7 +57,7 @@
         STAGE_CHECK,
         STAGE_RETRY
     ]
-
+    
     export default {
         components: {
             Stage,
@@ -84,6 +85,10 @@
                 type: Object,
                 required: true
             },
+            cancelUserId: {
+                type: String,
+                default: 'unknow'
+            },
             userName: {
                 type: String,
                 default: 'unknow'
@@ -94,14 +99,12 @@
             }
         },
         data () {
-            console.log(this.matchRules)
             return {
                 DELETE_EVENT_NAME,
                 COPY_EVENT_NAME
             }
         },
         computed: {
-            
             computedStage: {
                 get () {
                     return this.pipeline.stages
@@ -118,10 +121,7 @@
                             }
                         }
 
-                        return {
-                            id,
-                            ...stage
-                        }
+                        return stage
                     })
                     this.updatePipeline(this.pipeline, {
                         stages: data
@@ -147,6 +147,21 @@
                 }
             }
         },
+        watch: {
+            'pipeline.stages': {
+                deep: true,
+                handler: function () {
+                    this.$emit('input', this.pipeline)
+                    this.$emit('change', this.pipeline)
+                }
+            },
+            'pipeline.name': {
+                handler: function () {
+                    this.$emit('input', this.pipeline)
+                    this.$emit('change', this.pipeline)
+                }
+            }
+        },
         mounted () {
             this.registeCustomEvent()
         },
@@ -158,7 +173,6 @@
             registeCustomEvent (destory = false) {
                 customEvents.forEach(eventName => {
                     const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
-                    console.log(eventName)
                     fn(eventName, (...args) => {
                         this.$emit(eventName, ...args)
                     })
@@ -166,8 +180,6 @@
             },
             updatePipeline (model, params) {
                 Object.assign(model, params)
-                this.$emit('input', this.pipeline)
-                this.$emit('change', this.pipeline)
             },
             checkMove (event) {
                 const dragContext = event.draggedContext || {}
@@ -187,7 +199,9 @@
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
             },
             handleDeleteStage (stageIndex) {
-                this.pipeline.stages.splice(stageIndex, 1)
+                if (Number.isInteger(stageIndex)) {
+                    this.pipeline.stages.splice(stageIndex, 1)
+                }
             }
         }
     }
@@ -195,7 +209,7 @@
 
 <style lang="scss">
     @import './index';
-    .devops-stage-list {
+    .bk-pipeline {
         display: flex;
         padding-right: 120px;
         width: fit-content;

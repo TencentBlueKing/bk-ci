@@ -784,7 +784,7 @@
                     @include ellipsis();
                 }
                 .artifact-size {
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     margin-left: 30px;
                 }
                 .download-link {
