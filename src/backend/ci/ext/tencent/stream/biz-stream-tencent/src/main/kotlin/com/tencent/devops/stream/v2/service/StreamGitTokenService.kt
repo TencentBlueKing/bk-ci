@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.v2.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -54,22 +55,32 @@ class StreamGitTokenService @Autowired constructor(
     fun getToken(gitProjectId: Long): String {
         val projectId = getGitTokenKey(gitProjectId)
         var token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
+        val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
+        // 设置过期时间为一天2个小时
+        val validTime = TimeUnit.DAYS.toSeconds(1) + TimeUnit.HOURS.toSeconds(12)
         return if (token == null) {
-            val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
             updateLock.lock()
             try {
                 val newToken = streamScmService.getToken(gitProjectId.toString())
-                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
-                // TODO: 2022/2/15 json 格式化有无封装好的工具，redis设置时间的考量
-                val objJsonStr = objectMapper.writeValueAsString(newToken)
-                redisOperation.set(getGitTokenKey(gitProjectId), objJsonStr, TimeUnit.MINUTES.toSeconds(30))
+                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
+                val objJsonStr = JsonUtil.toJson(newToken, false)
+                redisOperation.set(projectId, objJsonStr, validTime)
                 newToken.accessToken
             } finally {
                 updateLock.unlock()
             }
         } else {
-            if (isExpire(token)) {
-                token = streamScmService.refreshToken(getGitTokenLockKey(gitProjectId), token)
+            // 如果过期，获取使用refreshToken去刷新token
+            updateLock.lock()
+            try {
+                if (isExpire(token)) {
+                    token = streamScmService.refreshToken(gitProjectId.toString(), token)
+                    logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${token.accessToken}")
+                    val objJsonStr = JsonUtil.toJson(token, false)
+                    redisOperation.set(projectId, objJsonStr, validTime)
+                }
+            } finally {
+                updateLock.unlock()
             }
             token.accessToken
         }

@@ -66,7 +66,7 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     }
 
     override fun refreshToken(gitProjectId: String, token: GitToken): Result<GitToken> {
-        return Result(gitService.refreshToken(gitProjectId, token))
+        return Result(gitService.refreshProjectToken(gitProjectId, token))
     }
 
     override fun getMembers(
