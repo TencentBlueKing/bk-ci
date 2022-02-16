@@ -86,7 +86,8 @@ class StreamGitTokenService @Autowired constructor(
     }
 
     private fun isExpire(accessToken: GitToken): Boolean {
-        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 <= System.currentTimeMillis()
+        // 提前半个小时刷新token
+        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
     }
 
     // TODO 暂时不加入销毁逻辑
