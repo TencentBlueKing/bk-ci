@@ -94,7 +94,6 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -329,6 +328,30 @@ class GitService @Autowired constructor(
 
     fun refreshToken(userId: String, accessToken: GitToken): GitToken {
         logger.info("Start to refresh the token of user $userId")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
+                "&grant_type=refresh_token&refresh_token=${accessToken.refreshToken}&redirect_uri=$callbackUrl"
+            val request = Request.Builder()
+                .url(url)
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"),
+                        ""
+                    )
+                )
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body()!!.string()
+                return objectMapper.readValue(data, GitToken::class.java)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to refresh the token")
+        }
+    }
+
+    fun refreshProjectToken(projectId: String, accessToken: GitToken): GitToken {
+        logger.info("Start to refresh the token of projectId $projectId")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
