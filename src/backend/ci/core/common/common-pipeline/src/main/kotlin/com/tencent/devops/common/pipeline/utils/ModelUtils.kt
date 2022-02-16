@@ -140,9 +140,7 @@ object ModelUtils {
             return
         }
 
-        if (additionalOptions.manualRetry == null || additionalOptions.manualRetry == true) {
-            element.canRetry = true
-        }
+        element.canRetry = additionalOptions.manualRetry
 
         if (additionalOptions.continueWhenFailed) { // 开启了自动跳过
             if (additionalOptions.manualSkip == true) { // 开启了手动跳过 会覆盖自动跳过

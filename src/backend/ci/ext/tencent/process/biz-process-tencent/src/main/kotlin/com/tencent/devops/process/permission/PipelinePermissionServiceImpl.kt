@@ -259,6 +259,10 @@ class PipelinePermissionServiceImpl @Autowired constructor(
             group = group
         )
 
+    override fun checkProjectManager(userId: String, projectId: String): Boolean {
+        return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(PipelinePermissionServiceImpl::class.java)
     }

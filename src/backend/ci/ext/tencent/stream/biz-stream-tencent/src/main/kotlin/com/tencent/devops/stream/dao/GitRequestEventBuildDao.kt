@@ -297,7 +297,7 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getRequestEventBuildList(
+    fun getRequestEventBuildListCount(
         dslContext: DSLContext,
         gitProjectId: Long,
         branchName: String?,
@@ -305,7 +305,52 @@ class GitRequestEventBuildDao {
         triggerUser: String?,
         pipelineId: String?,
         event: String?
+    ): Int {
+        return getRequestEventBuildRecords(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            branchName = branchName,
+            sourceGitProjectId = sourceGitProjectId,
+            triggerUser = triggerUser,
+            pipelineId = pipelineId,
+            event = event
+        ).count()
+    }
+
+    fun getRequestEventBuildList(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        branchName: String?,
+        sourceGitProjectId: Long?,
+        triggerUser: String?,
+        pipelineId: String?,
+        event: String?,
+        limit: Int,
+        offset: Int
     ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return getRequestEventBuildRecords(
+                dslContext = dslContext,
+                gitProjectId = gitProjectId,
+                branchName = branchName,
+                sourceGitProjectId = sourceGitProjectId,
+                triggerUser = triggerUser,
+                pipelineId = pipelineId,
+                event = event
+            ).orderBy(EVENT_ID.desc()).limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    private fun getRequestEventBuildRecords(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        branchName: String?,
+        sourceGitProjectId: Long?,
+        triggerUser: String?,
+        pipelineId: String?,
+        event: String?
+    ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
@@ -328,8 +373,7 @@ class GitRequestEventBuildDao {
             if (!event.isNullOrBlank()) {
                 dsl.and(OBJECT_KIND.eq(event))
             }
-            return dsl.orderBy(EVENT_ID.desc())
-                .fetch()
+            return dsl
         }
     }
 

@@ -63,6 +63,7 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deletePipelineWebhookByPipelineId(context, projectId, pipelineId)
             processDataClearDao.deleteTemplatePipelineByPipelineId(context, projectId, pipelineId)
             processDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineTemplateAcrossInfo(context, projectId, pipelineId)
             // 添加删除记录，插入要实现幂等
             processDao.addPipelineDataClear(
                 dslContext = context,
@@ -108,6 +109,7 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
+            processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,

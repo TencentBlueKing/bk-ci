@@ -102,6 +102,22 @@ class TxV3AuthProjectApi @Autowired constructor(
         ).data ?: false
     }
 
+    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+        return client.get(ServiceProjectAuthResource::class).isProjectUser(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode
+        ).data ?: false
+    }
+
+    override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+        return client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            userId = userId,
+            projectCode = projectCode,
+            token = tokenService.getSystemToken(null)!!
+        ).data ?: false
+    }
+
     override fun createProjectUser(
         user: String,
         serviceCode: AuthServiceCode,

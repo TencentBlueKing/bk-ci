@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Variable
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -94,7 +95,8 @@ object ModelParameters {
         event: GitRequestEvent,
         v2GitUrl: String?,
         originEvent: GitEvent?,
-        webhookParams: Map<String, String> = mapOf()
+        webhookParams: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData? = null
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -115,6 +117,11 @@ object ModelParameters {
         startParams[PIPELINE_GIT_SHA] = event.commitId
         if (event.commitId.isNotBlank() && event.commitId.length >= 8) {
             startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
+        }
+
+        // 模板替换关键字
+        if (yamlTransferData != null) {
+            startParams[CommonVariables.TEMPLATE_ACROSS_INFO_ID] = yamlTransferData.templateData.templateId
         }
 
         // 替换BuildMessage为了展示commit信息

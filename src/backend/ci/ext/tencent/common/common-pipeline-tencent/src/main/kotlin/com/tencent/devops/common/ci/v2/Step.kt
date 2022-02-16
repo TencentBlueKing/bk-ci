@@ -27,30 +27,28 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
 
 data class Step(
     val name: String?,
     val id: String?,
-    @ApiModelProperty(name = "if")
     @JsonProperty("if")
     val ifFiled: String?,
-    @ApiModelProperty(name = "if-modify")
     @JsonProperty("if-modify")
     val ifModify: List<String>? = null,
     val uses: String?,
     val with: Map<String, Any?>?,
-    @ApiModelProperty(name = "timeout-minutes")
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int?,
-    @ApiModelProperty(name = "continue-on-error")
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean?,
-    @ApiModelProperty(name = "retry-times")
     @JsonProperty("retry-times")
     val retryTimes: Int?,
     val env: Map<String, Any?>? = emptyMap(),
     val run: String?,
-    val checkout: String?
+    val checkout: String?,
+    // 在系统内唯一标识step唯一性，不参与yaml打印
+    @JsonIgnore
+    val taskId: String? = null
 )
