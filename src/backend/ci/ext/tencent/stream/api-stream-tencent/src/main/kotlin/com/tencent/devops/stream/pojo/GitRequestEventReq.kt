@@ -32,7 +32,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-// 工蜂所有推过来的请求
+// 该类提供给前端页面使用
 @ApiModel("工蜂触发请求Req")
 data class GitRequestEventReq(
     @ApiModelProperty("ID")
