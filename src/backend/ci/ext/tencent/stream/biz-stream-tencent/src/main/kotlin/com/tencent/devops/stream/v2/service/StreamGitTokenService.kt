@@ -69,7 +69,7 @@ class StreamGitTokenService @Autowired constructor(
             }
         } else {
             // 如果过期，获取使用refreshToken去刷新token
-            if (!isExpire(token)) {
+            if (isExpire(token)) {
                 updateLock.use {
                     updateLock.lock()
                     val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token)
