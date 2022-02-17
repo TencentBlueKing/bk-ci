@@ -1311,7 +1311,8 @@ class PipelineBuildFacadeService(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        updateTimeDesc: Boolean? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 1000
