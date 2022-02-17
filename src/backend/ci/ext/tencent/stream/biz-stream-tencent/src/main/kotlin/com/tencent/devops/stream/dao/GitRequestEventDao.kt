@@ -27,10 +27,14 @@
 
 package com.tencent.devops.stream.dao
 
+import com.rabbitmq.tools.json.JSONUtil
+import com.tencent.bkrepo.common.api.util.JsonUtils
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -125,7 +129,11 @@ class GitRequestEventDao {
                         record.description
                     },
                     mrTitle = record.mrTitle,
-                    gitEvent = null,
+                    gitEvent = try {
+                        JsonUtil.to(record.event, GitEvent::class.java)
+                    } catch (e: Exception) {
+                        null
+                    },
                     commitAuthorName = null
                 )
             }

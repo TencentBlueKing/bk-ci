@@ -103,18 +103,19 @@ data class GitRequestEventReq(
         mergeRequestId = gitRequestEvent.mergeRequestId,
         description = gitRequestEvent.description,
         mrTitle = gitRequestEvent.mrTitle,
-        gitEvent = gitRequestEvent.gitEvent,
+        gitEvent = null,
         deleteBranch = gitRequestEvent.isDeleteBranch(),
         deleteTag = gitRequestEvent.isDeleteTag(),
         noteId = null,
         noteUrl = null
     ) {
-        when (gitEvent) {
+        when (gitRequestEvent.gitEvent) {
             is GitNoteEvent -> {
-                val gitNoteEvent = gitEvent as GitNoteEvent
+                val gitNoteEvent = gitRequestEvent.gitEvent as GitNoteEvent
                 noteId = gitNoteEvent.objectAttributes.id
                 noteUrl = gitNoteEvent.objectAttributes.url
             }
+            else -> {}
         }
     }
 }
