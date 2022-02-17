@@ -170,17 +170,13 @@ class PipelineContextService @Autowired constructor(
         buildStepContext(c, variables, contextMap, outputArrayMap)
 
         // #6071 如果当前job为矩阵则追加矩阵上下文
-        val current = c.id?.let { it == containerId } == true
-        val inMatrix = outputArrayMap == null
-        if (current || inMatrix) {
-            // current in matrix
-            variables.forEach { (key, value) ->
-                val prefix = "jobs.${c.jobId ?: containerId}."
-                if (key.startsWith(prefix) && key.contains(".outputs.")) {
-                    contextMap[key.removePrefix(prefix)] = value
-                }
+        if (c.id?.let { it == containerId } != true) return
+        if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
+        variables.forEach { (key, value) ->
+            val prefix = "jobs.${c.jobId ?: containerId}."
+            if (key.startsWith(prefix) && key.contains(".outputs.")) {
+                contextMap[key.removePrefix(prefix)] = value
             }
-            if (current && inMatrix) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
         }
     }
 
