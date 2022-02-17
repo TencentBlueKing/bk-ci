@@ -24,37 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.auth.configuration
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.auth.service.gitci.GitProjectInfoService
-import com.tencent.devops.auth.service.gitci.StreamGitPermissionServiceImpl
-import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
-import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+package com.tencent.devops.stream.trigger.pojo
 
-@Configuration
-class StreamLocalConfiguration {
+data class YamlPathListEntry(
+    val yamlPath: String,
+    val checkType: CheckType
+)
 
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun tgitStreamPermissionService(
-        client: Client,
-        managerService: ManagerService,
-        projectInfoService: GitProjectInfoService
-    ) = StreamGitPermissionServiceImpl(client, managerService, projectInfoService)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-    fun tgitStreamProjectPermissionService(
-        streamPermissionService: StreamPermissionServiceImpl
-    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
-
-    @Bean
-    fun gitProjectInfoService(
-        client: Client
-    ) = GitProjectInfoService(client)
+enum class CheckType {
+    // 需要校验
+    NEED_CHECK,
+    // 无需校验
+    NO_NEED_CHECK,
+    // 校验有问题，改流水线不触发
+    NO_TRIGGER
 }
