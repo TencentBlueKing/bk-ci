@@ -80,6 +80,7 @@ class StreamGitTokenService @Autowired constructor(
                 }
             } else {
                 // 未过期，直接返回token
+                logger.info("token exist", token)
                 token.accessToken
             }
         }
