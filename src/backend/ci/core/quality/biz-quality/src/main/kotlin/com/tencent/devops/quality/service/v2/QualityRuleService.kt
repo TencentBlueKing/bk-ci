@@ -309,7 +309,7 @@ class QualityRuleService @Autowired constructor(
         val ruleMap = ruleMapDao.batchGet(dslContext, ruleIds)?.associateBy { it.ruleId }
         logger.info("QUALITY|get rule data for ruleIds: $ruleIds")
         val controlPointRecords = qualityControlPointDao.list(dslContext, records.map { it.controlPoint })
-        val ruleOperationMap = ruleOperationService.serviceBatchGet(dslContext, ruleIds).map { it.id to it }.toMap()
+        val ruleOperationMap = ruleOperationService.serviceBatchGet(dslContext, ruleIds).map { it.ruleId to it }.toMap()
         if (ruleMap.isNullOrEmpty()) {
             return null
         }
