@@ -56,6 +56,9 @@ import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
 import com.devops.process.yaml.utils.PathMatchUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.stream.pojo.v2.QualityElementInfo
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.util.AntPathMatcher
 
 class ModelStage constructor(
     val client: Client,
@@ -69,13 +72,25 @@ class ModelStage constructor(
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
     }
 
+    private val matcher = AntPathMatcher()
+
+    // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
+    val operations = mapOf(
+        QualityOperation.convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
+        QualityOperation.convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
+        QualityOperation.convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
+        QualityOperation.convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
+        QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
+    )
+
     fun createStage(
         stage: GitCIV2Stage,
         event: ModelCreateEvent,
         stageIndex: Int,
         finalStage: Boolean = false,
         resources: Resources? = null,
-        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
+        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?,
+        elementNames: MutableList<QualityElementInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
         val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, event.changeSet)
@@ -111,6 +126,18 @@ class ModelStage constructor(
                     buildTemplateAcrossInfo = jobBuildTemplateAcrossInfos?.get(job.id)
                 )
             }
+
+            // 添加红线指标判断需要的数据
+            elementList.forEach { ele ->
+                elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode().let {
+                    // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
+                    if (it == runPlugInAtomCode) {
+                        "run"
+                    } else {
+                        it
+                    }
+                }))
+            }
         }
 
         // 根据if设置stageController
@@ -141,7 +168,8 @@ class ModelStage constructor(
                     stageCheck = stage.checkIn,
                     position = ControlPointPosition.BEFORE_POSITION,
                     event = event,
-                    stageId = stageId
+                    stageId = stageId,
+                elementNames = elementNames
                 )
             },
             checkOut = event.pipelineInfo?.let {
@@ -149,7 +177,8 @@ class ModelStage constructor(
                     stageCheck = stage.checkOut,
                     position = ControlPointPosition.AFTER_POSITION,
                     event = event,
-                    stageId = stageId
+                    stageId = stageId,
+                elementNames = elementNames
                 )
             }
         )
@@ -159,7 +188,8 @@ class ModelStage constructor(
         stageCheck: StageCheck?,
         position: String,
         event: ModelCreateEvent,
-        stageId: String
+        stageId: String,
+        elementNames: MutableList<QualityElementInfo>?
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
@@ -177,7 +207,8 @@ class ModelStage constructor(
                 stageCheck = stageCheck,
                 event = event,
                 position = position,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             )
         }
         return check
@@ -210,25 +241,20 @@ class ModelStage constructor(
      * 根据规则创建红线
      * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
      */
+    @Suppress("ComplexMethod")
     private fun createRules(
         stageCheck: StageCheck,
         event: ModelCreateEvent,
         position: String,
-        stageId: String
+        stageId: String,
+        elementNames: MutableList<QualityElementInfo>?
     ): List<String>? {
-        // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
-        val operations = mapOf(
-            QualityOperation.convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
-            QualityOperation.convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
-            QualityOperation.convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
-            QualityOperation.convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
-            QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
-        )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
+        val taskSteps: MutableList<RuleCreateRequestV3.CreateRequestTask> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 // threshold可能包含小数，所以把最后的一部分都取出来在分割
-                val (atomCode, mid) = getAtomCodeAndOther(rule)
+                var (atomCode, stepName, mid) = getAtomCodeAndOther(rule, operations)
                 var op = ""
                 run breaking@{
                     operations.keys.forEach {
@@ -245,12 +271,24 @@ class ModelStage constructor(
                     )
                     return@GateEach
                 }
-                val enNameAndthreshold = mid.split(op)
+                val enNameAndThreshold = mid.split(op)
+
+                // 步骤不为空时添加步骤参数
+                if (stepName != null) {
+                    atomCode = checkAndGetRealStepName(stepName, elementNames) ?: atomCode
+                    taskSteps.add(
+                        RuleCreateRequestV3.CreateRequestTask(
+                            taskName = stepName.removeSuffix("*"),
+                            indicatorEnName = enNameAndThreshold.first().trim()
+                        )
+                    )
+                }
+
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    enName = enNameAndthreshold.first().trim(),
+                    enName = enNameAndThreshold.first().trim(),
                     operation = operations[op]!!.name,
-                    threshold = enNameAndthreshold.last().trim()
+                    threshold = enNameAndThreshold.last().trim()
                 )
             }
             val opList = mutableListOf<RuleCreateRequestV3.CreateRequestOp>()
@@ -283,7 +321,8 @@ class ModelStage constructor(
                     gatewayId = null,
                     opList = opList,
                     stageId = stageId,
-                    gateKeepers = gate.continueOnFail?.gatekeepers
+                    gateKeepers = gate.continueOnFail?.gatekeepers,
+                    taskSteps = taskSteps
                 )
             )
         }
@@ -310,12 +349,69 @@ class ModelStage constructor(
         return null
     }
 
-    private fun getAtomCodeAndOther(rule: String): Pair<String, String> {
-        val index = rule.indexOfFirst { it == '.' }
-        return Pair(
-            rule.substring(0 until index),
-            rule.substring((index + 1) until rule.length)
-        )
+    // 1、 <插件code>.<指标名><操作符><阈值>
+    // 2、 <插件code>.<步骤名称>.<指标名><操作符><阈值>
+    fun getAtomCodeAndOther(rule: String, operations: Map<String, QualityOperation>): Triple<String, String?, String> {
+        var op = ""
+        operations.keys.forEach {
+            if (rule.contains(it)) {
+                op = it
+            }
+        }
+        if (op.isBlank()) {
+            throw QualityRulesException("gates rules format error: no quality operations")
+        }
+        return when (rule.split(op).first().toCharArray()
+            .filter { it == '.' }
+            .groupBy { it.toString() }
+            .ifEmpty { null }?.get(".")?.count()
+        ) {
+            1 -> {
+                val index = rule.indexOfFirst { it == '.' }
+                return Triple(
+                    rule.substring(0 until index),
+                    null,
+                    rule.substring((index + 1) until rule.length)
+                )
+            }
+            2 -> {
+                val firstIndex = rule.indexOfFirst { it == '.' }
+                val first = rule.substring(0 until firstIndex)
+                val second = rule.removePrefix("$first.").indexOfFirst { it == '.' } + first.length + 1
+                return Triple(
+                    first,
+                    rule.substring((firstIndex + 1) until second),
+                    rule.substring((second + 1) until rule.length)
+                )
+            }
+            else -> {
+                throw QualityRulesException("gates rules format error: '.' number is wrong")
+            }
+        }
+    }
+
+    // 校验 当相同插件相同步骤名称匹配到多个时，系统无法判断以谁为准，将判定为失败
+    fun checkAndGetRealStepName(stepName: String, elementNames: MutableList<QualityElementInfo>?): String? {
+        if (elementNames.isNullOrEmpty()) {
+            return null
+        }
+        var matchTimes = 0
+        var atomCode: String? = null
+        elementNames.forEach {
+            if (matcher.match(stepName.replace("*", "**"), it.elementName)) {
+                matchTimes++
+                atomCode = it.atomCode
+            }
+            if (matchTimes >= 2) {
+                throw QualityRulesException(
+                    "there are multiple matches with the same step name $stepName of the same plug-in ${it.elementName}"
+                )
+            }
+        }
+        if (matchTimes < 1) {
+            throw QualityRulesException("there none matches with the step name $stepName")
+        }
+        return atomCode
     }
 
     // 获取蓝盾通知支持的类型

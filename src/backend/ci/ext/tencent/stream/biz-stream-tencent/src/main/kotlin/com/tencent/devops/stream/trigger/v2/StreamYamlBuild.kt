@@ -139,21 +139,26 @@ class StreamYamlBuild @Autowired constructor(
             filePath = pipeline.filePath
         )
         try {
-            triggerLock.lock()
+            val realPipeline: GitProjectPipeline
             val gitBasicSetting = streamBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
             // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
-            val realPipeline = pipelineService.getPipelineByFile(
-                event.gitProjectId,
-                pipeline.filePath
-            ) ?: pipeline
-            // 优先创建流水线为了绑定红线
-            if (realPipeline.pipelineId.isBlank()) {
-                streamYamlBaseBuild.savePipeline(
-                    pipeline = realPipeline,
-                    event = event,
-                    gitCIBasicSetting = gitBasicSetting,
-                    model = createTriggerModel(gitBasicSetting)
-                )
+            try {
+                triggerLock.lock()
+                realPipeline = pipelineService.getPipelineByFile(
+                    event.gitProjectId,
+                    pipeline.filePath
+                ) ?: pipeline
+                // 优先创建流水线为了绑定红线
+                if (realPipeline.pipelineId.isBlank()) {
+                    streamYamlBaseBuild.savePipeline(
+                        pipeline = realPipeline,
+                        event = event,
+                        gitCIBasicSetting = gitBasicSetting,
+                        model = createTriggerModel(gitBasicSetting)
+                    )
+                }
+            } finally {
+                triggerLock.unlock()
             }
 
             // 改名时保存需要修改名称
@@ -232,7 +237,6 @@ class StreamYamlBuild @Autowired constructor(
             )
         } finally {
             streamStorageBean.buildTime(LocalDateTime.now().timestampmilli() - start)
-            triggerLock.unlock()
         }
     }
 

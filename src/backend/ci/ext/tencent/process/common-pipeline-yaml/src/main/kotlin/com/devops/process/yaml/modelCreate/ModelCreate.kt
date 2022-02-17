@@ -46,6 +46,10 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
+import com.tencent.devops.stream.trigger.StreamTriggerCache
+import com.tencent.devops.stream.v2.service.StreamOauthService
+import com.tencent.devops.stream.v2.service.StreamScmService
+import com.tencent.devops.stream.pojo.v2.QualityElementInfo
 import org.slf4j.LoggerFactory
 
 class ModelCreate constructor(
@@ -108,6 +112,10 @@ class ModelCreate constructor(
         val stage1 = Stage(listOf(triggerContainer), id = stageId, name = stageId)
         stageList.add(stage1)
 
+        // 红线的步骤指标 xxx* 的判断，当指定多个指标时报错，所以需要维护一套List
+        // list中保存
+        val elementNames: MutableList<QualityElementInfo> = mutableListOf()
+
         // 其他的stage
         yaml.stages.forEach { stage ->
             stageList.add(
@@ -117,7 +125,8 @@ class ModelCreate constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    elementNames = elementNames
                 )
             )
         }
@@ -138,7 +147,8 @@ class ModelCreate constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    elementNames = null
                 )
             )
         }
