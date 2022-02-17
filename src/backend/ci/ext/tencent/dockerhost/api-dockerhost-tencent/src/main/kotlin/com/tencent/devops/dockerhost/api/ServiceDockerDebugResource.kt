@@ -66,7 +66,7 @@ interface ServiceDockerDebugResource {
         pipelineId: String,
         @ApiParam("容器ID", required = true)
         @QueryParam("containerId")
-        containerId: String,
+        containerId: String
     ): Result<String>
 
     @ApiOperation("终止流水线调试")

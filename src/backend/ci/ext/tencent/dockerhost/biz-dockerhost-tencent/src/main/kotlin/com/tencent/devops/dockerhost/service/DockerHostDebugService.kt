@@ -296,7 +296,7 @@ class DockerHostDebugService(
         dockerIp: String,
         pipelineId: String,
         projectId: String,
-        containerId: String,
+        containerId: String
     ): String {
         val requestBody = mapOf("cmd" to listOf("/bin/bash"), "container_id" to containerId)
         val request = Request.Builder().url("http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?" +
