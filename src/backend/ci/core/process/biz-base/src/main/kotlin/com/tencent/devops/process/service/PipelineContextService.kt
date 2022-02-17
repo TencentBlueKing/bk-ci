@@ -169,12 +169,18 @@ class PipelineContextService @Autowired constructor(
         // all element
         buildStepContext(c, variables, contextMap, outputArrayMap)
 
-        // in matrix
-        if (outputArrayMap != null && c.id?.let { it == containerId } != true) return
-        variables.forEach { (key, value) ->
-            val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix) && key.contains(".outputs.")) {
-                contextMap[key.removePrefix(prefix)] = value
+        // #6071 如果当前job为矩阵则追加矩阵上下文
+        if (outputArrayMap != null && c.id?.let { it == containerId } == true) {
+            // current in matrix
+            c.fetchMatrixContext()?.let { contextMap.putAll(it) }
+        } else {
+            // not in matrix
+            // 兼容处理，非矩阵内的outputs可以直接访问
+            variables.forEach { (key, value) ->
+                val prefix = "jobs.${c.jobId ?: containerId}."
+                if (key.startsWith(prefix) && key.contains(".outputs.")) {
+                    contextMap[key.removePrefix(prefix)] = value
+                }
             }
         }
     }

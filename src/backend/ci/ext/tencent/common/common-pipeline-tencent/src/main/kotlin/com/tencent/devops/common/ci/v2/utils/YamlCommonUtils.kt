@@ -29,13 +29,21 @@ package com.tencent.devops.common.ci.v2.utils
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
 
 object YamlCommonUtils {
     private val objectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)).apply {
-        registerModule(KotlinModule())
+        // 去掉替换模板中间过程中生成的中间变量
+        registerKotlinModule().setFilterProvider(
+            SimpleFilterProvider().addFilter(
+                YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+            )
+        )
     }
 
     fun getObjectMapper() = objectMapper

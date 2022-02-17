@@ -70,6 +70,6 @@ class GroupUserService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GroupUserService::class.java)
+        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
     }
 }

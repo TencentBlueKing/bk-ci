@@ -33,6 +33,10 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
     val client: Client
 ) : ApigwStreamResourceV3 {
 
+    companion object {
+        private const val MAX_PAGE_SIZE = 50
+    }
+
     override fun triggerStartup(
         appCode: String?,
         apigwType: String?,
@@ -72,12 +76,17 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>> {
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
         return client.get(GitCIPipelineResource::class).getPipelineList(
             userId = userId,
             gitProjectId = gitProjectId,
             keyword = keyword,
             page = page,
-            pageSize = pageSize
+            pageSize = realPageSize
         )
     }
 
@@ -155,6 +164,11 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         triggerUser: String?,
         pipelineId: String?
     ): Result<Page<GitCIBuildHistory>> {
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
         return client.get(GitCIHistoryResource::class).getHistoryBuildList(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -165,7 +179,7 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
             startBeginTime = startBeginTime,
             endBeginTime = endBeginTime,
             page = page,
-            pageSize = pageSize
+            pageSize = realPageSize
         )
     }
 
@@ -237,12 +251,17 @@ class ApigwStreamResourceV3Impl @Autowired constructor(
         orderBy: GitCodeProjectsOrder?,
         sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>> {
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
         return client.get(ServiceGitCIProjectResource::class).getProjects(
             userId = userId,
             type = type,
             search = search,
             page = page,
-            pageSize = pageSize,
+            pageSize = realPageSize,
             orderBy = orderBy,
             sort = sort
         )

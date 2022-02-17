@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -164,6 +165,25 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val path = "/ms/process/api/build/builds/timeout"
         val request = buildPost(path)
         val errorMessage = "构建超时结束请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
+    override fun getBuildAcrossTemplateInfo(
+        templateId: String
+    ): Result<List<BuildTemplateAcrossInfo>> {
+        val sb = StringBuilder(
+            "/ms/process/api/build/templates/across?templateId=$templateId"
+        )
+        val path = sb.toString()
+        val request = buildGet(path)
+        val errorMessage = "获取模板跨项目信息失败"
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,

@@ -250,9 +250,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return fileStr
     }
 
-    override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String) {
+    override fun asyncHandleUpdateAtom(context: DSLContext, atomId: String, userId: String, branch: String?) {
         // 执行构建流水线
-        runPipeline(context, atomId, userId)
+        runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
     }
 
     override fun validateUpdateMarketAtomReq(
@@ -497,7 +497,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             marketAtomDao.updateMarketAtomProps(context, atomId, props, userId)
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(context, atomId, atomEnvRequest)
             // 执行构建流水线
-            runPipeline(context, atomId, userId)
+            runPipeline(context = context, atomId = atomId, userId = userId, branch = branch)
         }
         return Result(true)
     }
@@ -527,7 +527,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         return processInfo
     }
 
-    private fun runPipeline(context: DSLContext, atomId: String, userId: String): Boolean {
+    @SuppressWarnings("ComplexMethod")
+    private fun runPipeline(context: DSLContext, atomId: String, userId: String, branch: String? = null): Boolean {
         val atomRecord = marketAtomDao.getAtomRecordById(context, atomId) ?: return false
         val atomCode = atomRecord.atomCode
         val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(context, atomCode, StoreTypeEnum.ATOM)
@@ -537,13 +538,12 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )!! // 查找新增插件时关联的项目
         val repositoryHashId = atomRecord.repositoryHashId
-        val branch = if (atomRecord.branch.isNullOrBlank()) MASTER else atomRecord.branch
         val commitId = handleCodeccTask(
             userId = userId,
             repositoryHashId = repositoryHashId,
             atomCode = atomCode,
             atomId = atomId,
-            branch = branch
+            branch = branch ?: MASTER
         )
         val buildInfo = marketAtomBuildInfoDao.getAtomBuildInfo(context, atomId)
         logger.info("the buildInfo is:$buildInfo")
@@ -574,7 +574,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 "script" to StringEscapeUtils.escapeJava(script),
                 "repositoryHashId" to atomRecord.repositoryHashId,
                 "repositoryPath" to (buildInfo.value2() ?: ""),
-                "branch" to branch
+                "branch" to (branch ?: MASTER)
             )
             // 将流水线模型中的变量替换成具体的值
             paramMap.forEach { (key, value) ->
@@ -635,7 +635,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             startParams["language"] = language
             startParams["script"] = script
             startParams["commitId"] = commitId
-            startParams["branch"] = branch
+            startParams["branch"] = branch ?: MASTER
             val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
                 userId, initProjectCode, atomPipelineRelRecord.pipelineId, startParams,
                 ChannelCode.AM

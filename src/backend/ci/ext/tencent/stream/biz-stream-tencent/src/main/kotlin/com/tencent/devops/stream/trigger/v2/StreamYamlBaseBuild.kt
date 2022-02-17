@@ -29,11 +29,14 @@ package com.tencent.devops.stream.trigger.v2
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.ci.v2.YamlTransferData
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -51,12 +54,19 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.pojo.isFork
+import com.tencent.devops.stream.pojo.isMr
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,7 +86,10 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val gitCheckService: GitCheckService,
     private val streamGitConfig: StreamGitConfig,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
+    private val triggerMessageUtil: StreamTriggerMessageUtils,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val oauthService: StreamOauthService,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
@@ -156,14 +169,13 @@ class StreamYamlBaseBuild @Autowired constructor(
         }
     }
 
-    @SuppressWarnings("LongParameterList")
-    fun startBuild(
+    private fun preStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         model: Model,
-        gitBuildId: Long
-    ): BuildId? {
+        yamlTransferData: YamlTransferData? = null
+    ) {
         // 【ID92537607】 stream 流水线标签不生效
         client.get(UserPipelineGroupResource::class).updatePipelineLabel(
             userId = event.userId,
@@ -172,13 +184,38 @@ class StreamYamlBaseBuild @Autowired constructor(
             labelIds = model.labels
         )
 
+        // 添加模板跨项目信息
+        if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
+            client.get(ServiceTemplateAcrossResource::class).batchCreate(
+                userId = event.userId,
+                projectId = gitCIBasicSetting.projectCode!!,
+                pipelineId = pipeline.pipelineId,
+                templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(
+                    gitRequestEventId = event.id!!,
+                    gitProjectId = event.gitProjectId
+                )
+            )
+        }
+    }
+
+    @SuppressWarnings("LongParameterList")
+    fun startBuild(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitCIBasicSetting: GitCIBasicSetting,
+        model: Model,
+        gitBuildId: Long,
+        yamlTransferData: YamlTransferData? = null
+    ): BuildId? {
+        preStartBuild(pipeline, event, gitCIBasicSetting, model, yamlTransferData)
+
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
         var buildId = ""
         try {
             logger.info(
-                "GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
+                "Stream Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
             )
             buildId = startupPipelineBuild(
                 processClient = processClient,
@@ -189,22 +226,101 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineName = pipeline.displayName
             )
             logger.info(
-                "GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
+                "Stream Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
             )
+        } catch (ignore: Throwable) {
+            errorStartBuild(gitCIBasicSetting, pipeline, gitBuildId, ignore, event, yamlTransferData)
+        } finally {
+            if (buildId.isNotEmpty()) {
+                kafkaClient.send(
+                    STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(
+                    StreamBuildInfo(
+                        buildId = buildId,
+                        streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
+                        washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                        )
+                    )
+                ))
+            }
+        }
+
+        if (buildId.isBlank()) {
+            return null
+        }
+
+        afterStartBuild(pipeline, buildId, gitBuildId, event, gitCIBasicSetting, yamlTransferData)
+
+        return BuildId(buildId)
+    }
+
+    private fun errorStartBuild(
+        gitCIBasicSetting: GitCIBasicSetting,
+        pipeline: GitProjectPipeline,
+        gitBuildId: Long,
+        ignore: Throwable,
+        event: GitRequestEvent,
+        yamlTransferData: YamlTransferData?
+    ) {
+        logger.error(
+            "Stream Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+            ignore
+        )
+        // 清除已经保存的构建记录
+        val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
+        if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
+
+        // 保存失败构建记录
+        gitCIEventSaveService.saveRunNotBuildEvent(
+            userId = event.userId,
+            eventId = event.id!!,
+            pipelineId = pipeline.pipelineId,
+            pipelineName = pipeline.displayName,
+            filePath = pipeline.filePath,
+            originYaml = build?.originYaml,
+            normalizedYaml = build?.normalizedYaml,
+            reason = TriggerReason.PIPELINE_RUN_ERROR.name,
+            reasonDetail = ignore.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
+            gitProjectId = event.gitProjectId,
+            sendCommitCheck = true,
+            commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
+            version = ymlVersion,
+            branch = event.branch
+        )
+
+        // 删除模板跨项目信息
+        if (yamlTransferData?.templateData != null) {
+            client.get(ServiceTemplateAcrossResource::class).delete(
+                projectId = gitCIBasicSetting.projectCode!!,
+                pipelineId = pipeline.pipelineId,
+                templateId = yamlTransferData.templateData.templateId,
+                buildId = null
+            )
+        }
+    }
+
+    private fun afterStartBuild(
+        pipeline: GitProjectPipeline,
+        buildId: String,
+        gitBuildId: Long,
+        event: GitRequestEvent,
+        gitCIBasicSetting: GitCIBasicSetting,
+        yamlTransferData: YamlTransferData?
+    ) {
+        try {
+            // 更新流水线和构建记录状态
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId, ymlVersion)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 成功构建的添加 流水线-分支 记录
-            if (!event.isFork() &&
-                (event.objectKind == TGitObjectKind.PUSH.value ||
-                        event.objectKind == TGitObjectKind.MERGE_REQUEST.value)
-            ) {
+            if (!event.isFork() && (event.objectKind == TGitObjectKind.PUSH.value || event.isMr())) {
                 streamPipelineBranchService.saveOrUpdate(
                     gitProjectId = gitCIBasicSetting.gitProjectId,
                     pipelineId = pipeline.pipelineId,
                     branch = event.branch
                 )
             }
+            // 发送commitCheck
             if (CommitCheckUtils.needSendCheck(event, gitCIBasicSetting)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
@@ -228,46 +344,23 @@ class StreamYamlBaseBuild @Autowired constructor(
                     pipelineId = pipeline.pipelineId
                 )
             }
-            return BuildId(buildId)
-        } catch (ignore: Throwable) {
-            logger.error(
-                "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
-                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
-                ignore
-            )
-            val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitCIEventSaveService.saveRunNotBuildEvent(
-                userId = event.userId,
-                eventId = event.id!!,
-                pipelineId = pipeline.pipelineId,
-                pipelineName = pipeline.displayName,
-                filePath = pipeline.filePath,
-                originYaml = build?.originYaml,
-                normalizedYaml = build?.normalizedYaml,
-                reason = TriggerReason.PIPELINE_RUN_ERROR.name,
-                reasonDetail = ignore.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
-                gitProjectId = event.gitProjectId,
-                sendCommitCheck = true,
-                commitCheckBlock = (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
-                version = ymlVersion,
-                branch = event.branch
-            )
-            if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
-        } finally {
-            if (buildId.isNotEmpty()) {
-                kafkaClient.send(
-                    STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(
-                        StreamBuildInfo(
-                            buildId = buildId,
-                            streamYamlUrl = "${gitCIBasicSetting.homepage}/blob/${event.commitId}/${pipeline.filePath}",
-                            washTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                        )
-                    )
+
+            // 更新跨项目模板信息
+            if (yamlTransferData?.templateData != null) {
+                client.get(ServiceTemplateAcrossResource::class).update(
+                    projectId = gitCIBasicSetting.projectCode!!,
+                    pipelineId = pipeline.pipelineId,
+                    templateId = yamlTransferData.templateData.templateId,
+                    buildId = buildId
                 )
             }
+        } catch (ignore: Exception) {
+            logger.error(
+                "Stream after Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+                ignore
+            )
         }
-
-        return null
     }
 
     private fun startupPipelineBuild(
@@ -279,12 +372,13 @@ class StreamYamlBaseBuild @Autowired constructor(
         pipelineName: String
     ): String {
         processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
-        return client.get(ServiceBuildResource::class).manualStartup(
+        return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
             pipelineId = pipelineId,
             values = mapOf(PIPELINE_NAME to pipelineName),
-            channelCode = channelCode
+            channelCode = channelCode,
+            startType = StartType.SERVICE
         ).data!!.id
     }
 
@@ -304,10 +398,60 @@ class StreamYamlBaseBuild @Autowired constructor(
         } catch (e: Exception) {
             logger.error(
                 "get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
-                        "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}"
+                    "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}"
             )
             return true
         }
         return false
+    }
+
+    private fun YamlTransferData.getTemplateAcrossInfo(
+        gitRequestEventId: Long,
+        gitProjectId: Long
+    ): List<BuildTemplateAcrossInfo> {
+        val remoteProjectIdMap = mutableMapOf<String, MutableMap<TemplateAcrossInfoType, BuildTemplateAcrossInfo>>()
+        templateData.transferDataMap.values.forEach { objectData ->
+            val templateType = objectData.templateType.toAcrossType()!!
+            val remoteProjectString = objectData.remoteProjectId
+
+            if (remoteProjectString !in remoteProjectIdMap.keys) {
+                // 将pathWithPathSpace转为数字id
+                val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitRequestEventId = gitRequestEventId,
+                    gitProjectId = remoteProjectString,
+                    token = oauthService.getGitCIEnableToken(gitProjectId).accessToken,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                ).gitProjectId.toString().let { "git_$it" }
+
+                remoteProjectIdMap[remoteProjectString] = TemplateAcrossInfoType.values().associateWith {
+                    BuildTemplateAcrossInfo(
+                        templateId = templateData.templateId,
+                        templateType = it,
+                        templateInstancesIds = listOf(),
+                        targetProjectId = remoteProjectIdLong
+                    )
+                }.toMutableMap()
+            }
+
+            val oldData = remoteProjectIdMap[remoteProjectString]!![templateType]!!
+
+            remoteProjectIdMap[remoteProjectString]!![templateType] = oldData.copy(
+                templateInstancesIds = mutableListOf<String>().apply {
+                    addAll(oldData.templateInstancesIds)
+                    add(objectData.objectId)
+                }
+            )
+        }
+
+        return remoteProjectIdMap.values.flatMap { it.values }.filter { it.templateInstancesIds.isNotEmpty() }
+    }
+
+    private fun TemplateType.toAcrossType(): TemplateAcrossInfoType? {
+        return when (this) {
+            TemplateType.STEP -> TemplateAcrossInfoType.STEP
+            TemplateType.JOB -> TemplateAcrossInfoType.JOB
+            else -> null
+        }
     }
 }

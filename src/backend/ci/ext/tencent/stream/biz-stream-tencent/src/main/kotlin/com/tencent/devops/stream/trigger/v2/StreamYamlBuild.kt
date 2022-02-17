@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -104,7 +105,8 @@ class StreamYamlBuild @Autowired constructor(
         isDeleteTrigger: Boolean = false,
         gitProjectInfo: GitCIProjectInfo? = null,
         changeSet: Set<String>? = null,
-        params: Map<String, String> = mapOf()
+        params: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData
     ): BuildId? {
         val start = LocalDateTime.now().timestampmilli()
         // pipelineId可能为blank所以使用filePath为key
@@ -114,21 +116,26 @@ class StreamYamlBuild @Autowired constructor(
             filePath = pipeline.filePath
         )
         try {
-            triggerLock.lock()
+            val realPipeline: GitProjectPipeline
             val gitBasicSetting = streamBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
             // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
-            val realPipeline = pipelineService.getPipelineByFile(
-                event.gitProjectId,
-                pipeline.filePath
-            ) ?: pipeline
-            // 优先创建流水线为了绑定红线
-            if (realPipeline.pipelineId.isBlank()) {
-                streamYamlBaseBuild.savePipeline(
-                    pipeline = realPipeline,
-                    event = event,
-                    gitCIBasicSetting = gitBasicSetting,
-                    model = createTriggerModel(gitBasicSetting)
-                )
+            try {
+                triggerLock.lock()
+                realPipeline = pipelineService.getPipelineByFile(
+                    event.gitProjectId,
+                    pipeline.filePath
+                ) ?: pipeline
+                // 优先创建流水线为了绑定红线
+                if (realPipeline.pipelineId.isBlank()) {
+                    streamYamlBaseBuild.savePipeline(
+                        pipeline = realPipeline,
+                        event = event,
+                        gitCIBasicSetting = gitBasicSetting,
+                        model = createTriggerModel(gitBasicSetting)
+                    )
+                }
+            } finally {
+                triggerLock.unlock()
             }
 
             // 改名时保存需要修改名称
@@ -152,7 +159,8 @@ class StreamYamlBuild @Autowired constructor(
                     gitBuildId = gitBuildId,
                     changeSet = changeSet,
                     gitBasicSetting = gitBasicSetting,
-                    params = params
+                    params = params,
+                    yamlTransferData = yamlTransferData
                 )
             } else if (onlySavePipeline) {
                 savePipeline(
@@ -206,7 +214,6 @@ class StreamYamlBuild @Autowired constructor(
             )
         } finally {
             streamStorageBean.buildTime(LocalDateTime.now().timestampmilli() - start)
-            triggerLock.unlock()
         }
     }
 
@@ -284,7 +291,8 @@ class StreamYamlBuild @Autowired constructor(
         gitBuildId: Long,
         gitBasicSetting: GitCIBasicSetting,
         changeSet: Set<String>? = null,
-        params: Map<String, String> = mapOf()
+        params: Map<String, String> = mapOf(),
+        yamlTransferData: YamlTransferData
     ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
@@ -295,7 +303,8 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             pipeline = pipeline,
             changeSet = changeSet,
-            webhookParams = params
+            webhookParams = params,
+            yamlTransferData = yamlTransferData
         )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
@@ -305,7 +314,8 @@ class StreamYamlBuild @Autowired constructor(
             event = event,
             gitCIBasicSetting = gitBasicSetting,
             model = model,
-            gitBuildId = gitBuildId
+            gitBuildId = gitBuildId,
+            yamlTransferData = yamlTransferData
         )
     }
 

@@ -46,6 +46,8 @@ import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
@@ -54,6 +56,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -67,12 +70,18 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
+    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
+    private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext,
     private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceBaseService::class.java)
+    }
+
     fun list(
         userId: String,
         offset: Int,
@@ -222,6 +231,95 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     /**
+     *  判断是否订阅
+     */
+    fun isSubscribe(
+        experienceId: Long,
+        userId: String,
+        platform: String,
+        bundleIdentifier: String,
+        projectId: String
+    ): Boolean {
+        logger.info("userId:$userId,platform:$platform,bundleIdentifier:$bundleIdentifier,projectId:$projectId")
+        val subscriptionRecord = lazy {
+            experiencePushSubscribeDao.getSubscription(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                bundle = bundleIdentifier,
+                platform = platform
+            ) != null
+        }
+        val isExperienceGroups = isExperienceGroups(experienceId, userId)
+        return subscriptionRecord.value || isExperienceGroups
+    }
+
+    /**
+     * 判断是否为体验组成员
+     */
+    fun isExperienceGroups(
+        experienceId: Long,
+        userId: String
+    ): Boolean {
+        val groupIds = getGroupIdsByRecordId(experienceId)
+        val isOuterGroup = lazy {
+            getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
+                .contains(userId)
+        }
+        val isInnerGroup = lazy {
+            getGroupIdToInnerUserIds(groupIds).values.asSequence().flatMap { it.asSequence() }.toSet()
+                .contains(userId)
+        }
+        val isInnerUser = lazy {
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                .contains(userId)
+        }
+        val isOuterUser = lazy {
+            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                .contains(userId)
+        }
+        val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
+
+        logger.info(
+            "isOuterGroup:${isOuterGroup.value}, " +
+                    "isInnerGroup:${isInnerGroup.value}, isInnerUser:${isInnerUser.value}, " +
+                    "isOuterUser:${isOuterUser.value} ,isCreator:${isCreator.value}"
+        )
+        return isOuterGroup.value || isInnerGroup.value ||
+                isInnerUser.value || isOuterUser.value || isCreator.value
+    }
+
+    /**
+     * 判断是否为公开体验
+     */
+    fun isPublicExperience(
+        experienceId: Long
+    ): Boolean {
+        return experiencePublicDao.getByRecordId(
+            dslContext = dslContext,
+            recordId = experienceId
+        ) != null
+    }
+
+    /**
+     * 判断是否为首次下载
+     */
+    fun isFirstDownload(
+        platform: String,
+        bundleIdentifier: String,
+        projectId: String,
+        userId: String
+    ): Boolean {
+        return experienceDownloadDetailDao.countDownloadHistory(
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform,
+            userId = userId
+        ) == 0
+    }
+
+    /**
      * 根据体验获取组号列表
      */
     fun getGroupIdsByRecordId(experienceId: Long): Set<Long> {
@@ -250,6 +348,24 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     /**
+     * 获取内部用户列表
+     */
+    fun getInnerReceivers(
+        dslContext: DSLContext,
+        experienceId: Long
+    ): MutableSet<String> {
+        val innerReceivers = mutableSetOf<String>()
+        val extraUsers =
+            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+        val groupIdToUserIdsMap = getGroupIdToInnerUserIds(
+            getGroupIdsByRecordId(experienceId)
+        )
+        innerReceivers.addAll(extraUsers)
+        innerReceivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
+        return innerReceivers
+    }
+
+    /**
      * 外部用户,根据组号获取<组号,用户列表>
      */
     fun getGroupIdToOuters(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
@@ -263,6 +379,25 @@ class ExperienceBaseService @Autowired constructor(
             userIds.add(it.outer)
         }
         return groupIdToUserIds
+    }
+
+    /**
+     * 获取外部用户列表
+     */
+    fun getOuterReceivers(
+        dslContext: DSLContext,
+        experienceId: Long,
+        groupIds: Set<Long>
+    ): MutableSet<String> {
+        val outerReceivers = mutableSetOf<String>()
+        val outerGroup =
+            getGroupIdToOuters(groupIds).values.asSequence().flatMap { it.asSequence() }
+                .toSet()
+        val outerUser =
+            experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+        outerReceivers.addAll(outerGroup)
+        outerReceivers.addAll(outerUser)
+        return outerReceivers
     }
 
     /**

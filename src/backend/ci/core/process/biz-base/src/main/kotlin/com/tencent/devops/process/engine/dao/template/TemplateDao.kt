@@ -383,7 +383,7 @@ class TemplateDao {
             if (includePublicFlag != null && includePublicFlag) {
                 val publicConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
                 publicConditions.add((TYPE.eq(TemplateType.PUBLIC.name)))
-                count += dslContext.select(DSL.count(ID))
+                count += dslContext.select(DSL.countDistinct(ID))
                     .from(this)
                     .where(publicConditions)
                     .fetchOne(0, Int::class.java)!!
@@ -425,7 +425,9 @@ class TemplateDao {
         val conditions = mutableListOf<Condition>()
         if (projectId != null) {
             if (includePublicFlag != null && includePublicFlag) {
-                conditions.add(a.PROJECT_ID.eq(projectId).or(a.TYPE.eq(TemplateType.PUBLIC.name)))
+                conditions.add(
+                    a.PROJECT_ID.eq(projectId).or(a.PROJECT_ID.eq("").and(a.TYPE.eq(TemplateType.PUBLIC.name)))
+                )
             } else {
                 conditions.add(a.PROJECT_ID.eq(projectId))
             }
