@@ -300,7 +300,7 @@ class DockerHostDebugService(
     ): String {
         val requestBody = mapOf("cmd" to listOf("/bin/bash"), "container_id" to containerId)
         val request = Request.Builder().url("http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?" +
-                "pipelineId=${pipelineId}&projectId=${projectId}&targetIp=${dockerIp}")
+                "pipelineId=$pipelineId&projectId=$projectId&targetIp=$dockerIp")
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
@@ -319,8 +319,8 @@ class DockerHostDebugService(
         }
 
         return "wss://$dockerDebugGateway/docker-console-new-v2?" +
-                "eventId=${eventId}&pipelineId=${pipelineId}&projectId=${projectId}" +
-                "&targetIP=${dockerIp}&containerId=${containerId}"
+                "eventId=$eventId&pipelineId=$pipelineId&projectId=$projectId" +
+                "&targetIP=$dockerIp&containerId=$containerId"
     }
 
     fun getContainerNum(): Int {
