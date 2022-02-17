@@ -345,12 +345,25 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	task.InheritSetting.ExtraProjectSetting = project.Extra
 	task.InheritSetting.ExtraWorkerSetting = worker.Extra
 
-	// resource manager
-	cpuPerInstance, memPerInstance := de.getResource(tb.Client.QueueName)
-	task.Operator.ClusterID = de.getClusterID(tb.Client.QueueName)
 	task.Operator.AppName = task.ID
 	task.Operator.Namespace = EngineName
 	task.Operator.Image = worker.Image
+	de.setTaskIstResource(task, tb.Client.QueueName)
+	task.Operator.RequestProcessPerUnit = ev.ProcessPerUnit
+
+	if err = de.updateTask(task); err != nil {
+		blog.Errorf("engine(%s) try creating task, update task(%s) failed: %v", EngineName, tb.ID, err)
+		return err
+	}
+	blog.Infof("engine(%s) success to create task(%s)", EngineName, tb.ID)
+	return nil
+}
+
+func (de *disttaskEngine) setTaskIstResource(task *distTask, queueName string) {
+	// resource manager
+	cpuPerInstance, memPerInstance := de.getResource(queueName)
+	task.Operator.ClusterID = de.getClusterID(queueName)
+	blog.Info("test2, %v", cpuPerInstance)
 	// if ban resources, then request and least instance is 0
 	if !task.InheritSetting.BanAllBooster {
 		task.Operator.RequestInstance = (int(task.InheritSetting.RequestCPU) + int(cpuPerInstance) - 1) /
@@ -361,14 +374,6 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 
 	task.Operator.RequestCPUPerUnit = cpuPerInstance
 	task.Operator.RequestMemPerUnit = memPerInstance
-	task.Operator.RequestProcessPerUnit = ev.ProcessPerUnit
-
-	if err = de.updateTask(task); err != nil {
-		blog.Errorf("engine(%s) try creating task, update task(%s) failed: %v", EngineName, tb.ID, err)
-		return err
-	}
-	blog.Infof("engine(%s) success to create task(%s)", EngineName, tb.ID)
-	return nil
 }
 
 func (de *disttaskEngine) getClusterID(queueName string) string {
@@ -575,6 +580,8 @@ func (de *disttaskEngine) launchCRMTask(task *distTask, tb *engine.TaskBasic, qu
 		return err
 	}
 
+	de.setTaskIstResource(task, queueName)
+
 	err = crmMgr.Launch(tb.ID, pureQueueName, func(availableInstance int) (int, error) {
 		if availableInstance < task.Operator.LeastInstance {
 			return 0, engine.ErrorNoEnoughResources
@@ -733,17 +740,8 @@ func (de *disttaskEngine) launchCRMDone(task *distTask) (bool, error) {
 
 	task.Workers = workerList
 	task.Stats.WorkerCount = len(task.Workers)
-
-	cpuPerInstance, memPerInstance := de.getResource(task.InheritSetting.QueueName)
-	if cpuPerInstance <= 0 {
-		cpuPerInstance = task.Operator.RequestCPUPerUnit
-	}
-	if memPerInstance <= 0 {
-		memPerInstance = task.Operator.RequestMemPerUnit
-	}
-	task.Stats.CPUTotal = float64(task.Stats.WorkerCount) * cpuPerInstance
-	task.Stats.MemTotal = float64(task.Stats.WorkerCount) * memPerInstance
-
+	task.Stats.CPUTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestCPUPerUnit
+	task.Stats.MemTotal = float64(task.Stats.WorkerCount) * task.Operator.RequestMemPerUnit
 	if err = de.updateTask(task); err != nil {
 		blog.Errorf("engine(%s) try checking service info, update crm task(%s) failed: %v",
 			EngineName, task.ID, err)
