@@ -322,7 +322,13 @@ class PipelineRuntimeService @Autowired constructor(
         return ret
     }
 
-    fun listPipelineBuildHistory(projectId: String, pipelineId: String, offset: Int, limit: Int): List<BuildHistory> {
+    fun listPipelineBuildHistory(
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int,
+        updateTimeDesc: Boolean? = null
+    ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
@@ -330,7 +336,8 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             offset = offset,
-            limit = if (limit < 0) 1000 else limit
+            limit = if (limit < 0) 1000 else limit,
+            updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()

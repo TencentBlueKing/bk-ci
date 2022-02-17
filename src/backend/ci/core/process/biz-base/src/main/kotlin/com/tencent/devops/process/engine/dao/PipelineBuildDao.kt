@@ -106,7 +106,8 @@ class PipelineBuildDao {
                     WEBHOOK_TYPE,
                     WEBHOOK_INFO,
                     BUILD_MSG,
-                    BUILD_NUM_ALIAS
+                    BUILD_NUM_ALIAS,
+                    UPDATE_TIME
                 ).values(
                     buildId,
                     buildNum,
@@ -128,7 +129,8 @@ class PipelineBuildDao {
                     webhookType,
                     webhookInfo,
                     buildMsg,
-                    buildNumAlias
+                    buildNumAlias,
+                    LocalDateTime.now()
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -227,14 +229,19 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         offset: Int,
-        limit: Int
+        limit: Int,
+        updateTimeDesc: Boolean? = null
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .orderBy(BUILD_NUM.desc())
-                .limit(offset, limit)
+            when (updateTimeDesc) {
+                true -> select.orderBy(UPDATE_TIME.desc())
+                false -> select.orderBy(UPDATE_TIME.asc())
+                null -> select.orderBy(BUILD_NUM.desc())
+            }
+            select.limit(offset, limit)
                 .fetch()
         }
     }
@@ -307,7 +314,9 @@ class PipelineBuildDao {
         retry: Boolean = false
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
+            val update = dslContext.update(this)
+                .set(STATUS, BuildStatus.RUNNING.ordinal)
+                .set(UPDATE_TIME, LocalDateTime.now())
             if (!retry) {
                 update.set(START_TIME, startTime)
             }
@@ -336,6 +345,7 @@ class PipelineBuildDao {
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
                 .set(RECOMMEND_VERSION, recommendVersion)
+                .set(UPDATE_TIME, LocalDateTime.now())
 
             if (!remark.isNullOrBlank()) {
                 baseQuery.set(REMARK, remark)
@@ -439,6 +449,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute()
         } == 1
@@ -452,6 +463,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(END_TIME, LocalDateTime.now())
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
@@ -487,7 +499,9 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
-                buildParameters = t.buildParameters?.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> },
+                buildParameters = t.buildParameters?.let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0
             )
@@ -534,7 +548,9 @@ class PipelineBuildDao {
             if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].aliasName", lower = true).like("%${materialAlias.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].aliasName", lower = true
+                ).like(
+                    "%${materialAlias.first().toLowerCase()}%"
                 )
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -550,7 +566,9 @@ class PipelineBuildDao {
             if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].branchName", lower = true).like("%${materialBranch.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].branchName", lower = true
+                ).like(
+                    "%${materialBranch.first().toLowerCase()}%"
                 )
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -657,7 +675,9 @@ class PipelineBuildDao {
             if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].aliasName", true
+                ).like(
+                    "%${materialAlias.first().toLowerCase()}%"
                 )
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -673,7 +693,9 @@ class PipelineBuildDao {
             if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].branchName", lower = true).like("%${materialBranch.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].branchName", lower = true
+                ).like(
+                    "%${materialBranch.first().toLowerCase()}%"
                 )
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -759,6 +781,7 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(REMARK, remark)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -770,6 +793,7 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(RECOMMEND_VERSION, recommendVersion)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
@@ -814,6 +838,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -825,6 +850,7 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(MATERIAL, material)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
@@ -840,6 +866,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
@@ -855,6 +882,7 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()

@@ -1342,7 +1342,13 @@ class PipelineBuildFacadeService(
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(projectId, pipelineId)
-            val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(projectId, pipelineId, offset, limit)
+            val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                offset = offset,
+                limit = limit,
+                updateTimeDesc = updateTimeDesc
+            )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
             val count = newTotalCount + 0L
