@@ -47,7 +47,7 @@ class StreamGitTokenService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
         private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
-        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:"
+        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:v2"
         fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
         fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
     }
@@ -69,7 +69,7 @@ class StreamGitTokenService @Autowired constructor(
             }
         } else {
             // 如果过期，获取使用refreshToken去刷新token
-            if (isExpire(token)) {
+            if (!isExpire(token)) {
                 updateLock.use {
                     updateLock.lock()
                     val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token)
