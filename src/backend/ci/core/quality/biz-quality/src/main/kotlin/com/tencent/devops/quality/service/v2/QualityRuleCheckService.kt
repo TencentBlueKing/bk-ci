@@ -183,7 +183,7 @@ class QualityRuleCheckService @Autowired constructor(
         val templateId = buildCheckParams.templateId
         val ruleList = mutableSetOf<QualityRule>()
         val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
-                "${buildCheckParams.buildId}|${buildCheckParams.position}")
+                "${buildCheckParams.buildId}|$templateId")
         try {
             watcher.start("listPipelineRange")
             // 匹配拦截规则
@@ -261,6 +261,7 @@ class QualityRuleCheckService @Autowired constructor(
                 val containsInTemplate = rule.templateRange.contains(buildCheckParams.templateId)
                 return@filter (containsInPipeline || containsInTemplate)
             }
+            logger.info("QUALITY|filterRuleList is: $filterRuleList")
 
             val resultPair = doCheck(
                 projectId = projectId,
@@ -342,7 +343,9 @@ class QualityRuleCheckService @Autowired constructor(
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
         // generate result
+        logger.info("QUALITY|ruleInterceptList is: $ruleInterceptList")
         val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
+        logger.info("QUALITY|failRule is: $failRule")
         val allPass = failRule.isEmpty()
         val allEnd = allPass || (!allPass && !failRule.any { it.operation == RuleOperation.AUDIT } &&
                 failRule.all { it.gateKeepers.isNullOrEmpty() })
@@ -744,6 +747,7 @@ class QualityRuleCheckService @Autowired constructor(
         val notifyUserSet = auditNotifyUserList.toMutableSet()
         val triggerUserId = runtimeVariable?.get(PIPELINE_START_WEBHOOK_USER_ID)
             ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
+        notifyUserSet.add(triggerUserId)
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
@@ -770,7 +774,7 @@ class QualityRuleCheckService @Autowired constructor(
                 "buildNo" to buildNo
             ),
             bodyParams = mapOf(
-                "title" to "$pipelineName(#$buildNo)被拦截，待审核(审核人$notifyUserSet)",
+                "title" to "$pipelineName(#$buildNo)被拦截，待审核(审核人$auditNotifyUserList)",
                 "projectName" to projectName,
                 "cc" to triggerUserId,
                 "time" to time,
