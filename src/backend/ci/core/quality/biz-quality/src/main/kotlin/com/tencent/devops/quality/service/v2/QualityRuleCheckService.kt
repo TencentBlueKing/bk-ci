@@ -229,23 +229,24 @@ class QualityRuleCheckService @Autowired constructor(
         qualityRuleBuildHisService.convertVariables(ruleList, buildCheckParams)
 
         val params = BuildCheckParams(
-            buildCheckParams.projectId,
-            buildCheckParams.pipelineId,
-            buildCheckParams.buildId,
-            "",
-            buildCheckParams.interceptName ?: "",
-            System.currentTimeMillis(),
-            "",
-            buildCheckParams.position,
-            buildCheckParams.templateId,
-            buildCheckParams.stageId ?: "",
-            buildCheckParams.runtimeVariable
+            projectId = buildCheckParams.projectId,
+            pipelineId = buildCheckParams.pipelineId,
+            buildId = buildCheckParams.buildId,
+            buildNo = "",
+            interceptTaskName = buildCheckParams.interceptName ?: "",
+            startTime = System.currentTimeMillis(),
+            taskId = "",
+            position = buildCheckParams.position,
+            templateId = buildCheckParams.templateId,
+            stageId = buildCheckParams.stageId ?: "",
+            runtimeVariable = buildCheckParams.runtimeVariable
         )
         return doCheckRules(buildCheckParams = params, ruleList = ruleList)
     }
 
     private fun doCheckRules(buildCheckParams: BuildCheckParams, ruleList: List<QualityRule>): RuleCheckResult {
         with(buildCheckParams) {
+            logger.info("QUALITY|doCheckRules buildCheckParams is|$buildCheckParams")
             val filterRuleList = ruleList.filter { rule ->
                 logger.info("validate whether to check rule(${rule.name}) with gatewayId(${rule.gatewayId})")
                 if (buildCheckParams.taskId.isNotBlank() && rule.controlPoint.name != buildCheckParams.taskId) {
@@ -261,7 +262,13 @@ class QualityRuleCheckService @Autowired constructor(
                 return@filter (containsInPipeline || containsInTemplate)
             }
 
-            val resultPair = doCheck(projectId, pipelineId, buildId, filterRuleList, runtimeVariable)
+            val resultPair = doCheck(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                filterRuleList = filterRuleList,
+                runtimeVariable = runtimeVariable
+            )
             val resultList = resultPair.first
             val ruleInterceptList = resultPair.second
 
@@ -293,7 +300,10 @@ class QualityRuleCheckService @Autowired constructor(
             logger.info("start to check rule(${rule.name})")
 
             val result = checkIndicator(
-                rule.controlPoint.name, rule.indicators, metadataList
+                rule.controlPoint.name,
+                rule.indicators,
+                metadataList,
+                rule.taskSteps
             )
             val interceptRecordList = result.second
             val interceptResult = result.first
@@ -458,24 +468,50 @@ class QualityRuleCheckService @Autowired constructor(
     private fun checkIndicator(
         controlPointName: String,
         indicators: List<QualityIndicator>,
-        metadataList: List<QualityHisMetadata>
+        metadataList: List<QualityHisMetadata>,
+        ruleTaskSteps: List<QualityRule.RuleTask>?
     ): Pair<Boolean, MutableList<QualityRuleInterceptRecord>> {
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
-        val metadataMap = metadataList.associateBy { it.enName }
+        var ruleTaskStepsCopy = ruleTaskSteps?.toMutableList()
+        if (!ruleTaskStepsCopy.isNullOrEmpty()) {
+            indicators.forEach { indicator ->
+                val taskStep = ruleTaskStepsCopy.firstOrNull { it.indicatorEnName == indicator.enName }
+                indicator.taskName = taskStep?.taskName
+                if (taskStep != null) ruleTaskStepsCopy.remove(taskStep)
+            }
+        }
+        logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
         // 遍历每个指标
         indicators.forEach { indicator ->
             val thresholdType = indicator.thresholdType
             var checkResult = true
 
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
-            val filterMetadataList = if (indicator.isScriptElementIndicator()) {
-                metadataList
-                    .filter { indicator.enName == it.enName }
-                    .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
+            val filterMetadataList = if (indicator.taskName.isNullOrBlank()) {
+                if (indicator.isScriptElementIndicator()) {
+                    listOf(metadataList
+                        .find { indicator.enName == it.enName &&
+                                it.elementType in QualityIndicator.SCRIPT_ELEMENT })
+                } else {
+                    indicator.metadataList.map {
+                        metadata -> metadataList.find { it.enName == metadata.enName }
+                    }.toList()
+                }
             } else {
-                indicator.metadataList.map { metadataMap[it.enName] }
+                if (indicator.isScriptElementIndicator()) {
+                    listOf(metadataList
+                        .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
+                        .find { indicator.enName == it.enName && it.taskName.startsWith(indicator.taskName ?: "") })
+                } else {
+                    metadataList.filter {
+                        it.taskName.startsWith(indicator.taskName ?: "") &&
+                        indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
+                    }
+                }
             }
+
+            logger.info("QUALITY|filterMetadataList is:$filterMetadataList")
 
             // 遍历所有基础数据
             var elementDetail = ""
