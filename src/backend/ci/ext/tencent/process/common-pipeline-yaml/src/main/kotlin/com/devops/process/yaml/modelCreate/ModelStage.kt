@@ -53,11 +53,10 @@ import org.slf4j.LoggerFactory
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
+import com.devops.process.yaml.pojo.QualityElementInfo
 import com.devops.process.yaml.utils.PathMatchUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.stream.pojo.v2.QualityElementInfo
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.AntPathMatcher
 
 class ModelStage constructor(
@@ -131,7 +130,7 @@ class ModelStage constructor(
             elementList.forEach { ele ->
                 elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode().let {
                     // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
-                    if (it == runPlugInAtomCode) {
+                    if (it == inner.runPlugInAtomCode) {
                         "run"
                     } else {
                         it
@@ -169,7 +168,7 @@ class ModelStage constructor(
                     position = ControlPointPosition.BEFORE_POSITION,
                     event = event,
                     stageId = stageId,
-                elementNames = elementNames
+                    elementNames = elementNames
                 )
             },
             checkOut = event.pipelineInfo?.let {
@@ -178,7 +177,7 @@ class ModelStage constructor(
                     position = ControlPointPosition.AFTER_POSITION,
                     event = event,
                     stageId = stageId,
-                elementNames = elementNames
+                    elementNames = elementNames
                 )
             }
         )

@@ -50,6 +50,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+
 @Service
 class StreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -332,28 +333,28 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     // 更新时同步更新蓝盾项目名称
-    fun refreshSetting(userId: String, gitProjectId: Long) {
-        val projectInfo = requestGitProjectInfo(gitProjectId) ?: return
-        updateProjectInfo(userId, projectInfo)
+    fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
+        val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
+        return updateProjectInfo(userId, projectInfo)
     }
 
-    fun updateProjectInfo(userId: String, projectInfo: GitCIProjectInfo) {
-        run back@{
-            streamBasicSettingDao.updateInfoSetting(
-                dslContext = dslContext,
-                gitProjectId = projectInfo.gitProjectId,
-                gitProjectName = projectInfo.name,
-                url = projectInfo.gitSshUrl ?: return@back,
-                homePage = projectInfo.homepage ?: return@back,
-                httpUrl = projectInfo.gitHttpsUrl ?: return@back,
-                sshUrl = projectInfo.gitSshUrl ?: return@back,
-                desc = projectInfo.description,
-                avatar = projectInfo.avatarUrl,
-                pathWithNamespace = projectInfo.pathWithNamespace,
-                nameWithNamespace = projectInfo.nameWithNamespace
-            )
-        }
-        val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return
+    fun updateProjectInfo(userId: String, projectInfo: GitCIProjectInfo): Boolean {
+        val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return false
+
+        streamBasicSettingDao.updateInfoSetting(
+            dslContext = dslContext,
+            gitProjectId = projectInfo.gitProjectId,
+            gitProjectName = projectInfo.name,
+            url = projectInfo.gitSshUrl ?: oldData.gitSshUrl,
+            homePage = projectInfo.homepage ?: oldData.homepage,
+            httpUrl = projectInfo.gitHttpsUrl ?: oldData.gitHttpUrl,
+            sshUrl = projectInfo.gitSshUrl ?: oldData.gitSshUrl,
+            desc = projectInfo.description,
+            avatar = projectInfo.avatarUrl,
+            pathWithNamespace = projectInfo.pathWithNamespace,
+            nameWithNamespace = projectInfo.nameWithNamespace
+        )
+
         if (oldData.name != projectInfo.name) {
             try {
                 client.get(ServiceTxProjectResource::class).updateProjectName(
@@ -363,8 +364,10 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             } catch (e: Throwable) {
                 logger.error("update bkci project name error :${e.message}")
+                return false
             }
         }
+        return true
     }
 
     fun getMaxId(
@@ -475,30 +478,31 @@ class StreamBasicSettingService @Autowired constructor(
             val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
 
             if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty() &&
-                projectNameFromPara != projectNameFromGit) {
+                projectNameFromPara != projectNameFromGit
+            ) {
                 // 项目已修改名称，更新项目信息，包含setting + project表
                 refreshSetting(userId, projectId.toLong())
             }
             return
         }
 
-            // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
-            try {
-                val timeStamp = System.currentTimeMillis().toString()
-                var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
-                if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
-                    deletedProjectName = deletedProjectName.substring(
-                        deletedProjectName.length -
+        // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
+        try {
+            val timeStamp = System.currentTimeMillis().toString()
+            var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
+            if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+                deletedProjectName = deletedProjectName.substring(
+                    deletedProjectName.length -
                             GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
-                    )
-                }
-                client.get(ServiceTxProjectResource::class).updateProjectName(
-                    userId = userId,
-                    projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                    projectName = deletedProjectName
                 )
-            } catch (e: Throwable) {
-                logger.error("update bkci project name error :${e.message}")
             }
+            client.get(ServiceTxProjectResource::class).updateProjectName(
+                userId = userId,
+                projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
+                projectName = deletedProjectName
+            )
+        } catch (e: Throwable) {
+            logger.error("update bkci project name error :${e.message}")
+        }
     }
 }

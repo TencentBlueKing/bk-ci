@@ -1,4 +1,4 @@
-package com.tencent.devops.stream.pojo.v2
+package com.devops.process.yaml.pojo
 
 /**
  * 创建红线时需要校验的红线指标列表

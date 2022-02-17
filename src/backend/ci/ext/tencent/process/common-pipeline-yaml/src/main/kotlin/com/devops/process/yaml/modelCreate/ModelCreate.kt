@@ -29,6 +29,7 @@ package com.devops.process.yaml.modelCreate
 
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
+import com.devops.process.yaml.pojo.QualityElementInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
@@ -46,10 +47,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
-import com.tencent.devops.stream.trigger.StreamTriggerCache
-import com.tencent.devops.stream.v2.service.StreamOauthService
-import com.tencent.devops.stream.v2.service.StreamScmService
-import com.tencent.devops.stream.pojo.v2.QualityElementInfo
 import org.slf4j.LoggerFactory
 
 class ModelCreate constructor(
