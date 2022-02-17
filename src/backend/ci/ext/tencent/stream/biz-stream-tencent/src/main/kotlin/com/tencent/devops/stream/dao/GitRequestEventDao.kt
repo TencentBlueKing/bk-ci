@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.dao
 
-import com.rabbitmq.tools.json.JSONUtil
-import com.tencent.bkrepo.common.api.util.JsonUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
