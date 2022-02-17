@@ -116,7 +116,6 @@ class UserDockerDebugResourceImpl @Autowired constructor(
             )
         }
 
-
         if (buildHistory != null) {
             val containerId = dockerHostDebugService.startDebug(
                 dockerIp = buildHistory.dockerIp,
