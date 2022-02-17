@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerDebug
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerDebugRecord
-import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
