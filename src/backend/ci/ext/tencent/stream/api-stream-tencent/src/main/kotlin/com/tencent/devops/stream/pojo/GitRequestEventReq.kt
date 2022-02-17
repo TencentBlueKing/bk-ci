@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -78,7 +79,11 @@ data class GitRequestEventReq(
     @ApiModelProperty("是否是删除分支触发")
     val deleteBranch: Boolean,
     @ApiModelProperty("是否是删除Tag触发")
-    val deleteTag: Boolean
+    val deleteTag: Boolean,
+    @ApiModelProperty("评论Id")
+    var noteId: Long?,
+    @ApiModelProperty("评论连接")
+    var noteUrl: String?
 ) {
     constructor(gitRequestEvent: GitRequestEvent) : this(
         id = gitRequestEvent.id,
@@ -100,6 +105,16 @@ data class GitRequestEventReq(
         mrTitle = gitRequestEvent.mrTitle,
         gitEvent = gitRequestEvent.gitEvent,
         deleteBranch = gitRequestEvent.isDeleteBranch(),
-        deleteTag = gitRequestEvent.isDeleteTag()
-    )
+        deleteTag = gitRequestEvent.isDeleteTag(),
+        noteId = null,
+        noteUrl = null
+    ) {
+        when (gitEvent) {
+            is GitNoteEvent -> {
+                val gitNoteEvent = gitEvent as GitNoteEvent
+                noteId = gitNoteEvent.objectAttributes.id
+                noteUrl = gitNoteEvent.objectAttributes.url
+            }
+        }
+    }
 }
