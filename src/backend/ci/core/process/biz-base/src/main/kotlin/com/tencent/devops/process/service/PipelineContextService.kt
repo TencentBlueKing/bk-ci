@@ -170,10 +170,7 @@ class PipelineContextService @Autowired constructor(
         buildStepContext(c, variables, contextMap, outputArrayMap)
 
         // #6071 如果当前job为矩阵则追加矩阵上下文
-        if (outputArrayMap != null && c.id?.let { it == containerId } == true) {
-            // current in matrix
-            c.fetchMatrixContext()?.let { contextMap.putAll(it) }
-        } else {
+        if (outputArrayMap == null) {
             // not in matrix
             // 兼容处理，非矩阵内的outputs可以直接访问
             variables.forEach { (key, value) ->
@@ -182,6 +179,9 @@ class PipelineContextService @Autowired constructor(
                     contextMap[key.removePrefix(prefix)] = value
                 }
             }
+        } else if (c.id?.let { it == containerId } == true) {
+            // current in matrix
+            c.fetchMatrixContext()?.let { contextMap.putAll(it) }
         }
     }
 
