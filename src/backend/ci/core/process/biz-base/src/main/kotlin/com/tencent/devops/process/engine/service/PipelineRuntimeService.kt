@@ -518,7 +518,8 @@ class PipelineRuntimeService @Autowired constructor(
                     startType = StartType.toStartType(trigger),
                     channelCode = ChannelCode.valueOf(channel)
                 ),
-                buildNumAlias = buildNumAlias
+                buildNumAlias = buildNumAlias,
+                updateTime = updateTime.timestampmilli(),
             )
         }
     }
