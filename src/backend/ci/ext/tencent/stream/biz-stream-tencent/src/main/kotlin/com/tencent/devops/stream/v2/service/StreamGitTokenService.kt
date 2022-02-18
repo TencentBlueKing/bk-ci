@@ -63,7 +63,7 @@ class StreamGitTokenService @Autowired constructor(
             updateLock.use {
                 updateLock.lock()
                 val newToken = streamScmService.getToken(gitProjectId.toString())
-                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
+                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}|refreshToken=${newToken.refreshToken}")
                 val objJsonStr = JsonUtil.toJson(newToken, false)
                 redisOperation.set(projectId, objJsonStr, validTime)
                 newToken.accessToken
@@ -77,7 +77,6 @@ class StreamGitTokenService @Autowired constructor(
                     val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
                     logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
                     val objJsonStr = JsonUtil.toJson(refreshToken, false)
-                    logger.info("refreshToken jsonStr: $objJsonStr")
                     redisOperation.set(projectId, objJsonStr, validTime)
                     refreshToken.accessToken
                 }

@@ -352,6 +352,7 @@ class GitService @Autowired constructor(
 
     fun refreshProjectToken(projectId: String, refreshToken: String): GitToken {
         logger.info("Start to refresh the token of projectId $projectId")
+        logger.info("refreshToken:$refreshToken")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
