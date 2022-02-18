@@ -47,7 +47,7 @@ class StreamGitTokenService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
         private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
-        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:2:"
+        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:v5:"
         fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
         fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
     }
