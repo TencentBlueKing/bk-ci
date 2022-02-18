@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -46,7 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth")
+@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList")
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -54,19 +55,46 @@ class PipelineContextService @Autowired constructor(
     private val logger = LoggerFactory.getLogger(PipelineContextService::class.java)
 
     fun buildContext(
+        projectId: String,
         buildId: String,
         containerId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         try {
             modelDetail.model.stages.forEach { stage ->
-                stage.containers.forEach { container ->
-                    buildJobContext(stage, container, containerId, contextMap, variables)
-                    container.fetchGroupContainers()?.forEach { c ->
-                        buildJobContext(stage, c, containerId, contextMap, variables)
+                stage.containers.forEach nextContainer@{ container ->
+                    // 如果有分裂Job则只处理分裂Job的上下文
+                    container.fetchGroupContainers()?.let { self ->
+                        val outputArrayMap = mutableMapOf<String, MutableList<String>>()
+                        self.forEachIndexed { i, c ->
+                            buildJobContext(
+                                stage = stage,
+                                c = c,
+                                containerId = containerId,
+                                contextMap = contextMap,
+                                variables = variables,
+                                outputArrayMap = outputArrayMap,
+                                groupIndex = i
+                            )
+                        }
+                        container.jobId?.let { jobId ->
+                            outputArrayMap.forEach { (stepKey, outputList) ->
+                                contextMap["jobs.$jobId.$stepKey"] = JsonUtil.toJson(outputList, false)
+                            }
+                        }
+                        return@nextContainer
                     }
+                    buildJobContext(
+                        stage = stage,
+                        c = container,
+                        containerId = containerId,
+                        contextMap = contextMap,
+                        variables = variables,
+                        outputArrayMap = null,
+                        groupIndex = 0
+                    )
                 }
             }
             buildCiContext(contextMap, variables)
@@ -112,17 +140,10 @@ class PipelineContextService @Autowired constructor(
         c: Container,
         containerId: String?,
         contextMap: MutableMap<String, String>,
-        variables: Map<String, String>
+        variables: Map<String, String>,
+        outputArrayMap: MutableMap<String, MutableList<String>>?,
+        groupIndex: Int
     ) {
-        // TODO 兼容逻辑，暂时把该job所有插件的output都去掉前缀，在后的覆盖前者
-        // 后续需要改为只有本job才去掉前缀
-        variables.forEach { (key, value) ->
-            val prefix = "jobs.${c.jobId ?: containerId}."
-            if (key.startsWith(prefix)) {
-                contextMap[key.removePrefix(prefix)] = value
-            }
-        }
-
         // current job
         if (c.id?.let { it == containerId } == true) {
             contextMap["job.id"] = c.jobId ?: ""
@@ -132,6 +153,7 @@ class PipelineContextService @Autowired constructor(
             contextMap["job.container.network"] = getNetWork(c) ?: ""
             contextMap["job.stage_id"] = stage.id ?: ""
             contextMap["job.stage_name"] = stage.name ?: ""
+            contextMap["job.index"] = groupIndex.toString()
         }
 
         // other job
@@ -145,12 +167,24 @@ class PipelineContextService @Autowired constructor(
         contextMap["jobs.$jobId.stage_name"] = stage.name ?: ""
 
         // all element
-        buildStepContext(c, contextMap)
+        buildStepContext(c, variables, contextMap, outputArrayMap)
+
+        // #6071 如果当前job为矩阵则追加矩阵上下文
+        if (c.id?.let { it == containerId } != true) return
+        if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
+        variables.forEach { (key, value) ->
+            val prefix = "jobs.${c.jobId ?: containerId}."
+            if (key.startsWith(prefix) && key.contains(".outputs.")) {
+                contextMap[key.removePrefix(prefix)] = value
+            }
+        }
     }
 
     private fun buildStepContext(
         c: Container,
-        contextMap: MutableMap<String, String>
+        variables: Map<String, String>,
+        contextMap: MutableMap<String, String>,
+        outputArrayMap: MutableMap<String, MutableList<String>>?
     ) {
         c.elements.forEach { e ->
             val stepId = e.stepId ?: return@forEach
@@ -163,6 +197,31 @@ class PipelineContextService @Autowired constructor(
             contextMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
             contextMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)
             contextMap["jobs.$jobId.steps.$stepId.outcome"] = e.status ?: ""
+            outputArrayMap?.let { self ->
+                fillStepOutputArray(
+                    jobPrefix = "jobs.$jobId.",
+                    stepPrefix = "steps.$stepId.outputs.",
+                    variables = variables,
+                    outputArrayMap = self
+                )
+            }
+        }
+    }
+
+    fun fillStepOutputArray(
+        jobPrefix: String,
+        stepPrefix: String,
+        variables: Map<String, String>,
+        outputArrayMap: MutableMap<String, MutableList<String>>
+    ) {
+        val outputPrefix = "$jobPrefix$stepPrefix"
+        variables.forEach { (key, value) ->
+            if (key.startsWith(outputPrefix)) {
+                val stepKey = key.removePrefix(jobPrefix)
+                val outputArray = outputArrayMap[stepKey] ?: mutableListOf()
+                outputArray.add(value)
+                outputArrayMap[stepKey] = outputArray
+            }
         }
     }
 

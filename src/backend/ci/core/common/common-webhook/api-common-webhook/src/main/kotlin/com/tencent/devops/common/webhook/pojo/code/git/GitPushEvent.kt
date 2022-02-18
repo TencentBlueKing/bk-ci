@@ -28,6 +28,8 @@
 package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,4 +50,34 @@ data class GitPushEvent(
     companion object {
         const val classType = "push"
     }
+}
+
+fun GitPushEvent.isDeleteBranch(): Boolean {
+    // 工蜂web端删除
+    if (action_kind == TGitPushActionKind.DELETE_BRANCH.value) {
+        return true
+    }
+    // 发送到工蜂的客户端删除
+    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
+        operation_kind == TGitPushOperationKind.DELETE.value &&
+        after.filter { it != '0' }.isBlank()
+    ) {
+        return true
+    }
+    return false
+}
+
+fun GitPushEvent.isCreateBranch(): Boolean {
+    // 工蜂web端创建分支
+    if (action_kind == TGitPushActionKind.CREATE_BRANCH.value) {
+        return true
+    }
+    // 发送到工蜂的客户端创建
+    if (action_kind == TGitPushActionKind.CLIENT_PUSH.value &&
+        operation_kind == TGitPushOperationKind.CREAT.value &&
+        before.filter { it != '0' }.isBlank()
+    ) {
+        return true
+    }
+    return false
 }

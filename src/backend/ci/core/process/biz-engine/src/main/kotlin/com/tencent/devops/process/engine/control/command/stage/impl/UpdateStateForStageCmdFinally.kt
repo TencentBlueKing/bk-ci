@@ -88,7 +88,7 @@ class UpdateStateForStageCmdFinally(
             if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
                 pipelineStageService.pauseStage(stage)
             } else {
-                nextOrFinish(event, stage, commandContext, true)
+                nextOrFinish(event, stage, commandContext, false)
                 sendStageEndCallBack(stage, event)
             }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
@@ -97,7 +97,7 @@ class UpdateStateForStageCmdFinally(
             } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
                 pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage)
             }
-            nextOrFinish(event, stage, commandContext, true)
+            nextOrFinish(event, stage, commandContext, commandContext.buildStatus.isSuccess())
             sendStageEndCallBack(stage, event)
         }
     }
@@ -130,7 +130,7 @@ class UpdateStateForStageCmdFinally(
             event.source == BS_STAGE_CANCELED_END_SOURCE
 
         if (gotoFinal) {
-            nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
+            nextStage = pipelineStageService.getLastStage(projectId = event.projectId, buildId = event.buildId)
             if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
 
                 LOG.info("ENGINE|${stage.buildId}|${event.source}|END_STAGE|${stage.stageId}|" +
@@ -139,7 +139,11 @@ class UpdateStateForStageCmdFinally(
                 return finishBuild(commandContext = commandContext)
             }
         } else {
-            nextStage = pipelineStageService.getNextStage(buildId = event.buildId, currentStageSeq = stage.seq)
+            nextStage = pipelineStageService.getNextStage(
+                projectId = event.projectId,
+                buildId = event.buildId,
+                currentStageSeq = stage.seq
+            )
         }
 
         if (nextStage != null) {
@@ -170,11 +174,11 @@ class UpdateStateForStageCmdFinally(
         }
 
         var needBreak = false
-        when (event.source) {
-            BS_QUALITY_PASS_STAGE -> {
+        when {
+            event.source == BS_QUALITY_PASS_STAGE -> {
                 qualityCheckOutPass(commandContext)
             }
-            BS_QUALITY_ABORT_STAGE -> {
+            event.source == BS_QUALITY_ABORT_STAGE || event.actionType.isEnd() -> {
                 qualityCheckOutFailed(commandContext)
             }
             else -> {
@@ -243,6 +247,7 @@ class UpdateStateForStageCmdFinally(
         val event = commandContext.event
         // 更新状态
         pipelineStageService.updateStageStatus(
+            projectId = event.projectId,
             buildId = event.buildId,
             stageId = event.stageId,
             buildStatus = commandContext.buildStatus,
@@ -263,10 +268,14 @@ class UpdateStateForStageCmdFinally(
                 commandContext.buildStatus = BuildStatus.FAILED
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
-                buildId = event.buildId, stageId = event.stageId,
+                projectId = event.projectId, buildId = event.buildId, stageId = event.stageId,
                 buildStatus = commandContext.buildStatus
             )
-            pipelineRuntimeService.updateBuildHistoryStageState(event.buildId, allStageStatus = allStageStatus)
+            pipelineRuntimeService.updateBuildHistoryStageState(
+                projectId = event.projectId,
+                buildId = event.buildId,
+                allStageStatus = allStageStatus
+            )
         }
     }
 
@@ -283,6 +292,7 @@ class UpdateStateForStageCmdFinally(
         commandContext.containers.forEach { c ->
             if (!c.status.isFinish()) { // #4315 未结束的，都需要刷新
                 pipelineContainerService.updateContainerStatus(
+                    projectId = c.projectId,
                     buildId = c.buildId,
                     stageId = c.stageId,
                     containerId = c.containerId,

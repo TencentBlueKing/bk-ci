@@ -361,13 +361,14 @@ abstract class AbstractDockerHostBuildService constructor(
             )?.data
 
             // 针对白名单项目做bazel cache处理
+            // 去掉install目录，只同步cache目录，及其所有子目录
             if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
                 val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.bazelUpperPath!!)}upper"
                 CommandLineUtils.execute(
                     command = "time flock -xn ${dockerHostConfig.bazelLowerPath}  " +
-                            "rsync --stats -ah --ignore-errors --include=\"cache/\" " +
-                            "--include=\"install/\" --exclude=\"*/\" " +
-                            " $upperDir/ ${dockerHostConfig.bazelLowerPath}/",
+                        "rsync --stats -ah --ignore-errors  --include=\"cache/\" --include=\"cache/*\" " +
+                        " --exclude=\"/*\" " +
+                        " $upperDir/ ${dockerHostConfig.bazelLowerPath}/",
                     workspace = File(dockerHostConfig.bazelLowerPath!!),
                     print2Logger = true
                 )

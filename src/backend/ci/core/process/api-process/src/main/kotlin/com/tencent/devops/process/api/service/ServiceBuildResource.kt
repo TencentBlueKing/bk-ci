@@ -37,8 +37,8 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
@@ -47,6 +47,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
@@ -71,6 +72,17 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ServiceBuildResource {
+    @ApiOperation("通过buildId获取流水线pipelineId")
+    @GET
+    @Path("/getPipelineIdFromBuildId")
+    fun getPipelineIdFromBuildId(
+        @ApiParam(value = "项目ID", required = true)
+        @HeaderParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<String>
 
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
@@ -108,6 +120,9 @@ interface ServiceBuildResource {
     // @Path("/builds/{buildId}/basic")
     @Path("/{buildId}/basic")
     fun serviceBasic(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String
@@ -435,7 +450,11 @@ interface ServiceBuildResource {
         buildId: Set<String>,
         @ApiParam("渠道号，默认为DS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.BS,
+        @QueryParam("startBeginTime")
+        startBeginTime: String? = null,
+        @QueryParam("endBeginTime")
+        endBeginTime: String? = null
     ): Result<List<BuildHistory>>
 
     @ApiOperation("根据流水线id获取最新执行信息")
@@ -603,4 +622,26 @@ interface ServiceBuildResource {
         @QueryParam("startType")
         startType: StartType
     ): Result<BuildId>
+
+    @ApiOperation("取消并发起新构建")
+    @POST
+    @Path("projects/{projectId}/pipelines/{pipelineId}/buildIds/{buildId}/build/restart")
+    fun buildRestart(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String
+    ): Result<String>
 }

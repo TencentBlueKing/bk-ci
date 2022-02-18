@@ -71,6 +71,9 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         dataUrlCondition: {
                             maxSize: 8 * 1024
                         }
+                    },
+                    generator: {
+                        filename: '[name].[contenthash].[ext]'
                     }
                 }
                 
