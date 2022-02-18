@@ -27,15 +27,38 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+import org.springframework.stereotype.Service
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
-        urlPrefix: String = "http://"
-    ): Request.Builder
+@Service
+class ExtDebugServiceImpl : ExtDebugService {
+    override fun startDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String? {
+        return null
+    }
+
+    override fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String? {
+        return null
+    }
+
+    override fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean {
+        return true
+    }
 }
