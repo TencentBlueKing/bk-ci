@@ -367,6 +367,7 @@ class GitService @Autowired constructor(
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
+                logger.info("refreshTokenJsonStr:$data")
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
