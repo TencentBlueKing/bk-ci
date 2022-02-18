@@ -74,13 +74,14 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitCodeErrorResp
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
@@ -663,15 +664,7 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             logger.info("request: $request Start to create file resp: $it")
             if (!it.isSuccessful) {
-                val data = it.body()?.string() ?: throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = it.message()
-                )
-                val resp = JsonUtil.getObjectMapper().readValue(data) as GitCodeErrorResp
-                throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = resp.message ?: it.message()
-                )
+                throw GitCodeUtils.handleErrorMessage(it)
             }
             return true
         }
@@ -707,15 +700,19 @@ class GitService @Autowired constructor(
         gitProjectId: Long,
         path: String,
         token: String,
-        ref: String
+        ref: String?
     ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
-                "?path=${URLEncoder.encode(path, "UTF-8")}" +
-                "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
-                "&access_token=$token"
+                    "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -1579,6 +1576,36 @@ class GitService @Autowired constructor(
                 logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
                 MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
+        }
+    }
+
+    fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo {
+        var url = "$gitCIUrl/api/v3/groups/$id?${
+            if (tokenType == TokenTypeEnum.OAUTH) {
+                "access_token=$token"
+            } else {
+                "private_token=$token"
+            }
+        }"
+        if (includeSubgroups != null) {
+            url = "$url&include_subgroups=$includeSubgroups"
+        }
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            logger.info("[url=$url]|getProjectGroupInfo with response=$response")
+            if (!response.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(response)
+            }
+            val data = response.body()!!.string()
+            return JsonUtil.to(data, GitProjectGroupInfo::class.java)
         }
     }
 

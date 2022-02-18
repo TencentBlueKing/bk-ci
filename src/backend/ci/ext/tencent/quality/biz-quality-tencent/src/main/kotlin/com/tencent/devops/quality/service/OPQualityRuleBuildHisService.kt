@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
 @Service
+@Suppress("NestedBlockDepth")
 class OPQualityRuleBuildHisService @Autowired constructor(
     private val qualityRuleBuildHisDao: OPQualityRuleBuildHisDao,
     private val buildHisDao: QualityRuleBuildHisDao,
@@ -62,7 +63,6 @@ class OPQualityRuleBuildHisService @Autowired constructor(
             val records = qualityRuleBuildHisDao.listTimeoutRule(dslContext, dateTime, limit, currId)
             records.forEach { rule ->
                 try {
-                    buildHisDao.updateStatus(rule.id, RuleInterceptResult.INTERCEPT.name)
                     val trigger = processClient.qualityTriggerStage(
                         userId = rule.createUser,
                         projectId = rule.projectId,
@@ -75,12 +75,15 @@ class OPQualityRuleBuildHisService @Autowired constructor(
                             checkTimes = 1
                         )
                     ).data ?: false
-                    qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
+                    if (trigger) {
+                        buildHisDao.updateStatus(rule.id, RuleInterceptResult.INTERCEPT.name)
+                        qualityRuleBuildHisOperationDao.create(dslContext, rule.createUser, rule.id, rule.stageId)
+                    }
                     logger.info("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
                             "buildId: ${rule.buildId}, trigger: $trigger")
                 } catch (e: Exception) {
                     logger.error("QUALITY|project: ${rule.projectId}, pipelineId: ${rule.pipelineId}, " +
-                            "buildId: ${rule.buildId} has triggered")
+                            "buildId: ${rule.buildId} trigger exception", e)
                 }
             }
             count = records.size

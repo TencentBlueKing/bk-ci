@@ -1,24 +1,24 @@
 package com.tencent.devops.openapi.api.apigw.v3
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.GitCIProjectType
+import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
 import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
@@ -41,7 +41,10 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwStreamResourceV3 {
 
-    @ApiOperation("人工TriggerBuild启动构建")
+    @ApiOperation(
+        "人工TriggerBuild启动构建",
+        tags = ["v3_stream_app_pipelines_startup", "v3_stream_user_pipelines_startup"]
+    )
     @POST
     @Path("/{gitProjectId}/pipelines/{pipelineId}/startup")
     fun triggerStartup(
@@ -64,7 +67,10 @@ interface ApigwStreamResourceV3 {
         streamTriggerBuildReq: StreamTriggerBuildReq
     ): Result<TriggerBuildResult>
 
-    @ApiOperation("工蜂project转换为streamProject")
+    @ApiOperation(
+        "工蜂project转换为streamProject",
+        tags = ["v3_stream_app_tranfer_projectname", "v3_stream_user_tranfer_projectname"]
+    )
     @GET
     @Path("/{gitProjectId}/projectName/transfer")
     fun getStreamProject(
@@ -82,7 +88,7 @@ interface ApigwStreamResourceV3 {
         gitProjectId: String
     ): Result<String>
 
-    @ApiOperation("项目下所有Stream流水线概览")
+    @ApiOperation("项目下所有Stream流水线概览", tags = ["v3_stream_app_pipelines_list", "v3_stream_user_pipelines_list"])
     @GET
     @Path("/{gitProjectId}/pipelines/list")
     fun getPipelineList(
@@ -104,12 +110,12 @@ interface ApigwStreamResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @ApiParam("每页多少条（最大50）", required = false, defaultValue = "10", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>>
 
-    @ApiOperation("获取指定Stream流水线信息")
+    @ApiOperation("获取指定Stream流水线信息", tags = ["v3_stream_app_pipelines_info", "v3_stream_user_pipelines_info"])
     @GET
     @Path("/{gitProjectId}/pipelines/{pipelineId}/info")
     fun getPipeline(
@@ -133,7 +139,7 @@ interface ApigwStreamResourceV3 {
         withHistory: Boolean? = false
     ): Result<GitProjectPipeline?>
 
-    @ApiOperation("开启或关闭Stream流水线")
+    @ApiOperation("开启或关闭Stream流水线", tags = ["v3_stream_app_pipelines_enable", "v3_stream_user_pipelines_enable"])
     @POST
     @Path("/{gitProjectId}/pipelines/{pipelineId}/enable")
     fun enablePipeline(
@@ -157,7 +163,7 @@ interface ApigwStreamResourceV3 {
         enabled: Boolean
     ): Result<Boolean>
 
-    @ApiOperation("获取Stream流水线列表")
+    @ApiOperation("获取Stream流水线列表", tags = ["v3_stream_app_pipelines_listInfo", "v3_stream_user_pipelines_listInfo"])
     @GET
     @Path("/{gitProjectId}/pipelines/listInfo")
     fun listPipelineNames(
@@ -175,7 +181,7 @@ interface ApigwStreamResourceV3 {
         gitProjectId: Long
     ): Result<List<GitProjectPipeline>>
 
-    @ApiOperation("查看项目下的指定构建详情")
+    @ApiOperation("查看项目下的指定构建详情", tags = ["v3_stream_app_builds_detail", "v3_stream_user_builds_detail"])
     @GET
     @Path("/{gitProjectId}/builds/detail")
     fun getLatestBuildDetail(
@@ -199,7 +205,7 @@ interface ApigwStreamResourceV3 {
         buildId: String?
     ): Result<GitCIModelDetail?>
 
-    @ApiOperation("可选条件检索Stream构建历史")
+    @ApiOperation("可选条件检索Stream构建历史", tags = ["v3_stream_app_builds_history", "v3_stream_user_builds_history"])
     @GET
     @Path("/{gitProjectId}/builds/history")
     fun getHistoryBuildList(
@@ -215,10 +221,16 @@ interface ApigwStreamResourceV3 {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
+        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("startBeginTime")
+        startBeginTime: String?,
+        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
+        @QueryParam("endBeginTime")
+        endBeginTime: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @ApiParam("每页多少条（最大50）", required = false, defaultValue = "20", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("分支", required = false)
@@ -235,7 +247,7 @@ interface ApigwStreamResourceV3 {
         pipelineId: String?
     ): Result<Page<GitCIBuildHistory>>
 
-    @ApiOperation("开启，关闭，初始化呢工蜂CI")
+    @ApiOperation("开启，关闭，初始化呢工蜂CI", tags = ["v3_stream_app_ci_enable", "v3_stream_user_ci_enable"])
     @POST
     @Path("/{gitProjectId}/enable")
     fun enableGitCI(
@@ -255,7 +267,7 @@ interface ApigwStreamResourceV3 {
         projectInfo: GitCIProjectInfo
     ): Result<Boolean>
 
-    @ApiOperation("查询工蜂CI项目配置")
+    @ApiOperation("查询工蜂CI项目配置", tags = ["v3_stream_app_ci_settings_get", "v3_stream_user_ci_settings_get"])
     @GET
     @Path("/{gitProjectId}/settings/get")
     fun getGitCIConf(
@@ -273,7 +285,7 @@ interface ApigwStreamResourceV3 {
         gitProjectId: String
     ): Result<GitCIBasicSetting?>
 
-    @ApiOperation("保存工蜂CI配置")
+    @ApiOperation("保存工蜂CI配置", tags = ["v3_stream_app_ci_update_setttings", "v3_stream_user_ci_update_setttings"])
     @POST
     @Path("/{gitProjectId}/settings/save")
     fun saveGitCIConf(
@@ -293,7 +305,10 @@ interface ApigwStreamResourceV3 {
         gitCIUpdateSetting: GitCIUpdateSetting
     ): Result<Boolean>
 
-    @ApiOperation("校验改用户工蜂的stream项目信息与权限")
+    @ApiOperation(
+        "校验改用户工蜂的stream项目信息与权限",
+        tags = ["v3_stream_app_project_validate", "v3_stream_user_project_validate"]
+    )
     @POST
     @Path("/validate")
     fun validateGitProject(
@@ -304,7 +319,7 @@ interface ApigwStreamResourceV3 {
         request: GitUserValidateRequest
     ): Result<GitUserValidateResult?>
 
-    @ApiOperation("刷新项目启动人")
+    @ApiOperation("刷新项目启动人", tags = ["v3_stream_app_ci_reset_oauth", "v3_stream_user_ci_reset_oauth"])
     @POST
     @Path("/{gitProjectId}/reset/oauth")
     fun updateEnableUser(
@@ -319,7 +334,7 @@ interface ApigwStreamResourceV3 {
         authUserId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取工蜂项目与STREAM关联列表")
+    @ApiOperation("获取工蜂项目与STREAM关联列表", tags = ["v3_stream_user_stream_list", "v3_stream_app_stream_list"])
     @GET
     @Path("/{type}/list")
     fun getProjects(
@@ -335,7 +350,7 @@ interface ApigwStreamResourceV3 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @ApiParam("每页多少条（最大50）", required = false, defaultValue = "10", allowableValues = "range[1, 50]")
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("排序条件", required = false)

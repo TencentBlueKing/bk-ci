@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
@@ -47,29 +48,7 @@ import javax.sql.DataSource
 class DataSourceConfig {
 
     @Bean
-    fun processDataSource(
-        @Value("\${spring.datasource.process.url}")
-        datasourceUrl: String,
-        @Value("\${spring.datasource.process.username}")
-        datasourceUsername: String,
-        @Value("\${spring.datasource.process.password}")
-        datasourcePassword: String,
-        @Value("\${spring.datasource.process.initSql:#{null}}")
-        datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.process.leakDetectionThreshold:#{0}}")
-        datasouceLeakDetectionThreshold: Long = 0
-    ): DataSource {
-        return hikariDataSource(
-            datasourcePoolName = "DBPool-Process",
-            datasourceUrl = datasourceUrl,
-            datasourceUsername = datasourceUsername,
-            datasourcePassword = datasourcePassword,
-            datasourceInitSql = datasourceInitSql,
-            datasouceLeakDetectionThreshold = datasouceLeakDetectionThreshold
-        )
-    }
-
-    @Bean
+    @Primary
     fun projectDataSource(
         @Value("\${spring.datasource.project.url}")
         datasourceUrl: String,
@@ -106,7 +85,7 @@ class DataSourceConfig {
         datasouceLeakDetectionThreshold: Long = 0
     ): DataSource {
         return hikariDataSource(
-            datasourcePoolName = "DBPool-Project",
+            datasourcePoolName = "DBPool-Lambda",
             datasourceUrl = datasourceUrl,
             datasourceUsername = datasourceUsername,
             datasourcePassword = datasourcePassword,

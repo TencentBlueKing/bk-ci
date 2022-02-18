@@ -90,6 +90,7 @@ class QualityRuleBuildHisService constructor(
 
         return ruleRequestList.map { ruleRequest ->
             // run插件先创建指标
+            // todo performance upsert indicator
             val indicatorCreateList = ruleRequest.indicators.filter { it.atomCode == RunElementType.RUN.elementType }
                 .map {
                     IndicatorCreate(
@@ -112,13 +113,15 @@ class QualityRuleBuildHisService constructor(
             val indicatorIds = mutableListOf<RuleCreateRequest.CreateRequestIndicator>()
 
             ruleRequest.indicators.groupBy { it.atomCode }.forEach { (atomCode, indicators) ->
-                val indicatorMap = indicators.map { it.enName to it }.toMap()
-                indicatorService.serviceList(atomCode, indicators.map { it.enName })
+                var indicatorsCopy = indicators.toMutableList()
+                indicatorService.serviceList(atomCode, indicators.map { it.enName }, projectId)
                     .filterNot { it.elementType == RunElementType.RUN.elementType && it.range != projectId }
                     .filter { it.enable ?: false }.forEach {
-                    val requestIndicator = (indicatorMap[it.enName])!!
+                    val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
+                        ?: throw OperationException("${ruleRequest.name} indicator ${it.enName} is not exist")
+                    logger.info("QUALITY|requestIndicator is: $requestIndicator")
 
-                    // 使用上下文变量表示阈值时不检查类型
+                        // 使用上下文变量表示阈值时不检查类型
                     if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
                             requestIndicator.atomCode != RunElementType.RUN.elementType) {
                         checkThresholdType(requestIndicator, it)
@@ -129,6 +132,7 @@ class QualityRuleBuildHisService constructor(
                         requestIndicator.operation,
                         requestIndicator.threshold
                     ))
+                    indicatorsCopy.remove(requestIndicator)
                 }
             }
 
@@ -137,7 +141,7 @@ class QualityRuleBuildHisService constructor(
                 throw OperationException("${ruleRequest.name} $indicatorNameSet indicator is not exist")
             }
 
-            logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}")
+            logger.info("start to create rule snapshot: $projectId, $pipelineId, ${ruleRequest.name}, $indicatorIds")
             val id = qualityRuleBuildHisDao.create(dslContext, userId, projectId, pipelineId, ruleRequest, indicatorIds)
 
             RuleCreateResponseV3(ruleRequest.name, projectId, pipelineId, HashUtil.encodeLongId(id))
@@ -181,41 +185,21 @@ class QualityRuleBuildHisService constructor(
 
         logger.info("start to check rule op list in his: ${allRule.size}")
 
-        val allIndicatorIds = mutableSetOf<Long>()
-        allRule.forEach {
-            if (it.indicatorIds.isNullOrBlank()) {
-                throw IllegalArgumentException("quality rule ${it.ruleName} indicator has error ${it.indicatorIds}")
-            }
-            allIndicatorIds.addAll(it.indicatorIds.split(",").map { indicatorId -> indicatorId.toLong() })
-        }
-
-        logger.info("start to check rule indicator: ${allIndicatorIds.firstOrNull()}, ${allIndicatorIds.size}")
-        val qualityIndicatorMap = qualityIndicatorService.serviceList(allIndicatorIds).map {
-            HashUtil.decodeIdToLong(it.hashId).toString() to it
-        }.toMap()
         return allRule.map {
+            val indicatorIdList = it.indicatorIds.split(",").map { id -> id.toLong() }
             val thresholdList = it.indicatorThresholds.split(",")
             val opList = it.indicatorOperations.split(",")
-            val ruleIndicatorIdMap = it.indicatorIds.split(",").mapIndexed { index, id ->
-                id.toLong() to Pair(opList[index], thresholdList[index])
-            }.toMap()
+            val qualityIndicatorList = qualityIndicatorService.serviceListALL(indicatorIdList).toMutableList()
+            logger.info("QUALITY|get qualityIndicator: ${qualityIndicatorList.size}")
 
             val rule = QualityRule(
                 hashId = HashUtil.encodeLongId(it.id),
                 name = it.ruleName,
                 desc = it.ruleDesc,
-                indicators = it.indicatorIds.split(",").map INDICATOR@{ indicatorId ->
-                    val indicator = qualityIndicatorMap[indicatorId]
-                        ?: throw IllegalArgumentException("indicatorId not found: $indicatorId, $qualityIndicatorMap")
-
-                    val indicatorCopy = indicator.clone()
-
-                    val item = ruleIndicatorIdMap[indicatorId.toLong()]
-
-                    indicatorCopy.operation = QualityOperation.valueOf(item?.first ?: indicator.operation.name)
-                    indicatorCopy.threshold = item?.second ?: indicator.threshold
-
-                    return@INDICATOR indicatorCopy
+                indicators = qualityIndicatorList.mapIndexed { index, indicator ->
+                    indicator.operation = QualityOperation.valueOf(opList[index])
+                    indicator.threshold = thresholdList[index]
+                    indicator
                 },
                 controlPoint = QualityRule.RuleControlPoint(
                     "", "", "", ControlPointPosition(ControlPointPosition.AFTER_POSITION), listOf()
@@ -252,7 +236,12 @@ class QualityRuleBuildHisService constructor(
                 } else {
                     it.gateKeepers.split(",")
                 },
-                stageId = it.stageId
+                stageId = it.stageId,
+                taskSteps = if (it.taskSteps.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.taskSteps, object : TypeReference<List<QualityRule.RuleTask>>() {})
+                }
             )
             rule
         }
@@ -390,7 +379,8 @@ class QualityRuleBuildHisService constructor(
         logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
-                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name || it?.status == null) {
+                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name ||
+                    it?.status == RuleInterceptResult.PASS.name) {
                     passFlag = true
                 } else {
                     passFlag = false
@@ -459,7 +449,12 @@ class QualityRuleBuildHisService constructor(
                 } else {
                     it.gateKeepers.split(",")
                 },
-                stageId = it.stageId
+                stageId = it.stageId,
+                taskSteps = if (it.taskSteps.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    JsonUtil.to(it.taskSteps, object : TypeReference<List<QualityRule.RuleTask>>() {})
+                }
             )
             rule
         }

@@ -45,7 +45,7 @@ import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.utils.GitCIWebHookMatcher
 import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.stream.trigger.StreamTriggerContext
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,7 +63,7 @@ class YamlTrigger @Autowired constructor(
     private val repositoryConfService: GitRepositoryConfService,
     private val gitCIEventSaveService: GitCIEventService,
     private val yamlBuild: YamlBuild
-) : YamlTriggerInterface<CIBuildYaml> {
+) : YamlTriggerInterface {
 
     override fun triggerBuild(
         context: StreamTriggerContext
@@ -77,10 +77,7 @@ class YamlTrigger @Autowired constructor(
             originYaml = originYaml,
             filePath = gitProjectPipeline.filePath,
             pipelineId = gitProjectPipeline.pipelineId,
-            pipelineName = gitProjectPipeline.displayName,
-            event = null,
-            changeSet = null,
-            forkGitProjectId = gitRequestEvent.getForkGitProjectId()
+            pipelineName = gitProjectPipeline.displayName
         ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -157,16 +154,13 @@ class YamlTrigger @Autowired constructor(
         return Pair(matcher.isMatch(ymlObject.trigger!!, ymlObject.mr!!), false)
     }
 
-    override fun prepareCIBuildYaml(
+    fun prepareCIBuildYaml(
         gitRequestEvent: GitRequestEvent,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
-        pipelineName: String?,
-        event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
+        pipelineName: String?
     ): CIBuildYaml? {
 
         if (originYaml.isNullOrBlank()) {

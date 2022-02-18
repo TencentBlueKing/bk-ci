@@ -56,6 +56,7 @@ import com.tencent.devops.scm.pojo.GitCICommitRef
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -245,7 +246,7 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "提交id 或者 分支")
         @QueryParam("ref")
-        ref: String
+        ref: String?
     ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取mr请求的代码变更")
@@ -728,4 +729,22 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<Boolean>
+
+    @ApiOperation("获取git项目组的详细信息")
+    @GET
+    @Path("/getProjectGroupInfo")
+    fun getProjectGroupInfo(
+        @ApiParam(value = "git项目组id", required = true)
+        @QueryParam("id")
+        id: String,
+        @ApiParam(value = "是否包含subgroup项目", required = false)
+        @QueryParam("includeSubgroups")
+        includeSubgroups: Boolean?,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo>
 }

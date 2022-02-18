@@ -30,16 +30,17 @@ package com.tencent.devops.stream.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.BranchBuildHistory
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
+import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.enums.BranchType
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -106,7 +107,7 @@ class GitCIBranchService @Autowired constructor(
                 gitCIBuildHistoryList.add(GitCIBuildHistory(
                     displayName = pipeline.displayName,
                     pipelineId = pipeline.pipelineId,
-                    gitRequestEvent = gitRequestEvent,
+                    gitRequestEvent = GitRequestEventReq(gitRequestEvent),
                     buildHistory = history
                 ))
             }

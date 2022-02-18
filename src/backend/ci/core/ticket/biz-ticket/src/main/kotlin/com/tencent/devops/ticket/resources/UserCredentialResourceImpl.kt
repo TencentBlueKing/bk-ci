@@ -36,6 +36,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
+import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -245,5 +246,25 @@ class UserCredentialResourceImpl @Autowired constructor(
         }
         credentialService.userEdit(userId, projectId, credentialId, credential)
         return Result(true)
+    }
+
+    override fun editSetting(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        credentialSetting: CredentialSettingUpdate
+    ): Result<Boolean> {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        return Result(
+            credentialService.userSettingEdit(userId, projectId, credentialId, credentialSetting)
+        )
     }
 }

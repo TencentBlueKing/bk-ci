@@ -28,9 +28,10 @@
 package com.tencent.devops.stream.trigger.template.pojo
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 
 data class GetTemplateParam(
+    val gitRequestEventId: Long,
     val token: String?,
     val forkToken: String?,
     val gitProjectId: Long,
@@ -40,5 +41,7 @@ data class GetTemplateParam(
     val fileName: String,
     val changeSet: Set<String>?,
     val event: GitEvent?,
-    val templateType: TemplateType?
+    val templateType: TemplateType?,
+    // 正在被替换的远程库
+    val nowRemoteGitProjectId: String?
 )

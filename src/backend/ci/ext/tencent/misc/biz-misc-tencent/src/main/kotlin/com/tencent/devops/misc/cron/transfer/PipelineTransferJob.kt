@@ -133,28 +133,29 @@ class PipelineTransferJob @Autowired constructor(
         try {
 
             targetPipelineService.addPipelineInfo(pipelineInfoRecord)
-
-            val resourceRecord = sourcePipelineService.getPipelineLatestRes(pipelineInfoRecord.pipelineId)
+            val projectId = pipelineInfoRecord.projectId
+            val pipelineId = pipelineInfoRecord.pipelineId
+            val resourceRecord = sourcePipelineService.getPipelineLatestRes(projectId, pipelineId)
             targetPipelineService.addResourceRecord(resourceRecord)
 
-            val settingRecord = sourcePipelineService.getPipelineSetting(pipelineInfoRecord.pipelineId)
+            val settingRecord = sourcePipelineService.getPipelineSetting(projectId, pipelineId)
             targetPipelineService.addSettingRecord(settingRecord)
 
-            val summaryRecord = sourcePipelineService.getPipelineSummary(pipelineInfoRecord.pipelineId)
+            val summaryRecord = sourcePipelineService.getPipelineSummary(projectId, pipelineId)
             targetPipelineService.addSummaryRecord(summaryRecord)
 
             var offset = 0L
             do {
                 val listPipelineBuilds = sourcePipelineService.listPipelineBuilds(
-                    projectId = pipelineInfoRecord.projectId,
-                    pipelineId = pipelineInfoRecord.pipelineId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
                     offset = offset,
                     limit = PIPELINE_BUILD_HISTORY_PAGE_SIZE
                 )
 
                 targetPipelineService.addPipelineBuilds(listPipelineBuilds)
                 listPipelineBuilds.forEach {
-                    val pipelineBuildDetail = sourcePipelineService.getPipelineBuildDetail(it.buildId)
+                    val pipelineBuildDetail = sourcePipelineService.getPipelineBuildDetail(projectId, it.buildId)
                     targetPipelineService.addDetailRecord(pipelineBuildDetail)
                 }
 

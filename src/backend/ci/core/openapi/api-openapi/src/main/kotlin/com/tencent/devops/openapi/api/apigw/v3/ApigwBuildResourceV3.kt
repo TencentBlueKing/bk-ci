@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -144,7 +145,7 @@ interface ApigwBuildResourceV3 {
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
-    @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
+    @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v3_app_build_status", "v3_user_build_status"])
     @GET
     @Path("/{buildId}/status")
     fun getStatus(
@@ -316,4 +317,26 @@ interface ApigwBuildResourceV3 {
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
+
+    @ApiOperation("取消并发起新构建")
+    @POST
+    @Path("/{buildId}/build/restart")
+    fun buildRestart(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(required = true)
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        @BkField(required = true)
+        buildId: String
+    ): Result<String>
 }

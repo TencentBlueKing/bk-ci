@@ -60,6 +60,7 @@ class ExperienceDownloadDetailDao {
         }
     }
 
+
     fun listIdsForPublic(dslContext: DSLContext, platform: String?, limit: Int): Result<Record1<Long>> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC.`as`("p")
         val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL.`as`("d")
@@ -74,5 +75,23 @@ class ExperienceDownloadDetailDao {
             .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
             .orderBy(d.UPDATE_TIME.desc()).limit(limit)
             .fetch()
+    }
+
+    fun countDownloadHistory(
+        dslContext: DSLContext,
+        projectId: String,
+        bundleIdentifier: String,
+        platform: String,
+        userId: String
+    ): Int {
+        with(TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
+                .and(USER_ID.eq(userId))
+                .and(PLATFORM.eq(platform))
+                .fetchAny()?.value1() ?: 0
+        }
     }
 }

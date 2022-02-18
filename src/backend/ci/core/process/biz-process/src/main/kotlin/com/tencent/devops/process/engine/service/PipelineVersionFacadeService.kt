@@ -60,8 +60,12 @@ class PipelineVersionFacadeService @Autowired constructor(
             )
         }
 
-        pipelineRepositoryVersionService.deletePipelineVer(pipelineId = pipelineId, version = version)
-        return pipelineRepositoryService.getPipelineInfo(pipelineId)?.pipelineName ?: pipelineId
+        pipelineRepositoryVersionService.deletePipelineVer(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        )
+        return pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.pipelineName ?: pipelineId
     }
 
     fun listPipelineVersion(
@@ -79,12 +83,14 @@ class PipelineVersionFacadeService @Autowired constructor(
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
         // 数据量不多，直接全拉
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         val (size, pipelines) = pipelineRepositoryVersionService.listPipelineVersion(
             pipelineInfo = pipelineInfo,
+            projectId = projectId,
             pipelineId = pipelineId,
             offset = offset,
-            limit = limit)
+            limit = limit
+        )
 
         return PipelineViewPipelinePage(
             page = pageNotNull,

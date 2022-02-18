@@ -31,7 +31,6 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.repository.dao.RepositoryDao
-import com.tencent.devops.repository.service.impl.GitCiRepositoryPermissionServiceImpl
 import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -43,6 +42,8 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.repository.service.RepositoryPermissionService
+import com.tencent.devops.repository.service.impl.StreamRepositoryPermissionServiceImpl
 import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 
@@ -72,20 +73,6 @@ class RepositoryConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCIRepositoryPermissionService(
-        dslContext: DSLContext,
-        tokenService: ClientTokenService,
-        client: Client,
-        repositoryDao: RepositoryDao
-    ) = GitCiRepositoryPermissionServiceImpl(
-        dslContext = dslContext,
-        tokenService = tokenService,
-        client = client,
-        repositoryDao = repositoryDao
-    )
-
-    @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun txRepositoryPermissionService(
         repositoryDao: RepositoryDao,
@@ -99,5 +86,19 @@ class RepositoryConfiguration {
         client = client,
         tokenService = tokenService,
         authResourceApiStr = authResourceApiStr
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamRepositoryPermissionService(
+        dslContext: DSLContext,
+        tokenService: ClientTokenService,
+        repositoryDao: RepositoryDao,
+        client: Client
+    ): RepositoryPermissionService = StreamRepositoryPermissionServiceImpl(
+        dslContext = dslContext,
+        repositoryDao = repositoryDao,
+        tokenService = tokenService,
+        client = client
     )
 }
