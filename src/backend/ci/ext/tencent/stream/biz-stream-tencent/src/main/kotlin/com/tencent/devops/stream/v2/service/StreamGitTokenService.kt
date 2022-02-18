@@ -55,10 +55,9 @@ class StreamGitTokenService @Autowired constructor(
     fun getToken(gitProjectId: Long): String {
         val projectId = getGitTokenKey(gitProjectId)
         val token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
-        logger.info("deJsonToRedis:", token?.accessToken)
         val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
         // 设置过期时间为一天12个小时
-        val validTime = TimeUnit.MINUTES.toSeconds(1)
+        val validTime = TimeUnit.HOURS.toSeconds(23)
         return if (token == null) {
             updateLock.use {
                 updateLock.lock()
@@ -73,7 +72,6 @@ class StreamGitTokenService @Autowired constructor(
             if (isExpire(token)) {
                 updateLock.use {
                     updateLock.lock()
-                    logger.info("begin refresh token:${token.refreshToken}")
                     val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
                     logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
                     val objJsonStr = JsonUtil.toJson(refreshToken, false)
