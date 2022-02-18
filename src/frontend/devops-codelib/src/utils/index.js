@@ -28,6 +28,7 @@ import {
 export function parsePathAlias (type, path, authType, svnType) {
     let reg = ''
     let msg = ''
+    let aliasIndex = 3
     const codelibLocaleObj = window.devops.$i18n.t('codelib')
 
     switch (true) {
@@ -48,22 +49,26 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.httpsRule}${type}${codelibLocaleObj.address}`
             break
         case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'):
-            reg = /^https\:\/\/git(\.code)?(\.tencent)\.com[\:|\/](.*)\.git$/
+            reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 2
             break
         case isTGit(type):
-            reg = /^git@git(\.tencent)(\.com)[\:|\/](.*)\.git$/
+            reg = /^git@([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 2
             break
     }
 
     const matchResult = path.match(reg)
 
-    return matchResult ? {
-        alias: matchResult[3]
-    } : {
-        msg
-    }
+    return matchResult
+        ? {
+            alias: matchResult[aliasIndex]
+        }
+        : {
+            msg
+        }
 }
 
 export function parsePathRegion (path) {
