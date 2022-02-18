@@ -74,7 +74,7 @@ class StreamGitTokenService @Autowired constructor(
                 updateLock.use {
                     updateLock.lock()
                     logger.info("begin refresh token")
-                    val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token)
+                    val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
                     logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
                     val objJsonStr = JsonUtil.toJson(refreshToken, false)
                     logger.info("refreshToken jsonStr: $objJsonStr")
