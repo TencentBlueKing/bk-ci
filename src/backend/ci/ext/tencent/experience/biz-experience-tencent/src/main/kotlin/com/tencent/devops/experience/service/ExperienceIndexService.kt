@@ -36,12 +36,14 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
 import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Service
 class ExperienceIndexService @Autowired constructor(
     val experienceBaseService: ExperienceBaseService,
     val experiencePublicDao: ExperiencePublicDao,
+    val experienceDao: ExperienceDao,
     val dslContext: DSLContext,
     val redisOperation: RedisOperation
 ) {
@@ -271,6 +274,22 @@ class ExperienceIndexService @Autowired constructor(
                     HashUtil.encodeLongId(it.id) +
                     "&userId=" + userId
         } else ""
+
+        // 同步版本号
+        if (StringUtils.isBlank(it.version)) {
+            val record = experienceDao.get(dslContext, it.recordId)
+            if (null == record) {
+                it.version = "0.0.0"
+            } else {
+                it.version = record.version
+                experiencePublicDao.updateById(
+                    dslContext = dslContext,
+                    id = it.id,
+                    version = it.version
+                )
+            }
+        }
+
         return IndexAppInfoVO(
             experienceHashId = HashUtil.encodeLongId(it.recordId),
             experienceName = it.experienceName,
@@ -283,7 +302,8 @@ class ExperienceIndexService @Autowired constructor(
             expired = false,
             lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-            type = it.type
+            type = it.type,
+            version = it.version
         )
     }
 }
