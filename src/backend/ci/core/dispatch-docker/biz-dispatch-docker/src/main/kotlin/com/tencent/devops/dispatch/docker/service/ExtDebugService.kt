@@ -27,15 +27,29 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+interface ExtDebugService {
+    fun startDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String?
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
-        urlPrefix: String = "http://"
-    ): Request.Builder
+    fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String?
+
+    fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean
 }
