@@ -410,13 +410,15 @@ class GitService @Autowired constructor(
         logger.info("Start to get the token for git project($gitProjectId)")
         val startEpoch = System.currentTimeMillis()
         try {
-            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+            val tokenUrl = "${gitConfig.gitUrl}/oauth/token" +
                 "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
                 "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
             val request = Request.Builder()
                 .url(tokenUrl)
-                .post(RequestBody.create(
-                    MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), "")
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""
+                    )
                 )
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
