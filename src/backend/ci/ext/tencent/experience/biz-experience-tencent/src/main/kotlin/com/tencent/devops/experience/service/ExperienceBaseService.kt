@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -77,7 +78,8 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceBaseService::class.java)
@@ -138,6 +140,7 @@ class ExperienceBaseService @Autowired constructor(
     ): MutableList<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
+        val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
 
         val result = records.map {
             AppExperience(
@@ -158,7 +161,8 @@ class ExperienceBaseService @Autowired constructor(
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
                 expired = now.isAfter(it.endDate),
-                subscribe = RandomUtils.nextBoolean()// TODO 等greyson那边的订阅逻辑
+                subscribe = RandomUtils.nextBoolean(), // TODO 等greyson那边的订阅逻辑
+                redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
         return result

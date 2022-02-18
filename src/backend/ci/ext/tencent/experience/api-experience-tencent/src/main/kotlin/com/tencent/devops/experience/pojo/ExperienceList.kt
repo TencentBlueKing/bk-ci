@@ -8,5 +8,7 @@ data class ExperienceList(
     @ApiModelProperty("内部体验列表")
     val privateExperiences: List<AppExperience>,
     @ApiModelProperty("公开体验列表")
-    val publicExperiences: List<AppExperience>
+    val publicExperiences: List<AppExperience>,
+    @ApiModelProperty("红点个数")
+    val redPointCount: Int
 )

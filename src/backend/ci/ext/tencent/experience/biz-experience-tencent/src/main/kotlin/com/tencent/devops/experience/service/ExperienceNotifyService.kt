@@ -27,6 +27,9 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.AppNotifyMessageWithOperation
@@ -60,7 +63,8 @@ import org.springframework.stereotype.Service
 class ExperienceNotifyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushHistoryDao: ExperiencePushHistoryDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val redisOperation: RedisOperation
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
 
@@ -112,11 +116,19 @@ class ExperienceNotifyService @Autowired constructor(
         }
         val isSuccess = sendXinge(appNotifyMessageWithOperation)
         when {
-            isSuccess -> experiencePushHistoryDao.updatePushHistoryStatus(
-                dslContext = dslContext,
-                id = appNotifyMessageWithOperation.messageId,
-                status = PushStatus.SUCCESS.status
-            )
+            isSuccess -> {
+                experiencePushHistoryDao.updatePushHistoryStatus(
+                    dslContext = dslContext,
+                    id = appNotifyMessageWithOperation.messageId,
+                    status = PushStatus.SUCCESS.status
+                )
+                redisOperation.sadd(
+                    ExperienceConstant.redPointKey(
+                        appNotifyMessageWithOperation.receiver
+                    ),
+                    HashUtil.decodeIdToLong(appNotifyMessageWithOperation.experienceHashId).toString()
+                )
+            }
             else -> experiencePushHistoryDao.updatePushHistoryStatus(
                 dslContext = dslContext,
                 id = appNotifyMessageWithOperation.messageId,

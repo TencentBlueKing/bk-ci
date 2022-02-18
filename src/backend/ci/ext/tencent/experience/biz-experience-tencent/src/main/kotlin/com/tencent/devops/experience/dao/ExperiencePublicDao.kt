@@ -29,6 +29,7 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.model.experience.tables.TExperiencePublic
+import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
@@ -414,5 +415,25 @@ class ExperiencePublicDao {
                 .and(PLATFORM.eq(platform))
                 .fetchOne()?.recordId
         }
+    }
+
+    fun listSubcribeRecordIds(
+        dslContext: DSLContext,
+        userId: String,
+        limit: Int
+    ): List<Long> {
+        val p = TExperiencePublic.T_EXPERIENCE_PUBLIC
+        val s = TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE
+        val join = p.leftJoin(s).on(
+            p.BUNDLE_IDENTIFIER.eq(s.BUNDLE_IDENTIFIER)
+                .and(p.PLATFORM.eq(s.PLATFORM))
+                .and(p.PROJECT_ID.eq(s.PROJECT_ID))
+        )
+        return dslContext.select(p.RECORD_ID)
+            .from(join)
+            .where(s.USER_ID.eq(userId))
+            .orderBy(p.UPDATE_TIME.desc())
+            .limit(limit)
+            .fetch(p.RECORD_ID)
     }
 }

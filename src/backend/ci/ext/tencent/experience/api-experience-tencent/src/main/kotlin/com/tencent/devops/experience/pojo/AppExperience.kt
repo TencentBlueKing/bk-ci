@@ -67,5 +67,7 @@ data class AppExperience(
     @ApiModelProperty("上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
     @ApiModelProperty("是否订阅", required = true)
-    val subscribe: Boolean
+    val subscribe: Boolean,
+    @ApiModelProperty("是否展示红点", required = false)
+    val redPointEnabled: Boolean = false
 )
