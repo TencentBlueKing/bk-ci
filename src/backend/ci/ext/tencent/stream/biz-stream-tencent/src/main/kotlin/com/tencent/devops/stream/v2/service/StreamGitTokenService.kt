@@ -55,7 +55,7 @@ class StreamGitTokenService @Autowired constructor(
     fun getToken(gitProjectId: Long): String {
         val projectId = getGitTokenKey(gitProjectId)
         val token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
-        logger.info("deJsonToRedis:", token)
+        logger.info("deJsonToRedis:", token?.accessToken)
         val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
         // 设置过期时间为一天12个小时
         val validTime = TimeUnit.MINUTES.toSeconds(1)
