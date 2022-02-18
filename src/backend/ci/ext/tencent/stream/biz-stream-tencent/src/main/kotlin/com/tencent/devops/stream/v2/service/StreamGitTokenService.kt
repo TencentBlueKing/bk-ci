@@ -47,7 +47,7 @@ class StreamGitTokenService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
         private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
-        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:v2:"
+        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:2:"
         fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
         fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
     }
@@ -55,9 +55,10 @@ class StreamGitTokenService @Autowired constructor(
     fun getToken(gitProjectId: Long): String {
         val projectId = getGitTokenKey(gitProjectId)
         val token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
+        logger.info("deJsonToRedis:", token)
         val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
         // 设置过期时间为一天12个小时
-        val validTime = TimeUnit.DAYS.toSeconds(1) + TimeUnit.HOURS.toSeconds(12)
+        val validTime = TimeUnit.MINUTES.toSeconds(1)
         return if (token == null) {
             updateLock.use {
                 updateLock.lock()
@@ -72,9 +73,11 @@ class StreamGitTokenService @Autowired constructor(
             if (isExpire(token)) {
                 updateLock.use {
                     updateLock.lock()
+                    logger.info("begin refresh token")
                     val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token)
                     logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
                     val objJsonStr = JsonUtil.toJson(refreshToken, false)
+                    logger.info("refreshToken jsonStr: $objJsonStr")
                     redisOperation.set(projectId, objJsonStr, validTime)
                     refreshToken.accessToken
                 }
