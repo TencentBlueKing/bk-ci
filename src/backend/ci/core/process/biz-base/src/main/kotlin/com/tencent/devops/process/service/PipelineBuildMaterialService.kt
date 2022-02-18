@@ -47,12 +47,11 @@ class PipelineBuildMaterialService @Autowired constructor(
     fun saveBuildMaterial(
         buildId: String,
         projectId: String,
-        pipelineId: String,
         pipelineBuildMaterials: List<PipelineBuildMaterial>
     ): Int {
         var newPipelineBuildMaterials = pipelineBuildMaterials
-        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, buildId)
-        if (pipelineBuildHistoryRecord != null) {
+        val pipelineBuildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
+        if (pipelineBuildHistoryRecord != null && pipelineBuildHistoryRecord.isRetry != true) {
             val material = pipelineBuildHistoryRecord.material
             if (StringUtils.isNoneBlank(material)) {
                 val originPipelineBuildMaterials =
@@ -60,9 +59,14 @@ class PipelineBuildMaterialService @Autowired constructor(
                 newPipelineBuildMaterials = newPipelineBuildMaterials.plus(originPipelineBuildMaterials)
             }
 
-            val materials = JsonUtil.toJson(newPipelineBuildMaterials)
+            val materials = JsonUtil.toJson(newPipelineBuildMaterials, formatted = false)
             logger.info("BuildId: $buildId save material size: ${newPipelineBuildMaterials.size}")
-            pipelineBuildDao.updateBuildMaterial(dslContext, buildId, materials)
+            pipelineBuildDao.updateBuildMaterial(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                material = materials
+            )
         }
         return pipelineBuildMaterials.size
     }

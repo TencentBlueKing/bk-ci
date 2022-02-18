@@ -8,3 +8,18 @@ spring:
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21911
 server:
   port: __BK_CI_NOTIFY_API_PORT__
+
+notify:
+  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+
+wework:
+  corpId:
+  corpSecret:
+  agentId:
+  tempDirectory: # 保存待上传 wework 文件临时存储路径
+  apiUrl: __BK_CI_NOTIFY_WEWORK_API_URL__ # 企业微信服务端host，用于调用企业微信api接口
+  safe: # 表示是否是保密消息，0表示可对外分享，1表示不能分享且内容显示水印，默认为0
+  enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
+  duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
+  enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
+  domain: true # 表示是否需要关注用户名内的@, true会将包含@的域信息剔除。 用于解决蓝鲸内用户名携带域的场景

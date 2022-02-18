@@ -31,16 +31,20 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.enums.CharsetType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
+import java.io.ByteArrayOutputStream
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.LogOutputStream
 import org.apache.commons.exec.PumpStreamHandler
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.nio.charset.Charset
 import java.util.regex.Pattern
 
+@Suppress("LongParameterList")
 object CommandLineUtils {
 
     private val logger = LoggerFactory.getLogger(CommandLineUtils::class.java)
@@ -53,7 +57,9 @@ object CommandLineUtils {
         print2Logger: Boolean,
         prefix: String = "",
         executeErrorMessage: String? = null,
-        buildId: String? = null
+        buildId: String? = null,
+        stepId: String? = null,
+        charsetType: String? = null
     ): String {
 
         val result = StringBuilder()
@@ -63,12 +69,28 @@ object CommandLineUtils {
         if (workspace != null) {
             executor.workingDirectory = workspace
         }
-        val resultLogFile = if (!buildId.isNullOrBlank()) { ScriptEnvUtils.getEnvFile(buildId) } else { null }
+        val contextLogFile = buildId?.let { ScriptEnvUtils.getContextFile(buildId) }
+
+        val charset = when (charsetType?.let { CharsetType.valueOf(it) }) {
+            CharsetType.UTF_8 -> "UTF-8"
+            CharsetType.GBK -> "GBK"
+            else -> Charset.defaultCharset().name()
+        }
 
         val outputStream = object : LogOutputStream() {
+
+            override fun processBuffer() {
+                val privateStringField = LogOutputStream::class.java.getDeclaredField("buffer")
+                privateStringField.isAccessible = true
+                val buffer = privateStringField.get(this) as ByteArrayOutputStream
+                processLine(buffer.toString(charset))
+                buffer.reset()
+            }
+
             override fun processLine(line: String?, level: Int) {
-                if (line == null)
+                if (line == null) {
                     return
+                }
 
                 var tmpLine: String = prefix + line
 
@@ -76,7 +98,8 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, stepId)
+                    appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
                     LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -96,8 +119,8 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
-                    LoggerService.addRedLine(tmpLine)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, stepId)
+                    LoggerService.addErrorLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
                 }
@@ -117,7 +140,7 @@ object CommandLineUtils {
             val errorMessage = executeErrorMessage ?: "Fail to execute the command($command)"
             logger.warn(errorMessage, ignored)
             if (print2Logger) {
-                LoggerService.addRedLine("$prefix $errorMessage")
+                LoggerService.addErrorLine("$prefix $errorMessage")
             }
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
@@ -128,28 +151,66 @@ object CommandLineUtils {
         return result.toString()
     }
 
-    private fun appendVariableToFile(workspace: File?, resultLogFile: String?, tmpLine: String) {
+    private fun appendResultToFile(
+        workspace: File?,
+        resultLogFile: String?,
+        tmpLine: String,
+        stepId: String?
+    ) {
         if (resultLogFile == null) {
             return
         }
-        val pattenVar = "::set-variable\\sname=.*"
-        val prefixVar = "::set-variable name="
-        appendToFile(pattenVar, prefixVar, tmpLine, workspace, resultLogFile)
-
-        val pattenOutput = "::set-output\\sname=.*"
-        val prefixOutput = "::set-output name="
-        appendToFile(pattenOutput, prefixOutput, tmpLine, workspace, resultLogFile)
+        appendVariableToFile(tmpLine, workspace, resultLogFile)
+        appendOutputToFile(tmpLine, workspace, resultLogFile, stepId)
     }
 
-    private fun appendToFile(
-        patten: String,
-        prefix: String,
+    private fun appendVariableToFile(
         tmpLine: String,
         workspace: File?,
-        resultLogFile: String?
+        resultLogFile: String
     ) {
-        if (Pattern.matches(patten, tmpLine)) {
-            val value = tmpLine.removePrefix(prefix)
+        val pattenVar = "::set-variable\\sname=.*"
+        val prefixVar = "::set-variable name="
+        if (Pattern.matches(pattenVar, tmpLine)) {
+            val value = tmpLine.removePrefix(prefixVar)
+            val keyValue = value.split("::")
+            if (keyValue.size >= 2) {
+                File(workspace, resultLogFile).appendText(
+                    "variables.${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                )
+            }
+        }
+    }
+
+    private fun appendOutputToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String,
+        stepId: String?
+    ) {
+        val pattenOutput = "::set-output\\sname=.*"
+        val prefixOutput = "::set-output name="
+        if (Pattern.matches(pattenOutput, tmpLine)) {
+            val value = tmpLine.removePrefix(prefixOutput)
+            val keyValue = value.split("::")
+            val keyPrefix = stepId?.let { "steps.$stepId.outputs." }
+            if (keyValue.size >= 2) {
+                File(workspace, resultLogFile).appendText(
+                    "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                )
+            }
+        }
+    }
+
+    private fun appendGateToFile(
+        tmpLine: String,
+        workspace: File?,
+        resultLogFile: String
+    ) {
+        val pattenOutput = "::set-gate-value\\sname=.*"
+        val prefixOutput = "::set-gate-value name="
+        if (Pattern.matches(pattenOutput, tmpLine)) {
+            val value = tmpLine.removePrefix(prefixOutput)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(

@@ -27,22 +27,23 @@
 
 package com.tencent.devops.process.engine.service.code
 
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.git.GitEvent
-import com.tencent.devops.process.pojo.code.github.GithubEvent
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 
 interface ScmWebhookMatcherBuilder {
 
     fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher
 
     fun createSvnWebHookMatcher(
-        event: SvnCommitEvent,
-        pipelineWebhookService: PipelineWebhookService
+        event: SvnCommitEvent
     ): ScmWebhookMatcher
 
     fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher
 
     fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher
+
+    fun createP4WebHookMatcher(event: P4Event): ScmWebhookMatcher
 }

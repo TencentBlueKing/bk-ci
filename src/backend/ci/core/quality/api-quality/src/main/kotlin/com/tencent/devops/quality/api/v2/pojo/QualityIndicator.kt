@@ -30,7 +30,8 @@ package com.tencent.devops.quality.api.v2.pojo
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.quality.pojo.enum.RunElementType
 
 data class QualityIndicator(
     val hashId: String,
@@ -39,16 +40,19 @@ data class QualityIndicator(
     val enName: String,
     val cnName: String,
     val stage: String,
-    val operation: QualityOperation,
+    var operation: QualityOperation,
     val operationList: List<QualityOperation>,
-    val threshold: String,
-    val thresholdType: QualityDataType,
+    var threshold: String,
+    var thresholdType: QualityDataType,
     val readOnly: Boolean,
     val type: String,
     val tag: String?,
     val metadataList: List<Metadata>,
     val desc: String?,
-    val logPrompt: String
+    val logPrompt: String,
+    val enable: Boolean?,
+    val range: String?,
+    var taskName: String? = null
 ) {
     data class Metadata(
         val hashId: String,
@@ -57,10 +61,37 @@ data class QualityIndicator(
     )
 
     companion object {
-        val SCRIPT_ELEMENT = setOf(LinuxScriptElement.classType, WindowsScriptElement.classType)
+        val SCRIPT_ELEMENT = setOf(
+            LinuxScriptElement.classType,
+            WindowsScriptElement.classType,
+            RunElementType.RUN.elementType
+        )
     }
 
     fun isScriptElementIndicator(): Boolean {
         return elementType in SCRIPT_ELEMENT
+    }
+
+    fun clone(): QualityIndicator {
+        return QualityIndicator(
+            hashId = this.hashId,
+            elementType = this.elementType,
+            elementDetail = this.elementDetail,
+            enName = this.enName,
+            cnName = this.cnName,
+            stage = this.stage,
+            operation = this.operation,
+            operationList = this.operationList,
+            threshold = this.threshold,
+            thresholdType = this.thresholdType,
+            readOnly = this.readOnly,
+            type = this.type,
+            tag = this.tag,
+            metadataList = this.metadataList,
+            desc = this.desc,
+            logPrompt = this.logPrompt,
+            enable = this.enable,
+            range = this.range
+        )
     }
 }

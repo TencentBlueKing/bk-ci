@@ -45,7 +45,10 @@ class PythonAtomTargetHandleServiceImpl : AtomTargetHandleService {
         buildEnvs: List<BuildEnv>,
         postEntryParam: String?
     ): String {
-        val convertTarget = "$target --post_action=$postEntryParam"
+        var convertTarget = target
+        if (!postEntryParam.isNullOrBlank()) {
+            convertTarget = "$target --post_action=$postEntryParam"
+        }
         logger.info("handleAtomTarget convertTarget:$convertTarget")
         return convertTarget
     }

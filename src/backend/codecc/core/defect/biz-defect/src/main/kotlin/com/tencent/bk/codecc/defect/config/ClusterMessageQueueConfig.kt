@@ -1,6 +1,7 @@
 package com.tencent.bk.codecc.defect.config
 
 import com.tencent.bk.codecc.defect.component.DefectClusterComponent
+import com.tencent.bk.codecc.defect.condition.AsyncReportCondition
 import com.tencent.devops.common.util.IPUtils
 import com.tencent.devops.common.web.mq.EXCHANGE_CLUSTER_ALLOCATION
 import com.tencent.devops.common.web.mq.QUEUE_CLUSTER_ALLOCATION
@@ -19,30 +20,30 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Conditional
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@ConditionalOnProperty(prefix = "spring.application", name = ["name"], havingValue = "asyncreport")
-class ClusterMessageQueueConfig {
+@Conditional(AsyncReportCondition::class)
+open class ClusterMessageQueueConfig {
 
     @Value("\${server.port:#{null}}")
     private val localPort: String? = null
 
     @Bean
-    fun clusterExchange(): DirectExchange {
+    open fun clusterExchange(): DirectExchange {
         return DirectExchange(EXCHANGE_CLUSTER_ALLOCATION, true, false)
     }
 
     @Bean
-    fun clusterQueue() = Queue(QUEUE_CLUSTER_ALLOCATION)
+    open fun clusterQueue() = Queue(QUEUE_CLUSTER_ALLOCATION)
 
     @Bean
-    fun clusterReplyQueue() = Queue("$QUEUE_REPLY_CLUSTER_ALLOCATION.${IPUtils.getInnerIP().replace(".", "")}.$localPort")
+    open fun clusterReplyQueue() = Queue("$QUEUE_REPLY_CLUSTER_ALLOCATION.${IPUtils.getInnerIP().replace(".", "")}.$localPort")
 
     @Bean
-    fun clusterQueueBind(
+    open fun clusterQueueBind(
         @Autowired clusterQueue: Queue,
         @Autowired clusterExchange: DirectExchange
     ): Binding {
@@ -50,9 +51,8 @@ class ClusterMessageQueueConfig {
             to(clusterExchange).with(ROUTE_CLUSTER_ALLOCATION)
     }
 
-
     @Bean
-    fun clusterContainer(
+    open fun clusterContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired clusterQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -74,7 +74,7 @@ class ClusterMessageQueueConfig {
     }
 
     @Bean
-    fun clusterReplyContainer(
+    open fun clusterReplyContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired clusterReplyQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -92,7 +92,7 @@ class ClusterMessageQueueConfig {
     }
 
     @Bean
-    fun clusterAsyncRabbitTamplte(rabbitTemplate: RabbitTemplate, clusterReplyContainer: SimpleMessageListenerContainer) : AsyncRabbitTemplate {
+    open fun clusterAsyncRabbitTamplte(rabbitTemplate: RabbitTemplate, clusterReplyContainer: SimpleMessageListenerContainer) : AsyncRabbitTemplate {
         val asyncRabbitTemplate = AsyncRabbitTemplate(rabbitTemplate, clusterReplyContainer)
         asyncRabbitTemplate.setReceiveTimeout(7200000)
         return asyncRabbitTemplate

@@ -35,6 +35,10 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 import java.io.File
 
 interface ReportSDKApi : WorkerRestApiSDK {
+    /**
+     * 获取Api对应的Realm
+     */
+    fun getRealm(): String
 
     /**
      * 获取报告跟路径
@@ -60,6 +64,13 @@ interface ReportSDKApi : WorkerRestApiSDK {
      * @param taskId 当前插件任务id
      * @param relativePath 报告首页所在的本地文件相对路径
      * @param buildVariables 构建变量
+     * @param token 令牌
      */
-    fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables)
+    fun uploadReport(
+        file: File,
+        taskId: String,
+        relativePath: String,
+        buildVariables: BuildVariables,
+        token: String? = null
+    )
 }

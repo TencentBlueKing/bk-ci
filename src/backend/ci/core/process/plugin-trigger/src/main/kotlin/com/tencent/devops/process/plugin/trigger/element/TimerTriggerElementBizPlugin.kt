@@ -28,6 +28,8 @@
 package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -57,13 +59,15 @@ class TimerTriggerElementBizPlugin constructor(
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) {
         val crontabExpressions = mutableSetOf<String>()
+        val params = (container as TriggerContainer).params.associate { it.id to it.defaultValue.toString() }
         logger.info("[$pipelineId]|$userId| Timer trigger [${element.name}] enable=${element.isElementEnable()}")
         if (element.isElementEnable()) {
 
-            val eConvertExpressions = element.convertExpressions()
+            val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {
                 throw ErrorCodeException(
                     defaultMessage = "定时触发器的定时参数不合法",
@@ -85,8 +89,8 @@ class TimerTriggerElementBizPlugin constructor(
                         params = arrayOf(cron)
                     )
                 }
+                crontabExpressions.add(cron)
             }
-            crontabExpressions.addAll(eConvertExpressions)
         }
 
         if (crontabExpressions.isNotEmpty()) {
@@ -105,14 +109,14 @@ class TimerTriggerElementBizPlugin constructor(
                 )
             }
         } else {
-            pipelineTimerService.deleteTimer(pipelineId, userId)
+            pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
             logger.info("[$pipelineId]|$userId| Delete pipeline timer")
         }
     }
 
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
-            pipelineTimerService.deleteTimer(param.pipelineId, param.userId)
+            pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
         }
     }
 

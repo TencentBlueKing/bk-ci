@@ -26,10 +26,13 @@
  */
 package com.tencent.devops.notify.service
 
+import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 
 interface WeworkService {
+
+    fun sendMqMsg(message: WeworkNotifyMessageWithOperation) = Unit
 
     fun sendMediaMessage(weworkNotifyMediaMessage: WeworkNotifyMediaMessage)
 

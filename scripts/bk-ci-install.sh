@@ -81,7 +81,7 @@ install_ci__common (){
   id -u "$MS_USER" &>/dev/null || \
     useradd -m -c "BlueKing CE User" --shell /bin/bash "$MS_USER"
 
-  os_pkg_install jq
+  [ -x /usr/bin/jq ] || os_pkg_install jq  # 如果已有jq则无需安装.
   local d
   for d in /etc/blueking/env "$BK_CI_HOME" "$BK_CI_LOGS_DIR" "${BK_CI_DATA_DIR%/?*}"; do
     command install -o "$MS_USER" -g "$MS_USER" -m 755 -d "$d"
@@ -99,13 +99,17 @@ install_ci__ms_common (){
   # 检查安装java
   install_java || return $?
   # 增量复制.
+  rsync -ra "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
   for f in agent-package jars-public jars-private scripts VERSION; do
     [ -e "$BK_CI_SRC_DIR/$f" ] || continue
     echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
-    rsync -ra "$BK_CI_SRC_DIR/" "$BK_CI_HOME"
+    rsync -ra "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
   done
-  # 保持微服务目录的强一致性.
-  rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
+  echo "change mode for agent-package dir."
+  find "$BK_CI_HOME/agent-package/" -type d -exec chmod -c a+rx {} \;
+  find "$BK_CI_HOME/agent-package/" -type f -exec chmod -c a+r {} \;
+  # 保持微服务部分子目录的强一致性.
+  rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
 }
 
 install_ci_dockerhost (){
@@ -136,7 +140,7 @@ install_ci_agentless (){
 install_ci_gateway (){
   local proj=$1
   install_openresty || return $?
-  rsync -ra --del "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"
+  rsync -ra "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"  # 不能del, 会删除codecc注入的配置文件.
   rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
   rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
   if [ -d "$BK_CI_SRC_DIR/docs" ]; then

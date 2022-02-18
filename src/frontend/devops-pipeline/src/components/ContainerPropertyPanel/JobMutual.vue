@@ -19,7 +19,7 @@
     import { mapActions } from 'vuex'
     import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import validMixins from '@/components/validMixins'
-    import jobOptionConfigMixin from '@/store/modules/soda/jobOptionConfigMixin'
+    import jobOptionConfigMixin from '@/store/modules/common/jobOptionConfigMixin'
     export default {
         name: 'job-mutual',
         mixins: [atomMixin, validMixins, jobOptionConfigMixin],

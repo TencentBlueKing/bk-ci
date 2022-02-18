@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.quality.api.v2.pojo.RulePipelineRange
 import com.tencent.devops.quality.api.v2.pojo.RuleTemplateRange
 import com.tencent.devops.quality.api.v2.pojo.request.PipelineRangeDetailRequest
@@ -87,8 +87,8 @@ class QualityPipelineService @Autowired constructor(
 
     fun userListTemplateRangeDetail(request: TemplateRangeDetailRequest): List<RuleTemplateRange> {
         with(request) {
-            val templateMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
-                .listTemplateById(templateIds, null).data?.templates ?: mapOf()
+            val templateMap = if (templateIds.isNotEmpty()) client.get(ServicePTemplateResource::class)
+                .listTemplateById(templateIds, projectId, null).data?.templates ?: mapOf()
             else mapOf()
             val templateElementsMap = templateMap.map { template ->
                 val model = template.value

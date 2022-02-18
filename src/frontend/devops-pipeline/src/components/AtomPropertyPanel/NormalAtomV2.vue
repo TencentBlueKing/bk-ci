@@ -4,7 +4,7 @@
             <template v-if="groupKey === 'rootProps'">
                 <template v-for="(obj, key) in group.props">
                     <form-field v-if="!isHidden(obj, atomValue) && rely(obj, atomValue)" :class="{ 'changed-prop': atomVersionChangedKeys.includes(key) }" :key="key" :desc="obj.desc" :desc-link="obj.descLink" :desc-link-text="obj.descLinkText" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
-                        <component :is="obj.type" :container="container" :atom-value="atomValue" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
+                        <component :is="obj.type" :container="container" :atom-value="atomValue" :disabled="disabled" :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.type) }, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateAtomInput" :value="atomValue[key]" v-bind="obj" :get-atom-key-modal="getAtomKeyModal" :placeholder="getPlaceholder(obj, atomValue)"></component>
                         <route-tips v-bind="getComponentTips(obj, atomValue)"></route-tips>
                     </form-field>
                 </template>
@@ -43,7 +43,7 @@
                                 {{ output.description }}
                             </div>
                         </bk-popover>
-                        <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
+                        <copy-icon :value="bkVarWrapper(namespace ? `${namespace}_${key}` : key)"></copy-icon>
                     </p>
                 </div>
             </div>
@@ -65,6 +65,7 @@
     import Parameter from '@/components/AtomFormComponent/Parameter'
     import Tips from '@/components/AtomFormComponent/Tips'
     import DynamicParameter from '@/components/AtomFormComponent/DynamicParameter'
+    import DynamicParameterSimple from '@/components/AtomFormComponent/DynamicParameterSimple'
     import { getAtomDefaultValue } from '@/store/modules/atom/atomUtil'
     import copyIcon from '@/components/copyIcon'
     export default {
@@ -78,6 +79,7 @@
             Parameter,
             Tips,
             DynamicParameter,
+            DynamicParameterSimple,
             copyIcon
         },
         mixins: [atomMixin, validMixins],
@@ -124,9 +126,11 @@
                 try {
                     const { [this.appIdPropsKey]: ccAppId, ...restProps } = this.atomPropsModel.input
                     return {
-                        ...(ccAppId ? {
-                            [this.appIdPropsKey]: ccAppId
-                        } : {}),
+                        ...(ccAppId
+                            ? {
+                                [this.appIdPropsKey]: ccAppId
+                            }
+                            : {}),
                         ...restProps
                     }
                 } catch (e) {
@@ -147,9 +151,9 @@
                         props: {}
                     }
                 })
-                Object.keys(this.inputProps).map(key => {
+                Object.keys(this.inputProps).forEach(key => {
                     const prop = this.inputProps[key]
-                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap['rootProps']
+                    const group = prop.groupName && groupMap[prop.groupName] ? groupMap[prop.groupName] : groupMap.rootProps
                     group.props[key] = prop
                 })
                 return groupMap
@@ -176,7 +180,7 @@
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
                     // 新增字段，已添加插件读取默认值
                     const atomValue = Object.keys(this.element.data.input).reduce((res, key) => {
-                        if (atomDefaultValue.hasOwnProperty(key)) {
+                        if (Object.prototype.hasOwnProperty.call(atomDefaultValue, key)) {
                             res[key] = this.element.data.input[key]
                         }
                         return res

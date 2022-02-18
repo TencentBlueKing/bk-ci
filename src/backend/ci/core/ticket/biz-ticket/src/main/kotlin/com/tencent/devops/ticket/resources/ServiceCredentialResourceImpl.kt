@@ -65,7 +65,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo> {
+    override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
         }

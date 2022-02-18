@@ -37,31 +37,46 @@ import java.io.File
 interface ArchiveSDKApi : WorkerRestApiSDK {
 
     /**
+     * 获取Api对应的Realm
+     */
+    fun getRealm(): String
+    /**
      * 归档构件到仓库中自定义路径
      * @param file 构件
      * @param destPath 要上传的文件而指定的自定义路径
      * @param buildVariables 构建变量
+     * @param token 令牌
      */
-    fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables)
+    fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables, token: String? = null)
 
     /**
      * 归档构件到流水线仓库
      * @param file 构件
      * @param buildVariables 构建变量
+     * @param token 令牌
      */
-    fun uploadPipeline(file: File, buildVariables: BuildVariables)
+    fun uploadPipeline(file: File, buildVariables: BuildVariables, token: String? = null)
+
+    /**
+     * 上传日志文件
+     */
+    fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables, token: String? = null)
 
     /**
      * 下载仓库中指定路径的文件
      *
      * @param uri 下载路径
      * @param destPath 下载后存放的文件
+     * @param isVmBuildEnv 是否是有编译环境
+     * @param token 令牌
      */
     fun downloadCustomizeFile(
         userId: String,
         projectId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean,
+        token: String? = null
     )
 
     /**
@@ -70,6 +85,8 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
      * @param buildId 构建id
      * @param uri 下载uri
      * @param destPath 下载后存放的文件
+     * @param isVmBuildEnv 是否是有编译环境
+     * @param token 令牌
      */
     fun downloadPipelineFile(
         userId: String,
@@ -77,7 +94,9 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         pipelineId: String,
         buildId: String,
         uri: String,
-        destPath: File
+        destPath: File,
+        isVmBuildEnv: Boolean,
+        token: String? = null
     )
 
     /**
@@ -105,14 +124,14 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
     /**
      * 通用上传文件接口
      * @param url 请求地址
-     * @param destPath 上传目标文件路径
      * @param file 上传的文件
      * @param headers 请求头
+     * @param isVmBuildEnv 是否是有编译环境
      */
     fun uploadFile(
         url: String,
-        destPath: String,
         file: File,
-        headers: Map<String, String>? = emptyMap()
+        headers: Map<String, String>? = emptyMap(),
+        isVmBuildEnv: Boolean
     ): Result<Boolean>
 }

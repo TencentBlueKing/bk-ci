@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -42,19 +43,21 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.StoreProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL")
 class UserMarketAtomResourceImpl @Autowired constructor(
     private val marketAtomService: MarketAtomService,
     private val storeProjectService: StoreProjectService
 ) : UserMarketAtomResource {
 
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketMainItem>> {
-        return marketAtomService.mainPageList(userId, page, pageSize)
+        return marketAtomService.mainPageList(userId, page, pageSize, urlProtocolTrim = true)
     }
 
     override fun list(
@@ -66,6 +69,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         rdType: AtomTypeEnum?,
         yamlFlag: Boolean?,
         recommendFlag: Boolean?,
+        qualityFlag: Boolean?,
         sortType: MarketAtomSortTypeEnum?,
         page: Int?,
         pageSize: Int?
@@ -80,9 +84,11 @@ class UserMarketAtomResourceImpl @Autowired constructor(
                 rdType = rdType,
                 yamlFlag = yamlFlag,
                 recommendFlag = recommendFlag,
+                qualityFlag = qualityFlag,
                 sortType = sortType,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                urlProtocolTrim = true
             )
         )
     }
@@ -91,8 +97,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?> {
         return marketAtomService.getMyAtoms(accessToken, userId, atomName, page, pageSize)
     }
@@ -134,7 +140,22 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.deleteAtom(userId, atomCode)
     }
 
+    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
+        return marketAtomService.getAtomShowVersionInfo(userId, atomCode)
+    }
+
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
         return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
+    }
+
+    override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
+        return Result(marketAtomService.generateCiV2Yaml(
+            atomCode = atomCode,
+            defaultShowFlag = defaultShowFlag ?: false)
+        )
+    }
+
+    override fun getAtomOutput(userId: String, atomCode: String): Result<List<AtomOutput>> {
+        return Result(marketAtomService.getAtomOutput(atomCode))
     }
 }

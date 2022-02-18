@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.template
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -44,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePTemplateResourceImpl @Autowired constructor(
     private val pipelineTemplateService: PipelineTemplateService,
     private val templateFacadeService: TemplateFacadeService
-) : ServiceTemplateResource {
+) : ServicePTemplateResource {
 
     override fun addMarketTemplate(
         userId: String,
@@ -66,6 +67,13 @@ class ServicePTemplateResourceImpl @Autowired constructor(
 
     override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {
         return templateFacadeService.getSrcTemplateCodes(projectId)
+    }
+
+    override fun getTemplateIdBySrcCode(
+        srcTemplateId: String,
+        projectIds: List<String>
+    ): Result<List<PipelineTemplateInfo>> {
+        return Result(templateFacadeService.getTemplateIdByTemplateCode(srcTemplateId, projectIds))
     }
 
     override fun listTemplate(
@@ -122,10 +130,11 @@ class ServicePTemplateResourceImpl @Autowired constructor(
 
     override fun listTemplateById(
         templateIds: Collection<String>,
+        projectId: String?,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
         return Result(templateFacadeService.listAllTemplate(
-            projectId = null,
+            projectId = projectId,
             templateType = templateType,
             templateIds = templateIds
         ))

@@ -41,8 +41,11 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATU
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.mq.LogListener
 import com.tencent.devops.log.service.LogService
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -51,6 +54,7 @@ import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
@@ -63,6 +67,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -123,6 +128,15 @@ class LogMQConfiguration @Autowired constructor() {
     fun logStatusEventQueue(): Queue {
         return Queue(QUEUE_LOG_STATUS_BUILD_EVENT, true)
     }
+
+    @Bean
+    fun buildLogPrintService(
+        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
+        rabbitTemplate: RabbitTemplate,
+        logPrintBean: LogPrintBean,
+        storageProperties: StorageProperties,
+        logServiceConfig: LogServiceConfig
+    ) = BuildLogPrintService(rabbitTemplate, logPrintBean, storageProperties, logServiceConfig)
 
     @Bean
     fun logEventBind(
@@ -234,20 +248,20 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun pipelineBuildFinishQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
+    fun pipelineBuildFinishLogQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
 
     @Bean
-    fun pipelineBuildFinishQueueBind(
-        @Autowired pipelineBuildFinishQueue: Queue,
+    fun pipelineBuildFinishLogQueueBind(
+        @Autowired pipelineBuildFinishLogQueue: Queue,
         @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishQueue).to(pipelineBuildFinishFanoutExchange)
+        return BindingBuilder.bind(pipelineBuildFinishLogQueue).to(pipelineBuildFinishFanoutExchange)
     }
 
     @Bean
-    fun pipelineBuildFinishListenerContainer(
+    fun pipelineBuildFinishLogListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineBuildFinishLogQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired logService: LogService,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -256,7 +270,7 @@ class LogMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = pipelineBuildFinishQueue,
+            queue = pipelineBuildFinishLogQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 5000,

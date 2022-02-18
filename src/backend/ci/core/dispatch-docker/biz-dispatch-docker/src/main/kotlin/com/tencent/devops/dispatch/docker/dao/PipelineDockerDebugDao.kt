@@ -61,10 +61,10 @@ class PipelineDockerDebugDao {
         imageType: String?,
         imagePublicFlag: Boolean?,
         imageRDType: ImageRDTypeEnum?
-    ): Long {
+    ) {
         with(TDispatchPipelineDockerDebug.T_DISPATCH_PIPELINE_DOCKER_DEBUG) {
             val now = LocalDateTime.now()
-            return dslContext.insertInto(this,
+            dslContext.insertInto(this,
                 PROJECT_ID,
                 PIPELINE_ID,
                 VM_SEQ_ID,
@@ -102,8 +102,18 @@ class PipelineDockerDebugDao {
                     imagePublicFlag,
                     imageRDType?.type?.toByte()
                 )
-                .returning(ID)
-                .fetchOne()!!.id
+                .onDuplicateKeyUpdate()
+                .set(POOL_NO, poolNo)
+                .set(STATUS, status.status)
+                .set(TOKEN, token)
+                .set(IMAGE_NAME, imageName)
+                .set(HOST_TAG, hostTag)
+                .set(CONTAINER_ID, containerId)
+                .set(UPDATED_TIME, now)
+                .set(BUILD_ENV, buildEnv)
+                .set(REGISTRY_USER, registryUser)
+                .set(REGISTRY_PWD, registryPwd)
+                .execute()
         }
     }
 

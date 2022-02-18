@@ -27,7 +27,9 @@
 module.exports = {
     root: true,
     parserOptions: {
-        parser: 'babel-eslint',
+        parser: '@babel/eslint-parser',
+        ecmaVersion: 2020,
+        requireConfigFile: false,
         sourceType: 'module'
     },
     env: {
@@ -86,13 +88,13 @@ module.exports = {
         'vue/block-spacing': ['error', 'always'],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/brace-style.md
-        'vue/brace-style': ['error', '1tbs', {'allowSingleLine': false}],
-        'brace-style': ['error', '1tbs', {'allowSingleLine': false}],
+        'vue/brace-style': ['error', '1tbs', { 'allowSingleLine': false }],
+        'brace-style': ['error', '1tbs', { 'allowSingleLine': false }],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/camelcase.md
         // 后端数据字段经常不是驼峰，所以不限制 properties，也不限制解构
-        'vue/camelcase': ['error', {'properties': 'never', 'ignoreDestructuring': true}],
-        'camelcase': ['error', {'properties': 'never', 'ignoreDestructuring': true}],
+        'vue/camelcase': ['error', { 'properties': 'never', 'ignoreDestructuring': true }],
+        'camelcase': ['error', { 'properties': 'never', 'ignoreDestructuring': true }],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/comma-dangle.md
         // 禁止使用拖尾逗号，如 {demo: 'test',}
@@ -112,7 +114,7 @@ module.exports = {
         // 'vue/dot-location': ['error', 'property'],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/eqeqeq.md
-        'vue/eqeqeq': ['error', 'always', {'null': 'ignore'}],
+        'vue/eqeqeq': ['error', 'always', { 'null': 'ignore' }],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/html-closing-bracket-newline.md
         // 单行写法不需要换行，多行需要，不限制
@@ -149,7 +151,7 @@ module.exports = {
         'vue/jsx-uses-vars': 1,
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/key-spacing.md
-        'vue/key-spacing': ['error', {'beforeColon': false, 'afterColon': true}],
+        'vue/key-spacing': ['error', { 'beforeColon': false, 'afterColon': true }],
 
         // 关键字周围空格一致性，在关键字前后保留空格，如 if () else {}
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/keyword-spacing.md
@@ -335,7 +337,7 @@ module.exports = {
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/space-unary-ops.md
         // new, delete, typeof, void, yield 等后面必须有空格，一元操作符 -, +, --, ++, !, !! 禁止有空格
-        'vue/space-unary-ops': ['error', {'words': true, 'nonwords': false}],
+        'vue/space-unary-ops': ['error', { 'words': true, 'nonwords': false }],
 
         // https://github.com/vuejs/eslint-plugin-vue/blob/master/docs/rules/this-in-template.md
         // 不允许在 template 中使用 this
@@ -413,7 +415,6 @@ module.exports = {
         // v-text 指令必须合法
         'vue/valid-v-text': 'error',
 
-
         // 缩进使用 4 个空格，并且 switch 语句中的 Case 需要缩进
         // https://eslint.org/docs/rules/indent
         'indent': ['error', 4, {
@@ -438,7 +439,7 @@ module.exports = {
 
         // 禁止空语句（可在空语句写注释避免），允许空的 catch 语句
         // https://eslint.org/docs/rules/no-empty
-        'no-empty': ['error', {'allowEmptyCatch': true}],
+        'no-empty': ['error', { 'allowEmptyCatch': true }],
 
         // 禁止在语句末尾使用分号
         // https://eslint.org/docs/rules/semi
@@ -447,7 +448,6 @@ module.exports = {
         // 禁用不必要的分号
         // https://eslint.org/docs/rules/no-extra-semi
         'no-extra-semi': 'error',
-
 
         // generator 的 * 前面禁止有空格，后面必须有空格
         // https://eslint.org/docs/rules/generator-star-spacing

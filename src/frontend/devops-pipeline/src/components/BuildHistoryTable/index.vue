@@ -32,7 +32,7 @@
                 </template>
                 <template v-else-if="col.prop === 'material'" v-slot="props">
                     <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
-                        <div @click.stop="" v-for="material in props.row.material" :key="material.aliasName" class="material-item">
+                        <div v-for="material in props.row.material" :key="material.aliasName" class="material-item">
                             <p :title="generateMaterial(material)" :class="{ 'show-commit-times': material.commitTimes > 1 }">{{ generateMaterial(material) }}</p>
                             <span class="material-commit-id" v-if="material.newCommitId" :title="material.newCommitId" @click.stop="goCodeRecords(props.row, material.aliasName)">
                                 <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
@@ -222,27 +222,31 @@
                     let shortUrl = ''
                     const appVersions = []
                     let sumSize = 0
-                    const artifactories = hasArtifactories ? item.artifactList.map(artifactory => {
-                        if (artifactory.shortUrl) {
-                            shortUrl = artifactory.shortUrl
-                        }
-                        if (artifactory.appVersion) {
-                            appVersions.push(artifactory.appVersion)
-                        }
-                        sumSize += artifactory.size
-                        return {
-                            ...artifactory,
-                            name: artifactory.name,
-                            size: convertFileSize(artifactory.size, 'B')
-                        }
-                    }) : []
+                    const artifactories = hasArtifactories
+                        ? item.artifactList.map(artifactory => {
+                            if (artifactory.shortUrl) {
+                                shortUrl = artifactory.shortUrl
+                            }
+                            if (artifactory.appVersion) {
+                                appVersions.push(artifactory.appVersion)
+                            }
+                            sumSize += artifactory.size
+                            return {
+                                ...artifactory,
+                                name: artifactory.name,
+                                size: convertFileSize(artifactory.size, 'B')
+                            }
+                        })
+                        : []
                     const needShowAll = hasArtifactories && item.artifactList.length > 11 && !this.isShowAll
-                    const stageStatus = item.stageStatus ? item.stageStatus.slice(1).map(stage => ({
-                        ...stage,
-                        tooltip: this.getStageTooltip(stage),
-                        icon: this.statusIconMap[stage.status] || 'circle',
-                        statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
-                    })) : null
+                    const stageStatus = item.stageStatus
+                        ? item.stageStatus.slice(1).map(stage => ({
+                            ...stage,
+                            tooltip: this.getStageTooltip(stage),
+                            icon: this.statusIconMap[stage.status] || 'circle',
+                            statusCls: `${stage.status}${stage.status === 'RUNNING' ? ' spin-icon' : ''}`
+                        }))
+                        : null
                     return {
                         ...item,
                         index,
@@ -254,7 +258,7 @@
                         startTime: item.startTime ? convertMiniTime(item.startTime) : '--',
                         endTime: item.endTime ? convertMiniTime(item.endTime) : '--',
                         queueTime: item.queueTime ? convertMiniTime(item.queueTime) : '--',
-                        totalTime: item.totalTime ? convertMStoStringByRule(item.totalTime) : '--',
+                        executeTime: item.executeTime ? convertMStoStringByRule(item.executeTime) : '--',
                         material: !active && Array.isArray(item.material) && item.material.length > 1 ? item.material.slice(0, 1) : item.material,
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
@@ -286,6 +290,7 @@
                             this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
                         }
                     }
+                    return item
                 })
                 return this.BUILD_HISTORY_TABLE_COLUMNS_MAP
             }
@@ -333,28 +338,31 @@
                 return ['QUEUE', 'RUNNING'].indexOf(row.status) < 0
             },
             async handleRemarkChange (row) {
+                if (this.isChangeRemark) return
+                const preRemark = row.remark
                 try {
                     const { $route: { params }, tempRemark } = this
                     if (tempRemark !== row.remark) {
                         this.isChangeRemark = true
-
+                        this.$set(row, 'remark', tempRemark)
+                        this.resetRemark()
                         await this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/builds/${params.projectId}/${params.pipelineId}/${row.id}/updateRemark`, {
                             remark: tempRemark
                         })
-                        this.$emit('update-table')
                         this.$showTips({
                             theme: 'success',
                             message: this.$t('updateSuc')
                         })
-                        this.resetRemark()
                     } else {
                         this.resetRemark()
                     }
                 } catch (e) {
+                    console.log(e)
                     this.$showTips({
                         theme: 'error',
                         message: this.$t('updateFail')
                     })
+                    this.$set(row, 'remark', preRemark)
                 }
             },
             resetRemark () {
@@ -444,7 +452,7 @@
             async downloadFile ({ artifactoryType, path }, key = 'download') {
                 try {
                     const { projectId } = this.$route.params
-                    const res = await this.$store.dispatch('soda/requestDownloadUrl', {
+                    const res = await this.$store.dispatch('common/requestDownloadUrl', {
                         projectId,
                         artifactoryType,
                         path
@@ -468,7 +476,7 @@
                         files: [artifactory.name],
                         copyAll: false
                     }
-                    const res = await this.$store.dispatch('soda/requestCopyArtifactory', {
+                    const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
                         buildId: this.currentBuildId,

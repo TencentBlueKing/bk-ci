@@ -40,7 +40,7 @@ data class StageControlOption(
     val runCondition: StageRunCondition = StageRunCondition.AFTER_LAST_FINISHED, // 运行条件
     val manualTrigger: Boolean? = false,
     var triggerUsers: List<String>? = null, // 可触发用户，支持引用变量
-    var triggered: Boolean? = false, // 已通过审核
+    var triggered: Boolean? = null, // 已通过审核
     val timeout: Int? = null, // 等待审核的超时时间
     val customVariables: List<NameAndValue>? = emptyList(), // 自定义变量
     val customCondition: String? = null, // 自定义条件

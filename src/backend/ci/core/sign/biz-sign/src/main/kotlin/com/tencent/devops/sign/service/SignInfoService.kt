@@ -29,10 +29,13 @@ package com.tencent.devops.sign.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
+import com.tencent.devops.sign.api.pojo.SignHistory
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.utils.IpaFileUtil
@@ -41,13 +44,59 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
+@Suppress("TooManyFunctions")
 class SignInfoService(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,
     private val signHistoryDao: SignHistoryDao
 ) {
+
+    fun listHistory(
+        userId: String,
+        startTime: Long?,
+        endTime: Long?,
+        offset: Int,
+        limit: Int
+    ): SQLPage<SignHistory> {
+        var startTimeTemp = startTime
+        if (startTimeTemp == null) {
+            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestampmilli()
+        }
+        var endTimeTemp = endTime
+        if (endTimeTemp == null) {
+            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestampmilli()
+        }
+
+        logger.info("list sign history param|$userId|$startTimeTemp|$endTimeTemp")
+        val count = signHistoryDao.count(
+            dslContext = dslContext,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp
+        )
+        val records = signHistoryDao.list(
+            dslContext = dslContext,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp,
+            offset = offset,
+            limit = limit
+        )
+        return SQLPage(
+            count,
+            records.map {
+                val history = signHistoryDao.convert(it)
+                val content = signIpaInfoDao.getSignInfoRecord(dslContext, history.resignId)
+                content?.let { info ->
+                    history.ipaSignInfoStr = String(Base64Util.decode(info.requestContent))
+                }
+                history
+            }
+        )
+    }
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo): Int {
         logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")
@@ -67,29 +116,31 @@ class SignInfoService(
     }
 
     fun finishUpload(resignId: String, ipaFile: File, info: IpaSignInfo, executeCount: Int) {
-        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|buildId=${info.buildId}")
+        logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|" +
+            "buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.finishUpload(dslContext, resignId)
     }
 
     fun finishUnzip(resignId: String, unzipDir: File, info: IpaSignInfo, executeCount: Int) {
-        logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}|buildId=${info.buildId}")
+        logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}" +
+            "buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.finishUnzip(dslContext, resignId)
     }
 
     fun finishResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
-        logger.info("[$resignId] finishResign|buildId=${info.buildId}")
+        logger.info("[$resignId] finishResign|buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.finishResign(dslContext, resignId)
     }
 
     fun finishZip(resignId: String, signedIpaFile: File, info: IpaSignInfo, executeCount: Int) {
         val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
         logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|" +
-            "signedIpaFile=${signedIpaFile.canonicalPath}|buildId=${info.buildId}")
+            "signedIpaFile=${signedIpaFile.canonicalPath}|buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.finishZip(dslContext, resignId, signedIpaFile.name, resultFileMd5)
     }
 
     fun finishArchive(resignId: String, info: IpaSignInfo, executeCount: Int) {
-        logger.info("[$resignId] finishArchive|buildId=${info.buildId}")
+        logger.info("[$resignId] finishArchive|buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.finishArchive(
             dslContext = dslContext,
             resignId = resignId
@@ -97,7 +148,7 @@ class SignInfoService(
     }
 
     fun successResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
-        logger.info("[$resignId] success resign|buildId=${info.buildId}")
+        logger.info("[$resignId] success resign|buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.successResign(
             dslContext = dslContext,
             resignId = resignId
@@ -105,7 +156,7 @@ class SignInfoService(
     }
 
     fun failResign(resignId: String, info: IpaSignInfo, executeCount: Int = 1, message: String) {
-        logger.info("[$resignId] fail resign|buildId=${info.buildId}")
+        logger.info("[$resignId] fail resign|buildId=${info.buildId}|executeCount=$executeCount")
         signHistoryDao.failResign(
             dslContext = dslContext,
             resignId = resignId,
@@ -163,8 +214,8 @@ class SignInfoService(
         try {
             val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
             return objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
-        } catch (e: Exception) {
-            logger.error("解析签名信息失败：$e")
+        } catch (ignore: Throwable) {
+            logger.error("解析签名信息失败：$ignore")
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER,
                 defaultMessage = "解析签名信息失败"
@@ -177,7 +228,7 @@ class SignInfoService(
             val objectMapper = ObjectMapper()
             val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
             return Base64Util.encode(ipaSignInfoJson.toByteArray())
-        } catch (ignored: Exception) {
+        } catch (ignored: Throwable) {
             logger.error("编码签名信息失败：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
         }

@@ -120,7 +120,7 @@
                     if (res.status >= 200 && res.status < 300) {
                         return res.blob()
                     } else {
-                        throw new Error(res.statusText)
+                        return res.json().then((result) => Promise.reject(result))
                     }
                 }).then((blob) => {
                     const a = document.createElement('a')
@@ -147,7 +147,7 @@
     }
     .statistic-pipeline-head {
         margin-bottom: 3.2vh;
-        /deep/ .bk-form-item {
+        ::v-deep .bk-form-item {
             margin-left: 20px;
         }
     }

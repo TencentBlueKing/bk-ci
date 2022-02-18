@@ -29,8 +29,8 @@ package com.tencent.devops.dispatch.docker.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -49,108 +49,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildDockerHostResource {
-
-/*    @ApiOperation("轮询开始任务")
-    @POST
-    @Path("/startBuild")
-    fun startBuild(
-        @ApiParam("dockerHost标识", required = true)
-        @QueryParam("hostTag")
-        hostTag: String
-    ): Result<DockerHostBuildInfo>?
-
-    @ApiOperation("轮询结束任务")
-    @POST
-    @Path("/endBuild")
-    fun endBuild(
-        @ApiParam("dockerHost标识", required = true)
-        @QueryParam("hostTag")
-        hostTag: String
-    ): Result<DockerHostBuildInfo>?
-
-    @ApiOperation("上报containerId")
-    @POST
-    @Path("/containerId")
-    fun reportContainerId(
-        @ApiParam("buildId", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam("vmSeqId", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: Int,
-        @ApiParam("containerId", required = true)
-        @QueryParam("containerId")
-        containerId: String,
-        @ApiParam("hostTag", required = true)
-        @QueryParam("hostTag")
-        hostTag: String? = null
-    ): Result<Boolean>?
-
-    @ApiOperation("回滚任务到队列里面")
-    @POST
-    @Path("/rollbackBuild")
-    fun rollbackBuild(
-        @ApiParam("buildId", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam("vmSeqId", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: Int,
-        @ApiParam("shutdown", required = true)
-        @QueryParam("shutdown")
-        shutdown: Boolean?
-    ): Result<Boolean>?
-
-    @ApiOperation("轮询debug开始任务")
-    @POST
-    @Path("/startDebug")
-    fun startDebug(
-        @ApiParam("dockerHost标识", required = true)
-        @QueryParam("hostTag")
-        hostTag: String
-    ): Result<ContainerInfo>?
-
-    @ApiOperation("轮询debug结束任务")
-    @POST
-    @Path("/endDebug")
-    fun endDebug(
-        @ApiParam("dockerHost标识", required = true)
-        @QueryParam("hostTag")
-        hostTag: String
-    ): Result<ContainerInfo>?
-
-    @ApiOperation("上报containerId")
-    @POST
-    @Path("/reportDebugContainerId")
-    fun reportDebugContainerId(
-        @ApiParam("pipelineId", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("vmSeqId", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: String,
-        @ApiParam("containerId", required = true)
-        @QueryParam("containerId")
-        containerId: String
-    ): Result<Boolean>?
-
-    @ApiOperation("回滚debug任务到队列里面")
-    @POST
-    @Path("/rollbackDebug")
-    fun rollbackDebug(
-        @ApiParam("pipelineId", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("vmSeqId", required = true)
-        @QueryParam("vmSeqId")
-        vmSeqId: String,
-        @ApiParam("shutdown", required = true)
-        @QueryParam("shutdown")
-        shutdown: Boolean? = false,
-        @ApiParam("message", required = true)
-        message: String?
-    ): Result<Boolean>?*/
-
     @ApiOperation("系统监控告警")
     @POST
     @Path("/alert")
@@ -166,14 +64,35 @@ interface BuildDockerHostResource {
         message: String
     ): Result<Boolean>?
 
-    @ApiOperation("获取主机信息")
     @GET
-    @Path("/host")
-    fun getHost(
-        @ApiParam("dockerHost标识", required = true)
-        @QueryParam("hostTag")
-        hostTag: String
-    ): Result<DockerHostInfo>?
+    @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
+    @ApiOperation("获取蓝盾项目的docker性能配置")
+    fun getResourceConfig(
+        @ApiParam("蓝盾流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("JOB ID", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String
+    ): Result<DockerResourceOptionsVO>
+
+    @GET
+    @Path("/qpc/projects/{projectId}/builds/{buildId}/vmSeqs/{vmSeqId}")
+    @ApiOperation("获取蓝盾项目的docker性能配置")
+    fun getQpcGitProjectList(
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("JOB ID", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("POOLNo", required = true)
+        @QueryParam("poolNo")
+        poolNo: Int
+    ): Result<List<String>>
 
     @ApiOperation("上报日志信息")
     @POST

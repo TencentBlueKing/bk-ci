@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.KEY_INPUT
 import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
@@ -57,6 +58,7 @@ object AtomUtils {
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
      */
+    @Suppress("ComplexMethod")
     fun parseContainerMarketAtom(
         container: Container,
         task: PipelineBuildTask,
@@ -64,34 +66,16 @@ object AtomUtils {
         buildLogPrinter: BuildLogPrinter
     ): MutableMap<String, String> {
         val atoms = mutableMapOf<String, String>()
-        val serviceMarketAtomEnvResource = client.get(ServiceMarketAtomEnvResource::class)
         val atomVersions = getAtomVersions(container)
         if (atomVersions.isNullOrEmpty()) {
             // 如果job容器内没有新插件，则直接返回
             return atoms
         }
         // 批量获取插件运行时信息
-        var flag = true
-        val atomRunInfoResult = try {
-            serviceMarketAtomEnvResource.batchGetAtomRunInfos(task.projectId, atomVersions)
-        } catch (ignored: Exception) {
-            flag = false
-            null
-        }
-        if (!flag || atomRunInfoResult?.isNotOk() == true) {
-            throw BuildTaskException(
-                errorType = ErrorType.USER,
-                errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
-                errorMsg = atomRunInfoResult?.message ?: "query tasks error",
-                pipelineId = task.pipelineId,
-                buildId = task.buildId,
-                taskId = task.taskId
-            )
-        }
-        val atomRunInfoMap = atomRunInfoResult?.data
-        container.elements.forEach nextOne@{ element ->
+        val atomRunInfoMap = batchGetAtomInfo(client = client, task = task, atomVersions = atomVersions)
+        for (element in container.elements) {
             if (isHisAtomElement(element)) {
-                return@nextOne
+                continue
             }
             var version = element.version
             if (version.isBlank()) {
@@ -142,6 +126,34 @@ object AtomUtils {
             atoms[atomCode] = atomRunInfo.initProjectCode
         }
         return atoms
+    }
+
+    private fun batchGetAtomInfo(
+        client: Client,
+        task: PipelineBuildTask,
+        atomVersions: MutableSet<StoreVersion>
+    ): Map<String, AtomRunInfo>? {
+
+        val atomRunInfoResult = try {
+            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(task.projectId, atomVersions)
+        } catch (ignored: Exception) {
+            Result<Map<String, AtomRunInfo>?>(
+                status = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
+                message = ignored.message
+            )
+        }
+
+        if (atomRunInfoResult.isNotOk()) {
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
+                errorMsg = atomRunInfoResult.message ?: "query tasks error",
+                pipelineId = task.pipelineId,
+                buildId = task.buildId,
+                taskId = task.taskId
+            )
+        }
+        return atomRunInfoResult.data
     }
 
     private fun getAtomVersions(container: Container): MutableSet<StoreVersion> {

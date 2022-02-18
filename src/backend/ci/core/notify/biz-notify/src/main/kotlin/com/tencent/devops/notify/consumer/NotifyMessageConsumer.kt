@@ -26,24 +26,31 @@
  */
 package com.tencent.devops.notify.consumer
 
+import com.tencent.devops.common.notify.enums.WeworkReceiverType
+import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import com.tencent.devops.notify.QUEUE_NOTIFY_RTX
 import com.tencent.devops.notify.QUEUE_NOTIFY_SMS
 import com.tencent.devops.notify.QUEUE_NOTIFY_WECHAT
+import com.tencent.devops.notify.QUEUE_NOTIFY_WEWORK
 import com.tencent.devops.notify.ROUTE_EMAIL
 import com.tencent.devops.notify.ROUTE_RTX
 import com.tencent.devops.notify.ROUTE_SMS
 import com.tencent.devops.notify.ROUTE_WECHAT
+import com.tencent.devops.notify.ROUTE_WEWORK
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
 import com.tencent.devops.notify.model.RtxNotifyMessageWithOperation
 import com.tencent.devops.notify.model.SmsNotifyMessageWithOperation
 import com.tencent.devops.notify.model.WechatNotifyMessageWithOperation
+import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
+import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
 import com.tencent.devops.notify.service.EmailService
 import com.tencent.devops.notify.service.OrgService
 import com.tencent.devops.notify.service.RtxService
 import com.tencent.devops.notify.service.SmsService
 import com.tencent.devops.notify.service.WechatService
+import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
 import org.springframework.amqp.rabbit.annotation.Queue
@@ -58,6 +65,7 @@ class NotifyMessageConsumer @Autowired constructor(
     private val emailService: EmailService,
     private val smsService: SmsService,
     private val wechatService: WechatService,
+    private val weworkService: WeworkService,
     private val orgService: OrgService
 ) {
     companion object {
@@ -137,6 +145,32 @@ class NotifyMessageConsumer @Autowired constructor(
             wechatService.sendMessage(wechatNotifyMessageWithOperation)
         } catch (ignored: Exception) {
             logger.warn("Failed process received Wechat message", ignored)
+        }
+    }
+
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
+        bindings = [
+            QueueBinding(
+                key = [ROUTE_WEWORK],
+                value = Queue(value = QUEUE_NOTIFY_WEWORK, durable = "true"),
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )]
+    )
+    fun onReceiveWeworkMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
+        try {
+            val parseStaff = orgService.parseStaff(weworkNotifyMessageWithOperation.getReceivers())
+            weworkNotifyMessageWithOperation.clearReceivers()
+            weworkNotifyMessageWithOperation.addAllReceivers(parseStaff)
+            val weworkNotifyTextMessage = WeworkNotifyTextMessage(
+                receivers = parseStaff,
+                receiverType = WeworkReceiverType.single,
+                textType = WeworkTextType.text,
+                message = weworkNotifyMessageWithOperation.body
+            )
+            weworkService.sendTextMessage(weworkNotifyTextMessage)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received Wework message", ignored)
         }
     }
 }

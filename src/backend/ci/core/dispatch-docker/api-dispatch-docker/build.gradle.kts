@@ -26,7 +26,9 @@
  */
 
 dependencies {
-    api(project(":core:dispatch:api-dispatch"))
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
+    api(project(":core:store:api-store-image"))
 }
 
 plugins {

@@ -1,0 +1,59 @@
+{
+  "object_kind": "merge_request",
+  "manual_unlock": false,
+  "user": {
+    "name": "ming",
+    "username": "mingshewhe",
+    "avatar_url": "https://git.code.tencent.com/uploads/user/avatar/132102/1909b65ef6c944ceb15613ec4bba652d."
+  },
+  "object_attributes": {
+    "id": 290966,
+    "target_branch": "master",
+    "source_branch": "mr_test",
+    "source_project_id": 130762,
+    "author_id": 132102,
+    "assignee_id": null,
+    "title": "mr_test",
+    "created_at": "2021-06-10T12:54:05+0000",
+    "updated_at": "2021-06-10T12:54:05+0000",
+    "st_commits": null,
+    "st_diffs": null,
+    "milestone_id": null,
+    "state": "opened",
+    "merge_status": "can_be_merged",
+    "target_project_id": 130762,
+    "iid": 9,
+    "description": "",
+    "source": {
+      "name": "webhook_test3",
+      "ssh_url": "git@git.code.tencent.com:mingshewhe/webhook_test3.git",
+      "http_url": "https://git.code.tencent.com/mingshewhe/webhook_test3.git",
+      "web_url": "https://git.code.tencent.com/mingshewhe/webhook_test3",
+      "namespace": "mingshewhe/webhook_test3",
+      "visibility_level": 0
+    },
+    "target": {
+      "name": "webhook_test3",
+      "ssh_url": "git@git.code.tencent.com:mingshewhe/webhook_test3.git",
+      "http_url": "https://git.code.tencent.com/mingshewhe/webhook_test3.git",
+      "web_url": "https://git.code.tencent.com/mingshewhe/webhook_test3",
+      "namespace": "mingshewhe/webhook_test3",
+      "visibility_level": 0
+    },
+    "last_commit": {
+      "id": "9c9f8cc062060fdad67137e5e102689be765b4d4",
+      "message": "mr 19",
+      "timestamp": "2021-06-09T07:56:28+0000",
+      "url": "https://git.code.tencent.com/mingshewhe/webhook_test3/commits/9c9f8cc062060fdad67137e5e102689be765b4d4",
+      "author": {
+        "name": "mingshewhe",
+        "email": "wx_a56dc86ef0f74feda385d4818e7c5cda@git.code.tencent.com"
+      }
+    },
+    "merge_type": null,
+    "merge_commit_sha": null,
+    "url": "https://git.code.tencent.com/mingshewhe/webhook_test3/merge_requests/9",
+    "action": "open",
+    "extension_action": "open"
+  }
+}

@@ -1,7 +1,7 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'readonly': !editable || stageDisabled }, 'pipeline-stage']" ref="stageRef">
-        <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip" @click.stop="startNextStage">
-            <logo v-if="!isTriggerStage && !isFinallyStage" :name="reviewStatausIcon" size="28" />
+        <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip(stage.checkIn)" @click.stop="startNextStage('checkIn')">
+            <logo v-if="!isTriggerStage && !isFinallyStage" :name="reviewStatausIcon(stage.checkIn)" size="28" />
         </span>
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
             <span :title="stageTitle" :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP', 'show-right-icon': (showCheckedToatal || canStageRetry) }">
@@ -42,7 +42,7 @@
             <i class="devops-icon icon-right-shape connector-angle"></i>
         </span>
         <template v-if="editable">
-            <span v-bk-clickoutside="toggleAddMenu" v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
+            <span v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
@@ -52,7 +52,7 @@
                                 {{ $t('editPage.insertStage') }}
                             </span>
                         </div>
-                        <div :class="{ 'disabled-item': hasFinallyStage, 'click-item': true }" @click.stop="appendStage(true)">
+                        <div :class="{ 'disabled-item': hasFinallyStage || stageLength === 1, 'click-item': true }" @click.stop="appendStage(true)">
                             <span>
                                 {{ $t('editPage.insertFinallyStage') }}
                             </span>
@@ -66,7 +66,7 @@
                     </div>
                 </template>
             </span>
-            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
+            <span v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
                 <template v-if="lastAddMenuShow">
                     <span class="insert-stage direction">
@@ -75,7 +75,7 @@
                                 {{ $t('editPage.insertStage') }}
                             </span>
                         </div>
-                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
+                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage || stageLength === 1 }" @click.stop="appendStage(true)">
                             <span>
                                 {{ $t('editPage.insertFinallyStage') }}
                             </span>
@@ -153,7 +153,8 @@
             ...mapState('atom', [
                 'insertStageIndex',
                 'pipeline',
-                'pipelineLimit'
+                'pipelineLimit',
+                'showStageReviewPanel'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -195,12 +196,8 @@
             stageDisabled () {
                 return !!(this.stage.stageControlOption && this.stage.stageControlOption.enable === false)
             },
-            canTriggerStage () {
-                try {
-                    return this.stage.stageControlOption.triggerUsers.includes(this.$userInfo.username)
-                } catch (e) {
-                    return false
-                }
+            stageReviewType () {
+                return this.showStageReviewPanel.type
             },
             computedContainer: {
                 get () {
@@ -223,13 +220,6 @@
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
                     disabled: !this.editable
-                }
-            },
-            isStagePause () {
-                try {
-                    return this.stage.reviewStatus === 'REVIEWING'
-                } catch (error) {
-                    return false
                 }
             },
             iconCls () {
@@ -258,40 +248,6 @@
                     default:
                         return ''
                 }
-            },
-            enableReview () {
-                return this.stage.stageControlOption && this.stage.stageControlOption.manualTrigger
-            },
-            reviewStatausIcon () {
-                try {
-                    if (this.stage.stageControlOption && this.stage.stageControlOption.isReviewError) return 'review-error'
-                    switch (true) {
-                        case this.stage.reviewStatus === 'REVIEWING':
-                            return 'reviewing'
-                        case this.stage.reviewStatus === 'QUEUE':
-                            return 'review-waiting'
-                        case this.stage.reviewStatus === 'REVIEW_PROCESSED':
-                            return 'reviewed'
-                        case this.stage.reviewStatus === 'REVIEW_ABORT':
-                            return 'review-abort'
-                        case this.stageStatusCls === 'SKIP':
-                        case !this.stageStatusCls && this.isExecDetail:
-                            return this.enableReview ? 'review-waiting' : 'review-auto-gray'
-                        case !!this.stageStatusCls:
-                            return 'review-auto-pass'
-                        default:
-                            return this.enableReview ? 'review-enable' : 'review-auto'
-                    }
-                } catch (e) {
-                    console.warn('get review icon error: ', e)
-                    return 'review-auto'
-                }
-            },
-            reviewTooltip () {
-                return {
-                    content: this.canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
-                    disabled: !this.isStagePause
-                }
             }
         },
         watch: {
@@ -316,6 +272,10 @@
             if (this.showCheckedToatal) {
                 Vue.set(this.stage, 'runStage', !this.stageDisabled)
             }
+            document.addEventListener('click', this.hideAddStage)
+        },
+        beforeDestroyed () {
+            window.removeEventListener('click', this.hideAddStage)
         },
         updated () {
             this.updateHeight()
@@ -331,9 +291,48 @@
                 'setPipelineEditing',
                 'updateStage',
                 'deleteStage',
-                'toggleReviewDialog',
                 'toggleStageReviewPanel'
             ]),
+
+            reviewTooltip (stageControl = {}) {
+                const reviewGroups = stageControl.reviewGroups || []
+                const curReviewGroup = reviewGroups.find((review) => (review.status === undefined)) || {}
+                const canTriggerStage = (curReviewGroup.reviewers || []).includes(this.$userInfo ? this.$userInfo.username : '')
+                const isStagePause = stageControl.status !== 'REVIEWING'
+                return {
+                    content: canTriggerStage ? this.$t('editPage.toCheck') : this.$t('editPage.noAuthToCheck'),
+                    disabled: isStagePause
+                }
+            },
+
+            reviewStatausIcon (stageControl = {}) {
+                try {
+                    if (stageControl.isReviewError) return 'review-error'
+                    switch (true) {
+                        case stageControl.status === 'REVIEWING':
+                            return 'reviewing'
+                        case stageControl.status === 'QUEUE':
+                            return 'review-waiting'
+                        case stageControl.status === 'REVIEW_PROCESSED':
+                            return 'reviewed'
+                        case stageControl.status === 'REVIEW_ABORT':
+                            return 'review-abort'
+                        case stageControl.status === 'QUALITY_CHECK_FAIL':
+                            return 'quality_check_fail'
+                        case this.stageStatusCls === 'SKIP':
+                        case !this.stageStatusCls && this.isExecDetail:
+                            return stageControl.manualTrigger ? 'review-waiting' : 'review-auto-gray'
+                        case !!this.stageStatusCls:
+                            return 'review-auto-pass'
+                        default:
+                            return stageControl.manualTrigger ? 'review-enable' : 'review-auto'
+                    }
+                } catch (e) {
+                    console.warn('get review icon error: ', e)
+                    return 'review-auto'
+                }
+            },
+
             confirmRetry () {
                 this.showRetryStageDialog = false
                 this.singleRetry(this.stage.id)
@@ -406,8 +405,8 @@
             },
 
             appendStage (isFinally = false, fromLast = false) {
-                const { stageIndex, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
-                if (isFinally && hasFinallyStage) return
+                const { stageIndex, stageLength, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
+                if (isFinally && (hasFinallyStage || stageLength === 1)) return
                 setInertStageIndex({
                     insertStageIndex: isFinally ? this.stageLength : (fromLast ? stageIndex + 1 : stageIndex)
                 })
@@ -416,6 +415,7 @@
                 })
                 showStageSelectPopup(false)
                 this.toggleAddMenu(false)
+                this.toggleLastMenu(false)
             },
             showStageSelectPopup (isParallel) {
                 let limitMsg = ''
@@ -449,25 +449,32 @@
                 }
             },
 
-            toggleLastMenu (isAddMenuShow) {
+            toggleLastMenu (isLastMenuShow) {
                 if (!this.editable) return
-                this.lastAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
-            },
-
-            startNextStage () {
-                if (this.canTriggerStage && this.isStagePause) {
-                    this.toggleReviewDialog({
-                        isShow: true,
-                        reviewInfo: this.stage
-                    })
-                } else {
-                    this.toggleStageReviewPanel({
-                        isShow: true,
-                        editingElementPos: {
-                            stageIndex: this.stageIndex
-                        }
+                const { stageIndex, setInertStageIndex } = this
+                this.lastAddMenuShow = typeof isLastMenuShow === 'boolean' ? isLastMenuShow : false
+                if (this.lastAddMenuShow) {
+                    setInertStageIndex({
+                        insertStageIndex: stageIndex
                     })
                 }
+            },
+
+            hideAddStage () {
+                this.lastAddMenuShow = false
+                this.isAddMenuShow = false
+            },
+
+            startNextStage (type) {
+                this.toggleStageReviewPanel({
+                    showStageReviewPanel: {
+                        isShow: true,
+                        type
+                    },
+                    editingElementPos: {
+                        stageIndex: this.stageIndex
+                    }
+                })
             },
             updateHeight () {
                 const parentEle = this.$refs.stageRef
@@ -502,11 +509,13 @@
                                 ...element,
                                 id: `e-${hashID(32)}`
                             })),
-                            jobControlOption: container.jobControlOption ? {
-                                ...container.jobControlOption,
-                                dependOnType: 'ID',
-                                dependOnId: []
-                            } : undefined
+                            jobControlOption: container.jobControlOption
+                                ? {
+                                    ...container.jobControlOption,
+                                    dependOnType: 'ID',
+                                    dependOnId: []
+                                }
+                                : undefined
                         }))
 
                     }
@@ -526,8 +535,9 @@
 </script>
 
 <style lang='scss'>
+    @use "sass:math";
     @import 'Stage';
-    $addIconTop: $stageEntryHeight / 2 - $addBtnSize / 2;
+    $addIconTop: math.div($stageEntryHeight, 2) - math.div($addBtnSize, 2);
 
     .pipeline-drag {
         cursor: url('../../images/grab.cur'), default;
@@ -543,8 +553,8 @@
 
         .stage-review-logo {
             position: absolute;
-            left: -$reviewIconSize / 2;
-            top: ($stageEntryHeight - $reviewIconSize) / 2;
+            left: math.div(-$reviewIconSize, 2);
+            top: math.div(($stageEntryHeight - $reviewIconSize), 2);
             z-index: 3;
         }
 
@@ -671,7 +681,7 @@
         .add-connector {
             stroke-dasharray: 4,4;
             top: 7px;
-            left: $addBtnSize / 2;
+            left: math.div($addBtnSize, 2);
         }
 
         .append-stage {
@@ -711,8 +721,8 @@
 
         &:last-child {
             .stage-connector {
-                width: $StageMargin / 2;
-                right: -$StageMargin / 2;
+                width: math.div($StageMargin, 2);
+                right: math.div(-$StageMargin, 2);
                 .connector-angle {
                     display: none;
                 }
@@ -720,10 +730,10 @@
         }
         .stage-connector {
             position: absolute;
-            width: $StageMargin - $reviewIconSize / 2;
+            width: $StageMargin - math.div($reviewIconSize, 2);
             height: $stageConnectorSize;
-            right: - $StageMargin + $reviewIconSize / 2;
-            top: $stageEntryHeight / 2 - 1;
+            right: - $StageMargin + math.div($reviewIconSize, 2);
+            top: math.div($stageEntryHeight, 2) - 1;
             color: $primaryColor;
             background-color: $primaryColor;
 
@@ -732,8 +742,8 @@
                 width: $dotR;
                 height: $dotR;
                 position: absolute;
-                left: -$dotR / 2;
-                top: - ($dotR / 2 - 1);
+                left: math.div(-$dotR, 2);
+                top: - (math.div($dotR, 2) - 1);
                 background-color: $primaryColor;
                 border-radius: 50%;
             }

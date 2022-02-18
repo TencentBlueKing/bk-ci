@@ -72,10 +72,10 @@
                                     </a>
                                 </dd>
                             </div> -->
-                            <div class="item">
+                            <!-- <div class="item">
                                 <dt>{{$t('管理员')}}</dt>
                                 <dd :title="roleList">{{ roleList }}</dd>
-                            </div>
+                            </div> -->
                             <div class="item">
                                 <dt>{{$t('创建时间')}}</dt>
                                 <dd>{{ formatDate(taskDetail.createdDate) }}</dd>
@@ -108,12 +108,6 @@
             :title="$t('重新分析')">
             {{this.$t('任务正在分析中，是否中断并重新分析？')}}
         </bk-dialog>
-        <new-analyse
-            @changeItem="changeItem"
-            @newAnalyse="newAnalyse"
-            :never-show="neverShow"
-            :visible.sync="dialogAnalyseVisible">
-        </new-analyse>
     </div>
 </template>
 
@@ -123,14 +117,12 @@
     import toolStatusCard from '@/components/tool-status-card'
     import Record from '@/components/operate-record/index'
     import taskWebsocket from '@/common/taskWebSocket'
-    import newAnalyse from '@/components/new-analyse'
     import axios from 'axios'
 
     export default {
         components: {
             toolStatusCard,
-            Record,
-            newAnalyse
+            Record
         },
         data () {
             return {
@@ -259,9 +251,10 @@
                             this.dialogAnalyseVisible = !this.neverShow
                         }
                     }
-                    if (this.detail.createFrom !== 'gongfeng_scan') {
-                        this.getUserList()
-                    }
+                    // 去掉管理员列表
+                    // if (this.detail.createFrom !== 'gongfeng_scan') {
+                    //     this.getUserList()
+                    // }
                 }
             },
             getUserList () {
@@ -437,7 +430,7 @@
             display: block;
             overflow-x: hidden;
             .main-left {
-                width: calc(100% - 400px);
+                width: calc(100% - 350px);
                 padding-right: 10px;
                 /* .tool-cards {
                     padding: 10px 8px 5px 8px;
@@ -492,7 +485,7 @@
                 margin-left: -9px;
             }
             .main-right {
-                width: 400px;
+                width: 350px;
             }
         }
 
@@ -525,11 +518,11 @@
                     padding-right: 20px;
                     text-align: right;
                     &.time {
-                        width: 200px;
+                        width: 230px;
                     }
                 }
                 dd {
-                    width: 240px;
+                    width: 210px;
                     color: #313238;
                     overflow: hidden;
                     text-overflow:ellipsis;
@@ -549,7 +542,7 @@
                     }
                     .checkerset {
                         display: inline-block;
-                        max-width: 240px;
+                        max-width: 210px;
                         overflow: hidden;
                         text-overflow:ellipsis;
                         white-space: nowrap;

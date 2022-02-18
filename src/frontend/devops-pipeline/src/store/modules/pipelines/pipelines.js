@@ -100,7 +100,7 @@ const mutations = {
         state.allPipelineList.unshift(item)
     },
     /**
-     * 更新 store.pipeline 中的 pipelineList
+     * 更新 store.pipeline 中的 allPipelineList
      *
      * @param {Object} state store state
      * @param {Array} list pipelineList 列表
@@ -124,7 +124,7 @@ const mutations = {
      * @param {String} pipelineId
      */
     removePipelineById (state, pipelineId) {
-        state.allPipelineList.map((item, index) => {
+        state.allPipelineList.forEach((item, index) => {
             if (item.pipelineId === pipelineId) {
                 state.allPipelineList.splice(index, 1)
             }
@@ -174,12 +174,12 @@ const mutations = {
                 if (_target.index === undefined) {
                     val.splice(0, val.length, ..._target)
                 } else {
-                    _target.index.map((_index, i) => {
+                    _target.index.forEach((_index, i) => {
                         val[_index][_target.key[i]] = _target.value[i]
                     })
                 }
             } else if (val.toString().toLowerCase() === '[object object]') {
-                _target.key.map((item, i) => {
+                _target.key.forEach((item, i) => {
                     val[item] = _target.value[i]
                 })
             } else {
@@ -253,6 +253,19 @@ const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    requestTemplateSetting: async ({ commit }, { projectId, templateId }) => {
+        try {
+            const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/templates/projects/${projectId}/templates/${templateId}/settings`)
+            commit(PIPELINE_SETTING_MUTATION, {
+                pipelineSetting: response.data
+            })
+        } catch (e) {
+            if (e.code === 403) {
+                e.message = ''
+            }
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
     updatePipelineSetting: ({ commit }, payload) => {
         commit(UPDATE_PIPELINE_SETTING_MUNTATION, payload)
     },
@@ -312,22 +325,19 @@ const actions = {
             return response.data
         })
     },
-    // requestAllPipelinesListByFilter ({ commit, state, dispatch }, data) {
-    //     let projectId = data.projectId
-    //     let sortType = data.sortType || ''
-    //     let viewId = data.viewId
-    //     let url = `${prefix}projects/${projectId}/viewPipelines?viewId=${viewId}`
-    //     let str = ''
-    //     for (let obj in data) {
-    //         if (obj !== 'viewId') {
-    //             str += `&${obj}=${data[obj]}`
-    //         }
-    //     }
-    //     url += str
-    //     return ajax.get(url).then(response => {
-    //         return response.data
-    //     })
-    // },
+    searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
+        
+        return ajax.get(url).then(response => {
+            return response.data
+        })
+    },
+    requestPipelineDetail ({ commit, state, dispatch }, { projectId, pipelineId }) {
+        const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/${pipelineId}/detail`
+        return ajax.get(url).then(response => {
+            return response.data
+        })
+    },
     requestAllPipelinesListByFilter ({ commit, state, dispatch }, data) {
         const projectId = data.projectId
         const viewId = data.viewId
@@ -476,9 +486,9 @@ const actions = {
 
     commitSetting ({ commit, state, dispatch }, { projectId, pipelineId, type, role }) {
         return ajax.put(`${PROCESS_API_URL_PREFIX}/backend/api/perm/service/pipeline/mgr_resource/permission`, {
-            'project_id': projectId,
-            'resource_code': pipelineId,
-            'resource_type_code': type,
+            project_id: projectId,
+            resource_code: pipelineId,
+            resource_type_code: type,
             role
         }).then(response => {
             return response.data

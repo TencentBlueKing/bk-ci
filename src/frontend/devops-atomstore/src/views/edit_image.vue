@@ -63,10 +63,14 @@
                     v-if="needAgentType"
                     error-display-type="normal"
                 >
-                    <bk-select v-model="form.agentTypeScope" searchable multiple show-select-all>
+                    <bk-select
+                        v-model="form.agentTypeScope"
+                        searchable
+                        multiple
+                        show-select-all>
                         <bk-option v-for="(option, index) in agentTypes"
                             :key="index"
-                            :id="option.id"
+                            :id="option.code"
                             :name="option.name"
                             :placeholder="$t('store.请选择适用机器')"
                         >
@@ -261,16 +265,12 @@
                     category: '',
                     agentTypeScope: []
                 },
-                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7518`,
+                docsLink: `${DOCS_URL_PREFIX}/store/ci-images/image-build`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
                 categoryList: [],
-                agentTypes: [
-                    { name: this.$t('store.Devnet 物理机'), id: 'DOCKER' },
-                    { name: 'IDC CVM', id: 'IDC' },
-                    { name: 'DevCloud', id: 'PUBLIC_DEVCLOUD' }
-                ],
+                agentTypes: [],
                 imageList: [],
                 imageVersionList: [],
                 isLoading: false,
@@ -333,7 +333,8 @@
                 'requestImageList',
                 'requestImageTagList',
                 'requestTicketList',
-                'requestReleaseImage'
+                'requestReleaseImage',
+                'fetchAgentTypes'
             ]),
 
             changeShowAgentType (option) {
@@ -411,10 +412,12 @@
                         this.requestImageClassifys(),
                         this.requestImageLabel(),
                         this.requestTicketList({ projectCode: res.projectCode }),
-                        this.requestImageCategorys()]).then(([classifys, labels, ticket, categorys]) => {
+                        this.fetchAgentTypes(),
+                        this.requestImageCategorys()]).then(([classifys, labels, ticket, agents, categorys]) => {
                             this.classifys = classifys
                             this.labelList = labels
                             this.categoryList = categorys
+                            this.agentTypes = agents
                             this.ticketList = ticket.records || []
                             const currentCategory = categorys.find((category) => (res.category === category.categoryCode)) || {}
                             const settings = currentCategory.settings || {}
@@ -487,7 +490,7 @@
         height: 400px;
         overflow: auto;
         background: black;
-        /deep/ .CodeMirror {
+        ::v-deep .CodeMirror {
             font-family: Consolas, "Courier New", monospace;
             line-height: 1.5;
             padding: 10px;

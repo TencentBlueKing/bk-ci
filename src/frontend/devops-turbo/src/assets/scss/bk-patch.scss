@@ -1,0 +1,22 @@
+.bk-form .bk-form-content {
+    line-height: 32px;
+}
+
+.bk-table {
+    &:before {
+        height: 0;
+    }
+    .bk-table-header-wrapper .bk-table-header-label {
+        color: #63656E;
+    }
+    td, th.is-leaf {
+        border-bottom: 1px solid #e7e8ed;
+    }
+    .bk-table-pagination-wrapper {
+        border-top: 1px solid #e7e8ed;
+    }
+}
+
+.tippy-tooltip {
+    padding: 15px;
+}

@@ -61,7 +61,7 @@ data class AppModelDetail(
     @ApiModelProperty("流水线版本", required = false)
     val pipelineVersion: Int,
     @ApiModelProperty("流水线名字", required = false)
-    val pipelineName: String,
+    var pipelineName: String,
     @ApiModelProperty("项目Id", required = false)
     val projectId: String,
     @ApiModelProperty("是否收藏", required = false)
@@ -72,7 +72,7 @@ data class AppModelDetail(
     val material: List<PipelineBuildMaterial>? = null,
     @ApiModelProperty("备注", required = false)
     val remark: String? = null,
-    @ApiModelProperty("运行耗时(秒，不包括人工审核时间)", required = false)
+    @ApiModelProperty("运行耗时(毫秒，不包括人工审核时间)", required = false)
     val executeTime: Long? = null,
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String? = null

@@ -29,6 +29,7 @@ package com.tencent.devops.repository.pojo.git
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /*
 *
@@ -84,26 +85,35 @@ import io.swagger.annotations.ApiModel
 @ApiModel("git mr reviewers信息")
 data class GitMrReviewInfo(
     @JsonProperty("created_at")
+    @ApiModelProperty(name = "created_at")
     val createTime: String? = "",
     @JsonProperty("updated_at")
+    @ApiModelProperty(name = "updated_at")
     val updateTime: String? = "",
     @JsonProperty("iid")
+    @ApiModelProperty(name = "iid")
     val mrNumber: String = "",
     @JsonProperty("id")
+    @ApiModelProperty(name = "id")
     val mrId: String = "",
     val reviewers: List<GitMrInfoReviewer>
 ) {
 
     data class GitMrInfoReviewer(
         @JsonProperty("id")
+        @ApiModelProperty(name = "id")
         val id: Int = 0,
         @JsonProperty("username")
+        @ApiModelProperty(name = "username")
         val username: String = "",
         @JsonProperty("web_url")
+        @ApiModelProperty(name = "web_url")
         val webUrl: String = "",
         @JsonProperty("state")
+        @ApiModelProperty(name = "state")
         val title: String = "",
         @JsonProperty("avatar_url")
+        @ApiModelProperty(name = "avatar_url")
         val avatarUrl: String = ""
     )
 }

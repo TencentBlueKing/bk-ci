@@ -6,11 +6,11 @@ spring:
   data:
     mongodb:
       taskdb:
-        uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_HOST__:__BK_CODECC_MONGODB_PORT__/db_task?readPreference=secondaryPreferred
+        uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_task?readPreference=secondaryPreferred
       defectdb:
-        uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_HOST__:__BK_CODECC_MONGODB_PORT__/db_defect?readPreference=secondaryPreferred
+        uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_defect?readPreference=secondaryPreferred
       opdb:
-        uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_HOST__:__BK_CODECC_MONGODB_PORT__/db_op?readPreference=secondaryPreferred
+        uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_op?readPreference=secondaryPreferred
 
 server:
   port: __BK_CODECC_APIQUERY_API_PORT__ # 服务端口

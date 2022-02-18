@@ -76,6 +76,7 @@ class AuthEnvService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.envHashId
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.createdUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${envInfos.size.toLong()}")
@@ -112,6 +113,6 @@ class AuthEnvService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(AuthEnvService::class.java)
     }
 }

@@ -27,10 +27,9 @@
 
 dependencies {
     api(project(":core:common:common-api"))
+    api("org.apache.commons:commons-lang3")
     implementation("commons-codec:commons-codec")
     implementation("com.google.guava:guava")
     implementation("org.jolokia:jolokia-core")
-    api("org.apache.commons:commons-lang3")
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+    implementation("com.github.taptap:pinyin-plus")
 }

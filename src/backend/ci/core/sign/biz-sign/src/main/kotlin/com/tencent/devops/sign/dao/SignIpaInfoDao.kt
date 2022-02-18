@@ -34,9 +34,10 @@ import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.model.sign.tables.records.TSignIpaInfoRecord
+import java.time.LocalDateTime
 
 @Repository
-@Suppress("ALL")
 class SignIpaInfoDao {
 
     fun saveSignInfo(
@@ -65,7 +66,8 @@ class SignIpaInfoDao {
                 FILE_MD5,
                 USER_ID,
                 WILDCARD,
-                REQUEST_CONTENT
+                REQUEST_CONTENT,
+                CREATE_TIME
             ).values(
                 resignId,
                 info?.certId,
@@ -85,7 +87,8 @@ class SignIpaInfoDao {
                 info?.md5,
                 info?.userId,
                 info?.wildcard,
-                ipaSignInfoHeader
+                ipaSignInfoHeader,
+                LocalDateTime.now()
             ).execute()
         }
     }
@@ -130,15 +133,14 @@ class SignIpaInfoDao {
         }
     }
 
-    fun getSignInfoContent(
+    fun getSignInfoRecord(
         dslContext: DSLContext,
         resignId: String
-    ): String? {
+    ): TSignIpaInfoRecord? {
         with(TSignIpaInfo.T_SIGN_IPA_INFO) {
-            val record = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(RESIGN_ID.eq(resignId))
                 .fetchOne()
-            return record?.requestContent
         }
     }
 }

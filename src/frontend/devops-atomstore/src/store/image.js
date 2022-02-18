@@ -265,6 +265,11 @@ export const actions = {
 
     updateImageMemInfo ({ commit }, res) {
         commit('updateImageMemInfo', res)
+    },
+
+    // 获取适用机器
+    fetchAgentTypes ({ commit }) {
+        return vue.$ajax.get(`${prefix}/user/market/image/agentType/list`)
     }
 }
 

@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -117,12 +119,15 @@ interface UserPTemplateResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 34)
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
+        @BkField(minLength = 1, maxLength = 32)
         templateId: String,
         @ApiParam("版本号", required = true)
         @PathParam("versionName")
+        @BkField(minLength = 1, maxLength = 64)
         versionName: String
     ): Result<Boolean>
 
@@ -135,12 +140,15 @@ interface UserPTemplateResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 34)
         projectId: String,
         @ApiParam("模板ID", required = true)
         @PathParam("templateId")
+        @BkField(minLength = 1, maxLength = 32)
         templateId: String,
         @ApiParam("版本名", required = true)
         @QueryParam("versionName")
+        @BkField(minLength = 1, maxLength = 64)
         versionName: String,
         @ApiParam("模板", required = true)
         template: Model
@@ -164,9 +172,11 @@ interface UserPTemplateResource {
         storeFlag: Boolean?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<TemplateListModel>
 
@@ -185,9 +195,11 @@ interface UserPTemplateResource {
         templateType: TemplateType?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         page: Int?,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.NUMBER_STYLE, required = false)
         pageSize: Int?
     ): Result<OptionalTemplateList>
 

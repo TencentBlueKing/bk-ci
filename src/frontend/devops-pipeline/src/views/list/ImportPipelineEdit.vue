@@ -47,11 +47,13 @@
                     to: {
                         name: 'pipelinesList'
                     }
-                }, ...(this.pipeline ? [{
-                    selectedValue: this.pipeline.name
-                }, {
-                    selectedValue: this.$t('edit')
-                }] : [])]
+                }, ...(this.pipeline
+                    ? [{
+                        selectedValue: this.pipeline.name
+                    }, {
+                        selectedValue: this.$t('edit')
+                    }]
+                    : [])]
             }
         },
         created () {
@@ -131,6 +133,7 @@
         }
         .bk-tab-header {
             background: transparent;
+            background-image: none !important;
             .bk-tab-label-wrapper .bk-tab-label-list .bk-tab-label-item {
                 min-width: auto;
                 padding: 0;

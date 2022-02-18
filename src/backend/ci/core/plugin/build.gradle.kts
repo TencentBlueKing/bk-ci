@@ -27,10 +27,4 @@
 
 subprojects {
     group = "com.tencent.bk.devops.ci.plugin"
-    dependencies {
-        api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-        api("org.jetbrains.kotlin:kotlin-reflect")
-        testImplementation("junit:junit")
-        testImplementation("org.springframework.boot:spring-boot-starter-test")
-    }
 }

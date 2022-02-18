@@ -4,6 +4,46 @@ spring:
     url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
+    process:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    project:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    repository:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    dispatch:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    plugin:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_plugin?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    quality:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_quality?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    artifactory:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    environment:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    misc:
+      pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    # 数据源配置（勿随便变更配置项的顺序）
+    dataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 server:
   port: __BK_CI_ASSEMBLY_API_PORT__
@@ -13,7 +53,8 @@ server:
 # 如果微服务是部署多机节点，则以下目录需要做成分布式高可用的，比如NFS，CephFS挂载
 # 保证多节点都能读取到
 artifactory:
-  archiveLocalBasePath: __BK_CI_DATA_DIR__/artifactory
+  realm: local  # 如果使用蓝鲸制品库，则该值要修改为 bkrepo
+  archiveLocalBasePath: __BK_CI_DATA_DIR__/artifactory  # 如果多节点部署, 需要使用共享存储.
   fileTask:
     savedir: __BK_CI_DATA_DIR__/artifactory-filetask/  # 不一定共享, 但是建议准备较大容量.
     file:
@@ -60,8 +101,9 @@ influxdb:
   password: __BK_CI_INFLUXDB_PASSWORD__
 
 #### DockerHost
+
 dockerhost:
-  mode: docker_build
+  mode: docker_no_build
 
 # docker client 配置
 dockerCli:
@@ -123,6 +165,11 @@ dockerCli:
   clearLocalImageCron: 0 0 2 * * ?
   localImageCacheDays: 7
 
+  # 无编译构建容器配置
+  memoryLimitBytes: 2147483648
+  cpuPeriod: 50000
+  cpuQuota: 50000
+
 #### image
 
 image:
@@ -137,22 +184,56 @@ image:
 
 #### log
 
-elasticsearch:
-  ip: __BK_CI_ES_REST_ADDR__   # 今后只使用REST client.
-  port: __BK_CI_ES_REST_PORT__
-  cluster: __BK_CI_ES_CLUSTER_NAME__
-  name: DEVOPS
-#  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
-  username: __BK_CI_ES_USER__
-  password: __BK_CI_ES_PASSWORD__
-#  ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
-#  https: true
-#  keystore:
-#    filePath:
-#    password:
-#  truststore:
-#    filePath:
-#    password:
+log:
+  storage:
+    type: __BK_CI_LOG_STORAGE_TYPE__                # 日志存储方式 lucene/elasticsearch
+    closeInDay: __BK_CI_LOG_CLOSE_DAY__             # 索引自动关闭时间，留空则为永不关闭
+    deleteInDay: __BK_CI_LOG_DELETE_DAY__           # 索引自动删除时间，留空则为永不删除
+  # 通过本地文件系统进行存储的必要配置
+  lucene:
+    dataDirectory: __BK_CI_LUCENE_DATA_DIR__        # 建立lucene索引的根目录
+    indexMaxSize: __BK_CI_LUCENE_INDEX_MAX_SIZE__   # 单个构建的最大日志行数，建议设在100万内
+  # 通过Elasticsearch服务进行存储的必要配置
+  elasticsearch:
+    ip: __BK_CI_ES_REST_ADDR__   # 今后只使用REST client.
+    port: __BK_CI_ES_REST_PORT__
+    cluster: __BK_CI_ES_CLUSTER_NAME__
+    name: DEVOPS
+    #  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
+    username: __BK_CI_ES_USER__
+    password: __BK_CI_ES_PASSWORD__
+    #  ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
+#    https: true
+#    keystore:
+#      filePath:
+#      password:
+#    truststore:
+#      filePath:
+#      password:
+
+#### misc
+
+build:
+  atomMonitorData:
+    report:
+      switch: false
+      maxMonitorDataSize: 1677216
+  data:
+    clear:
+      switch: false
+      maxEveryProjectHandleNum: 5
+      monthRange: -1
+      maxKeepNum: 10000
+      codeccDayRange: -14
+      codeccMaxKeepNum: 14
+      otherMonthRange: -1
+      otherMaxKeepNum: 500
+
+#### openapi
+# 是否开启apifilter和aspect功能
+api:
+  gateway:
+    auth: false
 
 #### plugin
 
@@ -210,17 +291,24 @@ scm:
       redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
       appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
       signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
-
+    tGit:
+      apiUrl: https://git.tencent.com/api/v3
+      tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
+      hookSecret:
+      enableHookSecret: false
+    p4:
+      p4HookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/p4/commit
 #### store
 
 store:
   commentNotifyAdmin: admin
   profileUrlPrefix: __BK_CI_STORE_USER_AVATARS_URL__
-  atomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/atom/
-  templateDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/template/
+  atomDetailBaseUrl: /console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: /console/store/atomStore/detail/template/
   artifactoryServiceUrlPrefix: __BK_CI_PUBLIC_URL__/ms/artifactory/api
-  ideAtomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/ide/
-  imageDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/image/
+  ideAtomDetailBaseUrl: /console/store/atomStore/detail/ide/
+  imageDetailBaseUrl: /console/store/atomStore/detail/image/
+  serviceDetailBaseUrl: /console/store/atomStore/detail/service/
   baseImageDocsLink: /console/store/atomStore/detail/image/
   imageAdminUsers: admin
   buildResultBaseUrl: __BK_CI_PUBLIC_URL__/console/pipeline
@@ -246,6 +334,8 @@ aes:
   aesKey: "J%k^yO{?vt}3tXpG"
   aesMock: "******"
 
+statistics:
+  timeSpanMonth: -3
 
 #### ticket
 
@@ -278,8 +368,84 @@ queueConcurrency:
   task: __BK_CI_PROCESS_EVENT_CONCURRENT__          # Task消息并发处理数量
   buildFinish: __BK_CI_PROCESS_EVENT_CONCURRENT__   # 构建结束消息并发处理数量
 
-build:
-  atomMonitorData:
-    report:
-      switch: false
-      maxMonitorDataSize: 1677216
+# 流水线模板配置
+template:
+  instanceListUrl: "__BK_CI_PUBLIC_URL__/console/store/pipeline/{0}/template/{0}/instance"
+
+# 流水线相关配置
+pipeline:
+  setting:
+    common:
+      maxModelSize: 16777215
+      maxStageNum: 20
+      stage:
+        maxJobNum: 20
+        job:
+          maxTaskNum: 50
+          task:
+            maxInputNum: 100
+            maxOutputNum: 100
+            inputComponent:
+              input:
+                size: 1024
+              textarea:
+                size: 16384
+              codeEditor:
+                size: 16384
+              default:
+                size: 1024
+              multiple:
+                member: "selector,select-input,devops-select,atom-checkbox-list,staff-input,company-staff-input,parameter,dynamic-parameter"
+                size: 4000
+            outputComponent:
+              default:
+                size: 4000
+  editPath: "console/pipeline/{0}/{1}/edit"
+  atom:
+    maxRelQueryNum: 2000  # 最大查询数量
+    maxRelQueryRangeTime: 30  # 最大查询时间跨度
+  version:
+    max_keep_num: 50
+    spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
+    spec_channel_max_keep_num: 2
+
+#### sign
+# 签名服务临时解压缩目录
+bkci:
+  sign:
+    tmpDir: "/tmp/enterprise_sign_tmp/"
+
+notify:
+  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+
+wework:
+  corpId:
+  corpSecret:
+  agentId:
+  tempDirectory: # 保存待上传 wework 文件临时存储路径
+  apiUrl: __BK_CI_NOTIFY_WEWORK_API_URL__ # 企业微信服务端host，用于调用企业微信api接口
+  safe: # 表示是否是保密消息，0表示可对外分享，1表示不能分享且内容显示水印，默认为0
+  enableDuplicateCheck: # 表示是否开启重复消息检查，0表示否，1表示是，默认0
+  duplicateCheckInterval: # 表示是否重复消息检查的时间间隔，默认1800s，最大不超过4小时
+  enableIdTrans: # 表示是否开启id转译，0表示否，1表示是，默认0。仅第三方应用需要用到，企业自建应用可以忽略。
+  
+# 分布式ID配置
+leaf:
+  segment:
+    allocStrategyDaoBeanName: jooqIDAllocDaoImpl
+    enable: true
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    username: __BK_CI_MYSQL_USER__
+    password: __BK_CI_MYSQL_PASSWORD__
+  name: leaf
+
+sharding:
+  databaseShardingStrategy:
+    algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    shardingField: PROJECT_ID
+  projectStrategy:
+    tableConfig: "T_AUDIT_RESOURCE,T_BUILD_STARTUP_PARAM,T_METADATA,T_PIPELINE_BUILD_CONTAINER,T_PIPELINE_BUILD_DETAIL,T_PIPELINE_BUILD_HIS_DATA_CLEAR,T_PIPELINE_BUILD_HISTORY,T_PIPELINE_BUILD_STAGE,T_PIPELINE_BUILD_SUMMARY,T_PIPELINE_BUILD_TASK,T_PIPELINE_BUILD_VAR,T_PIPELINE_DATA_CLEAR,T_PIPELINE_FAILURE_NOTIFY_USER,T_PIPELINE_FAVOR,T_PIPELINE_GROUP,T_PIPELINE_INFO,T_PIPELINE_JOB_MUTEX_GROUP,T_PIPELINE_LABEL,T_PIPELINE_LABEL_PIPELINE,T_PIPELINE_MODEL_TASK,T_PIPELINE_PAUSE_VALUE,T_PIPELINE_RESOURCE,T_PIPELINE_RESOURCE_VERSION,T_PIPELINE_SETTING,T_PIPELINE_SETTING_VERSION,T_PIPELINE_VIEW,T_PIPELINE_VIEW_PROJECT,T_PIPELINE_VIEW_USER_LAST_VIEW,T_PIPELINE_VIEW_USER_SETTINGS,T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL,T_PIPELINE_WEBHOOK_QUEUE,T_PROJECT_PIPELINE_CALLBACK,T_PROJECT_PIPELINE_CALLBACK_HISTORY,T_REPORT,T_TEMPLATE,T_TEMPLATE_PIPELINE"
+  broadcastStrategy:
+    tableConfig: "T_PIPELINE_RULE,T_PIPELINE_STAGE_TAG,T_PIPELINE_TIMER,T_PIPELINE_REMOTE_AUTH,T_PIPELINE_WEBHOOK,T_TEMPLATE_INSTANCE_BASE,T_TEMPLATE_INSTANCE_ITEM"
+  specifyDataSourceStrategy:
+    tableConfig: "T_PIPELINE_ATOM_REPLACE_BASE,T_PIPELINE_ATOM_REPLACE_ITEM,T_PIPELINE_ATOM_REPLACE_HISTORY"

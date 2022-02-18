@@ -27,7 +27,7 @@ LAN_IP=${LAN_IP:-$(ip route show | grep -Pom 1 "(?<=src )[0-9.]+")}
 
 BKCE_RENDER_CMD="$CTRL_DIR/bin/render_tpl"  # 蓝鲸社区版的render, 需要env文件及$BK_HOME.
 CI_RENDER_CMD="$(dirname "$0")/render_tpl"  # bk-ci里的默认读取本地的bkenv.properties文件.
-GEN_DOCKER_CONF_CMD="$(dirname "$0a")/bk-ci-gen-docker-conf.sh"
+GEN_DOCKER_CONF_CMD="$(dirname "$0")/bk-ci-gen-docker-conf.sh"
 
 # 批量检查变量名为空的情况.
 check_empty_var (){
@@ -88,6 +88,24 @@ env_line_set (){
   env_line_append "$@" || env_line_update "$@"
 }
 
+sysctl_set (){
+  SYSCTL_PATH="${SYSCTL_PATH:-/etc/sysctl.conf}"
+  local kv k v effect_v
+  for kv in "$@"; do
+    k="${kv%%=*}"
+    v="${kv#*=}"
+    env_line_set "$SYSCTL_PATH" "$k " " $v"  # re-use env.
+    sysctl -p >/dev/null  # 使之生效. 暂不使用--system
+    effect_v=$(sysctl -n "$k")
+    if test "$v" = "$effect_v"; then
+      echo "sysctl_set: $k is set to $v."
+    else
+      echo "sysctl_set: failed set $k to $v."
+      return 1
+    fi
+  done
+}
+
 # 负责渲染ci.
 render_ci (){
   local proj=$1
@@ -116,7 +134,7 @@ render_ci (){
     return 5
   fi
   if [ -x "$BKCE_RENDER_CMD" ]; then
-    BK_ENV_FILE="$CTRL_DIR/load_env.sh" $BKCE_RENDER_CMD -m ci -p "$BK_HOME" "${files[@]}"
+    BK_ENV_FILE="$CTRL_DIR/bin/04-final/ci.env" $BKCE_RENDER_CMD -m ci -p "$BK_HOME" "${files[@]}"
   elif [ -x "$CI_RENDER_CMD" ]; then
     $CI_RENDER_CMD -m ci "${files[@]}"
   else
@@ -225,6 +243,8 @@ setup_ci_dockerhost (){
   # 在当前目录创建docker及构建相关的链接. 方便排查问题.
   update_link_to_target "$BK_CI_HOME/$proj/build-logs" "$BK_CI_LOGS_DIR/docker" || return 3
   update_link_to_target "$BK_CI_HOME/$proj/build-data" "$BK_CI_DATA_DIR/docker" || return 3
+  # 设置ipv4转发
+  sysctl_set net.ipv4.ip_forward=1
   # 配置docker.
   ci_docker_data_root=$(readlink -f "$BK_CI_DATA_DIR/../docker-bkci")
   update_link_to_target "$BK_CI_HOME/$proj/docker-bkci" "$ci_docker_data_root" || return 3
@@ -233,6 +253,16 @@ setup_ci_dockerhost (){
   $GEN_DOCKER_CONF_CMD "$ci_docker_data_root" || return $?  # 修改daemon.json.
   # 配置sigar路径.
   env_line_set "$start_env" "LD_LIBRARY_PATH" "$BK_CI_HOME/$proj/sigar/"
+}
+
+setup_ci_turbo (){
+  local proj=$1
+  setup_ci__ms_common "$proj" || return 11
+  # turbo日志路径为 turbo-devops/turbo-devops.log
+  update_link_to_target "$MS_DIR/logs/$MS_NAME.log" "$MS_LOGS_DIR/$MS_NAME-$BK_CI_CONSUL_DISCOVERY_TAG/$MS_NAME-$BK_CI_CONSUL_DISCOVERY_TAG.log" || return 3
+  # 需要自定义启动参数.
+  env_line_set "$start_env" "JAVA_OPTS" "-Dturbo.thirdparty.propdir=$BK_HOME/etc/ci/thirdparty"
+  render_ci quartz  # 额外渲染 #etc#ci#thirdparty#quartz.properties
 }
 
 # 校验网关关键配置, 设置家目录, 设置启动用户或setcap?
@@ -284,6 +314,15 @@ setup_ci_gateway (){
     consul reload
   else
     echo "$CTRL_DIR/bin/reg_consul_svc is not executable, skip register domain: bk-ci.service.consul."
+  fi
+  if ! grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
+    > $BK_CI_SRC_DIR/support-files/templates/gateway\#core\#vhosts\#devops.bkrepo.upstream.conf
+  else
+    cat > $BK_CI_SRC_DIR/support-files/templates/gateway\#core\#vhosts\#devops.bkrepo.upstream.conf << EOF 
+upstream __BK_REPO_HOST__ {
+    server __BK_REPO_GATEWAY_IP__;
+}
+EOF
   fi
   # 渲染gateway配置及frontend页面.
   render_ci "$MS_NAME" || return $?

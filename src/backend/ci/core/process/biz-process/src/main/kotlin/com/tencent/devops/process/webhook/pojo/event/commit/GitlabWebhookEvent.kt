@@ -37,4 +37,9 @@ data class GitlabWebhookEvent(
     override var retryTime: Int = 3,
     override var delayMills: Int = 0,
     override val commitEventType: CommitEventType = CommitEventType.GITLAB
-) : ICodeWebhookEvent(requestContent, retryTime, delayMills, commitEventType)
+) : ICodeWebhookEvent(
+    requestContent = requestContent,
+    retryTime = retryTime,
+    delayMills = delayMills,
+    commitEventType = commitEventType
+)

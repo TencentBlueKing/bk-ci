@@ -22,79 +22,126 @@ function _M:get_tag(ns_config)
         return ns_config.tag
     end
 
-    local devops_project = ngx.var.project_id
+    local devops_project_id = ngx.var.project_id
+    local devops_project = ngx.var.project
+    local devops_service = ngx.var.service
     local default_tag = ns_config.tag
-    local tag = default_tag
+    local tag = nil
 
-    if devops_project ~= nil and devops_project ~= '' then
-        -- 获取redis连接
+    -- 根据header强制路由tag
+    if ngx.var.http_x_gateway_tag ~= nil then
+        return ngx.var.http_x_gateway_tag
+    end
+
+    -- 获取本地缓存
+    local tag_cache = ngx.shared.tag_project_store
+    local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
+                              tostring(devops_project)
+    local tag_cache_value = tag_cache:get(tag_cache_key)
+
+    -- 如果有缓存 ,则使用缓存变量
+    if tag_cache_value ~= nil and tag_cache_value ~= '' then
+        tag = tag_cache_value
+    else -- 否则从redis中拿到策略
         local red, err = redisUtil:new()
         if not red then
             ngx.log(ngx.ERR, "tag failed to new redis ", err)
             return tag
         end
-
-        -- 从缓存获取
-        local tag_cache = ngx.shared.tag_project_store
-        local tag_cache_value = tag_cache:get(devops_project)
-        if tag_cache_value ~= nil then
-            tag = tag_cache_value
-        else
+        -- 根据project_id路由
+        if devops_project_id ~= nil and devops_project_id ~= '' then
             local redis_key = nil
-            if ngx.var.project == 'codecc' then
+            if devops_project == 'codecc' then
                 redis_key = 'project:setting:tag:codecc:v2'
             else
                 redis_key = "project:setting:tag:v2"
             end
             -- 从redis获取tag
-            local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project:len()) .. devops_project -- 兼容Spring Redis的hashKey的默认序列化
-            local redRes, err = red:hget(redis_key, hash_key)
-            if not redRes then
-                ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
-                tag_cache:set(devops_project, default_tag, 30)
-            else
-                if redRes == ngx.null then
-                    tag_cache:set(devops_project, default_tag, 30)
-                else
-                    local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project, hash_val, 30)
-                    tag = hash_val
-                end
+            local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project_id:len()) .. devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
+            local redRes = red:hget(redis_key, hash_key)
+            if redRes and redRes ~= ngx.null then
+                local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
+                tag_cache:set(devops_project_id, hash_val, 5)
+                tag = hash_val
             end
         end
-
-        -- 是否只能用默认tag
-        if tag ~= ns_config.tag then
-            local pattern_key = "project:setting:tag:pattern:v2"
-            -- 先从本地缓存获取
-            local pattern_cache_value = tag_cache:get(pattern_key)
-
-            -- 再从redis获取
-            if pattern_cache_value == nil then
-                pattern_cache_value = red:get(pattern_key)
-                if pattern_cache_value == ngx.null then
-                    pattern_cache_value = 'null'
-                end
-                tag_cache:set(pattern_key, pattern_cache_value, 30)
-            end
-
-            -- 不为空且符合正则, 则有特殊处理
-            if pattern_cache_value ~= 'null' and string.find(ngx.var.uri, pattern_cache_value) then
-                tag = default_tag
+        -- 根据service路由
+        if tag == nil and devops_service ~= '' then
+            local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
+            if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
+                tag = service_redis_cache_value
             end
         end
-
+        -- 根据ngx.var.project路由
+        if tag == nil and devops_project then
+            local project_redis_cache_value = red:get("project:setting:project:tag:" .. devops_project)
+            if project_redis_cache_value and project_redis_cache_value ~= ngx.null then
+                tag = project_redis_cache_value
+            end
+        end
+        -- 使用默认值
+        if tag == nil then
+            tag = default_tag
+        end
         --- 将redis连接放回pool中
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+
+        -- 将redis拿到的tag保存在缓存
+        tag_cache:set(tag_cache_key, tag, 5)
     end
 
     -- 设置tag到http请求头
-    ngx.header["X-DEVOPS-TAG"] = tag
+    self:set_header(tag)
 
     return tag
 end
 
--- 获取tag对应的路径
+-- 设置tag到http请求头
+function _M:set_header(tag)
+    ngx.header["X-GATEWAY-TAG"] = tag
+    ngx.var.route_tag = tag
+end
+
+-- 获取前端目录
+function _M:get_frontend_path(tag, project)
+    local frontend_path_cache = ngx.shared.tag_frontend_path_store
+    local local_cache_key = "ci_" .. tag
+    if project == "codecc" then
+        local_cache_key = "codecc_" .. tag
+    end
+    local frontend_path = frontend_path_cache:get(local_cache_key)
+    if frontend_path == nil then
+        -- 从redis获取
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return config.static_dir
+        end
+        local red_key = "ci:frontend:path:" .. tag
+        if project == "codecc" then
+            red_key = "codecc:frontend:path:" .. tag
+        end
+        frontend_path = red:get(red_key)
+        if not frontend_path or frontend_path == ngx.null then
+            frontend_path = ""
+        end
+        frontend_path_cache:set(local_cache_key, frontend_path, 30)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+    end
+
+    local suffix = config.static_dir
+    if project == "codecc" then
+        suffix = config.static_dir_codecc
+    end
+
+    if frontend_path == nil or frontend_path == "" then
+        return suffix
+    end
+
+    return suffix .. "-" .. frontend_path
+end
+
+-- 获取tag对应的下载路径
 function _M:get_sub_path(tag)
     -- 从缓存获取
     local sub_path_cache = ngx.shared.tag_sub_path_store

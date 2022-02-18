@@ -42,6 +42,7 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceBaseStatus
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -91,29 +92,40 @@ class TemplateInstanceCronService @Autowired constructor(
             )
             templateInstanceBaseList?.forEach { templateInstanceBase ->
                 val baseId = templateInstanceBase.id
+                val projectId = templateInstanceBase.projectId
+                val projectRouterTagCheck =
+                    client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data
+                if (!projectRouterTagCheck!!) {
+                    logger.info("project $projectId router tag is not this cluster")
+                    return@forEach
+                }
+
                 // 把模板批量更新记录状态置为”实例化中“
                 templateInstanceBaseDao.updateTemplateInstanceBase(
                     dslContext = dslContext,
+                    projectId = projectId,
                     baseId = baseId,
                     status = TemplateInstanceBaseStatus.INSTANCING.name,
                     userId = "system"
                 )
-                val projectId = templateInstanceBase.projectId
                 val successPipelines = ArrayList<String>()
                 val failurePipelines = ArrayList<String>()
                 val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(
                     dslContext = dslContext,
+                    projectId = projectId,
                     baseId = baseId
                 )
                 if (templateInstanceItemCount < 1) {
                     return@forEach
                 }
-                val template = templateDao.getTemplate(dslContext, templateInstanceBase.templateVersion.toLong())
+                val templateVersion = templateInstanceBase.templateVersion.toLong()
+                val template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
                 val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
                 // 分页切片处理当前批次的待处理任务
                 for (page in 1..totalPages) {
                     val templateInstanceItemList = templateInstanceItemDao.getTemplateInstanceItemListByBaseId(
                         dslContext = dslContext,
+                        projectId = projectId,
                         baseId = baseId,
                         descFlag = false,
                         page = page,
@@ -153,8 +165,8 @@ class TemplateInstanceCronService @Autowired constructor(
                 }
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    templateInstanceItemDao.deleteByBaseId(context, baseId)
-                    templateInstanceBaseDao.deleteByBaseId(context, baseId)
+                    templateInstanceItemDao.deleteByBaseId(context, projectId, baseId)
+                    templateInstanceBaseDao.deleteByBaseId(context, projectId, baseId)
                 }
                 // 发送执行任务结果通知
                 TempNotifyTemplateUtils.sendUpdateTemplateInstanceNotify(

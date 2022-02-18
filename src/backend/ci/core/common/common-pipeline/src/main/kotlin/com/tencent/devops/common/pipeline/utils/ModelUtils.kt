@@ -98,42 +98,69 @@ object ModelUtils {
         return false
     }
 
-    fun refreshCanRetry(model: Model, canRetry: Boolean) {
+    fun stageNeedPause(triggerContainer: TriggerContainer): Boolean {
+        triggerContainer.elements.forEach {
+            if (it is RemoteTriggerElement && it.isElementEnable()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun refreshCanRetry(model: Model) {
         model.stages.forEach { s ->
-            s.canRetry = (BuildStatus.parse(s.status).isFailure() ||
-                BuildStatus.parse(s.status).isCancel()) && canRetry
+            val stageStatus = BuildStatus.parse(s.status)
+            s.canRetry = stageStatus.isFailure() || stageStatus.isCancel()
             s.containers.forEach { c ->
                 initContainerOldData(c)
                 if (c is VMBuildContainer) {
-                    c.canRetry = (c.canRetry ?: false) && canRetry
+                    val jobStatus = BuildStatus.parse(c.status)
+                    c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
                 }
 
                 val failElements = mutableListOf<Element>()
                 c.elements.forEach { e ->
-                    refreshElement(element = e, canRetry = canRetry, failElements = failElements)
+                    refreshElement(element = e, failElements = failElements)
                 }
             }
         }
     }
 
-    private fun refreshElement(element: Element, canRetry: Boolean, failElements: MutableList<Element>) {
-
-        element.canRetry = (element.canRetry ?: false) && canRetry
+    private fun refreshElement(element: Element, failElements: MutableList<Element>) {
 
         val additionalOptions = element.additionalOptions
-        if (additionalOptions != null && additionalOptions.enable) {
-            if (additionalOptions.continueWhenFailed) {
-                element.canRetry = false
-            } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
-                additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY
-            ) {
-                // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试
-                element.canRetry = false
-                failElements.forEach {
-                    it.canRetry = false
-                }
+        if (additionalOptions == null || !additionalOptions.enable) {
+            return
+        }
+
+        val taskStatus = BuildStatus.parse(element.status)
+        if (!taskStatus.isFailure() && !taskStatus.isCancel()) {
+            element.canRetry = null // 只为了减少传输数据，置空不会被序列化出字段
+            element.canSkip = null
+            return
+        }
+
+        element.canRetry = additionalOptions.manualRetry
+
+        if (additionalOptions.continueWhenFailed) { // 开启了自动跳过
+            if (additionalOptions.manualSkip == true) { // 开启了手动跳过 会覆盖自动跳过
+                element.canSkip = true
+            } else {
+                element.canRetry = null // 自动跳过的不能手动重试
+            }
+        } else if (additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_ONLY ||
+            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_BUT_CANCEL ||
+            additionalOptions.runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+        ) {
+            // 前面有失败的插件时也要运行的插件，将前面的失败插件置为不可重试和跳过
+            element.canRetry = null
+            element.canSkip = null
+            failElements.forEach { // 只为了减少传输数据，置空不会被序列化出字段
+                it.canSkip = null
+                it.canRetry = null
             }
         }
+
         if (element.canRetry == true) { // 先记录可重试的执行失败插件
             failElements.add(element)
         }

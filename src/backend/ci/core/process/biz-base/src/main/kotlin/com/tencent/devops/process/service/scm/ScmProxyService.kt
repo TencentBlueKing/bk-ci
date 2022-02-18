@@ -57,6 +57,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -64,8 +65,10 @@ import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.IllegalArgumentException
 import java.net.URLEncoder
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -189,7 +192,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         RevisionInfo(
                             revision = githubBranch.commit!!.sha,
                             updatedMessage = githubBranch.commit!!.commit?.message ?: "",
-                            branchName = githubBranch.name
+                            branchName = githubBranch.name,
+                            authorName = githubBranch.commit!!.commit?.author?.name ?: ""
                         )
                     )
                 } else { // 否则查tag
@@ -198,22 +202,23 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                             accessToken = accessToken,
                             projectName = repo.projectName,
                             tag = branchName!!
-                        ).data ?: return Result(-1, "can not find tag $branchName")
+                        ).data ?: return Result(status = -1, message = "can not find tag $branchName")
                     return if (tagData.tagObject != null) {
                         Result(
                             RevisionInfo(
                                 revision = tagData.tagObject!!.sha,
                                 updatedMessage = "",
-                                branchName = branchName
+                                branchName = branchName,
+                                authorName = ""
                             )
                         )
                     } else {
-                        Result(-2, "can not find tag2 $branchName")
+                        Result(status = -2, message = "can not find tag2 $branchName")
                     }
                 }
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
     }
@@ -221,8 +226,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun listBranches(
         projectId: String,
         repositoryConfig: RepositoryConfig,
-        search: String? = null,
-        full: Boolean = true
+        search: String? = null
     ): Result<List<String>> {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
@@ -238,8 +242,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     token = null,
                     region = repo.region,
                     userName = credInfo.username,
-                    search = search,
-                    full = full
+                    search = search
                 )
             }
             is CodeGitRepository -> {
@@ -255,8 +258,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.first,
                         region = null,
                         userName = repo.userName,
-                        search = search,
-                        full = full
+                        search = search
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
@@ -269,8 +271,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search,
-                        full = full
+                        search = search
                     )
                 }
             }
@@ -285,12 +286,11 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     token = credInfo.privateKey,
                     region = null,
                     userName = credInfo.username,
-                    search = search,
-                    full = full
+                    search = search
                 )
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
     }
@@ -298,8 +298,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun listTags(
         projectId: String,
         repositoryConfig: RepositoryConfig,
-        search: String? = null,
-        full: Boolean = true
+        search: String? = null
     ): Result<List<String>> {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
@@ -320,8 +319,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         type = ScmType.CODE_GIT,
                         token = credInfo.first,
                         userName = repo.userName,
-                        search = search,
-                        full = full
+                        search = search
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
@@ -331,8 +329,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         type = ScmType.CODE_GIT,
                         token = credInfo.privateKey,
                         userName = credInfo.username,
-                        search = search,
-                        full = full
+                        search = search
                     )
                 }
             }
@@ -344,12 +341,11 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     type = ScmType.CODE_GITLAB,
                     token = credInfo.privateKey,
                     userName = credInfo.username,
-                    search = search,
-                    full = full
+                    search = search
                 )
             }
             else -> {
-                throw RuntimeException("Unknown repo($repo)")
+                throw IllegalArgumentException("Unknown repo($repo)")
             }
         }
     }
@@ -364,14 +360,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         } else {
             getCredential(projectId, repo).privateKey
         }
-        val event = when (codeEventType) {
-            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
-            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-            }
-            else -> null
-        }
+        val event = convertEvent(codeEventType)
 
         logger.info("Add git web hook event($event)")
         if (isOauth) {
@@ -410,14 +399,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 defaultMessage = "不是Gitlab代码仓库",
                 errorCode = RepositoryMessageCode.GITLAB_INVALID
             )
-        val event = when (codeEventType) {
-            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
-            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-            }
-            else -> null
-        }
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -428,7 +409,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             token = token,
             region = null,
             userName = repo.userName,
-            event = event
+            event = convertEvent(codeEventType)
         )
         return repo.projectName
     }
@@ -457,14 +438,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
             ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = RepositoryMessageCode.TGIT_INVALID)
         val token = getCredential(projectId, repo).privateKey
-        val event = when (codeEventType) {
-            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
-            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
-            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
-                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
-            }
-            else -> null
-        }
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
@@ -474,43 +447,47 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             token = token,
             region = null,
             userName = repo.userName,
-            event = event
+            event = convertEvent(codeEventType)
         )
         return repo.projectName
     }
 
-    fun addGenericWebhook(
-        projectId: String,
-        repo: Repository,
-        scmType: ScmType,
-        codeEventType: CodeEventType?,
-        hookUrl: String? = null,
-        token: String? = null
-    ): String {
-        val realToken = if (token.isNullOrBlank()) {
-            getCredential(projectId, repo).privateKey
-        } else {
-            token!!
-        }
-        val event = when (codeEventType) {
+    private fun convertEvent(codeEventType: CodeEventType?): String? {
+        return when (codeEventType) {
             null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
             CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
             CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
                 CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
             }
+            CodeEventType.ISSUES -> CodeGitWebhookEvent.ISSUES_EVENTS.value
+            CodeEventType.NOTE -> CodeGitWebhookEvent.NOTE_EVENTS.value
+            CodeEventType.REVIEW -> CodeGitWebhookEvent.REVIEW_EVENTS.value
             else -> null
         }
+    }
+
+    fun addP4Webhook(
+        projectId: String,
+        repositoryConfig: RepositoryConfig,
+        codeEventType: CodeEventType?
+    ): String {
+        checkRepoID(repositoryConfig)
+        val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
+            ?: throw ErrorCodeException(
+                defaultMessage = "不是p4代码仓库",
+                errorCode = RepositoryMessageCode.P4_INVALID
+            )
+        val credential = getCredential(projectId, repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
             url = repo.url,
-            type = scmType,
+            type = ScmType.CODE_P4,
             privateKey = null,
-            passPhrase = null,
-            token = realToken,
+            passPhrase = credential.passPhrase,
+            token = null,
             region = null,
-            userName = repo.userName,
-            event = event,
-            hookUrl = hookUrl
+            userName = credential.username,
+            event = codeEventType?.name
         )
         return repo.projectName
     }
@@ -626,7 +603,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             client.get(ServiceRepositoryResource::class).get(projectId, repositoryId, repositoryConfig.repositoryType)
         if (repoResult.isNotOk() || repoResult.data == null) {
             logger.warn("$projectId|GET_REPO|$repositoryId|${repositoryConfig.repositoryType}|${repoResult.message}")
-            throw RuntimeException("Fail to get the repo")
+            throw ErrorCodeException(errorCode = repoResult.status.toString(), defaultMessage = repoResult.message)
         }
         return repoResult.data!!
     }
@@ -641,7 +618,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
+            )
         }
 
         val credential = credentialResult.data!!
@@ -673,13 +653,13 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
     private fun getAccessToken(userName: String): Pair<String, String?> {
         val gitOauthData = client.get(ServiceOauthResource::class).gitGet(userName).data
-            ?: throw RuntimeException("cannot found oauth access token for user($userName)")
+            ?: throw NotFoundException("cannot found oauth access token for user($userName)")
         return gitOauthData.accessToken to null
     }
 
     private fun getGithubAccessToken(userName: String): String {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
-            ?: throw RuntimeException("cannot find github oauth accessToekn for user($userName)")
+            ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
     }
 }

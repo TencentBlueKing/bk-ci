@@ -74,7 +74,7 @@ class BuildEngineCoreBuildConfiguration {
     }
 
     @Bean
-    fun pipelineStageBuildStartListenerContainer(
+    fun pipelineBuildStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

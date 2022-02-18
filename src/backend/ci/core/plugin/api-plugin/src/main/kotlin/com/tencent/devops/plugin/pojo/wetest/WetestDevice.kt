@@ -33,64 +33,64 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("WeTest设备信息")
 data class WetestDevice(
-    @ApiModelProperty("cloudid")
+    @ApiModelProperty(name = "cloudid")
     @JsonProperty("cloudid")
     val cloudId: String?,
-    @ApiModelProperty("cpu_ghz")
+    @ApiModelProperty(name = "cpu_ghz")
     @JsonProperty("cpu_ghz")
     val cpuGhz: String?,
-    @ApiModelProperty("cpu_total")
+    @ApiModelProperty(name = "cpu_total")
     @JsonProperty("cpu_total")
     val cpuTotal: String?,
-    @ApiModelProperty("deviceid")
+    @ApiModelProperty(name = "deviceid")
     @JsonProperty("deviceid")
     val deviceId: String?,
-    @ApiModelProperty("id")
+    @ApiModelProperty(name = "id")
     @JsonProperty("id")
     val id: String?,
-    @ApiModelProperty("location")
+    @ApiModelProperty(name = "location")
     @JsonProperty("location")
     val location: String?,
-    @ApiModelProperty("mac")
+    @ApiModelProperty(name = "mac")
     @JsonProperty("mac")
     val mac: String?,
-    @ApiModelProperty("manu")
+    @ApiModelProperty(name = "manu")
     @JsonProperty("manu")
     val manu: String?,
-    @ApiModelProperty("mem_show")
+    @ApiModelProperty(name = "mem_show")
     @JsonProperty("mem_show")
     val memShow: String?,
-    @ApiModelProperty("model")
+    @ApiModelProperty(name = "model")
     @JsonProperty("model")
     val model: String?,
-    @ApiModelProperty("model_en")
+    @ApiModelProperty(name = "model_en")
     @JsonProperty("model_en")
     val modelEn: String?,
-    @ApiModelProperty("modelid")
+    @ApiModelProperty(name = "modelid")
     @JsonProperty("modelid")
     val modelId: String?,
-    @ApiModelProperty("opcode")
+    @ApiModelProperty(name = "opcode")
     @JsonProperty("opcode")
     val opcode: String?,
-    @ApiModelProperty("opcodedesc")
+    @ApiModelProperty(name = "opcodedesc")
     @JsonProperty("opcodedesc")
     val opCodeDesc: String?,
-    @ApiModelProperty("resolution")
+    @ApiModelProperty(name = "resolution")
     @JsonProperty("resolution")
     val resolution: String?,
-    @ApiModelProperty("state")
+    @ApiModelProperty(name = "state")
     @JsonProperty("state")
     val state: String?,
-    @ApiModelProperty("statedesc")
+    @ApiModelProperty(name = "statedesc")
     @JsonProperty("statedesc")
     val stateDesc: String?,
-    @ApiModelProperty("testid")
+    @ApiModelProperty(name = "testid")
     @JsonProperty("testid")
     val testId: String?,
-    @ApiModelProperty("usernum")
+    @ApiModelProperty(name = "usernum")
     @JsonProperty("usernum")
     val userNum: String?,
-    @ApiModelProperty("version")
+    @ApiModelProperty(name = "version")
     @JsonProperty("version")
     val version: String?
 )

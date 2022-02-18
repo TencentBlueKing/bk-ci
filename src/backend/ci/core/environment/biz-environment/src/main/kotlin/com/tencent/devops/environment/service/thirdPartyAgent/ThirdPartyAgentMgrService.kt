@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.AgentResult
@@ -53,10 +54,10 @@ import com.tencent.devops.dispatch.api.ServiceAgentResource
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
+import com.tencent.devops.environment.dao.EnvShareProjectDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
@@ -67,6 +68,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentTask
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
@@ -86,6 +88,9 @@ import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -95,6 +100,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -117,7 +123,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val environmentPermissionService: EnvironmentPermissionService,
     private val upgradeService: UpgradeService,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val websocketService: NodeWebsocketService
+    private val websocketService: NodeWebsocketService,
+    private val envShareProjectDao: EnvShareProjectDao
 ) {
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
@@ -469,7 +476,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 thirdPartyAgentDao.updateGateway(
                     dslContext = dslContext,
                     agentId = agentRecord.id,
-                    gateway = gateway!!,
+                    gateway = gateway,
                     fileGateway = fileGateway
                 )
             }
@@ -641,12 +648,91 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
         logger.info("[$projectId|$envName] Get the agents by env name")
+        // get shared project first
+        val sharedThridPartyAgentList = getSharedThirdPartyAgentList(projectId, envName)
+
         val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
-        if (envRecord == null) {
+        if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envName] The env is not exist")
             return emptyList()
         }
-        return getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+
+        return (if (envRecord != null) {
+            getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
+        } else {
+            emptyList()
+        }).plus(sharedThridPartyAgentList)
+    }
+
+    private fun getSharedThirdPartyAgentList(projectId: String, projectEnvName: String): List<ThirdPartyAgent> {
+        val sharedProjEnv = projectEnvName.split("@") // sharedProjId@poolName
+        if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
+            return emptyList()
+        }
+        val sharedProjectId = sharedProjEnv[0]
+        val sharedEnvName = sharedProjEnv[1]
+
+        envDao.getByEnvName(
+            dslContext = dslContext,
+            projectId = sharedProjectId,
+            envName = sharedEnvName
+        ) ?: throw CustomException(Response.Status.NOT_FOUND, "第三方构建机环境不存在($projectEnvName)")
+
+        val sharedEnvRecord = envShareProjectDao.list(
+            dslContext = dslContext,
+            envName = sharedEnvName,
+            mainProjectId = sharedProjectId
+        )
+        if (sharedEnvRecord.isEmpty()) {
+            logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
+                "mainProjectId: $sharedProjectId")
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
+        }
+        logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
+        val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
+
+        run outSide@{
+            // 优先进行单个项目的匹配
+            sharedEnvRecord.sortedByDescending { it.type }.forEach nextRecord@{
+                // 对于分享的单独项目则查看是否是同一个
+                if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {
+                    return@nextRecord
+                }
+
+                // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
+                if (it.type == SharedEnvType.GROUP.name) {
+                    val projectsInGroups = try {
+                        val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
+                            ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
+                        client.get(ServiceGitResource::class).getProjectGroupInfo(
+                            id = it.sharedProjectId.removePrefix("git_"),
+                            includeSubgroups = true,
+                            token = token,
+                            tokenType = TokenTypeEnum.OAUTH
+                        ).data
+                    } catch (e: Exception) {
+                        logger.warn("$projectId $projectEnvName get share project error: ${e.message}")
+                        null
+                    }
+                    val gitProjectId = projectId.removePrefix("git_")
+                    projectsInGroups?.projects?.filter { project -> project.id == gitProjectId }?.ifEmpty {
+                        projectsInGroups.subProjects?.filter { subProject -> subProject.id == gitProjectId }?.ifEmpty {
+                            return@nextRecord
+                        }
+                    }
+                }
+
+                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@nextRecord
+                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+                // 找到了环境可用就可以退出了
+                return@outSide
+            }
+        }
+        if (sharedThirdPartyAgents.isEmpty()) {
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
+        }
+        logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
+        return sharedThirdPartyAgents
     }
 
     fun getAgentByEnvId(projectId: String, envHashId: String): List<ThirdPartyAgent> {
@@ -764,118 +850,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext,
             HashUtil.decodeIdToLong(agentId), projectId
         ) ?: throw NotFoundException("The agent($agentId) is not exist")
+        // #4686 优化导入流程之后构建机启动会自动导入，此web的导入界面需要继续展示让用户可见，以使之保持用户现有操作习惯，
+        var fromStatus = AgentStatus.fromStatus(record.status)
+        if (fromStatus == AgentStatus.IMPORT_OK) {
+            fromStatus = AgentStatus.UN_IMPORT_OK
+        }
         return ThirdPartyAgentStatusWithInfo(
-            status = AgentStatus.fromStatus(record.status),
+            status = fromStatus,
             hostname = record.hostname ?: "",
             ip = record.ip ?: "",
             os = record.detectOs ?: ""
         )
-    }
-
-    fun importAgent(
-        userId: String,
-        projectId: String,
-        agentId: String
-    ) {
-        val id = HashUtil.decodeIdToLong(agentId)
-        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id, projectId)
-            ?: throw NotFoundException("The agent($agentId) is not exist")
-        if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status ||
-            agentRecord.status == AgentStatus.UN_IMPORT.status
-        ) {
-            logger.warn("The agent status(${agentRecord.status}) is NOT OK")
-            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_AGENT_STATUS_EXCEPTION)
-        }
-
-        if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_CREATE_PERMISSSION))
-        }
-
-        val nodeInfo = nodeDao.listDevCloudNodesByIps(dslContext, projectId, listOf(agentRecord.ip))
-        if (nodeInfo.isNotEmpty()) {
-            logger.info("Import dev cloud agent, refresh the node status to normal")
-            nodeInfo[0].nodeStatus = NodeStatus.NORMAL.name
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                nodeDao.updateNode(context, nodeInfo[0])
-                thirdPartyAgentDao.updateStatus(
-                    dslContext = context,
-                    id = id,
-                    nodeId = nodeInfo[0].nodeId,
-                    projectId = projectId,
-                    status = AgentStatus.IMPORT_OK
-                )
-                // 不用再写入auth了，因为已经存在了
-
-                webSocketDispatcher.dispatch(
-                    websocketService.buildDetailMessage(projectId, userId)
-                )
-            }
-            return
-        }
-
-        logger.info("Trying to import the agent($agentId) of project($projectId) by user($userId)")
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-
-            val nodeId = nodeDao.addNode(
-                dslContext = context,
-                projectId = projectId,
-                ip = agentRecord.ip,
-                name = agentRecord.hostname,
-                osName = agentRecord.os.toLowerCase(),
-                status = NodeStatus.NORMAL,
-                type = NodeType.THIRDPARTY,
-                userId = userId
-            )
-
-            val maxNodeRecord = nodeDao.getMaxNodeStringId(context, projectId, nodeId)
-
-            val maxNodeRecordId = if (maxNodeRecord == null) {
-                0
-            } else {
-                val nodeStringId = maxNodeRecord.nodeStringId
-                if (nodeStringId == null) {
-                    0
-                } else {
-                    val split = nodeStringId.split("_")
-                    if (split.size < 3) {
-                        logger.warn("Unknown node string id format($nodeStringId)")
-                        0
-                    } else {
-                        split[2].toInt()
-                    }
-                }
-            }
-
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_${maxNodeRecordId + 1}"
-            nodeDao.insertNodeStringIdAndDisplayName(
-                dslContext = context,
-                id = nodeId,
-                nodeStringId = nodeStringId,
-                displayName = nodeStringId,
-                userId = userId
-            )
-
-            val count = thirdPartyAgentDao.updateStatus(context, id, nodeId, projectId, AgentStatus.IMPORT_OK)
-            if (count != 1) {
-                logger.warn("Fail to update the agent($id) to OK status")
-                throw ErrorCodeException(
-                    errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                    params = arrayOf(id.toString())
-                )
-            }
-            environmentPermissionService.createNode(
-                userId = userId,
-                projectId = projectId,
-                nodeId = nodeId,
-                nodeName = "$nodeStringId(${agentRecord.ip})"
-            )
-            webSocketDispatcher.dispatch(
-                websocketService.buildDetailMessage(projectId, userId)
-            )
-        }
     }
 
     /**
@@ -1043,8 +1028,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 thirdPartyAgentDao.saveAgent(context, agentRecord)
             }
 
-            val status = AgentStatus.fromStatus(agentRecord.status)
-            val agentStatus = when (status) {
+            val agentStatus = when (AgentStatus.fromStatus(agentRecord.status)) {
                 AgentStatus.UN_IMPORT -> {
                     logger.info("update the agent($agentHashId) status to un-import ok")
                     thirdPartyAgentDao.updateStatus(

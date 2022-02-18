@@ -78,6 +78,7 @@
                     <div class="right-temp-info">
                         <div class="temp-info-detail">
                             <template v-show="!isActiveTempEmpty">
+                                <label class="info-label">{{ $t('pipelineName') }}：</label>
                                 <div class="pipeline-input">
                                     <input type="text" ref="pipelineName" class="bk-form-input" :placeholder="$t('pipelineNameInputTips')" maxlength="40" name="newPipelineName" v-model.trim="newPipelineName" v-validate.initial="&quot;required&quot;" />
                                     <span class="border-effect" v-show="!errors.has(&quot;newPipelineName&quot;)"></span>
@@ -129,7 +130,7 @@
                             </section>
                         </div>
                         <div class="temp-operation-bar">
-                            <bk-button theme="primary" :disabled="isConfirmDisable" size="small" @click="createNewPipeline">{{ $t('add') }}</bk-button>
+                            <bk-button theme="primary" size="small" :disabled="isConfirmDisable" @click="createNewPipeline">{{ $t('add') }}</bk-button>
                             <bk-button size="small" @click="toggleTemplatePopup(false)">{{ $t('cancel') }}</bk-button>
                         </div>
                     </div>
@@ -188,12 +189,12 @@
         },
 
         computed: {
-            ...mapState('soda', [
+            ...mapState('common', [
                 'pipelineTemplate',
                 'templateCategory'
             ]),
             ...mapGetters({
-                'tagGroupList': 'pipelines/getTagGroupList'
+                tagGroupList: 'pipelines/getTagGroupList'
             }),
 
             tplTypes () {
@@ -230,7 +231,7 @@
                         }
                     })
                 } else {
-                    Object.keys(pipelineTemplate || {}).map(item => {
+                    Object.keys(pipelineTemplate || {}).forEach(item => {
                         const curItem = pipelineTemplate[item] || {}
                         if ((type === 'custom' && ['PUBLIC', 'CUSTOMIZE'].includes(curItem.templateType)) || curItem.category.includes(type)) {
                             list.push({
@@ -255,7 +256,7 @@
             },
             isConfirmDisable () {
                 const keys = Object.keys(this.activeTemp)
-                return this.isDisabled || !this.newPipelineName || this.activeTemp.isInstall || keys.length <= 0
+                return this.isDisabled || this.activeTemp.isInstall || keys.length <= 0
             },
             isActiveTempEmpty () {
                 const keys = Object.keys(this.activeTemp)
@@ -264,13 +265,13 @@
         },
 
         watch: {
-            'pipelineTemplate': function (newVal, oldVal) {
+            pipelineTemplate: function (newVal, oldVal) {
                 if (newVal) {
                     this.isLoading = false
                     this.selectTemp(0)
                 }
             },
-            'isShow': function () {
+            isShow: function () {
                 if (this.isShow) {
                     this.isLoading = true
                     this.requestCategory()
@@ -290,7 +291,7 @@
         },
 
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestCategory',
                 'requestPipelineTemplate',
                 'requestStoreTemplate'
@@ -400,6 +401,11 @@
                 })
             },
             async createNewPipeline () {
+                if (!this.newPipelineName.length) {
+                    this.$showTips({ message: this.$t('pipelineNameTips'), theme: 'error' })
+                    return false
+                }
+                
                 const { icon, ...pipeline } = this.activeTemp
                 Object.assign(pipeline, { name: this.newPipelineName })
 

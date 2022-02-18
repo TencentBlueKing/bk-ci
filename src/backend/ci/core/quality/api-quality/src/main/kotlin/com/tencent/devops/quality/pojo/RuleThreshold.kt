@@ -27,7 +27,7 @@
 
 package com.tencent.devops.quality.pojo
 
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

@@ -33,10 +33,10 @@ import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
-import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
 import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthTokenApi
+import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
 import com.tencent.devops.common.auth.code.BluekingV3ArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3BcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3CodeAuthServiceCode
@@ -77,6 +77,9 @@ class BluekingV3AuthAutoConfiguration {
     @Value("\${auth.appSecret:}")
     val appSecret = ""
 
+    @Value("\${auth.apigwUrl:#{null}}")
+    val iamApigw = ""
+
     @Bean
     @Primary
     fun authTokenApi(
@@ -92,16 +95,14 @@ class BluekingV3AuthAutoConfiguration {
     @Primary
     fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) =
         BluekingV3ResourceApi(
-            grantServiceImpl = grantService(),
             iamConfiguration = iamConfiguration(),
             iamEsbService = iamEsbService()
         )
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) =
+    fun authProjectApi() =
         BluekingV3AuthProjectApi(
-            bkAuthPermissionApi = bkAuthPermissionApi,
             policyService = policyService(),
             authHelper = authHelper(),
             iamConfiguration = iamConfiguration(),
@@ -136,8 +137,13 @@ class BluekingV3AuthAutoConfiguration {
     fun artifactoryAuthServiceCode() = BluekingV3ArtifactoryAuthServiceCode()
 
     @Bean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
+    // 鉴权类
+    @Bean
+    fun policyHttpService() = DefaultHttpClientServiceImpl(iamConfiguration())
+
+    // 非鉴权类(与鉴权类请求分开,方式授权类请求响应慢,影响鉴权类接口的响应)
     @Bean
     fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
 
@@ -145,7 +151,7 @@ class BluekingV3AuthAutoConfiguration {
     fun tokenService() = TokenServiceImpl(iamConfiguration(), httpService())
 
     @Bean
-    fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())
+    fun policyService() = PolicyServiceImpl(iamConfiguration(), policyHttpService())
 
     @Bean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())

@@ -48,7 +48,7 @@ import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
@@ -63,6 +63,7 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
+import com.tencent.devops.store.dao.template.TemplateLabelRelDao
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
@@ -84,6 +85,7 @@ import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
@@ -116,6 +118,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var templateCategoryRelDao: TemplateCategoryRelDao
     @Autowired
+    lateinit var templateLabelRelDao: TemplateLabelRelDao
+    @Autowired
     lateinit var marketAtomDao: MarketAtomDao
     @Autowired
     lateinit var atomDao: AtomDao
@@ -142,6 +146,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var classifyService: ClassifyService
     @Autowired
     lateinit var storeDeptService: StoreDeptService
+    @Autowired
+    lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var client: Client
 
@@ -436,7 +442,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         run check@{
             if (!projectCode.isNullOrBlank()) {
                 val installedTemplatesResult =
-                    client.get(ServiceTemplateResource::class).getSrcTemplateCodes(projectCode!!)
+                    client.get(ServicePTemplateResource::class).getSrcTemplateCodes(projectCode!!)
                 if (installedTemplatesResult.isNotOk()) {
                     throw RemoteServiceException("Failed to get project($projectCode) installedTemplates")
                 }
@@ -465,26 +471,20 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun getTemplateDetailByCode(userId: String, templateCode: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
         val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-        logger.info("the templateRecord is :$templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode)
             )
-        }
         return getTemplateDetail(templateRecord, userId)
     }
 
     override fun getTemplateDetailById(userId: String, templateId: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailById userId is :$userId, templateId is :$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
-        logger.info("the templateRecord is :$templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId)
             )
-        }
         return getTemplateDetail(templateRecord, userId)
     }
 
@@ -576,10 +576,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         dslContext.transaction { t ->
             val context = DSL.using(t)
 
-            client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, false)
-
-            storeMemberDao.deleteAll(context, templateCode, type)
-            storeProjectRelDao.deleteAllRel(context, templateCode, type)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, false)
+            storeCommonService.deleteStoreInfo(context, templateCode, StoreTypeEnum.TEMPLATE.type.toByte())
+            templateCategoryRelDao.deleteByTemplateCode(context, templateCode)
+            templateLabelRelDao.deleteByTemplateCode(context, templateCode)
             marketTemplateDao.delete(context, templateCode)
         }
 
@@ -636,7 +636,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publicFlag = template.publicFlag,
             publisher = template.publisher
         )
-        val addMarketTemplateResult = client.get(ServiceTemplateResource::class)
+        val addMarketTemplateResult = client.get(ServicePTemplateResource::class)
             .addMarketTemplate(userId = userId, addMarketTemplateRequest = addMarketTemplateRequest)
         logger.info("addMarketTemplateResult is $addMarketTemplateResult")
         if (addMarketTemplateResult.isNotOk()) {
@@ -663,7 +663,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         templateCode: String,
         projectCodeList: ArrayList<String>
     ): Result<Boolean> {
-        val templateDetailResult = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
+        val templateDetailResult = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(templateCode)
         if (templateDetailResult.isNotOk()) {
             // 抛出错误提示
             return Result(templateDetailResult.status, templateDetailResult.message ?: "")
@@ -897,8 +897,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     ) {
         try {
             logger.info("start to copy the quality rule for template: $templateCode")
-            val sourceTemplate = client.get(ServiceTemplateResource::class).listTemplateById(
-                setOf(templateCode), null).data?.templates!!.getValue(templateCode)
+            val sourceTemplate = client.get(ServicePTemplateResource::class).listTemplateById(
+                setOf(templateCode), null, null).data?.templates!!.getValue(templateCode)
             projectCodeList.forEach { projectCode ->
                 client.get(ServiceQualityRuleResource::class).copyRule(CopyRuleRequest(
                     sourceTemplate.projectId,

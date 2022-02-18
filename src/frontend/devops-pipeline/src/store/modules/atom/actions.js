@@ -69,9 +69,9 @@ import {
     SET_EXECUTE_STATUS,
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
-    TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON
+    SET_IMPORTED_JSON,
+    SET_EDIT_FROM
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -92,8 +92,8 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams })
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams, id, suggest }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams, id, suggest })
     },
     async fetchStageTagList ({ commit }) {
         try {
@@ -118,9 +118,6 @@ export default {
     },
     setSaveStatus ({ commit }, status) {
         commit(SET_SAVE_STATUS, status)
-    },
-    toggleReviewDialog ({ commit }, { isShow, reviewInfo }) {
-        commit(TOGGLE_REVIEW_DIALOG, { isShow, reviewInfo })
     },
     toggleStageReviewPanel: actionCreator(TOGGLE_STAGE_REVIEW_PANEL),
     addStoreAtom ({ commit, state }) {
@@ -168,15 +165,6 @@ export default {
 
     setPipelineContainer ({ commit }, { oldContainers, containers }) {
         commit(SET_PIPELINE_CONTAINER, { oldContainers, containers })
-    },
-    /**
-     * 根据projectcode获取项目详情
-     */
-    requestProjectDetail: async ({ commit }, { projectId }) => {
-        return request.get(`project/api/user/projects/${projectId}/`).then(response => {
-            // Object.assign(response.data, { ccAppName: response.ccAppName })
-            return response.data
-        })
     },
     requestTemplate: async ({ commit, dispatch }, { projectId, templateId, version }) => {
         try {
@@ -226,6 +214,7 @@ export default {
         }
     },
     setPipeline: actionCreator(SET_PIPELINE),
+    setEditFrom: actionCreator(SET_EDIT_FROM),
     setPipelineEditing: actionCreator(SET_PIPELINE_EDITING),
     fetchContainers: async ({ commit }, { projectCode }) => {
         try {
@@ -435,9 +424,15 @@ export default {
         return request.post(`${STORE_API_URL_PREFIX}/user/market/atom/install`, param).then(() => dispatch('fetchAtoms', { projectCode: param.projectCode[0] }))
     },
 
+    getAtomEnvConfig ({ commit }, atomCode) {
+        return request.get(`${STORE_API_URL_PREFIX}/user/market/ATOM/component/${atomCode}/sensitiveConf/list/?types=FRONTEND,ALL`).then((res) => {
+            return res.data || []
+        })
+    },
+
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=1000`)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
     },
 
     // 获取已安装的插件详情
@@ -462,10 +457,11 @@ export default {
 
     // 第一次拉取日志
 
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag, debug }) {
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, subTag, debug }) {
         return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
+                jobId,
                 executeCount: currentExe,
                 subTag,
                 debug
@@ -474,15 +470,31 @@ export default {
     },
 
     // 后续拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag, debug }) {
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, lineNo, subTag, debug }) {
         return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
                 tag,
+                jobId,
                 subTag,
                 debug
             }
+        })
+    },
+
+    fetchDevcloudSettings ({ commit }, { projectId, buildType }) {
+        return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
+    },
+
+    getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
+    },
+
+    getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
+            const data = res.data || {}
+            return data.url || ''
         })
     },
 
@@ -499,5 +511,23 @@ export default {
 
     pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
         return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
+    },
+
+    download (_, { url, name }) {
+        return fetch(url, { credentials: 'include' }).then((res) => {
+            if (res.status >= 200 && res.status < 300) {
+                return res.blob()
+            } else {
+                return res.json().then((result) => Promise.reject(result))
+            }
+        }).then((blob) => {
+            const a = document.createElement('a')
+            const url = window.URL || window.webkitURL || window.moxURL
+            a.href = url.createObjectURL(blob)
+            if (name) a.download = name
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+        })
     }
 }

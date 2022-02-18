@@ -49,6 +49,12 @@ export const codelibConfig = {
         typeName: 'codeGit'
     },
     gitlab: {
+        credentialTypes: 'TOKEN_SSH_PRIVATEKEY',
+        addType: 'TOKEN_SSH_PRIVATEKEY',
+        label: 'Gitlab',
+        typeName: 'codeGitLab'
+    },
+    gitlab_http: {
         credentialTypes: 'ACCESSTOKEN',
         addType: 'ACCESSTOKEN',
         label: 'Gitlab',
@@ -65,6 +71,12 @@ export const codelibConfig = {
         addType: 'TOKEN_USERNAME_PASSWORD',
         label: 'TGit',
         typeName: 'codeTGit'
+    },
+    p4: {
+        credentialTypes: 'USERNAME_PASSWORD',
+        addType: 'USERNAME_PASSWORD',
+        label: 'P4',
+        typeName: 'codeP4'
     }
 }
 
@@ -72,7 +84,8 @@ export const codelibTypes = [
     'SVN',
     'Github',
     'Gitlab',
-    'TGit'
+    'TGit',
+    'P4'
 ]
 
 /**
@@ -81,7 +94,7 @@ export const codelibTypes = [
  * @param {string} typeName
  */
 export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
-    let type = typeName.toLowerCase().replace(/^\S*?([gitlab|git|svn|github|tgit])/i, '$1')
+    let type = typeName.toLowerCase().replace(/^\S*?([gitlab|git|svn|github|tgit|p4])/i, '$1')
 
     if (type === 'svn' && svnType === 'http') {
         type = 'svn_http'
@@ -91,6 +104,9 @@ export function getCodelibConfig (typeName, svnType = 'ssh', authType = 'ssh') {
     }
     if (type === 'tgit' && authType === 'HTTPS') {
         type = 'tgit_https'
+    }
+    if (type === 'gitlab' && authType === 'HTTP') {
+        type = 'gitlab_http'
     }
 
     return codelibConfig[type]
@@ -140,3 +156,10 @@ export const isGithub = judgementCodelibType('github')
  * @param {string} typeName
  */
 export const isTGit = judgementCodelibType('codeTGit')
+
+/**
+ * 判断是代码库是否为P4
+ * method isP4
+ * @param {string} typeName
+ */
+export const isP4 = judgementCodelibType('codeP4')

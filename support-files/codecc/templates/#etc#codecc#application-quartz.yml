@@ -5,7 +5,7 @@ spring:
     packageName: com.tencent.bk.codecc.quartz
   data:
     mongodb:
-      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_HOST__:__BK_CODECC_MONGODB_PORT__/db_quartz?readPreference=secondaryPreferred
+      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_quartz?readPreference=secondaryPreferred
 
 server:
   port: __BK_CODECC_QUARTZ_API_PORT__ # 服务端口

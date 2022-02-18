@@ -43,7 +43,10 @@ class CommandPowerShellImpl : ICommand {
         dir: File,
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean,
-        errorMessage: String?
+        errorMessage: String?,
+        stepId: String?,
+        charsetType: String?,
+        taskId: String?
     ) {
         TODO("Not yet implemented")
     }

@@ -47,10 +47,20 @@ import javax.xml.bind.Element
 @Component
 class VmOperateTaskGenerator {
 
-    val startVmTaskAtom = "dispatchVMStartupTaskAtom"
-    val shutdownVmTaskAtom = "dispatchVMShutdownTaskAtom"
-    val startNormalTaskAtom = "dispatchBuildLessDockerStartupTaskAtom"
-    val shutdownNormalTaskAtom = "dispatchBuildLessDockerShutdownTaskAtom"
+    companion object {
+        const val START_VM_TASK_ATOM = "dispatchVMStartupTaskAtom"
+        const val SHUTDOWN_VM_TASK_ATOM = "dispatchVMShutdownTaskAtom"
+        const val START_NORMAL_TASK_ATOM = "dispatchBuildLessDockerStartupTaskAtom"
+        const val SHUTDOWN_NORMAL_TASK_ATOM = "dispatchBuildLessDockerShutdownTaskAtom"
+
+        fun isVmAtom(task: PipelineBuildTask) = isStartVM(task) || isStopVM(task)
+
+        fun isStartVM(task: PipelineBuildTask) =
+            task.taskAtom == START_VM_TASK_ATOM || task.taskAtom == START_NORMAL_TASK_ATOM
+
+        fun isStopVM(task: PipelineBuildTask) =
+            task.taskAtom == SHUTDOWN_VM_TASK_ATOM || task.taskAtom == SHUTDOWN_NORMAL_TASK_ATOM
+    }
 
     /**
      * 生成编译环境的开机插件任务
@@ -75,24 +85,26 @@ class VmOperateTaskGenerator {
         if (container is VMBuildContainer) {
             val buildType = container.dispatchType?.buildType()?.name ?: BuildType.DOCKER.name
             val baseOS = container.baseOS.name
-            atomCode = "$startVmTaskAtom-$buildType-$baseOS"
+            atomCode = "$START_VM_TASK_ATOM-$buildType-$baseOS"
             taskType = EnvControlTaskType.VM.name
             taskName = "Prepare_Job#${container.id!!}"
-            taskAtom = startVmTaskAtom
+            taskAtom = START_VM_TASK_ATOM
         } else {
-            atomCode = startNormalTaskAtom
+            atomCode = START_NORMAL_TASK_ATOM
             taskType = EnvControlTaskType.NORMAL.name
             taskName = "Prepare_Job#${container.id!!}(N)"
-            taskAtom = startNormalTaskAtom
+            taskAtom = START_NORMAL_TASK_ATOM
         }
-
+        val additionalOptions = ElementAdditionalOptions(
+            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL
+        )
         return PipelineBuildTask(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
             containerId = container.id!!,
-            containerHashId = container.containerId ?: "",
+            containerHashId = container.containerHashId ?: "",
             containerType = container.getClassType(),
             taskSeq = taskSeq,
             taskId = VMUtils.genStartVMTaskId(container.id!!),
@@ -104,9 +116,11 @@ class VmOperateTaskGenerator {
             executeCount = executeCount,
             starter = userId,
             approver = null,
+            subProjectId = null,
             subBuildId = null,
-            additionalOptions = null,
-            atomCode = atomCode
+            additionalOptions = additionalOptions,
+            atomCode = atomCode,
+            stepId = null
         )
     }
 
@@ -131,15 +145,15 @@ class VmOperateTaskGenerator {
         val taskAtom: String
         if (container is VMBuildContainer) {
             taskType = EnvControlTaskType.VM.name
-            taskAtom = shutdownVmTaskAtom
+            taskAtom = SHUTDOWN_VM_TASK_ATOM
         } else {
             taskType = EnvControlTaskType.NORMAL.name
-            taskAtom = shutdownNormalTaskAtom
+            taskAtom = SHUTDOWN_NORMAL_TASK_ATOM
         }
 
         val containerId = container.id!!
         val containerType = container.getClassType()
-        val endTaskSeq = VMUtils.genVMSeq(containerSeq, taskSeq - 1)
+        val endTaskSeq = VMUtils.genVMTaskSeq(containerSeq, taskSeq - 1)
 
         var taskName = "Wait_Finish_Job#${container.id!!}($taskType)"
         var additionalOptions = container.opts(taskName = taskName, taskSeq = taskSeq)
@@ -152,7 +166,7 @@ class VmOperateTaskGenerator {
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                containerHashId = container.containerId ?: "",
+                containerHashId = container.containerHashId ?: "",
                 containerType = containerType,
                 taskSeq = endTaskSeq,
                 taskId = VMUtils.genEndPointTaskId(endTaskSeq),
@@ -164,14 +178,16 @@ class VmOperateTaskGenerator {
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,
+                subProjectId = null,
                 subBuildId = null,
                 additionalOptions = additionalOptions,
-                atomCode = "$shutdownVmTaskAtom-END"
+                atomCode = "$SHUTDOWN_VM_TASK_ATOM-END",
+                stepId = null
             )
         )
 
         // stopVM-1xxx 停止虚拟机节点
-        val stopVMTaskSeq = VMUtils.genVMSeq(containerSeq, taskSeq)
+        val stopVMTaskSeq = VMUtils.genVMTaskSeq(containerSeq, taskSeq)
         val taskParams = container.genTaskParams()
         taskParams["elements"] = emptyList<Element>() // elements可能过多导致存储问题
         taskName = "Clean_Job#$containerId($taskType)"
@@ -184,7 +200,7 @@ class VmOperateTaskGenerator {
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                containerHashId = container.containerId ?: "",
+                containerHashId = container.containerHashId ?: "",
                 containerType = containerType,
                 taskSeq = stopVMTaskSeq,
                 taskId = VMUtils.genStopVMTaskId(stopVMTaskSeq),
@@ -196,9 +212,11 @@ class VmOperateTaskGenerator {
                 executeCount = executeCount,
                 starter = userId,
                 approver = null,
+                subProjectId = null,
                 subBuildId = null,
                 additionalOptions = additionalOptions,
-                atomCode = "$shutdownVmTaskAtom-FINISH"
+                atomCode = "$SHUTDOWN_VM_TASK_ATOM-FINISH",
+                stepId = null
             )
         )
 
@@ -208,10 +226,10 @@ class VmOperateTaskGenerator {
     private fun Container.opts(taskName: String, taskSeq: Int) = ElementAdditionalOptions(
         continueWhenFailed = true,
         timeout = 1, // 1分钟超时
-        runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+        runCondition = RunCondition.PARENT_TASK_FINISH,
         elementPostInfo = ElementPostInfo(
             parentElementId = VMUtils.genStartVMTaskId(id!!),
-            postCondition = "always",
+            postCondition = "",
             postEntryParam = "",
             parentElementName = taskName,
             parentElementJobIndex = taskSeq

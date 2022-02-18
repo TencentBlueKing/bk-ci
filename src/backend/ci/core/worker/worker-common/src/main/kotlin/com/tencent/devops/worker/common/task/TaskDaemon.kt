@@ -56,24 +56,26 @@ class TaskDaemon(
         }
     }
 
-    fun run() {
+    fun runWithTimeout() {
         val timeout = TaskUtil.getTimeOut(buildTask)
-        if (timeout == null || timeout == 0L) {
-            task.run(buildTask, buildVariables, workspace)
-        } else {
-            val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspace)
-            val executor = Executors.newCachedThreadPool()
-            val f1 = executor.submit(taskDaemon)
-            try {
-                f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
-            } catch (e: TimeoutException) {
-                throw TaskExecuteException(
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                    errorMsg = e.message ?: "插件执行超时, 超时时间:${timeout}分钟"
-                )
-            } finally {
-                executor.shutdownNow()
+        val executor = Executors.newCachedThreadPool()
+        val taskId = buildTask.taskId
+        if (taskId != null) {
+            TaskExecutorCache.put(taskId, executor)
+        }
+        val f1 = executor.submit(this)
+        try {
+            f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
+        } catch (ignore: TimeoutException) {
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
+                errorMsg = ignore.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+            )
+        } finally {
+            executor.shutdownNow()
+            if (taskId != null) {
+                TaskExecutorCache.invalidate(taskId)
             }
         }
     }
@@ -98,7 +100,7 @@ class TaskDaemon(
         if (allEnv.isNotEmpty()) {
             allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
-                    LoggerService.addYellowLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
+                    LoggerService.addWarnLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
                         "(max=$PARAM_MAX_LENGTH)")
                     return@forEach
                 }
@@ -108,7 +110,7 @@ class TaskDaemon(
 
         return BuildTaskResult(
             taskId = buildTask.taskId!!,
-            elementId = buildTask.elementId!!,
+            elementId = buildTask.taskId!!,
             containerId = buildVariables.containerHashId,
             success = isSuccess,
             buildResult = buildResult,

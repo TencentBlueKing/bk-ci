@@ -31,9 +31,11 @@ import com.tencent.devops.common.pipeline.NameAndValue
 
 data class ElementAdditionalOptions(
     var enable: Boolean = true,
-    var continueWhenFailed: Boolean = false,
+    var continueWhenFailed: Boolean = false, // 失败时继续  continueWhenFailed = true &&  manualSkip != true（自动继续）
+    val manualSkip: Boolean? = null, // (continueWhenFailed = true && manualSkip = true) 出现跳过按钮（手动继续）
     val retryWhenFailed: Boolean = false,
     val retryCount: Int = 0,
+    val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
     val timeout: Long? = 100, // 超时分钟
     val runCondition: RunCondition?,
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
@@ -51,10 +53,12 @@ data class ElementAdditionalOptions(
 enum class RunCondition {
     PRE_TASK_SUCCESS, // 所有前置插件运行成功时
     PRE_TASK_FAILED_BUT_CANCEL, // 即使前面有插件运行失败也运行，除非被取消才不运行
-    PRE_TASK_FAILED_EVEN_CANCEL, // 即使前面有插件运行失败也运行，即使被取消也运行 [未实现]
+    PRE_TASK_FAILED_EVEN_CANCEL, // 即使前面有插件运行失败也运行，即使被取消也运行
     PRE_TASK_FAILED_ONLY, // 只有前面有插件运行失败时才运行
     OTHER_TASK_RUNNING, // 指定插件开始运行时 [未实现]
     CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
     CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行 [未实现]
+    CUSTOM_CONDITION_MATCH, // 满足以下自定义条件时运行 [未实现]
+    PARENT_TASK_CANCELED_OR_TIMEOUT, // 父任务取消或者超时时才运行
+    PARENT_TASK_FINISH // 父任务结束就运行
 }

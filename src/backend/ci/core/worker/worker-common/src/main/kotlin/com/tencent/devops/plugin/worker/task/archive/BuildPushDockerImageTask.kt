@@ -34,13 +34,12 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv.isDockerEnv
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -57,7 +56,7 @@ import java.io.File
 @Suppress("ALL")
 class BuildPushDockerImageTask : ITask() {
 
-    private val api = ApiFactory.create(ArchiveSDKApi::class)
+    private val api = ArtifactApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -97,7 +96,7 @@ class BuildPushDockerImageTask : ITask() {
                 repoAddr = repoAddr,
                 userName = userName,
                 password = password,
-                elementId = buildTask.elementId)
+                elementId = buildTask.taskId)
 
             Thread.sleep(2000)
             // 轮询状态
@@ -148,7 +147,7 @@ class BuildPushDockerImageTask : ITask() {
                     dir = workspace,
                     buildEnvs = buildVariables.buildEnvs)
             } catch (t: RuntimeException) {
-                LoggerService.addNormalLine(Ansi().fgRed().a("Dockerfile第一行请确认使用 $repoAddr").reset().toString())
+                LoggerService.addErrorLine("Dockerfile第一行请确认使用 $repoAddr")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -183,7 +182,7 @@ class BuildPushDockerImageTask : ITask() {
             val responseBody = response.body()!!.string()
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
-                LoggerService.addNormalLine(Ansi().fgRed().a("启动构建镜像失败！请联系【蓝盾助手】").reset().toString())
+                LoggerService.addErrorLine("启动构建镜像失败！请联系【蓝盾助手】")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
@@ -195,7 +194,7 @@ class BuildPushDockerImageTask : ITask() {
                 val map = responseData["data"] as Map<String, Any>
                 return Pair(map["first"] as String, map["second"])
             } else {
-                LoggerService.addNormalLine(Ansi().fgRed().a("查询构建镜像状态失败！请联系【蓝盾助手】").reset().toString())
+                LoggerService.addErrorLine("查询构建镜像状态失败！请联系【蓝盾助手】")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -242,7 +241,7 @@ class BuildPushDockerImageTask : ITask() {
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
                 logger.error("failed to get start docker build")
-                LoggerService.addNormalLine(Ansi().fgRed().a("启动构建失败！请联系【蓝盾助手】").reset().toString())
+                LoggerService.addErrorLine("启动构建失败！请联系【蓝盾助手】")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,

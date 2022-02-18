@@ -39,24 +39,31 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL", "UNUSED")
 class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : ServiceArtifactoryResource {
 
-    override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
-        val fileDetail =
-            archiveFileService.show(userId = "", projectId = projectId, artifactoryType = artifactoryType, path = path)
+    override fun check(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Boolean> {
+        val fileDetail = archiveFileService.show(userId, projectId, artifactoryType, path)
         return Result(fileDetail.name.isNotBlank())
     }
 
     override fun acrossProjectCopy(
+        userId: String,
         projectId: String,
         artifactoryType: ArtifactoryType,
         path: String,
@@ -66,19 +73,40 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun properties(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+    override fun properties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<Property>> {
         TODO("not implemented")
     }
 
     override fun externalUrl(
         projectId: String,
         artifactoryType: ArtifactoryType,
+        creatorId: String?,
         userId: String,
         path: String,
         ttl: Int,
         directed: Boolean?
     ): Result<Url> {
         TODO("not implemented")
+    }
+
+    override fun downloadUrlForOpenApi(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        val urls = archiveFileService.getFileDownloadUrls(
+            userId = userId,
+            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD,
+            filePath = path,
+            artifactoryType = artifactoryType
+        )
+        return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
     override fun downloadUrl(
@@ -92,11 +120,17 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun show(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+    override fun show(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
         TODO("not implemented")
     }
 
     override fun search(
+        userId: String?,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -118,6 +152,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByAnd(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -127,6 +162,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     }
 
     override fun searchFileAndPropertyByOr(
+        userId: String,
         projectId: String,
         page: Int?,
         pageSize: Int?,
@@ -148,7 +184,11 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         TODO("not implemented")
     }
 
-    override fun searchCustomFiles(projectId: String, condition: CustomFileSearchCondition): Result<List<String>> {
+    override fun searchCustomFiles(
+        userId: String,
+        projectId: String,
+        condition: CustomFileSearchCondition
+    ): Result<List<String>> {
         TODO("not implemented")
     }
 

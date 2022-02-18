@@ -1,6 +1,6 @@
 <template>
     <ul class="label-content">
-        <li v-for="(label, index) in labelList" :key="index" class="label-item">{{ label | formatter }}</li>
+        <li v-for="(label, index) in labelList" :key="index" class="label-item">{{ label }}</li>
         <li class="empty-item" v-if="labelList.length <= 0">--</li>
     </ul>
 </template>
@@ -8,11 +8,7 @@
 <script>
     export default {
         props: {
-            labelList: Array,
-            formatter: {
-                type: Function,
-                default: (val) => val
-            }
+            labelList: Array
         }
     }
 </script>

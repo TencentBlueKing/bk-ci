@@ -27,4 +27,9 @@
 
 package com.tencent.devops.scm.exception
 
-class ScmException(message: String, val scmType: String) : RuntimeException(message)
+import com.tencent.devops.common.api.exception.ScmException
+
+class ScmException(
+    message: String,
+    scmType: String
+) : ScmException(message = message, scmType = scmType)

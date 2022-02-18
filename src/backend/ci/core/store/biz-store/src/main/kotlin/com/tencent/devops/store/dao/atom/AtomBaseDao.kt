@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.atom
 
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -58,9 +59,9 @@ abstract class AtomBaseDao {
     fun getLatestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                    .where(ATOM_CODE.eq(atomCode))
-                    .and(LATEST_FLAG.eq(true))
-                    .fetchOne()
+                .where(ATOM_CODE.eq(atomCode))
+                .and(LATEST_FLAG.eq(true))
+                .fetchOne()
         }
     }
 
@@ -76,10 +77,39 @@ abstract class AtomBaseDao {
     fun getNewestAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
-                    .where(ATOM_CODE.eq(atomCode))
-                    .orderBy(CREATE_TIME.desc())
-                    .limit(1)
-                    .fetchOne()
+                .where(ATOM_CODE.eq(atomCode))
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+        }
+    }
+
+    fun getMaxVersionAtomByCode(dslContext: DSLContext, atomCode: String): TAtomRecord? {
+        return with(TAtom.T_ATOM) {
+            dslContext.selectFrom(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .orderBy(
+                    JooqUtils.subStr(
+                        str = VERSION,
+                        delim = ".",
+                        count = 1
+                    ).plus(0).desc(),
+                    JooqUtils.subStr(
+                        str = JooqUtils.subStr(
+                            str = VERSION,
+                            delim = ".",
+                            count = -2
+                        ),
+                        delim = ".",
+                        count = 1
+                    ).plus(0).desc(),
+                    JooqUtils.subStr(
+                        str = VERSION,
+                        delim = ".",
+                        count = -1
+                    ).plus(0).desc())
+                .limit(1)
+                .fetchOne()
         }
     }
 

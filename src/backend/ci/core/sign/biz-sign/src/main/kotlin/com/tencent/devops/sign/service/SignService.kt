@@ -36,7 +36,7 @@ import java.io.InputStream
 interface SignService {
 
     /*
-    * 对ipa文件进行签名，并归档
+    * 接受文件上传并解码签名信息
     * */
     fun uploadIpaAndDecodeInfo(
         resignId: String,

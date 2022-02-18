@@ -33,6 +33,9 @@ enum class CodeEventType {
     TAG_PUSH,
     MERGE_REQUEST,
     MERGE_REQUEST_ACCEPT,
+    ISSUES,
+    NOTE,
+    REVIEW,
 
     // github event
     CREATE,
@@ -41,5 +44,19 @@ enum class CodeEventType {
     // svn event
     POST_COMMIT,
     LOCK_COMMIT,
-    PRE_COMMIT
+    PRE_COMMIT,
+
+    // p4 event
+    CHANGE_COMMIT,
+    PUSH_SUBMIT,
+    CHANGE_CONTENT,
+    CHANGE_SUBMIT,
+    PUSH_CONTENT,
+    PUSH_COMMIT,
+    FIX_ADD,
+    FIX_DELETE,
+    FORM_COMMIT,
+    SHELVE_COMMIT,
+    SHELVE_DELETE,
+    SHELVE_SUBMIT;
 }

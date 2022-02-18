@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.service.PipelineBuildMaterialService
-import org.apache.commons.lang.StringUtils
+import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -50,7 +50,6 @@ class BuildRepositoryMaterialResourceImpl @Autowired constructor(
         return Result(pipelineBuildMaterialService.saveBuildMaterial(
             buildId = buildId,
             projectId = projectId,
-            pipelineId = pipelineId,
             pipelineBuildMaterials = pipelineBuildMaterials
         ))
     }

@@ -43,7 +43,7 @@ object CodeWebhookEventDispatcher {
         logger.debug("Webhook comming [${event.commitEventType}|${event.requestContent}]")
         var result = false
         try {
-            logger.info("Dispatch the ${event.commitEventType} webhook event by MQ")
+            logger.info("${event.traceId}|Dispatch the ${event.commitEventType} webhook event by MQ")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定

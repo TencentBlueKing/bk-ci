@@ -2,7 +2,7 @@
     <div class="version-sideslider-container">
         <div class="pipeline-latest" @click="showVersionSideslider = true">{{latestPipelineVersionInfo}}</div>
         <bk-sideslider
-            width="580"
+            :width="580"
             :title="$t('template.versionList')"
             :is-show.sync="showVersionSideslider"
             :quick-close="true"
@@ -60,7 +60,7 @@
             }
         },
         computed: {
-            ...mapGetters('pipelines', ['getPipelineList']),
+            ...mapGetters('pipelines', ['getCurPipeline']),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -68,13 +68,11 @@
                 return this.$route.params.pipelineId
             },
             currentPipeline () {
-                return this.getPipelineList.find(v => v.pipelineId === this.pipelineId)
+                return this.getCurPipeline
             },
             // 最新的流水线版本信息
             latestPipelineVersionInfo () {
-                if (!this.getPipelineList.length) return
-                const latestPipeline = this.getPipelineList.find(v => v.pipelineId === this.pipelineId)
-                return latestPipeline ? `${this.$t('version')} ${latestPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(latestPipeline.deploymentTime)}` : this.$t('pipelinesEdit')
+                return this.currentPipeline ? `${this.$t('version')} ${this.currentPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${this.currentPipeline.deploymentTime}` : this.$t('pipelinesEdit')
             }
         },
         methods: {
@@ -122,7 +120,7 @@
                     this.PIPELINE_SETTING_MUTATION({ pipelineSetting: settingData })
                     this.SET_PIPELINE_EDITING(true)
                     theme = 'success'
-                    message = this.$t(`subpage.loadPipelineVersionSuccess`, { version })
+                    message = this.$t('subpage.loadPipelineVersionSuccess', { version })
                     this.showVersionSideslider = false
                 }).catch(err => {
                     theme = 'error'

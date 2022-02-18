@@ -32,6 +32,13 @@ export const actions = {
         return vue.$ajax.get(`${prefix}/user/market/atoms/${atomCode}/yml/detail`)
     },
 
+    /**
+     * 获取插件 v2 yaml
+     */
+    getAtomYamlV2 ({ commit }, { atomCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/atoms/${atomCode}/yml/2.0/detail`)
+    },
+
     modifyAtomDetail ({ commit }, { atomCode, data }) {
         return vue.$ajax.put(`${prefix}/user/pipeline/atom/baseInfo/atoms/${atomCode}`, data)
     },

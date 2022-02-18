@@ -32,6 +32,7 @@ import com.tencent.devops.model.quality.tables.TQualityIndicator
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -39,6 +40,7 @@ import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityIndicatorDao {
+    // todo performance
     fun listByType(dslContext: DSLContext, type: IndicatorType = IndicatorType.SYSTEM): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectFrom(this)
@@ -75,10 +77,27 @@ class QualityIndicatorDao {
         }
     }
 
-    fun listByElementType(dslContext: DSLContext, elementType: String, type: IndicatorType = IndicatorType.MARKET): Result<TQualityIndicatorRecord>? {
+    fun listByElementType(
+        dslContext: DSLContext,
+        elementType: String,
+        type: IndicatorType? = IndicatorType.MARKET,
+        enNameSet: Collection<String>? = null,
+        projectId: String? = null
+    ): Result<TQualityIndicatorRecord>? {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ELEMENT_TYPE.eq(elementType))
+            if (type != null) {
+                conditions.add(TYPE.eq(type.name))
+            }
+            if (!enNameSet.isNullOrEmpty()) {
+                conditions.add(EN_NAME.`in`(enNameSet))
+            }
+            if (projectId != null) {
+                conditions.add(INDICATOR_RANGE.eq(projectId))
+            }
             return dslContext.selectFrom(this)
-                .where(TYPE.eq(type.name).and(ELEMENT_TYPE.eq(elementType)))
+                .where(conditions)
                 .fetch()
         }
     }

@@ -51,4 +51,8 @@ class OpCallBackResourceImpl @Autowired constructor(
     override fun list(): Result<List<IamCallBackInfo>?> {
         return Result(callBackService.list())
     }
+
+    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
+        return Result(callBackService.refreshGateway(oldToNewMap))
+    }
 }

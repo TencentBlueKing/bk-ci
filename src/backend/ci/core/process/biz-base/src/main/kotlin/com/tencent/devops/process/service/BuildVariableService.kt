@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -42,7 +43,6 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Suppress("ALL")
 @Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
@@ -57,8 +57,8 @@ class BuildVariableService @Autowired constructor(
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
      */
-    fun getBuildExecuteCount(buildId: String): Int {
-        val retryCount = getVariable(buildId = buildId, varName = PIPELINE_RETRY_COUNT)
+    fun getBuildExecuteCount(projectId: String, buildId: String): Int {
+        val retryCount = getVariable(projectId = projectId, buildId = buildId, varName = PIPELINE_RETRY_COUNT)
         return try {
             if (NumberUtils.isParsable(retryCount)) 1 + retryCount!!.toInt() else 1
         } catch (ignored: Exception) {
@@ -66,17 +66,33 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
-    fun getVariable(buildId: String, varName: String): String? {
-        val vars = getAllVariable(buildId)
+    /**
+     * 将模板语法中的[template]模板字符串替换成当前构建[buildId]下对应的真正的字符串
+     */
+    fun replaceTemplate(projectId: String, buildId: String, template: String?): String {
+        return TemplateFastReplaceUtils.replaceTemplate(templateString = template) { templateWord ->
+            val word = PipelineVarUtil.oldVarToNewVar(templateWord) ?: templateWord
+            val templateValByType = pipelineBuildVarDao.getVarsWithType(
+                dslContext = commonDslContext,
+                projectId = projectId,
+                buildId = buildId,
+                key = word
+            )
+            if (templateValByType.isNotEmpty()) templateValByType[0].value.toString() else null
+        }
+    }
+
+    fun getVariable(projectId: String, buildId: String, varName: String): String? {
+        val vars = getAllVariable(projectId, buildId)
         return if (vars.isNotEmpty()) vars[varName] else null
     }
 
-    fun getAllVariable(buildId: String): Map<String, String> {
-        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, buildId))
+    fun getAllVariable(projectId: String, buildId: String): Map<String, String> {
+        return PipelineVarUtil.mixOldVarAndNewVar(pipelineBuildVarDao.getVars(commonDslContext, projectId, buildId))
     }
 
-    fun getAllVariableWithType(buildId: String): List<BuildParameters> {
-        return pipelineBuildVarDao.getVarsWithType(commonDslContext, buildId)
+    fun getAllVariableWithType(projectId: String, buildId: String): List<BuildParameters> {
+        return pipelineBuildVarDao.getVarsWithType(commonDslContext, projectId, buildId)
     }
 
     fun setVariable(projectId: String, pipelineId: String, buildId: String, varName: String, varValue: Any) {
@@ -91,13 +107,17 @@ class BuildVariableService @Autowired constructor(
         )
     }
 
-    fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) =
-        batchSetVariable(dslContext = commonDslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
-        )
+    fun batchUpdateVariable(projectId: String, pipelineId: String, buildId: String, variables: Map<String, Any>) {
+        commonDslContext.transaction { t ->
+            val context = DSL.using(t)
+            batchSetVariable(dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
+            )
+        }
+    }
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
@@ -108,6 +128,7 @@ class BuildVariableService @Autowired constructor(
     }
 
     // 保存方法需要提供事务保护的实现，传入特定dslContext
+    @Suppress("LongParameterList")
     fun saveVariable(
         dslContext: DSLContext,
         buildId: String,
@@ -119,7 +140,7 @@ class BuildVariableService @Autowired constructor(
         val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId:$name", 10)
         try {
             redisLock.lock()
-            val varMap = pipelineBuildVarDao.getVars(dslContext, buildId, name)
+            val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, name)
             if (varMap.isEmpty()) {
                 pipelineBuildVarDao.save(
                     dslContext = dslContext,
@@ -132,6 +153,7 @@ class BuildVariableService @Autowired constructor(
             } else {
                 pipelineBuildVarDao.update(
                     dslContext = dslContext,
+                    projectId = projectId,
                     buildId = buildId,
                     name = name,
                     value = value
@@ -151,9 +173,9 @@ class BuildVariableService @Autowired constructor(
     ) {
         val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
         watch.start("replaceOldByNewVar")
-        val varMaps = variables.map {
+        val varMaps = variables.associate {
             it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
-        }.toMap().toMutableMap()
+        }.toMutableMap()
         PipelineVarUtil.replaceOldByNewVar(varMaps)
 
         val pipelineBuildParameters = mutableListOf<BuildParameters>()
@@ -161,7 +183,8 @@ class BuildVariableService @Autowired constructor(
             pipelineBuildParameters.add(BuildParameters(
                 key = key,
                 value = valueAndType.first,
-                valueType = valueAndType.second
+                valueType = valueAndType.second,
+                readOnly = getReadOnly(key, variables)
             ))
         }
 
@@ -171,7 +194,7 @@ class BuildVariableService @Autowired constructor(
             // 加锁防止数据被重复插入
             redisLock.lock()
             watch.start("getVars")
-            val buildVarMap = pipelineBuildVarDao.getVars(dslContext, buildId)
+            val buildVarMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
             pipelineBuildParameters.forEach {
@@ -181,26 +204,33 @@ class BuildVariableService @Autowired constructor(
                     updateBuildParameters.add(it)
                 }
             }
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                watch.start("batchSave")
-                pipelineBuildVarDao.batchSave(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    variables = insertBuildParameters
-                )
-                watch.start("batchUpdate")
-                pipelineBuildVarDao.batchUpdate(
-                    dslContext = context,
-                    buildId = buildId,
-                    variables = updateBuildParameters
-                )
-            }
+            watch.start("batchSave")
+            pipelineBuildVarDao.batchSave(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                variables = insertBuildParameters
+            )
+            watch.start("batchUpdate")
+            pipelineBuildVarDao.batchUpdate(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                variables = updateBuildParameters
+            )
         } finally {
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
+    }
+
+    private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
+        variables.forEach {
+            if (key == it.key) {
+                return it.readOnly
+            }
+        }
+        return false
     }
 }

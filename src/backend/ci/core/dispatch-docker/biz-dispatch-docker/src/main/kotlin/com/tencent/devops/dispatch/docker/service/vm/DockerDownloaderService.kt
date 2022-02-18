@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
+import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -43,9 +44,9 @@ class DockerDownloaderService {
 
     fun downloadDocker(eTag: String?): Response {
         if (dockerFile.isNullOrBlank()) {
-            throw RuntimeException("docker.jar文件路径没有配置")
+            throw BadRequestException("docker.jar文件路径没有配置")
         }
-        return download(dockerFile!!, eTag)
+        return download(dockerFile, eTag)
     }
 
     private fun download(file: String, eTag: String?): Response {
@@ -55,13 +56,13 @@ class DockerDownloaderService {
         }
 
         if (!worker.isFile) {
-            throw RuntimeException("${worker.absolutePath} 不是一个文件")
+            throw BadRequestException("${worker.absolutePath} 不是一个文件")
         }
 
         if (eTag != null && eTag.isNotBlank()) {
             // 检查文件的MD5值是否和客户端一致
             val workerMD5 = FileUtil.getMD5(worker)
-            if (workerMD5 != null && workerMD5 == eTag) {
+            if (workerMD5 == eTag) {
                 return Response.status(Response.Status.NOT_MODIFIED).build()
             }
         }

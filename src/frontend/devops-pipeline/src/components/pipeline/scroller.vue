@@ -1,12 +1,12 @@
 <template>
     <section class="pipeline-steps__scroller clearfix">
         <div class="pipeline-scroller scroller-left fl"
-            :class="{disabled: !allowPullLeft}"
+            :class="{ disabled: !allowPullLeft }"
             @click="pullLeft">
             <i class="devops-icon icon-angle-double-left"></i>
         </div>
         <div class="pipeline-scroller scroller-right fr"
-            :class="{disabled: !allowPullRight}"
+            :class="{ disabled: !allowPullRight }"
             @click="pullRight">
             <i class="devops-icon icon-angle-double-right"></i>
         </div>
@@ -49,7 +49,7 @@
         },
         computed: {
             calcIsDisabled () {
-                let {
+                const {
                     listWrapperWidth,
                     listScrollerWidth
                 } = this
@@ -67,15 +67,12 @@
         },
         watch: {
             avaliableWidth (val) {
-                let {
-                    listWrapper,
-                    listWrapperWidth,
-                    scrollerTranslateX,
-                    listScroller
+                const {
+                    listWrapper
                 } = this
 
                 if (val && listWrapper) {
-                    let width = `${val}px`
+                    const width = `${val}px`
                     listWrapper.style.width = width
                     this.listWrapperWidth = val
 
@@ -83,15 +80,13 @@
                 }
             },
             stageLength (newVal, oldVal) {
-                let {
+                const {
                     listScroller,
-                    listScrollerWidth,
-                    listWrapperWidth,
-                    scrollerTranslateX
+                    listWrapperWidth
                 } = this
 
                 if (newVal && listScroller) {
-                    let width = newVal * this.stageWidth
+                    const width = newVal * this.stageWidth
 
                     this.listScrollerWidth = width
 
@@ -107,15 +102,14 @@
                 }
             },
             scrollTo (val) {
-                let {
+                const {
                     listWrapperWidth,
-                    listScrollerWidth,
-                    stageWidth
+                    listScrollerWidth
                 } = this
 
                 if (listWrapperWidth < listScrollerWidth) {
-                    let estimateTranslateX = val * this.stageWidth
-                    let maxTranslateX = listScrollerWidth - listWrapperWidth
+                    const estimateTranslateX = val * this.stageWidth
+                    const maxTranslateX = listScrollerWidth - listWrapperWidth
                     let realTranslateX
 
                     if (estimateTranslateX > maxTranslateX) {
@@ -129,25 +123,27 @@
                 }
             }
         },
+        mounted () {
+            this.init()
+
+            window.onresize = () => {
+                this.listWrapperWidth = converStrToNum(getComputedStyle(this.$parent.$el).width, 'px')
+                this.$emit('update:avaliableWidth', this.listWrapperWidth)
+            }
+        },
         methods: {
             /**
              *  初始化数据
              */
             init () {
-                let {
-                    stages,
-                    refName,
-                    avaliableWidth,
-                    listWrapperWidth,
-                    listScrollerWidth
-                } = this
+                const { refName } = this
 
-                stages = this.$parent.$refs[refName]
-                this.listWrapper = stages.querySelector('[data-type="wrapper"]')
-                this.listScroller = stages.querySelector('[data-type="scroll"]')
+                this.stages = this.$parent.$refs[refName]
+                this.listWrapper = this.stages.querySelector('[data-type="wrapper"]')
+                this.listScroller = this.stages.querySelector('[data-type="scroll"]')
 
-                listWrapperWidth = ~~getComputedStyle(this.listWrapper).width.replace('px', '')
-                listScrollerWidth = ~~getComputedStyle(this.listScroller).width.replace('px', '')
+                this.listWrapperWidth = ~~getComputedStyle(this.listWrapper).width.replace('px', '')
+                this.listScrollerWidth = ~~getComputedStyle(this.listScroller).width.replace('px', '')
             },
             /**
              *  流水线列表向左滚动
@@ -169,12 +165,11 @@
              *  执行滚动
              */
             scrollHandler (direction, displacement = this.stageWidth) {
-                let {
-                    listScroller,
-                    stageWidth
+                const {
+                    listScroller
                 } = this
-                let curTranslateX = listScroller.style.transform.match(/^translateX\((.*)px\)$/)
-                let curDisplacement = curTranslateX ? curTranslateX[1] : 0
+                const curTranslateX = listScroller.style.transform.match(/^translateX\((.*)px\)$/)
+                const curDisplacement = curTranslateX ? curTranslateX[1] : 0
                 let newDisplacement
                 let tmp
 
@@ -194,12 +189,12 @@
              *  @param {Number} val - 窗口大小改变后或stage个数改变后listWrapper的宽度
              */
             responseResize (val) {
-                let {
+                const {
                     scrollerTranslateX,
                     listScrollerWidth,
                     listScroller
                 } = this
-                let calcTranslateX = listScrollerWidth - val
+                const calcTranslateX = listScrollerWidth - val
                 let realTranslateX
 
                 if (calcTranslateX > 0 && calcTranslateX < Math.abs(scrollerTranslateX)) { // 剩余的stage个数超过可显示的个数
@@ -209,14 +204,6 @@
                 }
 
                 listScroller.style.transform = `translateX(${realTranslateX}px)`
-            }
-        },
-        mounted () {
-            this.init()
-
-            window.onresize = () => {
-                this.listWrapperWidth = converStrToNum(getComputedStyle(this.$parent.$el).width, 'px')
-                this.$emit('update:avaliableWidth', this.listWrapperWidth)
             }
         }
     }

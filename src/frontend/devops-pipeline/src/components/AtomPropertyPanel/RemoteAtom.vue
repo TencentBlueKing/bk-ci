@@ -47,7 +47,7 @@
                 return this.$route.params.pipelineId || ''
             },
             src () {
-                return `${location.origin}${API_URL_PREFIX}/artifactory/resource/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}&pipelineId=${this.pipelineId}`
+                return `${location.origin}/bk-plugin-fe/${this.atomCode}/${this.atomVersion}/index.html?projectId=${this.$route.params.projectId}&pipelineId=${this.pipelineId}`
             }
         },
         mounted () {
@@ -60,13 +60,15 @@
         },
         methods: {
             ...mapActions('atom', [
-                'setPipelineEditing'
+                'setPipelineEditing',
+                'getAtomEnvConfig'
             ]),
-            onLoad () {
+            async onLoad () {
                 const { baseOS, dispatchType } = this.container
                 const containerInfo = { baseOS, dispatchType }
                 const currentUserInfo = this.$userInfo || {}
                 const atomDisabled = this.disabled || false
+                const envConf = await this.getEnvConf()
                 this.loading = false
                 const iframe = document.getElementById('atom-iframe').contentWindow
                 iframe.postMessage({
@@ -74,6 +76,7 @@
                     atomPropsModel: this.atomPropsModel.input,
                     containerInfo,
                     currentUserInfo,
+                    envConf,
                     atomDisabled,
                     hostInfo: {
                         ...this.$route.params
@@ -91,6 +94,19 @@
                 } else if (e.data.iframeHeight) {
                     this.iframeHeight = parseInt(e.data.iframeHeight)
                 }
+            },
+            async getEnvConf () {
+                let env = {}
+                try {
+                    const atomEnvs = await this.getAtomEnvConfig(this.atomCode) || []
+                    atomEnvs.forEach(function (item) {
+                        console.log(item, item.fieldName, item.fieldValue)
+                        Object.assign(env, { [item.fieldName]: item.fieldValue })
+                    })
+                } catch (err) {
+                    env = {}
+                }
+                return env
             }
         }
     }

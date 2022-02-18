@@ -48,7 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.measure.pojo.ElementMeasureData
 import com.tencent.devops.measure.pojo.PipelineBuildData
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.measure.AtomMonitorEventDispatcher
@@ -64,10 +64,9 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL", "UNUSED")
 class MeasureServiceImpl constructor(
     private val projectCacheService: ProjectCacheService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
     private val templateService: TemplateService,
-    private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
@@ -93,8 +92,16 @@ class MeasureServiceImpl constructor(
                 return
             }
 
-            val parentPipelineId = buildVariableService.getVariable(buildId, PIPELINE_START_PARENT_PIPELINE_ID) ?: ""
-            val parentBuildId = buildVariableService.getVariable(buildId, PIPELINE_START_PARENT_BUILD_ID) ?: ""
+            val parentPipelineId = buildVariableService.getVariable(
+                projectId = projectId,
+                buildId = buildId,
+                varName = PIPELINE_START_PARENT_PIPELINE_ID
+            ) ?: ""
+            val parentBuildId = buildVariableService.getVariable(
+                projectId = projectId,
+                buildId = buildId,
+                varName = PIPELINE_START_PARENT_BUILD_ID
+            ) ?: ""
             val metaInfo = mapOf(
                 "parentPipelineId" to parentPipelineId,
                 "parentBuildId" to parentBuildId
@@ -103,7 +110,7 @@ class MeasureServiceImpl constructor(
             val data = PipelineBuildData(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                templateId = templateService.getTemplateIdByPipeline(pipelineId) ?: "",
+                templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId) ?: "",
                 buildId = buildId,
                 beginTime = startTime,
                 endTime = System.currentTimeMillis(),
@@ -117,7 +124,7 @@ class MeasureServiceImpl constructor(
                 errorInfoList = errorInfoList
             )
 
-            val requestBody = objectMapper.writeValueAsString(data)
+            val requestBody = JsonUtil.toJson(data, formatted = false)
             measureEventDispatcher.dispatch(
                 MeasureRequest(
                     projectId = projectId,
@@ -134,7 +141,7 @@ class MeasureServiceImpl constructor(
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {
         try {
-            val tasks = pipelineRuntimeService.getAllBuildTask(buildId)
+            val tasks = pipelineTaskService.getAllBuildTask(projectId, buildId)
             if (tasks.isEmpty()) {
                 return
             }

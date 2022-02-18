@@ -63,7 +63,7 @@ class CodeService @Autowired constructor(
             repositoryType = repositoryConfig.repositoryType
         ).data
             ?: throw NotFoundException("代码库($repoHashId)不存在")) as? CodeSvnRepository
-            ?: throw RuntimeException("代码库($repoHashId)不是svn代码库")
+            ?: throw IllegalArgumentException("代码库($repoHashId)不是svn代码库")
 
         try {
             val credential = getSvnCredential(projectId, repository)
@@ -102,8 +102,8 @@ class CodeService @Autowired constructor(
     fun getGitRefs(projectId: String, repoHashId: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
         val result = mutableListOf<String>()
-        val branches = scmProxyService.listBranches(projectId, repositoryConfig, full = false).data ?: listOf()
-        val tags = scmProxyService.listTags(projectId, repositoryConfig, full = false).data ?: listOf()
+        val branches = scmProxyService.listBranches(projectId, repositoryConfig).data ?: listOf()
+        val tags = scmProxyService.listTags(projectId, repositoryConfig).data ?: listOf()
         // 取前100
         result.addAll(branches)
         result.addAll(tags)
@@ -158,52 +158,47 @@ class CodeService @Autowired constructor(
     }
 
     private fun getCredential(projectId: String, credentialId: String): Pair<List<String>, CredentialType> {
-        try {
-            val pair = DHUtil.initKey()
-            val encoder = Base64.getEncoder()
-            val result = client.get(ServiceCredentialResource::class)
-                .get(
-                    projectId = projectId,
-                    credentialId = credentialId,
-                    publicKey = encoder.encodeToString(pair.publicKey)
-                )
-
-            if (result.isNotOk() || result.data == null) {
-                logger.warn("Fail to get the credential($credentialId) because of ${result.message}")
-                throw NotFoundException(result.message!!)
-            }
-
-            val credential = result.data!!
-
-            val credentialList = mutableListOf<String>()
-            credentialList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-            if (!credential.v2.isNullOrEmpty()) credentialList.add(
-                decode(
-                    encode = credential.v2!!,
-                    publicKey = credential.publicKey,
-                    privateKey = pair.privateKey
-                )
-            )
-            if (!credential.v3.isNullOrEmpty()) credentialList.add(
-                decode(
-                    encode = credential.v3!!,
-                    publicKey = credential.publicKey,
-                    privateKey = pair.privateKey
-                )
-            )
-            if (!credential.v4.isNullOrEmpty()) credentialList.add(
-                decode(
-                    encode = credential.v4!!,
-                    publicKey = credential.publicKey,
-                    privateKey = pair.privateKey
-                )
+        val pair = DHUtil.initKey()
+        val encoder = Base64.getEncoder()
+        val result = client.get(ServiceCredentialResource::class)
+            .get(
+                projectId = projectId,
+                credentialId = credentialId,
+                publicKey = encoder.encodeToString(pair.publicKey)
             )
 
-            return Pair(credentialList, credential.credentialType)
-        } catch (e: Exception) {
-            logger.warn("Fail to get the credential($credentialId)", e)
-            throw RuntimeException("获取代码库凭证($credentialId)失败")
+        if (result.isNotOk() || result.data == null) {
+            logger.warn("Fail to get the credential($credentialId) because of ${result.message}")
+            throw NotFoundException(result.message!!)
         }
+
+        val credential = result.data!!
+
+        val credentialList = mutableListOf<String>()
+        credentialList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+        if (!credential.v2.isNullOrEmpty()) credentialList.add(
+            decode(
+                encode = credential.v2!!,
+                publicKey = credential.publicKey,
+                privateKey = pair.privateKey
+            )
+        )
+        if (!credential.v3.isNullOrEmpty()) credentialList.add(
+            decode(
+                encode = credential.v3!!,
+                publicKey = credential.publicKey,
+                privateKey = pair.privateKey
+            )
+        )
+        if (!credential.v4.isNullOrEmpty()) credentialList.add(
+            decode(
+                encode = credential.v4!!,
+                publicKey = credential.publicKey,
+                privateKey = pair.privateKey
+            )
+        )
+
+        return Pair(credentialList, credential.credentialType)
     }
 
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
@@ -226,6 +221,6 @@ class CodeService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(CodeService::class.java)
     }
 }

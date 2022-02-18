@@ -456,7 +456,7 @@ class ImageProjectService @Autowired constructor(
                 storeType = StoreTypeEnum.IMAGE.type.toByte()
             )
             val imageDetail = imageService.getLatestImageDetailByCode(userId, it.code, interfaceName)
-            imageDetail.isInstalled = isInstalled
+            imageDetail.installedFlag = isInstalled
             resultList.add(imageDetail)
         }
         val count = marketImageDao.count(
@@ -1022,7 +1022,7 @@ class ImageProjectService @Autowired constructor(
             recommendFlag = recommendFlag,
             certificationFlag = certificationFlag,
             // 公共镜像视为已安装
-            isInstalled = installFlag || publicFlag,
+            installedFlag = installFlag || publicFlag,
             modifier = modifier ?: "",
             updateTime = updateTime
         )

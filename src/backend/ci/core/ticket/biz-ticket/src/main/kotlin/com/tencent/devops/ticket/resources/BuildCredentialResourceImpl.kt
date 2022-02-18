@@ -30,6 +30,7 @@ package com.tencent.devops.ticket.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.service.CredentialService
@@ -39,13 +40,15 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildCredentialResource {
+    @SensitiveApiPermission("get_credential")
     override fun get(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         credentialId: String,
         publicKey: String
-    ): Result<CredentialInfo> {
+    ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
@@ -61,13 +64,46 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(credentialService.buildGet(buildId, credentialId, publicKey))
+        return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
     }
 
-    override fun getDetail(
+    @SensitiveApiPermission("get_credential")
+    override fun getAcrossProject(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
+        credentialId: String,
+        targetProjectId: String,
+        publicKey: String
+    ): Result<CredentialInfo?> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (vmSeqId.isBlank()) {
+            throw ParamBlankException("Invalid vmSeqId")
+        }
+        if (vmName.isBlank()) {
+            throw ParamBlankException("Invalid vmName")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        if (publicKey.isBlank()) {
+            throw ParamBlankException("Invalid publicKey")
+        }
+        return Result(
+            credentialService.buildGetAcrossProject(projectId, targetProjectId, buildId, credentialId, publicKey)
+        )
+    }
+
+    @SensitiveApiPermission("get_credential")
+    override fun getDetail(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        taskId: String?,
         credentialId: String
     ): Result<Map<String, String>> {
         if (buildId.isBlank()) {
@@ -82,6 +118,6 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.buildGetDetail(buildId, credentialId))
+        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
     }
 }

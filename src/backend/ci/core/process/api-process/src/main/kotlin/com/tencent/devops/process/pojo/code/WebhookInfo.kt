@@ -32,5 +32,8 @@ data class WebhookInfo(
     val webhookBranch: String?,
     val webhookType: String?,
     val webhookEventType: String?,
-    val webhookMessage: String?
+    val webhookMessage: String?,
+    val webhookCommitId: String?,
+    // 合并后commitId
+    val webhookMergeCommitSha: String?
 )

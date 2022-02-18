@@ -28,5 +28,4 @@
 dependencies {
     api(project(":core:log:biz-log"))
     api(project(":core:project:api-project"))
-
 }

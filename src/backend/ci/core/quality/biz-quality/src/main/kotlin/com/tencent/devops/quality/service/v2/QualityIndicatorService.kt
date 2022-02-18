@@ -37,7 +37,7 @@ import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
@@ -45,6 +45,7 @@ import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
+import com.tencent.devops.quality.pojo.enum.RunElementType
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.InstalledAtom
@@ -70,13 +71,9 @@ class QualityIndicatorService @Autowired constructor(
     private val encoder = Base64.getEncoder()
 
     fun listByLevel(projectId: String): List<IndicatorStageGroup> {
-        val indicators = listIndicatorByProject(projectId).map { indicator ->
-            val metadataIds = convertMetaIds(indicator.metadataIds)
-            val metadata = metadataService.serviceListMetadata(metadataIds).map {
-                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
-            }
-            convertRecord(indicator, metadata)
-        }
+
+        val indicatorRecords = listIndicatorByProject(projectId)
+        val indicators = serviceListIndicatorRecord(indicatorRecords)
 
         // 生成数据
         return indicators.groupBy { it.stage }.map { stage ->
@@ -148,13 +145,47 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceList(indicatorIds: Collection<Long>): List<QualityIndicator> {
-        return indicatorDao.listByIds(dslContext, indicatorIds)?.map { indicator ->
+        val indicatorRecords = indicatorDao.listByIds(dslContext, indicatorIds)
+        return serviceListIndicatorRecord(indicatorRecords)
+    }
+
+    fun serviceListALL(indicatorIds: Collection<Long>): List<QualityIndicator> {
+        val indicatorTMap = indicatorDao.listByIds(dslContext, indicatorIds)?.map { it.id to it }?.toMap()
+        return indicatorIds.map { id ->
+            val indicator = indicatorTMap?.get(id) ?: throw OperationException("indicator id $id is not exist")
             val metadataIds = convertMetaIds(indicator.metadataIds)
             val metadata = metadataService.serviceListMetadata(metadataIds).map {
                 QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
             }
             convertRecord(indicator, metadata)
-        }?.toList() ?: listOf()
+        }
+    }
+
+    fun serviceList(
+        elementType: String,
+        enNameSet: Collection<String>,
+        projectId: String? = null
+    ): List<QualityIndicator> {
+        val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
+        val indicatorRecords = indicatorDao.listByElementType(
+            dslContext = dslContext,
+            elementType = elementType,
+            type = null,
+            enNameSet = enNameSet,
+            projectId = tempProjectId
+        )?.associateBy { it.enName }
+        val allIndicatorRecords = enNameSet.map {
+            indicatorRecords?.get(it) ?: throw OperationException("indicator id $it is not exist")
+        }
+        return serviceListIndicatorRecord(allIndicatorRecords)
+    }
+
+    fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        return if (elementType in QualityIndicator.SCRIPT_ELEMENT) {
+            listOf()
+        } else {
+            serviceList(elementType, enNameSet).filter { it.enable ?: false }
+        }
     }
 
     fun opList(userId: String, page: Int?, pageSize: Int?): Page<IndicatorData> {
@@ -175,6 +206,7 @@ class QualityIndicatorService @Autowired constructor(
     private fun indicatorRecordToIndicatorData(
         indicatorRecords: Result<TQualityIndicatorRecord>?
     ): List<IndicatorData> {
+        // todo perform
         return indicatorRecords?.map {
             val metadataIds = convertMetaIds(it.metadataIds).toSet()
             val metadataList = metadataService.serviceListByIds(metadataIds)
@@ -252,26 +284,7 @@ class QualityIndicatorService @Autowired constructor(
 
     fun userCreate(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Boolean {
         checkCustomIndicatorExist(projectId, indicatorCreate.name, indicatorCreate.cnName)
-        val indicatorUpdate = IndicatorUpdate(
-            elementType = indicatorCreate.elementType,
-            elementName = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementDetail = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementVersion = "",
-            enName = indicatorCreate.name,
-            cnName = indicatorCreate.cnName,
-            metadataIds = "",
-            defaultOperation = indicatorCreate.operation.firstOrNull()?.name,
-            operationAvailable = indicatorCreate.operation.joinToString(","),
-            threshold = indicatorCreate.threshold,
-            thresholdType = indicatorCreate.dataType.name,
-            desc = indicatorCreate.desc,
-            readOnly = false,
-            stage = "开发",
-            range = projectId,
-            tag = null,
-            enable = true,
-            type = IndicatorType.CUSTOM
-        )
+        val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         indicatorDao.create(userId, indicatorUpdate, dslContext)
         return true
     }
@@ -279,28 +292,31 @@ class QualityIndicatorService @Autowired constructor(
     fun userUpdate(userId: String, projectId: String, indicatorId: String, indicatorCreate: IndicatorCreate): Boolean {
         val id = HashUtil.decodeIdToLong(indicatorId)
         checkCustomIndicatorExcludeExist(id, projectId, indicatorCreate.name, indicatorCreate.cnName)
-        val indicatorUpdate = IndicatorUpdate(
-            elementType = indicatorCreate.elementType,
-            elementName = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementDetail = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
-            elementVersion = "",
-            enName = indicatorCreate.name,
-            cnName = indicatorCreate.cnName,
-            metadataIds = "",
-            defaultOperation = indicatorCreate.operation.firstOrNull()?.name,
-            operationAvailable = indicatorCreate.operation.joinToString(","),
-            threshold = indicatorCreate.threshold,
-            thresholdType = indicatorCreate.dataType.name,
-            desc = indicatorCreate.desc,
-            readOnly = false,
-            stage = "开发",
-            range = projectId,
-            tag = "",
-            enable = true,
-            type = IndicatorType.CUSTOM
-        )
+        val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         indicatorDao.update(userId = userId, id = id, indicatorUpdate = indicatorUpdate, dslContext = dslContext)
+        return true
+    }
+
+    fun upsertIndicators(userId: String, projectId: String, indicatorCreateList: List<IndicatorCreate>): Boolean {
+        indicatorCreateList.forEach { indicatorCreate ->
+            val indicatorId = checkCustomUpsertIndicator(projectId, indicatorCreate.name)
+            val indicatorUpdate = getIndicatorUpdate(projectId, indicatorCreate)
+            if (indicatorId == null) {
+                indicatorDao.create(
+                    userId = userId,
+                    indicatorUpdate = indicatorUpdate,
+                    dslContext = dslContext
+                )
+            } else {
+                indicatorDao.update(
+                    userId = userId,
+                    id = indicatorId,
+                    indicatorUpdate = indicatorUpdate,
+                    dslContext = dslContext
+                )
+            }
+        }
         return true
     }
 
@@ -315,6 +331,7 @@ class QualityIndicatorService @Autowired constructor(
         }.groupBy { it.elementType }.forEach { (_, indicators) ->
             indicators.map { indicator ->
                 val metadataIds = convertMetaIds(indicator.metadataIds)
+                // todo performance
                 val metadata = metadataService.serviceListMetadata(metadataIds).map {
                     IndicatorListResponse.QualityMetadata(enName = it.dataId,
                         cnName = it.dataName,
@@ -335,7 +352,7 @@ class QualityIndicatorService @Autowired constructor(
                     availableOperation = indicator.operationAvailable.split(",").map { QualityOperation.valueOf(it) },
                     dataType = QualityDataType.valueOf(indicator.thresholdType.toUpperCase()),
                     threshold = indicator.threshold,
-                    desc = indicator.desc,
+                    desc = indicator.desc ?: "",
                     range = indicator.indicatorRange // 脚本指标需要加上可见范围
                 )
 
@@ -530,7 +547,9 @@ class QualityIndicatorService @Autowired constructor(
             tag = indicator.tag,
             metadataList = metadata,
             desc = indicator.desc,
-            logPrompt = indicator.logPrompt
+            logPrompt = indicator.logPrompt,
+            enable = indicator.enable ?: false,
+            range = indicator.indicatorRange
         )
     }
 
@@ -574,8 +593,56 @@ class QualityIndicatorService @Autowired constructor(
         return false
     }
 
+    private fun checkCustomUpsertIndicator(projectId: String, enName: String): Long? {
+        val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return null
+        indicators.forEach { indicator ->
+            if (indicator.enName == enName && indicator.indicatorRange == projectId) return indicator.id
+        }
+        return null
+    }
+
+    private fun getIndicatorUpdate(projectId: String, indicatorCreate: IndicatorCreate): IndicatorUpdate {
+        return IndicatorUpdate(
+            elementType = indicatorCreate.elementType,
+            elementName = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
+            elementDetail = ElementUtils.getElementCnName(indicatorCreate.elementType, projectId),
+            elementVersion = "",
+            enName = indicatorCreate.name,
+            cnName = indicatorCreate.cnName,
+            metadataIds = "",
+            defaultOperation = indicatorCreate.operation.firstOrNull()?.name,
+            operationAvailable = indicatorCreate.operation.joinToString(","),
+            threshold = indicatorCreate.threshold,
+            thresholdType = indicatorCreate.dataType.name,
+            desc = indicatorCreate.desc,
+            readOnly = false,
+            stage = "开发",
+            range = projectId,
+            tag = "",
+            enable = true,
+            type = IndicatorType.CUSTOM
+        )
+    }
+
     private fun getProjectAtomCodes(projectId: String): List<InstalledAtom> {
         return client.get(ServiceAtomResource::class).getInstalledAtoms(projectId).data ?: listOf()
+    }
+
+    private fun serviceListIndicatorRecord(qualityIndicators: List<TQualityIndicatorRecord>?): List<QualityIndicator> {
+        val metadataIds = mutableSetOf<Long>()
+        qualityIndicators?.forEach { indicator ->
+            val metadataId = convertMetaIds(indicator.metadataIds)
+            metadataIds.addAll(metadataId)
+        }
+        val metadataMap = metadataService.serviceListMetadata(metadataIds).associateBy { it.hashId }
+        return qualityIndicators?.map {
+            val metadataIds = convertMetaIds(it.metadataIds)
+            val metadataList = metadataIds.map {
+                val metadata = metadataMap[HashUtil.encodeLongId(it)]
+                QualityIndicator.Metadata(metadata?.hashId ?: "", metadata?.dataName ?: "", metadata?.dataId ?: "")
+            }
+            convertRecord(it, metadataList)
+        } ?: listOf()
     }
 
     fun userCount(projectId: String): Long {
@@ -588,6 +655,11 @@ class QualityIndicatorService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
         val codeccToolNameMap = mapOf(
+            "STANDARD" to "代码规范",
+            "DEFECT" to "代码缺陷",
+            "SECURITY" to "安全漏洞",
+            "CCN" to "圈复杂度",
+            "DUPC" to "重复率",
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
             "CPPLINT" to "CppLint",
@@ -599,13 +671,16 @@ class QualityIndicatorService @Autowired constructor(
             "DETEKT" to "detekt",
             "PHPCS" to "PHPCS",
             "SENSITIVE" to "敏感信息",
-            "CCN" to "圈复杂度",
-            "DUPC" to "重复率",
             "OCCHECK" to "OCCheck",
             "RIPS" to "啄木鸟漏洞扫描-PHP",
             "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息")
 
         private val codeccToolDescMap = mapOf(
+            "STANDARD" to "按维度(推荐)",
+            "DEFECT" to "按维度(推荐)",
+            "SECURITY" to "按维度(推荐)",
+            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
+            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
             "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
             "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
             "CPPLINT" to "谷歌开源的C++代码风格检查工具",
@@ -617,8 +692,6 @@ class QualityIndicatorService @Autowired constructor(
             "DETEKT" to "Kotlin静态代码分析工具 ",
             "PHPCS" to "PHP代码风格检查工具",
             "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
-            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
             "OCCHECK" to "OC代码风格检查工具")
     }
 }

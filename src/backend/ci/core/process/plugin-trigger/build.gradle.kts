@@ -26,13 +26,13 @@
  */
 
 dependencies {
-    api(project(":core:common:common-db"))
+    api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-pipeline"))
     api(project(":core:process:model-process"))
     api(project(":core:process:api-process"))
     api(project(":core:process:plugin-sdk"))
-
+    api(project(":core:project:api-project"))
     implementation("org.quartz-scheduler:quartz") {
         exclude(group = "com.zaxxer", module = "HikariCP-java7")
     }

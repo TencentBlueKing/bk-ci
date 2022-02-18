@@ -27,11 +27,14 @@
 
 package com.tencent.devops.dispatch.docker.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
+import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -144,4 +147,13 @@ interface UserDockerHostResource {
         @PathParam("vmSeqId")
         vmSeqId: String
     ): Result<Boolean>?
+
+    @GET
+    @Path("/dockerhost-load")
+    @ApiOperation("获取dockerhost集群平均负载信息")
+    fun getDockerHostLoad(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<DockerHostLoad>
 }

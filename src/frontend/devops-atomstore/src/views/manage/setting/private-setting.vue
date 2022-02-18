@@ -7,6 +7,11 @@
         <section v-bkloading="{ isLoading }" class="g-scroll-table">
             <bk-table :data="privateList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }" v-if="!isLoading">
                 <bk-table-column :label="$t('store.名称')" prop="fieldName" width="180"></bk-table-column>
+                <bk-table-column :label="$t('store.适用范围')">
+                    <template slot-scope="props">
+                        {{ getTypeName(props.row.fieldType) }}
+                    </template>
+                </bk-table-column>
                 <bk-table-column :label="$t('store.描述')" prop="fieldDesc"></bk-table-column>
                 <bk-table-column :label="$t('store.修改者')" prop="modifier" width="180"></bk-table-column>
                 <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="180"></bk-table-column>
@@ -19,12 +24,17 @@
             </bk-table>
 
             <bk-sideslider :is-show.sync="showAdd" :quick-close="true" :title="$t('store.新增配置')" :width="640" @hidden="closeAddPrivate">
-                <bk-form :label-width="80" :model="privateObj" slot="content" class="add-private" ref="privateForm">
+                <bk-form :label-width="120" :model="privateObj" slot="content" class="add-private" ref="privateForm">
                     <bk-form-item :label="$t('store.字段名')" :required="true" :rules="[requireRule($t('store.字段名')), nameRule]" property="fieldName" error-display-type="normal">
                         <bk-input v-model="privateObj.fieldName" :placeholder="$t('store.请输入字段名称，不超过30个字符')"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.字段值')" :rules="[requireRule($t('store.字段值'))]" :required="true" property="fieldValue" error-display-type="normal">
                         <bk-input type="textarea" :rows="3" v-model="privateObj.fieldValue" @focus="handlePrivateFocus" :placeholder="$t('store.请输入字段值')"></bk-input>
+                    </bk-form-item>
+                    <bk-form-item :label="$t('store.适用范围')" property="fieldType" :desc="$t('store.适用范围选择为“全部”或“前端”时，字段值将明文返回给插件前端，请谨慎设置')" :desc-type="'icon'">
+                        <bk-radio-group v-model="privateObj.fieldType" class="radio-group">
+                            <bk-radio :value="type.value" v-for="(type, key) in fieldTypeList" :key="key" style="margin-right: 10px;">{{type.label}}</bk-radio>
+                        </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.描述')" property="fieldDesc">
                         <bk-input type="textarea" :rows="3" v-model="privateObj.fieldDesc" :placeholder="$t('store.请输入描述')"></bk-input>
@@ -63,8 +73,23 @@
                 privateObj: {
                     fieldName: '',
                     fieldValue: '',
+                    fieldType: 'BACKEND',
                     fieldDesc: ''
                 },
+                fieldTypeList: [
+                    {
+                        label: this.$t('store.后端'),
+                        value: 'BACKEND'
+                    },
+                    {
+                        label: this.$t('store.前端'),
+                        value: 'FRONTEND'
+                    },
+                    {
+                        label: this.$t('store.全部'),
+                        value: 'ALL'
+                    }
+                ],
                 deleteObj: {
                     show: false,
                     loading: false,
@@ -82,7 +107,7 @@
 
         computed: {
             ...mapGetters('store', {
-                'detail': 'getDetail'
+                detail: 'getDetail'
             })
         },
 
@@ -117,6 +142,7 @@
                 this.privateObj = {
                     fieldName: '',
                     fieldValue: '',
+                    fieldType: 'BACKEND',
                     fieldDesc: ''
                 }
             },
@@ -155,9 +181,15 @@
             handleEdit (row) {
                 this.privateId = row.fieldId
                 this.privateObj.fieldName = row.fieldName
+                this.privateObj.fieldType = row.fieldType || 'BACKEND'
                 this.privateObj.fieldValue = row.fieldValue
                 this.privateObj.fieldDesc = row.fieldDesc
                 this.showAdd = true
+            },
+
+            getTypeName (type = 'BACKEND') {
+                const item = this.fieldTypeList.find(item => item.value === type)
+                return (item && item.label) || this.$t('store.后端')
             },
 
             handleDelete ({ fieldId, fieldName }, index) {

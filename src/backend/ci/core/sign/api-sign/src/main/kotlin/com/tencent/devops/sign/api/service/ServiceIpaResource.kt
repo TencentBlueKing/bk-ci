@@ -29,9 +29,11 @@ package com.tencent.devops.sign.api.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SIGN_INFO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.sign.api.pojo.IpaUploadInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
+import com.tencent.devops.sign.api.pojo.SignHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -51,6 +53,28 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceIpaResource {
+
+    @ApiOperation("获取签名任务历史")
+    @GET
+    // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
+    @Path("/sign/history")
+    fun getHistorySign(
+        @ApiParam("用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("起始时间戳（毫秒）", required = false)
+        @QueryParam("startTime")
+        startTime: Long?,
+        @ApiParam("截止时间戳（毫秒）", required = false)
+        @QueryParam("endTime")
+        endTime: Long?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<SignHistory>>
 
     @ApiOperation("IPA包签名")
     @POST

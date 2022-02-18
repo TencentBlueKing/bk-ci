@@ -41,7 +41,7 @@ class ServiceProjectOrganizationResourceImpl @Autowired constructor(
     private val projectOrganizationService: ProjectOrganizationService
 ) : ServiceProjectOrganizationResource {
 
-    override fun getDeptInfo(userId: String, id: Int): Result<DeptInfo> {
+    override fun getDeptInfo(userId: String?, id: Int): Result<DeptInfo> {
         return Result(projectOrganizationService.getDeptInfo(userId, id))
     }
 

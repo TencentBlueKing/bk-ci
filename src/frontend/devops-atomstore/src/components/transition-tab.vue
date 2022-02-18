@@ -96,15 +96,18 @@
                 }
             }
         }
-        /deep/ .bk-tab-header {
+        ::v-deep .bk-tab-header {
             background-color: #fff;
-            height: 6.4vh;
-            line-height: 6.4vh;
-            background-image: linear-gradient(transparent 6.3vh,#dcdee5 0);
+            height: 6.4vh !important;
+            line-height: 6.4vh !important;
+            background-image: linear-gradient(transparent 6.3vh,#dcdee5 0) !important;
+            .bk-tab-label-wrapper {
+                background-color: #fff;
+            }
             .bk-tab-label-wrapper .bk-tab-label-list {
-                height: 6.4vh;
+                height: 6.4vh !important;
                 .bk-tab-label-item {
-                    line-height: 6.4vh;
+                    line-height: 6.4vh !important;
                     color: #666;
                     &::after {
                         height: 3px;
@@ -118,11 +121,12 @@
                 }
             }
             .bk-tab-header-setting {
-                height: 6.4vh;
-                line-height: 6.4vh;
+                background-color: #fff;
+                height: 6.4vh !important;
+                line-height: 6.4vh !important;
             }
         }
-        /deep/ .bk-tab-section {
+        ::v-deep .bk-tab-section {
             padding: 0;
         }
     }

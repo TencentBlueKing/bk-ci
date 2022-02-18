@@ -49,16 +49,16 @@ import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
-import com.tencent.devops.plugin.service.ScmService
+import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REPO_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
@@ -67,7 +67,8 @@ import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -86,7 +87,7 @@ class CodeWebhookService @Autowired constructor(
     private val pluginGithubCheckDao: PluginGithubCheckDao,
     private val redisOperation: RedisOperation,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val scmService: ScmService,
+    private val scmCheckService: ScmCheckService,
     private val gitWebhookUnlockService: GitWebhookUnlockService
 ) {
 
@@ -104,7 +105,7 @@ class CodeWebhookService @Autowired constructor(
                     val webhookType = CodeType.valueOf(webhookType)
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
                     when {
-                        webhookEventType == CodeEventType.MERGE_REQUEST &&
+                        enableCheck && webhookEventType == CodeEventType.MERGE_REQUEST &&
                             (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) -> {
                             logger.info(
                                 "$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
@@ -168,7 +169,7 @@ class CodeWebhookService @Autowired constructor(
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
 
                     when {
-                        (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
+                        enableCheck && (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
                             webhookEventType == CodeEventType.MERGE_REQUEST -> {
                             val state = if (buildStatus == BuildStatus.SUCCEED) {
                                 GIT_COMMIT_CHECK_STATE_SUCCESS
@@ -288,6 +289,7 @@ class CodeWebhookService @Autowired constructor(
 
             val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
             val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
+            val enableCheck = variables[BK_REPO_GIT_WEBHOOK_ENABLE_CHECK]?.toBoolean() ?: true
 
             action(
                 GitCommitCheckInfo(
@@ -300,8 +302,9 @@ class CodeWebhookService @Autowired constructor(
                     triggerType = triggerType,
                     mergeRequestId = mrId,
                     userId = userId,
-                    webhookType = webhookTypeStr!!,
-                    webhookEventType = webhookEventTypeStr!!
+                    webhookType = webhookTypeStr,
+                    webhookEventType = webhookEventTypeStr,
+                    enableCheck = enableCheck
                 )
             )
         } catch (ignore: Throwable) {
@@ -401,7 +404,7 @@ class CodeWebhookService @Autowired constructor(
                     )
 
                     if (record == null) {
-                        scmService.addGitCommitCheck(
+                        scmCheckService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
                             context = context,
@@ -420,7 +423,7 @@ class CodeWebhookService @Autowired constructor(
                         )
                     } else {
                         if (buildNum.toInt() >= record.buildNumber) {
-                            scmService.addGitCommitCheck(
+                            scmCheckService.addGitCommitCheck(
                                 event = event,
                                 targetUrl = targetUrl,
                                 context = record.context ?: pipelineName,
@@ -551,7 +554,7 @@ class CodeWebhookService @Autowired constructor(
 
                 val record = pluginGithubCheckDao.getOrNull(dslContext, pipelineId, repositoryConfig, commitId)
                 if (record == null) {
-                    val result = scmService.addGithubCheckRuns(
+                    val result = scmCheckService.addGithubCheckRuns(
                         projectId = projectId,
                         repositoryConfig = repositoryConfig,
                         name = name,
@@ -578,7 +581,7 @@ class CodeWebhookService @Autowired constructor(
                     if (buildNum.toInt() >= record.buildNumber) {
                         // 如果重试或者reopen，需要将状态重新置为in_progress
                         val checkRunId = if (conclusion == null) {
-                            val result = scmService.addGithubCheckRuns(
+                            val result = scmCheckService.addGithubCheckRuns(
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,
                                 name = record.checkRunName ?: "$pipelineName #$buildNum",
@@ -596,7 +599,7 @@ class CodeWebhookService @Autowired constructor(
                             )
                             result.id
                         } else {
-                            scmService.updateGithubCheckRuns(
+                            scmCheckService.updateGithubCheckRuns(
                                 checkRunId = record.checkRunId,
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,

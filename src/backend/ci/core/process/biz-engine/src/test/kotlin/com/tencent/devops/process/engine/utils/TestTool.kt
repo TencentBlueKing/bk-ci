@@ -45,12 +45,12 @@ object TestTool {
     const val buildId = "b-12345678901234567890123456789012"
     const val pipelineId = "p-12345678901234567890123456789012"
     const val stageId = "stage-1"
-    const val firstContainerId = "1"
+    const val containerHashId = "c-12345678901234567890123456789012"
     private const val firstContainerIdInt = 1
 
     fun genVmBuildContainer(
         jobControlOption: JobControlOption? = null,
-        id: Int? = firstContainerIdInt,
+        vmSeqId: Int = firstContainerIdInt,
         status: BuildStatus = BuildStatus.RUNNING
     ): PipelineBuildContainer {
         val vmContainerType = "vmBuild"
@@ -61,8 +61,9 @@ object TestTool {
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            containerId = id?.toString() ?: firstContainerId,
-            seq = id ?: firstContainerIdInt,
+            containerId = vmSeqId.toString(),
+            seq = vmSeqId,
+            containerHashId = containerHashId,
             containerType = vmContainerType,
             status = status,
             startTime = startTime,
@@ -73,24 +74,41 @@ object TestTool {
                 ),
                 mutexGroup = null
             ),
-            cost = containerCost
+            cost = containerCost,
+            matrixGroupId = null,
+            matrixGroupFlag = null
         )
     }
 
     fun genTask(
         taskId: String,
         vmContainer: PipelineBuildContainer,
-        elementAdditionalOptions: ElementAdditionalOptions? = null
+        elementAdditionalOptions: ElementAdditionalOptions? = null,
+        taskAtom: String = ""
     ): PipelineBuildTask {
         with(vmContainer) {
             return PipelineBuildTask(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                containerType = vmContainer.containerType, containerId = containerId,
-                startTime = startTime?.plusSeconds(vmContainer.cost.toLong()), status = status, stageId = stageId,
-                taskId = taskId, taskAtom = "", taskName = "Demo", taskParams = mutableMapOf(), taskSeq = 1,
-                taskType = vmContainer.containerType, starter = "user1",
-                containerHashId = containerId, approver = null, subBuildId = null,
-                additionalOptions = elementAdditionalOptions ?: elementAdditionalOptions()
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                containerType = vmContainer.containerType,
+                containerId = containerId,
+                startTime = startTime?.plusSeconds(vmContainer.cost.toLong()),
+                status = status,
+                stageId = stageId,
+                taskId = taskId,
+                taskAtom = taskAtom,
+                taskName = "Demo",
+                taskParams = mutableMapOf(),
+                taskSeq = 1,
+                taskType = vmContainer.containerType,
+                starter = "user1",
+                containerHashId = containerId,
+                approver = null,
+                subProjectId = null,
+                subBuildId = null,
+                additionalOptions = elementAdditionalOptions ?: elementAdditionalOptions(),
+                stepId = null
             )
         }
     }

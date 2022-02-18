@@ -18,7 +18,7 @@
                             {{ output.description }}
                         </div>
                     </bk-popover>
-                    <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
+                    <copy-icon :value="bkVarWrapper(namespace ? `${namespace}_${key}` : key)"></copy-icon>
                 </p>
             </div>
         </div>
@@ -29,7 +29,6 @@
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
     import copyIcon from '@/components/copyIcon'
-
     export default {
         name: 'atom-output',
         components: {
@@ -38,7 +37,7 @@
         mixins: [atomMixin, validMixins],
         computed: {
             outputNamespaceDesc () {
-                return `用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改`
+                return '用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改'
             },
             outputProps () {
                 try {

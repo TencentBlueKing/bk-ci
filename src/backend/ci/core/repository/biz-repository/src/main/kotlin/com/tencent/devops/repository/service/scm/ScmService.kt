@@ -34,6 +34,7 @@ import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.GitCommit
@@ -52,7 +53,8 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class ScmService @Autowired constructor(
     private val svnConfig: SVNConfig,
-    private val gitConfig: GitConfig
+    private val gitConfig: GitConfig,
+    private val p4Config: P4Config
 ) : IScmService {
 
     override fun getLatestRevision(
@@ -94,8 +96,7 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?,
-        full: Boolean
+        search: String?
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
@@ -111,7 +112,7 @@ class ScmService @Autowired constructor(
                 region = region,
                 userName = userName
             )
-                .getBranches(search = search, full = full)
+                .getBranches(search = search)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -155,8 +156,7 @@ class ScmService @Autowired constructor(
         type: ScmType,
         token: String,
         userName: String,
-        search: String?,
-        full: Boolean
+        search: String?
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
@@ -171,7 +171,7 @@ class ScmService @Autowired constructor(
                 token = token,
                 region = null,
                 userName = userName
-            ).getTags(search = search, full = full)
+            ).getTags(search = search)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
@@ -261,7 +261,7 @@ class ScmService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = if (!hookUrl.isNullOrBlank()) {
-                hookUrl!!
+                hookUrl
             } else {
                 when (type) {
                     ScmType.CODE_GIT -> {
@@ -276,9 +276,11 @@ class ScmService @Autowired constructor(
                     ScmType.CODE_TGIT -> {
                         gitConfig.tGitHookUrl
                     }
+                    ScmType.CODE_P4 -> {
+                        p4Config.p4HookUrl
+                    }
                     else -> {
-                        logger.warn("Unknown repository type ($type) when add webhook")
-                        throw RuntimeException("Unknown repository type ($type) when add webhook")
+                        throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                     }
                 }
             }
@@ -294,7 +296,7 @@ class ScmService @Autowired constructor(
                 userName = userName,
                 event = event
             )
-                .addWebHook(realHookUrl)
+                .addWebHook(hookUrl = realHookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
         }
@@ -345,8 +347,7 @@ class ScmService @Autowired constructor(
         userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
-            logger.warn("repository type ($type) can not lock")
-            throw RuntimeException("repository type ($type) can not lock")
+            throw IllegalArgumentException("repository type ($type) can not lock")
         }
         val repName = SvnUtils.getSvnRepName(url)
         val subPath = SvnUtils.getSvnSubPath(url)
@@ -374,8 +375,7 @@ class ScmService @Autowired constructor(
         userName: String
     ) {
         if (type != ScmType.CODE_SVN) {
-            logger.warn("repository type ($type) can not unlock")
-            throw RuntimeException("repository type ($type) can not unlock")
+            throw IllegalArgumentException("repository type ($type) can not unlock")
         }
         val repName = SvnUtils.getSvnRepName(url)
         val subPath = SvnUtils.getSvnSubPath(url)

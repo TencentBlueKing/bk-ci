@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.store.service.websocket
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Service
 @Service
 class StoreWebsocketService @Autowired constructor(
     val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper,
     val dslContext: DSLContext,
     val atomBaseDao: AtomDao,
     val atomMemberDao: StoreMemberDao,
@@ -91,7 +89,6 @@ class StoreWebsocketService @Autowired constructor(
             redisOperation = redisOperation,
             page = page,
             pushType = WebSocketType.AMD,
-            objectMapper = objectMapper,
             notifyPost = NotifyPost(
                 module = "store",
                 level = NotityLevel.LOW_LEVEL.getLevel(),

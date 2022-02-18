@@ -42,7 +42,7 @@ import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-@Suppress("ALL")
+@Suppress("ThrowsCount", "UNUSED")
 class UserPipelineFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : UserPipelineFileResource {
@@ -64,8 +64,7 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         pageSize: Int?,
         searchProps: SearchProps
     ): Result<Page<FileInfo>> {
-        var page = archiveFileService.searchFileList(userId, projectCode, page, pageSize, searchProps)
-        return Result(page)
+        return Result(archiveFileService.searchFileList(userId, projectCode, page, pageSize, searchProps))
     }
 
     override fun downloadUrl(
@@ -75,7 +74,11 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         path: String
     ): Result<Url> {
         val urls = archiveFileService.getFileDownloadUrls(
-            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, artifactoryType = artifactoryType
+            userId = userId,
+            fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD,
+            filePath = path,
+            artifactoryType = artifactoryType,
+            fullUrl = false
         )
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }

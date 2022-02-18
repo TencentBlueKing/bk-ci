@@ -47,7 +47,8 @@ class ProjectPipelineCallbackDao {
         events: String,
         userId: String,
         callbackUrl: String,
-        secretToken: String?
+        secretToken: String?,
+        id: Long? = null
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             val now = LocalDateTime.now()
@@ -60,7 +61,8 @@ class ProjectPipelineCallbackDao {
                 CREATOR,
                 UPDATOR,
                 CALLBACK_URL,
-                SECRET_TOKEN
+                SECRET_TOKEN,
+                ID
             ).values(
                 projectId,
                 events,
@@ -69,7 +71,8 @@ class ProjectPipelineCallbackDao {
                 userId,
                 userId,
                 callbackUrl,
-                secretToken
+                secretToken,
+                id
             ).onDuplicateKeyUpdate()
                 .set(UPDATED_TIME, now)
                 .set(UPDATOR, userId)
@@ -81,12 +84,14 @@ class ProjectPipelineCallbackDao {
     fun listProjectCallback(
         dslContext: DSLContext,
         projectId: String,
-        events: String
+        events: String,
+        enable: Boolean = true
     ): Result<TProjectPipelineCallbackRecord> {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(EVENTS.eq(events))
+                .and(ENABLE.eq(enable))
                 .fetch()
         }
     }
@@ -120,21 +125,23 @@ class ProjectPipelineCallbackDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ): TProjectPipelineCallbackRecord? {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }
 
     fun deleteById(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
+            dslContext.deleteFrom(this).where(ID.eq(id).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 

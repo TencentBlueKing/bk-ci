@@ -46,6 +46,6 @@ class PipelineAlreadyExistExceptionMapper : ExceptionMapper<PipelineAlreadyExist
         val status = Response.Status.CONFLICT
         val message = "流水线名称已被他人使用"
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }

@@ -44,7 +44,6 @@ import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 
 class BluekingV3AuthProjectApi constructor(
-    private val bkAuthPermissionApi: BluekingV3AuthPermissionApi,
     private val policyService: PolicyService,
     private val authHelper: AuthHelper,
     private val iamConfiguration: IamConfiguration,
@@ -62,19 +61,24 @@ class BluekingV3AuthProjectApi constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        val actionType = if (group != null && group == BkAuthGroup.MANAGER) {
-            ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.MANAGE)
-        } else {
-            ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.VIEW)
+        if (group != null && group == BkAuthGroup.MANAGER) {
+            return checkProjectManager(user, serviceCode, projectCode)
         }
-        val instance = InstanceDTO()
-        instance.id = projectCode
-        instance.system = iamConfiguration.systemId
-        instance.type = AuthResourceType.PROJECT.value
-        logger.info("v3 isProjectUser actionType[$actionType] instance[$instance]")
-        val isAllow = authHelper.isAllowed(user, actionType, instance)
-        logger.info("isProjectUser isAllow:$isAllow")
-        return isAllow
+        return checkProjectUser(user, serviceCode, projectCode)
+    }
+
+    override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+        val actionType = ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.VIEW)
+        val checkAction = checkAction(projectCode, actionType, user)
+        logger.info("isProjectUser checkAction:$checkAction")
+        return checkAction
+    }
+
+    override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
+        val actionType = ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.MANAGE)
+        val checkAction = checkAction(projectCode, actionType, userId)
+        logger.info("isProjectManager checkAction:$checkAction")
+        return checkAction
     }
 
     override fun getProjectGroupAndUserList(
@@ -159,7 +163,16 @@ class BluekingV3AuthProjectApi constructor(
         TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
     }
 
+    private fun checkAction(projectCode: String, actionType: String, userId: String): Boolean {
+        val instance = InstanceDTO()
+        instance.id = projectCode
+        instance.system = iamConfiguration.systemId
+        instance.type = AuthResourceType.PROJECT.value
+        logger.info("v3 isProjectUser actionType[$actionType] instance[$instance]")
+        return authHelper.isAllowed(userId, actionType, instance)
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(BluekingV3AuthProjectApi::class.java)
     }
 }

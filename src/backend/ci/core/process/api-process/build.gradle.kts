@@ -35,6 +35,8 @@ dependencies {
     api(project(":core:store:api-store-image"))
     api(project(":core:artifactory:api-artifactory"))
     api(project(":core:ticket:api-ticket"))
+    api(project(":core:quality:api-quality"))
+    api(project(":core:common:common-webhook:api-common-webhook"))
 }
 
 plugins {

@@ -13,16 +13,11 @@
         <div id="app"></div>
         <script>
             var PAAS_SERVICE_URL = 'http://__PAAS_SERVICE_URL__'
-            var AJAX_URL_PREFIX = 'http://__CODECC_GATEWAY_HOST__:__CODECC_GATEWAY_PORT__/ms'
-            var CODECC_SITE_URL = 'http://__CODECC_GATEWAY_HOST__:__CODECC_GATEWAY_PORT__'
-            var DEVOPS_SITE_URL = 'http://__DEVOPS_GATEWAY_HOST__:__DEVOPS_GATEWAY_PORT__'
-            var DEVOPS_API_URL = 'http://__DEVOPS_GATEWAY_HOST__:__DEVOPS_GATEWAY_PORT__/ms'
+            var AJAX_URL_PREFIX = '__BK_CODECC_PUBLIC_URL__/ms'
+            var CODECC_SITE_URL = '__BK_CODECC_PUBLIC_URL__'
+            var DEVOPS_SITE_URL = '__BK_CI_PUBLIC_URL__'
+            var DEVOPS_API_URL = '__BK_CI_PUBLIC_URL__/ms'
             var JUMP_SITE_URL = window.self === window.top ? CODECC_SITE_URL : DEVOPS_SITE_URL + '/console'
-
-            // 链接
-            var IWIKI_CODECC_HOME = 'https://__IWIKI_CODECC_HOME__'
-            var IWIKI_CODECC_TOOL = 'https://__IWIKI_CODECC_TOOL__'
-            var ROBOT_DESC = 'http://__ROBOT_DESC__'
         </script>
         <script>
             (function(){

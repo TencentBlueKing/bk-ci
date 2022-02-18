@@ -1,0 +1,40 @@
+{
+  "object_kind": "push",
+  "operation_kind": "update",
+  "action_kind": "modify file",
+  "before": "26fe14c395aa79ee82b37b37600503c1e6fc91b1",
+  "after": "9c9f8cc062060fdad67137e5e102689be765b4d4",
+  "ref": "refs/heads/mr_test",
+  "checkout_sha": "9c9f8cc062060fdad67137e5e102689be765b4d4",
+  "user_name": "mingshewhe",
+  "user_id": 132102,
+  "user_email": "wx_a56dc86ef0f74feda385d4818e7c5cda@git.code.tencent.com",
+  "project_id": 130762,
+  "repository": {
+    "name": "webhook_test3",
+    "description": "",
+    "homepage": "https://git.code.tencent.com/mingshewhe/webhook_test3",
+    "git_http_url": "https://git.code.tencent.com/mingshewhe/webhook_test3.git",
+    "git_ssh_url": "git@git.code.tencent.com:mingshewhe/webhook_test3.git",
+    "url": "git@git.code.tencent.com:mingshewhe/webhook_test3.git",
+    "visibility_level": 0
+  },
+  "commits": [
+    {
+      "id": "9c9f8cc062060fdad67137e5e102689be765b4d4",
+      "message": "mr 19",
+      "timestamp": "2021-06-09T07:56:28+0000",
+      "url": "https://git.code.tencent.com/mingshewhe/webhook_test3/commit/9c9f8cc062060fdad67137e5e102689be765b4d4",
+      "author": {
+        "name": "mingshewhe",
+        "email": "wx_a56dc86ef0f74feda385d4818e7c5cda@git.code.tencent.com"
+      },
+      "added": [],
+      "modified": [
+        "mr.txt"
+      ],
+      "removed": []
+    }
+  ],
+  "total_commits_count": 1
+}

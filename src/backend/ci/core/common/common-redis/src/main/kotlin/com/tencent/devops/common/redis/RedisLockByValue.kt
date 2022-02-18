@@ -200,7 +200,7 @@ class RedisLockByValue(
                         }
                     }
                 queryResult == 1L
-            })
+            }) ?: false
         }
         return result
     }

@@ -28,9 +28,11 @@
 package com.tencent.devops.process.init
 
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelineInfoExtService
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.service.PipelineBuildExtServiceImpl
 import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.process.service.PipelineInfoExtServiceImpl
 import com.tencent.devops.process.service.PipelinePauseExtServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -53,4 +55,8 @@ class PipelineServiceConfigure {
     @Bean
     @ConditionalOnMissingBean(PipelinePauseExtService::class)
     fun pipelinePauseExtService() = PipelinePauseExtServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(PipelineInfoExtService::class)
+    fun pipelineInfoExtService() = PipelineInfoExtServiceImpl()
 }

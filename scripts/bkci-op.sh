@@ -11,8 +11,8 @@ CTRL_DIR=${CTRL_DIR:-/data/install}
 
 dispatch_api_prefix="http://127.0.0.1:21938/api/op/dispatchDocker"
 
-jq_filter_get=".id,.dockerIp,.dockerHostPort,.enable,.capacity,.createTime"
-jq_filter_get_v=".id,.dockerIp,.dockerHostPort,.enable,.grayEnv,.specialOn,.capacity,.usedNum,.averageCpuLoad,.averageMemLoad,.averageDiskLoad,.averageDiskIOLoad,.createTime"
+jq_filter_get=".id,.dockerIp,.dockerHostPort,.enable,.capacity,.createTime,.clusterType"
+jq_filter_get_v=".id,.dockerIp,.dockerHostPort,.enable,.grayEnv,.specialOn,.capacity,.usedNum,.averageCpuLoad,.averageMemLoad,.averageDiskLoad,.averageDiskIOLoad,.createTime,.clusterType"
 
 header_uid="X-DEVOPS-UID: admin"
 header_json="Content-Type: application/json"
@@ -50,7 +50,7 @@ cmd_del (){
   local e=0
   local _data enable id dockerHostPort capacity
   for kv in "$@"; do
-    [[ "$kv" =~ $kvpatt_cmd_set ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_add)."; let e++; continue; }
+    [[ "$kv" =~ $kvpatt_cmd_del ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_del)."; let e++; continue; }
     local $kv && let s++
   done
   # id必选, 用于校验.
@@ -67,15 +67,15 @@ cmd_del (){
   curl_helper "DELETE" "$dispatch_api_prefix/delete/$ip" | pretty_json
 }
 
-usage_cmd_add="$0 add IP enable=true|false [dockerHostPort=21923] [capacity=100]"
-kvpatt_cmd_add="^(dockerHostPort|capacity|enable)="
-json_tpl_cmd_add='[{"dockerIp":"%s","dockerHostPort":%d,"capacity":%d,"enable":%s,"createTime":"%s"}]'
+usage_cmd_add="$0 add IP enable=true|false [dockerHostPort=21923] [capacity=100] [clusterType=COMMON|AGENT_LESS]"
+kvpatt_cmd_add="^(dockerHostPort|capacity|enable|clusterType)="
+json_tpl_cmd_add='[{"dockerIp":"%s","dockerHostPort":%d,"capacity":%d,"enable":%s,"createTime":"%s", "clusterType": "%s"}]'
 cmd_add (){
   local ip=$1
   shift
   [ -z "$ip" -o $# -eq 0 ] && die "Usage: $usage_cmd_add"
   local e=0
-  local _data enable dockerHostPort capacity
+  local _data enable dockerHostPort capacity clusterType
   for kv in "$@"; do
     [[ "$kv" =~ $kvpatt_cmd_add ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_add)."; let e++; continue; }
     local $kv
@@ -83,7 +83,7 @@ cmd_add (){
   [ "$enable" = "true" -o "$enable" = "false" ] || die "enable must set to true or false."
   [ $e -gt 0 ] && die "arg parse error. quit."
   printf -v _data "$json_tpl_cmd_add" "$ip" "${dockerHostPort:-21923}" \
-    "${capacity:-100}" "$enable" "$today"
+    "${capacity:-100}" "$enable" "$today" "${clusterType:-COMMON}"
   curl_helper POST "$dispatch_api_prefix/add" -d "$_data" | pretty_json
 }
 
@@ -97,7 +97,7 @@ cmd_set (){
   local _data enable id dockerHostPort capacity
   local e=0 s=0
   for kv in "$@"; do
-    [[ "$kv" =~ $kvpatt_cmd_set ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_add)."; let e++; continue; }
+    [[ "$kv" =~ $kvpatt_cmd_set ]] || { tip "unknow kv: kv($kv) does NOT match patt($kvpatt_cmd_set)."; let e++; continue; }
     local $kv && let s++
   done
   # id必选, 用于校验.

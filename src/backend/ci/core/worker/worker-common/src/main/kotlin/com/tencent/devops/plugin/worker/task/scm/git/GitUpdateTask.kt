@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -46,18 +45,18 @@ import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_ID
 import com.tencent.devops.process.utils.PIPELINE_MATERIAL_NEW_COMMIT_TIMES
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.code.git.api.GitCredentialSetter
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.github.GithubUtils
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.CommitSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
-import org.apache.commons.lang.exception.ExceptionUtils
+import org.apache.commons.lang3.exception.ExceptionUtils
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.ListBranchCommand
@@ -204,7 +203,7 @@ open class GitUpdateTask constructor(
             if (enableVirtualMergeBranch && isSameProject(gitType, url, targetUrl) && startType == StartType.WEB_HOOK &&
                 (hookType == CodeEventType.PULL_REQUEST || hookType == CodeEventType.MERGE_REQUEST)
             ) {
-                LoggerService.addYellowLine("The mode enable virtual merge branch")
+                LoggerService.addWarnLine("The mode enable virtual merge branch")
                 checkoutVirtualBranch(gitType, git, sourceUrl!!, sourceBranch!!, targetUrl!!, targetBranch!!, variables)
             } else {
                 LoggerService.addNormalLine("The mode type($modeType) and mode value($modeValue) - ${revision ?: ""}")
@@ -221,13 +220,8 @@ open class GitUpdateTask constructor(
             return saveCommit(git, repo, pipelineId, buildId, repositoryConfig, gitType)
         } catch (t: Throwable) {
             logger.warn("Fail to perform git code($url)", t)
-            LoggerService.addNormalLine(
-                Ansi().fgRed().a(
-                    "Fail to pull git($url) code because of (${ExceptionUtils.getStackTrace(
-                        t
-                    )})"
-                ).reset().toString()
-            )
+            LoggerService.addErrorLine("Fail to pull git($url) code because of " +
+                "(${ExceptionUtils.getStackTrace(t)})")
             throw t
         }
     }
@@ -511,9 +505,9 @@ open class GitUpdateTask constructor(
         remoteRemoveCommand.call()
 
         if (pullResult.mergeResult.mergeStatus == MergeResult.MergeStatus.CONFLICTING) {
-            LoggerService.addRedLine("Merge branch $branchName conflict")
+            LoggerService.addErrorLine("Merge branch $branchName conflict")
             pullResult.mergeResult.conflicts.forEach { file ->
-                LoggerService.addRedLine("Conflict file $file")
+                LoggerService.addErrorLine("Conflict file $file")
             }
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -663,7 +657,7 @@ open class GitUpdateTask constructor(
                             try {
                                 val u = URL(url)
                                 val convert = "git@${u.host}:${u.path.removePrefix("/")}"
-                                LoggerService.addYellowLine("Convert the git submodule url from ($url) to ($convert)")
+                                LoggerService.addWarnLine("Convert the git submodule url from ($url) to ($convert)")
                                 result.add(
                                     Submodule(
                                         path,
@@ -672,7 +666,7 @@ open class GitUpdateTask constructor(
                                     )
                                 )
                             } catch (e: Exception) {
-                                LoggerService.addRedLine("外链($url)不是一个正确的URL地址")
+                                LoggerService.addErrorLine("外链($url)不是一个正确的URL地址")
                                 throw e
                             }
                         } else {
@@ -689,7 +683,7 @@ open class GitUpdateTask constructor(
                             try {
                                 val (domain, repoName) = GitUtils.getDomainAndRepoName(url)
                                 val convert = "http://$domain/$repoName.git"
-                                LoggerService.addYellowLine("Convert the git submodule url from ($url) to ($convert)")
+                                LoggerService.addWarnLine("Convert the git submodule url from ($url) to ($convert)")
                                 result.add(
                                     Submodule(
                                         path,
@@ -698,7 +692,7 @@ open class GitUpdateTask constructor(
                                     )
                                 )
                             } catch (e: Exception) {
-                                LoggerService.addRedLine("外链($url)不是一个正确的URL地址")
+                                LoggerService.addErrorLine("外链($url)不是一个正确的URL地址")
                                 throw e
                             }
                         } else {
@@ -762,7 +756,7 @@ open class GitUpdateTask constructor(
                 clone.setProgressMonitor(TextProgressMonitor(writer))
                 clone.call()
             } catch (e: Exception) {
-                LoggerService.addRedLine(
+                LoggerService.addErrorLine(
                     "Fail to checkout the submodule(${walk.modulesPath}) " +
                         "with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
                 throw e
@@ -785,7 +779,7 @@ open class GitUpdateTask constructor(
 
         val remoteUrl = credentialSetter.getCredentialUrl(url)
         if (localUrl != remoteUrl && localDecodedUrl != remoteUrl) {
-            LoggerService.addYellowLine("Git repo url 从($localUrl)变为($url), 全量拉取代码仓库")
+            LoggerService.addWarnLine("Git repo url 从($localUrl)变为($url), 全量拉取代码仓库")
             cleanupWorkspace()
         }
     }

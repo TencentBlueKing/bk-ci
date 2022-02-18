@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
-@Suppress("ALL")
+@Suppress("LongParameterList")
 class UserIpaResourceImpl @Autowired constructor(
     private val signService: SignService,
     private val syncSignService: AsyncSignService,

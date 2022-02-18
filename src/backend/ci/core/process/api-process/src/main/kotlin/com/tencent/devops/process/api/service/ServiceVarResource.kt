@@ -43,15 +43,34 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceVarResource {
+
     @ApiOperation("获取指定构建或指定流水线下的构建变量")
     @Path("/get_build_variable")
     @GET
     fun getBuildVar(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
         @ApiParam(value = "变量名称", required = false)
         @QueryParam("varName")
         varName: String?
+    ): Result<Map<String, String>>
+
+    @ApiOperation("获取指定构建或指定构建下的上下文变量")
+    @Path("/get_build_context")
+    @GET
+    fun getContextVar(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam(value = "变量名称", required = false)
+        @QueryParam("contextName")
+        contextName: String?
     ): Result<Map<String, String>>
 }

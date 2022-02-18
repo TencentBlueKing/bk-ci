@@ -42,19 +42,21 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
-import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
-import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
+import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.notify.pojo.NotifyContext
+import com.tencent.devops.notify.pojo.NotifyMessageCommonTemplate
+import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
+import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.notify.pojo.NotifyMessageContextRequest
 import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
-import com.tencent.devops.notify.pojo.NotifyContext
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -66,10 +68,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val commonNotifyMessageTemplateDao: CommonNotifyMessageTemplateDao,
     private val emailService: EmailService,
     private val rtxService: RtxService,
-    private val wechatService: WechatService
+    private val wechatService: WechatService,
+    private val weworkService: WeworkService
 ) : NotifyMessageTemplateService {
 
     private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
+
+    @Value("\${wework.domain}")
+    private val userUseDomain: Boolean? = true
 
     /**
      * 根据查找到的消息通知模板主体信息来获取具体信息
@@ -301,14 +307,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
      * 更新消息通知模板信息
      * @param userId 用户ID
      * @param templateId 模板ID
-     * @param addNotifyMessageTemplateRequest 消息模板更新内容
+     * @param notifyMessageTemplateRequest 消息模板更新内容
      */
     override fun updateNotifyMessageTemplate(
         userId: String,
         templateId: String,
-        addNotifyMessageTemplateRequest: NotifyTemplateMessageRequest
+        notifyMessageTemplateRequest: NotifyTemplateMessageRequest
     ): Result<Boolean> {
-        if (addNotifyMessageTemplateRequest.msg.size > 3) {
+        if (notifyMessageTemplateRequest.msg.size > 3) {
             return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("TplNum"),
@@ -320,7 +326,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         var hasWechat = false
         val notifyTypeScopeSet = mutableSetOf<String>()
         // 判断提交的数据中是否存在同样类型的
-        addNotifyMessageTemplateRequest.msg.forEach {
+        notifyMessageTemplateRequest.msg.forEach {
             if (it.notifyTypeScope.contains(NotifyType.EMAIL.name) && !hasEmail) {
                 hasEmail = true
                 notifyTypeScopeSet.add(NotifyType.EMAIL.name)
@@ -361,12 +367,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             notifyMessageTemplateDao.updateCommonNotifyMessageTemplate(
                 dslContext = context,
                 templateId = templateId,
-                notifyMessageTemplateRequest = addNotifyMessageTemplateRequest,
+                notifyMessageTemplateRequest = notifyMessageTemplateRequest,
                 notifyTypeScopeSet = notifyTypeScopeSet
             )
             val uid = UUIDUtil.generate()
             // 根据模板类型向消息模板信息表中添加信息
-            addNotifyMessageTemplateRequest.msg.forEach {
+            notifyMessageTemplateRequest.msg.forEach {
                 if (it.notifyTypeScope.contains(NotifyType.WECHAT.name)) {
                     val num = notifyMessageTemplateDao.countWechatMessageTemplate(dslContext, templateId)
                     if (num > 0) {
@@ -521,23 +527,23 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 企业微信消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.RTX.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.RTX.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.EMAIL}|template=${request.templateCode}")
+                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.RTX}|template=${request.templateCode}")
             } else {
-                val rtxTplRecord =
+                logger.info("send wework msg: ${commonNotifyMessageTemplateRecord.id}")
+                val weworkTplRecord =
                     notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                         dslContext = dslContext,
                         commonTemplateId = commonNotifyMessageTemplateRecord.id
                     )!!
-                // 替换标题里的动态参数
-                val title = replaceContentParams(request.titleParams, rtxTplRecord.title)
+                val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, rtxTplRecord.body)
-                sendRtxNotifyMessage(
+                val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                logger.info("send wework msg: $body ${weworkTplRecord.sender}")
+                sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
-                    title = title,
-                    body = body,
-                    sender = rtxTplRecord.sender
+                    body = "$title" + "\n\n" + "$body",
+                    sender = weworkTplRecord.sender
                 )
             }
         }
@@ -545,7 +551,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 微信消息
         if (sendAllNotify || request.notifyType?.contains(NotifyType.WECHAT.name) == true) {
             if (!notifyTypeScope.contains(NotifyType.WECHAT.name)) {
-                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.EMAIL}|template=${request.templateCode}")
+                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.WECHAT}|template=${request.templateCode}")
             } else {
                 val wechatTplRecord = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(
                     dslContext = dslContext,
@@ -558,6 +564,27 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     sendNotifyMessageTemplateRequest = request,
                     body = body,
                     sender = wechatTplRecord.sender
+                )
+            }
+        }
+
+        // 新企业微信实现
+        if (sendAllNotify || request.notifyType?.contains(NotifyType.WEWORK.name) == true) {
+            if (!notifyTypeScope.contains(NotifyType.WEWORK.name)) {
+                logger.error("NotifyTemplate|NOT_FOUND|type=${NotifyType.WEWORK}|template=${request.templateCode}")
+            } else {
+                val weworkTplRecord = notifyMessageTemplateDao.getWeworkNotifyMessageTemplate(
+                    dslContext = dslContext,
+                    commonTemplateId = commonNotifyMessageTemplateRecord.id
+                )!!
+                // 替换内容里的动态参数
+                val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
+                val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                sendWeworkNotifyMessage(
+                    commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
+                    sendNotifyMessageTemplateRequest = request,
+                    body = "$title" + "\n\n" + "$body",
+                    sender = weworkTplRecord.sender
                 )
             }
         }
@@ -621,6 +648,12 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val rtxNotifyMessage = RtxNotifyMessage()
         rtxNotifyMessage.sender = sender
         rtxNotifyMessage.addAllReceivers(sendNotifyMessageTemplateRequest.receivers)
+        // 企业微信通知触发人
+        val triggerUserId = sendNotifyMessageTemplateRequest.bodyParams?.get("cc")
+        if (null != triggerUserId && "" != triggerUserId &&
+            !sendNotifyMessageTemplateRequest.receivers.contains(triggerUserId)) {
+            rtxNotifyMessage.addReceiver(triggerUserId)
+        }
         rtxNotifyMessage.title = title
         rtxNotifyMessage.body = body
         rtxNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
@@ -678,6 +711,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         emailService.sendMqMsg(emailNotifyMessage)
     }
 
+    private fun sendWeworkNotifyMessage(
+        commonNotifyMessageTemplate: TCommonNotifyMessageTemplateRecord,
+        sendNotifyMessageTemplateRequest: SendNotifyMessageTemplateRequest,
+        body: String,
+        sender: String
+    ) {
+        val wechatNotifyMessage = WeworkNotifyMessageWithOperation()
+        wechatNotifyMessage.sender = sender
+        wechatNotifyMessage.addAllReceivers(findWeworkUser(sendNotifyMessageTemplateRequest.receivers))
+        wechatNotifyMessage.body = body
+        wechatNotifyMessage.priority = EnumNotifyPriority.parse(commonNotifyMessageTemplate.priority.toString())
+        wechatNotifyMessage.source = EnumNotifySource.parse(commonNotifyMessageTemplate.source.toInt())
+            ?: EnumNotifySource.BUSINESS_LOGIC
+        weworkService.sendMqMsg(wechatNotifyMessage)
+    }
+
     private fun replaceContentParams(params: Map<String, String>?, content: String): String {
         var content1 = content
         params?.forEach { paramName, paramValue ->
@@ -685,5 +734,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 .replace("{{$paramName}}", paramValue)
         }
         return content1
+    }
+
+    // #5318 为解决使用蓝鲸用户中心生成了带域名的用户名无法与企业微信账号对齐问题
+    private fun findWeworkUser(userSet: Set<String>): Set<String> {
+        if (userUseDomain!!) {
+            val weworkUserSet = mutableSetOf<String>()
+            userSet.forEach {
+                // 若用户名包含域,取域前的用户名.
+                if (it.contains("@")) {
+                    weworkUserSet.add(it.substringBefore("@"))
+                } else {
+                    weworkUserSet.add(it)
+                }
+            }
+            return weworkUserSet
+        }
+        return userSet
     }
 }

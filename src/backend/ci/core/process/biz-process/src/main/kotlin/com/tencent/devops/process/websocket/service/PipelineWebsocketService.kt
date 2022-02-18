@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.websocket.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
@@ -46,7 +45,9 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineWebsocketService @Autowired constructor(
     val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
+    val historyPageBuild: HistoryPageBuild,
+    val detailPageBuild: DetailPageBuild,
+    val statusPageBuild: StatusPageBuild
 ) {
     fun buildDetailMessage(
         buildId: String,
@@ -54,7 +55,7 @@ class PipelineWebsocketService @Autowired constructor(
         pipelineId: String,
         userId: String
     ): DetailWebsocketPush {
-        val page = DetailPageBuild().buildPage(
+        val page = detailPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -71,7 +72,6 @@ class PipelineWebsocketService @Autowired constructor(
             redisOperation = redisOperation,
             page = page,
             pushType = WebSocketType.DETAIL,
-            objectMapper = objectMapper,
             notifyPost = NotifyPost(
                 module = "process",
                 level = NotityLevel.LOW_LEVEL.getLevel(),
@@ -90,7 +90,7 @@ class PipelineWebsocketService @Autowired constructor(
         pipelineId: String,
         userId: String
     ): HistoryWebsocketPush {
-        val page = HistoryPageBuild().buildPage(
+        val page = historyPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -107,7 +107,6 @@ class PipelineWebsocketService @Autowired constructor(
             redisOperation = redisOperation,
             page = page,
             pushType = WebSocketType.HISTORY,
-            objectMapper = objectMapper,
             notifyPost = NotifyPost(
                 module = "process",
                 level = NotityLevel.LOW_LEVEL.getLevel(),
@@ -126,7 +125,7 @@ class PipelineWebsocketService @Autowired constructor(
         pipelineId: String,
         userId: String
     ): StatusWebsocketPush {
-        val page = StatusPageBuild().buildPage(
+        val page = statusPageBuild.buildPage(
             buildPageInfo = BuildPageInfo(
                 buildId = buildId,
                 pipelineId = pipelineId,
@@ -143,7 +142,6 @@ class PipelineWebsocketService @Autowired constructor(
             redisOperation = redisOperation,
             page = page,
             pushType = WebSocketType.STATUS,
-            objectMapper = objectMapper,
             notifyPost = NotifyPost(
                 module = "process",
                 level = NotityLevel.LOW_LEVEL.getLevel(),
@@ -157,6 +155,6 @@ class PipelineWebsocketService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineWebsocketService::class.java)
     }
 }

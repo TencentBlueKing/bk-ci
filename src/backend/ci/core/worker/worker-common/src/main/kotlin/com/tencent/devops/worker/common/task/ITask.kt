@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.task
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
@@ -35,6 +36,7 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
 
+@Suppress("NestedBlockDepth")
 abstract class ITask {
 
     private val environment = HashMap<String, String>()
@@ -51,27 +53,23 @@ abstract class ITask {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
-                val variables = buildVariables.variables.toMutableMap()
-                additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
-                    variables[it.key!!] = it.value ?: ""
+                val variables = buildTask.buildVariable?.toMutableMap()
+                val variablesBuild = buildVariables.variables.toMutableMap()
+                if (variables != null) {
+                    additionalOptions.customEnv!!.forEach {
+                        if (!it.key.isNullOrBlank()) {
+                            // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
+                            val value = EnvUtils.parseEnv(it.value ?: "", variablesBuild)
+                            variablesBuild["envs.${it.key}"] = value
+                            variables[it.key!!] = value
+                        }
+                    }
+                    return execute(
+                        buildTask.copy(buildVariable = variables),
+                        buildVariables.copy(variables = variablesBuild),
+                        workspace
+                    )
                 }
-                return execute(
-                    buildTask,
-                    BuildVariables(
-                        buildId = buildVariables.buildId,
-                        vmSeqId = buildVariables.vmSeqId,
-                        vmName = buildVariables.vmName,
-                        projectId = buildVariables.projectId,
-                        pipelineId = buildVariables.pipelineId,
-                        variables = variables,
-                        buildEnvs = buildVariables.buildEnvs,
-                        containerId = buildVariables.containerId,
-                        containerHashId = buildVariables.containerHashId,
-                        variablesWithType = buildVariables.variablesWithType,
-                        timeoutMills = buildVariables.timeoutMills
-                    ),
-                    workspace
-                )
             }
         }
         execute(buildTask, buildVariables, workspace)

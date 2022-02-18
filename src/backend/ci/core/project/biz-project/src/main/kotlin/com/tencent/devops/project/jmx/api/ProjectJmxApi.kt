@@ -56,7 +56,7 @@ class ProjectJmxApi @Autowired constructor(private val mBeanExporter: MBeanExpor
                     bean = APIPerformanceBean()
                     val name = "com.tencent.devops.project:type=apiPerformance,name=$api"
                     logger.info("Register $api api performance mbean")
-                    mBeanExporter.registerManagedResource(bean, ObjectName(name))
+                    mBeanExporter.registerManagedResource(bean!!, ObjectName(name))
                     apis[api] = bean!!
                 }
             }

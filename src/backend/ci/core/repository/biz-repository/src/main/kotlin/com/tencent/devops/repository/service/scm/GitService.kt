@@ -33,6 +33,7 @@ import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -64,6 +65,7 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -87,6 +89,7 @@ import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -364,6 +367,26 @@ class GitService @Autowired constructor(
         }
     }
 
+    override fun getUserInfoByToken(token: String): GitUserInfo {
+        logger.info("Start to get the user info by token[$token]")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitUrl}/user?access_token=$token"
+            logger.info("getToken url>> $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body()!!.string()
+                return objectMapper.readValue(data, GitUserInfo::class.java)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
+        }
+    }
+
     override fun getRedirectUrl(authParamJsonStr: String): String {
         logger.info("getRedirectUrl authParamJsonStr is: $authParamJsonStr")
         val authParamDecodeJsonStr = URLDecoder.decode(authParamJsonStr, "UTF-8")
@@ -416,7 +439,12 @@ class GitService @Autowired constructor(
             }
             OkhttpUtils.doHttp(request).use {
                 val data = it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
-                if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "fail to get git file content with: $url($data)"
+                    )
+                }
                 return data
             }
         } finally {
@@ -959,7 +987,10 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge info error for $repoName, $mrId(${it.code()}): ${it.message()}")
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge info error for $repoName, $mrId(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             logger.info("get mr info response body: $data")
@@ -986,7 +1017,10 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}")
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data, GitMrReviewInfo::class.java)
@@ -1017,8 +1051,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException(
-                    "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
                 )
             }
             val data = it.body()!!.string()
@@ -1071,7 +1106,10 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}")
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data)
@@ -1090,8 +1128,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException(
-                    "get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}"
                 )
             }
             val data = it.body()!!.string()
@@ -1138,5 +1177,76 @@ class GitService @Autowired constructor(
             projectName = repoName,
             mrId = mrId
         )
+    }
+
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): GitProjectGroupInfo {
+        val url = StringBuilder("${gitConfig.gitApiUrl}/groups/$id")
+        setToken(tokenType, url, token)
+        if (includeSubgroups != null) {
+            url.append("&include_subgroups=$includeSubgroups")
+        }
+        logger.info("getProjectGroupInfo url: $url")
+
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "getProjectGroupInfo $id, $includeSubgroups(${it.code()}): ${it.message()}"
+                )
+            }
+            val data = it.body()!!.string()
+            logger.info("getProjectGroupInfo response body: $data")
+            return JsonUtil.to(data, GitProjectGroupInfo::class.java)
+        }
+    }
+
+    override fun createGitTag(
+        repoName: String,
+        tagName: String,
+        ref: String,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/tags")
+        setToken(tokenType, url, token)
+        val params = mutableMapOf<String, Any?>()
+        params["id"] = repoName
+        params["tag_name"] = tagName
+        params["ref"] = ref
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(params)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            logger.info("createGitTag response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val message = dataMap["message"]
+            if (!StringUtils.isEmpty(message)) {
+                val validateResult: Result<String?> =
+                    MessageCodeUtil.generateResponseDataObject(
+                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL
+                    )
+                logger.info("createGitTag validateResult>> $validateResult")
+
+                return Result(validateResult.status, "${validateResult.message}（git error:$message）")
+            }
+            return Result(true)
+        }
     }
 }

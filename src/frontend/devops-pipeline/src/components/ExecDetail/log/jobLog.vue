@@ -1,8 +1,9 @@
 <template>
     <section class="job-log">
-        <bk-log-search :down-load-link="curDownLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
+        <bk-log-search :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
             <template v-slot:tool>
                 <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
+                <li class="more-button" @click="downloadLog">Download Log</li>
             </template>
         </bk-log-search>
         <bk-multiple-log ref="multipleLog"
@@ -23,10 +24,13 @@
     import { mapActions } from 'vuex'
     import statusIcon from '../status'
     import { hashID } from '@/utils/util.js'
+    import { bkLogSearch, bkMultipleLog } from '@blueking/log'
 
     export default {
         components: {
-            statusIcon
+            statusIcon,
+            bkLogSearch,
+            bkMultipleLog
         },
 
         props: {
@@ -50,12 +54,6 @@
                 closeIds: [],
                 curExe: this.executeCount,
                 showDebug: false
-            }
-        },
-
-        computed: {
-            curDownLink () {
-                return `${this.downLoadLink}&executeCount=${this.curExe}`
             }
         },
 
@@ -185,6 +183,11 @@
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                     if (ref) ref.handleApiErr(err.message, id)
                 })
+            },
+
+            downloadLog () {
+                const downloadLink = `${this.downLoadLink}&executeCount=${this.curExe}`
+                location.href = downloadLink
             }
         }
     }
@@ -193,17 +196,16 @@
 <style lang="scss" scoped>
     .job-log {
         height: calc(100% - 59px);
-    }
-
-    .log-tools {
-        position: absolute;
-        right: 20px;
-        top: 13px;
-        display: flex;
-        align-items: center;
-        line-height: 30px;
-        user-select: none;
-        background: none;
+        .log-tools {
+            position: absolute;
+            right: 20px;
+            top: 13px;
+            display: flex;
+            align-items: center;
+            line-height: 30px;
+            user-select: none;
+            background: none;
+        }
     }
 
     .multiple-log-status {
@@ -211,7 +213,7 @@
         height: 15px;
         margin: 0 9px;
         padding: 1px 0;
-        /deep/ svg {
+        ::v-deep svg {
             width: 14px;
             height: 14px;
         }

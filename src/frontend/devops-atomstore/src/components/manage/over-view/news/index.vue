@@ -14,7 +14,11 @@
         data () {
             return {
                 list: [],
-                isLoading: false
+                isLoading: false,
+                current: 1,
+                limit: 100,
+                loadEnd: false,
+                isLoadingMore: false
             }
         },
 
@@ -22,28 +26,60 @@
             this.initData()
         },
 
+        mounted () {
+            this.addScrollLoadMore()
+        },
+
+        beforeDestroy () {
+            this.removeScrollLoadMore()
+        },
+
         methods: {
             initData () {
+                this.isLoadingMore = true
                 const methodGenerator = {
                     atom: this.getAtomData
                 }
 
                 const currentMethod = methodGenerator[this.type]
-                currentMethod().catch((err) => {
+                currentMethod().then(() => {
+                    this.current += 1
+                }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.isLoadingMore = false
                 })
             },
 
             getAtomData () {
                 return this.$store.dispatch('store/requestVersionList', {
-                    atomCode: this.detail.atomCode
+                    atomCode: this.detail.atomCode,
+                    page: this.current,
+                    pageSize: this.limit
                 }).then((res) => {
                     const records = res.records || []
-                    this.list = records.map((x) => ({
+                    this.list = [...this.list, ...records.map((x) => ({
                         tag: x.createTime,
                         content: `${x.creator} ${this.$t('store.新增版本')} ${x.version}`
-                    }))
+                    }))]
+                    this.loadEnd = res.count <= this.list.length
                 })
+            },
+
+            scrollLoadMore (event) {
+                const target = event.target
+                const bottomDis = target.scrollHeight - target.clientHeight - target.scrollTop
+                if (bottomDis <= 500 && !this.loadEnd && !this.isLoadingMore) this.initData()
+            },
+
+            addScrollLoadMore () {
+                const mainBody = document.querySelector('.over-view-news')
+                if (mainBody) mainBody.addEventListener('scroll', this.scrollLoadMore, { passive: true })
+            },
+
+            removeScrollLoadMore () {
+                const mainBody = document.querySelector('.over-view-news')
+                if (mainBody) mainBody.removeEventListener('scroll', this.scrollLoadMore, { passive: true })
             }
         }
     }
@@ -54,7 +90,7 @@
         overflow: auto;
         height: calc(100% - .28rem);
         padding: 15px 32px 0 37px;
-        /deep/ .bk-timeline-dot::before {
+        ::v-deep .bk-timeline-dot::before {
             border-color: #1592ff;
         }
     }

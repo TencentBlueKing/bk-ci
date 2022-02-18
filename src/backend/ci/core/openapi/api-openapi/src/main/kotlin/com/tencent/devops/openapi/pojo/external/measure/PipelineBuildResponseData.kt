@@ -28,7 +28,7 @@
 package com.tencent.devops.openapi.pojo.external.measure
 
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

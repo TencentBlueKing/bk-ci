@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.pojo
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 
 data class BuildInfo(
     val projectId: String,
@@ -40,6 +41,7 @@ data class BuildInfo(
     val trigger: String,
     val status: BuildStatus,
     val queueTime: Long,
+    val executeTime: Long,
     val startUser: String,
     val startTime: Long?,
     val endTime: Long?,
@@ -48,6 +50,7 @@ data class BuildInfo(
     val parentBuildId: String?,
     val parentTaskId: String?,
     val channelCode: ChannelCode,
+    val buildParameters: List<BuildParameters>?,
     var errorInfoList: List<ErrorInfo>?,
     val retryFlag: Boolean? = null
 ) {

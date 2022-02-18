@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.service.v2.QualityHistoryService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,6 +49,15 @@ class ServiceQualityInterceptResourceImpl @Autowired constructor(
         buildId: String
     ): Result<List<QualityRuleIntercept>> {
         return Result(historyService.serviceListByBuildId(projectId, pipelineId, buildId))
+    }
+
+    override fun listRuleHistory(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        ruleIds: List<String>?
+    ): Result<List<QualityRuleIntercept>> {
+        return Result(historyService.serviceListByRuleAndBuildId(projectId, pipelineId, buildId, ruleIds))
     }
 
     override fun list(
@@ -70,7 +79,7 @@ class ServiceQualityInterceptResourceImpl @Autowired constructor(
         }
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val limit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val result = historyService.listInterceptHistory(
             userId,
             projectId,

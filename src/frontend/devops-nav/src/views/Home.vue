@@ -17,7 +17,9 @@
                                 :key="service.key"
                                 :to="addConsole(service.link_new)"
                             >
+                                <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
                                 <Logo
+                                    v-else
                                     :name="service.logoUrl"
                                     size="16"
                                 />
@@ -104,7 +106,10 @@
         </section>
         <aside>
             <article>
-                <h2>{{ $t("bkdevopsTitle") }}</h2>
+                <h2>
+                    {{ $t("bkdevopsTitle") }}
+                    <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                </h2>
                 <p>
                     {{ $t("bkdevopsDesc") }}
                     <a
@@ -150,7 +155,7 @@
     import Logo from '../components/Logo/index.vue'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
     
-    import { urlJoin } from '../utils/util'
+    import { urlJoin, isAbsoluteUrl } from '../utils/util'
 
     @Component({
         components: {
@@ -167,6 +172,8 @@
         @Action fetchLinks
         isAllServiceListShow: boolean = false
         DOCS_URL_PREFIX: string = DOCS_URL_PREFIX
+        isAbsoluteUrl = isAbsoluteUrl
+        BK_CI_VERSION: string = window.BK_CI_VERSION
 
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
@@ -254,8 +261,15 @@
                     display: flex;
                     align-items: center;
                     cursor: pointer;
-                    > svg {
+
+                    > svg,
+                    .recent-logo-icon {
                         margin-right: 6px;
+                    }
+
+                    .recent-logo-icon {
+                        width: 16px;
+                        height: 16px;
                     }
                 }
             }

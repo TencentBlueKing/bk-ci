@@ -79,6 +79,8 @@ class DateTimeUtilTest {
         val date = "2019-09-02T08:58:46+0000"
         val expected: Long = 1567414726000
         Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date))
+        val date2 = "2019-09-02T08:58:46Z"
+        Assert.assertEquals(expected, DateTimeUtil.zoneDateToTimestamp(date2))
     }
 
     @Test

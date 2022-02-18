@@ -40,14 +40,16 @@
             },
             tabs () {
                 return [
-                    ...(this.hasThirdPartyReport ? [{
-                        id: 'thirdReport',
-                        name: this.$t('details.thirdReport'),
-                        component: 'thirdPartyReport',
-                        componentProps: {
-                            reportList: this.thirdPartyReportList
-                        }
-                    }] : []),
+                    ...(this.hasThirdPartyReport
+                        ? [{
+                            id: 'thirdReport',
+                            name: this.$t('details.thirdReport'),
+                            component: 'thirdPartyReport',
+                            componentProps: {
+                                reportList: this.thirdPartyReportList
+                            }
+                        }]
+                        : []),
                     ...this.customizeList.map(item => ({
                         ...item,
                         name: item.name,
@@ -73,7 +75,7 @@
             this.init()
         },
         methods: {
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestReportList'
             ]),
             async init () {

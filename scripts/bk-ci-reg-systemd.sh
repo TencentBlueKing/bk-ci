@@ -227,7 +227,7 @@ for MS_NAME in "$@"; do
   }
 done
 if [ "${#invalid_proj}" -gt 1 ]; then
-  echo "ERROR: invalid proj: $invalid_proj."
+  echo "ERROR: invalid proj: ${invalid_proj:1}."  # 去掉开头的逗号.
   exit 15
 fi
 
@@ -235,12 +235,20 @@ gen_systemd_ci__target
 for MS_NAME in "$@"; do
   reg_systemd_ci "$MS_NAME"
 done
+systemctl (){  # 规避systemctl daemon-reload及reenable报错.
+  local sd_retry=9
+  until command systemctl "$@" ; do
+  let sd_retry-- || { echo "max retry exceed."; break; }
+    echo "systemctl $* failed, sleep 1 and retry..."
+    sleep 1
+  done
+}
+# 重新加载生成的配置文件.
 systemctl daemon-reload
-sleep 1  # 规避daemon-reload报错Failed to execute operation: Connection reset by peer
 # 启用target.
-systemctl reenable bk-ci.target
+systemctl enable bk-ci.target
 for MS_NAME in "$@"; do
   svc_name=bk-ci-$MS_NAME  # 完整服务名, 用于命令行标记等.
   sd_service="$svc_name.service"  # systemd 服务名
-  systemctl reenable "$sd_service"
+  systemctl enable "$sd_service"
 done

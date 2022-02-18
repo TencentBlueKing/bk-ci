@@ -1,4 +1,4 @@
-name: Tag Realse
+name: Tag Release
 on:
   push:
     tags:
@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v2
         with:
-          go-version: 1.12
+          go-version: 1.13.15
       - uses: actions/checkout@v2
       - run: make clean build_linux
         working-directory: src/agent/
@@ -59,13 +59,20 @@ jobs:
   backend:
     name: Build backend and release
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - uses: actions/checkout@v2
       - name: init mysql
         run: |
-          sudo /etc/init.d/mysql start
           export MYSQL_PWD=root
-          for i in *.sql;do echo $i;mysql -h localhost -uroot < $i;done
+          for i in *.sql;do echo $i;mysql -h 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot < $i;done
         working-directory: support-files/sql
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
@@ -80,83 +87,42 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
-        run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+        run: |
+          ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+          -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/" \
+          -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root
+
+      - name: Gradle Build Turbo Service
+        working-directory: src/backend/turbo
+        run: |
+          ./gradlew clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+          # copy jar to ci release dir
+          cp -vf release/boot-turbo.jar ${{ github.workspace }}/src/backend/ci/release/
+          # copy turbo service config template to ci templates dir
+          cp -vrf support-files/templates/* ${{ github.workspace }}/support-files/templates/
+
       - name: Create artifact - Step1:init
         run: |
-          mkdir -p bkci/frontend
-          mkdir -p bkci/gateway
-          mkdir -p bkci/agent-package
-          mkdir -p bkci/agent-package/script/linux
-          mkdir -p bkci/agent-package/upgrade
-          mkdir -p bkci/agent-package/jar
+          true  # 暂无init需求, 保留此步骤.
 
-      - name: Create artifact - Step2:Microservices
-        run: |
-          cp -rf support-files/agent-package/script/* bkci/agent-package/script/
-          cp -r src/gateway/* bkci/gateway/
-
-          cd src/backend/ci/release/
-          mv -v worker-agent.jar $GITHUB_WORKSPACE/support-files/agent-package/jar/
-
-          bootlist=`ls boot-*.jar`
-          for bootfile in $bootlist
-          do
-              servicename=`echo $bootfile | sed 's/boot-\(.*\).jar/\1/g'`
-              mkdir -p $GITHUB_WORKSPACE/bkci/$servicename/
-              cp -v boot-$servicename.jar $GITHUB_WORKSPACE/bkci/$servicename/
-          done
-
-          mkdir -p $GITHUB_WORKSPACE/bkci/agentless/
-          cp -v boot-dockerhost.jar $GITHUB_WORKSPACE/bkci/agentless/boot-agentless.jar
-
-      - name: Create artifact - Step3:Agent
+      - name: Create artifact - Step2:get Agent
         uses: actions/download-artifact@v1
         with:
           name: agent
-          path: bkci/agent-package/upgrade/
+          path: src/agent/bin/
 
-      - name: Create artifact - Step4:Frontend
+      - name: Create artifact - Step3:get Frontend
         uses: actions/download-artifact@v1
         with:
           name: frontend
-          path: bkci/frontend/
+          path: src/frontend/frontend
 
-      - name: Create artifact - Step6:support-files
+      - name: Create artifact - Step4:make package
         id: create-artifact
         run: |
-          cp -rf support-files/ bkci/
-          cp -rf support-files/agent-package bkci/
-          rm -vf scripts/generate_boot.sh
-          cp -rf scripts/ bkci/
-          rm -rf bkci/support-files/agent-package
-          cp -f bkci/frontend/console/frontend#console#index.html bkci/support-files/templates/frontend#console#index.html
-          cp -f bkci/frontend/pipeline/frontend#pipeline#index.html bkci/support-files/templates/frontend#pipeline#index.html
-
-          cp -f bkci/frontend/assets_bundle.json bkci/support-files/templates/project#assets_bundle.json
           version="$(basename $GITHUB_REF)"
           echo "::set-output name=version::$version"
-          echo "$version" > bkci/VERSION
-          echo "BK_CI_VERSION=\"$version\"" >> bkci/scripts/bkenv.properties
-
-      - name: Create Slim Package dir
-        id: create-slim-dir
-        run: |
-          src_dir="bkci" slim_dir="ci"
-          mkdir -p "$slim_dir"
-          svcs=$(ls "$src_dir"/*/boot*.jar | sed -r 's/^.*boot-|.jar$//g'| grep -wv agentless)
-          #svcs="artifactory assembly auth dispatch dispatch dockerhost environment image log misc monitoring notify openapi plugin process project quality repository sign store ticket websocket"
-          for ms in $svcs; do
-            ./scripts/bk-ci-slim.sh "$ms" $src_dir/$ms/boot-$ms.jar "$slim_dir"
-          done
-
-          echo "sync files from $src_dir to $slim_dir. exclude agentless/ and boot-jars."
-          rsync -rav --exclude agentless/ --exclude "boot-*.jar" "$src_dir/" "$slim_dir"
-          echo "generate agentless/ dir."
-          mkdir -p "$slim_dir/agentless"
-          rsync -rav "$slim_dir/dockerhost/." "$slim_dir/agentless"
-          #ln -sfT dockerhost "$slim_dir"/agentless
-          echo "delete old boot-MS.sh"
-          rm -f "$slim_dir/support-files/templates/"*#boot-*.sh || true
+          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci ./scripts/packager-ci.sh "$version" bkci-slim.tar.gz
 
       - name: Create Release
         id: create_release
@@ -169,7 +135,6 @@ jobs:
           draft: true
           prerelease: true
 
-      - run: tar czvf bkci-slim.tar.gz ci
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
@@ -179,3 +144,66 @@ jobs:
           asset_path: ./bkci-slim.tar.gz
           asset_name: bkci-slim.tar.gz
           asset_content_type: application/gzip
+
+      - name: download codecc
+        uses: actions/download-artifact@v1
+        with:
+          name: codecc
+          path: ./
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bkcodecc-slim.tar.gz
+          asset_name: bkcodecc-slim.tar.gz
+          asset_content_type: application/gzip
+
+  codecc:
+    name: Build CodeCC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: CodeCC Cache Gradle
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-codecc-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-codecc-gradle-
+      - name: Gradle Build
+        id: codecc-backend
+        uses: eskatos/gradle-command-action@v1
+        with:
+          gradle-version: 4.6
+          build-root-directory: src/backend/codecc
+          arguments: clean copyToRelease -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+
+      - name: frontend
+        id: codecc-frontend
+        run: |
+          cd src/frontend/devops-codecc
+          rm -rf dist
+          npm i
+          npm run build
+          if [ -f dist/index.html ]; then
+            mv dist/index.html dist/frontend#index.html
+          fi
+
+      - name: Create artifact - make package
+        id: create-artifact
+        run: |
+          version="$(basename $GITHUB_REF)"
+          echo "::set-output name=version::$version"
+          codecc_pkg_dir=/dev/shm/codecc ./scripts/deploy-codecc/packager-codecc.sh "$version" bkcodecc-slim.tar.gz "$PWD"
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: codecc
+          path: bkcodecc-slim.tar.gz

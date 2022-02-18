@@ -27,11 +27,13 @@
 
 package com.tencent.devops.worker.common.task.market
 
+import com.tencent.devops.common.api.constant.GOLANG
 import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.constant.PYTHON
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import com.tencent.devops.worker.common.service.impl.CommonAtomTargetHandleServiceImpl
+import com.tencent.devops.worker.common.service.impl.GolangAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.NodeJsAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.PythonAtomTargetHandleServiceImpl
@@ -61,6 +63,12 @@ object AtomTargetFactory {
             PYTHON -> {
                 if (atomTargetHandleService == null) {
                     atomTargetHandleService = PythonAtomTargetHandleServiceImpl()
+                    atomTargetMap[language] = atomTargetHandleService
+                }
+            }
+            GOLANG -> {
+                if (atomTargetHandleService == null) {
+                    atomTargetHandleService = GolangAtomTargetHandleServiceImpl()
                     atomTargetMap[language] = atomTargetHandleService
                 }
             }

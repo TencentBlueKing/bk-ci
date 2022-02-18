@@ -57,18 +57,7 @@ class V3CertPermissionService @Autowired constructor(
 ) {
 
     override fun supplierForPermission(projectId: String): () -> MutableList<String> {
-        return {
-            val fakeList = mutableListOf<String>()
-            certDao.listIdByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = 0,
-                limit = 500
-            ).forEach {
-                fakeList.add(it)
-            }
-            fakeList
-        }
+        return { mutableListOf() }
     }
 
     override fun validatePermission(
@@ -101,13 +90,13 @@ class V3CertPermissionService @Autowired constructor(
             return true
         }
         return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = ticketAuthServiceCode,
-                resourceType = AuthResourceType.TICKET_CERT,
-                projectCode = projectId,
-                resourceCode = projectId,
-                permission = AuthPermission.CREATE,
-                relationResourceType = AuthResourceType.PROJECT
+            user = userId,
+            serviceCode = ticketAuthServiceCode,
+            resourceType = AuthResourceType.TICKET_CERT,
+            projectCode = projectId,
+            resourceCode = projectId,
+            permission = AuthPermission.CREATE,
+            relationResourceType = AuthResourceType.PROJECT
         )
     }
 
@@ -185,6 +174,6 @@ class V3CertPermissionService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(V3CertPermissionService::class.java)
     }
 }

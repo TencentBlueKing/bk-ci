@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.template
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TCategory
+import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.TTemplateCategoryRel
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
@@ -69,6 +70,16 @@ class TemplateCategoryRelDao {
         with(TTemplateCategoryRel.T_TEMPLATE_CATEGORY_REL) {
             dslContext.deleteFrom(this)
                 .where(TEMPLATE_ID.eq(templateId))
+                .execute()
+        }
+    }
+
+    fun deleteByTemplateCode(dslContext: DSLContext, templateCode: String) {
+        val tt = TTemplate.T_TEMPLATE
+        val templateIds = dslContext.select(tt.ID).from(tt).where(tt.TEMPLATE_CODE.eq(templateCode)).fetch()
+        with(TTemplateCategoryRel.T_TEMPLATE_CATEGORY_REL) {
+            dslContext.deleteFrom(this)
+                .where(TEMPLATE_ID.`in`(templateIds))
                 .execute()
         }
     }

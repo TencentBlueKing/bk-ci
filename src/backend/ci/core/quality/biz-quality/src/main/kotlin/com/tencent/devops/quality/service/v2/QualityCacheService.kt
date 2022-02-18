@@ -140,7 +140,7 @@ class QualityCacheService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(QualityCacheService::class.java)
         const val PIPELINE_RULE_KEY = "rlue:pipeline:key:"
         const val TEMPLATEID_RULE_KEY = "rlue:templateId:key:"
     }

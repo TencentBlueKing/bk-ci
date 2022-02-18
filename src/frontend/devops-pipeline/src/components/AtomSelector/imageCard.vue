@@ -20,7 +20,7 @@
             </p>
             <template v-if="card.availableFlag">
                 <template v-if="type === 'store'">
-                    <bk-button size="small" class="info-button" @click="choose" :disabled="code === card.code" v-if="card.installed">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
+                    <bk-button size="small" class="info-button" @click="choose" :disabled="code === card.code" v-if="card.installedFlag">{{code === card.code ? this.$t('editPage.selected') : this.$t('editPage.select')}}</bk-button>
                     <bk-button size="small" class="info-button" @click="installImage" v-else-if="card.flag" :loading="isInstalling">{{ $t('editPage.install') }}</bk-button>
                     <bk-button size="small" class="info-button" v-else :disabled="true" :title="$t('editPage.noInstallRight')">{{ $t('editPage.install') }}</bk-button>
                 </template>
@@ -68,21 +68,23 @@
             return {
                 isInstalling: false,
                 toolTip: {
-                    content: !this.card.availableFlag ? `${this.$t('editPage.notWorkAtCur')}${this.card.agentTypeScope.length ? `，${this.$t('editPage.onlySupport')}` : ''}${this.card.agentTypeScope.map((item) => {
-                        let res = ''
-                        switch (item) {
-                            case 'DOCKER':
-                                res = this.$t('editPage.devnet')
-                                break
-                            case 'IDC':
-                                res = 'IDC CVM'
-                                break
-                            case 'PUBLIC_DEVCLOUD':
-                                res = 'DevCloud'
-                                break
-                        }
-                        return res
-                    }).join('，')}` : '',
+                    content: !this.card.availableFlag
+                        ? `${this.$t('editPage.notWorkAtCur')}${this.card.agentTypeScope.length ? `，${this.$t('editPage.onlySupport')}` : ''}${this.card.agentTypeScope.map((item) => {
+                            let res = ''
+                            switch (item) {
+                                case 'DOCKER':
+                                    res = this.$t('editPage.devnet')
+                                    break
+                                case 'IDC':
+                                    res = 'IDC CVM'
+                                    break
+                                case 'PUBLIC_DEVCLOUD':
+                                    res = 'DevCloud'
+                                    break
+                            }
+                            return res
+                        }).join('，')}`
+                        : '',
                     appendTo: () => this.$refs.card
                 }
             }
@@ -114,7 +116,7 @@
                 }
                 this.isInstalling = true
                 this.$store.dispatch('pipelines/requestInstallImage', postData).then((res) => {
-                    this.card.installed = true
+                    this.card.installedFlag = true
                     this.$showTips({ theme: 'success', message: this.$t('editPage.installSuc') })
                 }).catch((err) => {
                     this.$showTips({ theme: 'error', message: err.message || err })
@@ -130,13 +132,13 @@
     .select-card {
         padding: 20px 15px 18px;
         position: relative;
-        /deep/ .tippy-popper {
+        ::v-deep .tippy-popper {
             display: none;
             transition: display 200ms;
         }
         &:hover {
             background: #fafbfd;
-            .card-link, &.disable /deep/ .tippy-popper {
+            .card-link, &.disable ::v-deep .tippy-popper {
                 display: block;
             }
         }

@@ -80,6 +80,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.utils.StoreUtils
@@ -88,7 +89,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -151,9 +151,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     page = null,
                     pageSize = null
                 ).data
-                return elementMapData?.records?.map {
-                    it.atomCode to it.name
-                }?.toMap() ?: mapOf()
+                return elementMapData?.records?.associate { it.atomCode to it.name } ?: mapOf()
             }
         })
 
@@ -223,7 +221,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName
             )
-            val logoUrl = it["logoUrl"] as? String
+            var logoUrl = it["logoUrl"] as? String
+            logoUrl = if (logoUrl?.contains("?") == true) {
+                logoUrl.plus("&logo=true")
+            } else {
+                logoUrl?.plus("?logo=true")
+            }
             val icon = it["icon"] as? String
             val categoryFlag = it["category"] as Byte
             val summary = it["summary"] as? String
@@ -333,8 +336,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 null
             }
         }
-        if (atomStatus == null)
+        if (atomStatus == null) {
             atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
+        }
         val pipelineAtomRecord = if (projectCode != null) {
             atomDao.getPipelineAtom(
                 dslContext = dslContext,
@@ -382,14 +386,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     logoUrl = pipelineAtomRecord.logoUrl,
                     icon = pipelineAtomRecord.icon,
                     summary = pipelineAtomRecord.summary,
-                    serviceScope = if (!StringUtils.isEmpty(pipelineAtomRecord.serviceScope)) {
-                        JsonUtil.getObjectMapper()
-                            .readValue(pipelineAtomRecord.serviceScope, List::class.java) as List<String>
-                    } else null,
+                    serviceScope =
+                    JsonUtil.toOrNull(pipelineAtomRecord.serviceScope, List::class.java) as List<String>?,
                     jobType = pipelineAtomRecord.jobType,
-                    os = if (!StringUtils.isEmpty(pipelineAtomRecord.os)) {
-                        JsonUtil.getObjectMapper().readValue(pipelineAtomRecord.os, List::class.java) as List<String>
-                    } else null,
+                    os = JsonUtil.toOrNull(pipelineAtomRecord.os, List::class.java) as List<String>?,
                     classifyId = atomClassify?.id,
                     classifyCode = atomClassify?.classifyCode,
                     classifyName = atomClassify?.classifyName,
@@ -406,8 +406,14 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     htmlTemplateVersion = pipelineAtomRecord.htmlTemplateVersion,
                     buildLessRunFlag = pipelineAtomRecord.buildLessRunFlag,
                     weight = pipelineAtomRecord.weight,
-                    props = atomDao.convertString(pipelineAtomRecord.props),
-                    data = atomDao.convertString(pipelineAtomRecord.data),
+                    props = pipelineAtomRecord.props?.let {
+                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
+                            ?.decorate(pipelineAtomRecord.props) as Map<String, Any>?
+                    },
+                    data = pipelineAtomRecord.data?.let {
+                        AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
+                            ?.decorate(pipelineAtomRecord.data) as Map<String, Any>?
+                    },
                     recommendFlag = atomFeature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
                     createTime = pipelineAtomRecord.createTime.timestampmilli(),
@@ -595,18 +601,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
                             context, userId, AtomFeatureRequest(
-                            atomCode = atomCode,
-                            recommendFlag = recommendFlag,
-                            yamlFlag = atomUpdateRequest.yamlFlag
-                        )
+                                atomCode = atomCode,
+                                recommendFlag = recommendFlag,
+                                yamlFlag = atomUpdateRequest.yamlFlag,
+                                qualityFlag = atomUpdateRequest.qualityFlag
+                            )
                         )
                     } else {
                         atomFeatureDao.addAtomFeature(
                             context, userId, AtomFeatureRequest(
-                            atomCode = atomCode,
-                            recommendFlag = recommendFlag,
-                            yamlFlag = atomUpdateRequest.yamlFlag
-                        )
+                                atomCode = atomCode,
+                                recommendFlag = recommendFlag,
+                                yamlFlag = atomUpdateRequest.yamlFlag,
+                                qualityFlag = atomUpdateRequest.qualityFlag
+                            )
                         )
                     }
                 }
@@ -718,22 +726,24 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
                 defaultMessage = classifyName
             )
-            result.add(InstalledAtom(
-                atomId = it["atomId"] as String,
-                atomCode = atomCode,
-                name = it["atomName"] as String,
-                logoUrl = it["logoUrl"] as? String,
-                classifyCode = atomClassifyCode,
-                classifyName = classifyLanName,
-                category = AtomCategoryEnum.getAtomCategory((it["category"] as Byte).toInt()),
-                summary = it["summary"] as? String,
-                publisher = it["publisher"] as? String,
-                installer = installer,
-                installTime = DateTimeUtil.toDateTime(it["installTime"] as LocalDateTime),
-                installType = StoreProjectTypeEnum.getProjectType((it["installType"] as Byte).toInt()),
-                pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
-                hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
-            ))
+            result.add(
+                InstalledAtom(
+                    atomId = it["atomId"] as String,
+                    atomCode = atomCode,
+                    name = it["atomName"] as String,
+                    logoUrl = it["logoUrl"] as? String,
+                    classifyCode = atomClassifyCode,
+                    classifyName = classifyLanName,
+                    category = AtomCategoryEnum.getAtomCategory((it["category"] as Byte).toInt()),
+                    summary = it["summary"] as? String,
+                    publisher = it["publisher"] as? String,
+                    installer = installer,
+                    installTime = DateTimeUtil.toDateTime(it["installTime"] as LocalDateTime),
+                    installType = StoreProjectTypeEnum.getProjectType((it["installType"] as Byte).toInt()),
+                    pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
+                    hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
+                )
+            )
         }
 
         return Page(pageNotNull, pageSizeNotNull, count.toLong(), result)

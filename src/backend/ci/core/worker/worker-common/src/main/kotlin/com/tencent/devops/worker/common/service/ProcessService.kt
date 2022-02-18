@@ -77,7 +77,7 @@ object ProcessService {
         if (buildResult.isNotEmpty()) {
             buildResult.forEach { (key, value) ->
                 if (value.length > PIPLELINE_PARAM_MAX_LENGTH) {
-                    LoggerService.addYellowLine("[$taskId]|ABANDON_DATA|len[$key]=${value.length}" +
+                    LoggerService.addWarnLine("[$taskId]|ABANDON_DATA|len[$key]=${value.length}" +
                         "(max=$PIPLELINE_PARAM_MAX_LENGTH)")
                     return@forEach
                 }

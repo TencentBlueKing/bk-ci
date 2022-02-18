@@ -45,8 +45,8 @@
             width="400"
             @confirm="saveTemplate">
             <div>
-                <form-field v-if="showVersionDialog" required="true" :label="$t('template.saveAsVersion')" :is-error="errors.has(&quot;versionName&quot;)" :error-msg="errors.first(&quot;versionName&quot;)">
-                    <auto-complete v-validate="'required'" :list="versionList" name="versionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
+                <form-field v-if="showVersionDialog" required="true" :label="$t('template.saveAsVersion')" :is-error="errors.has(&quot;saveVersionName&quot;)" :error-msg="errors.first(&quot;saveVersionName&quot;)">
+                    <auto-complete v-validate="Object.assign({}, { max: 64, required: true })" :list="versionList" name="saveVersionName" open-list="true" :placeholder="$t('template.versionInputTips')" :value="saveVersionName" display-key="name" setting-key="versionName" :handle-change="handleVersionChange"></auto-complete>
                 </form-field>
             </div>
         </bk-dialog>
@@ -54,6 +54,7 @@
 </template>
 
 <script>
+    import { Base64 } from 'js-base64'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import Pipeline from '@/components/Pipeline'
     import AutoComplete from '@/components/atomFormField/AutoComplete'
@@ -199,7 +200,7 @@
                 if (!valid) {
                     this.$showTips({
                         theme: 'error',
-                        message: this.$t('template.versionNullTips')
+                        message: this.$t('template.versionErrTips')
                     })
                     return
                 }
@@ -249,7 +250,7 @@
                     await this.$store.dispatch('pipelines/deleteTemplateVersionByName', {
                         projectId: this.projectId,
                         templateId: this.templateId,
-                        versionName: row.versionName
+                        versionName: Base64.encode(row.versionName)
                     })
 
                     // this.requestTemplateList()
@@ -280,12 +281,12 @@
                 }
             },
             requestQualityAtom () {
-                this.$store.dispatch('soda/requestQualityAtom', {
+                this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
                 })
             },
             requestMatchTemplateRules () {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId: this.templateId
                 })

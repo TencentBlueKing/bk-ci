@@ -30,6 +30,7 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import okhttp3.ConnectionPool
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -45,7 +46,6 @@ import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.security.cert.CertificateException
-import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -80,13 +80,26 @@ object OkhttpUtils {
     private const val readTimeout = 30L
     private const val writeTimeout = 30L
 
+    init {
+        logger.info("[OkhttpUtils init]")
+    }
+
+    private val shortOkHttpClient = OkHttpClient.Builder()
+        .connectionPool(ConnectionPool())
+        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(connectTimeout, TimeUnit.SECONDS)
+        .writeTimeout(connectTimeout, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(connectTimeout, TimeUnit.SECONDS)
         .readTimeout(readTimeout, TimeUnit.SECONDS)
         .writeTimeout(writeTimeout, TimeUnit.SECONDS)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
-        .build()!!
+        .build()
 
     // 下载会出现从 文件源--（耗时长）---->网关（网关全部收完才转发给用户，所以用户侧与网关存在读超时的可能)-->用户
     private val longHttpClient = OkHttpClient.Builder()
@@ -95,7 +108,7 @@ object OkhttpUtils {
         .writeTimeout(readTimeout, TimeUnit.MINUTES)
         .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
         .hostnameVerifier { _, _ -> true }
-        .build()!!
+        .build()
 
     @Throws(UnsupportedEncodingException::class)
     fun joinParams(params: Map<String, String>): String {
@@ -120,6 +133,10 @@ object OkhttpUtils {
 
     fun doLongHttp(request: Request): Response {
         return doHttp(longHttpClient, request)
+    }
+
+    fun doShortHttp(request: Request): Response {
+        return doHttp(shortOkHttpClient, request)
     }
 
     private fun doGet(okHttpClient: OkHttpClient, url: String, headers: Map<String, String> = mapOf()): Response {
@@ -154,19 +171,20 @@ object OkhttpUtils {
         url: String,
         uploadFile: File,
         headers: Map<String, String?>? = null,
-        fileFieldName: String = "file"
+        fileFieldName: String = "file",
+        fileName: String = uploadFile.name
     ): Response {
         val fileBody = RequestBody.create(octetStream, uploadFile)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart(fileFieldName, uploadFile.name, fileBody)
+            .addFormDataPart(fileFieldName, fileName, fileBody)
             .build()
         val requestBuilder = Request.Builder()
             .url(url)
             .post(requestBody)
         headers?.forEach { (key, value) ->
             if (!value.isNullOrBlank()) {
-                requestBuilder.addHeader(key, value!!)
+                requestBuilder.addHeader(key, value)
             }
         }
         val request = requestBuilder.build()

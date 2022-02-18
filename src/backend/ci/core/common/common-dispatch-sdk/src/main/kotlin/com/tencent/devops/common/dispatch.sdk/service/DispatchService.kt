@@ -82,10 +82,9 @@ class DispatchService constructor(
         )
     }
 
-    fun build(event: PipelineAgentStartupEvent, startupQueue: String): DispatchMessage {
+    fun buildDispatchMessage(event: PipelineAgentStartupEvent): DispatchMessage {
         logger.info("[${event.buildId}] Start build with gateway - ($gateway)")
         val secretInfo = setRedisAuth(event)
-        setStartup(startupQueue, event)
         return DispatchMessage(
             id = secretInfo.hashId,
             secretKey = secretInfo.secretKey,
@@ -110,30 +109,20 @@ class DispatchService constructor(
         )
     }
 
-    fun getExecuteCount(startupQueue: String): Long {
-        return redisOperation.get(executeCountKey(startupQueue))?.toLong() ?: 0
-    }
-
-    fun shutdown(event: PipelineAgentShutdownEvent, startupQueue: String) {
-        setShutdown(startupQueue)
+    fun shutdown(event: PipelineAgentShutdownEvent) {
         val secretInfoKey = secretInfoRedisKey(event.buildId)
+
+        // job结束
+        finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
+        redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
+
         val keysSet = redisOperation.hkeys(secretInfoKey)
-        if (keysSet != null && keysSet.isNotEmpty()) {
-            if (event.vmSeqId == null) {
-                // 流水线结束
-                keysSet.forEach {
-                    finishBuild(it, event.buildId, event.executeCount ?: 1)
-                }
-                redisOperation.delete(secretInfoKey)
-            } else {
-                // job结束
-                finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
-                redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
-            }
+        if (keysSet == null || keysSet.isEmpty()) {
+            redisOperation.delete(secretInfoKey)
         }
     }
 
-    fun isRunning(event: PipelineAgentStartupEvent) {
+    fun checkRunning(event: PipelineAgentStartupEvent) {
         // 判断流水线是否还在运行，如果已经停止则不在运行
         // 只有detail的信息是在shutdown事件发出之前就写入的，所以这里去builddetail的信息。
         // 为了兼容gitci的权限，这里把渠道号都改成GIT,以便去掉用户权限验证
@@ -221,7 +210,7 @@ class DispatchService constructor(
                 )
             )
         } catch (e: Exception) {
-            logger.error("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e)
+            logger.warn("[$pipelineId]|[$buildId]|[$vmSeqId]| sendDispatchMonitoring failed.", e.message)
         }
     }
 
@@ -230,17 +219,9 @@ class DispatchService constructor(
         if (result != null) {
             val secretInfo = JsonUtil.to(result, SecretInfo::class.java)
             redisOperation.delete(redisKey(secretInfo.hashId, secretInfo.secretKey))
-            logger.error("$buildId|$vmSeqId finishBuild success.")
+            logger.warn("$buildId|$vmSeqId finishBuild success.")
         } else {
             logger.error("$buildId|$vmSeqId finishBuild failed, secretInfo is null.")
-        }
-    }
-
-    private fun setShutdown(startupQueue: String) {
-        try {
-            redisOperation.increment(executeCountKey(startupQueue), -1)
-        } catch (t: Throwable) {
-            logger.warn("Fail to set the shutdown count in redis - $startupQueue", t)
         }
     }
 
@@ -256,8 +237,8 @@ class DispatchService constructor(
         val hashId = HashUtil.encodeLongId(System.currentTimeMillis())
         logger.info("[${event.buildId}|${event.vmSeqId}] Start to build the event with ($hashId|$secretKey)")
         redisOperation.set(
-            redisKey(hashId, secretKey),
-            objectMapper.writeValueAsString(
+            key = redisKey(hashId, secretKey),
+            value = objectMapper.writeValueAsString(
                 RedisBuild(
                     vmName = if (event.vmNames.isBlank()) "Dispatcher-sdk-${event.vmSeqId}" else event.vmNames,
                     projectId = event.projectId,
@@ -269,7 +250,8 @@ class DispatchService constructor(
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )
-            )
+            ),
+            expiredInSecond = 7 * 24 * 3600
         )
 
         // 一周过期时间
@@ -278,25 +260,12 @@ class DispatchService constructor(
             secretInfoRedisMapKey(event.vmSeqId, event.executeCount ?: 1),
             JsonUtil.toJson(SecretInfo(hashId, secretKey))
         )
-        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600
+        val expireAt = System.currentTimeMillis() + 24 * 7 * 3600 * 1000
         redisOperation.expireAt(secretInfoRedisKey, Date(expireAt))
         return SecretInfo(
             hashId = hashId,
             secretKey = secretKey
         )
-    }
-
-    private fun setStartup(
-        startupQueue: String,
-        event: PipelineAgentStartupEvent
-    ) {
-        try {
-            if (event.retryTime == 1) {
-                redisOperation.increment(executeCountKey(startupQueue), 1)
-            }
-        } catch (t: Throwable) {
-            logger.warn("Fail ot set the start up count in redis - $startupQueue", t)
-        }
     }
 
     private fun redisKey(hashId: String, secretKey: String) =
@@ -306,9 +275,6 @@ class DispatchService constructor(
         "secret_info_key_$buildId"
 
     private fun secretInfoRedisMapKey(vmSeqId: String, executeCount: Int) = "$vmSeqId-$executeCount"
-
-    private fun executeCountKey(startupQueue: String) =
-        "dispatcher:sdk:execute:count:key:$startupQueue"
 
     companion object {
         private val logger = LoggerFactory.getLogger(DispatchService::class.java)

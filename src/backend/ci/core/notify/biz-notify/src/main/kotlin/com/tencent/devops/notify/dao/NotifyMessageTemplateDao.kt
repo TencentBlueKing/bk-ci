@@ -31,10 +31,12 @@ import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TRtxNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
+import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
+import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import org.jooq.Condition
@@ -135,6 +137,24 @@ class NotifyMessageTemplateDao {
         with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectFrom(this)
                 .where(this.COMMON_TEMPLATE_ID.eq(commonTemplateId))
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 获取企业微信消息模板 新版
+     * @param dslContext 数据库操作对象
+     * @param commonTemplateId
+     */
+    fun getWeworkNotifyMessageTemplate(
+        dslContext: DSLContext,
+        commonTemplateId: String
+    ): TWeworkNotifyMessageTemplateRecord? {
+        with(TWeworkNotifyMessageTemplate.T_WEWORK_NOTIFY_MESSAGE_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
+            return dslContext.selectFrom(this)
+                .where(conditions)
                 .fetchOne()
         }
     }

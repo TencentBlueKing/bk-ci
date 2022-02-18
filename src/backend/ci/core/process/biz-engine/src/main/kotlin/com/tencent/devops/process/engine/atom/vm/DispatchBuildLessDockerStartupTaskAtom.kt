@@ -51,8 +51,8 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
@@ -65,12 +65,13 @@ import org.springframework.stereotype.Component
  * 无构建环境docker启动
  * @version 1.0
  */
+@Suppress("UNUSED", "LongParameterList")
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
@@ -88,6 +89,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         try {
             atomResponse = startUpDocker(task, param)
+            buildLogPrinter.stopLog(
+                buildId = task.buildId,
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -141,7 +148,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        val container = pipelineBuildDetailService.getBuildModel(buildId)?.getContainer(vmSeqId)
+        val container = containerBuildDetailService.getBuildModel(projectId, buildId)?.getContainer(vmSeqId)
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
@@ -151,15 +158,20 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        pipelineBuildDetailService.containerPreparing(buildId, vmSeqId.toInt())
+        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
 
-        dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!)
+        dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
 
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
     }
 
-    private fun dispatch(container: Container, task: PipelineBuildTask, pipelineInfo: PipelineInfo) {
+    private fun dispatch(
+        container: Container,
+        task: PipelineBuildTask,
+        pipelineInfo: PipelineInfo,
+        param: NormalContainer
+    ) {
         // 读取原子市场中的原子信息，写入待构建处理
         val atoms = AtomUtils.parseContainerMarketAtom(
             container = container,
@@ -181,10 +193,11 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 os = VMBaseOS.LINUX.name,
                 startTime = System.currentTimeMillis(),
                 channelCode = pipelineInfo.channelCode.name,
-                dispatchType = DockerDispatchType(DockerVersion.TLINUX2_2.value),
+                dispatchType = DockerDispatchType(DockerVersion.CUSTOMIZE.value),
                 zone = getBuildZone(container),
                 atoms = atoms,
-                executeCount = task.executeCount
+                executeCount = task.executeCount,
+                customBuildEnv = param.matrixContext
             )
         )
     }

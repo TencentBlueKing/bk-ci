@@ -37,17 +37,17 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
-import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.app.AppBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import org.apache.commons.lang3.math.NumberUtils
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 @RestResource
 class AppPipelineBuildResourceImpl @Autowired constructor(
     private val appBuildService: AppBuildService,
@@ -71,15 +71,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
         pipelineBuildQualityService.buildManualQualityGateReview(
-            userId,
-            projectId,
-            pipelineId,
-            buildId,
-            elementId,
-            action,
-            ChannelCode.BS,
-            ChannelCode.isNeedAuth(ChannelCode.BS)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            action = action,
+            channelCode = channelCode
         )
         return Result(true)
     }
@@ -99,15 +99,16 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
         pipelineBuildFacadeService.buildManualReview(
-            userId,
-            projectId,
-            pipelineId,
-            buildId,
-            elementId,
-            params,
-            ChannelCode.BS,
-            ChannelCode.isNeedAuth(ChannelCode.BS)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            params = params,
+            channelCode = ChannelCode.BS,
+            checkPermission = ChannelCode.isNeedAuth(channelCode)
         )
         return Result(true)
     }
@@ -212,7 +213,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid elementId")
         }
 
-        return Result(pipelineBuildFacadeService.goToReview(userId, projectId, pipelineId, buildId, elementId))
+        return Result(
+            pipelineBuildFacadeService.goToReview(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = elementId
+            )
+        )
     }
 
     override fun manualStartupInfo(
@@ -221,7 +230,17 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
-        return Result(pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
+
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
+        return Result(
+            pipelineBuildFacadeService.buildManualStartupInfo(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            )
+        )
     }
 
     override fun manualStartup(
@@ -231,15 +250,21 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         values: Map<String, String>
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
+
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
+        val buildNo = values["buildNo"]?.let { NumberUtils.toInt(it) }
+
         return Result(
             BuildId(
                 pipelineBuildFacadeService.buildManualStartup(
-                    userId,
-                    StartType.MANUAL,
-                    projectId,
-                    pipelineId,
-                    values,
-                    ChannelCode.BS
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values.filter { it.key != "buildNo" },
+                    channelCode = channelCode,
+                    buildNo = buildNo
                 )
             )
         )
@@ -252,10 +277,20 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         buildId: String
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
+
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        pipelineBuildFacadeService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
+
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
+        pipelineBuildFacadeService.buildManualShutdown(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = channelCode
+        )
         return Result(true)
     }
 
@@ -265,54 +300,30 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         taskId: String?,
-        failedContainer: Boolean?
+        failedContainer: Boolean?,
+        skipFailedTask: Boolean?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            failedContainer = failedContainer
-        )))
-    }
 
-    override fun getBuildDetail(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<AppModelDetail> {
-        checkParam(userId, projectId, pipelineId)
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        // 对特殊的buildid进行处理。
-        var buildIdReal = when (buildId) {
-            "latest" -> {
-                pipelineRuntimeService.getLatestBuildId(projectId, pipelineId)
-            }
-            "latestSucceeded" -> {
-                pipelineRuntimeService.getLatestSucceededBuildId(projectId, pipelineId)
-            }
-            "latestFailed" -> {
-                pipelineRuntimeService.getLatestFailedBuildId(projectId, pipelineId)
-            }
-            "latestFinished" -> {
-                pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
-            }
-            else -> {
-                buildId
-            }
-        }
-        if (buildIdReal == null) {
-            buildIdReal = buildId
-        }
-        return Result(appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, ChannelCode.BS))
+        val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
+
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.retry(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    failedContainer = failedContainer,
+                    skipFailedTask = skipFailedTask,
+                    channelCode = channelCode
+                )
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

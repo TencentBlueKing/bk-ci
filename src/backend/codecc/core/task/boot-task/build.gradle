@@ -2,7 +2,6 @@ dependencies {
     compile project(":core:common:common-auth-v3")
     compile project(":core:common:common-auth-mock")
     compile project(":core:task:biz-task-migration")
-    compile project(":core:task:biz-task-opensource")
 }
 
 version = null

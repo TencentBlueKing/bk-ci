@@ -57,7 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 @Service
 class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
@@ -69,7 +69,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     client: Client,
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
-    projectAuthServiceCode: ProjectAuthServiceCode
+    projectAuthServiceCode: ProjectAuthServiceCode,
+    projectDataSourceAssignService: ProjectDataSourceAssignService
 ) : AbsProjectServiceImpl(
     projectPermissionService,
     dslContext,
@@ -80,7 +81,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
     client,
     projectDispatcher,
     authPermissionApi,
-    projectAuthServiceCode
+    projectAuthServiceCode,
+    projectDataSourceAssignService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -139,7 +141,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+    override fun organizationMarkUp(
+        projectCreateInfo: ProjectCreateInfo,
+        userDeptDetail: UserDeptDetail
+    ): ProjectCreateInfo {
         return projectCreateInfo
     }
 
@@ -168,6 +173,6 @@ class SimpleProjectServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)
     }
 }

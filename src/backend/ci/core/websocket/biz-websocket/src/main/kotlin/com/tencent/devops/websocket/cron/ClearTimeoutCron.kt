@@ -48,7 +48,7 @@ class ClearTimeoutCron(
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ClearTimeoutCron::class.java)
     }
 
     /**
@@ -104,6 +104,9 @@ class ClearTimeoutCron(
                             RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
                             if (sessionPage != null) {
                                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
+                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                            } else {
+                                // sessionId没有匹配到页面且超时, 需把session从userId-sessionId内删除
                                 RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
                             }
                             // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session

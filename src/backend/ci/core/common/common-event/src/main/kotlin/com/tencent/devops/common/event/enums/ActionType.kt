@@ -48,6 +48,8 @@ enum class ActionType {
 
     fun isTerminate() = TERMINATE == this
 
+    fun isRetry() = RETRY == this
+
     companion object {
         @Deprecated(replaceWith = ReplaceWith("isStart"), message = "replace by isStart")
         fun isStart(actionType: ActionType) = actionType.isStart()

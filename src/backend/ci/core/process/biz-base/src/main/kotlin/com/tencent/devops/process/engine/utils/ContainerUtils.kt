@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.utils
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 
@@ -38,6 +39,12 @@ object ContainerUtils {
         containerId: String
     ) = "container:startup:$pipelineId:$buildId:$containerId"
 
+    fun getContainerRunEvenCancelTaskKey(
+        pipelineId: String,
+        buildId: String,
+        containerId: String
+    ) = "container:taskEvenCancel:$pipelineId:$buildId:$containerId"
+
     fun isNormalContainerEnable(normalContainer: NormalContainer): Boolean {
         return if (normalContainer.jobControlOption != null) {
             normalContainer.jobControlOption!!.enable
@@ -48,5 +55,21 @@ object ContainerUtils {
 
     fun isVMBuildContainerEnable(container: VMBuildContainer): Boolean {
         return container.jobControlOption == null || container.jobControlOption!!.enable
+    }
+
+    private const val mutexPrefix = "互斥中(Mutex waiting)"
+
+    fun clearMutexContainerName(container: Container) {
+        if (container.name.startsWith(mutexPrefix)) {
+            container.name = container.name.substring(mutexPrefix.length)
+        }
+    }
+
+    fun setMutexWaitName(container: Container) {
+        if (container.name.startsWith(mutexPrefix)) {
+            return
+        }
+
+        container.name = "$mutexPrefix${container.name}"
     }
 }

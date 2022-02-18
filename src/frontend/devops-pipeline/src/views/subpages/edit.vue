@@ -18,7 +18,7 @@
                     <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
                 </bk-tab-panel>
             </bk-tab>
-            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
+            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
         </template>
     </section>
 </template>
@@ -28,7 +28,7 @@
     import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
@@ -36,6 +36,7 @@
             emptyTips,
             PipelineEditTab,
             BaseSettingTab,
+            NotifyTab,
             MiniMap
         },
         mixins: [pipelineOperateMixin],
@@ -75,6 +76,9 @@
             ...mapState([
                 'fetchError'
             ]),
+            ...mapState('atom', [
+                'editfromImport'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -96,6 +100,24 @@
                                 isEditing: this.isEditing,
                                 pipeline: this.pipeline,
                                 isLoading: !this.pipeline
+                            }
+                        },
+                        {
+                            name: 'notify',
+                            label: this.$t('settings.notify'),
+                            component: 'NotifyTab',
+                            bindData: {
+                                failSubscription: this.pipelineSetting ? this.pipelineSetting.failSubscription : null,
+                                successSubscription: this.pipelineSetting ? this.pipelineSetting.successSubscription : null,
+                                updateSubscription: (container, name, value) => {
+                                    this.setPipelineEditing(true)
+                                    this.updatePipelineSetting({
+                                        container,
+                                        param: {
+                                            [name]: value
+                                        }
+                                    })
+                                }
                             }
                         },
                         {
@@ -129,8 +151,11 @@
             }
         },
         mounted () {
-            this.init()
-            this.requestQualityAtom()
+            if (!this.editfromImport) {
+                this.init()
+                this.requestQualityAtom()
+            }
+            this.setEditFrom(false)
             this.addLeaveListenr()
         },
         beforeDestroy () {
@@ -139,6 +164,7 @@
             this.removeLeaveListenr()
             this.setPipelineEditing(false)
             this.setSaveStatus(false)
+            this.setEditFrom(false)
             this.errors.clear()
         },
         beforeRouteUpdate (to, from, next) {
@@ -157,15 +183,15 @@
                 'togglePropertyPanel',
                 'setPipeline',
                 'setPipelineEditing',
-                'setAuthEditing',
-                'setSaveStatus'
+                'setSaveStatus',
+                'setEditFrom'
             ]),
             ...mapActions('pipelines', [
                 'requestPipelineSetting',
                 'updatePipelineSetting',
                 'resetPipelineSetting'
             ]),
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
@@ -212,20 +238,20 @@
                 return this.confirmMsg
             },
             requestQualityAtom () {
-                this.$store.dispatch('soda/requestQualityAtom', {
+                this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
                 })
             },
             requestInterceptAtom () {
                 if (this.projectId && this.pipelineId) {
-                    this.$store.dispatch('soda/requestInterceptAtom', {
+                    this.$store.dispatch('common/requestInterceptAtom', {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
                     })
                 }
             },
             requestMatchTemplateRules (templateId) {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId
                 })
@@ -256,7 +282,7 @@
             flex-direction: column;
             width: 100%;
             overflow: hidden;
-            .bk-tab-section {
+            .bk-tab-content {
                 overflow: auto;
             }
         }

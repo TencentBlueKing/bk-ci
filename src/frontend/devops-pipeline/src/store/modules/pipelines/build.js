@@ -24,7 +24,7 @@ import {
 import { getQueryParamList } from '../../../utils/util'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
-const pluginPrefix = `plugin/api`
+const pluginPrefix = 'plugin/api'
 
 const state = {
     historyPageStatus: {
@@ -205,7 +205,7 @@ const actions = {
         dispatch('setRouterQuery', {
             queryStr: filterStr
         })
-        
+
         return ajax.get(`${prefix}${projectId}/${pipelineId}/history/new?page=${page}&pageSize=${pageSize}&${filterStr}`).then(response => {
             return response.data
         })
@@ -259,9 +259,9 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestRetryPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, taskId, failedContainer }) {
+    requestRetryPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, taskId, failedContainer, skip }) {
         const failedContainerStr = failedContainer === undefined ? '' : `&failedContainer=${failedContainer}`
-        const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}` : ''
+        const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}&skip=${skip}` : ''
         return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/retry${queryStr}`).then(response => {
             return response.data
         })

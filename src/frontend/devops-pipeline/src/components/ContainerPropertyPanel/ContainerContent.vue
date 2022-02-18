@@ -15,7 +15,6 @@
                 </atom-checkbox>
             </div>
         </form-field>
-
         <form v-if="isVmContainer(container)" v-bkloading="{ isLoading: !apps || !containerModalId }">
             <form-field :label="$t('editPage.resourceType')">
                 <selector
@@ -31,10 +30,6 @@
                         <div class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addThridSlave">
                             <i class="devops-icon icon-plus-circle"></i>
                             <span class="text">{{ $t('editPage.addThirdSlave') }}</span>
-                        </div>
-                        <div v-if="container.baseOS === 'LINUX'" class="bk-selector-create-item cursor-pointer" @click.stop.prevent="addDockerImage">
-                            <i class="devops-icon icon-plus-circle"></i>
-                            <span class="text">{{ $t('editPage.addImage') }}</span>
                         </div>
                     </template>
                 </selector>
@@ -112,6 +107,19 @@
                 <select-input v-bind="imageCredentialOption" :disabled="!editable" name="credentialId" :value="buildImageCreId" :handle-change="changeBuildResource"></select-input>
             </form-field>
 
+            <section v-if="buildResourceType === 'DOCKER'">
+                <form-field :label="$t('editPage.performance')" v-show="isShowPerformance">
+                    <devcloud-option
+                        :disabled="!editable"
+                        :value="container.dispatchType.performanceConfigId"
+                        :build-type="buildResourceType"
+                        :handle-change="changeBuildResourceWithoutEnv"
+                        :change-show-performance="changeShowPerformance"
+                    >
+                    </devcloud-option>
+                </form-field>
+            </section>
+
             <form-field :label="$t('editPage.workspace')" v-if="isThirdParty">
                 <vuex-input :disabled="!editable" name="workspace" :value="container.dispatchType.workspace" :handle-change="changeBuildResource" :placeholder="$t('editPage.workspaceTips')" />
             </form-field>
@@ -166,6 +174,17 @@
         </section>
 
         <div>
+            <div class="job-matrix">
+                <job-matrix
+                    v-if="!isTriggerContainer(container)"
+                    :enable-matrix="container.matrixGroupFlag || false"
+                    :matrix-control-option="container.matrixControlOption"
+                    :update-container-params="handleContainerChange"
+                    :set-parent-validate="setContainerValidate"
+                    :disabled="!editable"
+                >
+                </job-matrix>
+            </div>
             <div class="job-option">
                 <job-option
                     v-if="!isTriggerContainer(container)"
@@ -210,10 +229,12 @@
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import ContainerAppSelector from './ContainerAppSelector'
     import ContainerEnvNode from './ContainerEnvNode'
+    import DevcloudOption from './DevcloudOption'
     import BuildParams from './BuildParams'
     import VersionConfig from './VersionConfig'
     import JobOption from './JobOption'
     import JobMutual from './JobMutual'
+    import JobMatrix from './JobMatrix'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import ImageSelector from '@/components/AtomSelector/imageSelector'
     import SelectInput from '@/components/AtomFormComponent/SelectInput'
@@ -227,9 +248,11 @@
             ContainerAppSelector,
             BuildParams,
             VersionConfig,
+            DevcloudOption,
             ContainerEnvNode,
             JobOption,
             JobMutual,
+            JobMatrix,
             Selector,
             AtomCheckbox,
             ImageSelector,
@@ -237,6 +260,7 @@
         },
         props: {
             containerIndex: Number,
+            containerGroupIndex: Number,
             stageIndex: Number,
             stages: Array,
             editable: Boolean,
@@ -248,7 +272,8 @@
                 isVersionLoading: false,
                 isLoadingMac: false,
                 xcodeVersionList: [],
-                systemVersionList: []
+                systemVersionList: [],
+                isShowPerformance: false
             }
         },
         computed: {
@@ -300,8 +325,8 @@
                 return getContainers(stage)
             },
             container () {
-                const { containers, containerIndex } = this
-                return this.getContainer(containers, containerIndex)
+                const { containers, containerIndex, containerGroupIndex } = this
+                return this.getContainer(containers, containerIndex, containerGroupIndex)
             },
             isPublicResourceType () {
                 return this.isPublicResource(this.container)
@@ -361,7 +386,7 @@
                 return getContainerApps(baseOS)
             },
             nfsSwitch () {
-                return !this.container.hasOwnProperty('nfsSwitch') || this.container['nfsSwitch']
+                return !Object.prototype.hasOwnProperty.call(this.container, 'nfsSwitch') || this.container.nfsSwitch
             },
             isShowNFSDependencies () {
                 if (this.buildResourceType === 'MACOS') return false
@@ -427,6 +452,9 @@
             }
             if (!this.isTriggerContainer(container) && this.container.jobId === undefined) {
                 Vue.set(container, 'jobId', '')
+            }
+            if (!this.isTriggerContainer(container) && this.container.matrixGroupFlag === undefined) {
+                Vue.set(container, 'matrixGroupFlag', false)
             }
             if (this.buildResourceType === 'THIRD_PARTY_AGENT_ID' && !this.container.dispatchType.agentType) {
                 this.handleContainerChange('dispatchType', Object.assign({
@@ -546,7 +574,7 @@
                 const { errors } = this
 
                 if (addErrors && addErrors.length) {
-                    addErrors.map(e => {
+                    addErrors.forEach(e => {
                         if (errors && errors.items.every(err => err.field !== e.field)) {
                             errors.add({
                                 field: e.field,
@@ -569,6 +597,12 @@
                     [name]: value
                 }, emptyValueObj))
                 this.handleContainerChange('buildEnv', {}) // 清空依赖编译环境
+            },
+            changeBuildResourceWithoutEnv (name, value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    [name]: value
+                }))
             },
             handleContainerChange (name, value) {
                 this.updateContainer({
@@ -595,7 +629,7 @@
             },
             handleContainerAppChange (preApp, curApp, version = '') {
                 const { container: { buildEnv }, getAppDefaultVersion } = this
-                if (preApp !== curApp && buildEnv.hasOwnProperty(preApp)) {
+                if (preApp !== curApp && Object.prototype.hasOwnProperty.call(buildEnv, preApp)) {
                     delete buildEnv[preApp]
                 }
                 const defaultAppVer = getAppDefaultVersion(curApp)
@@ -606,7 +640,6 @@
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
-                    console.log(name, typeof value, value)
                     this.handleContainerChange('buildEnv', {})
                 }
                 this.handleContainerChange(name, value)
@@ -632,9 +665,8 @@
                 const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },
-            addDockerImage () {
-                const url = `${WEB_URL_PREFIX}/artifactory/${this.projectId}/depot/project-image`
-                window.open(url, '_blank')
+            changeShowPerformance (isShow = false) {
+                this.isShowPerformance = isShow
             }
         }
     }

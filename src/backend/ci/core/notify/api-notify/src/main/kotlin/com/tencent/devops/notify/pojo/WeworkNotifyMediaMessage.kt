@@ -35,7 +35,7 @@ import java.io.InputStream
 @ApiModel("企业微信文本消息")
 data class WeworkNotifyMediaMessage(
     @ApiModelProperty("接收人Id", required = true)
-    val receivers: List<String>,
+    val receivers: Collection<String>,
     @ApiModelProperty("接收人类型", required = true)
     val receiverType: WeworkReceiverType,
     @ApiModelProperty("媒体内容", required = true)

@@ -27,24 +27,23 @@
 
 package com.tencent.devops.quality.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import org.jooq.DSLContext
 
-@Service
-class SampleQualityPermissionServiceImpl @Autowired constructor(
-    val authPermissionApi: AuthPermissionApi,
-    val authResourceApi: AuthResourceApi,
-    val qualityAuthServiceCode: QualityAuthServiceCode
-) : QualityPermissionService {
+@Suppress("ALL")
+class SampleQualityPermissionServiceImpl constructor(
+    override val authPermissionApi: AuthPermissionApi,
+    override val authResourceApi: AuthResourceApi,
+    override val qualityAuthServiceCode: QualityAuthServiceCode,
+    val qualityRuleDao: QualityRuleDao,
+    val groupDao: QualityNotifyGroupDao,
+    val dslContext: DSLContext
+) : AbsQualityPermissionServiceImpl(authPermissionApi, authResourceApi, qualityAuthServiceCode) {
 
     override fun validateGroupPermission(
         userId: String,
@@ -53,52 +52,19 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = qualityAuthServiceCode,
-                resourceType = AuthResourceType.QUALITY_GROUP,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(groupId),
-                permission = authPermission
-            )) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
-            )
-            throw PermissionForbiddenException(
-                message = message,
-                params = arrayOf(permissionMsg))
-        }
+        super.validateGroupPermission(userId, projectId, groupId, authPermission, message)
     }
 
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            resourceName = groupName
-        )
+        super.createGroupResource(userId, projectId, groupId, groupName)
     }
 
     override fun modifyGroupResource(projectId: String, groupId: Long, groupName: String) {
-        authResourceApi.modifyResource(
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            resourceName = groupName
-        )
+        super.modifyGroupResource(projectId, groupId, groupName)
     }
 
     override fun deleteGroupResource(projectId: String, groupId: Long) {
-        authResourceApi.deleteResource(
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId)
-        )
+        super.deleteGroupResource(projectId, groupId)
     }
 
     override fun filterGroup(
@@ -106,29 +72,11 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = authPermissionApi.getUserResourcesByPermissions(
-            user = user,
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val map = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { (key, value) ->
-            map[key] = value.map { HashUtil.decodeIdToLong(it) }
-        }
-        return map
+        return super.filterGroup(user, projectId, authPermissions)
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_GROUP,
-            projectCode = projectId,
-            permission = authPermission
-        )
+        return super.validateRulePermission(userId, projectId, authPermission)
     }
 
     override fun validateRulePermission(
@@ -137,22 +85,7 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = qualityAuthServiceCode,
-                resourceType = AuthResourceType.QUALITY_GROUP,
-                projectCode = projectId,
-                permission = authPermission
-            )) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
-            )
-            throw PermissionForbiddenException(
-                message = message,
-                params = arrayOf(permissionMsg)
-            )
-        }
+        super.validateRulePermission(userId, projectId, authPermission, message)
     }
 
     override fun validateRulePermission(
@@ -162,52 +95,19 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = qualityAuthServiceCode,
-                resourceType = AuthResourceType.QUALITY_GROUP,
-                projectCode = projectId,
-                resourceCode = HashUtil.encodeLongId(ruleId),
-                permission = authPermission)) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
-            )
-            throw PermissionForbiddenException(
-                message = message,
-                params = arrayOf(permissionMsg)
-            )
-        }
+        super.validateRulePermission(userId, projectId, ruleId, authPermission, message)
     }
 
     override fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_RULE,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(ruleId),
-            resourceName = ruleName
-        )
+        super.createRuleResource(userId, projectId, ruleId, ruleName)
     }
 
     override fun modifyRuleResource(projectId: String, ruleId: Long, ruleName: String) {
-        authResourceApi.modifyResource(
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_RULE,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(ruleId),
-            resourceName = ruleName
-        )
+        super.modifyRuleResource(projectId, ruleId, ruleName)
     }
 
     override fun deleteRuleResource(projectId: String, ruleId: Long) {
-        authResourceApi.deleteResource(
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_RULE,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(ruleId)
-        )
+        super.deleteRuleResource(projectId, ruleId)
     }
 
     override fun filterRules(
@@ -215,18 +115,58 @@ class SampleQualityPermissionServiceImpl @Autowired constructor(
         projectId: String,
         bkAuthPermissionSet: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        val permissionResourceMap = authPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = qualityAuthServiceCode,
-            resourceType = AuthResourceType.QUALITY_RULE,
-            projectCode = projectId,
-            permissions = bkAuthPermissionSet,
-            supplier = null
-        )
-        val permissionRuleMap = mutableMapOf<AuthPermission, List<Long>>()
-        permissionResourceMap.forEach { permission, list ->
-            permissionRuleMap[permission] = list.map { HashUtil.decodeIdToLong(it) }
+        return super.filterRules(userId, projectId, bkAuthPermissionSet)
+    }
+
+    override fun supplierForPermissionGroup(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            groupDao.list(
+                dslContext = dslContext,
+                projectId = projectId,
+                offset = 0,
+                limit = 500
+            ).forEach {
+                fakeList.add(it.id.toString())
+            }
+            fakeList
         }
-        return permissionRuleMap
+    }
+
+    override fun supplierForPermissionRule(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            qualityRuleDao.list(
+                dslContext = dslContext,
+                projectId = projectId
+            )?.forEach {
+                fakeList.add(it.id.toString())
+            }
+            fakeList
+        }
+    }
+
+    override fun supplierPermissionRule(projectId: String): List<Long> {
+        val projectRule = mutableListOf<Long>()
+        qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId
+        )?.forEach {
+            projectRule.add(it.id)
+        }
+        return projectRule
+    }
+
+    override fun supplierPermissionGroup(projectId: String): List<Long> {
+        val projectGroup = mutableListOf<Long>()
+        groupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = 0,
+            limit = 500
+        ).forEach {
+            projectGroup.add(it.id)
+        }
+        return projectGroup
     }
 }

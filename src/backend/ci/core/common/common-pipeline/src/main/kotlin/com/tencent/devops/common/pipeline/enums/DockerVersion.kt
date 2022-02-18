@@ -30,5 +30,9 @@ package com.tencent.devops.common.pipeline.enums
 enum class DockerVersion(val value: String) {
     TLINUX1_2("tlinux1.2"),
     TLINUX2_2("tlinux2.2"),
-    CENTOS7_2("centos7.2")
+
+    /**
+     * 用户自定义配置无编译环境镜像
+     */
+    CUSTOMIZE("customize")
 }

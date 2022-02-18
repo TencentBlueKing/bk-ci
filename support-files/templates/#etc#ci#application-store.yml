@@ -31,6 +31,7 @@ store:
   imageExecuteNullNotifyTplCode: IMAGE_EXECUTE_NULL_NOTIFY_TPL
   templateApproveSwitch: close
   imageApproveSwitch: close
+  imageAgentTypes: "DOCKER"
 
 logo:
   allowUploadLogoTypes: jpg,png,svg

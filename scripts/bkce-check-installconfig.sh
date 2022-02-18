@@ -58,7 +58,7 @@ install_config_conflict (){
 install_config_affinity (){
   local lonely_ip=$(echo "$1" | tr ',' '\n' | sort | uniq -u)
   if [ -n "$lonely_ip" ]; then
-    echo "install.config中$2模块需要部署到相同的主机, 但是如下IP中仅配置了其中一项: ${conflict_ip//$'\n'/,}."
+    echo "install.config中$2模块需要部署到相同的主机, 但是如下IP中仅配置了其中一项: ${lonely_ip//$'\n'/,}."
     return 1
   fi
 }
@@ -94,7 +94,7 @@ fi
 
 echo "检查 install.config, 请根据提示处理."
 # 蓝鲸冲突检测
-install_config_conflict "${BK_NGINX_IP_COMMA:-},$BK_CI_GATEWAY_IP_COMMA" \
+install_config_conflict "${BK_NGINX_IP_COMMA:-},${BK_CI_GATEWAY_IP_COMMA:-}" \
   "ci(gateway)与nginx" "需要独占80端口" \
   "将ci(gateway)移到其他节点"
 
@@ -123,6 +123,10 @@ then
   exit 1
 fi
 
+# docker冲突检查. 
+install_config_conflict "${BK_CI_AGENTLESS_IP_COMMA:-},${BK_CI_DOCKERHOST_IP_COMMA:-}" \
+  "ci(agentless)和ci(dockerhost)" "需要独占docker" \
+  "将ci(dockerhost)移到其他节点"
 # ci组件配置.
 install_config_exist "${BK_CI_GATEWAY_IP:-}" \
   "ci(gateway)" \

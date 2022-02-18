@@ -27,11 +27,16 @@
 
 package com.tencent.devops.process.engine.service.code
 
-import com.tencent.devops.process.engine.service.PipelineWebhookService
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.git.GitEvent
-import com.tencent.devops.process.pojo.code.github.GithubEvent
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GitlabWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.P4WebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import org.springframework.stereotype.Service
 
 @Service
@@ -39,11 +44,12 @@ class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
     override fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitWebHookMatcher(event)
 
     override fun createSvnWebHookMatcher(
-        event: SvnCommitEvent,
-        pipelineWebhookService: PipelineWebhookService
-    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+        event: SvnCommitEvent
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event)
 
     override fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
 
     override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
+
+    override fun createP4WebHookMatcher(event: P4Event): ScmWebhookMatcher = P4WebHookMatcher(event)
 }

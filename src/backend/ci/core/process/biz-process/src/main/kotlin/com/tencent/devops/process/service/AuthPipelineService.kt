@@ -27,35 +27,81 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthPipelineService @Autowired constructor(
-    val client: Client,
-    val authTokenApi: AuthTokenApi
+    val authTokenApi: AuthTokenApi,
+    val pipelineListFacadeService: PipelineListFacadeService,
+    val authProjectApi: AuthProjectApi,
+    val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) {
-    fun searchPipeline(
+    fun pipelineInfo(
+        callBackInfo: CallbackRequestDTO,
+        token: String,
+        returnPipelineId: Boolean? = false
+    ): CallbackBaseResponseDTO? {
+        val method = callBackInfo.method
+        val page = callBackInfo.page
+        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
+        when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                return getPipeline(
+                    projectId = projectId,
+                    offset = page.offset.toInt(),
+                    limit = page.limit.toInt(),
+                    token = token,
+                    returnPipelineId = returnPipelineId!!
+                )
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                return getPipelineInfo(ids, token, returnPipelineId!!)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                return searchPipeline(
+                    projectId = projectId,
+                    keyword = callBackInfo.filter.keyword,
+                    limit = page.limit.toInt(),
+                    offset = page.offset.toInt(),
+                    token = token,
+                    returnPipelineId = returnPipelineId!!
+                )
+            }
+        }
+        return null
+    }
+
+    private fun searchPipeline(
         projectId: String,
         keyword: String,
         limit: Int,
         offset: Int,
-        token: String
+        token: String,
+        returnPipelineId: Boolean
     ): SearchInstanceInfo {
         authTokenApi.checkToken(token)
-        val pipelineInfos =
-            client.get(ServiceAuthPipelineResource::class)
-                .searchPipelineInstances(projectId, offset, limit, keyword).data
+        val pipelineInfos = pipelineListFacadeService.searchByPipelineName(
+            projectId = projectId,
+            pipelineName = keyword,
+            limit = limit,
+            offset = offset
+        )
         val result = SearchInstanceInfo()
         if (pipelineInfos?.records == null) {
             logger.info("$projectId 项目下无流水线")
@@ -63,8 +109,13 @@ class AuthPipelineService @Autowired constructor(
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineInfos?.records?.map {
+            val entityId = if (returnPipelineId) {
+                it.pipelineId
+            } else {
+                it.id?.toString() ?: "0"
+            }
             val entity = InstanceInfoDTO()
-            entity.id = it.pipelineId
+            entity.id = entityId
             entity.displayName = it.pipelineName
             entityInfo.add(entity)
         }
@@ -72,11 +123,19 @@ class AuthPipelineService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, pipelineInfos.count)
     }
 
-    fun getPipeline(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+    private fun getPipeline(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        token: String,
+        returnPipelineId: Boolean
+    ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
-        val pipelineInfos =
-            client.get(ServiceAuthPipelineResource::class)
-                .pipelineList(projectId, offset, limit).data
+        val pipelineInfos = pipelineListFacadeService.getPipelinePage(
+            projectId = projectId,
+            limit = limit,
+            offset = offset
+        )
         val result = ListInstanceInfo()
         if (pipelineInfos?.records == null) {
             logger.info("$projectId 项目下无流水线")
@@ -84,8 +143,13 @@ class AuthPipelineService @Autowired constructor(
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineInfos?.records?.map {
+            val entityId = if (returnPipelineId) {
+                it.pipelineId
+            } else {
+                it.id?.toString() ?: "0"
+            }
             val entity = InstanceInfoDTO()
-            entity.id = it.pipelineId
+            entity.id = entityId
             entity.displayName = it.pipelineName
             entityInfo.add(entity)
         }
@@ -93,22 +157,49 @@ class AuthPipelineService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, pipelineInfos.count)
     }
 
-    fun getPipelineInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+    private fun getPipelineInfo(
+        ids: List<Any>?,
+        token: String,
+        returnPipelineId: Boolean
+    ): FetchInstanceInfoResponseDTO? {
         authTokenApi.checkToken(token)
-        val pipelineInfos =
-            client.get(ServiceAuthPipelineResource::class)
-                .pipelineInfos(ids!!.toSet() as Set<String>).data
+
+        val pipelineId = ids!!.first().toString()
+        val idNumType = pipelineId.matches("-?\\d+(\\.\\d+)?".toRegex()) // 判断是否为纯数字
+
+        val pipelineInfos = if (idNumType) {
+            // 纯数字按自增id获取
+            pipelineListFacadeService.getByAutoIds(ids.map { it.toString().toInt() })
+        } else {
+            // 非纯数字按pipelineId获取
+            pipelineListFacadeService.getByPipelineIds(pipelineIds = ids!!.toSet() as Set<String>)
+        }
         val result = FetchInstanceInfo()
 
         if (pipelineInfos == null || pipelineInfos.isEmpty()) {
             logger.info("$ids 未匹配到启用流水线")
             return result.buildFetchInstanceFailResult()
         }
+
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineInfos?.map {
+            val projectManager = authProjectApi.getProjectUsers(
+                projectCode = it.projectId,
+                group = BkAuthGroup.MANAGER,
+                serviceCode = pipelineAuthServiceCode
+            )
+            val approve = mutableListOf<String>()
+            approve.addAll(projectManager)
+            it.createUser?.let { it1 -> approve.add(it1) }
+            val entityId = if (returnPipelineId) {
+                it.pipelineId
+            } else {
+                it.id?.toString() ?: "0"
+            }
             val entity = InstanceInfoDTO()
-            entity.id = it.pipelineId
+            entity.id = entityId
             entity.displayName = it.pipelineName
+            entity.iamApprover = approve
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")
@@ -116,6 +207,6 @@ class AuthPipelineService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(AuthPipelineService::class.java)
     }
 }

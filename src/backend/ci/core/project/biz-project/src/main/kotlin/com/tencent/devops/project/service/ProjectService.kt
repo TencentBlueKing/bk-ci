@@ -107,6 +107,8 @@ interface ProjectService {
 
     fun list(limit: Int, offset: Int): Page<ProjectVO>
 
+    fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO>
+
     fun getAllProject(): List<ProjectVO>
 
     /**
@@ -143,4 +145,6 @@ interface ProjectService {
     fun listSecrecyProject(): Set<String>?
 
     fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean
+
+    fun relationIamProject(projectCode: String, relationId: String): Boolean
 }

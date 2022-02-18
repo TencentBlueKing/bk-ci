@@ -31,15 +31,14 @@ import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.artifactory.pojo.EnvSet
 import com.tencent.devops.artifactory.pojo.PushTypeEnum
 import com.tencent.devops.artifactory.pojo.RemoteResourceInfo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.ArrayList
 
 @Service
 @Suppress("ALL")
@@ -54,7 +53,7 @@ class EnvServiceExt @Autowired constructor(
             PushTypeEnum.ENVId.name -> getRemoteInfoByEnvId(targetMachine)
             PushTypeEnum.NodeId.name -> getRemoteInfoByNodeId(targetMachine)
             PushTypeEnum.ENVName.name -> getRemoteInfoByEnvName(targetMachine, userId, projectId)
-            else -> throw RuntimeException()
+            else -> throw IllegalArgumentException("Bad type: $pushType")
         }
         checkEnvNodeExists(userId, projectId, envSet)
         logger.info("push file by Job: envSet[$envSet]")
@@ -83,10 +82,9 @@ class EnvServiceExt @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(
-                messageCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+            throw ErrorCodeException(
+                errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
                 params = arrayOf(noExistsEnvNames.toString())
-            )
             )
         }
 
@@ -100,9 +98,10 @@ class EnvServiceExt @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(
-                messageCode = PushMessageCode.ENV_MACHINE_NOT_AUTH,
-                params = arrayOf(noAuthEnvIds.toString())))
+            throw ErrorCodeException(
+                errorCode = PushMessageCode.ENV_MACHINE_NOT_AUTH,
+                params = arrayOf(noAuthEnvIds.toString())
+            )
         }
         val nodeHashIds: List<String> = ArrayList()
 //        val ipLists: List<EnvSet.IpDto> = buildIpDto()
@@ -133,9 +132,10 @@ class EnvServiceExt @Autowired constructor(
             val noExistsEnvIds = envSet.envHashIds.subtract(envIdList)
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(
-                    messageCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
-                    params = arrayOf(noExistsEnvIds.toString())))
+                throw ErrorCodeException(
+                    errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                    params = arrayOf(noExistsEnvIds.toString())
+                )
             }
         }
         if (envSet.nodeHashIds.isNotEmpty()) {
@@ -148,9 +148,10 @@ class EnvServiceExt @Autowired constructor(
             val noExistsNodeIds = envSet.nodeHashIds.subtract(nodeIdList)
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(
-                    messageCode = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
-                    params = arrayOf(noExistsNodeIds.toString())))
+                throw ErrorCodeException(
+                    errorCode = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
+                    params = arrayOf(noExistsNodeIds.toString())
+                )
             }
         }
     }
@@ -162,14 +163,12 @@ class EnvServiceExt @Autowired constructor(
 
     private fun checkParams(str: String?): Boolean {
         if (str == null || str.isEmpty()) {
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(
-                messageCode = PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY,
-                params = null))
+            throw ErrorCodeException(errorCode = PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY)
         }
         return true
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(EnvServiceExt::class.java)
     }
 }

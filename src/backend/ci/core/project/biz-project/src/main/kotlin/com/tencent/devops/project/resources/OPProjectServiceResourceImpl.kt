@@ -30,7 +30,6 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPProjectServiceResource
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.GrayTestInfo
 import com.tencent.devops.project.pojo.service.GrayTestListInfo
 import com.tencent.devops.project.pojo.service.OPPServiceVO
@@ -38,22 +37,19 @@ import com.tencent.devops.project.pojo.service.ServiceCreateInfo
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceType
 import com.tencent.devops.project.pojo.service.ServiceTypeModify
+import com.tencent.devops.project.pojo.service.ServiceUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.GrayTestService
 import com.tencent.devops.project.service.ServiceTypeService
 import com.tencent.devops.project.service.UserProjectServiceService
-import org.slf4j.LoggerFactory
 
 @RestResource
+@Suppress("TooManyFunctions")
 class OPProjectServiceResourceImpl constructor(
     private val userProjectServiceService: UserProjectServiceService,
     private val serviceTypeService: ServiceTypeService,
     private val grayTestService: GrayTestService
 ) : OPProjectServiceResource {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(OPProjectServiceResourceImpl::class.java)
-    }
 
     override fun listUsers(userId: String): Result<Map<String, List<Any>>> {
         return Result(grayTestService.listAllUsers())
@@ -139,13 +135,19 @@ class OPProjectServiceResourceImpl constructor(
     override fun updateService(
         userId: String,
         serviceId: Long,
-        serviceCreateInfo: ServiceCreateInfo
+        serviceUpdateInfo: ServiceUpdateInfo
     ): Result<Boolean> {
-        return userProjectServiceService.updateService(userId, serviceId, serviceCreateInfo)
+        serviceUpdateInfo.serviceId = serviceId
+        return userProjectServiceService.updateService(userId, serviceUpdateInfo)
     }
 
-    override fun updateServiceUrlByBatch(userId: String, serviceUpdateUrls: List<ServiceUpdateUrls>): Result<Int> {
-        return userProjectServiceService.updateServiceUrls(userId, serviceUpdateUrls)
+    override fun updateServiceByName(
+        userId: String,
+        englishName: String,
+        serviceUpdateInfo: ServiceUpdateInfo
+    ): Result<Boolean> {
+        serviceUpdateInfo.englishName = englishName
+        return userProjectServiceService.updateService(userId, serviceUpdateInfo)
     }
 
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {

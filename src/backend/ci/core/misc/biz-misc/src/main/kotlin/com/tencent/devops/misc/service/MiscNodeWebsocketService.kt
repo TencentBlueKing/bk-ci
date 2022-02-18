@@ -28,7 +28,6 @@
 package com.tencent.devops.misc.service
 
 import NodePath
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.BuildPageInfo
@@ -41,7 +40,6 @@ import org.springframework.stereotype.Service
 
 @Service
 class MiscNodeWebsocketService @Autowired constructor(
-    val objectMapper: ObjectMapper,
     val redisOperation: RedisOperation
 ) {
     fun buildDetailMessage(
@@ -63,7 +61,6 @@ class MiscNodeWebsocketService @Autowired constructor(
                 redisOperation = redisOperation,
                 page = page,
                 pushType = WebSocketType.DETAIL,
-                objectMapper = objectMapper,
                 notifyPost = NotifyPost(
                         module = "environment",
                         level = NotityLevel.LOW_LEVEL.getLevel(),
@@ -77,6 +74,6 @@ class MiscNodeWebsocketService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(MiscNodeWebsocketService::class.java)
     }
 }

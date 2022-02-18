@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.option.StageControlOption
+import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -43,8 +44,6 @@ data class Stage(
     var tag: List<String?>? = null,
     @ApiModelProperty("阶段状态", required = false, hidden = true)
     var status: String? = null,
-    @ApiModelProperty("阶段手动审核状态", required = false, hidden = true)
-    var reviewStatus: String? = null,
     @ApiModelProperty("阶段启动时间", required = false, hidden = true)
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, hidden = true)
@@ -56,7 +55,34 @@ data class Stage(
     @ApiModelProperty("标识是否为FinallyStage，每个Model只能包含一个FinallyStage，并且处于最后位置", required = false)
     val finally: Boolean = false,
     @ApiModelProperty("当前Stage是否能重试", required = false)
-    var canRetry: Boolean? = false,
+    var canRetry: Boolean? = null,
     @ApiModelProperty("流程控制选项", required = true)
-    var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
-)
+    var stageControlOption: StageControlOption? = null, // 为了兼容旧数据，所以定义为可空以及var
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var checkIn: StagePauseCheck? = null, // stage准入配置
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var checkOut: StagePauseCheck? = null // stage准出配置
+) {
+    /**
+     * 刷新stage的所有配置，如果是初始化则重置所有历史数据
+     */
+    fun resetBuildOption(init: Boolean? = false) {
+        if (init == true) {
+            status = null
+            startEpoch = null
+            elapsed = null
+        }
+        checkIn?.fixReviewGroups(init == true)
+        checkOut?.fixReviewGroups(init == true)
+        if (stageControlOption?.manualTrigger == true && checkIn == null) {
+            checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
+        }
+    }
+
+    fun getContainer(vmSeqId: String): Container? {
+        containers.forEach { container ->
+            return container.getContainerById(vmSeqId) ?: return@forEach
+        }
+        return null
+    }
+}

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
+
 package disttask
 
 import (
@@ -6,13 +15,15 @@ import (
 	"strconv"
 	"strings"
 
-	"build-booster/common/blog"
-	"build-booster/common/codec"
-	commonMySQL "build-booster/common/mysql"
-	commonTypes "build-booster/common/types"
-	"build-booster/gateway/pkg/api"
-	"build-booster/server/pkg/engine"
-	"build-booster/server/pkg/engine/disttask"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
+
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
+	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
+	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
+	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
 
 	"github.com/emicklei/go-restful"
 )
@@ -29,7 +40,8 @@ func ListTask(req *restful.Request, resp *restful.Response) {
 	taskList, length, err := defaultMySQL.ListTask(opts)
 	if err != nil {
 		blog.Errorf("list task failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListTaskFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListTaskFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -48,7 +60,8 @@ func ListWorkStats(req *restful.Request, resp *restful.Response) {
 	wsList, length, err := defaultMySQL.ListWorkStats(opts)
 	if err != nil {
 		blog.Errorf("list work stats failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWorkStatsFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWorkStatsFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -67,7 +80,8 @@ func ListProject(req *restful.Request, resp *restful.Response) {
 	projectList, length, err := defaultMySQL.ListProject(opts)
 	if err != nil {
 		blog.Errorf("list project failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListProjectFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListProjectFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -88,6 +102,12 @@ func ListProject(req *restful.Request, resp *restful.Response) {
 
 // UpdateProject handle the http request for updating project with some fields.
 func UpdateProject(req *restful.Request, resp *restful.Response) {
+	req.SetAttribute(api.QueryProjectIDKey, req.PathParameter(api.QueryProjectIDKey))
+	req.SetAttribute(querySceneKey, req.PathParameter(querySceneKey))
+	updateProject(req, resp)
+}
+
+func updateProject(req *restful.Request, resp *restful.Response) {
 	var projectType UpdateProjectType
 	rawBody, err := ioutil.ReadAll(req.Request.Body)
 	if err != nil {
@@ -104,13 +124,13 @@ func UpdateProject(req *restful.Request, resp *restful.Response) {
 
 	if projectType.Operator == "" {
 		blog.Errorf("update project failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
-	projectID := req.PathParameter(api.QueryProjectIDKey)
-	scene := req.PathParameter(querySceneKey)
-
+	projectID, _ := req.Attribute(api.QueryProjectIDKey).(string)
+	scene, _ := req.Attribute(querySceneKey).(string)
 	if scene != "" {
 		projectID = commonTypes.GetProjectIDWithScene(projectID, scene)
 		projectType.Data.Scene = scene
@@ -128,10 +148,13 @@ func UpdateProject(req *restful.Request, resp *restful.Response) {
 
 	var record []byte
 	_ = codec.EncJSON(projectType.RawData, &record)
-	blog.Infof("receive a project update: ID(%s) Operator(%s) Data: %s", projectID, projectType.Operator, string(record))
-	if err := defaultMySQL.CreateOrUpdateProjectSetting(&projectType.Data, projectType.RawData); err != nil {
+	blog.Infof("receive a project update: ID(%s) Operator(%s) Data: %s",
+		projectID, projectType.Operator, string(record))
+	if err := defaultMySQL.CreateOrUpdateProjectSetting(
+		&projectType.Data.TableProjectSetting, projectType.RawData); err != nil {
 		blog.Errorf("update project failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateProjectFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateProjectFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -140,6 +163,12 @@ func UpdateProject(req *restful.Request, resp *restful.Response) {
 
 // DeleteProject handle the http request for deleting project.
 func DeleteProject(req *restful.Request, resp *restful.Response) {
+	req.SetAttribute(api.QueryProjectIDKey, req.PathParameter(api.QueryProjectIDKey))
+	req.SetAttribute(querySceneKey, req.PathParameter(querySceneKey))
+	deleteProject(req, resp)
+}
+
+func deleteProject(req *restful.Request, resp *restful.Response) {
 	var projectType DeleteProjectType
 	if err := codec.DecJSONReader(req.Request.Body, &projectType); err != nil {
 		blog.Errorf("delete project get data failed: %v", err)
@@ -149,12 +178,13 @@ func DeleteProject(req *restful.Request, resp *restful.Response) {
 
 	if projectType.Operator == "" {
 		blog.Errorf("delete project failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
-	projectID := req.PathParameter(api.QueryProjectIDKey)
-	scene := req.PathParameter(querySceneKey)
+	projectID, _ := req.Attribute(api.QueryProjectIDKey).(string)
+	scene, _ := req.Attribute(querySceneKey).(string)
 	if scene != "" {
 		projectID = commonTypes.GetProjectIDWithScene(projectID, scene)
 	}
@@ -162,7 +192,8 @@ func DeleteProject(req *restful.Request, resp *restful.Response) {
 	blog.Infof("receive a project delete: ID(%s) Operator(%s)", projectID, projectType.Operator)
 	if err := defaultMySQL.DeleteProjectSetting(projectID); err != nil {
 		blog.Errorf("delete project failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteProjectFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteProjectFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -181,7 +212,8 @@ func ListWhitelist(req *restful.Request, resp *restful.Response) {
 	whitelistList, _, err := defaultMySQL.ListWhitelist(opts)
 	if err != nil {
 		blog.Errorf("list whitelist failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWhiteListFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWhiteListFailed,
+			Message: err.Error()})
 		return
 	}
 	for _, wl := range whitelistList {
@@ -204,15 +236,21 @@ func UpdateWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if whitelistType.Operator == "" {
 		blog.Errorf("update whitelist failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
+	scene, _ := req.Attribute(querySceneKey).(string)
+
 	whiteList := whitelistType.Data
 	for _, wl := range whiteList {
+		wl.ProjectID = commonTypes.GetProjectIDWithScene(wl.ProjectID, scene)
+
 		if err := wl.CheckData(); err != nil {
 			blog.Errorf("update whitelist check data failed: %v", err)
-			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
+			api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam,
+				Message: err.Error()})
 			return
 		}
 	}
@@ -223,7 +261,8 @@ func UpdateWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if err := defaultMySQL.PutWhitelist(whiteList); err != nil {
 		blog.Errorf("update whitelist failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateWhiteListFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateWhiteListFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -241,11 +280,16 @@ func DeleteWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if whitelistType.Operator == "" {
 		blog.Errorf("delete whitelist failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
+
+	scene, _ := req.Attribute(querySceneKey).(string)
+
 	keys := whitelistType.Data
 	for _, key := range keys {
+		key.ProjectID = commonTypes.GetProjectIDWithScene(key.ProjectID, scene)
 		if key.ProjectID == "" {
 			key.ProjectID = engine.WhiteListAllProjectID
 		}
@@ -257,7 +301,8 @@ func DeleteWhitelist(req *restful.Request, resp *restful.Response) {
 
 	if err := defaultMySQL.DeleteWhitelist(keys); err != nil {
 		blog.Errorf("delete whitelist failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteWhiteListFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteWhiteListFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -276,7 +321,8 @@ func ListWorker(req *restful.Request, resp *restful.Response) {
 	workerList, _, err := defaultMySQL.ListWorker(opts)
 	if err != nil {
 		blog.Errorf("list worker failed opts(%v): %v", opts, err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWorkerFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListWorkerFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -285,6 +331,12 @@ func ListWorker(req *restful.Request, resp *restful.Response) {
 
 // UpdateWorker handle the http request for updating worker with full fields.
 func UpdateWorker(req *restful.Request, resp *restful.Response) {
+	req.SetAttribute(queryWorkerVersionKey, req.PathParameter(queryWorkerVersionKey))
+	req.SetAttribute(querySceneKey, req.PathParameter(querySceneKey))
+	updateWorker(req, resp)
+}
+
+func updateWorker(req *restful.Request, resp *restful.Response) {
 	var workerType UpdateWorkerType
 	if err := codec.DecJSONReader(req.Request.Body, &workerType); err != nil {
 		blog.Errorf("update worker get data failed: %v", err)
@@ -294,24 +346,27 @@ func UpdateWorker(req *restful.Request, resp *restful.Response) {
 
 	if workerType.Operator == "" {
 		blog.Errorf("update worker failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
 	worker := workerType.Data
-	worker.WorkerVersion = req.PathParameter(queryWorkerVersionKey)
-	worker.Scene = req.PathParameter(querySceneKey)
+	worker.WorkerVersion, _ = req.Attribute(queryWorkerVersionKey).(string)
+	worker.Scene, _ = req.Attribute(querySceneKey).(string)
 	if err := worker.CheckData(); err != nil {
 		blog.Errorf("update worker failed: %v", err)
 		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrInvalidParam, Message: err.Error()})
 		return
 	}
 
-	blog.Infof("receive a worker update: Operator(%s) workerVersion(%s)", workerType.Operator, worker.WorkerVersion)
+	blog.Infof("receive a worker update: Operator(%s) workerVersion(%s)",
+		workerType.Operator, worker.WorkerVersion)
 
 	if err := defaultMySQL.PutWorker(&worker); err != nil {
 		blog.Errorf("update worker failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateWorkerFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrUpdateWorkerFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -320,6 +375,12 @@ func UpdateWorker(req *restful.Request, resp *restful.Response) {
 
 // DeleteWorker handle the http request for deleting worker.
 func DeleteWorker(req *restful.Request, resp *restful.Response) {
+	req.SetAttribute(queryWorkerVersionKey, req.PathParameter(queryWorkerVersionKey))
+	req.SetAttribute(querySceneKey, req.PathParameter(querySceneKey))
+	deleteWorker(req, resp)
+}
+
+func deleteWorker(req *restful.Request, resp *restful.Response) {
 	var workerType DeleteWorkerType
 	if err := codec.DecJSONReader(req.Request.Body, &workerType); err != nil {
 		blog.Errorf("delete worker get data failed: %v", err)
@@ -329,16 +390,19 @@ func DeleteWorker(req *restful.Request, resp *restful.Response) {
 
 	if workerType.Operator == "" {
 		blog.Errorf("delete worker failed: operator not specific")
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific, Message: "operator no specific"})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrOperatorNoSpecific,
+			Message: "operator no specific"})
 		return
 	}
 
-	workerVersion := req.PathParameter(queryWorkerVersionKey)
-	scene := req.PathParameter(querySceneKey)
-	blog.Infof("receive a worker delete: workerVersion(%s) scene(%s) Operator(%s)", workerVersion, scene, workerType.Operator)
+	workerVersion, _ := req.Attribute(queryWorkerVersionKey).(string)
+	scene, _ := req.Attribute(querySceneKey).(string)
+	blog.Infof("receive a worker delete: workerVersion(%s) scene(%s) Operator(%s)",
+		workerVersion, scene, workerType.Operator)
 	if err := defaultMySQL.DeleteWorker(workerVersion, scene); err != nil {
 		blog.Errorf("delete worker failed: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteWorkerFailed, Message: err.Error()})
+		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrDeleteWorkerFailed,
+			Message: err.Error()})
 		return
 	}
 
@@ -433,7 +497,14 @@ func getListOptions(req *restful.Request, resource string) (commonMySQL.ListOpti
 				continue
 			}
 		case "WORKER":
-			break
+			if _, ok := listWorkerInKey[k]; ok {
+				v, err := parseType(k, rv, true)
+				if err != nil {
+					return opts, err
+				}
+				opts.In(k, v)
+				continue
+			}
 		case "WORK_STATS":
 			if _, ok := listWorkStatsInKey[k]; ok {
 				v, err := parseType(k, rv, true)
@@ -514,13 +585,21 @@ type OperatorType struct {
 	Operator string `json:"operator"`
 }
 
+// UpdateProjectSettingShell get project settings and add some extra message
+type UpdateProjectSettingShell struct {
+	disttask.TableProjectSetting
+
+	CCacheEnable bool `json:"ccache_enabled"`
+}
+
 // UpdateProjectType describe the param of http request to update project.
 type UpdateProjectType struct {
 	OperatorType
-	Data    disttask.TableProjectSetting `json:"data"`
-	RawData map[string]interface{}       `json:"-"`
+	Data    UpdateProjectSettingShell `json:"data"`
+	RawData map[string]interface{}    `json:"-"`
 }
 
+// Load UpdateProjectType from http body bytes
 func (upt *UpdateProjectType) Load(rawBody []byte) error {
 	if err := codec.DecJSON(rawBody, upt); err != nil {
 		return err
@@ -545,6 +624,37 @@ func (upt *UpdateProjectType) CheckData() error {
 	// check project_id can not be empty
 	if upt.RawData["project_id"] == "" {
 		return fmt.Errorf("projectID empty")
+	}
+
+	if _, ok := upt.RawData["request_cpu"].(string); ok {
+		delete(upt.RawData, "request_cpu")
+	}
+
+	if upt.Data.RequestCPU > 0 {
+		upt.RawData["request_cpu"] = upt.Data.RequestCPU
+	}
+
+	if _, ok := upt.RawData["least_cpu"].(string); ok {
+		delete(upt.RawData, "least_cpu")
+	}
+
+	if upt.Data.LeastCPU > 0 {
+		upt.RawData["least_cpu"] = upt.Data.LeastCPU
+	}
+
+	switch upt.Data.Scene {
+	case types.BoosterCC.String():
+
+		// 兼容ccache_enabled在upsert project时打平的需求
+		if v, ok := upt.RawData["ccache_enabled"]; ok {
+			if t, ok := v.(bool); ok {
+				extra := fmt.Sprintf("{\"ccache_enabled\":%t}", t)
+				upt.Data.Extra = extra
+				upt.RawData["extra"] = extra
+			}
+
+			delete(upt.RawData, "ccache_enabled")
+		}
 	}
 
 	upt.Data.EngineName = disttask.EngineName

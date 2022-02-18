@@ -33,9 +33,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElem
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,7 +43,6 @@ import org.springframework.stereotype.Component
 @Component
 class QualityGateInTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val templateService: TemplateService,
     private val pipelineBuildQualityService: PipelineBuildQualityService
 ) : IAtomTask<QualityGateInElement> {
@@ -59,7 +56,7 @@ class QualityGateInTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-        return QualityUtils.tryFinish(task, buildLogPrinter)
+        return pipelineBuildQualityService.tryFinish(task, buildLogPrinter)
     }
 
     override fun execute(
@@ -67,25 +64,22 @@ class QualityGateInTaskAtom @Autowired constructor(
         param: QualityGateInElement,
         runVariables: Map<String, String>
     ): AtomResponse {
-        val checkResult = QualityUtils.getCheckResult(
+        val checkResult = pipelineBuildQualityService.getCheckResult(
             task = task,
             interceptTaskName = param.interceptTaskName,
             interceptTask = param.interceptTask,
             runVariables = runVariables,
             buildLogPrinter = buildLogPrinter,
             position = ControlPointPosition.BEFORE_POSITION,
-            pipelineBuildQualityService = pipelineBuildQualityService,
-            templateId = templateService.getTemplateIdByPipeline(task.pipelineId)
+            templateId = templateService.getTemplateIdByPipeline(task.projectId, task.pipelineId)
         )
 
-        return QualityUtils.handleResult(
+        return pipelineBuildQualityService.handleResult(
             position = ControlPointPosition.BEFORE_POSITION,
             task = task,
             interceptTask = param.interceptTask!!,
             checkResult = checkResult,
-            buildLogPrinter = buildLogPrinter,
-            pipelineBuildQualityService = pipelineBuildQualityService,
-            pipelineBuildDetailService = pipelineBuildDetailService
+            buildLogPrinter = buildLogPrinter
         )
     }
 }

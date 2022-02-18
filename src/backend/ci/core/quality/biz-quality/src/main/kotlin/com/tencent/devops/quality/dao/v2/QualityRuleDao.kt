@@ -146,7 +146,7 @@ class QualityRuleDao {
     fun getById(dslContext: DSLContext, ruleId: Long): TQualityRuleRecord? {
         with(TQualityRule.T_QUALITY_RULE) {
             return dslContext.selectFrom(this)
-                    .where(ID.eq(ruleId).and(ENABLE.eq(true)))
+                    .where(ID.eq(ruleId))
                     .fetchOne() ?: throw NotFoundException("RuleId: $ruleId not found")
         }
     }
@@ -209,6 +209,42 @@ class QualityRuleDao {
         }
     }
 
+    fun listByPipelineRange(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        enable: Boolean = true
+    ): Result<TQualityRuleRecord>? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                ENABLE.eq(enable)
+            )
+            if (pipelineId != null) conditions.add(INDICATOR_RANGE.like("%$pipelineId%"))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
+    fun listByTemplateRange(
+        dslContext: DSLContext,
+        projectId: String,
+        templateId: String?,
+        enable: Boolean = true
+    ): Result<TQualityRuleRecord>? {
+        with(TQualityRule.T_QUALITY_RULE) {
+            val conditions = mutableListOf(
+                PROJECT_ID.eq(projectId),
+                ENABLE.eq(enable)
+            )
+            if (templateId != null) conditions.add(PIPELINE_TEMPLATE_RANGE.like("%$templateId%"))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
     fun plusInterceptTimes(dslContext: DSLContext, ruleId: Long) {
         with(TQualityRule.T_QUALITY_RULE) {
             dslContext.update(this)
@@ -227,6 +263,18 @@ class QualityRuleDao {
         }
     }
 
+    fun listByIds(
+        dslContext: DSLContext,
+        ruleIds: Set<String>
+    ): Result<TQualityRuleRecord> {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(ruleIds))
+                .orderBy(CREATE_TIME.desc())
+                .fetch()
+        }
+    }
+
     fun listByPosition(dslContext: DSLContext, projectId: String, position: String): Result<TQualityRuleRecord>? {
         with(TQualityRule.T_QUALITY_RULE) {
             val sql = dslContext.selectFrom(this)
@@ -238,6 +286,45 @@ class QualityRuleDao {
                     )
                 )
             return sql.fetch()
+        }
+    }
+
+    fun deleteByPipelineId(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(INDICATOR_RANGE.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun searchByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        name: String
+    ): List<TQualityRuleRecord>? {
+        return with(TQualityRule.T_QUALITY_RULE) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(NAME.like("%$name%")))
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun countByIdLike(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String
+    ): Long {
+        with(TQualityRule.T_QUALITY_RULE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.like("%$name%"))
+                .fetchOne(0, kotlin.Long::class.java)!!
         }
     }
 }

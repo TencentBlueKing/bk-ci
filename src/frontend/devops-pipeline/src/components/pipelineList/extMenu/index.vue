@@ -31,6 +31,12 @@
             clickMenuItem (item) {
                 if (item.disable) return
 
+                if (item.isJumpToTem) {
+                    this.$refs.dotMenuRef.hideHandler()
+                    item.handler(this.config.templateId)
+                    return
+                }
+
                 this.$refs.dotMenuRef.hideHandler()
                 item.handler(this.config.pipelineId)
             }

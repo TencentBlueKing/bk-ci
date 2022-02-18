@@ -69,45 +69,8 @@
                             :is-error="errors.has(`param-${param.key}.defaultValue`)"
                             :error-msg="errors.first(`param-${param.key}.defaultValue`)"
                             :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.valueType)}`)">
-                            <selector
-                                :popover-min-width="250"
-                                v-if="isSelectorParam(param.valueType)"
-                                :handle-change="(name, value) => handleParamChange(name, value, index)"
-                                :list="transformOpt(param.options)"
-                                :multi-select="isMultipleParam(param.valueType)"
-                                name="value"
-                                :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.selectDefaultValueTips')"
-                                :disabled="disabled"
-                                :key="param.valueType"
-                                :value="getSelectorDefaultVal(param)">
-                            </selector>
-                            <enum-input
-                                v-if="isBooleanParam(param.valueType)"
-                                name="value"
-                                :list="boolList"
-                                :disabled="disabled"
-                                :data-vv-scope="`param-${param.key}`"
-                                :handle-change="(name, value) => handleParamChange(name, value, index)"
-                                :value="param.value">
-                            </enum-input>
-                            <vuex-input
-                                v-if="isStringParam(param.valueType)"
-                                :disabled="disabled"
-                                :handle-change="(name, value) => handleParamChange(name, value, index)"
-                                name="value"
-                                :click-unfold="true"
-                                :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.defaultValueTips')" :value="param.value" />
-                            <vuex-textarea
-                                v-if="isTextareaParam(param.valueType)"
-                                :click-unfold="true"
-                                :disabled="disabled"
-                                :handle-change="(name, value) => handleParamChange(name, value, index)"
-                                name="value"
-                                :data-vv-scope="`param-${param.key}`"
-                                :placeholder="$t('editPage.defaultValueTips')"
-                                :value="param.value" />
+                            <!-- 自定义变量展示 -->
+                            <define-param-show :param="param" :global-params="globalParams" :param-index="index" @handleParamChange="handleParamChange" />
                         </bk-form-item>
                     </div>
                     <bk-form-item
@@ -157,17 +120,14 @@
     import draggable from 'vuedraggable'
     import { deepCopy } from '@/utils/util'
     import atomFieldMixin from '../../atomFormField/atomFieldMixin'
+    import DefineParamShow from './show.vue'
     import Selector from '@/components/atomFormField/Selector'
     import Accordion from '@/components/atomFormField/Accordion'
     import VuexInput from '@/components/atomFormField/VuexInput'
-    import EnumInput from '@/components/atomFormField/EnumInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
 
     import {
-        isTextareaParam,
-        isStringParam,
-        isBooleanParam,
         isEnumParam,
         isMultipleParam,
         getParamsDefaultValueLabel,
@@ -176,17 +136,6 @@
         CHECK_DEFAULT_PARAM,
         STRING
     } from '@/store/modules/atom/paramsConfig'
-
-    const BOOLEAN = [
-        {
-            value: true,
-            label: true
-        },
-        {
-            value: false,
-            label: false
-        }
-    ]
     
     const getDefineParamList = () => {
         return CHECK_PARAM_LIST.map(item => {
@@ -204,9 +153,9 @@
             draggable,
             Accordion,
             VuexInput,
-            EnumInput,
             VuexTextarea,
-            AtomCheckbox
+            AtomCheckbox,
+            DefineParamShow
         },
         mixins: [atomFieldMixin],
         props: {
@@ -244,10 +193,6 @@
                     animation: 200,
                     disabled: this.disabled
                 }
-            },
-
-            boolList () {
-                return BOOLEAN
             }
         },
         watch: {
@@ -262,9 +207,6 @@
             this.globalParams = this.value
         },
         methods: {
-            isTextareaParam,
-            isStringParam,
-            isBooleanParam,
             isMultipleParam,
             getParamsDefaultValueLabel,
             getParamsDefaultValueLabelTips,
@@ -320,7 +262,7 @@
                         paramIdKey: `paramIdKey-${this.paramIdCount++}`
                     }
                     if (this.settingKey === 'templateParams') {
-                        Object.assign(param, { 'required': false })
+                        Object.assign(param, { required: false })
                     }
                     value.splice(index + 1, 0, param)
                 } else {
@@ -330,29 +272,8 @@
                 this.$emit('input', value)
             },
 
-            editParamShow (paramIndex) {
-                let isShow = false
-                const param = this.value[paramIndex]
-                if (param) {
-                    isShow = param.required
-                }
-                this.handleParamChange('required', !isShow, paramIndex)
-            },
-
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
-            },
-            
-            transformOpt (opts) {
-                const uniqueMap = {}
-                opts = opts.filter(opt => opt.key.length)
-                return Array.isArray(opts) ? opts.filter(opt => {
-                    if (!uniqueMap[opt.key]) {
-                        uniqueMap[opt.key] = 1
-                        return true
-                    }
-                    return false
-                }).map(opt => ({ id: opt.key, name: opt.value })) : []
             },
 
             getOptions (param) {

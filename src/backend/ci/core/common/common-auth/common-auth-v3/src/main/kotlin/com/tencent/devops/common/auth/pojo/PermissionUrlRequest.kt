@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.auth.pojo
 
+import com.tencent.devops.common.auth.api.pojo.Action
+
 data class PermissionUrlRequest(
     val system: String,
     val action: List<Action>

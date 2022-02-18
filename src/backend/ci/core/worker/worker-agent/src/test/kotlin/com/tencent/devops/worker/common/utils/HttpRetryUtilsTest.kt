@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.util.HttpRetryUtils
 import org.junit.Assert
 import org.junit.Test
 import java.net.HttpRetryException

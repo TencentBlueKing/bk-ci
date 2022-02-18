@@ -64,9 +64,9 @@ import {
     SET_EXECUTE_STATUS,
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
-    TOGGLE_REVIEW_DIALOG,
     TOGGLE_STAGE_REVIEW_PANEL,
-    SET_IMPORTED_JSON
+    SET_IMPORTED_JSON,
+    SET_EDIT_FROM
 } from './constants'
 import {
     getAtomModalKey,
@@ -78,15 +78,11 @@ import {
 import { hashID } from '@/utils/util'
 
 export default {
-    [TOGGLE_STAGE_REVIEW_PANEL]: (state, { isShow, editingElementPos = null }) => {
+    [TOGGLE_STAGE_REVIEW_PANEL]: (state, { showStageReviewPanel, editingElementPos = null }) => {
         Object.assign(state, {
-            showStageReviewPanel: isShow,
+            showStageReviewPanel,
             editingElementPos
         })
-    },
-    [TOGGLE_REVIEW_DIALOG]: (state, { isShow: showReviewDialog, reviewInfo }) => {
-        Vue.set(state, 'showReviewDialog', showReviewDialog)
-        Vue.set(state, 'reviewInfo', reviewInfo)
     },
     [SET_DEFAULT_STAGE_TAG]: (state, defaultStageTags) => {
         Vue.set(state, 'defaultStageTags', defaultStageTags)
@@ -140,6 +136,10 @@ export default {
     },
     [SET_PIPELINE]: (state, pipeline = null) => {
         Vue.set(state, 'pipeline', pipeline)
+        return state
+    },
+    [SET_EDIT_FROM]: (state, editfromImport = false) => {
+        Vue.set(state, 'editfromImport', editfromImport)
         return state
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
@@ -261,7 +261,7 @@ export default {
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {
         for (const key in newParam) {
-            if (newParam.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(newParam, key)) {
                 Vue.set(atom, key, newParam[key])
             }
         }
@@ -270,7 +270,7 @@ export default {
     [UPDATE_ATOM_INPUT]: (state, { atom, newParam }) => {
         try {
             for (const key in newParam) {
-                if (newParam.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
                     Vue.set(atom.data.input, key, newParam[key])
                 }
             }
@@ -290,7 +290,7 @@ export default {
     [UPDATE_ATOM_OUTPUT]: (state, { atom, newParam }) => {
         try {
             for (const key in newParam) {
-                if (newParam.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(newParam, key)) {
                     Vue.set(atom.data.output, key, newParam[key])
                 }
             }
@@ -315,9 +315,11 @@ export default {
     [ADD_STAGE]: (state, { stages, insertStageIndex, insertStageIsFinally = false }) => {
         stages.splice(insertStageIndex, 0, {
             id: `s-${hashID(32)}`,
-            name: insertStageIsFinally === true ? 'Finally' : `stage-${insertStageIndex + 1}`,
+            name: insertStageIsFinally === true ? 'Final' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
             containers: [],
+            checkIn: { timeout: 24 },
+            checkOut: { timeout: 24 },
             finally: insertStageIsFinally === true || undefined
         })
         return state

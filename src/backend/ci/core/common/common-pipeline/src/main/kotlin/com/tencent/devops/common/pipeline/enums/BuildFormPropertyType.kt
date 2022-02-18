@@ -42,7 +42,8 @@ enum class BuildFormPropertyType(val value: String) {
     ARTIFACTORY("artifactory"), // 版本仓库
     SUB_PIPELINE("sub_pipeline"), // 子流水线
     CUSTOM_FILE("custom_file"), // 自定义仓库文件
-    PASSWORD("password");
+    PASSWORD("password"),
+    TEMPORARY("do not storage in database");
 
     override fun toString() = value
 }

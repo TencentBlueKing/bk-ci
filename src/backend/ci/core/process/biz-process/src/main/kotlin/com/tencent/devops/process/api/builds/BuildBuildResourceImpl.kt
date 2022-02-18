@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
@@ -43,42 +44,73 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val subPipelineStartUpService: SubPipelineStartUpService
+    private val subPipelineStartUpService: SubPipelineStartUpService,
+    private val pipelineUrlBean: PipelineUrlBean
 ) : BuildBuildResource {
 
     @Deprecated("replace by BuildJobResourceImpl")
-    override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
+    override fun setStarted(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String
+    ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(vmBuildService.buildVMStarted(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            vmName = vmName
+        ))
     }
 
     @Deprecated("replace by BuildJobResourceImpl")
-    override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
+    override fun claimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId, vmSeqId, vmName)
-        return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vmBuildService.buildClaimTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     @Deprecated("replace by BuildJobResourceImpl")
     override fun completeTask(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         result: BuildTaskResult
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        vmBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
+        vmBuildService.buildCompleteTask(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            vmName = vmName,
+            result = result
+        )
         return Result(true)
     }
 
     @Deprecated("replace by BuildJobResourceImpl")
-    override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun endTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vmBuildService.buildEndTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     @Deprecated("replace by BuildJobResourceImpl")
@@ -154,8 +186,8 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getSubBuildVars(buildId: String, taskId: String): Result<Map<String, String>> {
-        return subPipelineStartUpService.getSubVar(buildId = buildId, taskId = taskId)
+    override fun getSubBuildVars(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
+        return subPipelineStartUpService.getSubVar(projectId = projectId, buildId = buildId, taskId = taskId)
     }
 
     override fun updateRedisAtoms(
@@ -170,6 +202,10 @@ class BuildBuildResourceImpl @Autowired constructor(
         }
 
         return Result(pipelineBuildFacadeService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
+    }
+
+    override fun getBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(pipelineUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, null, null, true))
     }
 
     companion object {

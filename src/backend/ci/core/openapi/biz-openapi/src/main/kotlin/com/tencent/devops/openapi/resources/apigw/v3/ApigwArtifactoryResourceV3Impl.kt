@@ -27,7 +27,8 @@
 
 package com.tencent.devops.openapi.resources.apigw.v3
 
-import com.tencent.devops.artifactory.api.UserPipelineFileResource
+import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.artifactory.api.service.ServiceLogFileResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
@@ -37,16 +38,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwArtifactoryResourceV3
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("UNUSED")
 class ApigwArtifactoryResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwArtifactoryResourceV3 {
-    companion object {
-        private val logger = LoggerFactory.getLogger(ApigwArtifactoryResourceV3Impl::class.java)
-    }
 
     override fun getUserDownloadUrl(
         appCode: String?,
@@ -56,7 +54,7 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
-        return client.get(UserPipelineFileResource::class).downloadUrl(
+        return client.get(ServiceArtifactoryResource::class).downloadUrlForOpenApi(
             userId = userId,
             projectId = projectId,
             artifactoryType = artifactoryType,
@@ -81,12 +79,30 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
             fileNames = null,
             props = map
         )
-        return client.get(UserPipelineFileResource::class).searchFile(
+        return client.get(ServiceArtifactoryResource::class).searchFile(
             userId = userId,
-            projectCode = projectId,
-            page = page,
-            pageSize = pageSize,
+            projectId = projectId,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
             searchProps = searchProps
+        )
+    }
+
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        return client.get(ServiceLogFileResource::class).getPluginLogUrl(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            elementId = elementId,
+            executeCount = executeCount
         )
     }
 }

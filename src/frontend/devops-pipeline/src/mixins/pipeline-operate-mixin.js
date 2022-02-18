@@ -27,6 +27,7 @@ import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
 export default {
     computed: {
         ...mapGetters({
+            allPipelineList: 'pipelines/getAllPipelineList',
             pipelineList: 'pipelines/getPipelineList',
             tagGroupList: 'pipelines/getTagGroupList',
             curPipeline: 'pipelines/getCurPipeline',
@@ -50,40 +51,66 @@ export default {
     },
     methods: {
         ...mapActions('pipelines', {
-            requestPipelinesList: 'requestPipelinesList',
             requestExecPipeline: 'requestExecPipeline',
             requestToggleCollect: 'requestToggleCollect',
             removePipeline: 'deletePipeline',
             copyPipelineAction: 'copyPipeline',
-            updatePipelineSetting: 'updatePipelineSetting'
+            updatePipelineSetting: 'updatePipelineSetting',
+            requestTerminatePipeline: 'requestTerminatePipeline',
+            requestRetryPipeline: 'requestRetryPipeline',
+            searchPipelineList: 'searchPipelineList',
+            requestPipelineDetail: 'requestPipelineDetail',
+            setPipelineSetting: 'setPipelineSetting'
         }),
         ...mapActions('atom', [
             'setPipelineEditing',
             'setExecuteStatus',
             'setSaveStatus',
+            'setPipeline',
             'updateContainer'
         ]),
-        async fetchPipelineList () {
+        async fetchPipelineList (searchName) {
             try {
-                const { requestPipelinesList } = this
                 const { projectId, pipelineId } = this.$route.params
-                const res = await requestPipelinesList({
-                    projectId,
-                    tag: 'pipelines',
-                    page: 1,
-                    pageSize: -1
-                })
-                this.$store.commit('pipelines/updatePipelineList', res.records)
-                this.$nextTick(() => {
-                    // 选中下拉列表中的项
-                    this.updateCurPipelineId(pipelineId)
-                })
+                const [list, curPipeline] = await Promise.all([
+                    this.searchPipelineList({
+                        projectId,
+                        searchName
+                    }),
+                    this.updateCurPipeline({
+                        projectId,
+                        pipelineId
+                    })
+                ])
+                
+                this.setBreadCrumbPipelineList(list, curPipeline)
             } catch (err) {
+                console.log(err)
                 this.$showTips({
                     message: err.message || err,
                     theme: 'error'
                 })
             }
+        },
+        async setBreadCrumbPipelineList (list, pipeline) {
+            if (pipeline && list.every(ele => ele.pipelineId !== pipeline.pipelineId)) {
+                list = [
+                    {
+                        pipelineId: pipeline.pipelineId,
+                        pipelineName: pipeline.pipelineName
+                    },
+                    ...list
+                ]
+            }
+            this.$store.commit('pipelines/updatePipelineList', list)
+        },
+        async updateCurPipeline ({ projectId, pipelineId }) {
+            const curPipeline = await this.requestPipelineDetail({
+                projectId,
+                pipelineId
+            })
+            this.$store.commit('pipelines/updateCurPipeline', curPipeline)
+            return curPipeline
         },
         /**
          *  处理收藏和取消收藏
@@ -101,7 +128,7 @@ export default {
                     message: isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc'),
                     theme: 'success'
                 })
-                this.fetchPipelineList()
+                this.updateCurPipelineByKeyValue('hasCollect', isCollect)
             } catch (err) {
                 this.$showTips({
                     message: err.message || err,
@@ -113,7 +140,6 @@ export default {
              *  终止任务
              */
         async terminatePipeline (pipelineId) {
-            const { $store } = this
             const { projectId } = this.$route.params
             const target = this.pipelineList.find(item => item.pipelineId === pipelineId)
             const { feConfig } = target
@@ -123,7 +149,7 @@ export default {
             feConfig.buttonAllow.terminatePipeline = false
 
             try {
-                await $store.dispatch('pipelines/requestTerminatePipeline', {
+                await this.requestTerminatePipeline({
                     projectId,
                     pipelineId,
                     buildId: feConfig.buildId || target.latestBuildId
@@ -212,10 +238,6 @@ export default {
 
                 message = this.$t('copySuc')
                 theme = 'success'
-
-                this.$nextTick(() => {
-                    this.fetchPipelineList()
-                })
             } catch (err) {
                 this.handleError(err, [{
                     actionId: this.$permissionActionMap.create,
@@ -254,7 +276,8 @@ export default {
                     name
                 })
                 this.$nextTick(() => {
-                    this.fetchPipelineList()
+                    this.updateCurPipelineByKeyValue('pipelineName', name)
+                    
                     this.pipelineSetting && Object.keys(this.pipelineSetting).length && this.updatePipelineSetting({
                         container: this.pipelineSetting,
                         param: {
@@ -283,12 +306,11 @@ export default {
         },
         async executePipeline (params, goDetail = false) {
             let message, theme
-            const { requestExecPipeline, setExecuteStatus } = this
             const { projectId, pipelineId } = this.$route.params
             try {
-                setExecuteStatus(true)
+                this.setExecuteStatus(true)
                 // 请求执行构建
-                const res = await requestExecPipeline({
+                const res = await this.requestExecPipeline({
                     projectId,
                     params,
                     pipelineId
@@ -298,7 +320,7 @@ export default {
                     message = this.$t('newlist.sucToStartBuild')
                     theme = 'success'
                     this.$store.commit('pipelines/updateCurAtomPrams', null)
-                    setExecuteStatus(false)
+                    this.setExecuteStatus(false)
                     if (goDetail) {
                         this.$router.push({
                             name: 'pipelinesDetail',
@@ -314,7 +336,7 @@ export default {
                     theme = 'error'
                 }
             } catch (err) {
-                setExecuteStatus(false)
+                this.setExecuteStatus(false)
                 this.$store.commit('pipelines/updateCurAtomPrams', null)
                 this.handleError(err, [{
                     actionId: this.$permissionActionMap.execute,
@@ -393,7 +415,7 @@ export default {
             const { projectId, pipelineId } = this.$route.params
             try {
                 // 请求执行构建
-                const res = await this.$store.dispatch('pipelines/requestRetryPipeline', {
+                const res = await this.requestRetryPipeline({
                     ...this.$route.params,
                     buildId
                 })
@@ -440,8 +462,7 @@ export default {
             let message, theme
 
             try {
-                const { $store } = this
-                const res = await $store.dispatch('pipelines/requestTerminatePipeline', {
+                const res = await this.requestTerminatePipeline({
                     ...this.$route.params,
                     buildId
                 })
@@ -472,7 +493,6 @@ export default {
         },
         async savePipelineAndSetting () {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-            console.log(this, '111')
             const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
             const { projectId, pipelineId } = this.$route.params
             if (inValid) {
@@ -520,17 +540,21 @@ export default {
                     message: this.$t('saveSuc'),
                     theme: 'success'
                 })
-                const { pipeline } = this
-                if (!this.isTemplatePipeline && pipeline.latestVersion && !isNaN(pipeline.latestVersion)) {
-                    ++pipeline.latestVersion
+                
+                if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
+                    ++this.pipeline.latestVersion
+                    this.updateCurPipelineByKeyValue('pipelineVersion', this.pipeline.latestVersion)
                 }
-                this.fetchPipelineList()
+                
+                if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {
+                    this.updateCurPipelineByKeyValue('pipelineName', this.pipelineSetting.pipelineName)
+                }
+                
                 return {
                     code: 0,
                     data: responses
                 }
             } catch (e) {
-
                 this.handleError(e, [{
                     actionId: this.$permissionActionMap.edit,
                     resourceId: this.$permissionResourceMap.pipeline,
@@ -575,15 +599,6 @@ export default {
                 }])
             }
         },
-        updateCurPipelineId (pipelineId) {
-            for (let i = 0; i < this.pipelineList.length; i++) {
-                const item = this.pipelineList[i]
-                if (item.pipelineId === pipelineId) {
-                    this.$store.commit('pipelines/updateCurPipeline', item)
-                    return
-                }
-            }
-        },
         updateCurPipelineByKeyValue (key, value) {
             this.$store.commit('pipelines/updateCurPipelineByKeyValue', {
                 key,
@@ -603,7 +618,10 @@ export default {
                     instanceId: [{
                         id: projectId,
                         type: this.$permissionResourceTypeMap.PROJECT
-                    }, pipeline]
+                    }, {
+                        type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT,
+                        ...pipeline
+                    }]
                 }])
                 console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')

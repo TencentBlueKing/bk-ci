@@ -35,22 +35,26 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.PathParam
-import javax.ws.rs.PUT
-import javax.ws.rs.GET
 import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -61,6 +65,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwPipelineResourceV3 {
 
+    @Deprecated("Replace with createPipeline")
     @ApiOperation("新建流水线编排")
     @POST
     @Path("")
@@ -81,6 +86,7 @@ interface ApigwPipelineResourceV3 {
         pipeline: Model
     ): Result<PipelineId>
 
+    @Deprecated("Replace with editPipeline")
     @ApiOperation("编辑流水线编排")
     @PUT
     @Path("/{pipelineId}/")
@@ -103,6 +109,51 @@ interface ApigwPipelineResourceV3 {
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model
     ): Result<Boolean>
+
+    @ApiOperation("导入新流水线, 包含流水线编排和设置")
+    @POST
+    @Path("/pipeline_upload")
+    fun uploadPipeline(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<PipelineId>
+
+    @ApiOperation("更新流水线编排和设置")
+    @PUT
+    @Path("/{pipelineId}/pipeline_update")
+    fun updatePipeline(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<DeployPipelineResult>
 
     @ApiOperation("获取流水线编排")
     @GET
@@ -143,7 +194,24 @@ interface ApigwPipelineResourceV3 {
         projectId: String,
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
-    ): Result<List<PipelineWithModel>>
+    ): Result<List<Pipeline>>
+
+    @ApiOperation("复制流水线编排")
+    @POST
+    @Path("/{pipelineId}/copy")
+    fun copy(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线模型", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线COPY", required = true)
+        pipeline: PipelineCopy
+    ): Result<PipelineId>
 
     @ApiOperation("删除流水线编排")
     @DELETE
@@ -253,5 +321,28 @@ interface ApigwPipelineResourceV3 {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
+    ): Result<Boolean>
+
+    @ApiOperation("更新流水线设置")
+    @PUT
+    @Path("/{pipelineId}/setting_update")
+    fun saveSetting(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "流水线设置", required = true)
+        setting: PipelineSetting
     ): Result<Boolean>
 }

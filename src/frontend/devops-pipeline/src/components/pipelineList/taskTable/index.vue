@@ -12,6 +12,11 @@
             <template slot-scope="{ row }">
                 <div class="table-list-name text-overflow"
                     :class="row.feConfig && row.feConfig.status">
+                    <div
+                        v-if="row.latestBuildStatus"
+                        class="build-status-tips"
+                        v-bk-tooltips="{ content: getStatusTips(row.latestBuildStatus), disabled: !row.latestBuildStatus }"
+                    ></div>
                     <a
                         v-if="row.hasPermission"
                         :href="getHistoryURL(row.pipelineId)"
@@ -31,7 +36,7 @@
                 <div v-if="row.hasPermission">
                     <progress-bar
                         class="table-list-progress mr15"
-                        v-if="row.feConfig && row.feConfig.status !== 'success' && row.feConfig.status !== 'not_built' && row.feConfig.status !== 'known_error'"
+                        v-if="row.feConfig && row.feConfig.status !== 'success' && row.feConfig.status !== 'not_built' && row.feConfig.status !== 'known_error' && row.feConfig.status !== 'known_cancel'"
                         :percentage="row.feConfig && row.feConfig.runningInfo.percentage"
                         :status="row.feConfig && row.feConfig.status"
                         :has-icon="true">
@@ -58,7 +63,7 @@
                     <a
                         href="javascript:;"
                         class="text-link item-text-btn noticed"
-                        v-if="row.feConfig && row.feConfig.status === 'error'"
+                        v-if="(row.feConfig && row.feConfig.status === 'error') || (row.feConfig && row.feConfig.status === 'cancel')"
                         @click.stop.prevent="emitEventHandler('error-noticed', row.pipelineId)">
                         {{ $t('newlist.known') }}
                         <i class="devops-icon icon-check-1"></i>
@@ -184,17 +189,31 @@
             calcLatestStartBuildTime (row) {
                 if (row.latestBuildStartTime) {
                     try {
-                        let result = this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime).match(/^[0-9]{1,}([\u4e00-\u9fa5]){1,}/)[0]
-                        if (result.indexOf('分') > 0) {
-                            result += '钟'
+                        const timeLocaleString = this.localConvertMStoString(row.currentTimestamp - row.latestBuildStartTime)
+                        if (window.pipelineVue.$i18n && window.pipelineVue.$i18n.locale === 'en-US') {
+                            return timeLocaleString
+                        } else {
+                            let result = timeLocaleString.match(/^[0-9]{1,}([\u4e00-\u9fa5]){1,}/)[0]
+                            if (result.indexOf('分') > 0) {
+                                result += '钟'
+                            }
+                            return `${result}前`
                         }
-                        return `${result}前`
                     } catch (err) {
                         return '---'
                     }
                 } else {
                     return '--'
                 }
+            },
+            getStatusTips (status) {
+                const statusTipsMap = {
+                    SUCCEED: this.$t('newlist.success'),
+                    FAILED: this.$t('newlist.failed'),
+                    CANCELED: this.$t('newlist.cancel'),
+                    STAGE_SUCCESS: this.$t('newlist.stageSuccess')
+                }
+                return statusTipsMap[status] || ''
             }
         }
     }

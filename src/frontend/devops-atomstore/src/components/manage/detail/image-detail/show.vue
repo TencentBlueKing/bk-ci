@@ -24,7 +24,7 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.适用机器') }}：</span>
-                    <label-list :label-list="detail.agentTypeScope" :formatter="agentFilter"></label-list>
+                    <label-list :label-list="filterAgents"></label-list>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.简介') }}：</span>
@@ -83,6 +83,7 @@
 </template>
 
 <script>
+    import { mapActions } from 'vuex'
     import labelList from '../../../labelList'
     import defaultPic from '../../../../images/defaultPic.svg'
 
@@ -119,27 +120,32 @@
 
         data () {
             return {
-                defaultPic
+                defaultPic,
+                agentTypes: []
             }
         },
-
-        methods: {
-            agentFilter (value) {
-                const local = window.devops || {}
-                let res = ''
-                switch (value) {
-                    case 'DOCKER':
-                        res = local.$t('store.Devnet 物理机')
-                        break
-                    case 'IDC':
-                        res = 'IDC CVM'
-                        break
-                    case 'PUBLIC_DEVCLOUD':
-                        res = 'DevCloud'
-                        break
-                }
-                return res
+        computed: {
+            filterAgents () {
+                const agentNames = []
+                this.detail.agentTypeScope.forEach(item => {
+                    this.agentTypes.forEach(agent => {
+                        if (item === agent.code) {
+                            agentNames.push(agent.name)
+                        }
+                    })
+                })
+                return agentNames
             }
+        },
+        mounted () {
+            this.fetchAgentTypes().then(res => {
+                this.agentTypes = res
+            })
+        },
+        methods: {
+            ...mapActions('store', [
+                'fetchAgentTypes'
+            ])
         }
     }
 </script>

@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.service.trace.TraceTag
@@ -47,6 +47,8 @@ import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import okhttp3.HttpUrl
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,11 +68,12 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val projectPipelineCallbackDao: ProjectPipelineCallbackDao,
     private val projectPipelineCallbackHistoryDao: ProjectPipelineCallbackHistoryDao,
-    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator
+    private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
+    private val client: Client
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
     }
 
@@ -83,14 +86,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
         secretToken: String?
     ): CreateCallBackResult {
         // 验证用户是否为管理员
-        validAuth(userId, projectId, BkAuthGroup.MANAGER)
-        // 验证url的合法性
-        val regex = Regex(
-            pattern = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]",
-            option = RegexOption.IGNORE_CASE
-        )
-        val regexResult = url.matches(regex)
-        if (!regexResult) {
+        validProjectManager(userId, projectId)
+        if (!validUrl(projectId, url)) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
         }
         val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
@@ -101,7 +98,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             throw ParamBlankException("Invalid event")
         }
         val events = event.split(",").map {
-            CallBackEvent.valueOf(it)
+            CallBackEvent.valueOf(it.trim())
         }
 
         val successEvents = mutableListOf<String>()
@@ -120,7 +117,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     events = projectPipelineCallBack.events,
                     userId = userId,
                     callbackUrl = projectPipelineCallBack.callBackUrl,
-                    secretToken = projectPipelineCallBack.secretToken
+                    secretToken = projectPipelineCallBack.secretToken,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId("PROJECT_PIPELINE_CALLBACK").data
                 )
                 successEvents.add(it.name)
             } catch (e: Throwable) {
@@ -132,6 +130,16 @@ class ProjectPipelineCallBackService @Autowired constructor(
             successEvents = successEvents,
             failureEvents = failureEvents
         )
+    }
+
+    private fun validUrl(projectId: String, url: String): Boolean {
+        return try {
+            HttpUrl.get(url)
+            true
+        } catch (e: IllegalArgumentException) {
+            logger.warn("$projectId|callback url Invalid: ${e.message}")
+            false
+        }
     }
 
     fun listProjectCallBack(projectId: String, events: String): List<ProjectPipelineCallBack> {
@@ -182,9 +190,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
 
     fun delete(userId: String, projectId: String, id: Long) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId, BkAuthGroup.MANAGER)
+        validProjectManager(userId, projectId)
         projectPipelineCallbackDao.get(
             dslContext = dslContext,
+            projectId = projectId,
             id = id
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_NOT_FOUND,
@@ -193,6 +202,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
         projectPipelineCallbackDao.deleteById(
             dslContext = dslContext,
+            projectId = projectId,
             id = id
         )
     }
@@ -208,12 +218,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 events = events,
                 status = status,
                 errorMsg = errorMsg,
-                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it) },
+                requestHeaders = requestHeaders?.let { JsonUtil.toJson(it, formatted = false) },
                 requestBody = requestBody,
                 responseCode = responseCode,
                 responseBody = responseBody,
                 startTime = startTime,
-                endTime = endTime
+                endTime = endTime,
+                id = id
             )
         }
     }
@@ -223,7 +234,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         projectId: String,
         id: Long
     ): ProjectPipelineCallBackHistory? {
-        val record = projectPipelineCallbackHistoryDao.get(dslContext, id) ?: return null
+        val record = projectPipelineCallbackHistoryDao.get(dslContext, projectId, id) ?: return null
         return projectPipelineCallbackHistoryDao.convert(record)
     }
 
@@ -282,7 +293,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         id: Long
     ) {
         checkParam(userId, projectId)
-        validAuth(userId, projectId, BkAuthGroup.MANAGER)
+        validProjectManager(userId, projectId)
         val record = getHistory(userId, projectId, id) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND,
             defaultMessage = "重试的回调历史记录($id)不存在",
@@ -342,7 +353,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     responseCode = responseCode,
                     responseBody = responseBody,
                     startTime = startTime,
-                    endTime = System.currentTimeMillis()
+                    endTime = System.currentTimeMillis(),
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("PROJECT_PIPELINE_CALLBACK_HISTORY").data
                 )
             )
         }
@@ -360,10 +373,19 @@ class ProjectPipelineCallBackService @Autowired constructor(
         }
     }
 
-    private fun validAuth(userId: String, projectId: String, group: BkAuthGroup? = null) {
-        if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, group)) {
+    private fun validAuth(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectUser(userId, pipelineAuthServiceCode, projectId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+    }
+
+    private fun validProjectManager(userId: String, projectId: String) {
+        if (!authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PERMISSION_NOT_PROJECT_MANAGER,
                 params = arrayOf(userId, projectId)
             )
         }

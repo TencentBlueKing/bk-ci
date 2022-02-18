@@ -27,17 +27,15 @@
 
 package com.tencent.devops.process.engine.atom.plugin
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
 
 @ElementBiz
-class MarketBuildLessAtomElementBizPlugin constructor(
-    private val codeccApi: CodeccApi
-) : ElementBizPlugin<MarketBuildLessAtomElement> {
+class MarketBuildLessAtomElementBizPlugin : ElementBizPlugin<MarketBuildLessAtomElement> {
 
     override fun elementClass(): Class<MarketBuildLessAtomElement> {
         return MarketBuildLessAtomElement::class.java
@@ -50,12 +48,13 @@ class MarketBuildLessAtomElementBizPlugin constructor(
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) = Unit
 
     override fun beforeDelete(element: MarketBuildLessAtomElement, param: BeforeDeleteParam) {
-        val inputMap = element.data["input"] as Map<*, *>
-        MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), param, codeccApi)
+        val inputMap = element.data["input"] as Map<String, Any>
+        MarketBuildUtils.beforeDelete(inputMap, element.getAtomCode(), element.version, param)
     }
 
     override fun check(element: MarketBuildLessAtomElement, appearedCnt: Int) = Unit

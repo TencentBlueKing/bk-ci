@@ -123,7 +123,7 @@ data class JobMarketImageItem(
     val certificationFlag: Boolean,
 
     @ApiModelProperty("是否已安装", required = true)
-    var isInstalled: Boolean? = null,
+    var installedFlag: Boolean? = null,
 
     @ApiModelProperty("最近修改人", required = true)
     val modifier: String,

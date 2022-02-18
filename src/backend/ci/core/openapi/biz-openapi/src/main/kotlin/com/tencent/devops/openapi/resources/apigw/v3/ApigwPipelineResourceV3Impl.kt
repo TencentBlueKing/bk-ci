@@ -30,21 +30,26 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
+import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Client) :
+class ApigwPipelineResourceV3Impl @Autowired constructor(
+    private val client: Client,
+    private val apiGatewayUtil: ApiGatewayUtil
+) :
     ApigwPipelineResourceV3 {
-
     override fun status(
         appCode: String?,
         apigwType: String?,
@@ -67,12 +72,12 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         pipeline: Model
     ): Result<PipelineId> {
-        logger.info("Create a pipeline at project:$projectId with model: $pipeline")
+        logger.info("Create pipeline at project:$projectId")
         return client.get(ServicePipelineResource::class).create(
             userId = userId,
             projectId = projectId,
             pipeline = pipeline,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -84,13 +89,47 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         pipelineId: String,
         pipeline: Model
     ): Result<Boolean> {
-        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId with model: $pipeline")
+        logger.info("Edit a pipeline at project:$projectId, pipelineId:$pipelineId")
         return client.get(ServicePipelineResource::class).edit(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             pipeline = pipeline,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
+    override fun updatePipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<DeployPipelineResult> {
+        logger.info("updatePipeline|project:$projectId|userId:$userId|pipelineId:$pipelineId")
+        return client.get(ServicePipelineResource::class).updatePipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            modelAndSetting = modelAndSetting,
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
+    override fun uploadPipeline(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        modelAndSetting: PipelineModelAndSetting
+    ): Result<PipelineId> {
+        logger.info("uploadPipeline|project:$projectId|userId:$userId")
+        return client.get(ServicePipelineResource::class).uploadPipeline(
+            userId = userId,
+            projectId = projectId,
+            modelAndSetting = modelAndSetting,
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -106,7 +145,7 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS,
+            channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
     }
@@ -117,13 +156,13 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         userId: String,
         projectId: String,
         pipelineIds: List<String>
-    ): Result<List<PipelineWithModel>> {
+    ): Result<List<Pipeline>> {
         logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
         return client.get(ServicePipelineResource::class).getBatch(
             userId = userId,
             projectId = projectId,
             pipelineIds = pipelineIds,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
         )
     }
 
@@ -139,7 +178,22 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            channelCode = ChannelCode.BS
+            channelCode = apiGatewayUtil.getChannelCode()
+        )
+    }
+
+    override fun copy(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipeline: PipelineCopy
+    ): Result<PipelineId> {
+        logger.info("copy pipelines by user, userId:$userId")
+        return client.get(ServicePipelineResource::class).copy(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipeline = pipeline
         )
     }
 
@@ -155,9 +209,9 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         return client.get(ServicePipelineResource::class).list(
             userId = userId,
             projectId = projectId,
-            page = page,
-            pageSize = pageSize,
-            channelCode = ChannelCode.BS,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            channelCode = apiGatewayUtil.getChannelCode(),
             checkPermission = true
         )
     }
@@ -183,6 +237,23 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
     ): Result<Boolean> {
         logger.info("restore: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
         return client.get(ServicePipelineResource::class).restore(userId, projectId, pipelineId)
+    }
+
+    override fun saveSetting(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        setting: PipelineSetting
+    ): Result<Boolean> {
+        logger.info("saveSetting: userId[$userId] projectId[$projectId] pipelineId[$pipelineId]")
+        return client.get(ServicePipelineResource::class).saveSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            setting = setting
+        )
     }
 
     companion object {

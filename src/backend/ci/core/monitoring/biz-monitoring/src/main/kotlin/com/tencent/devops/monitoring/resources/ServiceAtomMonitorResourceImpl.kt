@@ -26,22 +26,33 @@
  */
 package com.tencent.devops.monitoring.resources
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.monitoring.api.service.ServiceAtomMonitorResource
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode
 import com.tencent.devops.monitoring.pojo.AtomMonitorStatisticData
 import com.tencent.devops.monitoring.service.AtomMonitorService
+import org.influxdb.InfluxDBIOException
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAtomMonitorResourceImpl @Autowired constructor(private val atomMonitorService: AtomMonitorService) :
     ServiceAtomMonitorResource {
 
+    @Suppress("ALL")
     override fun queryAtomMonitorStatisticData(
         atomCode: String,
         startTime: Long,
         endTime: Long
     ): Result<AtomMonitorStatisticData> {
-        return Result(atomMonitorService.queryAtomMonitorStatisticData(atomCode, startTime, endTime))
+        return try {
+            Result(atomMonitorService.queryAtomMonitorStatisticData(atomCode, startTime, endTime))
+        } catch (e: InfluxDBIOException) {
+            throw ErrorCodeException(
+                errorCode = MonitoringMessageCode.ERROR_MONITORING_INFLUXDB_BAD,
+                defaultMessage = "bad influxdb: ${e.message}"
+            )
+        }
     }
 }

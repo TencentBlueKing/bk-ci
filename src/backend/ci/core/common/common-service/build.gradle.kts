@@ -29,14 +29,13 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-redis"))
     api("org.springframework.boot:spring-boot-starter-actuator")
-    api("org.springframework.boot:spring-boot-starter-log4j2")
-    api("org.springframework.cloud:spring-cloud-starter-consul-discovery")
+    api("org.springframework.boot:spring-boot-starter-logging")
+    api("org.springframework.cloud:spring-cloud-consul-discovery")
     api("io.github.openfeign:feign-okhttp")
     api("org.jolokia:jolokia-core")
     api("javax.servlet:javax.servlet-api")
     api("org.springframework:spring-web")
-
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    api("org.apache.commons:commons-lang3")
+    api("org.springframework.cloud:spring-cloud-starter-bootstrap")
+    api("org.jooq:jooq")
 }
-
-

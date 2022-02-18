@@ -40,10 +40,10 @@
 
 - CentOS 7.X
 - jdk: 1.8
-- gradle: 4.8
+- gradle: 6.7
 - redis: 2.8.17
 - mysql 5.7
-- es: 5.6
+- es: 7.4
 - rabbitmq: 3.7.15 [rabbitMQ 安装文档](../install/rabbitmq.md) 
 - Consul 1.0+ [Consul安装](../install/consul.md)
 

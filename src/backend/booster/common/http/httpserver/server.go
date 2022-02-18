@@ -1,6 +1,11 @@
 /*
-Copyright 2017 Authors All rights reserved
-*/
+ * Copyright (c) 2021 THL A29 Limited, a Tencent company. All rights reserved
+ *
+ * This source code file is licensed under the MIT License, you may obtain a copy of the License at
+ *
+ * http://opensource.org/licenses/MIT
+ *
+ */
 
 package httpserver
 
@@ -10,8 +15,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"build-booster/common/blog"
-	"build-booster/common/ssl"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/ssl"
 
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/mux"

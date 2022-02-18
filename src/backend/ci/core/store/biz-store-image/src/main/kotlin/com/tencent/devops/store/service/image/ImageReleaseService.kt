@@ -39,7 +39,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.image.api.ServiceImageResource
@@ -82,7 +84,9 @@ import com.tencent.devops.store.pojo.image.request.ImageFeatureCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -156,8 +160,11 @@ abstract class ImageReleaseService {
 
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
-    @Value("\${store.imageApproveSwitch}")
+    @Value("\${store.imageApproveSwitch:close}")
     protected lateinit var imageApproveSwitch: String
+
+    @Value("\${store.imageAgentTypes:DOCKER}")
+    protected lateinit var imageAgentTypes: String
 
     fun addMarketImage(
         accessToken: String,
@@ -361,17 +368,30 @@ abstract class ImageReleaseService {
         val dbVersion = imageRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = imageRecord.imageStatus == ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion =
+        val requireVersionList =
             if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                dbVersion
-            } else storeCommonService.getRequireVersion(
-                dbVersion,
-                releaseType
-            )
-        if (version != requireVersion) {
+                listOf(dbVersion)
+            } else {
+                // 历史大版本下的小版本更新模式需获取要更新大版本下的最新版本
+                val reqVersion = if (releaseType == ReleaseTypeEnum.HIS_VERSION_UPGRADE) {
+                    imageDao.getImage(
+                        dslContext = dslContext,
+                        imageCode = imageCode,
+                        version = VersionUtils.convertLatestVersion(version)
+                    )?.version
+                } else {
+                    null
+                }
+                storeCommonService.getRequireVersion(
+                    reqVersion = reqVersion,
+                    dbVersion = dbVersion,
+                    releaseType = releaseType
+                )
+            }
+        if (!requireVersionList.contains(version)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
-                arrayOf(version, requireVersion)
+                arrayOf(version, requireVersionList.toString())
             )
         }
         // 判断最近一个镜像版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
@@ -476,14 +496,11 @@ abstract class ImageReleaseService {
     ): Result<Boolean> {
         logger.info("passTest, userId:$userId, imageId:$imageId, validateUserFlag:$validateUserFlag")
         val imageRecord = imageDao.getImage(dslContext, imageId)
-        logger.info("passTest imageRecord is:$imageRecord")
-        if (null == imageRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(imageId),
                 false
             )
-        }
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核
         val imageCode = imageRecord.imageCode
         val isNormalUpgrade = getNormalUpgradeFlag(imageCode, imageRecord.imageStatus.toInt())
@@ -651,12 +668,13 @@ abstract class ImageReleaseService {
             if (null != password) {
                 startParams["registryPwd"] = password
             }
-            val buildIdObj = client.get(ServiceBuildResource::class).manualStartup(
+            val buildIdObj = client.get(ServiceBuildResource::class).manualStartupNew(
                 userId = userId,
                 projectId = projectCode!!,
                 pipelineId = imagePipelineRelRecord.pipelineId,
                 values = startParams,
-                channelCode = ChannelCode.AM
+                channelCode = ChannelCode.AM,
+                startType = StartType.SERVICE
             ).data
             logger.info("the buildIdObj is:$buildIdObj")
             if (null != buildIdObj) {
@@ -1157,5 +1175,19 @@ abstract class ImageReleaseService {
             image.imageCode,
             JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
         )
+    }
+
+    fun getImageAgentTypes(userId: String): List<ImageAgentTypeInfo> {
+        val types = imageAgentTypes.split(",")
+        val imageAgentTypes = mutableListOf<ImageAgentTypeInfo>()
+        types.forEach { type ->
+            val buildType = BuildType.valueOf(type)
+            val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${buildType.name}",
+                defaultMessage = buildType.value
+            )
+            imageAgentTypes.add(ImageAgentTypeInfo(buildType.name, i18nTypeName))
+        }
+        return imageAgentTypes
     }
 }

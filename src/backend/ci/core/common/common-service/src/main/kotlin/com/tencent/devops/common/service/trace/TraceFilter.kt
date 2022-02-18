@@ -46,7 +46,7 @@ class TraceFilter : Filter {
             return
         }
         val httpServletRequest = request as HttpServletRequest
-        val bizId = httpServletRequest.getHeader(TraceTag.BIZID)
+        val bizId = httpServletRequest.getHeader(TraceTag.X_DEVOPS_RID)
         if (bizId.isNullOrEmpty()) {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
         } else {
@@ -59,6 +59,6 @@ class TraceFilter : Filter {
     override fun init(filterConfig: FilterConfig?) = Unit
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this:: class.java)
+        private val logger = LoggerFactory.getLogger(TraceFilter:: class.java)
     }
 }

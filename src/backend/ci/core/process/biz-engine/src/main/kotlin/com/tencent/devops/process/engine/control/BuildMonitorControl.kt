@@ -36,6 +36,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
@@ -53,10 +54,14 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.pojo.StageQualityRequest
+import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
@@ -65,11 +70,13 @@ import kotlin.math.min
  * @version 1.0
  */
 @Service
+@Suppress("LongParameterList")
 class BuildMonitorControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -77,17 +84,20 @@ class BuildMonitorControl @Autowired constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(BuildMonitorControl::class.java)
+        private val TEN_MIN_MILLS = TimeUnit.MINUTES.toMillis(10)
+        private fun coerceAtMost10Min(interval: Long) = interval.coerceAtMost(TEN_MIN_MILLS)
     }
 
     fun handle(event: PipelineBuildMonitorEvent): Boolean {
 
         val buildId = event.buildId
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(event.projectId, buildId)
         if (buildInfo == null || buildInfo.isFinish()) {
-            LOG.info("ENGINE|$buildId|${event.source}|BUILD_MONITOR|status=${buildInfo?.status}")
+            LOG.info("ENGINE|$buildId|BUILD_MONITOR|status=${buildInfo?.status}|ec=${event.executeCount}")
             return true
         }
 
+        LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_START|ec=${event.executeCount}")
         return when {
             buildInfo.status.isReadyToRun() -> monitorQueueBuild(event, buildInfo)
             else -> {
@@ -99,32 +109,37 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorPipeline(event: PipelineBuildMonitorEvent): Boolean {
 
         // 由于30天对应的毫秒数值过大，以Int的上限值作为下一次monitor时间
-        val stageMinInt = min(monitorStage(event), Int.MAX_VALUE.toLong()).toInt()
+        val stageMinInt = monitorStage(event)
         val jobMinInt = monitorContainer(event)
 
         val minInterval = min(jobMinInt, stageMinInt)
 
-        if (minInterval < min(Timeout.CONTAINER_MAX_MILLS.toLong(), Timeout.STAGE_MAX_MILLS)) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_MONITOR_CONTINUE|Interval=$minInterval")
-            event.delayMills = minInterval
+        if (minInterval < min(Timeout.CONTAINER_MAX_MILLS, Timeout.STAGE_MAX_MILLS)) {
+            LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_CONTINUE|jobMinInt=$jobMinInt|" +
+                "stageMinInt=$stageMinInt|Interval=$minInterval")
+            // 每次Check间隔不能大于10分钟，防止长时间延迟消息被大量堆积
+            event.delayMills = coerceAtMost10Min(minInterval).toInt()
             pipelineEventDispatcher.dispatch(event)
+        } else {
+            LOG.info("ENGINE|${event.buildId}|BUILD_MONITOR_QUIT|jobMinInt=$jobMinInt|" +
+                "stageMinInt=$stageMinInt|Interval=$minInterval")
         }
         return true
     }
 
-    private fun monitorContainer(event: PipelineBuildMonitorEvent): Int {
-
-        val containers = pipelineRuntimeService.listContainers(event.buildId)
-            .filter { !it.status.isFinish() }
+    private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
+        // #5090 ==0 是为了兼容旧的监控事件
+        val containers = pipelineContainerService.listContainers(event.projectId, event.buildId)
+            .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
 
         if (containers.isEmpty()) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_CONTAINER_MONITOR|empty containers")
+            LOG.info("ENGINE|${event.buildId}|BUILD_CONTAINER_MONITOR|no match")
             return minInterval
         }
 
-        containers.forEach { container ->
+        for (container in containers) {
             val interval = container.checkNextContainerMonitorIntervals(event.userId)
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
@@ -136,18 +151,27 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
-        val stages = pipelineStageService.listStages(event.buildId)
-            .filter { !it.status.isFinish() && it.status != BuildStatus.STAGE_SUCCESS }
+        val stages = pipelineStageService.listStages(event.projectId, event.buildId)
+            .filter {
+                // #5873 即使stage已完成，如果有准出卡审核也需要做超时监控
+                (!it.status.isFinish() || it.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) &&
+                    it.status != BuildStatus.STAGE_SUCCESS &&
+                    (it.executeCount == event.executeCount || event.executeCount == 0) // #5090 ==0 是为了兼容旧的监控事件
+            }
 
         var minInterval = Timeout.STAGE_MAX_MILLS
 
         if (stages.isEmpty()) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_STAGE_MONITOR|empty stage")
+            LOG.info("ENGINE|${event.buildId}|BUILD_STAGE_MONITOR|no match")
             return minInterval
         }
 
-        stages.forEach Next@{ stage ->
-            val interval = stage.checkNextStageMonitorIntervals(event.userId)
+        for (stage in stages) {
+            val interval = stage.checkNextStageMonitorIntervals(
+                userId = event.userId,
+                startTime = stage.startTime,
+                endTime = stage.endTime
+            )
             // 根据最小的超时时间来决定下一次监控执行的时间
             if (interval in 1 until minInterval) {
                 minInterval = interval
@@ -157,9 +181,9 @@ class BuildMonitorControl @Autowired constructor(
         return minInterval
     }
 
-    private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Int {
+    private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Long {
 
-        var interval = 0
+        var interval = 0L
 
         if (status.isFinish()) {
             return interval
@@ -173,7 +197,7 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        interval = (timeoutMills - usedTimeMills).toInt()
+        interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
@@ -183,7 +207,7 @@ class BuildMonitorControl @Autowired constructor(
                 buildId = buildId,
                 message = errorInfo.message ?: "Job timeout($minute) min",
                 tag = VMUtils.genStartVMTaskId(containerId),
-                jobId = containerId,
+                jobId = containerHashId,
                 executeCount = executeCount
             )
             // 终止当前容器下的任务
@@ -196,6 +220,7 @@ class BuildMonitorControl @Autowired constructor(
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId,
+                    containerHashId = containerHashId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
                     reason = errorInfo.message ?: "Job timeout($minute) min!",
@@ -208,26 +233,40 @@ class BuildMonitorControl @Autowired constructor(
         return interval
     }
 
-    private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
-        var interval: Long = 0
+    private fun PipelineBuildStage.checkNextStageMonitorIntervals(
+        userId: String,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?
+    ): Long {
+        val checkInIntervals = checkInOutMonitorIntervals(userId, true, startTime)
+        val checkOutIntervals = checkInOutMonitorIntervals(userId, false, endTime)
+        return min(checkInIntervals, checkOutIntervals)
+    }
 
-        if (controlOption?.stageControlOption?.manualTrigger != true) {
-            return interval
+    private fun PipelineBuildStage.checkInOutMonitorIntervals(
+        userId: String,
+        inOrOut: Boolean,
+        checkTime: LocalDateTime?
+    ): Long {
+
+        val pauseCheck = if (inOrOut) checkIn else checkOut
+        if (pauseCheck?.manualTrigger != true && pauseCheck?.ruleIds.isNullOrEmpty()) {
+            return Timeout.STAGE_MAX_MILLS
         }
 
-        var hours = controlOption?.stageControlOption?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
+        var hours = pauseCheck?.timeout ?: Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         if (hours <= 0 || hours > Timeout.MAX_HOURS) {
             hours = Timeout.MAX_HOURS.toInt()
         }
-        val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
 
-        val usedTimeMills: Long = if (startTime != null) {
-            System.currentTimeMillis() - startTime!!.timestampmilli()
+        val timeoutMills = TimeUnit.HOURS.toMillis(hours.toLong())
+        val usedTimeMills: Long = if (checkTime != null) {
+            System.currentTimeMillis() - checkTime!!.timestampmilli()
         } else {
             0
         }
 
-        interval = timeoutMills - usedTimeMills
+        val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
             buildLogPrinter.addRedLine(
                 buildId = buildId,
@@ -236,16 +275,51 @@ class BuildMonitorControl @Autowired constructor(
                 jobId = "",
                 executeCount = executeCount
             )
-            pipelineStageService.cancelStage(userId = userId, buildStage = this)
+
+            // #5654 如果是红线待审核状态则取消红线审核
+            if (pauseCheck?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+                pipelineStageService.qualityTriggerStage(
+                    userId = userId,
+                    buildStage = this,
+                    qualityRequest = StageQualityRequest(
+                        position = ControlPointPosition.BEFORE_POSITION,
+                        pass = false,
+                        checkTimes = executeCount
+                    ),
+                    inOrOut = inOrOut,
+                    check = pauseCheck!!,
+                    timeout = true
+                )
+            }
+            // #5654 如果是待人工审核则取消人工审核
+            else if (pauseCheck?.groupToReview() != null) {
+                pipelineStageService.cancelStage(
+                    userId = userId,
+                    buildStage = this,
+                    reviewRequest = StageReviewRequest(
+                        reviewParams = listOf(),
+                        id = pauseCheck?.groupToReview()?.id,
+                        suggest = null
+                    ),
+                    timeout = true
+                )
+            }
         }
 
         return interval
     }
 
+    @Suppress("LongMethod")
     private fun monitorQueueBuild(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Boolean {
         // 判断是否超时
-        if (pipelineSettingService.isQueueTimeout(event.pipelineId, buildInfo.startTime!!)) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout")
+        if (pipelineSettingService.isQueueTimeout(event.projectId, event.pipelineId, buildInfo.startTime!!)) {
+            val exitQueue = pipelineRuntimeExtService.existQueue(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                buildStatus = buildInfo.status
+            )
+            LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
             val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId)
@@ -277,11 +351,12 @@ class BuildMonitorControl @Autowired constructor(
             )
             if (canStart) {
                 val buildId = event.buildId
-                LOG.info("ENGINE|$buildId|${event.source}|BUILD_QUEUE_TRY_START")
-                val model = pipelineBuildDetailService.getBuildModel(buildInfo.buildId) ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildInfo.buildId)
-                )
+                LOG.info("ENGINE|$buildId|BUILD_QUEUE_TRY_START")
+                val model = pipelineBuildDetailService.getBuildModel(event.projectId, buildInfo.buildId)
+                    ?: throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                        params = arrayOf(buildInfo.buildId)
+                    )
                 val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(

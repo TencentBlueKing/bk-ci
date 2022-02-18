@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -42,6 +43,8 @@ data class CodeSVNWebHookTriggerElement(
     override var status: String? = null,
     @ApiModelProperty("仓库ID", required = true)
     val repositoryHashId: String?,
+    @ApiModelProperty("路径过滤类型", required = true)
+    val pathFilterType: PathFilterType? = PathFilterType.NamePrefixFilter,
     @ApiModelProperty("相对路径", required = true)
     val relativePath: String?,
     @ApiModelProperty("排除的路径", required = false)

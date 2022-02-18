@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
@@ -37,16 +37,16 @@ import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Suppress("ALL")
+@Suppress("TooManyFunctions", "LongParameterList")
 @Repository
-class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineResDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -54,16 +54,17 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
     ) {
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
-            val modelString = objectMapper.writeValueAsString(model)
+            val modelString = JsonUtil.toJson(model, formatted = false)
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
             )
-                .values(pipelineId, version, modelString, creator, LocalDateTime.now())
+                .values(projectId, pipelineId, version, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -72,11 +73,12 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         }
     }
 
-    fun getLatestVersionModelString(dslContext: DSLContext, pipelineId: String) =
-        getVersionModelString(dslContext, pipelineId, null)
+    fun getLatestVersionModelString(dslContext: DSLContext, projectId: String, pipelineId: String) =
+        getVersionModelString(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = null)
 
     fun getVersionModelString(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         version: Int?
     ): String? {
@@ -84,7 +86,7 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         return with(T_PIPELINE_RESOURCE) {
             val where = dslContext.select(MODEL)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             if (version != null) {
                 where.and(VERSION.eq(version))
             } else {
@@ -96,14 +98,20 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
 
     fun listLatestModelResource(
         dslContext: DSLContext,
-        pipelineIds: Set<String>
+        pipelineIds: Set<String>,
+        projectId: String? = null
     ): Result<Record3<String, Int, String>>? {
         val tpr = T_PIPELINE_RESOURCE.`as`("tpr")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tpr.PIPELINE_ID.`in`(pipelineIds))
+        if (projectId != null) {
+            conditions.add(tpr.PROJECT_ID.eq(projectId))
+        }
         val t = dslContext.select(
             tpr.PIPELINE_ID.`as`("PIPELINE_ID"),
             DSL.max(tpr.VERSION).`as`("VERSION")
         ).from(tpr)
-            .where(tpr.PIPELINE_ID.`in`(pipelineIds))
+            .where(conditions)
             .groupBy(tpr.PIPELINE_ID)
         return dslContext.select(tpr.PIPELINE_ID, tpr.VERSION, tpr.MODEL).from(tpr)
             .join(t)
@@ -114,18 +122,18 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
             .fetch()
     }
 
-    fun deleteAllVersion(dslContext: DSLContext, pipelineId: String): Int {
+    fun deleteAllVersion(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
-    fun deleteEarlyVersion(dslContext: DSLContext, pipelineId: String, beforeVersion: Int): Int {
+    fun deleteEarlyVersion(dslContext: DSLContext, projectId: String, pipelineId: String, beforeVersion: Int): Int {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(VERSION.lt(beforeVersion))
                 .execute()
         }
@@ -137,8 +145,9 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
         with(T_PIPELINE_RESOURCE) {
-            val updateStep = pipelineModelVersionList.map {
+            pipelineModelVersionList.map {
                 val conditions = mutableListOf<Condition>()
+                conditions.add(PROJECT_ID.eq(it.projectId))
                 conditions.add(PIPELINE_ID.eq(it.pipelineId))
                 val version = it.version
                 if (version != null) {
@@ -146,9 +155,41 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
                 }
                 dslContext.update(this)
                     .set(MODEL, it.model)
+                    .set(CREATOR, userId)
                     .where(conditions)
+                    .execute()
             }
-            dslContext.batch(updateStep).execute()
+        }
+    }
+
+    /**
+     * 获取最新的modelString
+     *
+     * @return Map<PIPELINE_ID, MODEL>
+     */
+    fun listModelString(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): Map<String, String> {
+        with(T_PIPELINE_RESOURCE) {
+            val record3s = dslContext.select(PIPELINE_ID, MODEL, VERSION)
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .fetch()
+            if (record3s.isEmpty()) {
+                return emptyMap()
+            }
+            val result = mutableMapOf<String, String>()
+            val maxVersionMap = mutableMapOf<String, Int>()
+            record3s.forEach {
+                val maxVersion = maxVersionMap[it.get(PIPELINE_ID)]
+                if (maxVersion == null || maxVersion < it.get(VERSION)) {
+                    maxVersionMap[it.get(PIPELINE_ID)] = it.get(VERSION)
+                    result[it.get(PIPELINE_ID)] = it.get(MODEL)
+                }
+            }
+            return result
         }
     }
 

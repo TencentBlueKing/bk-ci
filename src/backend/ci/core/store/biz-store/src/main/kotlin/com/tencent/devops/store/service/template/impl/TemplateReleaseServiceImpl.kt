@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
-import com.tencent.devops.process.api.template.ServiceTemplateResource
+import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -127,7 +127,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         }
         val projectCode = marketTemplateRelRequest.projectCode
         // 校验模板是否合法
-        val checkResult = client.get(ServiceTemplateResource::class).checkTemplate(
+        val checkResult = client.get(ServicePTemplateResource::class).checkTemplate(
             userId = userId,
             projectId = projectCode,
             templateId = templateCode
@@ -169,7 +169,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 storeCode = templateCode,
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
-            client.get(ServiceTemplateResource::class).updateStoreFlag(userId, templateCode, true)
+            client.get(ServicePTemplateResource::class).updateStoreFlag(userId, templateCode, true)
         }
         return Result(true)
     }
@@ -413,7 +413,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 publisher = template.publisher
             )
             logger.info("addMarketTemplateRequest is $addMarketTemplateRequest")
-            val updateMarketTemplateReferenceResult = client.get(ServiceTemplateResource::class)
+            val updateMarketTemplateReferenceResult = client.get(ServicePTemplateResource::class)
                 .updateMarketTemplateReference("system", addMarketTemplateRequest)
             logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
         }

@@ -26,7 +26,6 @@ export const SVN_TAG = 'SVN_TAG'
 export const GIT_REF = 'GIT_REF'
 export const CODE_LIB = 'CODE_LIB'
 export const CONTAINER_TYPE = 'CONTAINER_TYPE'
-export const ARTIFACTORY = 'ARTIFACTORY'
 export const SUB_PIPELINE = 'SUB_PIPELINE'
 export const CUSTOM_FILE = 'CUSTOM_FILE'
 
@@ -137,19 +136,6 @@ export const DEFAULT_PARAM = {
         typeDesc: 'buildResource',
         required: true
     },
-    [ARTIFACTORY]: {
-        id: 'artifactory',
-        defaultValue: '',
-        defalutValueLabel: 'defaultValue',
-        defaultValueLabelTips: 'defaultValueDesc',
-        desc: '',
-        options: [],
-        glob: '*',
-        properties: {},
-        type: ARTIFACTORY,
-        typeDesc: 'artifactory',
-        required: true
-    },
     [SUB_PIPELINE]: {
         id: 'subPipeline',
         defaultValue: '',
@@ -240,7 +226,6 @@ export const ParamComponentMap = {
     [GIT_REF]: 'Selector',
     [CODE_LIB]: 'Selector',
     [CONTAINER_TYPE]: 'Selector',
-    [ARTIFACTORY]: 'Selector',
     [SUB_PIPELINE]: 'Selector',
     [CUSTOM_FILE]: 'VuexInput'
 }
@@ -286,12 +271,12 @@ export const CODE_LIB_TYPE = [
         name: 'GIT'
     },
     {
-        id: 'CODE_SVN',
-        name: 'SVN'
-    },
-    {
         id: 'GITHUB',
         name: 'GITHUB'
+    },
+    {
+        id: 'GITLAB',
+        name: 'GITLAB'
     }
 ]
 
@@ -304,6 +289,5 @@ export const isSvnParam = paramType(SVN_TAG)
 export const isGitParam = paramType(GIT_REF)
 export const isCodelibParam = paramType(CODE_LIB)
 export const isBuildResourceParam = paramType(CONTAINER_TYPE)
-export const isArtifactoryParam = paramType(ARTIFACTORY)
 export const isSubPipelineParam = paramType(SUB_PIPELINE)
 export const isFileParam = paramType(CUSTOM_FILE)

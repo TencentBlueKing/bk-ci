@@ -301,8 +301,8 @@
 
                     const reData = recom.data || {}
                     const reList = reData.records || []
-                    this.searchInstallList = reList.filter(x => x.installed)
-                    this.searchUninstallList = reList.filter(x => !x.installed)
+                    this.searchInstallList = reList.filter(x => x.installedFlag)
+                    this.searchUninstallList = reList.filter(x => !x.installedFlag)
                 }).catch((err) => this.$showTips({ theme: 'error', message: err.message || err })).finally(() => (this.isLoading = false))
             },
 
@@ -338,7 +338,7 @@
     .uninstall{
         position: relative;
         cursor: pointer;
-        /deep/ .bk-tooltip {
+        ::v-deep .bk-tooltip {
             vertical-align: bottom;
         }
         &:after {

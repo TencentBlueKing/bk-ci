@@ -30,4 +30,5 @@ package com.tencent.devops.monitoring.constant
 object MonitoringMessageCode {
     const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110001" // 监控服务：通知发送失败
     const val ERROR_MONITORING_INSERT_DATA_FAIL = "2110002" // 监控服务：写入influxdb失败
+    const val ERROR_MONITORING_INFLUXDB_BAD = "2110003" // 监控服务：influxdb异常
 }

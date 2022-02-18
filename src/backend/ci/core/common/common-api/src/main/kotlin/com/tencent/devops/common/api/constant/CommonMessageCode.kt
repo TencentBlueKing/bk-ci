@@ -47,6 +47,7 @@ object CommonMessageCode {
     const val MSG_CODE_ROLE_PREFIX = "MSG_CODE_ROLE_PREFIX_" // 角色国际化前缀
     const val MSG_CODE_PERMISSION_PREFIX = "MSG_CODE_PERMISSION_PREFIX_" // 操作权限国际化前缀
     const val SUCCESS = "0" // 成功
+    const val OAUTH_DENERD = 418 // 自定义状态码, 未进行oauth认证
     const val SYSTEM_ERROR = "2100001" // 系统内部繁忙，请稍后再试
     const val PARAMETER_IS_NULL = "2100002" // 参数{0}不能为空
     const val PARAMETER_IS_EXIST = "2100003" // 参数值{0}已经存在系统，请换一个再试
@@ -67,4 +68,12 @@ object CommonMessageCode {
     const val ERROR_QUERY_TIME_RANGE_TOO_LARGE = "2100018" // 查询的时间范围跨度最大，最长时间范围跨度不能超过{0}天
     const val ERROR_HTTP_RESPONSE_BODY_TOO_LARGE = "2100019" // http请求返回体太大
     const val PERMISSION_DENIED_FOR_APP = "2100020" // APP的无权限{0}
+    const val ERROR_SENSITIVE_API_NO_AUTH = "2100021" // 无敏感API访问权限
+    const val PARAMETER_LENGTH_TOO_LONG = "2100022" // 参数长度不能超过{0}个字符
+    const val PARAMETER_LENGTH_TOO_SHORT = "2100023" // 参数长度不能小于{0}个字符
+    const val PARAMETER_ILLEGAL_ERROR = "2100024" // {0}参数非法错误: {1}
+    const val PARAMETER_EXPIRED_ERROR = "2100025" // {0}token过期错误: {1}
+    const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
+    const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
+    const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
 }

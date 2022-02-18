@@ -67,7 +67,7 @@ class ResourceService @Autowired constructor(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO1? {
-        checkoutParentType(callBackInfo.filter.parent.type)
+//        checkoutParentType(callBackInfo.filter.parent.type)
         if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
                 val result = SearchInstanceInfo()
@@ -128,7 +128,7 @@ class ResourceService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(ResourceService::class.java)
         const val DEFAULTSYSTEM = "ci"
     }
 }

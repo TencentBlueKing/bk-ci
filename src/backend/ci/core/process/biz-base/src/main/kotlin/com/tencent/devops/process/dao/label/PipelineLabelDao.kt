@@ -38,34 +38,41 @@ import java.time.LocalDateTime
 /**
  * 流水线标签
  */
+@Suppress("LongParameterList")
 @Repository
 class PipelineLabelDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         name: String,
-        userId: String
+        userId: String,
+        id: Long? = null
     ) {
         logger.info("Create the pipeline label for group $groupId with name $name by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             val now = LocalDateTime.now()
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 GROUP_ID,
                 NAME,
                 CREATE_TIME,
                 UPDATE_TIME,
                 CREATE_USER,
-                UPDATE_USER
+                UPDATE_USER,
+                ID
             )
                 .values(
+                    projectId,
                     groupId,
                     name,
                     now,
                     now,
                     userId,
-                    userId
+                    userId,
+                    id
                 )
                 .execute()
         }
@@ -73,6 +80,7 @@ class PipelineLabelDao {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         labelId: Long,
         name: String,
         userId: String
@@ -83,77 +91,82 @@ class PipelineLabelDao {
                 .set(NAME, name)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
-                .where(ID.eq(labelId))
+                .where(ID.eq(labelId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
 
     fun deleteById(
         dslContext: DSLContext,
+        projectId: String,
         labelId: Long,
         userId: String
     ): Boolean {
         logger.info("Delete the label $labelId by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.deleteFrom(this)
-                .where(ID.eq(labelId))
+                .where(ID.eq(labelId).and(PROJECT_ID.eq(projectId)))
                 .execute() == 1
         }
     }
 
     fun deleteByGroupId(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long,
         userId: String
     ): Int {
         logger.info("Delete the group $groupId by user $userId")
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.deleteFrom(this)
-                .where(GROUP_ID.eq(groupId))
+                .where(GROUP_ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .execute()
-        }
-    }
-
-    fun getByGroupId(
-        dslContext: DSLContext,
-        groupId: Long
-    ): Result<TPipelineLabelRecord> {
-        with(TPipelineLabel.T_PIPELINE_LABEL) {
-            return dslContext.selectFrom(this)
-                .where(GROUP_ID.eq(groupId))
-                .fetch()
         }
     }
 
     fun countByGroupId(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Long
     ): Long {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectCount().from(this)
-                .where(GROUP_ID.eq(groupId))
+                .where(GROUP_ID.eq(groupId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Long::class.java)!!
         }
     }
 
     fun getByGroupIds(
         dslContext: DSLContext,
+        projectId: String,
         groupId: Set<Long>
     ): Result<TPipelineLabelRecord> {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
-                .where(GROUP_ID.`in`(groupId))
+                .where(GROUP_ID.`in`(groupId).and(PROJECT_ID.eq(projectId)))
                 .fetch()
+        }
+    }
+
+    fun getById(
+        dslContext: DSLContext,
+        id: Long
+    ): TPipelineLabelRecord? {
+        with(TPipelineLabel.T_PIPELINE_LABEL) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchAny()
         }
     }
 
     fun getByIds(
         dslContext: DSLContext,
+        projectId: String,
         ids: Set<Long>
     ): Result<TPipelineLabelRecord> {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
             return dslContext.selectFrom(this)
-                .where(ID.`in`(ids))
+                .where(ID.`in`(ids).and(PROJECT_ID.eq(projectId)))
                 .fetch()
         }
     }

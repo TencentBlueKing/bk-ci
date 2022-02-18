@@ -18,7 +18,7 @@ scm:
   #svn open api url，如果不需要则放着即可
   svn:
     apiKey: __BK_CI_REPOSITORY_SVN_API_KEY__
-    apiUrl: __BK_CI_REPOSITORY_SVN_API_URL__  # 结尾一般为 /rest 
+    apiUrl: __BK_CI_REPOSITORY_SVN_API_URL__  # 结尾一般为 /rest
     webhookApiUrl: __BK_CI_REPOSITORY_SVN_WEBHOOK_URL__  # 一般为 SVN_API_URL/webhooks
     svnHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codesvn/commit
   # git 仓库配置，如果不需要则放着即可
@@ -42,10 +42,12 @@ scm:
     github:
       clientId: __BK_CI_REPOSITORY_GITHUB_CLIENT_ID__
       clientSecret: __BK_CI_REPOSITORY_GITHUB_CLIENT_SECRET__
-      callbackUrl: __BK_CI_PUBLIC_URL__/external/api/external/github/oauth/callback
+      callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/github/oauth/callback
       redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
       appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
       signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
     tGit:
       apiUrl: https://git.tencent.com/api/v3
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
+    p4:
+      p4HookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/p4/commit

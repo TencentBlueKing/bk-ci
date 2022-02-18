@@ -26,10 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:notify:biz-notify")) // 开源版实现
+    api(project(":core:notify:biz-notify"))
     api(project(":core:notify:biz-notify-blueking")) // 对接蓝鲸实现
-}
-
-plugins {
-   `task-spring-boot-package`
+    implementation(project(":core:notify:biz-notify-wework")) // 对接企业微信实现
 }

@@ -46,22 +46,6 @@
                                 v-validate="'required'">
                             </bk-input>
                         </devops-form-item>
-                        <devops-form-item label="ID" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
-                            <bk-input
-                                class="rule-name-input"
-                                placeholder="可不填。仅支持英文和数字，例如gate1。"
-                                name="gatewayId"
-                                v-model="createRuleForm.gatewayId"
-                                v-validate="{
-                                    max: 10,
-                                    customRuleId: true
-                                }">
-                            </bk-input>
-                        </devops-form-item>
-                        <p class="gateway-id-tips">
-                            <i class="devops-icon icon-info-circle-shape"></i>
-                            <span>若输入了ID（例如gate1），红线将只对名称以ID加下划线开头的控制点生效（例如gate1_XX）</span>
-                        </p>
                         <bk-form-item label="描述" :property="'desc'">
                             <bk-input
                                 type="text"
@@ -192,6 +176,22 @@
                                 </bk-option>
                             </bk-select>
                         </bk-form-item>
+                        <devops-form-item label="控制点前缀" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
+                            <bk-input
+                                class="rule-name-input"
+                                placeholder="默认可不填，不填则对所有控制点生效。仅支持英文和数字，例如gate1."
+                                name="gatewayId"
+                                v-model="createRuleForm.gatewayId"
+                                v-validate="{
+                                    max: 10,
+                                    customRuleId: true
+                                }">
+                            </bk-input>
+                        </devops-form-item>
+                        <p class="gateway-id-tips">
+                            <i class="devops-icon icon-info-circle-shape"></i>
+                            <span>若输入了前缀（例如gate1），红线将只对名称以前缀加下划线开头的控制点生效（例如gate1_XX）</span>
+                        </p>
                         <bk-form-item label="生效范围" class="blod-label"
                             :property="'controlPointPosition'">
                             <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false" ref="dropdown">
@@ -235,7 +235,7 @@
                                                 指标所需插件完整
                                             </p>
                                             <p class="atom-tips" v-if="checkAtomCount(props.row.existElement)">
-                                                <span class="mark-circle"></span>有多个控制点插件。请将需配置红线的控制点插件别名开头加上红线ID+下划线
+                                                <span class="mark-circle"></span>有多个控制点插件。请将需配置红线的控制点插件别名开头加上控制点前缀+下划线
                                             </p>
                                             <p v-if="props.row.isSetPipeline">-</p>
                                         </template>
@@ -299,14 +299,14 @@
                                                 </bk-checkbox>
                                             </bk-checkbox-group>
                                         </bk-form-item>
-                                        <bk-form-item label="附加通知人员">
-                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员"></user-input>
+                                        <bk-form-item label="附加通知人员" desc="请输入通知人员，支持输入流水线变量">
+                                            <user-input :handle-change="handleChange" name="attacher" :value="createRuleForm.notifyUserList" placeholder="请输入通知人员，支持输入流水线变量"></user-input>
                                         </bk-form-item>
                                     </bk-form>
 
                                     <bk-form v-else :label-width="120" :model="createRuleForm" class="user-audit-form">
-                                        <bk-form-item label="审核人" :required="true">
-                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员"></user-input>
+                                        <bk-form-item label="审核人" desc="请输入通知人员，支持输入流水线变量" :required="true">
+                                            <user-input :handle-change="handleChange" name="reviewer" :value="createRuleForm.auditUserList" placeholder="请输入通知人员，支持输入流水线变量"></user-input>
                                         </bk-form-item>
                                         <bk-form-item label="审核超时时间">
                                             <bk-input type="number"
@@ -503,11 +503,11 @@
                     }
                 },
                 handlerList: {
-                    'LT': '<',
-                    'LE': '<=',
-                    'EQ': '=',
-                    'GT': '>',
-                    'GE': '>='
+                    LT: '<',
+                    LE: '<=',
+                    EQ: '=',
+                    GT: '>',
+                    GE: '>='
                 },
                 localCreateForm: {},
                 baseForm: {
@@ -531,7 +531,7 @@
                 // 权限配置
                 emptyTipsConfig: {
                     title: '没有权限',
-                    desc: `你在该项目下没有【创建】拦截规则权限，请切换项目访问或申请`,
+                    desc: '你在该项目下没有【创建】拦截规则权限，请切换项目访问或申请',
                     btns: [
                         {
                             type: 'primary',
@@ -733,7 +733,7 @@
                 })
             },
             getIndicatorName (indicator) {
-                const enName = indicator.type === 'CUSTOM' ? `(${indicator.enName})` : ``
+                const enName = indicator.type === 'CUSTOM' ? `(${indicator.enName})` : ''
                 return `${indicator.cnName}${enName}`
             },
             selectMetadata (index) {
@@ -840,7 +840,7 @@
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('quality/getControlPoint', { element })
+                    const res = await this.$store.dispatch('quality/getControlPoint', { element, projectId: this.projectId })
 
                     // 控制点处理
                     this.createRuleForm.controlPointName = res.name
@@ -920,7 +920,7 @@
                         projectId: this.projectId
                     })
 
-                    res.records.map(item => {
+                    res.records.forEach(item => {
                         if (!this.groupList.some(group => group.groupHashId === item.groupHashId)) {
                             this.groupList.push(item)
                         }
@@ -937,11 +937,13 @@
             },
             async requestRuleTemplate () {
                 try {
-                    const res = await this.$store.dispatch('quality/requestRuleTemplate')
+                    const res = await this.$store.dispatch('quality/requestRuleTemplate', {
+                        projectId: this.projectId
+                    })
 
                     this.fastTypeRuleList.splice(0, this.fastTypeRuleList.length)
                     if (res.length) {
-                        res.map(item => {
+                        res.forEach(item => {
                             this.fastTypeRuleList.push(item)
                         })
                     }
@@ -1049,7 +1051,7 @@
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
                 }
-                this.createRuleForm.indicators.map(item => {
+                this.createRuleForm.indicators.forEach(item => {
                     params.indicatorIds.push(item.hashId)
                 })
                 this.showPipelineList = false
@@ -1060,7 +1062,7 @@
 
                     this.createRuleForm.pipelineList = this.createRuleForm.pipelineList.filter(item => item.type !== 'pipeline')
 
-                    res.map(item => {
+                    res.forEach(item => {
                         item.isRefresh = false
                         item.type = 'pipeline'
                         if (this.pipelineSetting && item.pipelineId === this.pipelineSetting.pipelineId) {
@@ -1094,7 +1096,7 @@
                     controlPointType: this.createRuleForm.controlPoint || '',
                     indicatorIds: []
                 }
-                this.createRuleForm.indicators.map(item => {
+                this.createRuleForm.indicators.forEach(item => {
                     params.indicatorIds.push(item.hashId)
                 })
                 this.showTemplateList = false
@@ -1105,7 +1107,7 @@
 
                     this.createRuleForm.pipelineList = this.createRuleForm.pipelineList.filter(item => item.type !== 'template')
 
-                    res.map(item => {
+                    res.forEach(item => {
                         item.isRefresh = false
                         item.type = 'template'
                         if (this.pipelineSetting && item.templateId === this.pipelineSetting.templateId) {

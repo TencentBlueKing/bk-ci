@@ -59,19 +59,16 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            artifactListJsonString = JsonUtil.toJson(artifactoryFileList)
+            artifactListJsonString = JsonUtil.toJson(artifactoryFileList, formatted = false)
         )
         if (success) {
 
-            val list = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
-            if (list.isEmpty()) {
-                throw ErrorCodeException(
+            val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
+                ?: throw ErrorCodeException(
                     errorCode = ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "要更新的构建 $buildId 不存在",
                     params = arrayOf(buildId)
                 )
-            }
-            val buildHistory = list[0]
 
             webSocketDispatcher.dispatch(
                 pipelineWebsocketService.buildHistoryMessage(

@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.control
 
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
@@ -39,16 +38,17 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 class MutexControlTest {
 
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(LogMQEventDispatcher(mock()))
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mock())
     private val redisOperation: RedisOperation = RedisOperation(mock())
     private val variables: Map<String, String> = mapOf(Pair("var1", "Test"))
     private val buildId: String = "b-12345678901234567890123456789012"
     private val containerId: String = "1"
     private val projectId: String = "demo"
     private val pipelineId: String = "p-12345678901234567890123456789012"
+    private val containerHashId: String = "c-12345678901234567890123456789012"
     private val stageId: String = "stage-1"
     private val mutexGroup: MutexGroup = MutexGroup(
         enable = true,
@@ -63,15 +63,19 @@ class MutexControlTest {
         buildId = buildId,
         stageId = stageId,
         containerId = containerId,
+        containerHashId = containerHashId,
         containerType = "vmBuild",
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
-        controlOption = null
+        controlOption = null,
+        matrixGroupId = null,
+        matrixGroupFlag = false
     )
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
-        pipelineRuntimeService = mock()
+        pipelineUrlBean = mock(),
+        pipelineContainerService = mock()
     )
 
     @Test
@@ -94,9 +98,7 @@ class MutexControlTest {
             mutexGroup = mutexGroup,
             variables = variables
         )
-        Assert.assertEquals(ContainerMutexStatus.READY,
-            mutexControl.checkContainerMutex(mutexGroup = initMutexGroup, container = container)
-        )
+        Assert.assertEquals(ContainerMutexStatus.READY, mutexControl.acquireMutex(initMutexGroup, container))
     }
 
     @Ignore

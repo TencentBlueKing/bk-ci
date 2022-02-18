@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.codecc.element
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
@@ -63,7 +64,8 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
         pipelineName: String,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        container: Container
     ) {
         with(element) {
             if (languages.isEmpty()) {

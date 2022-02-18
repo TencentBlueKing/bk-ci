@@ -79,7 +79,11 @@ open class V2BuildParametersCompatibilityTransformer constructor(private val psw
                     else -> userInputValue
                 }
             }
-            startParamsWithType.add(BuildParameters(key = paramKey, value = value, valueType = it.type))
+            startParamsWithType.add(BuildParameters(
+                    key = paramKey,
+                    value = value,
+                    valueType = it.type,
+                    readOnly = it.readOnly))
         }
 
         return startParamsWithType

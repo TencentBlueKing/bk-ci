@@ -41,6 +41,7 @@ data class PipelineBuildStatusBroadCastEvent(
     override val pipelineId: String,
     override val userId: String,
     val buildId: String,
+    val stageId: String? = null,
     val taskId: String? = null,
     override var actionType: ActionType,
     override var delayMills: Int = 0

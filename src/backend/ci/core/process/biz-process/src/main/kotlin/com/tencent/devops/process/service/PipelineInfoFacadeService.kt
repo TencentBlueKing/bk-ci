@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -46,12 +47,15 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
@@ -74,6 +78,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
@@ -93,11 +98,19 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
-    private val client: Client
+    private val client: Client,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val redisOperation: RedisOperation
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
+
+    // pipeline对应的channel为静态数据, 基本不会变
+    private val pipelineChannelCache = CacheBuilder.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*pipelineId*/, ChannelCode>()
 
     fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
         pipelinePermissionService.validPipelinePermission(
@@ -108,9 +121,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
 
-        val settingInfo = pipelineRepositoryService.getSetting(pipelineId)
+        val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
 
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
@@ -118,7 +131,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
     }
 
-    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String? {
+    fun uploadPipeline(userId: String, projectId: String, pipelineModelAndSetting: PipelineModelAndSetting): String {
         val permissionCheck = pipelinePermissionService.checkPipelinePermission(
             userId = userId,
             projectId = projectId,
@@ -168,8 +181,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             .build()
     }
 
-    fun getPipelineNameVersion(pipelineId: String): Pair<String, Int> {
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
+    fun getPipelineNameVersion(projectId: String, pipelineId: String): Pair<String, Int> {
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
         return Pair(pipelineInfo?.pipelineName ?: "", pipelineInfo?.version ?: 0)
     }
 
@@ -220,7 +233,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             val templateId = model.templateId
             if (templateId != null) {
                 // 如果是根据模板创建的流水线需为model设置srcTemplateId
-                model.srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId, TemplateType.CONSTRAINT.name)
+                model.srcTemplateId = templateDao.getSrcTemplateId(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    type = TemplateType.CONSTRAINT.name
+                )
             }
 
             // 检查用户是否有插件的使用权限
@@ -290,6 +308,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         }
                         pipelineGroupService.updatePipelineLabel(
                             userId = userId,
+                            projectId = projectId,
                             pipelineId = pipelineId,
                             labelIds = labels
                         )
@@ -298,6 +317,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,
+                        projectId = projectId,
                         templateId = templateId,
                         pipelineId = pipelineId,
                         instanceType = instanceType!!,
@@ -325,7 +345,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                     }
                     watcher.stop()
                 }
-                pipelineGroupService.addPipelineLabel(userId = userId, pipelineId = pipelineId, labelIds = model.labels)
+                pipelineGroupService.addPipelineLabel(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    labelIds = model.labels
+                )
 
                 success = true
                 return pipelineId
@@ -376,11 +401,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         try {
             watcher.start("isProjectManager")
             // 判断用户是否为项目管理员
-            val permission = BkAuthGroup.MANAGER
-            if (!pipelinePermissionService.isProjectUser(userId, projectId, permission)) {
+            if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
                 val defaultMessage = "管理员"
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${permission.value}",
+                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
                     defaultMessage = defaultMessage
                 )
                 throw ErrorCodeException(
@@ -438,13 +462,20 @@ class PipelineInfoFacadeService @Autowired constructor(
                 permission = AuthPermission.EDIT,
                 message = "用户无流水线编辑权限"
             )
-            pipelinePermissionService.validPipelinePermission(
+//            pipelinePermissionService.validPipelinePermission(
+//                userId = userId,
+//                projectId = projectId,
+//                pipelineId = "*",
+//                permission = AuthPermission.CREATE,
+//                message = "用户($userId)无权限在工程($projectId)下创建流水线"
+//            )
+            if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
-                pipelineId = "*",
-                permission = AuthPermission.CREATE,
-                message = "用户($userId)无权限在工程($projectId)下创建流水线"
-            )
+                permission = AuthPermission.CREATE
+            )) {
+                throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下创建流水线")
+            }
         }
 
         if (pipeline.channelCode != channelCode) {
@@ -456,7 +487,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -466,7 +497,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val copyMode = Model(name, desc ?: model.desc, model.stages)
             modelCheckPlugin.clearUpModel(copyMode)
             val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode)
-            val settingInfo = pipelineSettingFacadeService.getSettingInfo(pipelineId)
+            val settingInfo = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
             if (settingInfo != null) {
                 // setting pipeline需替换成新流水线的
                 val newSetting = pipelineSettingFacadeService.rebuildSetting(
@@ -516,7 +547,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true
     ): DeployPipelineResult {
-        if (checkTemplate && templateService.isTemplatePipeline(pipelineId)) {
+        if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT,
                 defaultMessage = "模板流水线不支持编辑"
@@ -566,7 +597,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
-            val existModel = pipelineRepositoryService.getModel(pipelineId)
+            val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -631,6 +662,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
+        if (setting.projectId.isBlank()) {
+            setting.projectId = projectId
+        }
+        setting.pipelineId = pipelineResult.pipelineId // fix 用户端可能不传入pipelineId的问题，或者传错的问题
         pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
         return pipelineResult
     }
@@ -670,7 +705,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId, version)
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId, version)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -698,15 +733,16 @@ class PipelineInfoFacadeService @Autowired constructor(
             model.desc = pipelineInfo.pipelineDesc
             model.pipelineCreator = pipelineInfo.creator
 
-            val defaultTagIds = listOf(stageTagService.getDefaultStageTag().data?.id)
+            val defaultTagIds by lazy { listOf(stageTagService.getDefaultStageTag().data?.id) } // 优化
             model.stages.forEach {
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagIds
+                it.resetBuildOption()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
             if (model.instanceFromTemplate == true) {
-                model.templateId = templateService.getTemplateIdByPipeline(pipelineId)
+                model.templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId)
             }
             // 将当前最新版本号传给前端
             model.latestVersion = pipelineInfo.version
@@ -742,7 +778,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
 
-            val existModel = pipelineRepositoryService.getModel(pipelineId)
+            val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -792,6 +828,31 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineRepositoryService.isPipelineExist(
             projectId = projectId, pipelineName = name, channelCode = channelCode, excludePipelineId = pipelineId
         )
+    }
+
+    fun batchUpdatePipelineNamePinYin(userId: String) {
+        logger.info("$userId batchUpdatePipelineNamePinYin")
+        val redisLock = RedisLock(redisOperation, "process:batchUpdatePipelineNamePinYin", 5 * 60)
+        if (redisLock.tryLock()) {
+            try {
+                pipelineInfoDao.batchUpdatePipelineNamePinYin(dslContext)
+            } finally {
+                redisLock.unlock()
+                logger.info("$userId batchUpdatePipelineNamePinYin finished")
+            }
+        }
+    }
+
+    fun getPipelineChannel(projectId: String, pipelineId: String): ChannelCode? {
+        if (pipelineChannelCache.getIfPresent(pipelineId) != null) {
+            return pipelineChannelCache.getIfPresent(pipelineId)
+        }
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId) ?: return null
+        val channelCode = ChannelCode.getChannel(pipelineInfo.channel)
+        if (channelCode != null) {
+            pipelineChannelCache.put(pipelineId, channelCode)
+        }
+        return channelCode
     }
 
     companion object {

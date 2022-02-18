@@ -39,16 +39,22 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
         private val logger = LoggerFactory.getLogger(QualityGatewayResourceApi::class.java)
     }
 
-    override fun saveScriptHisMetadata(elementType: String, data: Map<String, String>): Result<String> {
+    override fun saveScriptHisMetadata(
+        elementType: String,
+        taskId: String,
+        taskName: String,
+        data: Map<String, String>
+    ): Result<String> {
         try {
-            val path = "/ms/quality/api/build/metadata/saveHisMetadata?elementType=$elementType"
+            val path = "/ms/quality/api/build/metadata/saveHisMetadata?" +
+                    "elementType=$elementType&taskId=$taskId&taskName=$taskName"
             val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
                 objectMapper.writeValueAsString(data))
             val request = buildPost(path, requestBody)
             val responseContent = request(request, "保存脚本元数据失败")
             return Result(responseContent)
         } catch (ignore: Exception) {
-            LoggerService.addRedLine("保存脚本元数据失败: ${ignore.message}")
+            LoggerService.addErrorLine("保存脚本元数据失败: ${ignore.message}")
             logger.warn("saveScriptHisMetadata|${ignore.message}", ignore)
         }
         return Result("")

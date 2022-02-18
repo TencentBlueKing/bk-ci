@@ -154,7 +154,7 @@ check_ci_service_up (){
   done
   return $e
 }
-wait=${BKI_UPGRADE_WAIT:-60}
+wait=${BKI_UPGRADE_WAIT:-30}
 until check_ci_service_up; do
   sleep 1
   echo -n "${#pending_services[@]} "

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.GlobalMessage;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
+import com.tencent.devops.common.util.JsonUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -38,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -66,7 +68,7 @@ public class GlobalMessageUtil
     private ObjectMapper objectMapper;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
 
 
     private static Logger logger = LoggerFactory.getLogger(GlobalMessageUtil.class);
@@ -86,16 +88,20 @@ public class GlobalMessageUtil
 
         if (StringUtils.isNotBlank(redisKey))
         {
-            Map<String, String> messageDetailMap = (Map<String, String>) redisTemplate.opsForHash().entries(redisKey);
+            Map<Object, Object> messageDetailMap = redisTemplate.opsForHash().entries(redisKey);
 
             if (MapUtils.isEmpty(messageDetailMap))
             {
-                logger.error("operation type map not initialized");
+                JedisConnectionFactory jedisConnectionFactory = (JedisConnectionFactory) redisTemplate.getConnectionFactory();
+                logger.error("operation type map not initialized: {}, {}, {}, {}", redisKey,
+                    jedisConnectionFactory.getHostName(),
+                    jedisConnectionFactory.getPort(),
+                    jedisConnectionFactory.getDatabase());
                 return new HashMap<>();
             }
-            for (Map.Entry<String, String> entry : messageDetailMap.entrySet())
+            for (Map.Entry<Object, Object> entry : messageDetailMap.entrySet())
             {
-                String messageDetailStr = entry.getValue();
+                String messageDetailStr = (String) entry.getValue();
                 GlobalMessage globalMessage;
                 try
                 {
@@ -106,7 +112,7 @@ public class GlobalMessageUtil
                     logger.error("operation type message deserialize fail! key: {}", entry.getKey());
                     continue;
                 }
-                messageCodeDetailMap.put(entry.getKey(), globalMessage);
+                messageCodeDetailMap.put((String) entry.getKey(), globalMessage);
             }
         }
 
@@ -129,16 +135,21 @@ public class GlobalMessageUtil
         {
             for (String key : keyList)
             {
-                String operMsgStr = (String) redisTemplate.opsForValue().get(key);
+                String operMsgStr = redisTemplate.opsForValue().get(key);
+
+                if (StringUtils.isBlank(operMsgStr)) {
+                    continue;
+                }
+
                 GlobalMessage operMsgDetail;
                 try
                 {
                     operMsgDetail = objectMapper.readValue(operMsgStr, GlobalMessage.class);
                     message.put(key, operMsgDetail);
                 }
-                catch (IOException e)
+                catch (Exception e)
                 {
-                    logger.error("operation history message deserialize fail!");
+                    logger.error("operation history message deserialize fail!: {}, {}", key, operMsgStr);
                     throw new CodeCCException(CommonMessageCode.UTIL_EXECUTE_FAIL);
                 }
             }

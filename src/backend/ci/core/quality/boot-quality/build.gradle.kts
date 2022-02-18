@@ -32,7 +32,3 @@ dependencies {
     api(project(":core:quality:biz-quality"))
     api(project(":core:quality:biz-quality-sample"))
 }
-
-plugins {
-   `task-spring-boot-package`
-}

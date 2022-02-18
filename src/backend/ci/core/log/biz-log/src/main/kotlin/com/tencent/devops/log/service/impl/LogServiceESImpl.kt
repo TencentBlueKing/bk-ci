@@ -41,18 +41,18 @@ import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
-import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.jmx.CreateIndexBean
+import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -87,10 +87,10 @@ class LogServiceESImpl constructor(
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
-    private val createIndexBeanV2: CreateIndexBeanV2,
-    private val logBeanV2: LogBeanV2,
+    private val createIndexBean: CreateIndexBean,
+    private val logStorageBean: LogStorageBean,
     private val redisOperation: RedisOperation,
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val buildLogPrintService: BuildLogPrintService
 ) : LogService {
 
     companion object {
@@ -104,7 +104,6 @@ class LogServiceESImpl constructor(
 
     override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
         with(event) {
-            logger.info("[$projectId|$pipelineId|$buildId] build finish")
             indexService.flushLineNum2DB(buildId)
         }
     }
@@ -112,7 +111,7 @@ class LogServiceESImpl constructor(
     override fun addLogEvent(event: LogEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(LogBatchEvent(event.buildId, logMessage))
         }
     }
 
@@ -145,7 +144,7 @@ class LogServiceESImpl constructor(
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
-            logBeanV2.batchWrite(elapse, success)
+            logStorageBean.batchWrite(elapse, success)
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= 1000 && event.logs.isNotEmpty()) logger.warn(
@@ -156,13 +155,13 @@ class LogServiceESImpl constructor(
 
     override fun updateLogStatus(event: LogStatusEvent) {
         with(event) {
-            logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount|$finished] Start to update log status")
             logStatusService.finish(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
+                logStorageMode = logStorageMode,
                 finish = finished
             )
         }
@@ -171,6 +170,7 @@ class LogServiceESImpl constructor(
     override fun queryInitLogs(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -184,6 +184,7 @@ class LogServiceESImpl constructor(
                 buildId = buildId,
                 index = index,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -192,7 +193,7 @@ class LogServiceESImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - currentEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - currentEpoch, success)
         }
     }
 
@@ -203,6 +204,7 @@ class LogServiceESImpl constructor(
         start: Long,
         end: Long,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -227,6 +229,7 @@ class LogServiceESImpl constructor(
                 val query = getQuery(
                     buildId = buildId,
                     debug = debug,
+                    logType = logType,
                     tag = tag,
                     subTag = subTag,
                     jobId = jobId,
@@ -272,21 +275,21 @@ class LogServiceESImpl constructor(
                 if (!fromStart) {
                     queryLogs.logs.reverse()
                 }
-                if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+                if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
                 success = true
             } catch (e: ElasticsearchStatusException) {
                 e.status()
                 val exString = e.toString()
                 if (exString.contains("index_closed_exception")) {
                     logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                    queryLogs.status = LogStatus.CLOSED
+                    queryLogs.status = LogStatus.CLOSED.status
                 }
             } catch (e: Exception) {
                 logger.error("Query more logs between lines failed because of ${e.javaClass}. buildId: $buildId", e)
             }
             return queryLogs
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -294,6 +297,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         start: Long,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -308,6 +312,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 start = start,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -316,7 +321,7 @@ class LogServiceESImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -324,6 +329,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         end: Long,
         debug: Boolean,
+        logType: LogType?,
         size: Int?,
         tag: String?,
         subTag: String?,
@@ -339,6 +345,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 end = end,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -349,7 +356,7 @@ class LogServiceESImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -367,6 +374,7 @@ class LogServiceESImpl constructor(
         val query = getQuery(
             buildId = buildId,
             debug = false,
+            logType = null,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -433,6 +441,7 @@ class LogServiceESImpl constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -446,6 +455,7 @@ class LogServiceESImpl constructor(
             val result = doGetEndLogs(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -458,7 +468,7 @@ class LogServiceESImpl constructor(
             queryLogs.logs = result.logs
             queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return queryLogs
     }
@@ -467,6 +477,7 @@ class LogServiceESImpl constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -479,6 +490,7 @@ class LogServiceESImpl constructor(
             val result = doGetEndLogs(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -489,13 +501,14 @@ class LogServiceESImpl constructor(
             result.timeUsed = System.currentTimeMillis() - startEpoch
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
     override fun queryInitLogsPage(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -520,6 +533,7 @@ class LogServiceESImpl constructor(
             queryLogs = doQueryInitLogsPage(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -531,24 +545,25 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
             success = logStatusSuccess(queryLogs.status)
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
 
         return PageQueryLogs(
@@ -572,8 +587,8 @@ class LogServiceESImpl constructor(
         return openIndex(buildId, index)
     }
 
-    private fun logStatusSuccess(logStatus: LogStatus) =
-        (logStatus == LogStatus.EMPTY || logStatus == LogStatus.SUCCEED)
+    private fun logStatusSuccess(logStatus: Int) =
+        (LogStatus.parse(logStatus) == LogStatus.EMPTY || LogStatus.parse(logStatus) == LogStatus.SUCCEED)
 
     private fun openIndex(buildId: String, index: String): Boolean {
         logger.info("[$buildId|$index] Start to open the index")
@@ -585,6 +600,7 @@ class LogServiceESImpl constructor(
     private fun doQueryInitLogsPage(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,
@@ -613,6 +629,7 @@ class LogServiceESImpl constructor(
         val query = getQuery(
             buildId = buildId,
             debug = debug,
+            logType = logType,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -641,11 +658,11 @@ class LogServiceESImpl constructor(
         do {
             searchResponse.hits.hits.forEach { searchHit ->
                 val sourceMap = searchHit.sourceAsMap
-                val logType = sourceMap["logType"].toString()
+                val type = sourceMap["logType"].toString()
                 val logLine = LogLine(
                     sourceMap["lineNo"].toString().toLong(),
                     sourceMap["timestamp"].toString().toLong(),
-                    if (logType == LogType.LOG.name) sourceMap["message"].toString() else "",
+                    if (type == LogType.LOG.name) sourceMap["message"].toString() else "",
                     Constants.DEFAULT_PRIORITY_NOT_DELETED
                 )
                 queryLogs.logs.add(logLine)
@@ -656,13 +673,14 @@ class LogServiceESImpl constructor(
             )
         } while (searchResponse.hits.hits.isNotEmpty())
 
-        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+        if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
         return queryLogs
     }
 
     private fun doGetEndLogs(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -690,6 +708,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -700,6 +719,7 @@ class LogServiceESImpl constructor(
             val query = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -746,11 +766,11 @@ class LogServiceESImpl constructor(
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query end logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -759,12 +779,12 @@ class LogServiceESImpl constructor(
         buildId: String,
         index: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs")
         val logStatus = if (tag == null && jobId != null) getLogStatus(
             buildId = buildId,
             tag = jobId,
@@ -787,6 +807,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -798,12 +819,13 @@ class LogServiceESImpl constructor(
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             )
-            logger.info("Get the query builder: $boolQueryBuilder")
+            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs get the query builder: $boolQueryBuilder")
 
             val searchRequest = SearchRequest(index)
                 .source(
@@ -840,17 +862,17 @@ class LogServiceESImpl constructor(
                 queryLogs.logs.add(logLine)
             }
             logger.info("logs query time cost: ${System.currentTimeMillis() - startTime}")
-            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY
+            if (queryLogs.logs.isEmpty()) queryLogs.status = LogStatus.EMPTY.status
             queryLogs.hasMore = logSize > queryLogs.logs.size
         } catch (e: ElasticsearchStatusException) {
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
         }
         return queryLogs
     }
@@ -860,12 +882,12 @@ class LogServiceESImpl constructor(
         index: String,
         start: Long,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$debug|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine")
         val logStatus = if (tag == null && jobId != null) {
             getLogStatus(
                 buildId = buildId,
@@ -893,6 +915,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -903,12 +926,14 @@ class LogServiceESImpl constructor(
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
+            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine get the query builder: $boolQueryBuilder")
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
@@ -967,11 +992,11 @@ class LogServiceESImpl constructor(
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query after logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }
@@ -984,12 +1009,12 @@ class LogServiceESImpl constructor(
         end: Long,
         size: Int,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$debug|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine")
         val logStatus = if (tag == null && jobId != null) {
             getLogStatus(
                 buildId = buildId,
@@ -1017,6 +1042,7 @@ class LogServiceESImpl constructor(
                 index = index,
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -1038,6 +1064,7 @@ class LogServiceESImpl constructor(
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
                 debug = debug,
+                logType = logType,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -1045,6 +1072,7 @@ class LogServiceESImpl constructor(
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
                 .must(QueryBuilders.rangeQuery("lineNo").lte(end))
 
+            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine get the query builder: $boolQueryBuilder")
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
@@ -1085,11 +1113,11 @@ class LogServiceESImpl constructor(
             val exString = e.toString()
             if (exString.contains("index_closed_exception")) {
                 logger.error("[$buildId] Can't search because of index_closed_exception", e)
-                queryLogs.status = LogStatus.CLOSED
+                queryLogs.status = LogStatus.CLOSED.status
             }
         } catch (e: Exception) {
             logger.error("Query before logs failed because of ${e.javaClass}. buildId: $buildId", e)
-            queryLogs.status = LogStatus.FAIL
+            queryLogs.status = LogStatus.FAIL.status
             queryLogs.finished = true
             queryLogs.hasMore = false
         }
@@ -1116,6 +1144,7 @@ class LogServiceESImpl constructor(
         index: String,
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1123,7 +1152,7 @@ class LogServiceESImpl constructor(
         start: Long? = null,
         end: Long? = null
     ): Long {
-        val query = getQuery(buildId, debug, tag, subTag, jobId, executeCount)
+        val query = getQuery(buildId, debug, logType, tag, subTag, jobId, executeCount)
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         if (end != null) query.must(QueryBuilders.rangeQuery("lineNo").lte(end))
         val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
@@ -1182,7 +1211,7 @@ class LogServiceESImpl constructor(
                 logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
             }
             val elapse = System.currentTimeMillis() - currentEpoch
-            logBeanV2.bulkRequest(elapse, bulkLines > 0)
+            logStorageBean.bulkRequest(elapse, bulkLines > 0)
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= 500 && logMessages.isNotEmpty()) logger.warn(
@@ -1295,7 +1324,7 @@ class LogServiceESImpl constructor(
             logger.error("[${createClient.clusterName}] Create index $index failure", e)
             return false
         } finally {
-            createIndexBeanV2.execute(System.currentTimeMillis() - startEpoch, success)
+            createIndexBean.execute(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -1309,6 +1338,7 @@ class LogServiceESImpl constructor(
     private fun getQuery(
         buildId: String,
         debug: Boolean,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1323,6 +1353,9 @@ class LogServiceESImpl constructor(
         }
         if (!jobId.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("jobId", jobId).operator(Operator.AND))
+        }
+        if (logType != null) {
+            query.must(QueryBuilders.matchQuery("logType", logType.name).operator(Operator.AND))
         }
         if (!debug) {
             query.mustNot(QueryBuilders.matchQuery("logType", LogType.DEBUG.name).operator(Operator.AND))

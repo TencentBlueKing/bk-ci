@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.websocket.push
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
@@ -51,12 +51,17 @@ data class StatusWebsocketPush(
     override val userId: String,
     override val pushType: WebSocketType,
     override val redisOperation: RedisOperation,
-    override val objectMapper: ObjectMapper,
     override var page: String?,
     override var notifyPost: NotifyPost
-) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
+) : WebsocketPush(
+    userId = userId,
+    pushType = pushType,
+    redisOperation = redisOperation,
+    page = page,
+    notifyPost = notifyPost
+) {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(StatusWebsocketPush::class.java)
         private val pipelineStatusService = SpringContextUtil.getBean(PipelineStatusService::class.java)
     }
 
@@ -99,7 +104,7 @@ data class StatusWebsocketPush(
         if (status != null) {
             val result = mutableMapOf<String, PipelineStatus>()
             result[pipelineId] = status
-            message.notifyPost.message = objectMapper.writeValueAsString(result)
+            message.notifyPost.message = JsonUtil.toJson(result, formatted = false)
         }
     }
 }

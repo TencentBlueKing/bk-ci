@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
  *
  * @version 1.0
  */
+@Suppress("MagicNumber")
 @Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_MONITOR, 20000)
 data class PipelineBuildMonitorEvent(
     override val source: String,
@@ -46,6 +47,7 @@ data class PipelineBuildMonitorEvent(
     override val userId: String,
     val buildId: String,
     val buildStatus: BuildStatus,
+    val executeCount: Int = 0, // 0 为了兼容旧的事件没有该字段，默认为0
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

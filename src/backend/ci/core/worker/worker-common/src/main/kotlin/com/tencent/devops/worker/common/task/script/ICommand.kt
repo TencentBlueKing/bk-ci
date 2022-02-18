@@ -30,9 +30,11 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
-import org.slf4j.LoggerFactory
+import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import java.io.File
 
 interface ICommand {
@@ -47,32 +49,36 @@ interface ICommand {
         dir: File,
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
-        errorMessage: String? = null
+        errorMessage: String? = null,
+        stepId: String? = null,
+        charsetType: String? = null,
+        taskId: String? = null
     )
 
-    fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {
+    fun parseTemplate(
+        buildId: String,
+        command: String,
+        data: Map<String, String>,
+        dir: File,
+        taskId: String?
+    ): String {
+        // 解析跨项目模板信息
+        val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
+
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
+            override fun getReplacement(key: String): String? = if (data[key] != null) {
                 data[key]!!
             } else {
                 try {
-                    CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (ignored: Exception) {
-                    logger.warn("环境变量($key)不存在", ignored)
-                    if (doubleCurlyBraces) {
-                        "\${{$key}}"
-                    } else {
-                        "\${$key}"
-                    }
+                    CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                } catch (ignore: Exception) {
+                    CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
                 }
             }
         }, mapOf(
             WORKSPACE_CONTEXT to dir.absolutePath,
-            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: "")
+            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: ""),
+            JOB_OS_CONTEXT to AgentEnv.getOS().name
         ))
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ICommand::class.java)
     }
 }

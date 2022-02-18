@@ -256,7 +256,7 @@
         max-width: 80%;
         height: 59px;
         .manage-view-btn {
-            margin-top: 18px;
+            margin-top: 17px;
             width: 24px;
             height: 24px;
             border: 2px dotted $borderWeightColor;
@@ -271,7 +271,7 @@
         &.bk-tab .bk-tab-header {
             height: 59px;
             line-height: 59px;
-            background-image: none;
+            background-image: none !important;
             .bk-tab-label-wrapper .bk-tab-label-list {
                 height: 59px;
                 li.bk-tab-label-item {
@@ -306,7 +306,15 @@
             .bk-tab-header-setting {
                 margin-left: 10px;
             }
+            .prev,
+            .next {
+                height: 59px !important;
+                line-height: 59px !important;
+            }
         }
+    }
+    .bk-tab-label-list-has-bar {
+        height: 59px !important;
     }
     .label-button {
         margin-right: -5px;

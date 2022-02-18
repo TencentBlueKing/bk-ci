@@ -22,18 +22,21 @@ else
     ns_config = config.ns_devnet
 end
 
+-- 获取tag
 local tag = tagUtil:get_tag(ns_config)
-local isGray = grayUtil:get_gray()
-if isGray or tag == "gray" then
-    ngx.var.static_dir = config.static_dir_gray
-    ngx.var.static_dir_codecc = config.static_dir_codecc_gray
+
+-- 根据tag路由front目录
+ngx.var.static_dir = tagUtil:get_frontend_path(tag, "ci")
+ngx.var.static_dir_codecc = tagUtil:get_frontend_path(tag, "codecc")
+
+-- 根据tag路由下载路径
+ngx.header["X-DEVOPS-GRAY-DIR"] = tagUtil:get_sub_path(tag)
+
+-- 灰度标志
+if tag == "gray" then
     ngx.header["X-DEVOPS-GRAY"] = "true"
 else
-    ngx.var.static_dir = config.static_dir
-    ngx.var.static_dir_codecc = config.static_dir_codecc
     ngx.header["X-DEVOPS-GRAY"] = "false"
 end
-
-ngx.header["X-DEVOPS-GRAY-DIR"] = tagUtil:get_sub_path(tag)
 
 ngx.exit(200)

@@ -40,7 +40,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
-import com.tencent.devops.quality.pojo.RuleCheckResult
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.quality.service.v2.QualityHisMetadataService
 import com.tencent.devops.quality.service.v2.QualityRuleCheckService
 import com.tencent.devops.quality.service.v2.QualityRuleService
@@ -116,7 +116,7 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
     ): Result<Page<QualityRuleSummaryWithPermission>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val limit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val result = ruleService.listRuleDataSummary(userId, projectId, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
     }

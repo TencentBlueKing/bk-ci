@@ -23,6 +23,7 @@
     import imageInfo from '../../components/common/detail-info/image'
     import detailScore from '../../components/common/detailTab/detailScore'
     import codeSection from '../../components/common/detailTab/codeSection'
+    import yamlDetail from '../../components/common/detailTab/yamlDetail'
 
     export default {
         components: {
@@ -31,7 +32,8 @@
             imageInfo,
             detailScore,
             codeSection,
-            breadCrumbs
+            breadCrumbs,
+            yamlDetail
         },
 
         data () {
@@ -42,7 +44,7 @@
         },
 
         computed: {
-            ...mapGetters('store', { 'markerQuey': 'getMarketQuery', 'detail': 'getDetail' }),
+            ...mapGetters('store', { markerQuey: 'getMarketQuery', detail: 'getDetail' }),
 
             detailCode () {
                 return this.$route.params.code
@@ -55,14 +57,15 @@
             tabList () {
                 return {
                     atom: [
-                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' },
-                        { componentName: 'codeSection', label: this.$t('YAML片段'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
+                        { componentName: 'codeSection', label: this.$t('store.YAMLV1'), name: 'YAML', bindData: { code: this.detail.codeSection, limitHeight: false }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) },
+                        { componentName: 'yamlDetail', label: this.$t('store.YAMLV2'), name: 'YAMLV2', bindData: { code: this.detail.codeSectionV2, limitHeight: false }, hidden: (!this.detail.yamlFlag || !this.detail.recommendFlag) }
                     ],
                     template: [
-                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' }
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' }
                     ],
                     image: [
-                        { componentName: 'detailScore', label: this.$t('概述'), name: 'des' },
+                        { componentName: 'detailScore', label: this.$t('store.概述'), name: 'des' },
                         { componentName: 'codeSection', label: 'Dockerfile', name: 'Dockerfile', bindData: { code: this.detail.codeSection, limitHeight: false } }
                     ]
                 }
@@ -107,7 +110,8 @@
                 'requestImage',
                 'getUserApprovalInfo',
                 'requestImageCategorys',
-                'getAtomYaml'
+                'getAtomYaml',
+                'getAtomYamlV2'
             ]),
 
             getDetail () {
@@ -131,13 +135,15 @@
                     this.requestAtom(atomCode),
                     this.requestAtomStatistic({ storeCode: atomCode, storeType: 'ATOM' }),
                     this.getUserApprovalInfo(atomCode),
-                    this.getAtomYaml({ atomCode })
-                ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {
+                    this.getAtomYaml({ atomCode }),
+                    this.getAtomYamlV2({ atomCode }).catch(({ data }) => '')
+                ]).then(([atomDetail, atomStatic, userAppInfo, yaml, yamlV2]) => {
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
                     detail.recentExecuteNum = atomStatic.recentExecuteNum || 0
                     detail.approveStatus = (userAppInfo || {}).approveStatus
                     detail.codeSection = yaml
+                    detail.codeSectionV2 = yamlV2
                     this.setDetail(detail)
                 })
             },

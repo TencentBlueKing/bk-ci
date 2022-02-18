@@ -38,16 +38,17 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import java.net.URLDecoder
+import java.net.URLEncoder
 import java.nio.charset.Charset
 
-@Suppress("ALL")
+@Suppress("MagicNumber")
 abstract class ArchiveFileServiceImpl : ArchiveFileService {
 
     @Autowired
@@ -110,19 +111,18 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         disposition: FormDataContentDisposition,
         fileChannelType: FileChannelTypeEnum
     ): String {
-        val path = generateDestPath(fileType, projectId, customFilePath, pipelineId, buildId)
-        val destPath = if (!path.endsWith(disposition.fileName)) {
-            path + fileSeparator + disposition.fileName
+        val destPath = if (customFilePath?.endsWith(disposition.fileName) != true) {
+            (customFilePath ?: "") + fileSeparator + disposition.fileName
         } else {
-            path
+            customFilePath
         }
         val servicePipelineResource = client.get(ServicePipelineResource::class)
         val pipelineName = servicePipelineResource.getPipelineNameByIds(
             projectId = projectId,
             pipelineIds = setOf(pipelineId)
         ).data!![pipelineId] ?: ""
-        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
-        val props: Map<String, String?>? = mapOf(
+        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId), projectId).data!![buildId] ?: ""
+        val props: Map<String, String?> = mapOf(
             "pipelineId" to pipelineId,
             "pipelineName" to pipelineName,
             "buildId" to buildId,
@@ -176,7 +176,43 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         return flag
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(ArchiveFileServiceImpl::class.java)
+    protected fun generateFileDownloadUrl(
+        fileChannelType: FileChannelTypeEnum,
+        destPath: String,
+        fullUrl: Boolean = true
+    ): String {
+        val urlPrefix = StringBuilder()
+        when (fileChannelType) {
+            FileChannelTypeEnum.WEB_SHOW -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download")
+            }
+            FileChannelTypeEnum.WEB_DOWNLOAD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download/local")
+            }
+            FileChannelTypeEnum.SERVICE -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/service/artifactories/file/download")
+            }
+            FileChannelTypeEnum.BUILD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
+                }
+                urlPrefix.append("/ms/artifactory/api/build/artifactories/file/download")
+            }
+        }
+        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
+        return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
+            "$urlPrefix/${URLEncoder.encode(filePath, "UTF-8")}"
+        } else {
+            "$urlPrefix?filePath=$filePath"
+        }
     }
 }

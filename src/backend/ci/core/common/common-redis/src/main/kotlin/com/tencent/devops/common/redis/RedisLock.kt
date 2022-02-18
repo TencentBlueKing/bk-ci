@@ -112,7 +112,7 @@ open class RedisLock(
      * @return
      */
     private fun set(key: String, value: String, seconds: Long): String? {
-        val finalLockKey = getFinalLockKey(key)
+        val finalLockKey = redisOperation.getKeyByRedisName(key)
         return redisOperation.execute(RedisCallback { connection ->
             val result =
                 when (val nativeConnection = connection.nativeConnection) {
@@ -139,11 +139,6 @@ open class RedisLock(
         })
     }
 
-    private fun getFinalLockKey(key: String): String {
-        val redisName = redisOperation.getRedisName()
-        return if (!redisName.isNullOrBlank()) "$redisName:$key" else key
-    }
-
     /**
      * 解锁
      * <p>
@@ -159,7 +154,7 @@ open class RedisLock(
 //            logger.info("Start to unlock the key($lockKey) of value($lockValue)")
             return redisOperation.execute(RedisCallback { connection ->
                 val nativeConnection = connection.nativeConnection
-                val finalLockKey = getFinalLockKey(lockKey)
+                val finalLockKey = redisOperation.getKeyByRedisName(lockKey)
                 val keys = arrayOf(finalLockKey.toByteArray())
                 val result =
                     when (nativeConnection) {
@@ -186,7 +181,7 @@ open class RedisLock(
                     }
                 locked = result == 0L
                 result == 1L
-            })
+            }) ?: false
         } else {
             logger.info("It's already unlock")
         }

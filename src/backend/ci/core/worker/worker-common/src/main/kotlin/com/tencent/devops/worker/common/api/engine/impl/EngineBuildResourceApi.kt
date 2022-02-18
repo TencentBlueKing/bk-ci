@@ -28,7 +28,9 @@
 package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -38,6 +40,7 @@ import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
+@Suppress("UNUSED", "TooManyFunctions")
 @ApiPriority(priority = 1)
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
@@ -91,22 +94,12 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(retryCount: Int): Result<Boolean> {
-        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
-        val request = buildPost(path)
-        val errorMessage = "构建完成请求失败"
-        val responseContent = request(
-            request = request,
-            connectTimeoutInSec = 5L,
-            errorMessage = errorMessage,
-            readTimeoutInSec = 30L,
-            writeTimeoutInSec = 30L
-        )
-        return objectMapper.readValue(responseContent)
+    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
+        return workerEnd(retryCount)
     }
 
-    override fun heartbeat(): Result<Boolean> {
-        val path = getRequestUrl(path = "api/build/worker/heartbeat")
+    override fun heartbeat(): Result<HeartBeatInfo> {
+        val path = getRequestUrl(path = "api/build/worker/heartbeat/v1")
         val request = buildPost(path)
         val errorMessage = "心跳失败"
         val responseContent = request(
@@ -133,7 +126,53 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun getCiToken(): String {
-        return ""
+    override fun submitError(errorInfo: ErrorInfo): Result<Boolean> {
+        val path = getRequestUrl(path = "api/build/worker/submit_error")
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(errorInfo)
+        )
+        val request = buildPost(path, requestBody)
+        val errorMessage = "上报启动异常信息失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
+    override fun getJobContext(): Map<String, String> {
+        return emptyMap()
+    }
+
+    override fun getBuildDetailUrl(): String {
+        val path = getRequestUrl(path = "api/build/builds/detail_url")
+        val request = buildGet(path)
+        val errorMessage = "构建超时结束请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
+    protected fun workerEnd(retryCount: Int): Result<Boolean> {
+        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
+        val request = buildPost(path)
+        val errorMessage = "构建完成请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
     }
 }

@@ -31,14 +31,15 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.quality.api.v2.pojo.QualityRuleIntercept
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -66,6 +67,24 @@ interface ServiceQualityInterceptResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String
+    ): Result<List<QualityRuleIntercept>>
+
+    @ApiOperation("获取stream红线执行历史")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
+    @POST
+    fun listRuleHistory(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("红线ID", required = false)
+        @QueryParam("ruleIds")
+        ruleIds: List<String>?
     ): Result<List<QualityRuleIntercept>>
 
     @ApiOperation("获取拦截记录")

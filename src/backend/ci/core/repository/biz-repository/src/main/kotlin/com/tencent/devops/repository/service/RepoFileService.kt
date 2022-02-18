@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
@@ -42,18 +43,18 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.github.IGithubService
 import com.tencent.devops.repository.service.scm.IGitService
-import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.repository.utils.Credential
 import com.tencent.devops.repository.utils.CredentialUtils
+import com.tencent.devops.scm.code.svn.ISvnService
+import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.lang.StringBuilder
-import java.net.URI
 import java.util.Base64
+import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -209,41 +210,25 @@ class RepoFileService @Autowired constructor(
     private fun getSvnSingleFileV2(repo: CodeSvnRepository, filePath: String, reversion: Long): String {
         val credInfo = getCredential(repo.projectId ?: "", repo)
         val svnType = repo.svnType?.toUpperCase() ?: "SSH"
-        val uri = URI(repo.url.trim())
-        val pathArr = uri.path.split("/")
-        val projectName = StringBuilder()
-        for (item in pathArr) {
-            if (item.isBlank()) continue
-            projectName.append(item).append("/")
-            if (item.endsWith("_proj")) break
-        }
-        val projectNameStr = projectName.toString().removePrefix("/").removeSuffix("/")
-        val projectUrl = uri.scheme + "://" + uri.host + "/" + projectNameStr
-
-        // 三节项目名的话，Codecc传的filePath会带项目名，需要去掉
-        val projectNameArr = projectNameStr.split("/")
-        val filterFilePath = if (projectNameArr.size == 3) {
-            filePath.removePrefix("/").removePrefix(projectNameArr.last())
-        } else {
-            filePath
-        }
+        // Codecc传的filePath会带项目名,需要去掉
+        val finalFilePath = SvnUtils.getSvnFilePath(url = repo.url, filePath = filePath)
 
         return if (svnType == "HTTP") {
             svnService.getFileContent(
-                url = projectUrl,
+                url = repo.url,
                 userId = repo.userName,
                 svnType = svnType,
-                filePath = filterFilePath,
+                filePath = finalFilePath,
                 reversion = reversion,
                 credential1 = credInfo.username,
                 credential2 = credInfo.privateKey
             )
         } else {
             svnService.getFileContent(
-                url = projectUrl,
+                url = repo.url,
                 userId = repo.userName,
                 svnType = if (svnType.isBlank()) "SSH" else svnType,
-                filePath = filterFilePath,
+                filePath = finalFilePath,
                 reversion = reversion,
                 credential1 = credInfo.privateKey,
                 credential2 = credInfo.passPhrase
@@ -256,7 +241,7 @@ class RepoFileService @Autowired constructor(
             AESUtil.decrypt(
                 key = aesKey,
                 content = gitTokenDao.getAccessToken(dslContext, repo.userName)?.accessToken
-                    ?: throw RuntimeException("get access token for user(${repo.userName}) fail")
+                    ?: throw NotFoundException("get access token for user(${repo.userName}) fail")
             )
         } else {
             getCredential(repo.projectId ?: "", repo).privateKey
@@ -326,7 +311,10 @@ class RepoFileService @Autowired constructor(
             publicKey = encoder.encodeToString(pair.publicKey)
         )
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
+            )
         }
 
         val credential = credentialResult.data!!

@@ -36,71 +36,213 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 object BuildStatusSwitcher {
 
     /**
-     * 取消构建时，[currentBuildStatus]应该切换成什么状态
-     * 当[BuildStatus.isReadyToRun]准备执行状态，则直接设置为[BuildStatus.CANCELED]
-     * 当[BuildStatus.isRunning]执行中状态，则直接设置为[BuildStatus.CANCELED]
-     * 当[BuildStatus.isFinish]结束状态，则直接原样返回[currentBuildStatus]
-     * 其他未列入状态，暂定[BuildStatus.CANCELED]
-     */
-    fun cancel(currentBuildStatus: BuildStatus): BuildStatus {
-        return when {
-            currentBuildStatus == BuildStatus.UNKNOWN -> BuildStatus.CANCELED
-            currentBuildStatus.isReadyToRun() -> BuildStatus.CANCELED
-            currentBuildStatus.isRunning() -> BuildStatus.CANCELED
-            currentBuildStatus.isFinish() -> currentBuildStatus
-            else -> BuildStatus.CANCELED // 其他状态暂定
-        }
-    }
-
-    /**
-     * 正常结束构建时，[currentBuildStatus]应该切换成什么状态。
-     * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.SUCCEED]
-     */
-    fun finish(currentBuildStatus: BuildStatus): BuildStatus {
-        return if (currentBuildStatus.isFinish() || currentBuildStatus == BuildStatus.STAGE_SUCCESS) {
-            currentBuildStatus
-        } else {
-            BuildStatus.SUCCEED
-        }
-    }
-
-    /**
-     * 对于流水线状态来讲，成功要转换为SUCCEED, 失败统一为FAILED，CANCEL取消和STAGE_SUCCESS保持不变
-     */
-    fun fixPipelineFinish(currentBuildStatus: BuildStatus): BuildStatus {
-        var buildStatus = finish(currentBuildStatus)
-        if (buildStatus.isSuccess()) {
-            buildStatus = BuildStatus.SUCCEED
-        } else if (buildStatus.isFailure()) {
-            buildStatus = BuildStatus.FAILED
-        }
-        return buildStatus
-    }
-
-    /**
-     * 强制结束构建时，[currentBuildStatus]应该切换成什么状态。
-     * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.FAILED]
-     */
-    fun forceFinish(currentBuildStatus: BuildStatus): BuildStatus {
-        return if (currentBuildStatus.isFinish() || currentBuildStatus == BuildStatus.STAGE_SUCCESS) {
-            currentBuildStatus
-        } else {
-            BuildStatus.FAILED
-        }
-    }
-
-    /**
-     * 一个[BuildStatus.isReadyToRun]状态的插件任务在切换成[BuildStatus.SKIP]前，
-     * 如果 [containerFailure]容器状态已经出错：
-     *  则返回[BuildStatus.UNEXEC]表示从未执行
+     * 如果 buildStatus 为结束态：
+     *  则返回[BuildStatus.UNEXEC]
      * 否则
      *  返回[BuildStatus.SKIP] 切换成为跳过
      */
-    fun readyToSkipWhen(containerFailure: Boolean): BuildStatus {
-        return if (containerFailure) { // 容器已经出错，排队变未执行
+    fun readyToSkipWhen(buildStatus: BuildStatus): BuildStatus {
+        return if (buildStatus.isFailure() || buildStatus.isCancel()) {
             BuildStatus.UNEXEC
         } else {
             BuildStatus.SKIP
         }
+    }
+
+    val pipelineStatusMaker = PipelineBuildStatusMaker()
+
+    val stageStatusMaker = StageBuildStatusMaker()
+
+    val jobStatusMaker = JobBuildStatusMaker()
+
+    val taskStatusMaker = TaskBuildStatusMaker()
+
+    interface BuildStatusMaker {
+
+        fun statusSet(): Set<BuildStatus>
+
+        /**
+         * 取消构建时，[currentBuildStatus]应该切换成什么状态
+         * 当[BuildStatus.isReadyToRun]准备执行状态，则直接设置为[BuildStatus.CANCELED]
+         * 当[BuildStatus.isRunning]执行中状态，则直接设置为[BuildStatus.CANCELED]
+         * 当[BuildStatus.isFinish]结束状态，则直接原样返回[currentBuildStatus]
+         * 其他未列入状态，暂定[BuildStatus.CANCELED]
+         */
+        fun cancel(currentBuildStatus: BuildStatus): BuildStatus {
+            val canceled = BuildStatus.CANCELED
+            return when {
+                currentBuildStatus == BuildStatus.UNKNOWN -> canceled
+                currentBuildStatus.isReadyToRun() -> canceled
+                currentBuildStatus.isRunning() -> canceled
+                currentBuildStatus.isFinish() -> if (statusSet().contains(currentBuildStatus)) {
+                    currentBuildStatus
+                } else {
+                    canceled
+                }
+                else -> canceled // 其他状态暂定
+            }
+        }
+
+        /**
+         * 正常结束构建时，[currentBuildStatus]应该切换成什么状态。
+         * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.SUCCEED]
+         */
+        fun finish(currentBuildStatus: BuildStatus): BuildStatus {
+            return if (currentBuildStatus.isFinish() || currentBuildStatus == BuildStatus.STAGE_SUCCESS) {
+                if (statusSet().contains(currentBuildStatus)) { // 在定义范围内的最终态直接返回
+                    currentBuildStatus
+                } else {
+                    if (currentBuildStatus.isFailure()) { // 失败类统一收敛为FAILED状态
+                        BuildStatus.FAILED
+                    } else {
+                        BuildStatus.SUCCEED
+                    }
+                }
+            } else if (currentBuildStatus.isReadyToRun()) { // 排队状态->取消
+                BuildStatus.CANCELED
+            } else { // 运行中及其它状态 -> 成功
+                BuildStatus.SUCCEED
+            }
+        }
+
+        /**
+         * 强制结束构建时，[currentBuildStatus]应该切换成什么状态。
+         * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.FAILED]
+         */
+        fun forceFinish(currentBuildStatus: BuildStatus): BuildStatus {
+            return if (currentBuildStatus.isFinish() || currentBuildStatus == BuildStatus.STAGE_SUCCESS) {
+                if (statusSet().contains(currentBuildStatus)) { // 在定义范围内的最终态直接返回
+                    currentBuildStatus
+                } else {
+                    if (currentBuildStatus.isSuccess()) {
+                        BuildStatus.SUCCEED
+                    } else { // 失败类统一收敛为FAILED状态
+                        BuildStatus.FAILED
+                    }
+                }
+            } else { // 运行中及其它状态 -> 失败
+                BuildStatus.FAILED
+            }
+        }
+
+        fun switchByErrorCode(currentBuildStatus: BuildStatus, errorCode: Int?): BuildStatus = currentBuildStatus
+    }
+
+    class TaskBuildStatusMaker : BuildStatusMaker {
+
+        companion object {
+            private val timeoutCodeSet = setOf(2128006)
+        }
+
+        /**
+         * 强制结束构建时，[currentBuildStatus]如果是[BuildStatus.isRunning]状态，则为[BuildStatus.TERMINATE]
+         * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.FAILED]
+         */
+        override fun forceFinish(currentBuildStatus: BuildStatus): BuildStatus {
+            return if (currentBuildStatus.isFinish()) {
+                if (statusSet().contains(currentBuildStatus)) { // 在定义范围内的最终态直接返回
+                    currentBuildStatus
+                } else {
+                    if (currentBuildStatus.isSuccess()) {
+                        BuildStatus.SUCCEED
+                    } else { // 失败类统一收敛为FAILED状态
+                        BuildStatus.FAILED
+                    }
+                }
+            } else if (currentBuildStatus.isRunning()) {
+                BuildStatus.TERMINATE // 运行中 -> 终止
+            } else { // 其它状态 -> 失败
+                BuildStatus.FAILED
+            }
+        }
+
+        override fun switchByErrorCode(currentBuildStatus: BuildStatus, errorCode: Int?): BuildStatus {
+            if (timeoutCodeSet.contains(errorCode)) {
+                return BuildStatus.QUEUE_TIMEOUT
+            }
+            return currentBuildStatus
+        }
+
+        private val pipelineStatus = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.RETRY,
+            BuildStatus.RUNNING,
+            BuildStatus.CALL_WAITING,
+            BuildStatus.REVIEWING,
+            BuildStatus.REVIEW_ABORT,
+            BuildStatus.REVIEW_PROCESSED,
+            BuildStatus.PAUSE,
+            BuildStatus.CANCELED,
+            BuildStatus.SUCCEED,
+            BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
+            BuildStatus.SKIP,
+            BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
+            BuildStatus.QUALITY_CHECK_FAIL
+        )
+
+        override fun statusSet(): Set<BuildStatus> = pipelineStatus
+    }
+
+    class PipelineBuildStatusMaker : BuildStatusMaker {
+
+        private val pipelineStatus = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.RUNNING,
+            BuildStatus.CANCELED,
+            BuildStatus.SUCCEED,
+            BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
+            BuildStatus.QUEUE_TIMEOUT,
+            BuildStatus.STAGE_SUCCESS
+        )
+
+        override fun statusSet(): Set<BuildStatus> = pipelineStatus
+    }
+
+    class StageBuildStatusMaker : BuildStatusMaker {
+
+        private val pipelineStatus = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.RUNNING,
+            BuildStatus.REVIEWING,
+            BuildStatus.PAUSE,
+            BuildStatus.CANCELED,
+            BuildStatus.SUCCEED,
+            BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
+            BuildStatus.SKIP,
+            BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
+            BuildStatus.STAGE_SUCCESS
+        )
+
+        override fun statusSet(): Set<BuildStatus> = pipelineStatus
+    }
+
+    class JobBuildStatusMaker : BuildStatusMaker {
+
+        private val pipelineStatus = setOf(
+            BuildStatus.QUEUE,
+            BuildStatus.QUEUE_CACHE,
+            BuildStatus.DEPENDENT_WAITING, // 依赖等待
+            BuildStatus.LOOP_WAITING, // 互斥组抢锁轮循
+            BuildStatus.PREPARE_ENV,
+            BuildStatus.RUNNING,
+            BuildStatus.CANCELED,
+            BuildStatus.SUCCEED,
+            BuildStatus.FAILED,
+            BuildStatus.TERMINATE,
+            BuildStatus.SKIP,
+            BuildStatus.UNEXEC,
+            BuildStatus.QUEUE_TIMEOUT,
+            BuildStatus.HEARTBEAT_TIMEOUT
+        )
+
+        override fun statusSet(): Set<BuildStatus> = pipelineStatus
     }
 }

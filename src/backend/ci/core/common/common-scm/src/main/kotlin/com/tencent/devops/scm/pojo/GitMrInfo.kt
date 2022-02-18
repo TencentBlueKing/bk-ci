@@ -106,7 +106,13 @@ data class GitMrInfo(
     val description: String? = "",
     val assignee: GitMrInfoAssignee? = null,
     val milestone: GitMrInfoMilestone? = null,
-    val author: GitMrInfoAuthor = GitMrInfoAuthor()
+    val author: GitMrInfoAuthor = GitMrInfoAuthor(),
+    @JsonProperty("base_commit")
+    val baseCommit: String? = null,
+    @JsonProperty("target_commit")
+    val targetCommit: String? = null,
+    @JsonProperty("source_commit")
+    val sourceCommit: String? = null
 ) {
     data class GitMrInfoAssignee(
         @JsonProperty("id")

@@ -62,5 +62,7 @@ data class ModelDetail(
     @ApiModelProperty("流水线当前最新版本号", required = true)
     val latestVersion: Int,
     @ApiModelProperty("最新一次的构建buildNo", required = true)
-    val latestBuildNum: Int
+    val latestBuildNum: Int,
+    @ApiModelProperty("执行耗时（排除系统耗时）", required = true)
+    val executeTime: Long = 0
 )

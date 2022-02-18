@@ -59,7 +59,7 @@ class BuildAgentCertResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(certService.queryIos(buildId, certId, publicKey))
+        return Result(certService.queryIos(projectId, buildId, certId, publicKey))
     }
 
     override fun queryAndroid(
@@ -79,6 +79,13 @@ class BuildAgentCertResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(certService.queryAndroid(buildId, certId, publicKey))
+        return Result(
+            certService.queryAndroid(
+                projectId = projectId,
+                buildId = buildId,
+                certId = certId,
+                publicKey = publicKey
+            )
+        )
     }
 }

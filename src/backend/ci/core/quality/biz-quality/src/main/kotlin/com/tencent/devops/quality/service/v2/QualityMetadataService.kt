@@ -43,8 +43,8 @@ import org.springframework.stereotype.Service
 
 @Service@Suppress("ALL")
 class QualityMetadataService @Autowired constructor(
-    val dslContext: DSLContext,
-    val metadataDao: QualityMetadataDao
+    private val dslContext: DSLContext,
+    private val metadataDao: QualityMetadataDao
 ) {
     fun serviceListMetadata(metadataIds: Collection<Long>): List<QualityIndicatorMetadata> {
         return metadataDao.list(dslContext, metadataIds)?.map {

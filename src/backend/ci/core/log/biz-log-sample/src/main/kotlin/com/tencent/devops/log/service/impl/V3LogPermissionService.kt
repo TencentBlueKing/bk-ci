@@ -49,7 +49,7 @@ class V3LogPermissionService @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         userId: String,
-        authPermission: AuthPermission?
+        permission: AuthPermission?
     ): Boolean {
         logger.info("checkPipelinePermission only check action project[$projectCode]")
         if (isProjectOwner(projectCode, userId)) {
@@ -62,7 +62,7 @@ class V3LogPermissionService @Autowired constructor(
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectCode,
             resourceCode = pipelineId,
-            permission = authPermission ?: AuthPermission.VIEW,
+            permission = permission ?: AuthPermission.VIEW,
             relationResourceType = null
         )
     }
@@ -85,6 +85,6 @@ class V3LogPermissionService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(V3LogPermissionService::class.java)
     }
 }

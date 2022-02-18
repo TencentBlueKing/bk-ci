@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.store.service.websocket
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
@@ -47,13 +47,18 @@ data class StoreWebsocketPush(
     override val userId: String,
     override val pushType: WebSocketType,
     override val redisOperation: RedisOperation,
-    override val objectMapper: ObjectMapper,
     override var page: String?,
     override var notifyPost: NotifyPost
-) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
+) : WebsocketPush(
+    userId = userId,
+    pushType = pushType,
+    redisOperation = redisOperation,
+    page = page,
+    notifyPost = notifyPost
+) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(StoreWebsocketPush::class.java)
         private val atomReleaseService = SpringContextUtil.getBean(AtomReleaseService::class.java, "atomReleaseService")
     }
 
@@ -91,7 +96,7 @@ data class StoreWebsocketPush(
         val notifyPost = message.notifyPost
         try {
             val modelDetail = atomReleaseService.getProcessInfo(userId, atomId).data
-            notifyPost.message = objectMapper.writeValueAsString(modelDetail)
+            notifyPost.message = modelDetail?.let { self -> JsonUtil.toJson(self, formatted = false) } ?: "{}"
             logger.info("StoreWebsocketPush message: $notifyPost")
         } catch (ignored: Exception) {
             logger.error("StoreWebsocketPush:getProcessInfo error. message:${ignored.message}")

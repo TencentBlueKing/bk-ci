@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
@@ -41,7 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class JobServiceExt @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -55,7 +57,7 @@ class JobServiceExt @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.warn("start jobDevOpsFastPushfile failed")
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(PushMessageCode.JOB_EXECUTE_FAIL))
+            throw ErrorCodeException(errorCode = MessageCodeUtil.getCodeLanMessage(PushMessageCode.JOB_EXECUTE_FAIL))
         }
         return taskInstanceId
     }
@@ -80,7 +82,7 @@ class JobServiceExt @Autowired constructor(
             } else {
                 val msg = response["message"] as String
                 logger.warn("start job failed, msg: $msg")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.JOB_EXECUTE_FAIL, arrayOf(msg)))
+                throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
             }
         }
     }
@@ -100,32 +102,32 @@ class JobServiceExt @Autowired constructor(
                     return when (status) {
                         3 -> {
                             logger.info("Job execute task finished and success")
-                            TaskResult(true, true, "Success")
+                            TaskResult(isFinish = true, success = true, msg = "Success")
                         }
                         4 -> {
                             logger.error("Job execute task failed")
-                            TaskResult(true, false, "Job failed")
+                            TaskResult(isFinish = true, success = false, msg = "Job failed")
                         }
                         else -> {
                             logger.info("Job execute task running")
-                            TaskResult(false, false, "Job Running")
+                            TaskResult(isFinish = false, success = false, msg = "Job Running")
                         }
                     }
                 } else {
                     val msg = response["message"] as String
                     logger.error("job execute failed, msg: $msg")
-                    throw RuntimeException("job execute failed, msg: $msg")
+                    throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(msg))
                 }
             }
         } catch (e: Exception) {
             logger.error("execute job error", e)
-            throw RuntimeException("execute job error: ${e.message}")
+            throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL, params = arrayOf(e.message ?: ""))
         }
     }
 
     data class TaskResult(val isFinish: Boolean, val success: Boolean, val msg: String)
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(JobServiceExt::class.java)
     }
 }

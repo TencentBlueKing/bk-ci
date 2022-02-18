@@ -110,6 +110,6 @@ class BluekingV3AuthTokenApi @Autowired constructor(
 
     companion object {
         const val TOKEN_REDIS_KEY = "_BK:AUTH:V3:TOKEN_"
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(BluekingV3AuthTokenApi::class.java)
     }
 }

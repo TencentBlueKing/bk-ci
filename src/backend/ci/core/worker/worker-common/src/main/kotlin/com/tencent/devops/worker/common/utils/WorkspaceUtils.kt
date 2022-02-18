@@ -27,62 +27,65 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.worker.common.env.AgentEnv.getOS
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import java.io.File
+import java.io.IOException
 
+@Suppress("TooManyFunctions")
 object WorkspaceUtils {
 
-    fun getLandun() =
-        File(".")
+    fun getLandun() = File(".")
 
-    fun getWorkspace() =
-        File(getLandun(), "workspace")
-
-    fun getAgentJar() =
-        File(getLandun(), "worker-agent.jar")
-
-    fun getAgentInstallScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_install.bat")
-        } else {
-            File(getLandun(), "agent_install.sh")
-        }
-    }
-
-    fun getAgentUnInstallScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_uninstall.bat")
-        } else {
-            File(getLandun(), "agent_uninstall.sh")
-        }
-    }
-
-    fun getAgentStartScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_start.bat")
-        } else {
-            File(getLandun(), "agent_start.sh")
-        }
-    }
-
-    fun getAgentStopScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_stop.bat")
-        } else {
-            File(getLandun(), "agent_stop.sh")
-        }
-    }
+    fun getWorkspace() = File(getLandun(), "workspace")
 
     fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
         return if (workspace.isNotBlank()) {
-            File(workspace)
+            File(workspace) // .normalize() 会导致在windows机器下填写 ./ 时，File.exists() 会返回false，表示文件夹不存在
         } else {
-            File(getWorkspace(), "$pipelineId/src")
+            File(getWorkspace(), "$pipelineId/src").normalize()
         }
     }
+
+    fun getPipelineLogDir(pipelineId: String): File {
+        val prefix = "DEVOPS_BUILD_LOGS_${pipelineId}_"
+        var tmpDir = System.getProperty("java.io.tmpdir")
+        val errorMsg = try {
+            val dir = File.createTempFile(prefix, null, null)
+            dir.delete()
+            if (dir.mkdir()) {
+                return dir
+            }
+            if (!dir.startsWith(tmpDir)) { // #5046 做一次修正
+                tmpDir = dir.parent
+            }
+            "temporary directory create failed"
+        } catch (ioe: IOException) {
+            ioe.message
+        }
+        throw IOException("$tmpDir: $errorMsg")
+    }
+
+    @Suppress("LongParameterList")
+    fun getBuildLogProperty(
+        pipelineLogDir: File,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: Int,
+        logStorageMode: LogStorageMode
+    ): TaskBuildLogProperty {
+        val childPath = getBuildLogChildPath(pipelineId, buildId, elementId, executeCount)
+        val logFile = File(pipelineLogDir, childPath)
+        logFile.parentFile.mkdirs()
+        logFile.createNewFile()
+        return TaskBuildLogProperty(elementId, childPath, logFile, logStorageMode)
+    }
+
+    private fun getBuildLogChildPath(
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: Int
+    ) = "/$pipelineId/$buildId/$elementId/$executeCount.log"
 }

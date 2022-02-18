@@ -29,16 +29,16 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.model.project.tables.TService
 import com.tencent.devops.model.project.tables.records.TServiceRecord
-import com.tencent.devops.project.pojo.ServiceUpdateUrls
 import com.tencent.devops.project.pojo.service.ServiceCreateInfo
+import com.tencent.devops.project.pojo.service.ServiceUpdateInfo
 import com.tencent.devops.project.pojo.service.ServiceVO
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.UpdateSetMoreStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ComplexMethod", "LongMethod")
 class ServiceDao {
 
     fun getServiceList(dslContext: DSLContext): Result<TServiceRecord> {
@@ -106,6 +106,7 @@ class ServiceDao {
             return dslContext.insertInto(
                 this,
                 NAME,
+                ENGLISH_NAME,
                 SERVICE_TYPE_ID,
                 LINK,
                 LINK_NEW,
@@ -127,6 +128,7 @@ class ServiceDao {
                 GRAY_IFRAME_URL
             ).values(
                 serviceCreateInfo.name,
+                serviceCreateInfo.englishName,
                 serviceCreateInfo.serviceTypeId,
                 serviceCreateInfo.link,
                 serviceCreateInfo.linkNew,
@@ -161,62 +163,81 @@ class ServiceDao {
         }
     }
 
-    fun update(dslContext: DSLContext, userId: String, serviceId: Long, serviceCreateInfo: ServiceCreateInfo): Boolean {
+    fun update(dslContext: DSLContext, userId: String, serviceUpdateInfo: ServiceUpdateInfo): Boolean {
         with(TService.T_SERVICE) {
-            val execute = dslContext.update(this)
-                .set(NAME, serviceCreateInfo.name)
-                .set(SERVICE_TYPE_ID, serviceCreateInfo.serviceTypeId)
-                .set(LINK, serviceCreateInfo.link)
-                .set(LINK_NEW, serviceCreateInfo.linkNew)
-                .set(INJECT_TYPE, serviceCreateInfo.injectType)
-                .set(IFRAME_URL, serviceCreateInfo.iframeUrl)
-                .set(GRAY_IFRAME_URL, serviceCreateInfo.grayIframeUrl)
-                .set(CSS_URL, serviceCreateInfo.cssUrl)
-                .set(JS_URL, serviceCreateInfo.jsUrl)
-                .set(GRAY_CSS_URL, serviceCreateInfo.grayCssUrl)
-                .set(GRAY_JS_URL, serviceCreateInfo.grayJsUrl)
-                .set(SHOW_PROJECT_LIST, serviceCreateInfo.showProjectList)
-                .set(SHOW_NAV, serviceCreateInfo.showNav)
-                .set(PROJECT_ID_TYPE, serviceCreateInfo.projectIdType)
-                .set(STATUS, serviceCreateInfo.status)
-                .set(LOGO_URL, serviceCreateInfo.logoUrl)
-                .set(WEB_SOCKET, serviceCreateInfo.webSocket)
-                .set(UPDATED_USER, userId)
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(ID.eq(serviceId))
-                .and(DELETED.eq(false))
-                .execute()
-            return execute > 0
-        }
-    }
 
-    fun updateUrlsByName(dslContext: DSLContext, serviceUpdateUrls: List<ServiceUpdateUrls>): Int {
-        return with(TService.T_SERVICE) {
-            dslContext.batch(
-                serviceUpdateUrls.filter {
-                    (!it.jsUrl.isNullOrBlank()) ||
-                        (!it.grayJsUrl.isNullOrBlank()) ||
-                        (!it.cssUrl.isNullOrBlank()) ||
-                        (!it.grayCssUrl.isNullOrBlank())
-                }.map {
-                    val step = dslContext.update(this)
-                    var updateStep: UpdateSetMoreStep<TServiceRecord>? = null
-                    if (!it.jsUrl.isNullOrBlank()) {
-                        updateStep = step.set(JS_URL, it.jsUrl)
-                    }
-                    if (!it.grayJsUrl.isNullOrBlank()) {
-                        updateStep = step.set(GRAY_JS_URL, it.grayJsUrl)
-                    }
-                    if (!it.cssUrl.isNullOrBlank()) {
-                        updateStep = step.set(CSS_URL, it.cssUrl)
-                    }
-                    if (!it.grayCssUrl.isNullOrBlank()) {
-                        updateStep = step.set(GRAY_CSS_URL, it.grayCssUrl)
-                    }
-                    updateStep!!.where(NAME.eq(it.name))
-                }
-            ).execute()
-        }.sum()
+            val whereCondition = if (serviceUpdateInfo.serviceId != null) {
+                ID.eq(serviceUpdateInfo.serviceId)
+            } else if (!serviceUpdateInfo.englishName.isNullOrBlank()) {
+                ENGLISH_NAME.eq(serviceUpdateInfo.englishName)
+            } else {
+                return false
+            }
+
+            val execute = dslContext.update(this)
+            if (!serviceUpdateInfo.name.isNullOrBlank()) {
+                execute.set(NAME, serviceUpdateInfo.name)
+            }
+            if (serviceUpdateInfo.serviceTypeId != null) {
+                execute.set(SERVICE_TYPE_ID, serviceUpdateInfo.serviceTypeId)
+            }
+            if (!serviceUpdateInfo.link.isNullOrBlank()) {
+                execute.set(LINK, serviceUpdateInfo.link)
+            }
+            if (!serviceUpdateInfo.linkNew.isNullOrBlank()) {
+                execute.set(LINK_NEW, serviceUpdateInfo.linkNew)
+            }
+            if (!serviceUpdateInfo.injectType.isNullOrBlank()) {
+                execute.set(INJECT_TYPE, serviceUpdateInfo.injectType)
+            }
+            if (!serviceUpdateInfo.iframeUrl.isNullOrBlank()) {
+                execute.set(IFRAME_URL, serviceUpdateInfo.iframeUrl)
+            }
+            if (!serviceUpdateInfo.grayIframeUrl.isNullOrBlank()) {
+                execute.set(GRAY_IFRAME_URL, serviceUpdateInfo.grayIframeUrl)
+            }
+            if (!serviceUpdateInfo.cssUrl.isNullOrBlank()) {
+                execute.set(CSS_URL, serviceUpdateInfo.cssUrl)
+            }
+            if (!serviceUpdateInfo.jsUrl.isNullOrBlank()) {
+                execute.set(JS_URL, serviceUpdateInfo.jsUrl)
+            }
+            if (!serviceUpdateInfo.grayCssUrl.isNullOrBlank()) {
+                execute.set(GRAY_CSS_URL, serviceUpdateInfo.grayCssUrl)
+            }
+            if (!serviceUpdateInfo.grayJsUrl.isNullOrBlank()) {
+                execute.set(GRAY_JS_URL, serviceUpdateInfo.grayJsUrl)
+            }
+            if (serviceUpdateInfo.showProjectList != null) {
+                execute.set(SHOW_PROJECT_LIST, serviceUpdateInfo.showProjectList)
+            }
+            if (serviceUpdateInfo.showNav != null) {
+                execute.set(SHOW_NAV, serviceUpdateInfo.showNav)
+            }
+            if (!serviceUpdateInfo.projectIdType.isNullOrBlank()) {
+                execute.set(PROJECT_ID_TYPE, serviceUpdateInfo.projectIdType)
+            }
+            if (!serviceUpdateInfo.status.isNullOrBlank()) {
+                execute.set(STATUS, serviceUpdateInfo.status)
+            }
+            if (!serviceUpdateInfo.logoUrl.isNullOrBlank()) {
+                execute.set(LOGO_URL, serviceUpdateInfo.logoUrl)
+            }
+            if (!serviceUpdateInfo.webSocket.isNullOrBlank()) {
+                execute.set(WEB_SOCKET, serviceUpdateInfo.webSocket)
+            }
+            if (!serviceUpdateInfo.englishName.isNullOrBlank()) {
+                execute.set(ENGLISH_NAME, serviceUpdateInfo.englishName)
+            }
+            if (serviceUpdateInfo.deleted != null) {
+                execute.set(DELETED, serviceUpdateInfo.deleted)
+            }
+
+            return execute.set(UPDATED_USER, userId)
+                .set(UPDATED_TIME, LocalDateTime.now())
+                .where(whereCondition)
+                .execute() > 0
+        }
     }
 
     fun select(dslContext: DSLContext, serviceId: Long): TServiceRecord? {
@@ -225,35 +246,6 @@ class ServiceDao {
                 .where(ID.eq(serviceId))
                 .and(DELETED.eq(false))
                 .fetchOne()
-        }
-    }
-
-    fun updateUrls(
-        dslContext: DSLContext,
-        userId: String,
-        name: String,
-        serviceUpdateUrls: ServiceUpdateUrls
-    ): Boolean {
-        with(TService.T_SERVICE) {
-            val step = dslContext.update(this)
-            if (!serviceUpdateUrls.cssUrl.isNullOrBlank()) {
-                step.set(CSS_URL, serviceUpdateUrls.cssUrl)
-            }
-            if (!serviceUpdateUrls.jsUrl.isNullOrBlank()) {
-                step.set(JS_URL, serviceUpdateUrls.jsUrl)
-            }
-            if (!serviceUpdateUrls.grayCssUrl.isNullOrBlank()) {
-                step.set(GRAY_CSS_URL, serviceUpdateUrls.grayCssUrl)
-            }
-            if (!serviceUpdateUrls.grayJsUrl.isNullOrBlank()) {
-                step.set(GRAY_JS_URL, serviceUpdateUrls.grayJsUrl)
-            }
-            val execute = step.set(UPDATED_USER, userId)
-                .set(UPDATED_TIME, LocalDateTime.now())
-                .where(NAME.eq(name))
-                .and(DELETED.eq(false))
-                .execute()
-            return execute > 0
         }
     }
 }

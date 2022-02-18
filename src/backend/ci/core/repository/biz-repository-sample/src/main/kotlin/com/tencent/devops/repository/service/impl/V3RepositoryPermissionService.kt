@@ -160,6 +160,6 @@ class V3RepositoryPermissionService constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(V3RepositoryPermissionService::class.java)
     }
 }

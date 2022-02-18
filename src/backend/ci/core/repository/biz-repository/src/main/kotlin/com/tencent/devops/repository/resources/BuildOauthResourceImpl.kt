@@ -29,6 +29,7 @@ package com.tencent.devops.repository.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.repository.api.BuildOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitOauthService
@@ -39,7 +40,8 @@ class BuildOauthResourceImpl @Autowired constructor(
     private val gitOauthService: IGitOauthService
 ) : BuildOauthResource {
 
-    override fun gitGet(buildId: String, userId: String): Result<GitToken?> {
-        return Result(gitOauthService.checkAndGetAccessToken(buildId, userId))
+    @SensitiveApiPermission("get_oauth_token")
+    override fun gitGet(projectId: String, buildId: String, userId: String): Result<GitToken?> {
+        return Result(gitOauthService.checkAndGetAccessToken(projectId, buildId, userId))
     }
 }

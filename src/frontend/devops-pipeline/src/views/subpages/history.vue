@@ -41,9 +41,8 @@
 
         computed: {
             ...mapGetters('pipelines', {
-                'statusMap': 'getStatusMap',
-                'pipelineList': 'getPipelineList',
-                'hisPageStatus': 'getHisPageStatus'
+                statusMap: 'getStatusMap',
+                hisPageStatus: 'getHisPageStatus'
             }),
             projectId () {
                 return this.$route.params.projectId

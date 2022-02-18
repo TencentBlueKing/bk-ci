@@ -1,6 +1,5 @@
 /// <reference path='./typings/index.d.ts' />
 
-import 'core-js/es7/array'
 import Vue from 'vue'
 
 import createRouter from '@/router'
@@ -88,6 +87,10 @@ Vue.prototype.$localeList = localeList
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.$bkMessage = function (config) {
+    config.ellipsisLine = config.ellipsisLine || 3
+    bkMagic.bkMessage(config)
+}
 
 // 判断localStorage版本, 旧版本需要清空
 judgementLsVersion()

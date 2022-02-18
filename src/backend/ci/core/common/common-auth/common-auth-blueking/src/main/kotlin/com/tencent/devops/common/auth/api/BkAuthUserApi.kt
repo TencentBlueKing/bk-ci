@@ -37,9 +37,8 @@ import com.tencent.devops.common.auth.api.utils.AuthUtils
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 class BkAuthUserApi @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val authUtils: AuthUtils

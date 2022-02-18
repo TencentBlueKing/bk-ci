@@ -29,7 +29,7 @@
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executionTime') }}：</span>
-                        <span>{{ execDetail.endTime ? convertMStoStringByRule(execDetail.endTime - execDetail.startTime) : '--' }}</span>
+                        <span>{{ execDetail.executeTime ? convertMStoStringByRule(execDetail.executeTime) : '--' }}</span>
                     </div>
                 </div>
                 <bk-tab-panel
@@ -48,6 +48,7 @@
             <template v-if="showPanelType === 'PAUSE'">
                 <atom-property-panel
                     :element-index="editingElementPos.elementIndex"
+                    :container-group-index="editingElementPos.containerGroupIndex"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="execDetail.model.stages"
@@ -64,8 +65,8 @@
             <template v-else-if="showStagePanel">
                 <stage @close="showLog = false" />
             </template>
-            <template v-else-if="showStageReviewPanel">
-                <stage-review @close="showLog = false" />
+            <template v-else-if="showStageReviewPanel.isShow">
+                <stage-review-panel :stage="stage" @approve="requestPipelineExecDetail(routerParams)" />
             </template>
         </template>
         <template v-if="execDetail && showCompleteLog">
@@ -88,7 +89,7 @@
     import plugin from '@/components/ExecDetail/plugin'
     import job from '@/components/ExecDetail/job'
     import stage from '@/components/ExecDetail/stage'
-    import stageReview from '@/components/ExecDetail/stageReview'
+    import stageReviewPanel from '@/components/StageReviewPanel'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import { convertMStoStringByRule } from '@/utils/util'
@@ -108,7 +109,7 @@
             completeLog,
             job,
             stage,
-            stageReview,
+            stageReviewPanel,
             Logo,
             MiniMap,
             AtomPropertyPanel
@@ -270,14 +271,16 @@
                 return 1
             },
             sidePanelConfig () {
-                return this.showLog ? {
-                    title: `${this.getElementViewName || this.$t('history.viewLog')}`,
-                    width: 820
-                } : {
-                    title: this.$t('propertyBar'),
-                    class: 'bkci-property-panel',
-                    width: 640
-                }
+                return this.showLog
+                    ? {
+                        title: `${this.getElementViewName || this.$t('history.viewLog')}`,
+                        width: 820
+                    }
+                    : {
+                        title: this.$t('propertyBar'),
+                        class: 'bkci-property-panel',
+                        width: 640
+                    }
             },
             buildNum () {
                 const { execDetail } = this
@@ -315,7 +318,7 @@
 
         mounted () {
             this.requestPipelineExecDetail(this.routerParams)
-            this.$store.dispatch('soda/requestInterceptAtom', {
+            this.$store.dispatch('common/requestInterceptAtom', {
                 projectId: this.routerParams.projectId,
                 pipelineId: this.routerParams.pipelineId
             })
@@ -339,7 +342,7 @@
                 'getInitLog',
                 'getAfterLog'
             ]),
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestInterceptAtom'
             ]),
             convertMStoStringByRule,
@@ -365,15 +368,18 @@
 
         .pipeline-detail-tab-card {
             height: 100%;
-            .bk-tab-section {
-                height: calc(100% - 52px);
+            display: flex;
+            flex-direction: column;
+            .bk-tab-content {
+                height: calc(100% - 25px);
+                overflow: auto;
             }
         }
         .exec-pipeline {
             position: relative;
             overflow: auto;
             height: 100%;
-            /deep/ .devops-stage-list {
+            ::v-deep .devops-stage-list {
                 padding-bottom: 25px;
             }
         }

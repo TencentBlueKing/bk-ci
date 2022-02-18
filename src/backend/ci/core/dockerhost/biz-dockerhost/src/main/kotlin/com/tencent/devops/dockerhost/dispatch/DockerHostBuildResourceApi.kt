@@ -35,9 +35,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.dockerhost.utils.SigarUtil
+import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -75,6 +76,61 @@ class DockerHostBuildResourceApi constructor(
         }
     }
 
+    fun getResourceConfig(pipelineId: String, vmSeqId: String, retryCount: Int = 3): Result<DockerResourceOptionsVO>? {
+        try {
+            val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/pipelines/$pipelineId/vmSeqs/$vmSeqId"
+            OkhttpUtils.doHttp(buildGet(path)).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("[$pipelineId]|[$vmSeqId] Get resourceConfig $path fail. $responseContent")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                        errorType = ErrorType.SYSTEM,
+                        errorMsg = "Get resourceConfig $path fail")
+                }
+                return objectMapper.readValue(responseContent)
+            }
+        } catch (e: Exception) {
+            val localRetryCount = retryCount - 1
+            return if (localRetryCount > 0) {
+                getResourceConfig(pipelineId, vmSeqId, localRetryCount)
+            } else {
+                return null
+            }
+        }
+    }
+
+    fun getQpcGitProjectList(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        poolNo: Int,
+        retryCount: Int = 3
+    ): Result<List<String>>? {
+        try {
+            val path = "/${getUrlPrefix()}/api/dockerhost//qpc/projects/$projectId/builds/$buildId/" +
+                    "vmSeqs/$vmSeqId?poolNo=$poolNo"
+            OkhttpUtils.doHttp(buildGet(path)).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("[$projectId]|[$buildId]|[$vmSeqId] Get resourceConfig $path fail. $responseContent")
+                    throw TaskExecuteException(
+                        errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
+                        errorType = ErrorType.SYSTEM,
+                        errorMsg = "Get resourceConfig $path fail")
+                }
+                return objectMapper.readValue(responseContent)
+            }
+        } catch (e: Exception) {
+            val localRetryCount = retryCount - 1
+            return if (localRetryCount > 0) {
+                getQpcGitProjectList(projectId, buildId, vmSeqId, poolNo, retryCount)
+            } else {
+                return null
+            }
+        }
+    }
+
     fun refreshDockerIpStatus(port: String, containerNum: Int): Result<Boolean>? {
         val dockerIp = CommonUtils.getInnerIP(dockerHostConfig.dockerhostLocalIp)
         val path = "/${getUrlPrefix()}/api/dockerhost/dockerIp/$dockerIp/refresh"
@@ -84,10 +140,10 @@ class DockerHostBuildResourceApi constructor(
             dockerHostPort = port.toInt(),
             capacity = 100,
             usedNum = containerNum,
-            averageCpuLoad = SigarUtil.getAverageCpuLoad(),
-            averageMemLoad = SigarUtil.getAverageMemLoad(),
-            averageDiskLoad = SigarUtil.getAverageDiskLoad(),
-            averageDiskIOLoad = SigarUtil.getAverageDiskIOLoad(),
+            averageCpuLoad = SystemInfoUtil.getAverageCpuLoad(),
+            averageMemLoad = SystemInfoUtil.getAverageMemLoad(),
+            averageDiskLoad = SystemInfoUtil.getAverageDiskLoad(),
+            averageDiskIOLoad = SystemInfoUtil.getAverageDiskIOLoad(),
             enable = true,
             grayEnv = null,
             specialOn = null,

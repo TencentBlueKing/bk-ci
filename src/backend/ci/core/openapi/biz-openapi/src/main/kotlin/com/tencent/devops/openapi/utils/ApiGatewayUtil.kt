@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.utils
 
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Component
@@ -37,5 +38,18 @@ class ApiGatewayUtil {
     @Value("\${api.gateway.auth:#{false}}")
     private val apiGatewayAuth: Boolean = false
 
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
+
     fun isAuth() = apiGatewayAuth
+
+    fun getChannelCode(): ChannelCode {
+        return if (consulTag.contains("stream") || consulTag.contains("gitci")) {
+            ChannelCode.GIT
+        } else if (consulTag.contains("auto")) {
+            ChannelCode.GONGFENGSCAN
+        } else {
+            ChannelCode.BS
+        }
+    }
 }

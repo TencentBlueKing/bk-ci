@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
@@ -78,7 +77,6 @@ object ShellUtil {
     lateinit var buildEnvs: List<BuildEnv>
 
     private val specialKey = listOf(".", "-")
-    private val specialValue = listOf("|", "&", "(", ")")
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
 
     fun execute(
@@ -92,7 +90,8 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         workspace: File = dir,
-        print2Logger: Boolean = true
+        print2Logger: Boolean = true,
+        stepId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -110,7 +109,8 @@ object ShellUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
-            buildId = buildId
+            buildId = buildId,
+            stepId = stepId
         )
     }
 
@@ -142,9 +142,7 @@ object ShellUtil {
         }
 
         val commonEnv = runtimeVariables.plus(CommonEnv.getCommonEnv())
-            .filter {
-                !specialEnv(it.key, it.value)
-            }
+            .filterNot { specialEnv(it.key) }
         if (commonEnv.isNotEmpty()) {
             commonEnv.forEach { (name, value) ->
                 // --bug=75509999 Agent环境变量中替换掉破坏性字符
@@ -157,19 +155,11 @@ object ShellUtil {
             buildEnvs.forEach { buildEnv ->
                 val home = File(getEnvironmentPathPrefix(), "${buildEnv.name}/${buildEnv.version}/")
                 if (!home.exists()) {
-                    LoggerService.addNormalLine(
-                        Ansi().fgRed().a(
-                            "环境变量路径(${home.absolutePath})不存在"
-                        ).reset().toString()
-                    )
+                    LoggerService.addErrorLine("环境变量路径(${home.absolutePath})不存在")
                 }
                 val envFile = File(home, buildEnv.binPath)
                 if (!envFile.exists()) {
-                    LoggerService.addNormalLine(
-                        Ansi().fgRed().a(
-                            "环境变量路径(${envFile.absolutePath})不存在"
-                        ).reset().toString()
-                    )
+                    LoggerService.addErrorLine("环境变量路径(${envFile.absolutePath})不存在")
                     return@forEach
                 }
                 // command.append("export $name=$path")
@@ -217,7 +207,8 @@ object ShellUtil {
         errorMessage: String? = null,
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
-        buildId: String? = null
+        buildId: String? = null,
+        stepId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -226,7 +217,8 @@ object ShellUtil {
                 print2Logger = print2Logger,
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
-                buildId = buildId
+                buildId = buildId,
+                stepId = stepId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
@@ -239,18 +231,7 @@ object ShellUtil {
         }
     }
 
-    private fun specialEnv(key: String, value: String): Boolean {
-        specialKey.forEach {
-            if (key.contains(it)) {
-                return true
-            }
-        }
-
-        specialValue.forEach {
-            if (value.contains(it)) {
-                return true
-            }
-        }
-        return false
+    private fun specialEnv(key: String): Boolean {
+        return specialKey.any { key.contains(it) }
     }
 }

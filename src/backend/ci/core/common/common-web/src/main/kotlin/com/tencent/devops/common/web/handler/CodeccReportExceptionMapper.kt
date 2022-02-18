@@ -52,6 +52,6 @@ class CodeccReportExceptionMapper : ExceptionMapper<CodeccReportException> {
             "Fail to get the codecc report"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }

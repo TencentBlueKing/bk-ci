@@ -33,8 +33,8 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:store:api-store"))
+    api(project(":core:auth:api-auth"))
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:sign:api-sign"))
 }
-

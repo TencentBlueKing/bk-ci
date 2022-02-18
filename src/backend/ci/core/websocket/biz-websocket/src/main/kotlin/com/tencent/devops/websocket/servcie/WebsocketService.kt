@@ -33,7 +33,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanUserSessionBySessionId
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
@@ -53,7 +52,7 @@ class WebsocketService @Autowired constructor(
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(WebsocketService::class.java)
     }
 
     @Value("\${transferData:false}")
@@ -145,7 +144,7 @@ class WebsocketService @Autowired constructor(
             } else if (redisPage != null) {
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
             }
-            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+//            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     LoginOutTransferEvent(

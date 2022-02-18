@@ -44,5 +44,6 @@ data class PipelineInfo(
     val canManualStartup: Boolean,
     val canElementSkip: Boolean,
     val taskCount: Int,
-    var versionName: String = "init"
+    var versionName: String = "init",
+    val id: Long?
 )

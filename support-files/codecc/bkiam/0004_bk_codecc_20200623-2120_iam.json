@@ -9,7 +9,7 @@
         "name_en": "codecc scan task instance selection",
         "resource_type_chain": [
           {
-            "system_id": "bk_codecc",
+            "system_id": "bk_ci",
             "id": "project"
           },
           {

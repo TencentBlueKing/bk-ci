@@ -46,6 +46,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -179,5 +180,22 @@ interface ServiceRepositoryResource {
         @ApiParam("代码库哈希ID", required = true)
         @PathParam("repositoryHashId")
         repositoryHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("编辑关联代码库")
+    @PUT
+    @Path("/{projectId}/{repositoryHashId}/")
+    fun edit(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID", required = true)
+        @PathParam("repositoryHashId")
+        repositoryHashId: String,
+        @ApiParam(value = "代码库模型", required = true)
+        repository: Repository
     ): Result<Boolean>
 }

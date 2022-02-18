@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.websocket.push
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,16 +44,20 @@ data class HistoryWebsocketPush(
     val pipelineId: String,
     val projectId: String,
     override val userId: String,
-//        override val pathClass: IPath,
     override val pushType: WebSocketType,
     override val redisOperation: RedisOperation,
-    override val objectMapper: ObjectMapper,
     override var page: String?,
     override var notifyPost: NotifyPost
-) : WebsocketPush(userId, pushType, redisOperation, objectMapper, page, notifyPost) {
+) : WebsocketPush(
+    userId = userId,
+    pushType = pushType,
+    redisOperation = redisOperation,
+    page = page,
+    notifyPost = notifyPost
+) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(HistoryWebsocketPush::class.java)
     }
 
     override fun findSession(page: String): List<String>? {
@@ -80,7 +84,7 @@ data class HistoryWebsocketPush(
         val messageMap = mutableMapOf<String, String>()
         try {
             messageMap["pipelineId"] = pipelineId
-            message.notifyPost.message = objectMapper.writeValueAsString(messageMap)
+            message.notifyPost.message = JsonUtil.toJson(messageMap, formatted = false)
         } catch (ignored: Exception) {
             logger.error("HistoryWebSocketMessage:buildMessage error. message:${ignored.message}")
         }

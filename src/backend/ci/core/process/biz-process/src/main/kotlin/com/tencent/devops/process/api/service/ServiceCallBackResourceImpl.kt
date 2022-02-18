@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_CALLBACK_SAVE_FAIL
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBack
@@ -53,7 +55,7 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         event: CallBackEvent,
         secretToken: String?
     ): Result<Boolean> {
-        projectPipelineCallBackService.createCallBack(
+        val result = projectPipelineCallBackService.createCallBack(
             userId = userId,
             projectId = projectId,
             url = url,
@@ -61,7 +63,15 @@ class ServiceCallBackResourceImpl @Autowired constructor(
             event = event.name,
             secretToken = secretToken
         )
-        return Result(true)
+        return if (result.failureEvents.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = ERROR_CALLBACK_SAVE_FAIL,
+                defaultMessage = "创建callback失败",
+                params = arrayOf(result.failureEvents[event.name] ?: "")
+            )
+        } else {
+            Result(true)
+        }
     }
 
     override fun batchCreate(

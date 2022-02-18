@@ -28,10 +28,12 @@
 package com.tencent.devops.process.engine.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.engine.api.BuildJobResource
+import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -46,6 +48,7 @@ class BuildJobResourceImpl @Autowired constructor(
 ) : BuildJobResource {
 
     override fun jobStarted(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -53,6 +56,7 @@ class BuildJobResourceImpl @Autowired constructor(
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName, retryCount)
         return Result(vMBuildService.buildVMStarted(
+            projectId = projectId,
             buildId = buildId,
             vmSeqId = vmSeqId,
             vmName = vmName,
@@ -60,25 +64,46 @@ class BuildJobResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
+    override fun claimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vMBuildService.buildClaimTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     override fun completeTask(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         result: BuildTaskResult
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        vMBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
+        vMBuildService.buildCompleteTask(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            vmName = vmName,
+            result = result
+        )
         return Result(true)
     }
 
-    override fun jobEnd(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobEnd(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vMBuildService.buildEndTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     override fun jobTimeout(
@@ -98,9 +123,53 @@ class BuildJobResourceImpl @Autowired constructor(
         )
     }
 
-    override fun jobHeartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobHeartbeat(
+        buildId: String,
+        vmSeqId: String,
+        vmName: String
+    ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(data = vMBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            data = vMBuildService.heartbeat(
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
+    }
+
+    override fun jobHeartbeatV1(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String
+    ): Result<HeartBeatInfo> {
+        checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
+        return Result(
+            data = vMBuildService.heartbeatV1(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
+    }
+
+    override fun submitError(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        errorInfo: ErrorInfo
+    ): Result<Boolean> {
+        vMBuildService.submitError(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            errorInfo = errorInfo
+        )
+        return Result(true)
     }
 
     companion object {

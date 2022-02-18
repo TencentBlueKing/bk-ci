@@ -32,9 +32,9 @@ package com.tencent.devops.common.pipeline.enums
  * @version 1.0
  */
 enum class StageRunCondition {
-    AFTER_LAST_FINISHED,            // 上个阶段执行结束
-    CUSTOM_VARIABLE_MATCH,          // 自定义变量全部满足时运行
-    CUSTOM_VARIABLE_MATCH_NOT_RUN,  // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH          // 满足以下自定义条件时运行
+    AFTER_LAST_FINISHED, // 上个阶段执行结束
+    CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
+    CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
+    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行
     ;
 }

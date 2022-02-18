@@ -28,7 +28,7 @@
 package com.tencent.devops.plugin.worker.task.scm.svn
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
 import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
@@ -275,7 +275,7 @@ open class SvnUpdateTask constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to pull the svn($svnUrl) update task", t)
             if (printLog) {
-                LoggerService.addRedLine("Fail to pull svn($svnUrl) code because of ${t.message}")
+                LoggerService.addErrorLine("Fail to pull svn($svnUrl) code because of ${t.message}")
             }
             throw t
         }
@@ -305,7 +305,7 @@ open class SvnUpdateTask constructor(
         } catch (t: Throwable) {
             logger.warn("Fail to switch the svn($svnUrl) update task", t)
             if (printLog) {
-                LoggerService.addRedLine("Fail to switch svn($svnUrl) code because of ${t.message}")
+                LoggerService.addErrorLine("Fail to switch svn($svnUrl) code because of ${t.message}")
             }
             throw t
         }
@@ -346,12 +346,12 @@ open class SvnUpdateTask constructor(
         } catch (e: SVNException) {
             if (shouldRetry) {
                 if (printLog) {
-                    LoggerService.addYellowLine("Warning: fail to checkout code because of ${e.message}, retry")
+                    LoggerService.addWarnLine("Warning: fail to checkout code because of ${e.message}, retry")
                 }
                 return checkout(client, workspace, svnUrl, pegRevision, revision, false, printLog)
             } else {
                 if (printLog) {
-                    LoggerService.addRedLine("Error: fail to checkout the code because of ${e.message}")
+                    LoggerService.addErrorLine("Error: fail to checkout the code because of ${e.message}")
                 }
                 throw e
             }
@@ -395,7 +395,7 @@ open class SvnUpdateTask constructor(
         } catch (e: SVNException) {
             if (shouldRetry) {
                 if (printLog) {
-                    LoggerService.addYellowLine("Warning: fail to switch code because of ${e.message}, retry")
+                    LoggerService.addWarnLine("Warning: fail to switch code because of ${e.message}, retry")
                 }
                 if (cleanup) {
                     LoggerService.addNormalLine("Clean up the workspace")
@@ -411,7 +411,7 @@ open class SvnUpdateTask constructor(
                     printLog = printLog)
             } else {
                 if (printLog) {
-                    LoggerService.addRedLine("Error: fail to switch the code because of ${e.message}")
+                    LoggerService.addErrorLine("Error: fail to switch the code because of ${e.message}")
                 }
                 throw e
             }
@@ -439,7 +439,7 @@ open class SvnUpdateTask constructor(
         } catch (e: SVNException) {
             if (shouldRetry && isSVNErrorShouldRetry(e.errorMessage.errorCode)) {
                 if (printLog) {
-                    LoggerService.addYellowLine("Warning: fail to update code because of ${e.message}, retry")
+                    LoggerService.addWarnLine("Warning: fail to update code because of ${e.message}, retry")
                 }
                 if (cleanup) {
                     LoggerService.addNormalLine("Clean up the workspace")
@@ -448,7 +448,7 @@ open class SvnUpdateTask constructor(
                 return update(manager, client, workspace, revision, false, printLog, cleanup)
             } else {
                 if (printLog) {
-                    LoggerService.addRedLine("Error: fail to update the code")
+                    LoggerService.addErrorLine("Error: fail to update the code")
                 }
                 throw e
             }
@@ -489,10 +489,12 @@ open class SvnUpdateTask constructor(
             override fun handleEvent(event: SVNEvent, progress: Double) {
                 val action = event.action
                 if (action == SVNEventAction.UPDATE_ADD || action == SVNEventAction.ADD) {
-                    LoggerService.addNormalLine(Ansi().fgGreen().a("A").reset()
+                    LoggerService.addNormalLine(
+                        Ansi().fgGreen().a("A").reset()
                         .a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_DELETE || action == SVNEventAction.DELETE) {
-                    LoggerService.addNormalLine(Ansi().fgRed().a("D").reset()
+                    LoggerService.addNormalLine(
+                        Ansi().fgRed().a("D").reset()
                         .a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.UPDATE_UPDATE) {
                     when (event.contentsStatus) {
@@ -523,7 +525,7 @@ open class SvnUpdateTask constructor(
                     LoggerService.addNormalLine(
                         Ansi().fgMagenta().a("L").reset().a("\t").a(event.file.path).reset().toString())
                 } else if (action == SVNEventAction.LOCK_FAILED) {
-                    LoggerService.addYellowLine("Failed to lock ${event.file.path}")
+                    LoggerService.addWarnLine("Failed to lock ${event.file.path}")
                 }
             }
 
@@ -581,7 +583,7 @@ open class SvnUpdateTask constructor(
             return
         }
         if (info.url != svnUrl) {
-            LoggerService.addYellowLine("SVN repo url 从（${info.url}）变为（$svnUrl），全量拉取代码")
+            LoggerService.addWarnLine("SVN repo url 从（${info.url}）变为（$svnUrl），全量拉取代码")
             cleanupWorkspace(workspace)
         }
     }
@@ -602,7 +604,7 @@ open class SvnUpdateTask constructor(
             val newProjectName = SvnUtils.getSvnProjectName(svnUrl.toString())
 
             if (localProjectName == newProjectName) {
-                LoggerService.addYellowLine("SVN repo url 从（${info.url}）变为（$svnUrl），switch拉取代码")
+                LoggerService.addWarnLine("SVN repo url 从（${info.url}）变为（$svnUrl），switch拉取代码")
                 return true
             }
         }

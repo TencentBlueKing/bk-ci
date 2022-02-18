@@ -57,6 +57,7 @@ class AuthNodeService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = it.nodeHashId
             entity.displayName = it.displayName
+            entity.iamApprover = arrayListOf(it.createdUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${nodeInfos.size.toLong()}")
@@ -112,6 +113,6 @@ class AuthNodeService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(AuthNodeService::class.java)
     }
 }

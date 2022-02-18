@@ -150,7 +150,7 @@ class FileTaskServiceImpl : FileTaskService {
             // 下载文件到本地临时目录
             fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DOWNLOADING.status)
             try {
-                archiveFileService.downloadFile(destPath, FileOutputStream(tmpFile))
+                archiveFileService.downloadFile(userId, destPath, FileOutputStream(tmpFile))
                 fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DONE.status)
             } catch (e: Exception) {
                 logger.error("fail to download file:taskId=$taskId", e)
@@ -206,7 +206,7 @@ class FileTaskServiceImpl : FileTaskService {
         }
     }
 
-    @Scheduled(cron = "0 0 9 0/1 * ?")
+    @Scheduled(cron = "0 0 9 * * ?")
     fun clearRecordTask() {
         logger.info("clearRecordTask start")
         if (!clearRecordEnable) {

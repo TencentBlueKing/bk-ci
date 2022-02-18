@@ -28,6 +28,47 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 
 object PipelineVarUtil {
 
@@ -101,7 +142,87 @@ object PipelineVarUtil {
         "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
     )
 
+    /**
+     * CI预置上下文转换映射关系
+     */
+    private val contextVarMappingBuildVar = mapOf(
+        "ci.workspace" to WORKSPACE,
+        "ci.pipeline_id" to PIPELINE_ID,
+        "ci.pipeline_name" to PIPELINE_NAME,
+        "ci.actor" to PIPELINE_START_USER_ID,
+        "ci.build_id" to PIPELINE_BUILD_ID,
+        "ci.build_num" to PIPELINE_BUILD_NUM,
+        "ci.pipeline_start_time" to PIPELINE_TIME_START,
+        "ci.pipeline_execute_time" to PIPELINE_TIME_DURATION,
+        "ci.ref" to PIPELINE_GIT_REF,
+        "ci.head_ref" to PIPELINE_GIT_HEAD_REF,
+        "ci.base_ref" to PIPELINE_GIT_BASE_REF,
+        "ci.repo" to PIPELINE_GIT_REPO,
+        "ci.repo_name" to PIPELINE_GIT_REPO_NAME,
+        "ci.repo_group" to PIPELINE_GIT_REPO_GROUP,
+        "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
+        "ci.sha" to PIPELINE_GIT_SHA,
+        "ci.sha_short" to PIPELINE_GIT_SHA_SHORT,
+        "ci.before_sha" to PIPELINE_GIT_BEFORE_SHA,
+        "ci.before_sha_short" to PIPELINE_GIT_BEFORE_SHA_SHORT,
+        "ci.commit_message" to PIPELINE_GIT_COMMIT_MESSAGE,
+        "ci.repo_url" to PIPELINE_GIT_REPO_URL,
+        "ci.base_repo_url" to PIPELINE_GIT_BASE_REPO_URL,
+        "ci.head_repo_url" to PIPELINE_GIT_HEAD_REPO_URL,
+        "ci.mr_url" to PIPELINE_GIT_MR_URL,
+        "ci.commit_author" to PIPELINE_GIT_COMMIT_AUTHOR,
+        "ci.pipeline_update_user" to PIPELINE_GIT_UPDATE_USER,
+        "ci.authorizer" to PIPELINE_GIT_AUTHORIZER,
+        "ci.mr_id" to PIPELINE_GIT_MR_ID,
+        "ci.mr_iid" to PIPELINE_GIT_MR_IID,
+        "ci.tag_message" to PIPELINE_GIT_TAG_MESSAGE,
+        "ci.tag_from" to PIPELINE_GIT_TAG_FROM,
+        "ci.mr_title" to PIPELINE_GIT_MR_TITLE,
+        "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
+        "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
+        "ci.mr_action" to PIPELINE_GIT_MR_ACTION
+    )
+
+    /**
+     * CI预置上下文转换映射关系
+     */
+    private val contextVarMappingBuildVarRevert = mapOf(
+        PIPELINE_START_USER_NAME to "ci.actor"
+    )
+
     private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()
+
+    private val reverseContextVarMappingBuildVar =
+        contextVarMappingBuildVar.values.zip(contextVarMappingBuildVar.keys).toMap()
+
+    fun fetchReverseVarName(contextKey: String): String? {
+        val varMap = reverseContextVarMappingBuildVar.toMutableMap()
+        varMap.putAll(contextVarMappingBuildVarRevert)
+        return varMap[contextKey]
+    }
+
+    /**
+     * 填充CI预置变量
+     */
+    fun fillContextVarMap(varMap: MutableMap<String, String>, buildVar: Map<String, String>) {
+        contextVarMappingBuildVar.forEach { (contextKey, varKey) ->
+            if (!buildVar[varKey].isNullOrBlank()) varMap[contextKey] = buildVar[varKey]!!
+        }
+    }
+
+    /**
+     * 获取CI预置变量
+     */
+    fun fetchContextInBuildVars(contextKey: String, buildVar: Map<String, String>): String? {
+        return buildVar[contextVarMappingBuildVar[contextKey]]
+    }
+
+    /**
+     * 获取CI预置变量名
+     */
+    fun fetchVarName(contextKey: String): String? {
+        return contextVarMappingBuildVar[contextKey]
+    }
 
     /**
      * 填充旧变量名，兼容用户在流水线中旧的写法
@@ -134,14 +255,14 @@ object PipelineVarUtil {
             // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
             val oldVarName = newVarToOldVar(it.key)
             if (!oldVarName.isNullOrBlank()) {
-                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
+                allVars[oldVarName] = it.value // 旧变量写入，如果之前有了，则替换
                 allVars[it.key] = it.value // 新变量仍然写入
             } else {
                 // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
                 val newVarName = oldVarToNewVar(it.key)
                 // 新变量已经存在，忽略旧变量转换
                 if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
-                    allVars[newVarName!!] = it.value
+                    allVars[newVarName] = it.value
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
                 if (!allVars.containsKey(it.key)) {

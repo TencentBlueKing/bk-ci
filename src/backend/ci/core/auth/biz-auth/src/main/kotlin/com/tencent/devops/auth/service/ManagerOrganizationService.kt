@@ -128,12 +128,12 @@ class ManagerOrganizationService @Autowired constructor(
         watcher.start("getManager")
         val record = managerOrganizationDao.get(dslContext, managerId) ?: return null
         watcher.start("getStrategyName")
-        val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
+        val strategyName = strategyService.getStrategyName(record.strategyid.toString()) ?: ""
         watcher.start("getParentOrganizationInfo")
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(
-            organizationId = record!!.organizationId.toString(),
-            level = record!!.level)
-        val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
+            organizationId = record.organizationId.toString(),
+            level = record.level)
+        val parentOrg = parentOrganizationInfo?.sortedBy { it.level }
         watcher.start("getOrganizationInfo")
         logger.info("list createTime: ${record.createTime}, ${DateTimeUtil.toDateTime(record.createTime)}")
         val organizationInfo = organizationService.getOrganizationInfo(record.organizationId.toString(), record!!.level)
@@ -156,16 +156,16 @@ class ManagerOrganizationService @Autowired constructor(
 
     fun getManagerInfo(managerId: Int, needDeleteData: Boolean? = false): ManagerOrganizationInfo? {
         val record = if (needDeleteData!!) {
-            managerOrganizationDao.getById(dslContext, managerId) ?: null
+            managerOrganizationDao.getById(dslContext, managerId)
         } else {
             managerOrganizationDao.get(dslContext, managerId)
         }
         return ManagerOrganizationInfo(
             id = record!!.id,
-            strategyId = record!!.strategyid,
-            organizationLevel = record!!.level,
-            organizationId = record!!.organizationId,
-            name = record!!.name
+            strategyId = record.strategyid,
+            organizationLevel = record.level,
+            organizationId = record.organizationId,
+            name = record.name
         )
     }
 
@@ -179,7 +179,7 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     fun listOrganization(): List<ManageOrganizationEntity>? {
-        val records = managerOrganizationDao.list(dslContext) ?: null
+        val records = managerOrganizationDao.list(dslContext)
         val entitys = mutableListOf<ManageOrganizationEntity>()
         records!!.forEach {
             val entity = getManagerOrganization(it.id)
@@ -192,7 +192,7 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     fun listManager(): List<ManagerOrganizationInfo>? {
-        val records = managerOrganizationDao.list(dslContext) ?: null
+        val records = managerOrganizationDao.list(dslContext)
         val entitys = mutableListOf<ManagerOrganizationInfo>()
         records!!.forEach {
             entitys.add(ManagerOrganizationInfo(
@@ -220,7 +220,7 @@ class ManagerOrganizationService @Autowired constructor(
         )
 
         when (action) {
-            createAction -> if (record != null && record!!.size > 0) {
+            createAction -> if (record != null && record.size > 0) {
                 logger.warn("checkBeforeExecute fail, createAction:$record|" +
                     " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
                 throw ErrorCodeException(
@@ -232,7 +232,7 @@ class ManagerOrganizationService @Autowired constructor(
                 if (record == null || record.size == 0) {
                     return
                 }
-                val ids = record!!.map { it.id }
+                val ids = record.map { it.id }
                 if (!ids.contains(id) || ids.size > 1) {
                     logger.warn("checkBeforeExecute fail, updateAction: $ids |$id |" +
                         " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
@@ -256,7 +256,7 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ManagerOrganizationService::class.java)
+        private val logger = LoggerFactory.getLogger(ManagerOrganizationService::class.java)
         const val createAction = "create"
         const val updateAction = "update"
     }

@@ -43,37 +43,51 @@ class DefaultImageConfig {
     @Value("\${dispatch.imageTLinux2_2:bkci/ci:latest}")
     val imageTLinux2_2: String? = null
 
-    // 无编译环境，末尾需含bkdevops
-    @Value("\${dispatch.dockerBuildLessImagePrefix:#{null}}")
-    var dockerBuildLessImagePrefix: String? = null
+    // 无编译环境镜像仓库
+    @Value("\${dispatch.agentLessRegistryUrl:#{null}}")
+    var agentLessRegistryUrl: String? = null
 
-    @Value("\${dispatch.imageBuildLessTLinux1_2:bkci/ci:alpine}")
-    val imageBuildLessTLinux1_2: String? = null
+    // 无编译环境镜像路径
+    @Value("\${dispatch.agentLessImageName:bkci/ci:alpine}")
+    val agentLessImageName: String? = null
 
-    @Value("\${dispatch.imageBuildLessTLinux2_2:bkci/ci:alpine}")
-    val imageBuildLessTLinux2_2: String? = null
+    // 无编译环境镜像仓库登录信息
+    @Value("\${dispatch.agentLessRegistryUserName:#{null}}")
+    val agentLessRegistryUserName: String? = null
 
-    fun getBuildLessTLinux1_2CompleteUri(): String {
-        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
-            imageBuildLessTLinux1_2?.trim()?.removePrefix("/")
+    // 无编译环境镜像仓库登录信息
+    @Value("\${dispatch.agentLessRegistryPassword:#{null}}")
+    val agentLessRegistryPassword: String? = null
+
+    // docker构建资源默认配置
+    @Value("\${dispatch.docker.memoryLimitBytes:34359738368}")
+    var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G
+
+    @Value("\${dispatch.docker.cpuPeriod:10000}")
+    var cpuPeriod: Int = 10000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dispatch.docker.cpuQuota:160000}")
+    var cpuQuota: Int = 160000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dispatch.docker.blkioDeviceWriteBps:125829120}")
+    var blkioDeviceWriteBps: Long = 125829120 // 默认磁盘IO写速率：120M/s
+
+    @Value("\${dispatch.docker.blkioDeviceReadBps:125829120}")
+    var blkioDeviceReadBps: Long = 125829120 // 默认磁盘IO读速率：120M/s
+
+    fun getAgentLessCompleteUri(): String {
+        return if (agentLessRegistryUrl.isNullOrBlank()) {
+            agentLessImageName?.trim()?.removePrefix("/")
         } else {
-            dockerBuildLessImagePrefix + imageBuildLessTLinux1_2?.trim()
+            agentLessRegistryUrl + agentLessImageName?.trim()
         } ?: ""
     }
 
-    fun getBuildLessTLinux2_2CompleteUri(): String {
-        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
-            imageBuildLessTLinux2_2?.trim()?.removePrefix("/")
-        } else {
-            dockerBuildLessImagePrefix + imageBuildLessTLinux2_2?.trim()
-        } ?: ""
-    }
-
-    fun getBuildLessCompleteUriByImageName(imageName: String?): String {
-        return if (dockerBuildLessImagePrefix.isNullOrBlank()) {
+    fun getAgentLessCompleteUriByImageName(imageName: String?): String {
+        return if (agentLessRegistryUrl.isNullOrBlank()) {
             imageName?.trim()?.removePrefix("/")
         } else {
-            "$dockerBuildLessImagePrefix/${imageName?.trim()}"
+            "$agentLessRegistryUrl/${imageName?.trim()}"
         } ?: ""
     }
 

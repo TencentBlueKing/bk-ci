@@ -90,7 +90,7 @@ class MarketCheckImageTask : ITask() {
         if (!response.isSuccessful) {
             logger.warn("Fail to request($request) with code ${response.code()} ," +
                 " message ${response.message()} and response ($responseContent)")
-            LoggerService.addRedLine(response.message())
+            LoggerService.addErrorLine(response.message())
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -101,7 +101,7 @@ class MarketCheckImageTask : ITask() {
         })
         LoggerService.addNormalLine("checkImageResult: $checkImageResult")
         if (checkImageResult.isNotOk()) {
-            LoggerService.addRedLine(JsonUtil.toJson(checkImageResult))
+            LoggerService.addErrorLine(JsonUtil.toJson(checkImageResult))
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: ${checkImageResult.message}",
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -123,7 +123,7 @@ class MarketCheckImageTask : ITask() {
         )
         logger.info("MarketCheckImageTask updateImageResult: $updateImageResult")
         if (updateImageResult.isNotOk()) {
-            LoggerService.addRedLine(JsonUtil.toJson(updateImageResult))
+            LoggerService.addErrorLine(JsonUtil.toJson(updateImageResult))
             throw TaskExecuteException(
                 errorMsg = "updateImage fail: ${updateImageResult.message}",
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,

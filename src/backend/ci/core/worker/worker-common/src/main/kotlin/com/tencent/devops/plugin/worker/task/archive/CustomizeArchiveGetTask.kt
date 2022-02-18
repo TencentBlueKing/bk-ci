@@ -35,18 +35,21 @@ import com.tencent.devops.common.archive.element.CustomizeArchiveGetElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.net.URLDecoder
 
 @TaskClassType(classTypes = [CustomizeArchiveGetElement.classType])
 class CustomizeArchiveGetTask : ITask() {
 
-    private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
+    private val archiveGetResourceApi = ArtifactApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
@@ -61,9 +64,9 @@ class CustomizeArchiveGetTask : ITask() {
 
         LoggerService.addNormalLine("archive get notFoundContinue: $notFoundContinue")
         // 匹配文件
-        downloadPaths.split(",").map {
+        val files = downloadPaths.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
-        }.forEach { srcPath ->
+        }.filter { it.isNotBlank() }.flatMap { srcPath ->
 
             val fileList = archiveGetResourceApi.getFileDownloadUrls(
                 userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
@@ -74,7 +77,7 @@ class CustomizeArchiveGetTask : ITask() {
                 customFilePath = srcPath
             )
 
-            fileList.forEach { fileUrl ->
+            fileList.map { fileUrl ->
                 val decodeUrl = URLDecoder.decode(fileUrl, "UTF-8")
                 val lastFx = decodeUrl.lastIndexOf("/")
                 val file = if (lastFx > 0) {
@@ -83,17 +86,30 @@ class CustomizeArchiveGetTask : ITask() {
                     File(destPath, decodeUrl)
                 }
                 LoggerService.addNormalLine("find the file($fileUrl) in repo! [${file.name}")
-                archiveGetResourceApi.downloadCustomizeFile(
-                    userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                    projectId = buildVariables.projectId,
-                    uri = fileUrl,
-                    destPath = file
-                )
-                count++
+                fileUrl to file
             }
         }
-
+        count = files.size
         LoggerService.addNormalLine("total $count file(s) found")
+        files.forEachIndexed { index, (fileUrl, file) ->
+            val token = RepoServiceFactory.getInstance().getRepoToken(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
+                repoName = "custom",
+                path = fileUrl,
+                type = TokenType.DOWNLOAD,
+                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+            )
+            archiveGetResourceApi.downloadCustomizeFile(
+                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+                projectId = buildVariables.projectId,
+                uri = fileUrl,
+                destPath = file,
+                isVmBuildEnv = TaskUtil.isVmBuildEnv(buildVariables.containerType),
+                token = token
+            )
+            LoggerService.addNormalLine("${index + 1}/$count finished")
+        }
         if (count == 0 && notFoundContinue == "false") throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
             errorType = ErrorType.USER,

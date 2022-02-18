@@ -6,7 +6,7 @@ spring:
     packageName: com.tencent.bk.codecc.codeccjob
   data:
     mongodb:
-      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_HOST__:__BK_CODECC_MONGODB_PORT__/db_defect?readPreference=secondaryPreferred
+      uri: mongodb://__BK_CODECC_MONGODB_USER__:__BK_CODECC_MONGODB_PASSWORD__@__BK_CODECC_MONGODB_ADDR__/db_defect?readPreference=secondaryPreferred
 
 server:
-  port: __BK_CODECC_JOB_API_PORT__
+  port: __BK_CODECC_CODECCJOB_API_PORT__

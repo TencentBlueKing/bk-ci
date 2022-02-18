@@ -32,15 +32,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
-import com.tencent.devops.process.dao.label.PipelineViewLabelDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewCreate
@@ -55,10 +55,10 @@ import com.tencent.devops.process.pojo.classify.PipelineViewIdAndName
 import com.tencent.devops.process.pojo.classify.PipelineViewSettings
 import com.tencent.devops.process.pojo.classify.enums.Condition
 import com.tencent.devops.process.pojo.classify.enums.Logic
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -72,11 +72,10 @@ class PipelineViewService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val pipelineViewDao: PipelineViewDao,
-    private val pipelineViewLabelDao: PipelineViewLabelDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelineGroupService: PipelineGroupService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val client: Client
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
@@ -180,7 +179,7 @@ class PipelineViewService @Autowired constructor(
             val currentViewIdList = objectMapper.readValue<List<String>>(pipelineViewSettingsRecord.settings)
 
             val userViewIdList = currentViewIdList.filterNot { it in SYSTEM_VIEW_ID_LIST }.map { decode(it) }
-            val pipelineViewRecordList = pipelineViewDao.list(dslContext, userViewIdList.toSet())
+            val pipelineViewRecordList = pipelineViewDao.list(dslContext, projectId, userViewIdList.toSet())
 
             val pipelineViewMap = mutableMapOf<Long, TPipelineViewRecord>()
             pipelineViewRecordList.forEach {
@@ -263,14 +262,14 @@ class PipelineViewService @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 projectId = projectId,
-                settings = objectMapper.writeValueAsString(viewIdList)
+                settings = JsonUtil.toJson(viewIdList, formatted = false)
             )
         } else {
             pipelineViewUserSettingDao.update(
                 dslContext = dslContext,
                 userId = userId,
                 projectId = projectId,
-                settings = objectMapper.writeValueAsString(viewIdList)
+                settings = JsonUtil.toJson(viewIdList, formatted = false)
             )
         }
     }
@@ -297,7 +296,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
-        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, projectId = projectId, viewId = decode(viewId))
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
                 params = arrayOf(viewId)
@@ -305,7 +304,6 @@ class PipelineViewService @Autowired constructor(
 
         val filters =
             getFilters(
-                viewId = viewRecord.id,
                 filterByName = viewRecord.filterByPipeineName,
                 filterByCreator = viewRecord.filterByCreator,
                 filters = viewRecord.filters
@@ -336,7 +334,8 @@ class PipelineViewService @Autowired constructor(
                     isProject = pipelineView.projected,
                     filters = objectMapper.writerFor(object :
                         TypeReference<List<PipelineViewFilter>>() {}).writeValueAsString(pipelineView.filters),
-                    userId = userId
+                    userId = userId,
+                    id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data
                 )
                 encode(viewId)
             }
@@ -351,7 +350,7 @@ class PipelineViewService @Autowired constructor(
 
     fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
         val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext, projectId, decode(viewId))
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
                 params = arrayOf(viewId)
@@ -367,14 +366,13 @@ class PipelineViewService @Autowired constructor(
 
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            pipelineViewLabelDao.detachLabelByView(context, id, userId)
-            pipelineViewDao.delete(context, id)
+            pipelineViewDao.delete(context, projectId, id)
         }
     }
 
     fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
         val id = decode(viewId)
-        val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
+        val viewRecord = pipelineViewDao.get(dslContext = dslContext, projectId = projectId, viewId = decode(viewId))
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
                 params = arrayOf(viewId)
@@ -391,9 +389,9 @@ class PipelineViewService @Autowired constructor(
         try {
             return dslContext.transactionResult { configuration ->
                 val context = DSL.using(configuration)
-                pipelineViewLabelDao.detachLabelByView(context, id, userId)
                 val result = pipelineViewDao.update(
                     dslContext = context,
+                    projectId = projectId,
                     viewId = id,
                     name = pipelineView.name,
                     logic = pipelineView.logic.name,
@@ -437,13 +435,10 @@ class PipelineViewService @Autowired constructor(
     }
 
     private fun getFilters(
-        viewId: Long,
         filterByName: String,
         filterByCreator: String,
         filters: String?
     ): List<PipelineViewFilter> {
-        val labels = pipelineViewLabelDao.getLabels(dslContext, viewId)
-        val labelIds = labels.map { encode(it.labelId) }
 
         val allFilters = mutableListOf<PipelineViewFilter>()
 
@@ -464,27 +459,13 @@ class PipelineViewService @Autowired constructor(
             )
         }
 
-        if (labelIds.isNotEmpty()) {
-            val groupToLabelsMap = pipelineGroupService.getGroupToLabelsMap(labelIds)
-            groupToLabelsMap.forEach { (groupId, labelIdList) ->
-                allFilters.add(
-                    PipelineViewFilterByLabel(
-                        condition = Condition.INCLUDE,
-                        groupId = groupId,
-                        labelIds = labelIdList
-                    )
-                )
-            }
-        }
-
         return allFilters
     }
 
     private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.isProjectUser(
+        return pipelinePermissionService.checkProjectManager(
             userId = userId,
-            projectId = projectId,
-            group = BkAuthGroup.MANAGER
+            projectId = projectId
         )
     }
 

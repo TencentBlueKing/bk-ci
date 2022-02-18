@@ -49,6 +49,11 @@ object AuthMessageCode {
     const val GROUP_NOT_BIND_PERSSION = "2121003" // 权限系统：自定义用户组未绑定权限
     const val GROUP_USER_ALREADY_EXIST = "2121004" // 权限系统：用户已在该用户组
     const val GROUP_ACTION_EMPTY = "2121005" // 权限系统：用户组未绑定动作
+    const val GRADE_CHECK_FAIL = "2121007" // 权限系统：无分级管理员权限,不允许进行该操作
+    const val DEFAULT_GROUP_ERROR = "2121008" // 权限系统：该分组为默认分组,不允许重复添加
+    const val UN_DEFAULT_GROUP_ERROR = "2121009" // 权限系统：非默认分组与默认分组重名
+    const val DEFAULT_GROUP_UPDATE_NAME_ERROR = "2121010" // 权限系统：该分组为默认分组,不允许重命名
+    const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
@@ -57,6 +62,7 @@ object AuthMessageCode {
     const val HOST_CHECKOU_FAIL = "2121110" // 权限系统：iam回调域名校验失败
     const val PATH_CHECK_FAIL = "2121111" // 权限系统：iam回调路径校验失败
     const val RELATED_RESOURCE_CHECK_FAIL = "2121112" // 权限系统：iam回调关联资源不存在
+    const val RELATED_RESOURCE_EMPTY = "2121113" // 权限系统：绑定系统资源为空
 
     const val STRATEGT_CHECKOUT_FAIL = "2121201" // 权限系统： 权限集合校验失败
     const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败

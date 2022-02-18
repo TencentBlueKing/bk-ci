@@ -40,5 +40,6 @@ data class GitCommitCheckInfo(
     val mergeRequestId: Long? = null,
     val userId: String,
     val webhookType: String,
-    val webhookEventType: String
+    val webhookEventType: String,
+    val enableCheck: Boolean
 )

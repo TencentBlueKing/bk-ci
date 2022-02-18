@@ -31,10 +31,12 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServiceImp
 import com.tencent.devops.environment.permission.service.impl.BluekingEnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.MockEnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.V3EnvironmentPermissionService
@@ -102,5 +104,37 @@ class EnvironmentPermConfiguration {
         environmentAuthServiceCode = environmentAuthServiceCode,
         client = client,
         redisOperation = redisOperation
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamEnvironmentPermissionService(
+        client: Client,
+        dslContext: DSLContext,
+        nodeDao: NodeDao,
+        envDao: EnvDao,
+        tokenCheckService: ClientTokenService
+    ): EnvironmentPermissionService = StreamEnvironmentPermissionServiceImp(
+        client = client,
+        dslContext = dslContext,
+        nodeDao = nodeDao,
+        envDao = envDao,
+        tokenCheckService = tokenCheckService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamEnvironmentPermissionService(
+        client: Client,
+        dslContext: DSLContext,
+        nodeDao: NodeDao,
+        envDao: EnvDao,
+        tokenCheckService: ClientTokenService
+    ): EnvironmentPermissionService = StreamEnvironmentPermissionServiceImp(
+        client = client,
+        dslContext = dslContext,
+        nodeDao = nodeDao,
+        envDao = envDao,
+        tokenCheckService = tokenCheckService
     )
 }

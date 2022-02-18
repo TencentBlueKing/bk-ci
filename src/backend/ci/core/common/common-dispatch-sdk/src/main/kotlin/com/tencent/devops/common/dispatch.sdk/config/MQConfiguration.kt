@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -50,6 +51,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MQConfiguration @Autowired constructor() {
@@ -70,36 +72,58 @@ class MQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun pipelineBuildStartQueue(@Autowired buildListener: BuildListener) =
+    fun pipelineBuildDispatchStartQueue(@Autowired buildListener: BuildListener) =
         Queue(MQ.QUEUE_PIPELINE_BUILD_START_DISPATCHER + getStartQueue(buildListener))
 
     @Bean
-    fun pipelineBuildStartQueueBind(
-        @Autowired pipelineBuildStartQueue: Queue,
+    fun pipelineBuildDispatchStartQueueBind(
+        @Autowired pipelineBuildDispatchStartQueue: Queue,
         @Autowired pipelineBuildStartFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildStartQueue).to(pipelineBuildStartFanoutExchange)
+        return BindingBuilder.bind(pipelineBuildDispatchStartQueue).to(pipelineBuildStartFanoutExchange)
     }
 
     @Bean
-    fun pipelineBuildStartListenerContainer(
+    fun pipelineBuildDispatchStartListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildStartQueue: Queue,
+        @Autowired pipelineBuildDispatchStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineBuildStartQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setPrefetchCount(1)
-
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineStartup.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = pipelineBuildDispatchStartQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 10,
+            adapter = adapter,
+            prefetchCount = 1
+        )
+    }
+
+    /**
+     * 构建审核步骤广播交换机
+     */
+    @Bean
+    fun pipelineBuildReviewFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_REVIEW_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
+     * 构建红线检查步骤广播交换机
+     */
+    @Bean
+    fun pipelineBuildQualityCheckFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUALITY_CHECK_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
     }
 
     /**
@@ -112,37 +136,49 @@ class MQConfiguration @Autowired constructor() {
         return fanoutExchange
     }
 
+    /**
+     * 构建流水线取消广播交换机
+     */
     @Bean
-    fun pipelineBuildFinishQueue(@Autowired buildListener: BuildListener) =
-        Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER + getShutdownQueue(buildListener))
-
-    @Bean
-    fun pipelineBuildFinishQueueBind(
-        @Autowired pipelineBuildFinishQueue: Queue,
-        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishQueue).to(pipelineBuildFinishFanoutExchange)
+    fun pipelineCancelFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
     }
 
     @Bean
-    fun pipelineBuildFinishListenerContainer(
+    fun pipelineBuildDispatchFinishQueue(@Autowired buildListener: BuildListener) =
+        Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER + getShutdownQueue(buildListener))
+
+    @Bean
+    fun pipelineBuildDispatchFinishQueueBind(
+        @Autowired pipelineBuildDispatchFinishQueue: Queue,
+        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineBuildDispatchFinishQueue).to(pipelineBuildFinishFanoutExchange)
+    }
+
+    @Bean
+    fun pipelineBuildDispatchFinishListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildFinishQueue: Queue,
+        @Autowired pipelineBuildDispatchFinishQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineBuildFinishQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setPrefetchCount(1)
-
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineShutdown.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = pipelineBuildDispatchFinishQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 10,
+            adapter = adapter,
+            prefetchCount = 1
+        )
     }
 
     @Bean
@@ -152,16 +188,20 @@ class MQConfiguration @Autowired constructor() {
         return directExchange
     }
 
+    /**
+     * 启动构建队列
+     */
     @Bean
-    fun buildStartQueue(
-        @Autowired buildListener: BuildListener
-    ): Queue {
+    fun buildAgentStartQueue(@Autowired buildListener: BuildListener): Queue {
         return Queue(ROUTE_AGENT_STARTUP + getStartQueue(buildListener))
     }
 
     @Bean
-    fun buildStartBind(@Autowired buildStartQueue: Queue, @Autowired exchange: DirectExchange): Binding {
-        return BindingBuilder.bind(buildStartQueue).to(exchange).with(buildStartQueue.name)
+    fun buildAgentStartQueueBind(
+        @Autowired buildAgentStartQueue: Queue,
+        @Autowired exchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(buildAgentStartQueue).to(exchange).with(buildAgentStartQueue.name)
     }
 
     @Bean
@@ -170,55 +210,99 @@ class MQConfiguration @Autowired constructor() {
     @Bean
     fun startListener(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildStartQueue: Queue,
+        @Autowired buildAgentStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(buildStartQueue.name)
-        container.setConcurrentConsumers(60)
-        container.setMaxConcurrentConsumers(100)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        container.setPrefetchCount(1)
-        val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        container.setMessageListener(messageListenerAdapter)
-        logger.info("Start listener")
-        return container
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildAgentStartQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 60,
+            maxConcurrency = 100,
+            adapter = adapter,
+            prefetchCount = 1
+        )
+    }
+
+    /**
+     * 啓動构建降级队列
+     */
+    @Bean
+    fun buildAgentStartDemoteQueue(@Autowired buildListener: BuildListener): Queue {
+        return Queue(ROUTE_AGENT_STARTUP + getStartDemoteQueue(buildListener))
     }
 
     @Bean
-    fun buildShutdownQueue(@Autowired buildListener: BuildListener): Queue {
+    fun buildAgentStartDemoteQueueBind(
+        @Autowired buildAgentStartDemoteQueue: Queue,
+        @Autowired exchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(buildAgentStartDemoteQueue).to(exchange).with(buildAgentStartDemoteQueue.name)
+    }
+
+    @Bean
+    fun startDemoteListener(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired buildAgentStartDemoteQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: BuildListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleStartDemoteMessage.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildAgentStartDemoteQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20,
+            adapter = adapter,
+            prefetchCount = 1
+        )
+    }
+
+    @Bean
+    fun buildAgentShutdownQueue(@Autowired buildListener: BuildListener): Queue {
         return Queue(ROUTE_AGENT_SHUTDOWN + getShutdownQueue(buildListener))
     }
 
     @Bean
-    fun buildShutdownBind(@Autowired buildShutdownQueue: Queue, @Autowired exchange: DirectExchange): Binding {
-        return BindingBuilder.bind(buildShutdownQueue).to(exchange).with(buildShutdownQueue.name)
+    fun buildAgentShutdownQueueBind(
+        @Autowired buildAgentShutdownQueue: Queue,
+        @Autowired exchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(buildAgentShutdownQueue).to(exchange).with(buildAgentShutdownQueue.name)
     }
 
     @Bean
     fun shutdownListener(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildShutdownQueue: Queue,
+        @Autowired buildAgentShutdownQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired buildListener: BuildListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(buildShutdownQueue.name)
-        container.setConcurrentConsumers(60)
-        container.setMaxConcurrentConsumers(100)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
-        container.setPrefetchCount(1)
-        val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleShutdownMessage.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        container.setMessageListener(messageListenerAdapter)
-        logger.info("Start shutdown listener")
-        return container
+        val adapter = MessageListenerAdapter(buildListener, buildListener::handleShutdownMessage.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildAgentShutdownQueue,
+            rabbitAdmin = rabbitAdmin,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 60,
+            maxConcurrency = 100,
+            adapter = adapter,
+            prefetchCount = 1
+        )
     }
 
     companion object {
@@ -232,6 +316,15 @@ class MQConfiguration @Autowired constructor() {
             throw RuntimeException("The startup queue is blank")
         }
         return startupQueue
+    }
+
+    private fun getStartDemoteQueue(buildListener: BuildListener): String {
+        val startupDemoteQueue = buildListener.getStartupDemoteQueue()
+        logger.info("Get the startupDemoteQueue ($startupDemoteQueue)")
+        if (startupDemoteQueue.isBlank()) {
+            throw RuntimeException("The startupDemoteQueue is blank")
+        }
+        return startupDemoteQueue
     }
 
     private fun getShutdownQueue(buildListener: BuildListener): String {

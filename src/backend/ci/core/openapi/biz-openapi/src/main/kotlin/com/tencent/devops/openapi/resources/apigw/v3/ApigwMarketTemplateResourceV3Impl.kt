@@ -30,6 +30,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwMarketTemplateResourceV3
+import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.pojo.PipelineTemplateInfo
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import org.slf4j.LoggerFactory
@@ -48,6 +50,26 @@ class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         // 可见与可安装鉴权在store服务marketTemplateService中已实现
         return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    override fun installTemplateFromStoreNew(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<List<PipelineTemplateInfo>> {
+        val install = client.get(ServiceTemplateResource::class)
+            .installTemplate(userId, installTemplateReq).data ?: false
+        return if (install) {
+            val templateProjectInfos = client.get(ServicePTemplateResource::class)
+                .getTemplateIdBySrcCode(installTemplateReq.templateCode, installTemplateReq.projectCodeList).data
+            if (templateProjectInfos.isNullOrEmpty()) {
+                return Result(emptyList())
+            }
+            Result(templateProjectInfos)
+        } else {
+            Result(emptyList())
+        }
     }
 
     companion object {

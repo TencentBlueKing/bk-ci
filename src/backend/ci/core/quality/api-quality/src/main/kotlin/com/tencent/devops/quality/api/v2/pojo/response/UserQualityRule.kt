@@ -38,7 +38,7 @@ data class UserQualityRule(
     val name: String,
     val desc: String,
     val indicators: List<QualityIndicator>,
-    val controlPoint: QualityRule.RuleControlPoint,
+    val controlPoint: QualityRule.RuleControlPoint?,
     @ApiModelProperty("生效的流水线id集合", required = true)
     val range: List<RangeItem>,
     @ApiModelProperty("生效的流水线模板id集合", required = true)

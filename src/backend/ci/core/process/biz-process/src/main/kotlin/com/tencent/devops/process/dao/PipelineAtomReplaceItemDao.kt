@@ -51,7 +51,7 @@ class PipelineAtomReplaceItemDao {
         userId: String
     ) {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
-            val addStep = versionInfoList.map {
+            versionInfoList.map {
                 val paramReplaceInfoList = it.paramReplaceInfoList
                 dslContext.insertInto(
                     this,
@@ -71,13 +71,12 @@ class PipelineAtomReplaceItemDao {
                         it.fromAtomVersion,
                         toAtomCode,
                         it.toAtomVersion,
-                        if (paramReplaceInfoList != null) JsonUtil.toJson(paramReplaceInfoList) else null,
+                        paramReplaceInfoList?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         baseId,
                         userId,
                         userId
-                    )
+                    ).execute()
             }
-            dslContext.batch(addStep).execute()
         }
     }
 

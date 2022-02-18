@@ -148,5 +148,9 @@ data class ProjectVO(
     val cc_app_id: Long?,
     @ApiModelProperty("旧版cc业务名称(即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替)")
     @Deprecated("即将作废，兼容插件中被引用到的旧的字段命名，请用ccAppName代替")
-    val cc_app_name: String?
+    val cc_app_name: String?,
+    @ApiModelProperty("项目路由指向")
+    val routerTag: String?,
+    @ApiModelProperty("关联系统Id")
+    val relationId: String?
 )

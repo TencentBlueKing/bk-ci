@@ -31,11 +31,12 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.GitWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.GitlabWebhookEvent
+import com.tencent.devops.process.webhook.pojo.event.commit.P4WebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.process.webhook.pojo.event.commit.TGitWebhookEvent
-import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,13 +55,32 @@ class ExternalScmResourceImpl @Autowired constructor(
     override fun webHookCodeSvnCommit(event: String) =
             Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, SvnWebhookEvent(requestContent = event)))
 
-    override fun webHookCodeGitCommit(event: String) =
-        Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitWebhookEvent(requestContent = event)))
+    override fun webHookCodeGitCommit(
+        event: String,
+        secret: String?,
+        traceId: String,
+        body: String
+    ) =
+        Result(
+            CodeWebhookEventDispatcher.dispatchEvent(
+                rabbitTemplate = rabbitTemplate,
+                event = GitWebhookEvent(
+                    requestContent = body,
+                    event = event,
+                    secret = secret
+                )
+            )
+        )
 
     override fun webHookGitlabCommit(event: String) =
         Result(CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, GitlabWebhookEvent(requestContent = event)))
 
-    override fun webHookCodeTGitCommit(secret: String?, event: String): Result<Boolean> {
+    override fun webHookCodeTGitCommit(
+        event: String,
+        secret: String?,
+        traceId: String,
+        body: String
+    ): Result<Boolean> {
         logger.info("tgit webhook secret|$secret")
         if (enableTGitWebhookSecret) {
             if (secret.isNullOrBlank()) {
@@ -73,7 +93,26 @@ class ExternalScmResourceImpl @Autowired constructor(
             }
         }
         return Result(
-            CodeWebhookEventDispatcher.dispatchEvent(rabbitTemplate, TGitWebhookEvent(requestContent = event))
+            CodeWebhookEventDispatcher.dispatchEvent(
+                rabbitTemplate = rabbitTemplate,
+                event = TGitWebhookEvent(
+                    requestContent = body,
+                    event = event,
+                    secret = secret
+                )
+            )
+        )
+    }
+
+    override fun webHookCodeP4Commit(body: String): Result<Boolean> {
+        logger.info("p4 webhook|$body")
+        return Result(
+            CodeWebhookEventDispatcher.dispatchEvent(
+                rabbitTemplate = rabbitTemplate,
+                event = P4WebhookEvent(
+                    requestContent = body
+                )
+            )
         )
     }
 

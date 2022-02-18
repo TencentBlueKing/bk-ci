@@ -144,7 +144,7 @@ class QualityMetadataDao {
         }
     }
 
-    fun listByIds(ids: Set<Long?>, dslContext: DSLContext): Result<TQualityMetadataRecord> {
+    fun listByIds(ids: Set<Long>, dslContext: DSLContext): Result<TQualityMetadataRecord> {
         with(TQualityMetadata.T_QUALITY_METADATA) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(ids))

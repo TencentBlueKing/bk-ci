@@ -30,6 +30,7 @@ package com.tencent.devops.dockerhost.services
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
+import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -83,7 +84,8 @@ class DockerHostBuildAgentLessService(
                 projectId = dockerHostBuildInfo.projectId,
                 agentId = dockerHostBuildInfo.agentId,
                 secretKey = dockerHostBuildInfo.secretKey,
-                buildType = dockerHostBuildInfo.buildType
+                buildType = dockerHostBuildInfo.buildType,
+                customBuildEnv = dockerHostBuildInfo.customBuildEnv
             )
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
@@ -110,9 +112,10 @@ class DockerHostBuildAgentLessService(
         projectId: String,
         agentId: String,
         secretKey: String,
-        buildType: BuildType
+        buildType: BuildType,
+        customBuildEnv: Map<String, String>?
     ): String {
-        val hostWorkspace = getWorkspace(pipelineId, vmSeqId.trim())
+        val hostWorkspace = getWorkspace(pipelineId, buildId, vmSeqId.trim())
         val linkPath = dockerHostWorkSpaceService.createSymbolicLink(hostWorkspace)
 
         // docker run
@@ -143,6 +146,20 @@ class DockerHostBuildAgentLessService(
             Bind(linkPath, volumeTmpLink),
             Bind(hostWorkspace, volumeWs)
         )
+
+        val blkioRateDeviceWirte = BlkioRateDevice()
+            .withPath("/data")
+            .withRate(dockerHostConfig.blkioDeviceWriteBps)
+        val blkioRateDeviceRead = BlkioRateDevice()
+            .withPath("/data")
+            .withRate(dockerHostConfig.blkioDeviceReadBps)
+
+        // #4518 追加无编译环境的构建矩阵上下文
+        val customEnv = mutableListOf<String>()
+        customBuildEnv?.forEach {
+            customEnv.add("${it.key}=${it.value}")
+        }
+
         val container = httpLongDockerCli.createContainerCmd(imageName)
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
             .withEnv(
@@ -157,15 +174,16 @@ class DockerHostBuildAgentLessService(
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
                     "$ENV_JOB_BUILD_TYPE=${buildType.name}"
-                )
+                ).plus(customEnv)
             )
             .withHostConfig(
                 // CPU and memory Limit
                 HostConfig()
                     .withMemory(dockerHostConfig.memory)
-                    .withMemorySwap(dockerHostConfig.memory)
                     .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
                     .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+/*                    .withBlkioDeviceWriteBps(listOf(blkioRateDeviceWirte))
+                    .withBlkioDeviceReadBps(listOf(blkioRateDeviceRead))*/
                     .withBinds(binds)
                     .withNetworkMode("bridge")
             )
@@ -186,8 +204,12 @@ class DockerHostBuildAgentLessService(
         }
     }
 
-    private fun getWorkspace(pipelineId: String, vmSeqId: String): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
+    private fun getWorkspace(
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): String {
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$buildId/$vmSeqId/"
     }
 
     companion object {

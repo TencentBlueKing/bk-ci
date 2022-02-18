@@ -90,8 +90,7 @@ class ScmOauthService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?,
-        full: Boolean
+        search: String?
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list the branches")
         val startEpoch = System.currentTimeMillis()
@@ -107,7 +106,7 @@ class ScmOauthService @Autowired constructor(
                 region = region,
                 userName = userName,
                 event = null
-            ).getBranches(search = search, full = full)
+            ).getBranches(search = search)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -119,8 +118,7 @@ class ScmOauthService @Autowired constructor(
         type: ScmType,
         token: String,
         userName: String,
-        search: String?,
-        full: Boolean
+        search: String?
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
@@ -136,7 +134,7 @@ class ScmOauthService @Autowired constructor(
                 region = null,
                 userName = userName,
                 event = null)
-                .getTags(search = search, full = full)
+                .getTags(search = search)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
@@ -201,8 +199,7 @@ class ScmOauthService @Autowired constructor(
                     svnConfig.svnHookUrl
                 }
                 else -> {
-                    logger.warn("Unknown repository type ($type) when add webhook")
-                    throw RuntimeException("Unknown repository type ($type) when add webhook")
+                    throw IllegalArgumentException("Unknown repository type ($type) when add webhook")
                 }
             }
             ScmOauthFactory.getScm(projectName = projectName,

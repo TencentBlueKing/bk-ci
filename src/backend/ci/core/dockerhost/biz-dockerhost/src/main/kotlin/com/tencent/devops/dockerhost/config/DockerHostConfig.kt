@@ -30,12 +30,8 @@ package com.tencent.devops.dockerhost.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
-@Suppress("ALL")
 @Component
 class DockerHostConfig {
-
-//    @Value("\${dockerCli.dockerHost:unix:///var/run/docker.sock}")
-//    val dockerHost: String? = null
 
     @Value("\${dockerCli.dockerConfig:/root/.docke}")
     var dockerConfig: String? = null
@@ -160,17 +156,26 @@ class DockerHostConfig {
     @Value("\${dockerCli.hostPathHosts}")
     var hostPathHosts: String? = null
 
+    @Value("\${dockerCli.hostPathOverlayfsCache:#{null}}")
+    var hostPathOverlayfsCache: String? = "/data/overlayfscache"
+
     @Value("\${dockerCli.shareProjectCodeWhiteList}")
     var shareProjectCodeWhiteList: String? = null
 
-    @Value("\${dockerCli.memoryLimitBytes:2147483648}")
-    var memory: Long = 2147483648L // 1024 * 1024 * 1024 * 2 Memory limit in bytes. 2048MB
+    @Value("\${dockerCli.memoryLimitBytes:34359738368}")
+    var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G
 
-    @Value("\${dockerCli.cpuPeriod:50000}")
-    var cpuPeriod: Int = 50000 // Limit the CPU CFS (Completely Fair Scheduler) period
+    @Value("\${dockerCli.cpuPeriod:10000}")
+    var cpuPeriod: Int = 10000 // Limit the CPU CFS (Completely Fair Scheduler) period
 
-    @Value("\${dockerCli.cpuQuota:50000}")
-    var cpuQuota: Int = 50000 // Limit the CPU CFS (Completely Fair Scheduler) period
+    @Value("\${dockerCli.cpuQuota:160000}")
+    var cpuQuota: Int = 160000 // Limit the CPU CFS (Completely Fair Scheduler) period
+
+    @Value("\${dockerCli.blkioDeviceWriteBps:125829120}")
+    var blkioDeviceWriteBps: Long = 125829120 // 默认磁盘IO写速率：120M/s
+
+    @Value("\${dockerCli.blkioDeviceReadBps:125829120}")
+    var blkioDeviceReadBps: Long = 125829120 // 默认磁盘IO读速率：120M/s
 
     @Value("\${dockerCli.dockerAgentPath}")
     var dockerAgentPath: String? = null
@@ -189,6 +194,9 @@ class DockerHostConfig {
 
     @Value("\${dockerhost.dispatch.urlPrefix:ms/dispatch-docker}")
     var dispatchUrlPrefix: String? = "ms/dispatch-docker"
+
+    @Value("\${dockerhost.gatewayHeaderTag:#{null}}")
+    var gatewayHeaderTag: String? = null
 
     @Value("\${dockerhost.localIp:#{null}}")
     var dockerhostLocalIp: String? = null
@@ -246,4 +254,22 @@ class DockerHostConfig {
      */
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
+
+    /**
+     * bazel overlayfs lower层路径
+     */
+    @Value("\${dockerCli.bazelLowerPath:/data/bazelcache}")
+    var bazelLowerPath: String? = null
+
+    /**
+     * bazel overlayfs upper路径
+     */
+    @Value("\${dockerCli.bazelUpperPath:/data/landun/thirdparty/bazel_cache}")
+    var bazelUpperPath: String? = null
+
+    /**
+     * bazel 缓存容器路径
+     */
+    @Value("\${dockerCli.bazelContainerPath:/root/.bazelcache}")
+    var bazelContainerPath: String? = null
 }

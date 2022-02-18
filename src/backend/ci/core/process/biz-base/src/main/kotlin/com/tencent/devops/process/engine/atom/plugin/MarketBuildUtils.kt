@@ -27,11 +27,15 @@
 
 package com.tencent.devops.process.engine.atom.plugin
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.plugin.codecc.CodeccApi
-import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.atom.PipelineAtom
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -41,6 +45,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.HttpMethod
 
 object MarketBuildUtils {
+    private const val INPUT_PARAM = "input"
     private const val BK_ATOM_HOOK_URL = "bk_atom_del_hook_url"
     private const val BK_ATOM_HOOK_URL_METHOD = "bk_atom_del_hook_url_method"
     private const val BK_ATOM_HOOK_URL_BODY = "bk_atom_del_hook_url_body"
@@ -51,6 +56,21 @@ object MarketBuildUtils {
 
     private val logger = LoggerFactory.getLogger(MarketBuildUtils::class.java)
 
+    private val atomCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(10, TimeUnit.MINUTES)
+        .build<String, PipelineAtom?>(object : CacheLoader<String, PipelineAtom?>() {
+            override fun load(atomCodeAndVersion: String): PipelineAtom? {
+                val client = SpringContextUtil.getBean(Client::class.java)
+                val arr = atomCodeAndVersion.split("|")
+                val atomCode = arr[0]
+                val atomVersion = arr[1]
+                val atom = client.get(ServiceAtomResource::class).getAtomVersionInfo(atomCode, atomVersion).data
+                logger.info("get atom version info for : $atomCode, $atomVersion, $atom")
+                return atom
+            }
+        })
+
     @Suppress("ALL")
     private val marketBuildExecutorService = ThreadPoolExecutor(
         Runtime.getRuntime().availableProcessors(),
@@ -60,21 +80,29 @@ object MarketBuildUtils {
         ArrayBlockingQueue(16000)
     )
 
-    fun beforeDelete(inputMap: Map<*, *>, atomCode: String, param: BeforeDeleteParam, codeccApi: CodeccApi) {
+    fun beforeDelete(inputMap: Map<String, Any>, atomCode: String, atomVersion: String, param: BeforeDeleteParam) {
         marketBuildExecutorService.execute {
+            logger.info("start to do before delete: $atomCode, $atomVersion, $param")
             val bkAtomHookUrl = inputMap.getOrDefault(
                 BK_ATOM_HOOK_URL,
-                getDefaultHookUrl(atomCode = atomCode, codeccApi = codeccApi, channelCode = param.channelCode)
+                getDefaultHookUrl(atomCode = atomCode, atomVersion = atomVersion, channelCode = param.channelCode)
             ) as String
+
+            if (bkAtomHookUrl.isBlank()) {
+                logger.info("bk atom hook url is blank: $atomCode, $atomVersion")
+                return@execute
+            }
+
             val bkAtomHookUrlMethod = inputMap.getOrDefault(
                 key = BK_ATOM_HOOK_URL_METHOD,
-                defaultValue = getDefaultHookMethod(atomCode)
+                defaultValue = getDefaultHookMethod(atomCode, atomVersion)
             ) as String
-            val bkAtomHookBody = inputMap.getOrDefault(BK_ATOM_HOOK_URL_BODY, "") as String
+            val bkAtomHookBody = inputMap.getOrDefault(
+                BK_ATOM_HOOK_URL_BODY,
+                getDefaultHookBody(atomCode, atomVersion)
+            ) as String
 
-            if (bkAtomHookUrl.isBlank()) return@execute
-
-            doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param)
+            doHttp(bkAtomHookUrl, bkAtomHookUrlMethod, bkAtomHookBody, param, inputMap)
         }
     }
 
@@ -82,22 +110,25 @@ object MarketBuildUtils {
         bkAtomHookUrl: String,
         bkAtomHookUrlMethod: String,
         bkAtomHookBody: String,
-        param: BeforeDeleteParam
+        param: BeforeDeleteParam,
+        inputMap: Map<String, Any>
     ) {
-        val url = resolveParam(bkAtomHookUrl, param)
+        val url = resolveParam(bkAtomHookUrl, param, inputMap)
         var request = Request.Builder()
             .url(url)
+
+        logger.info("start to market build atom http: $url, $bkAtomHookUrlMethod, $bkAtomHookBody")
 
         when (bkAtomHookUrlMethod) {
             HttpMethod.GET -> {
                 request = request.get()
             }
             HttpMethod.POST -> {
-                val requestBody = resolveParam(bkAtomHookBody, param)
+                val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.PUT -> {
-                val requestBody = resolveParam(bkAtomHookBody, param)
+                val requestBody = resolveParam(bkAtomHookBody, param, inputMap)
                 request = request.put(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             }
             HttpMethod.DELETE -> {
@@ -107,27 +138,63 @@ object MarketBuildUtils {
 
         OkhttpUtils.doHttp(request.build()).use { response ->
             val body = response.body()!!.string()
-            logger.info("before delete execute result: $url, $body")
+            logger.info("before delete execute result: $body")
         }
     }
 
     @Suppress("ALL")
-    private fun getDefaultHookUrl(atomCode: String, codeccApi: CodeccApi, channelCode: ChannelCode): String {
-        if (!CodeccUtils.isCodeccNewAtom(atomCode)) return ""
+    private fun getDefaultHookUrl(atomCode: String, atomVersion: String, channelCode: ChannelCode): String {
         if (channelCode != ChannelCode.BS) return ""
-        return codeccApi.getExecUrl(
-            path = "/ms/task/api/service/task/pipeline/stop?userName={userId}&pipelineId={$PIPELINE_ID}"
-        )
+        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        if (inputMap == null || inputMap !is Map<*, *>) {
+            return ""
+        }
+        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL]
+        if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
+            return bkAtomHookUrlItem["default"]?.toString() ?: ""
+        }
+        return ""
     }
 
-    private fun getDefaultHookMethod(atomCode: String): String {
-        if (!CodeccUtils.isCodeccNewAtom(atomCode)) return "GET"
-        return "DELETE"
+    private fun getDefaultHookMethod(atomCode: String, atomVersion: String): String {
+        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        if (inputMap == null || inputMap !is Map<*, *>) {
+            return ""
+        }
+        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL_METHOD]
+        if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
+            return bkAtomHookUrlItem["default"]?.toString() ?: "GET"
+        }
+        return "GET"
     }
 
-    private fun resolveParam(str: String, param: BeforeDeleteParam): String {
-        return str.replace("{$PROJECT_ID}", param.projectId)
+    private fun getDefaultHookBody(atomCode: String, atomVersion: String): String {
+        val inputMap = atomCache.get("$atomCode|$atomVersion")?.props?.get(INPUT_PARAM)
+        if (inputMap == null || inputMap !is Map<*, *>) {
+            return ""
+        }
+        val bkAtomHookUrlItem = inputMap[BK_ATOM_HOOK_URL_BODY]
+        if (bkAtomHookUrlItem != null && bkAtomHookUrlItem is Map<*, *>) {
+            return bkAtomHookUrlItem["default"]?.toString() ?: ""
+        }
+        return ""
+    }
+
+    private fun resolveParam(str: String, param: BeforeDeleteParam, inputMap: Map<String, Any>): String {
+        var result = str.replace("{$PROJECT_ID}", param.projectId)
             .replace("{$PIPELINE_ID}", param.pipelineId)
             .replace("{$USER_ID}", param.userId)
+            .replace("%7B$PROJECT_ID%7D", param.projectId)
+            .replace("%7B$PIPELINE_ID%7D", param.pipelineId)
+            .replace("%7B$USER_ID%7D", param.userId)
+
+        inputMap.forEach { (key, value) ->
+            result = result.replace("{$key}", value.toString())
+                .replace("%7B$key%7D", value.toString())
+        }
+
+        // 没有变量值的变量默认置空
+        return result.replace(Regex("\\{.*}"), "")
+            .replace(Regex("%7B.*%7D"), "")
     }
 }

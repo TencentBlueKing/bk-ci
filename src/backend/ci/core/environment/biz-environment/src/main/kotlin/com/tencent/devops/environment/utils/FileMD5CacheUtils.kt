@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.FileUtil
 import org.slf4j.LoggerFactory
 import java.io.File
+import javax.ws.rs.NotFoundException
 
 object FileMD5CacheUtils {
 
@@ -47,7 +48,7 @@ object FileMD5CacheUtils {
         val scriptFile = File("/data1/work/thirdPartyAgent/scripts/${os.toLowerCase()}/agent_uninstall.sh")
         if (!scriptFile.exists()) {
             logger.warn("The uninstall script file(${scriptFile.absolutePath}) is not exist")
-            throw RuntimeException("The uninstall script file is not exist")
+            throw NotFoundException("The uninstall script file is not exist")
         }
         return scriptFile
     }
@@ -56,7 +57,7 @@ object FileMD5CacheUtils {
         val file = File("/data1/work/thirdPartyAgent/jar/agent.jar")
         if (!file.exists()) {
             logger.warn("The agent file(${file.absolutePath}) is not exist")
-            throw RuntimeException("The agent file is not exist")
+            throw NotFoundException("The agent file is not exist")
         }
         return file
     }
@@ -65,7 +66,7 @@ object FileMD5CacheUtils {
         val file = File("/data1/work/thirdPartyAgent/jar/upgrader.jar")
         if (!file.exists()) {
             logger.warn("The agent file(${file.absolutePath}) is not exist")
-            throw RuntimeException("The agent file is not exist")
+            throw NotFoundException("The agent file is not exist")
         }
         return file
     }
@@ -74,7 +75,7 @@ object FileMD5CacheUtils {
         val file = File("/data1/work/thirdPartyAgent/jre/${os.toLowerCase()}/jre.tar.gz")
         if (!file.exists()) {
             logger.warn("The jre file(${file.absolutePath}) is not exist")
-            throw RuntimeException("The jre file is not exist")
+            throw NotFoundException("The jre file is not exist")
         }
         return file
     }

@@ -122,7 +122,7 @@ class JwtManager(
         return true
     }
 
-    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar?) {
+    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
         if (isAuthEnable()) {
             taskRegistrar?.addFixedDelayTask(
                 this@JwtManager::refreshToken,

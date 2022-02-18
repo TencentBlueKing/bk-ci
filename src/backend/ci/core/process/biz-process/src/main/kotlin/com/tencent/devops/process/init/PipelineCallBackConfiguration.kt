@@ -89,7 +89,7 @@ class PipelineCallBackConfiguration {
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
             concurrency = 1,
-            maxConcurrency = 20
+            maxConcurrency = 50
         )
     }
 }

@@ -27,6 +27,20 @@
 
 rootProject.name = "bk-ci-backend"
 
+// 适用于project的plugins
+pluginManagement {
+    repositories {
+        mavenLocal()
+        if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
+            maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
+            maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
+        } else { // GitHub Action 环境
+            mavenCentral()
+            gradlePluginPortal()
+        }
+    }
+}
+
 // Single CI Service
 include(":boot-assembly")
 
@@ -37,15 +51,16 @@ include(":core:common:common-event")
 include(":core:common:common-api")
 include(":core:common:common-web")
 include(":core:common:common-db")
+include(":core:common:common-db-sharding")
 include(":core:common:common-environment-thirdpartyagent")
 include(":core:common:common-client")
 include(":core:common:common-redis")
 include(":core:common:common-kafka")
 include(":core:common:common-scm")
 include(":core:common:common-archive")
+include(":core:common:common-quality")
 include(":core:common:common-service")
 include(":core:common:common-pipeline")
-include(":core:common:common-log")
 include(":core:common:common-test")
 include(":core:common:common-auth")
 include(":core:common:common-auth:common-auth-api")
@@ -58,6 +73,8 @@ include(":core:common:common-websocket")
 include(":core:common:common-util")
 include(":core:common:common-security")
 include(":core:common:common-dispatch-sdk")
+include(":core:common:common-webhook:api-common-webhook")
+include(":core:common:common-webhook:biz-common-webhook")
 
 include(":core:project")
 include(":core:project:api-project")
@@ -88,9 +105,15 @@ include(":core:quality:biz-quality-sample")
 include(":core:quality:boot-quality")
 include(":core:quality:model-quality")
 
+include(":core:buildless")
+include(":core:buildless:api-buildless")
+include(":core:buildless:biz-buildless")
+include(":core:buildless:boot-buildless")
+
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")
 include(":core:dockerhost:biz-dockerhost")
+include(":core:dockerhost:biz-dockerhost-sample")
 include(":core:dockerhost:boot-dockerhost")
 include(":core:dockerhost:plugin-dockerhost-codecc")
 
@@ -145,7 +168,6 @@ include(":core:store:biz-store-image-sample")
 include(":core:store:boot-store")
 include(":core:store:model-store")
 
-
 include(":core:process")
 include(":core:process:api-process")
 include(":core:process:biz-base")
@@ -162,6 +184,7 @@ include(":core:process:plugin-trigger")
 include(":core:dispatch")
 include(":core:dispatch:api-dispatch")
 include(":core:dispatch:biz-dispatch")
+include(":core:dispatch:biz-dispatch-sample")
 include(":core:dispatch:boot-dispatch")
 include(":core:dispatch:model-dispatch")
 
@@ -193,6 +216,7 @@ include(":core:notify")
 include(":core:notify:api-notify")
 include(":core:notify:biz-notify")
 include(":core:notify:biz-notify-blueking")
+include(":core:notify:biz-notify-wework")
 include(":core:notify:model-notify")
 include(":core:notify:boot-notify")
 

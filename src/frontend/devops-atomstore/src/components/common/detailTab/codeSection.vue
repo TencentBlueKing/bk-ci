@@ -56,7 +56,7 @@
 
         methods: {
             initCodeMirror () {
-                const ele = document.querySelector('.store-code')
+                const ele = this.$el
                 if (this.codeEditor) ele.innerHTML = ''
                 this.codeEditor = CodeMirror(ele, this.codeMirrorCon)
                 this.codeEditor.setValue(this.code || '')
@@ -84,23 +84,23 @@
 
     .max-height {
         height: 400px;
-        /deep/ .CodeMirror-scroll {
+        ::v-deep .CodeMirror-scroll {
             height: 400px;
         }
-        /deep/ .CodeMirror {
+        ::v-deep .CodeMirror {
             max-height: 400px;
             padding: 0 10px;
         }
     }
 
-    /deep/ .CodeMirror {
+    ::v-deep .CodeMirror {
         font-family: Consolas, "Courier New", monospace;
         line-height: 1.5;
         margin-bottom: 20px;
         padding: 10px;
         height: auto;
     }
-    /deep/ .CodeMirror {
+    ::v-deep .CodeMirror {
         min-height: 300px;
         height: auto;
         .CodeMirror-scroll {

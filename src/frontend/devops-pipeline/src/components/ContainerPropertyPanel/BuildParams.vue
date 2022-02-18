@@ -80,7 +80,7 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
@@ -118,14 +118,6 @@
                                         </bk-form-item>
                                     </template>
 
-                                    <bk-form-item label-width="auto" v-if="isArtifactoryParam(param.type)" :label="$t('editPage.filterRule')" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
-                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.filterRuleTips')" :value="param.glob"></vuex-input>
-                                    </bk-form-item>
-
-                                    <bk-form-item label-width="auto" v-if="isArtifactoryParam(param.type)" :label="$t('metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
-                                        <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
-                                    </bk-form-item>
-
                                     <bk-form-item label-width="auto" v-if="isFileParam(param.type)">
                                         <file-param-input
                                             :file-path="param.defaultValue"
@@ -159,7 +151,6 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FileParamInput from '@/components/FileParamInput'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
@@ -175,7 +166,6 @@
         isCodelibParam,
         isSvnParam,
         isGitParam,
-        isArtifactoryParam,
         isSubPipelineParam,
         isFileParam,
         getRepoOption,
@@ -211,7 +201,6 @@
             draggable,
             VuexTextarea,
             RequestSelector,
-            KeyValueNormal,
             FileParamInput
         },
         mixins: [validMixins],
@@ -337,7 +326,6 @@
             isSvnParam,
             isGitParam,
             isCodelibParam,
-            isArtifactoryParam,
             isBuildResourceParam,
             isSubPipelineParam,
             isFileParam,
@@ -432,7 +420,7 @@
                         paramIdKey: `paramIdKey-${this.paramIdCount++}`
                     }
                     if (this.settingKey === 'templateParams') {
-                        Object.assign(param, { 'required': false })
+                        Object.assign(param, { required: false })
                     }
                     globalParams.splice(index + 1, 0, param)
                 } else {
@@ -459,7 +447,7 @@
                     if (value && typeof value === 'string') {
                         opts = value.split('\n').map(opt => {
                             const v = opt.trim()
-                            const res = v.match(/^([\w\.\\\/]+)=(\S+)$/) || [v, v, v]
+                            const res = v.match(/^([\w\.\-\\\/]+)=(\S+)$/) || [v, v, v]
                             const [, key, value] = res
                             console.log(key, value)
                             return {
@@ -500,7 +488,7 @@
 
             handleProperties (key, value, index) {
                 const properties = {}
-                value.map(val => {
+                value.forEach(val => {
                     properties[val.key] = val.value
                 })
                 this.handleUpdateParam(key, properties, index)
@@ -560,13 +548,15 @@
             transformOpt (opts) {
                 const uniqueMap = {}
                 opts = opts.filter(opt => opt.key.length)
-                return Array.isArray(opts) ? opts.filter(opt => {
-                    if (!uniqueMap[opt.key]) {
-                        uniqueMap[opt.key] = 1
-                        return true
-                    }
-                    return false
-                }).map(opt => ({ id: opt.key, name: opt.value })) : []
+                return Array.isArray(opts)
+                    ? opts.filter(opt => {
+                        if (!uniqueMap[opt.key]) {
+                            uniqueMap[opt.key] = 1
+                            return true
+                        }
+                        return false
+                    }).map(opt => ({ id: opt.key, name: opt.value }))
+                    : []
             }
         }
     }

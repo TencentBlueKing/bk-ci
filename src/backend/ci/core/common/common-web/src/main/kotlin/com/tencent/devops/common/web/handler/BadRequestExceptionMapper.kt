@@ -52,6 +52,6 @@ class BadRequestExceptionMapper : ExceptionMapper<BadRequestException> {
             "错误的请求"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }

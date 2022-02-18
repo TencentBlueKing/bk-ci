@@ -27,15 +27,13 @@
 
 package com.tencent.devops.log.resources
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
-import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -45,8 +43,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class UserLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher,
-    private val logPermissionService: LogPermissionService
+    private val buildLogQueryService: BuildLogQueryService
 ) : UserLogResource {
 
     override fun getInitLogs(
@@ -55,17 +52,19 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return logDispatcher.getInitLogs(
+        return buildLogQueryService.getInitLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug,
+            logType = logType,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -79,6 +78,7 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
+        logType: LogType?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -88,12 +88,13 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return logDispatcher.getMoreLogs(
+        return buildLogQueryService.getMoreLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             debug = debug,
+            logType = logType,
             num = num,
             fromStart = fromStart,
             start = start,
@@ -112,18 +113,20 @@ class UserLogResourceImpl @Autowired constructor(
         buildId: String,
         start: Long,
         debug: Boolean?,
+        logType: LogType?,
         tag: String?,
         subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return logDispatcher.getAfterLogs(
+        return buildLogQueryService.getAfterLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             start = start,
             debug = debug,
+            logType = logType,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -142,8 +145,8 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
-        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.DOWNLOAD)
-        return logDispatcher.downloadLogs(
+        return buildLogQueryService.downloadLogs(
+            userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -155,33 +158,21 @@ class UserLogResourceImpl @Autowired constructor(
         )
     }
 
-    private fun validateAuth(
+    override fun getLogMode(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        permission: AuthPermission
-    ) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (!logPermissionService.verifyUserLogPermission(
-                userId = userId,
-                pipelineId = pipelineId,
-                projectCode = projectId,
-                permission = permission
-            )
-        ) {
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下${permission.alias}流水线")
-        }
+        tag: String,
+        executeCount: Int?
+    ): Result<QueryLogStatus> {
+        return buildLogQueryService.getLogMode(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            executeCount = executeCount
+        )
     }
 }

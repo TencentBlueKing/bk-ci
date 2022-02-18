@@ -53,25 +53,16 @@ end
 
 -- 获取灰度设置
 local cache_tail = ""
-local devops_gray = grayUtil:get_gray()
 local ns_config = nil
-if devops_gray ~= true then
-    if ngx.var.devops_region ~= "DEVNET" then
-        ns_config = config.ns
-        cache_tail = ".normal.idc"
-    else
-        ns_config = config.ns_devnet
-        cache_tail = ".normal.devnet"
-    end
+
+if ngx.var.devops_region ~= "DEVNET" then
+    ns_config = config.ns
+    cache_tail = ".normal.idc"
 else
-    if ngx.var.devops_region ~= "DEVNET" then
-        ns_config = config.ns_gray
-        cache_tail = ".gray.idc"
-    else
-        ns_config = config.ns_devnet_gray
-        cache_tail = ".gray.devnet"
-    end
+    ns_config = config.ns_devnet
+    cache_tail = ".normal.devnet"
 end
+
 if not ns_config.ip then
     ngx.log(ngx.ERR, "DNS ip not exist!")
     ngx.exit(503)
@@ -87,14 +78,18 @@ end
 -- 负载均衡
 local target = loadBalanceUtil:getTarget(devops_tag, service_name, cache_tail, ns_config)
 if target == nil then
-    -- 用默认tag
-    if devops_tag ~= ns_config.tag then
-        target = loadBalanceUtil:getTarget(ns_config.tag, service_name, cache_tail, ns_config)
-    end
-
     if target == nil then
         ngx.exit(503)
     end
 end
 
 ngx.var.target = target
+
+-- 特殊逻辑
+if ngx.var.url_prefix ~= nil then
+    if config.artifactory.realm == "local" then
+        ngx.var.url_prefix = "http://" .. ngx.var.target .. "/resource/bk-plugin-fe/"
+    else
+        ngx.var.url_prefix = "http://" .. config.bkrepo.domain .. "/generic/bk-store/static/"
+    end
+end

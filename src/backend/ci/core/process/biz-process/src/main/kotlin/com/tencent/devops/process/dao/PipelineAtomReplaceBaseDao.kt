@@ -62,21 +62,13 @@ class PipelineAtomReplaceBaseDao {
                 .values(
                     baseId,
                     projectId,
-                    if (pipelineIdList != null) JsonUtil.toJson(pipelineIdList) else null,
+                    pipelineIdList?.let { self -> JsonUtil.toJson(self, formatted = false) },
                     fromAtomCode,
                     toAtomCode,
                     userId,
                     userId
                 )
                 .execute()
-        }
-    }
-
-    fun getAtomReplaceBase(dslContext: DSLContext, baseId: String): TPipelineAtomReplaceBaseRecord? {
-        return with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
-            dslContext.selectFrom(this)
-                .where(ID.eq(baseId))
-                .fetchOne()
         }
     }
 
@@ -98,14 +90,6 @@ class PipelineAtomReplaceBaseDao {
                 baseStep.orderBy(CREATE_TIME.asc())
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        }
-    }
-
-    fun deleteByBaseId(dslContext: DSLContext, baseId: String) {
-        with(TPipelineAtomReplaceBase.T_PIPELINE_ATOM_REPLACE_BASE) {
-            dslContext.deleteFrom(this)
-                .where(ID.eq(baseId))
-                .execute()
         }
     }
 

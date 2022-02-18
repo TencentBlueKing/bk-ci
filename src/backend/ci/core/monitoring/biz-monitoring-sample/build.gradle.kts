@@ -27,6 +27,5 @@
 
 dependencies {
     api(project(":core:monitoring:biz-monitoring"))
-    api(project(":core:common:common-db"))
     api(project(":core:common:common-notify"))
 }

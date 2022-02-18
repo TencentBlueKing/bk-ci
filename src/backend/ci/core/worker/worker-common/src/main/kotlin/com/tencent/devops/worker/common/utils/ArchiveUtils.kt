@@ -30,8 +30,9 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
@@ -46,51 +47,78 @@ import java.nio.file.attribute.BasicFileAttributes
 
 object ArchiveUtils {
 
-    private val api = ApiFactory.create(ArchiveSDKApi::class)
+    private val api = ArtifactApiFactory.create(ArchiveSDKApi::class)
     private const val MAX_FILE_COUNT = 100
 
-    fun archiveCustomFiles(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): Int {
-        val fileList = mutableSetOf<String>()
-        filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
-            fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
+    fun archiveCustomFiles(
+        filePath: String,
+        destPath: String,
+        workspace: File,
+        buildVariables: BuildVariables,
+        token: String? = null
+    ): Int {
+        val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
+        fileList.forEachIndexed { index, it ->
+            HttpRetryUtils.retry(
+                retryTime = 5,
+                retryPeriodMills = 1000
+            ) {
+                api.uploadCustomize(
+                    file = it,
+                    destPath = destPath,
+                    buildVariables = buildVariables,
+                    token = token
+                )
+            }
+            LoggerService.addNormalLine("${index + 1}/$size file(s) finished")
         }
-        if (fileList.size > MAX_FILE_COUNT) {
-            throw TaskExecuteException(
-                errorCode = ErrorCode.USER_INPUT_INVAILD,
-                errorType = ErrorType.USER,
-                errorMsg = "单次归档文件数太多，请打包后再归档！"
-            )
-        }
-        LoggerService.addNormalLine("${fileList.size} file match: ")
-        fileList.forEach {
-            LoggerService.addNormalLine("  $it")
-        }
-        fileList.forEach {
-            api.uploadCustomize(File(it), destPath, buildVariables)
-        }
-        return fileList.size
+        return size
     }
 
-    fun archivePipelineFiles(filePath: String, workspace: File, buildVariables: BuildVariables): Int {
-        val fileList = mutableSetOf<String>()
-        filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
-            fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
+    fun archivePipelineFiles(
+        filePath: String,
+        workspace: File,
+        buildVariables: BuildVariables,
+        token: String? = null
+    ): Int {
+        val (fileList, size) = prepareToArchiveFiles(filePath, workspace)
+        fileList.forEachIndexed { index, it ->
+            HttpRetryUtils.retry(
+                retryTime = 5,
+                retryPeriodMills = 1000
+            ) {
+                api.uploadPipeline(
+                    file = it,
+                    buildVariables = buildVariables,
+                    token = token
+                )
+            }
+            LoggerService.addNormalLine("${index + 1}/$size file(s) finished")
         }
-        if (fileList.size > MAX_FILE_COUNT) {
+        return size
+    }
+
+    private fun prepareToArchiveFiles(filePath: String, workspace: File): Pair<Set<File>, Int> {
+        val fileList = filePath.splitToSequence(",").map { it.removePrefix("./") }
+            .filterNot { it.isBlank() }.flatMap { path ->
+                matchFiles(workspace, path).map { it.absolutePath }.asSequence()
+            }.map { File(it) }.toSet()
+        val size = fileList.size
+        if (size > MAX_FILE_COUNT) {
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorType = ErrorType.USER,
                 errorMsg = "单次归档文件数太多，请打包后再归档！"
             )
         }
-        LoggerService.addNormalLine("${fileList.size} file match:")
+        LoggerService.addNormalLine("$size file match: ")
+        var filesSize = 0L
         fileList.forEach {
             LoggerService.addNormalLine("  $it")
+            filesSize += Files.size(it.toPath())
         }
-        fileList.forEach {
-            api.uploadPipeline(File(it), buildVariables)
-        }
-        return fileList.size
+        LoggerService.addNormalLine("prepare to upload ${humanReadableByteCountBin(filesSize)}")
+        return Pair(fileList, size)
     }
 
     fun matchFiles(workspace: File, path: String): List<File> {
@@ -116,7 +144,7 @@ object ArchiveUtils {
         }
         return fileList.filter {
             if (it.name.endsWith(".DS_STORE", ignoreCase = true)) {
-                LoggerService.addYellowLine("${it.canonicalPath} will not upload")
+                LoggerService.addWarnLine("${it.canonicalPath} will not upload")
                 false
             } else {
                 true
@@ -207,6 +235,10 @@ object ArchiveUtils {
         }
     }
 
+    fun archiveLogFile(file: File, destFullPath: String, buildVariables: BuildVariables, token: String? = null) {
+        api.uploadLog(file = file, destFullPath = destFullPath, buildVariables = buildVariables, token = token)
+    }
+
     fun recursiveGetFiles(file: File): List<File> {
         val fileList = mutableListOf<File>()
         file.listFiles()?.forEach {
@@ -222,5 +254,16 @@ object ArchiveUtils {
             }
         }
         return fileList
+    }
+
+    fun humanReadableByteCountBin(bytes: Long) = when {
+        bytes == Long.MIN_VALUE || bytes < 0 -> "N/A"
+        bytes < 1024L -> "$bytes B"
+        bytes <= 0xfffccccccccccccL shr 40 -> "%.3f KiB".format(bytes.toDouble() / (0x1 shl 10))
+        bytes <= 0xfffccccccccccccL shr 30 -> "%.3f MiB".format(bytes.toDouble() / (0x1 shl 20))
+        bytes <= 0xfffccccccccccccL shr 20 -> "%.3f GiB".format(bytes.toDouble() / (0x1 shl 30))
+        bytes <= 0xfffccccccccccccL shr 10 -> "%.3f TiB".format(bytes.toDouble() / (0x1 shl 40))
+        bytes <= 0xfffccccccccccccL -> "%.3f PiB".format((bytes shr 10).toDouble() / (0x1 shl 40))
+        else -> "%.1f EiB".format((bytes shr 20).toDouble() / (0x1 shl 40))
     }
 }

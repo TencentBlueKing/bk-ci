@@ -83,14 +83,12 @@ class UserScmResourceImpl @Autowired constructor(
         val branches = scmProxyService.listBranches(
             projectId = projectId,
             repositoryConfig = repositoryConfig,
-            search = search,
-            full = false
+            search = search
         ).data ?: listOf()
         val tags = scmProxyService.listTags(
             projectId = projectId,
             repositoryConfig = repositoryConfig,
-            search = search,
-            full = false
+            search = search
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)

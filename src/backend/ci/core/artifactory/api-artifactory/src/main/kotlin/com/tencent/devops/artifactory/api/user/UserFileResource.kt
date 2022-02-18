@@ -53,17 +53,19 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserFileResource {
 
-    @ApiOperation("上传文件")
+    @ApiOperation("上传文件到指定自定义仓库路径")
     @POST
-    @Path("/file/upload")
+    @Path("/file/uploadToPath")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun uploadFile(
+    fun uploadToPath(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目代码", required = false)
-        @FormDataParam("projectCode")
-        projectCode: String?,
+        @FormDataParam("projectId")
+        projectId: String,
+        @FormDataParam("path")
+        path: String,
         @ApiParam("文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
@@ -95,6 +97,9 @@ interface UserFileResource {
         @ApiParam("文件路径", required = true)
         @QueryParam("filePath")
         filePath: String,
+        @ApiParam("是否为logo文件", required = false)
+        @QueryParam("logo")
+        logo: Boolean?,
         @Context
         response: HttpServletResponse
     )
@@ -109,6 +114,9 @@ interface UserFileResource {
         @ApiParam("文件路径", required = true)
         @PathParam("filePath")
         filePath: String,
+        @ApiParam("是否为logo文件", required = false)
+        @QueryParam("logo")
+        logo: Boolean?,
         @Context
         response: HttpServletResponse
     )

@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
+import java.net.SocketTimeoutException
 
 @Service
 class ArchiveServiceImpl @Autowired constructor(
@@ -59,8 +60,10 @@ class ArchiveServiceImpl @Autowired constructor(
         ipaSignInfo: IpaSignInfo,
         properties: MutableMap<String, String>?
     ): Boolean {
-        logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
-            "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
+        logger.info(
+            "uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
+                "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}"
+        )
         val artifactoryType = when (ipaSignInfo.archiveType.toLowerCase()) {
             "pipeline" -> FileTypeEnum.BK_ARCHIVE
             "custom" -> FileTypeEnum.BK_CUSTOM
@@ -91,8 +94,11 @@ class ArchiveServiceImpl @Autowired constructor(
                     return false
                 }
             }
-        } catch (e: Exception) {
-            logger.error("artifactory upload file with error. url:$url", e)
+        } catch (e: SocketTimeoutException) {
+            logger.error("artifactory upload file with timeout, need retry", e)
+            throw e
+        } catch (ignore: Throwable) {
+            logger.error("artifactory upload file with error. url:$url", ignore)
             return false
         }
         return true

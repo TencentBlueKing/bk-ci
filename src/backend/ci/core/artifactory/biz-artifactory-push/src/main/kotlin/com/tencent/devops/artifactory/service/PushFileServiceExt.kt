@@ -88,7 +88,7 @@ class PushFileServiceExt @Autowired constructor(
         try {
             // 下载目标文件到本地
             val downloadFiles = fileService.downloadFileTolocal(
-                projectId, pipelineId, buildId, fileResourceInfo.fileName,
+                userId, projectId, pipelineId, buildId, fileResourceInfo.fileName,
                 fileResourceInfo.isCustom!!
             ).toMutableList()
             val filePath = mutableListOf<String>()
@@ -189,6 +189,6 @@ class PushFileServiceExt @Autowired constructor(
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(this::class.java)
+        val logger: Logger = LoggerFactory.getLogger(PushFileServiceExt::class.java)
     }
 }

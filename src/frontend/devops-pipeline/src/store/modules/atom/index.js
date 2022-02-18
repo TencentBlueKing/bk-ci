@@ -53,12 +53,11 @@ export default {
         globalEnvs: null,
         executeStatus: false,
         saveStatus: false,
-        authSettingEditing: false,
         stageTagList: [],
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
-        showStageReviewPanel: false,
+        showStageReviewPanel: {},
         importedPipelineJson: null,
         atomVersionChangedKeys: [],
         pipelineLimit: {
@@ -66,7 +65,8 @@ export default {
             jobLimit: 20,
             atomLimit: 50
         },
-        pipelineCommonSetting: {}
+        pipelineCommonSetting: {},
+        editfromImport: false
     },
     mutations,
     actions,

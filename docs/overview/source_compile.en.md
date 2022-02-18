@@ -61,7 +61,7 @@ The gateway is built with Lua scripts and Nginx configurations, so no compilatio
 
 - MySQL 5.7
 - JDK 1.8
-- Gradle 4.8 – 4.10
+- Gradle 6.7
 
 #### Database Initialization
 

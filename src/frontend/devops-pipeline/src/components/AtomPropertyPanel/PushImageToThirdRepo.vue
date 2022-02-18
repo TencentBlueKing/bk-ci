@@ -32,7 +32,7 @@
         methods: {
             async requestImageList () {
                 try {
-                    const res = await this.$store.dispatch('soda/getImageList', {
+                    const res = await this.$store.dispatch('common/getImageList', {
                         projectId: this.projectId
                     })
                     if (res && res.imageList.length) {
@@ -47,7 +47,7 @@
             },
             async requestImageTagList (imageRepo) {
                 try {
-                    const res = await this.$store.dispatch('soda/getImageTagList', {
+                    const res = await this.$store.dispatch('common/getImageTagList', {
                         repo: imageRepo
                     })
                     if (res && res.tags.length) {

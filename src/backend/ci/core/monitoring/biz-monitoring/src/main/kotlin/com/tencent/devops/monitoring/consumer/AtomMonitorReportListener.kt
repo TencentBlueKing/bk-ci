@@ -52,8 +52,8 @@ class AtomMonitorReportListener @Autowired constructor(
 
             monitorProcessors.asSequence().filter { it.atomCode() == monitorData.atomCode }
                 .forEach { it.process(influxdbClient, monitorData) }
-        } catch (t: Throwable) {
-            logger.warn("Fail to insert the atom monitor data", t)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to insert the atom monitor data", ignored)
             throw ErrorCodeException(
                 errorCode = ERROR_MONITORING_INSERT_DATA_FAIL,
                 defaultMessage = "Fail to insert the atom monitor data"

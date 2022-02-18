@@ -75,7 +75,7 @@
                     taskId: this.taskId
                 }
                 this.isLoading = true
-                this.$store.dispatch('soda/requestReportList', postData).then((res) => {
+                this.$store.dispatch('common/requestReportList', postData).then((res) => {
                     const thirdReports = []
                     const innerReports = [];
                     (res || []).forEach((item) => {
@@ -148,7 +148,7 @@
         width: 100%;
         text-align: center;
     }
-    /deep/ .bk-table {
+    ::v-deep .bk-table {
         border: none;
         height: 100%;
         &::before {

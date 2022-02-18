@@ -29,7 +29,8 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":core:common:common-api"))
     api("org.slf4j:slf4j-api")
-    api("org.tmatesoft.svnkit:svnkit:1.9.3")
+    api("org.tmatesoft.svnkit:svnkit")
     api("com.squareup.okhttp3:okhttp")
-    api("org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r")
+    api("org.eclipse.jgit:org.eclipse.jgit")
+    api("com.perforce:p4java")
 }

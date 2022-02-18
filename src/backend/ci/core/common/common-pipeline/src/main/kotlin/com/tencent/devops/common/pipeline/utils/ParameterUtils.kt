@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.utils
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -42,8 +41,8 @@ object ParameterUtils {
         }
     }
 
-    fun element2Str(element: Element, objectMapper: ObjectMapper): String? {
-        val elementStr = objectMapper.writeValueAsString(element)
+    fun element2Str(element: Element): String? {
+        val elementStr = JsonUtil.toJson(element)
         if (elementStr.length > 65534) {
             return null
         }

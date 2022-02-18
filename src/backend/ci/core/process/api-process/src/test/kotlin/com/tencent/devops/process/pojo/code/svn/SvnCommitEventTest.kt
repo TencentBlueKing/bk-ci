@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.code.svn
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import org.junit.Assert
 import org.junit.Test
 

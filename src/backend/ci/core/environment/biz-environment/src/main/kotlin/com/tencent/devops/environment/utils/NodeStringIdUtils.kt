@@ -35,10 +35,7 @@ import com.tencent.devops.model.environment.tables.records.TNodeRecord
 object NodeStringIdUtils {
     fun getNodeStringId(it: TNodeRecord): String {
         return when (it.nodeType) {
-            NodeType.BCSVM.name -> "BCSVM-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
-            NodeType.CC.name -> "CC-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.CMDB.name -> "CMDB-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
-            NodeType.TSTACK.name -> "TSTACK-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.OTHER.name -> "OTHER-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             NodeType.THIRDPARTY.name -> "BUILD-${HashUtil.encodeLongId(it.nodeId)}-${it.nodeId}"
             else -> it.nodeStringId ?: ""
@@ -46,7 +43,7 @@ object NodeStringIdUtils {
     }
 
     fun getRefineDisplayName(nodeStringId: String, displayName: String): String {
-        return if (displayName.isNullOrBlank()) {
+        return if (displayName.isBlank()) {
             nodeStringId
         } else {
             displayName

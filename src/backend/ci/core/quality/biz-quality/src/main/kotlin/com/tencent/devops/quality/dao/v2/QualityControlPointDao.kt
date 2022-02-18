@@ -43,23 +43,15 @@ import java.time.LocalDateTime
 @Repository@Suppress("ALL")
 class QualityControlPointDao {
 
-    fun list(dslContext: DSLContext, elementType: Collection<String>, projectId: String): List<TQualityControlPointRecord>? {
+    fun list(
+        dslContext: DSLContext,
+        elementType: Collection<String>
+    ): List<TQualityControlPointRecord> {
+        // remove logic to service
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
-            val result = dslContext.selectFrom(this)
+            return dslContext.selectFrom(this)
                 .where(ELEMENT_TYPE.`in`(elementType))
                 .fetch()
-            val filterResult = mutableListOf<TQualityControlPointRecord>()
-            // 获取生产跑的，或者测试项目对应的
-            result?.groupBy { it.elementType }?.forEach { elementType, list ->
-                val testControlPoint = list.firstOrNull { it.testProject == projectId }
-                val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
-                if (testControlPoint != null) {
-                    filterResult.add(testControlPoint)
-                } else {
-                    if (prodControlPoint != null) filterResult.add(prodControlPoint)
-                }
-            }
-            return filterResult
         }
     }
 
@@ -202,9 +194,9 @@ class QualityControlPointDao {
 
                 // 测试为空，代表quality.json被删了，直接把生产的也删了
                 if (testControlPoint == null) {
-                    transactionContext.deleteFrom(this)
-                        .where(ELEMENT_TYPE.eq(elementType))
-                        .execute()
+//                    transactionContext.deleteFrom(this)
+//                        .where(ELEMENT_TYPE.eq(elementType))
+//                        .execute()
                     return@transaction
                 }
 
@@ -212,8 +204,6 @@ class QualityControlPointDao {
                     transactionContext.update(this)
                         .set(NAME, testControlPoint.name)
                         .set(STAGE, testControlPoint.stage)
-                        .set(AVAILABLE_POSITION, testControlPoint.availablePosition)
-                        .set(DEFAULT_POSITION, testControlPoint.defaultPosition)
                         .set(UPDATE_TIME, LocalDateTime.now())
                         .where(ID.eq(prodControlPoint.id))
                         .execute()

@@ -52,6 +52,6 @@ class DependNotFoundExceptionMapper : ExceptionMapper<DependNotFoundException> {
             "依赖的资源不存在"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(status.statusCode, message)).build()
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }
 }

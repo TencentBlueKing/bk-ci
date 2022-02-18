@@ -27,31 +27,33 @@
 
 package com.tencent.devops.process.engine.dao
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("Unused", "LongParameterList")
 @Repository
-class PipelineResVersionDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class PipelineResVersionDao {
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
         versionName: String = "init",
         model: Model
     ) {
-        val modelString = objectMapper.writeValueAsString(model)
+        val modelString = JsonUtil.toJson(model, formatted = false)
         create(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             creator = creator,
             version = version,
@@ -62,6 +64,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
 
     fun create(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         creator: String,
         version: Int,
@@ -71,13 +74,14 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.insertInto(
                 this,
+                PROJECT_ID,
                 PIPELINE_ID,
                 VERSION,
                 VERSION_NAME,
                 MODEL,
                 CREATOR,
                 CREATE_TIME
-            ).values(pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
+            ).values(projectId, pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
                 .set(CREATOR, creator)
@@ -89,6 +93,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
 
     fun getVersionModelString(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         version: Int?
     ): String? {
@@ -96,7 +101,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         return with(T_PIPELINE_RESOURCE_VERSION) {
             val where = dslContext.select(MODEL)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             if (version != null) {
                 where.and(VERSION.eq(version))
             } else {
@@ -108,29 +113,32 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
 
     fun deleteEarlyVersion(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         currentVersion: Int,
         maxPipelineResNum: Int
     ): Int {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(VERSION.le(currentVersion - maxPipelineResNum))
                 .execute()
         }
     }
 
-    fun deleteByVer(dslContext: DSLContext, pipelineId: String, version: Int) {
+    fun deleteByVer(dslContext: DSLContext, projectId: String, pipelineId: String, version: Int) {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
     fun listPipelineVersion(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int
@@ -139,12 +147,12 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         with(T_PIPELINE_RESOURCE_VERSION) {
             val result = dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc())
                 .limit(limit).offset(offset)
                 .fetch()
 
-            result?.forEach {
+            result.forEach {
                 list.add(PipelineVersionSimple(
                     pipelineId = pipelineId,
                     creator = it[CREATOR] ?: "unknown",
@@ -157,19 +165,19 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         return list
     }
 
-    fun count(dslContext: DSLContext, pipelineId: String): Int {
+    fun count(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
             return dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun deleteAllVersion(dslContext: DSLContext, pipelineId: String) {
+    fun deleteAllVersion(dslContext: DSLContext, projectId: String, pipelineId: String) {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

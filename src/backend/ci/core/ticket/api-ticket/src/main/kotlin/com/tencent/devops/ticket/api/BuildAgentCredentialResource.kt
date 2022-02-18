@@ -73,5 +73,5 @@ interface BuildAgentCredentialResource {
         @ApiParam("Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         publicKey: String
-    ): Result<CredentialInfo>
+    ): Result<CredentialInfo?>
 }

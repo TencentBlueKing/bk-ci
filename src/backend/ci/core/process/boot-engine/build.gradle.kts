@@ -26,9 +26,6 @@
  */
 
 dependencies {
+    api(project(":core:process:biz-base"))
     api(project(":core:process:biz-engine"))
 }
-
-//plugins {
-//    `task-spring-boot-package`
-//}

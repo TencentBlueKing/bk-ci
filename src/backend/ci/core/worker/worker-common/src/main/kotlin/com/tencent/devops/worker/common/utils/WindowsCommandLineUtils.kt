@@ -89,7 +89,7 @@ object WindowsCommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    LoggerService.addRedLine(tmpLine)
+                    LoggerService.addErrorLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
                 }
@@ -108,7 +108,7 @@ object WindowsCommandLineUtils {
         } catch (ignored: Throwable) {
             logger.warn("Fail to execute the command($command)", ignored)
             if (print2Logger) {
-                LoggerService.addRedLine("$prefix Fail to execute the command($command)")
+                LoggerService.addErrorLine("$prefix Fail to execute the command($command)")
             }
             throw TaskExecuteException(
                 errorType = ErrorType.USER,

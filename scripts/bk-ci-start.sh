@@ -59,7 +59,7 @@ start_ci__openresty (){
 
 check_port_listen (){
   local patt_port_listen port=$1
-  printf -v patt_port_listen "^ *[0-9]+: [0-9A-F]+:%X 0+:0+ 0A " "$port"
+  printf -v patt_port_listen "^ *[0-9]+: [0-9A-F]+:%04X 0+:0+ 0A " "$port"
   if cat /proc/net/tcp /proc/net/tcp6 | grep -E "$patt_port_listen"; then
     echo "ERROR: port $port is LISTENed by others."
     return 19
@@ -83,23 +83,26 @@ detect_main (){
 
 # 检查服务启动成功. health接口为格式化后的, 要求整行匹配.
 check_springboot_up (){
-  curl -m 1 -sf "http://127.0.0.1:$API_PORT/management/health" 2>/dev/null | grep -qx '  "status" : "UP",'
+  local port="$1"
+  curl -m 1 -sf "http://127.0.0.1:$port/management/health" 2>/dev/null | grep -qx '  "status" : "UP",'
 }
 # 等待服务启动成功.
 wait_springboot_up (){
+  local pid="$1" port="$2" msg="app is up. ^_^"
   local wait_count=40 wait_sec=3  # 等待app启动, 否则认为失败触发systemd的自动重启.
   SECONDS=0
-  until check_springboot_up; do
-    echo "wait_springboot_up: $wait_count: sleep ${wait_sec}s.";
+  until check_springboot_up "$port"; do
+    echo "wait_springboot_up $port: $wait_count: sleep ${wait_sec}s.";
     sleep "$wait_sec";
-    let wait_count-- || {
-      echo "wait_springboot_up: unable to confirm app status from http://127.0.0.1:$API_PORT/management/health"
-      echo "see $PWD/logs/bootstrap.log and $PWD/logs/$MS_NAME.log for details."
-      return 14
-    }
+    let wait_count-- || { msg="wait timeout"; break; }
+    check_pid_alive "$pid" || { msg="java is dead"; break; }
   done
-  echo "wait_springboot_up: $wait_count: app is up. ^_^"
-  return 0
+  echo "wait_springboot_up $port: $wait_count: $msg."
+  if check_springboot_up "$port"; then
+    return 0
+  else
+    return 14
+  fi
 }
 
 # 启动微服务.
@@ -125,8 +128,13 @@ start_ci__springboot (){
   java_pid=$!
   echo "$java_pid" > "$pid_file" || return 24
   echo "java pid is $java_pid."
+  [ "$MS_NAME" = "turbo" ] && return 0
   # 此处阻塞.
-  wait_springboot_up
+  if ! wait_springboot_up "$java_pid" "$API_PORT"; then
+    echo "wait_springboot_up: unable to confirm app status from http://127.0.0.1:$API_PORT/management/health"
+    echo "see $PWD/logs/bootstrap.log and $PWD/logs/$MS_NAME.log for details."
+    return 14
+  fi
 }
 
 # 模拟systemd时的预设环境: 加载env, 切换启动目录及用户.

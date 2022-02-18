@@ -29,9 +29,10 @@ package com.tencent.devops.quality.dao
 
 import com.tencent.devops.model.quality.tables.THistory
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
-import com.tencent.devops.quality.pojo.enum.RuleInterceptResult
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL.max
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -47,7 +48,7 @@ class HistoryDao {
         interceptList: String,
         createTime: LocalDateTime,
         updateTime: LocalDateTime
-    ): Long {
+    ): Int {
         with(THistory.T_HISTORY) {
             val record = dslContext.insertInto(
                 this,
@@ -57,6 +58,7 @@ class HistoryDao {
                 BUILD_ID,
                 RESULT,
                 INTERCEPT_LIST,
+                CHECK_TIMES,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
@@ -66,6 +68,7 @@ class HistoryDao {
                 buildId,
                 result,
                 interceptList,
+                0,
                 createTime,
                 updateTime
             )
@@ -81,7 +84,19 @@ class HistoryDao {
                 .set(PROJECT_NUM, projectNum)
                 .where(ID.eq(record.id))
                 .execute()
-            return record.id
+
+            // 更新checkTimes
+            val checkTimes = dslContext.select(max(this.CHECK_TIMES) + 1)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)
+                    .and(BUILD_ID.eq(buildId)).and(RULE_ID.eq(ruleId))))
+                .fetchOne(0, Int::class.java)!!
+            dslContext.update(this)
+                .set(CHECK_TIMES, checkTimes)
+                .where(ID.eq(record.id))
+                .execute()
+
+            return checkTimes
         }
     }
 
@@ -110,8 +125,8 @@ class HistoryDao {
         result: String?,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
-        offset: Int,
-        limit: Int
+        offset: Int?,
+        limit: Int?
     ): Result<THistoryRecord> {
         with(THistory.T_HISTORY) {
             val step1 = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
@@ -120,10 +135,47 @@ class HistoryDao {
             val step4 = if (result == null) step3 else step3.and(RESULT.eq(result))
             val step5 = if (startTime == null) step4 else step4.and(CREATE_TIME.gt(startTime))
             val step6 = if (endTime == null) step5 else step5.and(CREATE_TIME.lt(endTime))
-            return step6.orderBy(PROJECT_NUM.desc())
-                .offset(offset)
-                .limit(limit)
-                .fetch()
+            val sql = step6.orderBy(PROJECT_NUM.desc())
+            if (offset != null) {
+                sql.offset(offset)
+            }
+            if (limit != null) {
+                sql.limit(limit)
+            }
+            return sql.fetch()
+        }
+    }
+
+    fun batchList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String?,
+        ruleIds: Set<Long>?,
+        result: String?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
+        checkTimes: Int?,
+        offset: Int?,
+        limit: Int?
+    ): Result<THistoryRecord> {
+        with(THistory.T_HISTORY) {
+            val step1 = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId))
+            val step2 = if (pipelineId == null) step1 else step1.and(PIPELINE_ID.eq(pipelineId))
+            val step3 = if (buildId == null) step2 else step2.and(BUILD_ID.eq(buildId))
+            val step4 = if (ruleIds == null) step3 else step3.and(RULE_ID.`in`(ruleIds))
+            val step5 = if (result == null) step4 else step4.and(RESULT.eq(result))
+            val step6 = if (startTime == null) step5 else step5.and(CREATE_TIME.gt(startTime))
+            val step7 = if (endTime == null) step6 else step6.and(CREATE_TIME.lt(endTime))
+            val step8 = if (checkTimes == null) step7 else step7.and(CHECK_TIMES.eq(checkTimes))
+            val sql = step8.orderBy(PROJECT_NUM.desc())
+            if (offset != null) {
+                sql.offset(offset)
+            }
+            if (limit != null) {
+                sql.limit(limit)
+            }
+            return sql.fetch()
         }
     }
 
@@ -182,11 +234,12 @@ class HistoryDao {
         }
     }
 
-    fun count(dslContext: DSLContext, ruleId: Long): Long {
+    fun count(dslContext: DSLContext, projectId: String, ruleId: Long): Long {
         with(THistory.T_HISTORY) {
             return dslContext.selectCount()
                 .from(this)
                 .where(RULE_ID.eq(ruleId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Long::class.java)!!
         }
     }

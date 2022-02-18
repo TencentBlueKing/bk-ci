@@ -34,61 +34,79 @@ import org.springframework.data.redis.core.ScanOptions
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
+@Suppress("TooManyFunctions")
 class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, private val redisName: String? = null) {
 
     // max expire time is 30 days
     private val maxExpireTime = TimeUnit.DAYS.toSeconds(30)
 
-    fun get(key: String): String? {
-        return redisTemplate.opsForValue().get(key)
+    fun get(key: String, isDistinguishCluster: Boolean? = false): String? {
+        return redisTemplate.opsForValue().get(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun getAndSet(key: String, defaultValue: String, expiredInSecond: Long? = null): String? {
-        val value = redisTemplate.opsForValue().getAndSet(key, defaultValue)
+    fun getAndSet(
+        key: String,
+        defaultValue: String,
+        expiredInSecond: Long? = null,
+        isDistinguishCluster: Boolean? = false
+    ): String? {
+        val finalKey = getFinalKey(key, isDistinguishCluster)
+        val value = redisTemplate.opsForValue().getAndSet(finalKey, defaultValue)
         if (value == null) {
-            redisTemplate.expire(key, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
+            redisTemplate.expire(finalKey, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
         }
         return value
     }
 
-    fun increment(key: String, incr: Long): Long? {
-        return redisTemplate.opsForValue().increment(key, incr)
+    fun increment(key: String, incr: Long, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForValue().increment(getFinalKey(key, isDistinguishCluster), incr)
     }
 
-    fun set(key: String, value: String, expiredInSecond: Long? = null, expired: Boolean? = true) {
+    fun set(
+        key: String,
+        value: String,
+        expiredInSecond: Long? = null,
+        expired: Boolean? = true,
+        isDistinguishCluster: Boolean? = false
+    ) {
+        val finalKey = getFinalKey(key, isDistinguishCluster)
         return if (expired == false) {
-            redisTemplate.opsForValue().set(key, value)
+            redisTemplate.opsForValue().set(finalKey, value)
         } else {
-            redisTemplate.opsForValue().set(key, value, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
+            redisTemplate.opsForValue().set(finalKey, value, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
         }
     }
 
-    fun delete(key: String) {
-        redisTemplate.delete(key)
+    fun delete(key: String, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.delete(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun delete(keys: Collection<String>) {
-        redisTemplate.delete(keys)
+    fun delete(keys: Collection<String>, isDistinguishCluster: Boolean? = false) {
+        val finalKeys = mutableListOf<String>()
+        keys.forEach {
+            finalKeys.add(getFinalKey(it, isDistinguishCluster))
+        }
+        redisTemplate.delete(finalKeys)
     }
 
-    fun hasKey(key: String): Boolean {
-        return redisTemplate.hasKey(key)
+    fun hasKey(key: String, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.hasKey(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun addSetValue(key: String, item: String) {
-        redisTemplate.opsForSet().add(key, item)
+    fun addSetValue(key: String, item: String, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForSet().add(getFinalKey(key, isDistinguishCluster), item)
     }
 
-    fun removeSetMember(key: String, item: String) {
-        redisTemplate.opsForSet().remove(key, item)
+    fun removeSetMember(key: String, item: String, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), item)
     }
 
-    fun isMember(key: String, item: String): Boolean {
-        return redisTemplate.opsForSet().isMember(key, item)
+    fun isMember(key: String, item: String, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.opsForSet().isMember(getFinalKey(key, isDistinguishCluster), item) ?: false
     }
 
-    fun getSetMembers(key: String): Set<String>? {
-        return redisTemplate.opsForSet().members(key)
+    fun getSetMembers(key: String, isDistinguishCluster: Boolean? = false): Set<String>? {
+        return redisTemplate.opsForSet().members(getFinalKey(key, isDistinguishCluster))
     }
 
     /**
@@ -96,84 +114,142 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
      * @param hashKey hash key
      * @param values values
      */
-    fun hset(key: String, hashKey: String, values: String) {
-        redisTemplate.opsForHash<String, String>().put(key, hashKey, values)
+    fun hset(key: String, hashKey: String, values: String, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForHash<String, String>().put(getFinalKey(key, isDistinguishCluster), hashKey, values)
     }
 
-    fun hget(key: String, hashKey: String): String? {
-        return redisTemplate.opsForHash<String, String>().get(key, hashKey)
+    fun hIncrBy(key: String, hashKey: String, delta: Long, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForHash<String, String>().increment(getFinalKey(key, isDistinguishCluster), hashKey, delta)
     }
 
-    fun hdelete(key: String, hashKey: String) {
-        redisTemplate.opsForHash<String, String>().delete(key, hashKey)
+    fun hget(key: String, hashKey: String, isDistinguishCluster: Boolean? = false): String? {
+        return redisTemplate.opsForHash<String, String>().get(getFinalKey(key, isDistinguishCluster), hashKey)
     }
 
-    fun hdelete(key: String, hashKeys: Collection<String>) {
-        redisTemplate.opsForHash<String, String>().delete(key, hashKeys)
+    fun hdelete(key: String, hashKey: String, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), hashKey)
     }
 
-    fun hhaskey(key: String, hashKey: String): Boolean {
-        return redisTemplate.opsForHash<String, String>().hasKey(key, hashKey)
+    fun hdelete(key: String, hashKeys: Collection<String>, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForHash<String, String>().delete(getFinalKey(key, isDistinguishCluster), hashKeys)
     }
 
-    fun hsize(key: String): Long {
-        return redisTemplate.opsForHash<String, String>().size(key)
+    fun hhaskey(key: String, hashKey: String, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.opsForHash<String, String>().hasKey(getFinalKey(key, isDistinguishCluster), hashKey)
     }
 
-    fun hvalues(key: String): MutableList<String>? {
-        return redisTemplate.opsForHash<String, String>().values(key)
+    fun hsize(key: String, isDistinguishCluster: Boolean? = false): Long {
+        return redisTemplate.opsForHash<String, String>().size(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun hkeys(key: String): MutableSet<String>? {
-        return redisTemplate.opsForHash<String, String>().keys(key)
+    fun hvalues(key: String, isDistinguishCluster: Boolean? = false): MutableList<String>? {
+        return redisTemplate.opsForHash<String, String>().values(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun hentries(key: String): MutableMap<String, String>? {
-        return redisTemplate.opsForHash<String, String>().entries(key)
+    fun hkeys(key: String, isDistinguishCluster: Boolean? = false): MutableSet<String>? {
+        return redisTemplate.opsForHash<String, String>().keys(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun sadd(key: String, vararg values: String): Long? {
-        return redisTemplate.opsForSet().add(key, *values)
+    fun hentries(key: String, isDistinguishCluster: Boolean? = false): MutableMap<String, String>? {
+        return redisTemplate.opsForHash<String, String>().entries(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun sremove(key: String, values: String): Long? {
-        return redisTemplate.opsForSet().remove(key, values)
+    fun sadd(key: String, vararg values: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForSet().add(getFinalKey(key, isDistinguishCluster), *values)
     }
 
-    fun sscan(key: String, pattern: String, count: Long = 1000L): Cursor<String>? {
+    fun sremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForSet().remove(getFinalKey(key, isDistinguishCluster), values)
+    }
+
+    fun sscan(
+        key: String,
+        pattern: String,
+        count: Long = 1000L,
+        isDistinguishCluster: Boolean? = false
+    ): Cursor<String>? {
         val options = ScanOptions.scanOptions().match(pattern).count(count).build()
-        return redisTemplate.opsForSet().scan(key, options)
+        return redisTemplate.opsForSet().scan(getFinalKey(key, isDistinguishCluster), options)
     }
 
-    fun zadd(key: String, values: String, score: Double): Boolean? {
-        return redisTemplate.opsForZSet().add(key, values, score)
+    fun zadd(key: String, values: String, score: Double, isDistinguishCluster: Boolean? = false): Boolean? {
+        return redisTemplate.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values, score)
     }
 
-    fun zremove(key: String, values: String): Long {
-        return redisTemplate.opsForZSet().remove(key, values)
+    fun zremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().remove(getFinalKey(key, isDistinguishCluster), values)
     }
 
-    fun zsize(key: String, min: Double, max: Double): Long {
-        return redisTemplate.opsForZSet().count(key, min, max)
+    fun zsize(key: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().size(getFinalKey(key, isDistinguishCluster))
     }
 
-    fun zremoveRangeByScore(key: String, min: Double, max: Double): Long? {
-        return redisTemplate.opsForZSet().removeRangeByScore(key, min, max)
+    fun zsize(key: String, min: Double, max: Double, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().count(getFinalKey(key, isDistinguishCluster), min, max)
     }
 
-    fun expireAt(key: String, date: Date): Boolean {
-        return redisTemplate.expireAt(key, date)
+    fun zrange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Set<String>? {
+        return redisTemplate.opsForZSet().range(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
+    fun zrevrange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Set<String>? {
+        return redisTemplate.opsForZSet().reverseRange(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
+    fun zremoveRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().removeRange(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
+    fun zremoveRangeByScore(key: String, min: Double, max: Double, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForZSet().removeRangeByScore(getFinalKey(key, isDistinguishCluster), min, max)
+    }
+
+    fun expireAt(key: String, date: Date, isDistinguishCluster: Boolean? = false): Boolean {
+        return redisTemplate.expireAt(getFinalKey(key, isDistinguishCluster), date)
     }
 
     fun expire(key: String, expiredInSecond: Long) {
         redisTemplate.expire(key, expiredInSecond, TimeUnit.SECONDS)
     }
 
-    fun <T> execute(action: RedisCallback<T>): T {
+    fun <T> execute(action: RedisCallback<T>): T? {
         return redisTemplate.execute(action)
+    }
+
+    fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().size(getFinalKey(key, isDistinguishCluster))
+    }
+
+    fun listRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): List<String>? {
+        return redisTemplate.opsForList().range(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
+    fun leftPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().leftPush(getFinalKey(key, isDistinguishCluster), value)
+    }
+
+    fun rightPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().rightPush(getFinalKey(key, isDistinguishCluster), value)
+    }
+
+    fun rightPop(key: String, isDistinguishCluster: Boolean? = false): String? {
+        return redisTemplate.opsForList().rightPop(getFinalKey(key, isDistinguishCluster))
     }
 
     fun getRedisName(): String? {
         return redisName
+    }
+
+    fun getKeyByRedisName(key: String): String {
+        val redisName = getRedisName()
+        return if (!redisName.isNullOrBlank()) "$redisName:$key" else key
+    }
+
+    private fun getFinalKey(key: String, isDistinguishCluster: Boolean? = false): String {
+        return if (isDistinguishCluster == true) {
+            getKeyByRedisName(key)
+        } else {
+            key
+        }
     }
 }
