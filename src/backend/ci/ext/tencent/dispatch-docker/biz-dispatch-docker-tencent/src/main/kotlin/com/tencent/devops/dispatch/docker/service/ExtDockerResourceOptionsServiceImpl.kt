@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -18,6 +19,7 @@ import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOption
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -27,6 +29,9 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
 ) : ExtDockerResourceOptionsService {
 
     private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
+
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
 
     override fun getDockerResourceConfigList(
         userId: String,
@@ -53,6 +58,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
+            .addHeader(AUTH_HEADER_GATEWAY_TAG, consulTag)
             .get()
             .build()
 
