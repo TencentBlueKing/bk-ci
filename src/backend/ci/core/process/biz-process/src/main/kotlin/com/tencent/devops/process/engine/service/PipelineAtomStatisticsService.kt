@@ -62,9 +62,9 @@ class PipelineAtomStatisticsService @Autowired constructor(
     fun updateAtomPipelineNum(
         projectId: String,
         pipelineId: String,
-        version = event.version,
-        deleteFlag = false,
-        restoreFlag = false
+        version: Int? = null,
+        deleteFlag: Boolean = false,
+        restoreFlag: Boolean = false
     ) {
         val pipelineNumUpdateList = mutableListOf<StoreStatisticPipelineNumUpdate>()
         val currentVersionModelStr = getVersionModelString(projectId, pipelineId, version) ?: return
