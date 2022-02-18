@@ -16,10 +16,17 @@ module.exports = (env = {}, argv) => {
             library: {
                 type: 'umd'
             },
-            chunkFilename: 'bk-pipeline.js',
             filename: 'bk-pipeline.min.js',
             path: path.resolve(__dirname, 'dist'),
             clean: true
+        },
+        externals: {
+            vue: {
+                commonjs: 'vue',
+                commonjs2: 'vue',
+                amd: 'vue',
+                root: 'Vue'
+            }
         },
         module: {
             rules: [
@@ -72,9 +79,6 @@ module.exports = (env = {}, argv) => {
             alias: {
                 '@': path.resolve('src')
             }
-        },
-        externals: {
-            vue: 'Vue'
         }
     }
 }
