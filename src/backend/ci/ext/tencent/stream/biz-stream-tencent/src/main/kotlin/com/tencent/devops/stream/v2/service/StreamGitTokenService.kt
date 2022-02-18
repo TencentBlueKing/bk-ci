@@ -77,6 +77,7 @@ class StreamGitTokenService @Autowired constructor(
                     val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
                     logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
                     val objJsonStr = JsonUtil.toJson(refreshToken, false)
+                    logger.info("refreshTokenJsonStr:$objJsonStr")
                     redisOperation.set(projectId, objJsonStr, validTime)
                     refreshToken.accessToken
                 }
