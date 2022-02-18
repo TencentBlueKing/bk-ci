@@ -59,6 +59,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
+import com.tencent.devops.stream.pojo.v2.QualityElementInfo
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.util.AntPathMatcher
 
 @Component
 class ModelStage @Autowired constructor(
@@ -67,9 +70,23 @@ class ModelStage @Autowired constructor(
     private val modelElement: ModelElement
 ) {
 
+    @Value("\${stream.marketRun.atomCode:#{null}}")
+    private val runPlugInAtomCode: String? = null
+
     companion object {
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
     }
+
+    private val matcher = AntPathMatcher()
+
+    // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
+    val operations = mapOf(
+        QualityOperation.convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
+        QualityOperation.convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
+        QualityOperation.convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
+        QualityOperation.convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
+        QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
+    )
 
     fun createStage(
         stage: GitCIV2Stage,
@@ -80,7 +97,8 @@ class ModelStage @Autowired constructor(
         resources: Resources? = null,
         changeSet: Set<String>? = null,
         pipeline: GitProjectPipeline,
-        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?
+        jobBuildTemplateAcrossInfos: Map<String, BuildTemplateAcrossInfo>?,
+        elementNames: MutableList<QualityElementInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
         val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, changeSet)
@@ -117,6 +135,18 @@ class ModelStage @Autowired constructor(
                     buildTemplateAcrossInfo = jobBuildTemplateAcrossInfos?.get(job.id)
                 )
             }
+
+            // 添加红线指标判断需要的数据
+            elementList.forEach { ele ->
+                elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode().let {
+                    // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
+                    if (it == runPlugInAtomCode) {
+                        "run"
+                    } else {
+                        it
+                    }
+                }))
+            }
         }
 
         // 根据if设置stageController
@@ -147,14 +177,16 @@ class ModelStage @Autowired constructor(
                 position = ControlPointPosition.BEFORE_POSITION,
                 event = event,
                 pipeline = pipeline,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             ),
             checkOut = createStagePauseCheck(
                 stageCheck = stage.checkOut,
                 position = ControlPointPosition.AFTER_POSITION,
                 event = event,
                 pipeline = pipeline,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             )
         )
     }
@@ -164,7 +196,8 @@ class ModelStage @Autowired constructor(
         position: String,
         event: GitRequestEvent,
         pipeline: GitProjectPipeline,
-        stageId: String
+        stageId: String,
+        elementNames: MutableList<QualityElementInfo>?
     ): StagePauseCheck? {
         if (stageCheck == null) return null
         val check = StagePauseCheck()
@@ -183,7 +216,8 @@ class ModelStage @Autowired constructor(
                 event = event,
                 position = position,
                 pipeline = pipeline,
-                stageId = stageId
+                stageId = stageId,
+                elementNames = elementNames
             )
         }
         return check
@@ -216,26 +250,21 @@ class ModelStage @Autowired constructor(
      * 根据规则创建红线
      * 规则实例： CodeccCheckAtomDebug.coverity_serious_defect <= 2
      */
+    @Suppress("ComplexMethod")
     private fun createRules(
         stageCheck: StageCheck,
         event: GitRequestEvent,
         position: String,
         pipeline: GitProjectPipeline,
-        stageId: String
+        stageId: String,
+        elementNames: MutableList<QualityElementInfo>?
     ): List<String>? {
-        // 根据顺序，先匹配 <= 和 >= 在匹配 = > <因为 >= 包含 > 和 =
-        val operations = mapOf(
-            QualityOperation.convertToSymbol(QualityOperation.GE) to QualityOperation.GE,
-            QualityOperation.convertToSymbol(QualityOperation.LE) to QualityOperation.LE,
-            QualityOperation.convertToSymbol(QualityOperation.GT) to QualityOperation.GT,
-            QualityOperation.convertToSymbol(QualityOperation.LT) to QualityOperation.LT,
-            QualityOperation.convertToSymbol(QualityOperation.EQ) to QualityOperation.EQ
-        )
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
+        val taskSteps: MutableList<RuleCreateRequestV3.CreateRequestTask> = mutableListOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
             val indicators = gate.rule.map { rule ->
                 // threshold可能包含小数，所以把最后的一部分都取出来在分割
-                val (atomCode, mid) = getAtomCodeAndOther(rule)
+                var (atomCode, stepName, mid) = getAtomCodeAndOther(rule, operations)
                 var op = ""
                 run breaking@{
                     operations.keys.forEach {
@@ -249,12 +278,24 @@ class ModelStage @Autowired constructor(
                     logger.warn("GitProject: ${event.gitProjectId} event: ${event.id} rule: $rule not find operations")
                     return@GateEach
                 }
-                val enNameAndthreshold = mid.split(op)
+                val enNameAndThreshold = mid.split(op)
+
+                // 步骤不为空时添加步骤参数
+                if (stepName != null) {
+                    atomCode = checkAndGetRealStepName(stepName, elementNames) ?: atomCode
+                    taskSteps.add(
+                        RuleCreateRequestV3.CreateRequestTask(
+                            taskName = stepName.removeSuffix("*"),
+                            indicatorEnName = enNameAndThreshold.first().trim()
+                        )
+                    )
+                }
+
                 RuleCreateRequestV3.CreateRequestIndicator(
                     atomCode = atomCode,
-                    enName = enNameAndthreshold.first().trim(),
+                    enName = enNameAndThreshold.first().trim(),
                     operation = operations[op]!!.name,
-                    threshold = enNameAndthreshold.last().trim()
+                    threshold = enNameAndThreshold.last().trim()
                 )
             }
             val opList = mutableListOf<RuleCreateRequestV3.CreateRequestOp>()
@@ -287,7 +328,8 @@ class ModelStage @Autowired constructor(
                     gatewayId = null,
                     opList = opList,
                     stageId = stageId,
-                    gateKeepers = gate.continueOnFail?.gatekeepers
+                    gateKeepers = gate.continueOnFail?.gatekeepers,
+                    taskSteps = taskSteps
                 )
             )
         }
@@ -311,11 +353,68 @@ class ModelStage @Autowired constructor(
         return null
     }
 
-    private fun getAtomCodeAndOther(rule: String): Pair<String, String> {
-        val index = rule.indexOfFirst { it == '.' }
-        return Pair(
-            rule.substring(0 until index),
-            rule.substring((index + 1) until rule.length)
-        )
+    // 1、 <插件code>.<指标名><操作符><阈值>
+    // 2、 <插件code>.<步骤名称>.<指标名><操作符><阈值>
+    fun getAtomCodeAndOther(rule: String, operations: Map<String, QualityOperation>): Triple<String, String?, String> {
+        var op = ""
+        operations.keys.forEach {
+            if (rule.contains(it)) {
+                op = it
+            }
+        }
+        if (op.isBlank()) {
+            throw QualityRulesException("gates rules format error: no quality operations")
+        }
+        return when (rule.split(op).first().toCharArray()
+            .filter { it == '.' }
+            .groupBy { it.toString() }
+            .ifEmpty { null }?.get(".")?.count()
+        ) {
+            1 -> {
+                val index = rule.indexOfFirst { it == '.' }
+                return Triple(
+                    rule.substring(0 until index),
+                    null,
+                    rule.substring((index + 1) until rule.length)
+                )
+            }
+            2 -> {
+                val firstIndex = rule.indexOfFirst { it == '.' }
+                val first = rule.substring(0 until firstIndex)
+                val second = rule.removePrefix("$first.").indexOfFirst { it == '.' } + first.length + 1
+                return Triple(
+                    first,
+                    rule.substring((firstIndex + 1) until second),
+                    rule.substring((second + 1) until rule.length)
+                )
+            }
+            else -> {
+                throw QualityRulesException("gates rules format error: '.' number is wrong")
+            }
+        }
+    }
+
+    // 校验 当相同插件相同步骤名称匹配到多个时，系统无法判断以谁为准，将判定为失败
+    fun checkAndGetRealStepName(stepName: String, elementNames: MutableList<QualityElementInfo>?): String? {
+        if (elementNames.isNullOrEmpty()) {
+            return null
+        }
+        var matchTimes = 0
+        var atomCode: String? = null
+        elementNames.forEach {
+            if (matcher.match(stepName.replace("*", "**"), it.elementName)) {
+                matchTimes++
+                atomCode = it.atomCode
+            }
+            if (matchTimes >= 2) {
+                throw QualityRulesException(
+                    "there are multiple matches with the same step name $stepName of the same plug-in ${it.elementName}"
+                )
+            }
+        }
+        if (matchTimes < 1) {
+            throw QualityRulesException("there none matches with the step name $stepName")
+        }
+        return atomCode
     }
 }

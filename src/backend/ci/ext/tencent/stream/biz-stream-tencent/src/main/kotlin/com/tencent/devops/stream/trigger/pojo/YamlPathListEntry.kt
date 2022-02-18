@@ -25,24 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2.pojo.request
+package com.tencent.devops.stream.trigger.pojo
 
-import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
+data class YamlPathListEntry(
+    val yamlPath: String,
+    val checkType: CheckType
+)
 
-data class MetadataCallback(
-    val elementType: String,
-    val taskId: String = "",
-    val taskName: String = "",
-    val data: List<CallbackHisMetadata>
-) {
-
-    data class CallbackHisMetadata(
-        val enName: String,
-        val cnName: String,
-        val detail: String,
-        val type: QualityDataType,
-        val msg: String,
-        val value: String,
-        val extra: String?
-    )
+enum class CheckType {
+    // 需要校验
+    NEED_CHECK,
+    // 无需校验
+    NO_NEED_CHECK,
+    // 校验有问题，改流水线不触发
+    NO_TRIGGER
 }
