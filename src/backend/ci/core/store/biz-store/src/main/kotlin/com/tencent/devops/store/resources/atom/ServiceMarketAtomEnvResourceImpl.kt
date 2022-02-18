@@ -41,10 +41,11 @@ class ServiceMarketAtomEnvResourceImpl @Autowired constructor(private val market
     ServiceMarketAtomEnvResource {
 
     override fun batchGetAtomRunInfos(
+        userId: String,
         projectCode: String,
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?> {
-        return marketAtomEnvService.batchGetAtomRunInfos(projectCode, atomVersions)
+        return marketAtomEnvService.batchGetAtomRunInfos(userId, projectCode, atomVersions)
     }
 
     override fun getAtomEnv(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {

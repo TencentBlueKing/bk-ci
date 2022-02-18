@@ -35,10 +35,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -62,8 +65,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
+import com.tencent.devops.store.dao.common.StoreDeptRelDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,6 +80,7 @@ import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.Optional
 import java.util.concurrent.TimeUnit
+import java.util.stream.Collectors
 
 /**
  * 插件执行环境逻辑类
@@ -88,7 +97,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val marketAtomDao: MarketAtomDao,
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+        private val client: Client,
+    private val storeDeptRelDao: StoreDeptRelDao,
+    private val storeMemberDao: StoreMemberDao
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
@@ -107,6 +119,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         })
 
     override fun batchGetAtomRunInfos(
+        userId: String,
         projectCode: String,
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?> {
@@ -154,30 +167,42 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCodeList.add(storeCode)
         }
         if (validateAtomCodeList.isNotEmpty()) {
-            val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                storeCodes = validateAtomCodeList,
-                storeType = StoreTypeEnum.ATOM
-            )?.map { it.value1() } ?: emptyList()
-            // 判断是否存在不可用插件
-            validateAtomCodeList.removeAll(validAtomCodeList)
-        }
-        if (validateAtomCodeList.isNotEmpty()) {
-            // 存在不可用插件，给出错误提示
-            val inValidAtomNameList = mutableListOf<String>()
+            // 获取项目所属机构
+            val dept = client.get(ServiceProjectResource::class).get(englishName = projectCode).data
             validateAtomCodeList.forEach { atomCode ->
-                inValidAtomNameList.add(atomCodeMap[atomCode] ?: atomCode)
-            }
-            val params = arrayOf(projectCode, JsonUtil.toJson(inValidAtomNameList))
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = params,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
-                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                    params = params
+                // 获取插件审核通过的可见范围
+                val visibleDept = getVisibleDept(atomCode, StoreTypeEnum.ATOM, DeptStatusEnum.APPROVED)?.toList()
+                // 判断当前用户是否是该插件的成员
+                val isStoreMember = storeMemberDao.isStoreMember(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
-            )
+                if (visibleDept == null || visibleDept.isEmpty()){
+                        if (!isStoreMember) {
+                            throw ErrorCodeException(
+                                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                                params = arrayOf("无权限，非组件成员 atomCode:$atomCode")
+                            )
+                        }
+                    } else {
+                        if ((dept == null) || !approveVisibleDept(dept, visibleDept)){
+                            throw ErrorCodeException(
+                                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                                params = arrayOf("不在组件可见范围 atomCode:$atomCode")
+                            )
+                        }
+                    }
+                // 判断是否存在未发布插件
+                    val releaseAtomNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
+                    if (releaseAtomNum < 1 && !isStoreMember){
+                        throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PERMISSION_DENIED,
+                            params = arrayOf("存在未发布插件$releaseAtomNum atomCode:$atomCode")
+                        )
+                    }
+            }
         }
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
@@ -254,6 +279,58 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
     }
 
+    /**
+     * 查看store组件可见范围
+     */
+    fun getVisibleDept(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        deptStatus: DeptStatusEnum?
+    ):  MutableList<DeptInfo>? {
+        logger.info("the storeCode is :$storeCode,storeType is :$storeType,deptStatus is :$deptStatus")
+        val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            deptStatus = deptStatus,
+            deptIdList = null
+        )
+        if (storeDeptRelRecords == null) {
+            return  null
+            } else {
+                val deptInfos = mutableListOf<DeptInfo>()
+                storeDeptRelRecords.forEach {
+                    deptInfos.add(
+                        DeptInfo(
+                        deptId = it.deptId,
+                        deptName = it.deptName,
+                        status = DeptStatusEnum.getStatus(it.status.toInt()),
+                        comment = it.comment
+                        )
+                    )
+                }
+            return  deptInfos
+            }
+    }
+
+    /**
+     * 效验项目是否在插件可见范围
+     */
+    fun approveVisibleDept(dept: ProjectVO, deptInfos: List<DeptInfo>):Boolean {
+        val deptNumList = mutableSetOf<Int>()
+        if (dept.bgId!=null) {
+            deptNumList.add(0)
+            deptNumList.add(dept.bgId!!.toInt())
+            if (dept.deptId != null) {
+                deptNumList.add(dept.deptId!!.toInt())
+            }
+            if (dept.centerId != null) {
+                deptNumList.add(dept.centerId!!.toInt())
+            }
+        }
+        val deptIdList = deptInfos.stream().map(DeptInfo::deptId).collect(Collectors.toList())
+        return deptIdList.intersect(deptNumList).isNotEmpty()
+    }
     private fun queryAtomRunInfoFromDb(
         projectCode: String,
         atomCode: String,

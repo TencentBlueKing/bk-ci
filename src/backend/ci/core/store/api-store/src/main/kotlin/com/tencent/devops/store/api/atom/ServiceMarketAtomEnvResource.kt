@@ -40,6 +40,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_MARKET_ATOM_ENV"], description = "插件市场-插件执行环境")
@@ -52,6 +53,9 @@ interface ServiceMarketAtomEnvResource {
     @POST
     @Path("/project/{projectCode}/run/info/list")
     fun batchGetAtomRunInfos(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
         projectCode: String,

@@ -72,7 +72,7 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    override fun checkModelIntegrity(model: Model, projectId: String?) {
+    override fun checkModelIntegrity(userId: String, model: Model, projectId: String?) {
         // 检查流水线名称
         PipelineUtils.checkPipelineName(model.name)
         PipelineUtils.checkPipelineDescLength(model.desc)
@@ -156,6 +156,7 @@ open class DefaultModelCheckPlugin constructor(
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
+                    userId = userId,
                     projectCode = projectId,
                     atomVersions = atomVersions,
                     atomInputParamList = atomInputParamList,

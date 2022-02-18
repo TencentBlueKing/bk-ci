@@ -169,7 +169,7 @@ class TemplateFacadeService @Autowired constructor(
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template $template by user $userId")
         checkPermission(projectId, userId)
-        checkTemplate(template, projectId)
+        checkTemplate(userId, template, projectId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -442,7 +442,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
-        checkTemplate(template, projectId)
+        checkTemplate(userId, template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
@@ -1024,7 +1024,7 @@ class TemplateFacadeService @Autowired constructor(
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
         try {
-            checkTemplate(templateResult, projectId)
+            checkTemplate(userId, templateResult, projectId)
         } catch (ignored: ErrorCodeException) {
             // 兼容历史数据，模板内容有问题给出错误提示
             val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
@@ -1966,23 +1966,23 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板是不是合法
      */
-    private fun checkTemplate(template: Model, projectId: String? = null) {
+    private fun checkTemplate(userId: String, template: Model, projectId: String? = null) {
         if (template.name.isBlank()) {
             throw ErrorCodeException(
                 defaultMessage = "模板名不能为空字符串",
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
-        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
+        modelCheckPlugin.checkModelIntegrity(userId = userId, model = template, projectId = projectId)
         checkPipelineParam(template)
     }
 
-    fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
+    fun checkTemplate(userId: String, templateId: String, projectId: String? = null): Boolean {
         val templateRecord = templateDao.getLatestTemplate(dslContext, templateId)
         val modelStr = templateRecord.template
         if (modelStr != null) {
             val model = JsonUtil.to(modelStr, Model::class.java)
-            checkTemplate(model, projectId)
+            checkTemplate(userId, model, projectId)
         }
         return true
     }
@@ -2088,7 +2088,7 @@ class TemplateFacadeService @Autowired constructor(
             if (modelStr != null) {
                 val model = JsonUtil.to(modelStr, Model::class.java)
                 projectCodeList.forEach {
-                    checkTemplate(model, it)
+                    checkTemplate(userId, model, it)
                 }
             }
         }

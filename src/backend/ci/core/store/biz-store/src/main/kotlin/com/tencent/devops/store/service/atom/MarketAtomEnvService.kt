@@ -46,6 +46,7 @@ interface MarketAtomEnvService {
      * 批量获取插件运行时信息
      */
     fun batchGetAtomRunInfos(
+        userId: String,
         projectCode: String,
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?>

@@ -134,6 +134,7 @@ class DefaultModelCheckPluginTest : TestBase() {
         whenever(client.get(ServiceMarketAtomEnvResource::class)).thenReturn(serviceMarketAtomEnvResource)
         whenever(
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
+                userId = userId,
                 projectCode = any(),
                 atomVersions = any()
             )
@@ -226,7 +227,7 @@ class DefaultModelCheckPluginTest : TestBase() {
     @Test(expected = ErrorCodeException::class)
     fun checkModelIntegrityEmptyElement() {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
-        checkPlugin.checkModelIntegrity(model, projectId)
+        checkPlugin.checkModelIntegrity(userId, model, projectId)
     }
 
     @Test
@@ -239,7 +240,7 @@ class DefaultModelCheckPluginTest : TestBase() {
 
         val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
         try {
-            checkPlugin.checkModelIntegrity(fulModel, projectId)
+            checkPlugin.checkModelIntegrity(userId, fulModel, projectId)
         } catch (actual: ErrorCodeException) {
             Assert.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)
         }

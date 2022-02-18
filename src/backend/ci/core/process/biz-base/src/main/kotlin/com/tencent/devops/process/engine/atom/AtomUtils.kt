@@ -135,7 +135,7 @@ object AtomUtils {
     ): Map<String, AtomRunInfo>? {
 
         val atomRunInfoResult = try {
-            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(task.projectId, atomVersions)
+            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(task.starter, task.projectId, atomVersions)
         } catch (ignored: Exception) {
             Result<Map<String, AtomRunInfo>?>(
                 status = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
@@ -195,6 +195,7 @@ object AtomUtils {
     }
 
     fun checkModelAtoms(
+        userId: String,
         projectCode: String,
         atomVersions: Set<StoreVersion>,
         atomInputParamList: MutableList<StoreParam>,
@@ -206,6 +207,7 @@ object AtomUtils {
         }
         // 批量获取插件运行时信息
         val atomRunInfoResult = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
+            userId = userId,
             projectCode = projectCode,
             atomVersions = atomVersions
         )

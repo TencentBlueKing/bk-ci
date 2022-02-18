@@ -197,7 +197,7 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode
     ): Set<PipelineModelTask> {
 
-        modelCheckPlugin.checkModelIntegrity(model, projectId)
+        modelCheckPlugin.checkModelIntegrity(userId, model, projectId)
 
         // 初始化ID 该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
         val modelTasks = mutableSetOf<PipelineModelTask>()
