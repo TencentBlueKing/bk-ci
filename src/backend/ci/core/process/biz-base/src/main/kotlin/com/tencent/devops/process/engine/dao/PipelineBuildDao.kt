@@ -106,8 +106,7 @@ class PipelineBuildDao {
                     WEBHOOK_TYPE,
                     WEBHOOK_INFO,
                     BUILD_MSG,
-                    BUILD_NUM_ALIAS,
-                    UPDATE_TIME
+                    BUILD_NUM_ALIAS
                 ).values(
                     buildId,
                     buildNum,
@@ -129,8 +128,7 @@ class PipelineBuildDao {
                     webhookType,
                     webhookInfo,
                     buildMsg,
-                    buildNumAlias,
-                    LocalDateTime.now()
+                    buildNumAlias
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -314,9 +312,7 @@ class PipelineBuildDao {
         retry: Boolean = false
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
-            val update = dslContext.update(this)
-                .set(STATUS, BuildStatus.RUNNING.ordinal)
-                .set(UPDATE_TIME, LocalDateTime.now())
+            val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
             if (!retry) {
                 update.set(START_TIME, startTime)
             }
@@ -345,7 +341,6 @@ class PipelineBuildDao {
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
                 .set(RECOMMEND_VERSION, recommendVersion)
-                .set(UPDATE_TIME, LocalDateTime.now())
 
             if (!remark.isNullOrBlank()) {
                 baseQuery.set(REMARK, remark)
@@ -449,7 +444,6 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
                 .execute()
         } == 1
@@ -463,7 +457,6 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(END_TIME, LocalDateTime.now())
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
@@ -781,7 +774,6 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(REMARK, remark)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -793,7 +785,6 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(RECOMMEND_VERSION, recommendVersion)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
@@ -838,7 +829,6 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(ARTIFACT_INFO, artifactList)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
@@ -850,7 +840,6 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(MATERIAL, material)
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
@@ -866,7 +855,6 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
@@ -882,7 +870,6 @@ class PipelineBuildDao {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.update(this)
                 .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
-                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
