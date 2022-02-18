@@ -58,14 +58,15 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
         dockerHostUri: String,
         dockerHostIp: String,
         dockerHostPort: Int,
-        clusterType: DockerHostClusterType
+        clusterType: DockerHostClusterType,
+        urlPrefix: String
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
                 ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorType, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerHostIp is not available.")
-            "http://$dockerHostIp:${dockerIpInfo.dockerHostPort}$dockerHostUri"
+            "$urlPrefix$dockerHostIp:${dockerIpInfo.dockerHostPort}$dockerHostUri"
         } else {
-            "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
+            "$urlPrefix$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
 
         return if (clusterType != DockerHostClusterType.COMMON) {

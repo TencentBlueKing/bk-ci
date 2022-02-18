@@ -25,55 +25,59 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.api
+package com.tencent.devops.dispatch.docker.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
+import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["DOCKER_DEBUG"], description = "docker debug")
-@Path("/docker")
+@Api(tags = ["USER_DOCKER_HOST"], description = "用户-获取构建容器信息")
+@Path("/user/docker/debug")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceDockerDebugResource {
+interface UserDockerDebugResource {
 
-    @ApiOperation("启动流水线调试")
+    @ApiOperation("启动调试容器-新版")
     @POST
-    @Path("/debug/start")
+    @Path("/start")
     fun startDebug(
-        @ApiParam("容器信息", required = true)
-        dockerStartDebugInfo: ContainerInfo
-    ): Result<String>
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        debugStartParam: DebugStartParam
+    ): Result<String>?
 
-    @ApiOperation("获取调试url")
-    @GET
-    @Path("/debug/getWsUrl")
-    fun getWebSocketUrl(
-        @ApiParam("蓝盾项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam("蓝盾构建ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("容器ID", required = true)
-        @QueryParam("containerId")
-        containerId: String
-    ): Result<String>
-
-    @ApiOperation("终止流水线调试")
+    @ApiOperation("终止调试容器")
     @POST
-    @Path("/debug/end")
-    fun endDebug(
-        @ApiParam("容器信息", required = true)
-        dockerEndDebugInfo: ContainerInfo
-    ): Result<Boolean>
+    @Path("/stop/projects/{projectId}/pipelines/{pipelineId}/vmseqs/{vmSeqId}")
+    fun stopDebug(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("vmSeqId", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("containerName", required = false)
+        @QueryParam("containerName")
+        containerName: String?
+    ): Result<Boolean>?
 }
