@@ -355,7 +355,7 @@ class GitService @Autowired constructor(
         logger.info("refreshToken:$refreshToken")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
+            val url = "${gitConfig.gitUrl}/oauth/token?client_id=$gitCIClientId&client_secret=$gitCIClientSecret" +
                 "&grant_type=refresh_token&refresh_token=${refreshToken}&redirect_uri=$callbackUrl"
             val request = Request.Builder()
                 .url(url)
