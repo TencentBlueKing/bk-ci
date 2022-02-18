@@ -471,6 +471,9 @@
         .node-item-name {
             flex: 5;
         }
+        .node-item-displayname {
+            flex: 4;
+        }
 
         .node-item-ip,
         .node-item-status,
