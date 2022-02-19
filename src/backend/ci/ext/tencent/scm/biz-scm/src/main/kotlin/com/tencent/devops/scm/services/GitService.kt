@@ -125,9 +125,6 @@ class GitService @Autowired constructor(
     @Value("\${gitCI.url}")
     private lateinit var gitCIUrl: String
 
-    @Value("\${gitCI.oauthUrl}")
-    private lateinit var gitCIOauthUrl: String
-
     @Value("\${gitCI.tokenExpiresIn:#{null}}")
     private val tokenExpiresIn: Int? = 86400
 
@@ -466,7 +463,7 @@ class GitService @Autowired constructor(
         try {
             val token = getToken(gitProjectId)
             val url =
-                "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
+                "$gitCIUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
 
             logger.info("[$userId]|[$gitProjectId]| Get git project member utl: $url")
             val request = Request.Builder()
@@ -492,7 +489,7 @@ class GitService @Autowired constructor(
     fun getGitCIUserId(rtxId: String, gitProjectId: String): String? {
         try {
             val token = getToken(gitProjectId)
-            val url = "$gitCIOauthUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
+            val url = "$gitCIUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
 
             logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId: $url")
             val request = Request.Builder()
@@ -1662,7 +1659,7 @@ class GitService @Autowired constructor(
         logger.info("Start to clear the token: $token")
         val startEpoch = System.currentTimeMillis()
         try {
-            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+            val tokenUrl = "$gitCIUrl/oauth/token" +
                 "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
             val request = Request.Builder()
                 .url(tokenUrl)
