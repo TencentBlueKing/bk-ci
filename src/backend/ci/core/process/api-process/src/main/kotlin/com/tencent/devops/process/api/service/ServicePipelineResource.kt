@@ -108,7 +108,7 @@ interface ServicePipelineResource {
         channelCode: ChannelCode,
         @ApiParam("是否修改最后修改人", required = false)
         @QueryParam("updateLastModifyUser")
-        updateLastModifyUser: Boolean? = false
+        updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
