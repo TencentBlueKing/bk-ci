@@ -114,15 +114,9 @@ class StreamBasicSettingService @Autowired constructor(
 
         val userUpdateInfo = updateProjectOrganizationInfo(gitProjectId.toString(), userId)
 
-        if (!userUpdateInfo.bgName.isNullOrBlank()) {
+        if (!userId.isNullOrBlank()) {
             setting.creatorBgName = userUpdateInfo.bgName
-        }
-
-        if (!userUpdateInfo.deptName.isNullOrBlank()) {
             setting.creatorDeptName = userUpdateInfo.deptName
-        }
-
-        if (!userUpdateInfo.centerName.isNullOrBlank()) {
             setting.creatorCenterName = userUpdateInfo.centerName
         }
 
