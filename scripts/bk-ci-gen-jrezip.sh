@@ -54,7 +54,7 @@ get_bcprov_from_dispatchjar (){  # fatjar.
 }
 get_bcprov_from_dispatch_lib_dir (){  # slim安装包.
   local bcprov_dst_dir="$1"
-  local bcprov_glob="$BK_CI_SRC_DIR/dispatch/lib/bcprov-jdk16*.jar"
+  local bcprov_glob="$BK_CI_SRC_DIR/dispatch/lib/bcprov-jdk*.jar"
   log "try to find bcprov in dispatch lib dir by using glob: $bcprov_glob"
   shopt -s nullglob
   declare -a bcprov_dispatch_lib=($bcprov_glob)

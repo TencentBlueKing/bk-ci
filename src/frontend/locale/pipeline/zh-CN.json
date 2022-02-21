@@ -271,6 +271,7 @@
         "buildNumberFormat": "构建号格式",
         "validatebuildNum": "只支持[a-z A-Z 0-9 . - _ : + ? $ {} ()]",
         "correctBuildNumber": "请输入正确的构建号格式",
+        "emptyPipelineName": "请输入流水线名称",
         "label": "标签",
         "runLock": "运行锁定",
         "namePlaceholder": "请输入流水线名称，长度不超过40个字符",
