@@ -360,8 +360,8 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     updateAtomType: PipelineEditActionCreator(UPDATE_ATOM_TYPE),
-    updateAtom: ({ commit }, { element: atom, newParam }) => {
-        PipelineEditActionCreator(UPDATE_ATOM)({ commit }, { atom, newParam })
+    updateAtom: (action, { element: atom, newParam }) => {
+        PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
     },
     updateAtomInput: PipelineEditActionCreator(UPDATE_ATOM_INPUT),
     updateWholeAtomInput: PipelineEditActionCreator(UPDATE_WHOLE_ATOM_INPUT),
