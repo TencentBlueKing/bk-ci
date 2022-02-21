@@ -363,7 +363,6 @@ func (de *disttaskEngine) setTaskIstResource(task *distTask, queueName string) {
 	// resource manager
 	cpuPerInstance, memPerInstance := de.getResource(queueName)
 	task.Operator.ClusterID = de.getClusterID(queueName)
-	blog.Info("test2, %v", cpuPerInstance)
 	// if ban resources, then request and least instance is 0
 	if !task.InheritSetting.BanAllBooster {
 		task.Operator.RequestInstance = (int(task.InheritSetting.RequestCPU) + int(cpuPerInstance) - 1) /
