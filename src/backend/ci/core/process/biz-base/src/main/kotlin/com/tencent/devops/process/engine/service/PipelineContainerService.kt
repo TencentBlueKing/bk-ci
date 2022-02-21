@@ -52,11 +52,12 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
-import java.time.LocalDateTime
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -173,8 +174,7 @@ class PipelineContainerService @Autowired constructor(
         endTime: LocalDateTime? = null,
         buildStatus: BuildStatus
     ) {
-        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|" +
-            "containerSeqId=$containerId|stageId=$stageId")
+        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|containerSeqId=$containerId|s($stageId)")
         pipelineBuildContainerDao.updateStatus(
             dslContext = dslContext,
             projectId = projectId,
@@ -196,8 +196,7 @@ class PipelineContainerService @Autowired constructor(
         modelContainer: Container?,
         controlOption: PipelineBuildContainerControlOption
     ) {
-        logger.info("[$buildId]|updateMatrixGroupStatus|controlOption=$controlOption|" +
-            "matrixGroupId=$matrixGroupId|stageId=$stageId")
+        logger.info("[$buildId]|updateMatrixGroupStatus|option=$controlOption|matrixGroupId=$matrixGroupId|s($stageId)")
         pipelineBuildContainerDao.updateControlOption(
             dslContext = dslContext,
             projectId = projectId,
@@ -257,8 +256,7 @@ class PipelineContainerService @Autowired constructor(
             buildId = buildId,
             matrixGroupId = matrixGroupId
         )
-        logger.info("[$buildId]|cleanContainersInMatrixGroup|deleteTaskCount=$taskCount|" +
-            "deleteContainerCount=$containerCount")
+        logger.info("[$buildId]|cleanContainersInMatrixGroup|deleteT=$taskCount|deleteC=$containerCount")
     }
 
     fun prepareMatrixBuildContainer(
@@ -501,14 +499,18 @@ class PipelineContainerService @Autowired constructor(
                         jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
-                        mutexGroup = container.mutexGroup,
+                        mutexGroup = container.mutexGroup?.also { s ->
+                            s.linkTip = "${pipelineId}_Pipeline[${startParamMap[PIPELINE_NAME]}]Job[${container.name}]"
+                        },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
                     is VMBuildContainer -> PipelineBuildContainerControlOption(
                         jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
-                        mutexGroup = container.mutexGroup,
+                        mutexGroup = container.mutexGroup?.also { s ->
+                            s.linkTip = "${pipelineId}_Pipeline[${startParamMap[PIPELINE_NAME]}]Job[${container.name}]"
+                        },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
                     else -> null

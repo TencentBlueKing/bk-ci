@@ -38,11 +38,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.context.annotation.Configuration
 
-@Configuration
-@ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
 class StreamPipelinePermissionServiceImpl @Autowired constructor(
     val client: Client,
     val pipelineInfoDao: PipelineInfoDao,

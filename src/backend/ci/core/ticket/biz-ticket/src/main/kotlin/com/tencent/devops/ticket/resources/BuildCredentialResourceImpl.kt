@@ -68,11 +68,42 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
+    override fun getAcrossProject(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        credentialId: String,
+        targetProjectId: String,
+        publicKey: String
+    ): Result<CredentialInfo?> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (vmSeqId.isBlank()) {
+            throw ParamBlankException("Invalid vmSeqId")
+        }
+        if (vmName.isBlank()) {
+            throw ParamBlankException("Invalid vmName")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        if (publicKey.isBlank()) {
+            throw ParamBlankException("Invalid publicKey")
+        }
+        return Result(
+            credentialService.buildGetAcrossProject(projectId, targetProjectId, buildId, credentialId, publicKey)
+        )
+    }
+
+    @SensitiveApiPermission("get_credential")
     override fun getDetail(
         projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
+        taskId: String?,
         credentialId: String
     ): Result<Map<String, String>> {
         if (buildId.isBlank()) {
@@ -87,6 +118,6 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.buildGetDetail(projectId, buildId, credentialId))
+        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
     }
 }

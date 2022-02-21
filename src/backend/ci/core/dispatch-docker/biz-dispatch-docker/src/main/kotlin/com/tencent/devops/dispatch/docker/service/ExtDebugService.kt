@@ -25,26 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
-import com.tencent.devops.common.auth.api.AuthPermission
-
-class SimpleIStreamPermissionValidateImpl : IStreamPermissionValidateService {
-    override fun isPublicProject(projectCode: String): Boolean {
-        return true
-    }
-
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        return Pair(first = true, second = true)
-    }
-
-    override fun extPermission(
-        projectCode: String,
+interface ExtDebugService {
+    fun startDebug(
         userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
-        return false
-    }
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String?
+
+    fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String?
+
+    fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean
 }

@@ -114,4 +114,8 @@ data class NormalContainer(
     override fun fetchGroupContainers(): List<Container>? {
         return groupContainers?.toList()
     }
+
+    override fun fetchMatrixContext(): Map<String, String>? {
+        return matrixContext
+    }
 }
