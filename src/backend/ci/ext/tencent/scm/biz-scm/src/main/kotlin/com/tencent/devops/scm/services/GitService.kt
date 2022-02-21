@@ -349,7 +349,6 @@ class GitService @Autowired constructor(
 
     fun refreshProjectToken(projectId: String, refreshToken: String): GitToken {
         logger.info("Start to refresh the token of projectId $projectId")
-        logger.info("refreshToken:$refreshToken")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
@@ -365,7 +364,6 @@ class GitService @Autowired constructor(
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
-                logger.info("refreshTokenJsonStr:$data")
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
