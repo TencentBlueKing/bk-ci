@@ -76,9 +76,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         } else {
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                enableCi = enabled,
-                userId = userId
-
+                enableCi = enabled
             )
         }
         return Result(result)
