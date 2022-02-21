@@ -118,7 +118,7 @@ data class StagePauseCheck(
     /**
      * 初始化状态并，填充审核组ID
      */
-    fun fixReviewGroups(action: ActionType?) {
+    fun fixCheckStatus(action: ActionType?) {
         reviewGroups?.forEach { group ->
             if (group.id.isNullOrBlank()) group.id = UUIDUtil.generate()
             if (action?.isStart() == true) {

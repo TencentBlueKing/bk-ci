@@ -73,8 +73,8 @@ data class Stage(
             startEpoch = null
             elapsed = null
         }
-        checkIn?.fixReviewGroups(action)
-        checkOut?.fixReviewGroups(action)
+        checkIn?.fixCheckStatus(action)
+        checkOut?.fixCheckStatus(action)
         if (stageControlOption?.manualTrigger == true && checkIn == null) {
             checkIn = StagePauseCheck.convertControlOption(stageControlOption!!)
         }
