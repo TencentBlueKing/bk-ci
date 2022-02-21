@@ -37,6 +37,7 @@ import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -59,6 +60,7 @@ import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.stream.pojo.StreamBuildLock
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.StreamTriggerCache
@@ -79,6 +81,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val client: Client,
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitCIEventSaveService: GitCIEventService,
@@ -104,7 +107,8 @@ class StreamYamlBaseBuild @Autowired constructor(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
-        model: Model
+        model: Model,
+        updateLastModifyUser: Boolean
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
@@ -124,39 +128,16 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipelineId = pipeline.pipelineId,
                 userId = event.userId
             )
-        } else if (needReCreate(processClient, event, gitCIBasicSetting, pipeline)) {
-            val oldPipelineId = pipeline.pipelineId
-            // 先删除已有数据
-            logger.info("recreate pipeline: $pipeline")
-            try {
-                gitPipelineResourceDao.deleteByPipelineId(dslContext, oldPipelineId)
-                processClient.delete(event.userId, gitCIBasicSetting.projectCode!!, oldPipelineId, channelCode)
-            } catch (e: Exception) {
-                logger.error("failed to delete pipeline resource, pipeline: $pipeline", e)
-            }
-            // 再次新建
-            pipeline.pipelineId =
-                processClient.create(event.userId, gitCIBasicSetting.projectCode!!, model, channelCode).data!!.id
-            gitPipelineResourceDao.createPipeline(
-                dslContext = dslContext,
-                gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipeline = pipeline,
-                version = ymlVersion
-            )
-            // 对于需要删了重建的，删除旧的流水线-分支记录
-            streamPipelineBranchService.deleteBranch(
-                gitProjectId = gitCIBasicSetting.gitProjectId,
-                pipelineId = oldPipelineId,
-                branch = null
-            )
-            websocketService.pushPipelineWebSocket(
-                projectId = "git_${gitCIBasicSetting.gitProjectId}",
-                pipelineId = pipeline.pipelineId,
-                userId = event.userId
-            )
-        } else if (pipeline.pipelineId.isNotBlank()) {
+        } else {
             // 编辑流水线model
-            processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipeline.pipelineId, model, channelCode)
+            processClient.edit(
+                userId = event.userId,
+                projectId = gitCIBasicSetting.projectCode!!,
+                pipelineId = pipeline.pipelineId,
+                pipeline = model,
+                channelCode = channelCode,
+                updateLastModifyUser = updateLastModifyUser
+            )
             // 已有的流水线需要更新下Stream这里的状态
             logger.info("update gitPipeline pipeline: $pipeline")
             gitPipelineResourceDao.updatePipeline(
@@ -205,14 +186,21 @@ class StreamYamlBaseBuild @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         model: Model,
         gitBuildId: Long,
-        yamlTransferData: YamlTransferData? = null
+        yamlTransferData: YamlTransferData? = null,
+        updateLastModifyUser: Boolean
     ): BuildId? {
         preStartBuild(pipeline, event, gitCIBasicSetting, model, yamlTransferData)
 
         val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
+        val buildLock = StreamBuildLock(
+            redisOperation = redisOperation,
+            gitProjectId = event.gitProjectId,
+            pipelineId = pipeline.pipelineId
+        )
         var buildId = ""
         try {
+            buildLock.lock()
             logger.info(
                 "Stream Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
                     "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
@@ -223,7 +211,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 event = event,
                 gitCIBasicSetting = gitCIBasicSetting,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = pipeline.displayName
+                pipelineName = pipeline.displayName,
+                updateLastModifyUser = updateLastModifyUser
             )
             logger.info(
                 "Stream Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
@@ -232,6 +221,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         } catch (ignore: Throwable) {
             errorStartBuild(gitCIBasicSetting, pipeline, gitBuildId, ignore, event, yamlTransferData)
         } finally {
+            buildLock.unlock()
             if (buildId.isNotEmpty()) {
                 kafkaClient.send(
                     STREAM_BUILD_INFO_TOPIC, JsonUtil.toJson(
@@ -369,9 +359,17 @@ class StreamYamlBaseBuild @Autowired constructor(
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
         pipelineId: String,
-        pipelineName: String
+        pipelineName: String,
+        updateLastModifyUser: Boolean
     ): String {
-        processClient.edit(event.userId, gitCIBasicSetting.projectCode!!, pipelineId, model, channelCode)
+        processClient.edit(
+            userId = event.userId,
+            projectId = gitCIBasicSetting.projectCode!!,
+            pipelineId = pipelineId,
+            pipeline = model,
+            channelCode = channelCode,
+            updateLastModifyUser = updateLastModifyUser
+        )
         return client.get(ServiceBuildResource::class).manualStartupNew(
             userId = event.userId,
             projectId = gitCIBasicSetting.projectCode!!,
@@ -380,29 +378,6 @@ class StreamYamlBaseBuild @Autowired constructor(
             channelCode = channelCode,
             startType = StartType.SERVICE
         ).data!!.id
-    }
-
-    private fun needReCreate(
-        processClient: ServicePipelineResource,
-        event: GitRequestEvent,
-        gitCIBasicSetting: GitCIBasicSetting,
-        pipeline: GitProjectPipeline
-    ): Boolean {
-        try {
-            val response =
-                processClient.get(event.userId, gitCIBasicSetting.projectCode!!, pipeline.pipelineId, channelCode)
-            if (response.isNotOk()) {
-                logger.error("get pipeline failed, msg: ${response.message}")
-                return true
-            }
-        } catch (e: Exception) {
-            logger.error(
-                "get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
-                    "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}"
-            )
-            return true
-        }
-        return false
     }
 
     private fun YamlTransferData.getTemplateAcrossInfo(
