@@ -546,7 +546,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true,
-        updateLastModifyUser: Boolean? = false
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -618,7 +618,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 signPipelineId = pipelineId,
                 userId = userId,
                 channelCode = channelCode,
-                create = false
+                create = false,
+                updateLastModifyUser = updateLastModifyUser
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)

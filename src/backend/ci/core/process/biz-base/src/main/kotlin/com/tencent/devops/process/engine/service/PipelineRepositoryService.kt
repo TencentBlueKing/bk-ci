@@ -125,7 +125,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         create: Boolean,
         useTemplateSettings: Boolean? = false,
-        templateId: String? = null
+        templateId: String? = null,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -166,7 +167,8 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
-                maxPipelineResNum = pipelineSetting?.maxPipelineResNum
+                maxPipelineResNum = pipelineSetting?.maxPipelineResNum,
+                updateLastModifyUser = updateLastModifyUser
             )
         } else {
             create(
@@ -587,13 +589,13 @@ class PipelineRepositoryService constructor(
         modelTasks: Set<PipelineModelTask>,
         channelCode: ChannelCode,
         maxPipelineResNum: Int? = null,
-        updateLastModifyUser: Boolean? = false
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            version = if (updateLastModifyUser == null || updateLastModifyUser == false) {
+            version = if (updateLastModifyUser != null && updateLastModifyUser == false) {
                 pipelineInfoDao.update(
                     dslContext = transactionContext,
                     projectId = projectId,
