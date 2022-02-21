@@ -113,7 +113,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         pipelineId: String,
         pipeline: Model,
         channelCode: ChannelCode,
-        updateLastModifyUser: Boolean? = true
+        updateLastModifyUser: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
         pipelineInfoFacadeService.editPipeline(
