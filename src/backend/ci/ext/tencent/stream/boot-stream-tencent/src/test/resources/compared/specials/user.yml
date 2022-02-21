@@ -20,7 +20,7 @@ triggerOn:
   delete:
     types:
     - "branch"
-  issues:
+  issue:
     action:
     - "open"
   review:

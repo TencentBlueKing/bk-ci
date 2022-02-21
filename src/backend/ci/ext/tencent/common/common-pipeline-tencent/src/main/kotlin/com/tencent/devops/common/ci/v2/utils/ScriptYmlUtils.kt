@@ -45,7 +45,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.DeleteRule
-import com.tencent.devops.common.ci.v2.IssuesRule
+import com.tencent.devops.common.ci.v2.IssueRule
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.ParametersType
@@ -578,7 +578,7 @@ object ScriptYmlUtils {
             mr = mrRule(preTriggerOn),
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
-            issues = issuesRule(preTriggerOn),
+            issue = issueRule(preTriggerOn),
             review = reviewRule(preTriggerOn)
         )
     }
@@ -594,25 +594,25 @@ object ScriptYmlUtils {
                     ReviewRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn issuesRule failed.", e)
+                logger.error("Format triggerOn reviewRule failed.", e)
                 null
             }
         }
         return null
     }
 
-    private fun issuesRule(
+    private fun issueRule(
         preTriggerOn: PreTriggerOn
-    ): IssuesRule? {
-        if (preTriggerOn.issues != null) {
-            val issues = preTriggerOn.issues
+    ): IssueRule? {
+        if (preTriggerOn.issue != null) {
+            val issues = preTriggerOn.issue
             return try {
                 YamlUtil.getObjectMapper().readValue(
                     JsonUtil.toJson(issues),
-                    IssuesRule::class.java
+                    IssueRule::class.java
                 )
             } catch (e: MismatchedInputException) {
-                logger.error("Format triggerOn issuesRule failed.", e)
+                logger.error("Format triggerOn issueRule failed.", e)
                 null
             }
         }
