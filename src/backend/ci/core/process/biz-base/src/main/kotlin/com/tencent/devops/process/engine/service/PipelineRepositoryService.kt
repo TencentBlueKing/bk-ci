@@ -586,25 +586,42 @@ class PipelineRepositoryService constructor(
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>,
         channelCode: ChannelCode,
-        maxPipelineResNum: Int? = null
+        maxPipelineResNum: Int? = null,
+        updateLastModifyUser: Boolean? = false
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            version = pipelineInfoDao.update(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                updateVersion = true,
-                pipelineName = null,
-                pipelineDesc = null,
-                manualStartup = canManualStartup,
-                canElementSkip = canElementSkip,
-                taskCount = taskCount,
-                latestVersion = model.latestVersion
-            )
+            version = if (updateLastModifyUser == null || updateLastModifyUser == false) {
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = null,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
+            } else {
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
+            }
             if (version == 0) {
                 // 传过来的latestVersion已经不是最新
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
