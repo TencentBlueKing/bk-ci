@@ -61,7 +61,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwQualityResourceV4 {
 
     @ApiOperation("获取拦截规则列表", tags = ["v4_app_quality_rule_list", "v4_user_quality_rule_list"])
-    @Path("/rules/list")
+    @Path("/rule")
     @GET
     fun listRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -79,13 +79,13 @@ interface ApigwQualityResourceV4 {
         @ApiParam("页目", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页数目", required = false, defaultValue = "20")
+        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>>
 
     @ApiOperation("创建拦截规则", tags = ["v4_user_quality_rule_create", "v4_app_quality_rule_create"])
-    @Path("/rules/create")
+    @Path("/rule")
     @POST
     fun createRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -105,7 +105,7 @@ interface ApigwQualityResourceV4 {
     ): Result<String>
 
     @ApiOperation("更新拦截规则列表", tags = ["v4_user_quality_rule_update", "v4_app_quality_rule_update"])
-    @Path("/rules/update")
+    @Path("/rule")
     @PUT
     fun updateRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -128,7 +128,7 @@ interface ApigwQualityResourceV4 {
     ): Result<Boolean>
 
     @ApiOperation("删除拦截规则列表", tags = ["v4_user_quality_rule_delete", "v4_app_quality_rule_delete"])
-    @Path("/rules/delete")
+    @Path("/rule")
     @DELETE
     fun deleteRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -149,7 +149,7 @@ interface ApigwQualityResourceV4 {
     ): Result<Boolean>
 
     @ApiOperation("获取拦截记录", tags = ["v4_app_quality_intercepts_list", "v4_user_quality_intercepts_list"])
-    @Path("/intercepts/list")
+    @Path("/intercept_list")
     @GET
     fun listIntercepts(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -182,7 +182,7 @@ interface ApigwQualityResourceV4 {
         @ApiParam("页号", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("页数", required = false, defaultValue = "20")
+        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>
@@ -191,7 +191,7 @@ interface ApigwQualityResourceV4 {
         "获取Stream红线列表",
         tags = ["v4_app_quality_rule_build_history", "v4_user_quality_rule_build_history"]
     )
-    @Path("/ruleBuildHis/list")
+    @Path("/rule_build_history_list")
     @GET
     fun listBuildHisRule(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -221,7 +221,7 @@ interface ApigwQualityResourceV4 {
         @ApiParam("页号", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("页数", required = false, defaultValue = "20")
+        @ApiParam("每页数目(最大100条)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>>

@@ -59,7 +59,7 @@ interface ApigwEnvironmentResourceV4 {
 
     @ApiOperation("获取用户有权限使用的服务器列表", tags = ["v4_user_env_list_usable_nodes", "v4_app_env_list_usable_nodes"])
     @GET
-    @Path("/nodes/listUsableServerNodes")
+    @Path("/usable_server_nodes")
     fun listUsableServerNodes(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -77,7 +77,7 @@ interface ApigwEnvironmentResourceV4 {
 
     @ApiOperation("获取用户有权限使用的环境列表", tags = ["v4_app_env_list_usable_envs", "v4_user_env_list_usable_envs"])
     @GET
-    @Path("/envs/listUsableServerEnvs")
+    @Path("/usable_server_envs")
     fun listUsableServerEnvs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -98,7 +98,7 @@ interface ApigwEnvironmentResourceV4 {
         tags = ["v4_user_env_list_env_by_env_names", "v4_app_env_list_env_by_env_names"]
     )
     @POST
-    @Path("/envs/listRawByEnvNames")
+    @Path("/envNames_to_envInfo")
     fun listEnvRawByEnvNames(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -121,7 +121,7 @@ interface ApigwEnvironmentResourceV4 {
         tags = ["v4_app_env_list_by_env_hashIds", "v4_user_env_list_by_env_hashIds"]
     )
     @POST
-    @Path("/envs/listRawByEnvHashIds")
+    @Path("/envHashIds_to_envInfo")
     fun listEnvRawByEnvHashIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -144,7 +144,7 @@ interface ApigwEnvironmentResourceV4 {
         tags = ["v4_user_env_node_list_byNodeHashIds", "v4_app_env_node_list_byNodeHashIds"]
     )
     @POST
-    @Path("/nodes/listRawByNodeHashIds")
+    @Path("/nodeHashIds_to_nodes")
     fun listNodeRawByNodeHashIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -167,7 +167,7 @@ interface ApigwEnvironmentResourceV4 {
         tags = ["v4_user_env_node_list_byEnvHashIds", "v4_app_env_node_list_byEnvHashIds"]
     )
     @POST
-    @Path("/nodes/listRawByEnvHashIds")
+    @Path("/envHashIds_to_nodes")
     fun listNodeRawByEnvHashIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -187,7 +187,7 @@ interface ApigwEnvironmentResourceV4 {
 
     @ApiOperation("获取构建节点信息（扩展接口）", tags = ["v4_user_env_node_list_ext", "v4_app_env_node_list_ext"])
     @GET
-    @Path("/nodes/extListNodes")
+    @Path("/ext_nodes")
     fun extListNodes(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -208,7 +208,7 @@ interface ApigwEnvironmentResourceV4 {
         tags = ["v4_user_env_node_list_pipeline_ref", "v4_app_env_node_list_pipeline_ref"]
     )
     @GET
-    @Path("/nodes/listPipelineRef")
+    @Path("/pipeline_ref_list")
     fun listPipelineRef(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -235,7 +235,7 @@ interface ApigwEnvironmentResourceV4 {
 
     @ApiOperation("设置环境共享", tags = ["v4_user_set_share_env", "v4_app_set_share_env"])
     @POST
-    @Path("/envs/share")
+    @Path("/share_envs")
     fun setShareEnv(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

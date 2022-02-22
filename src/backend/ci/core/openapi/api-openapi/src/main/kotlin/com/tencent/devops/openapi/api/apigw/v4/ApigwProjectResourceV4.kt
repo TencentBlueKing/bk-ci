@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwProjectResourceV4 {
 
     @POST
-    @Path("/")
+    @Path("/project_create")
     @ApiOperation("创建项目", tags = ["v4_app_project_create", "v4_user_project_create"])
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -78,7 +78,7 @@ interface ApigwProjectResourceV4 {
     ): Result<Boolean>
 
     @PUT
-    @Path("/{projectId}/")
+    @Path("/{projectId}/project")
     @ApiOperation("修改项目", tags = ["v4_user_project_edit", "v4_app_project_edit"])
     fun update(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -101,7 +101,7 @@ interface ApigwProjectResourceV4 {
     ): Result<Boolean>
 
     @GET
-    @Path("/{projectId}/")
+    @Path("/{projectId}/project")
     @ApiOperation("获取项目信息", tags = ["v4_user_project_get", "v4_app_project_get"])
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -122,7 +122,7 @@ interface ApigwProjectResourceV4 {
     ): Result<ProjectVO?>
 
     @GET
-    @Path("/list")
+    @Path("/project_list")
     @ApiOperation("查询所有项目", tags = ["v4_user_project_list", "v4_app_project_list"])
     fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -140,7 +140,7 @@ interface ApigwProjectResourceV4 {
     ): Result<List<ProjectVO>>
 
     @GET
-    @Path("/names/validate")
+    @Path("/project_name_validation")
     @ApiOperation("校验项目名称和项目英文名", tags = ["v4_app_project_name_validate", "v4_user_project_name_validate"])
     fun validate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -164,7 +164,7 @@ interface ApigwProjectResourceV4 {
     ): Result<Boolean>
 
     @POST
-    @Path("/{projectId}/createUser")
+    @Path("/{projectId}/project_user")
     @ApiOperation("添加指定用户到指定项目用户组", tags = ["v4_app_project_create_users", "v4_user_project_create_users"])
     fun createProjectUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

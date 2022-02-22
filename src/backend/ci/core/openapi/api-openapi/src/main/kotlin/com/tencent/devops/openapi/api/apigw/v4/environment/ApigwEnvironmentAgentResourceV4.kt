@@ -55,7 +55,7 @@ interface ApigwEnvironmentAgentResourceV4 {
 
     @ApiOperation("获取项目下第三方构建机列表",tags = ["v4_app_node_list","v4_user_node_list"])
     @GET
-    @Path("/thirdPartAgent/nodeList")
+    @Path("/third_part_agent_nodes")
     fun thirdPartAgentList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -72,7 +72,7 @@ interface ApigwEnvironmentAgentResourceV4 {
     ): Result<List<NodeBaseInfo>>
 
     @ApiOperation("获取指定构建机状态",tags = ["v4_user_node_status","v4_app_node_status"])
-    @Path("/thirdPartAgent/nodes/status")
+    @Path("/third_part_agent_node_status")
     @GET
     fun getNodeStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

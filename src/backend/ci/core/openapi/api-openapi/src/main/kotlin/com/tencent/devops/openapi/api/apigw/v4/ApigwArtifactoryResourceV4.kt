@@ -56,7 +56,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwArtifactoryResourceV4 {
 
     @ApiOperation("获取用户下载链接", tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"])
-    @Path("/userDownloadUrl")
+    @Path("/user_download_url")
     @GET
     fun getUserDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -80,7 +80,7 @@ interface ApigwArtifactoryResourceV4 {
     ): Result<Url>
 
     @ApiOperation("根据元数据获取文件", tags = ["v4_app_artifactory_list", "v4_user_artifactory_list"])
-    @Path("/")
+    @Path("/file_info")
     @GET
     fun search(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -95,9 +95,9 @@ interface ApigwArtifactoryResourceV4 {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("流水线ID", required = false)
         @QueryParam("pipelineId")
-        pipelineId: String,
+        pipelineId: String?,
         @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,

@@ -52,8 +52,8 @@ class ApigwSignResourceV4Impl @Autowired constructor(
         appCode: String?,
         apigwType: String?,
         userId: String,
-        startTime: Long,
-        endTime: Long,
+        startTime: Long?,
+        endTime: Long?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<SignHistory>> {

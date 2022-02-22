@@ -56,7 +56,7 @@ interface ApigwSignResourceV4 {
 
     @ApiOperation("获取签名任务历史", tags = ["v4_app_sign_history_list", "v4_user_sign_history_list"])
     @GET
-    @Path("/history")
+    @Path("/sign_history_list")
     fun getHistorySign(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -67,12 +67,12 @@ interface ApigwSignResourceV4 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("起始时间戳（毫秒）", required = true)
+        @ApiParam("起始时间戳（毫秒）", required = false)
         @QueryParam("startTime")
-        startTime: Long,
-        @ApiParam("截止时间戳（毫秒）", required = true)
+        startTime: Long?,
+        @ApiParam("截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
-        endTime: Long,
+        endTime: Long?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
@@ -83,7 +83,7 @@ interface ApigwSignResourceV4 {
 
     @ApiOperation("获取签名接口token", tags = ["v4_app_sign_token", "v4_user_sign_token"])
     @GET
-    @Path("/projects/{projectId}/pipelines/builds/getSignToken")
+    @Path("/projects/{projectId}/sign_token")
     fun getSignToken(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -107,7 +107,7 @@ interface ApigwSignResourceV4 {
 
     @ApiOperation("查看签名任务状态信息", tags = ["v4_app_sign_status", "v4_user_sign_status"])
     @GET
-    @Path("/status")
+    @Path("/sign_status")
     fun getStatus(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -125,7 +125,7 @@ interface ApigwSignResourceV4 {
 
     @ApiOperation("签名任务详情", tags = ["v4_app_sign_detail", "v4_user_sign_detail"])
     @GET
-    @Path("/detail")
+    @Path("/sign_detail")
     fun getDetail(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -143,7 +143,7 @@ interface ApigwSignResourceV4 {
 
     @ApiOperation("获取签后IPA文件下载路径", tags = ["v4_app_sign_downloadUrl", "v4_user_sign_downloadUrl"])
     @GET
-    @Path("/downloadUrl/")
+    @Path("/sign_download_url")
     fun getDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

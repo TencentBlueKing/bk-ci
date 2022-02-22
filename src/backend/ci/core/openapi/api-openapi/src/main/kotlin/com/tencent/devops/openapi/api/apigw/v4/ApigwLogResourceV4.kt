@@ -48,14 +48,14 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Api(tags = ["OPENAPI_LOG_V4"], description = "OPENAPI-构建日志资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/pipelines/builds/logs")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwLogResourceV4 {
     @ApiOperation("根据构建ID获取初始化所有日志", tags = ["v4_app_log_init", "v4_user_log_init"])
     @GET
-    @Path("/init")
+    @Path("/init_logs")
     fun getInitLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -91,7 +91,7 @@ interface ApigwLogResourceV4 {
 
     @ApiOperation("获取更多日志", tags = ["v4_app_log_more", "v4_user_log_more"])
     @GET
-    @Path("/more")
+    @Path("/more_logs")
     fun getMoreLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -139,7 +139,7 @@ interface ApigwLogResourceV4 {
 
     @ApiOperation("获取某行后的日志", tags = ["v4_user_log_after", "v4_app_log_after"])
     @GET
-    @Path("/after")
+    @Path("/after_line_logs")
     fun getAfterLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -178,7 +178,7 @@ interface ApigwLogResourceV4 {
 
     @ApiOperation("下载日志接口", tags = ["v4_user_log_download", "v4_app_log_download"])
     @GET
-    @Path("/download")
+    @Path("/download_logs")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -212,7 +212,7 @@ interface ApigwLogResourceV4 {
 
     @ApiOperation("获取插件的的日志状态", tags = ["v4_app_log_mode", "v4_user_log_mode"])
     @GET
-    @Path("/mode")
+    @Path("/log_mode")
     fun getLogMode(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

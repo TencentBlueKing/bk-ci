@@ -169,7 +169,7 @@ interface ApigwBuildResourceV3 {
         buildId: String
     ): Result<BuildHistoryWithVars>
 
-    @ApiOperation("获取流水线构建历史", tags = ["v3_user_build_list","v3_app_build_list"])
+    @ApiOperation("获取流水线构建历史", tags = ["v3_user_build_list", "v3_app_build_list"])
     @GET
     @Path("/history")
     fun getHistoryBuild(
@@ -318,7 +318,7 @@ interface ApigwBuildResourceV3 {
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
 
-    @ApiOperation("取消并发起新构建")
+    @ApiOperation("取消并发起新构建", tags = ["v3_app_build_restart", "v3_user_build_restart"])
     @POST
     @Path("/{buildId}/build/restart")
     fun buildRestart(

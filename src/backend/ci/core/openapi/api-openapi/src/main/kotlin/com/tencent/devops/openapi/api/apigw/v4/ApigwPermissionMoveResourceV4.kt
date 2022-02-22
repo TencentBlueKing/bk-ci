@@ -18,14 +18,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_MOVE"], description = "OPEN-API-迁移")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/permission/move")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/permission/move/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPermissionMoveResourceV4 {
 
     @ApiOperation("获取项目下pipelineId+自增id", tags = ["v4_app_pipeline_id_info", "v4_user_pipeline_id_info"])
     @GET
-    @Path("/projects/{projectId}/pipelineIds/list")
+    @Path("/pipeline_id_list")
     fun getProjectPipelineIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -40,7 +40,7 @@ interface ApigwPermissionMoveResourceV4 {
 
     @ApiOperation("关联iam项目", tags = ["v4_app_relation_iam", "v4_user_relation_iam"])
     @PUT
-    @Path("/projects/{projectId}/relationProject")
+    @Path("/relation_project")
     fun relationProject(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

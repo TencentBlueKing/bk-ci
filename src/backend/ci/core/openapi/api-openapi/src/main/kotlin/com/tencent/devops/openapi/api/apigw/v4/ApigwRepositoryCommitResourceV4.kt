@@ -46,15 +46,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_REPOSITORY_V4"], description = "OPENAPI-代码提交资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/pipelines" +
-    "/builds/repositoryCommit")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/projects/{projectId}/repositoryCommit")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwRepositoryCommitResourceV4 {
 
     @ApiOperation("获取代码提交记录", tags = ["v4_app_repository_commit_list", "v4_user_repository_commit_list"])
-    @Path("")
+    @Path("/commit_data_list")
     @GET
     fun getRepositoryCommit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

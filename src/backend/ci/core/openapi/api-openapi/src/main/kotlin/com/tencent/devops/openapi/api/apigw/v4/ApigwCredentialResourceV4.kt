@@ -59,7 +59,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwCredentialResourceV4 {
 
     @ApiOperation("获取用户拥有对应权限凭据列表", tags = ["v4_app_credential_list", "v4_user_credential_list"])
-    @Path("/")
+    @Path("/credential_list")
     @GET
     fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -89,7 +89,7 @@ interface ApigwCredentialResourceV4 {
     ): Result<Page<CredentialWithPermission>>
 
     @ApiOperation("新增凭据", tags = ["v4_app_credential_create", "v4_user_credential_create"])
-    @Path("/")
+    @Path("/credential")
     @POST
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -109,7 +109,7 @@ interface ApigwCredentialResourceV4 {
     ): Result<Boolean>
 
     @ApiOperation("获取凭据", tags = ["v4_user_credential_get", "v4_app_credential_get"])
-    @Path("/detail")
+    @Path("/credential")
     @GET
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -130,7 +130,7 @@ interface ApigwCredentialResourceV4 {
     ): Result<CredentialWithPermission>
 
     @ApiOperation("编辑凭据", tags = ["v4_user_credential_edit", "v4_app_credential_edit"])
-    @Path("/detail")
+    @Path("/credential")
     @PUT
     fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -153,7 +153,7 @@ interface ApigwCredentialResourceV4 {
     ): Result<Boolean>
 
     @ApiOperation("删除凭据", tags = ["v4_user_credential_delete", "v4_app_credential_delete"])
-    @Path("/detail")
+    @Path("/credential")
     @DELETE
     fun delete(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

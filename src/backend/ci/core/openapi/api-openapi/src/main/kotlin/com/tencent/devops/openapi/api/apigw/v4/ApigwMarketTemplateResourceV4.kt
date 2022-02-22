@@ -51,7 +51,7 @@ interface ApigwMarketTemplateResourceV4 {
 
     @ApiOperation("安装研发商店模板到项目", tags = ["v4_user_template_install", "v4_app_template_install"])
     @POST
-    @Path("/template/installFromStore")
+    @Path("/template_install_from_store")
     fun installTemplateFromStore(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -71,7 +71,7 @@ interface ApigwMarketTemplateResourceV4 {
         tags = ["v4_app_template_install_new", "v4_user_template_install_new"]
     )
     @POST
-    @Path("/template/installFromStore/new")
+    @Path("/template_install_from_store_new")
     fun installTemplateFromStoreNew(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

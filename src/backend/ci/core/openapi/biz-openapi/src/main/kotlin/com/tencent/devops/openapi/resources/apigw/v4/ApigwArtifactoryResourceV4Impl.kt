@@ -71,13 +71,13 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        pipelineId: String,
+        pipelineId: String?,
         buildId: String,
         page: Int?,
         pageSize: Int?
     ): Result<Page<FileInfo>> {
         val map = mutableMapOf<String, String>()
-        map["pipelineId"] = pipelineId
+        map["pipelineId"] = checkPipelineId(projectId, pipelineId, buildId)
         map["buildId"] = buildId
         val searchProps = SearchProps(
             fileNames = null,

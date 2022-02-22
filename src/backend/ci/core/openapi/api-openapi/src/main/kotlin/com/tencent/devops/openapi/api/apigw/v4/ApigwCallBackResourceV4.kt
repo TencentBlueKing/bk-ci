@@ -120,7 +120,7 @@ interface ApigwCallBackResourceV4 {
 
     @ApiOperation("callback回调列表", tags = ["v4_app_callback_list", "v4_user_callback_list"])
     @GET
-    @Path("/")
+    @Path("/callback_list")
     fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -144,7 +144,7 @@ interface ApigwCallBackResourceV4 {
 
     @ApiOperation("callback回调移除", tags = ["v4_app_callback_delete", "v4_user_callback_delete"])
     @DELETE
-    @Path("/remove")
+    @Path("/callback")
     fun remove(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -165,7 +165,7 @@ interface ApigwCallBackResourceV4 {
 
     @ApiOperation("callback回调执行历史记录", tags = ["v4_user_callback_history_list", "v4_app_callback_history_list"])
     @GET
-    @Path("/history")
+    @Path("/callback_history")
     fun listHistory(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -201,7 +201,7 @@ interface ApigwCallBackResourceV4 {
 
     @ApiOperation("callback回调重试", tags = ["v4_user_callback_history_retry","v4_app_callback_history_retry"])
     @POST
-    @Path("/history/retry")
+    @Path("/callback_retry")
     fun retry(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

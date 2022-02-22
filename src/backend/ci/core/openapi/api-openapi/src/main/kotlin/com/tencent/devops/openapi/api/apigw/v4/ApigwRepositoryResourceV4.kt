@@ -52,7 +52,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_REPOSITORY_V4"], description = "OPEN-API-代码仓库资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/repositories/{projectId}")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/repositories/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @SuppressWarnings("All")
@@ -60,7 +60,7 @@ interface ApigwRepositoryResourceV4 {
 
     @ApiOperation("代码库列表", tags = ["v4_app_repository_list", "v4_user_repository_list"])
     @GET
-    @Path("/hasPermissionList")
+    @Path("/repository_info_list")
     fun hasPermissionList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -81,7 +81,7 @@ interface ApigwRepositoryResourceV4 {
 
     @ApiOperation("关联代码库", tags = ["v4_app_repository_create", "v4_user_repository_create"])
     @POST
-    @Path("/")
+    @Path("/repository")
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -101,7 +101,7 @@ interface ApigwRepositoryResourceV4 {
 
     @ApiOperation("删除代码库", tags = ["v4_user_repository_delete", "v4_app_repository_delete"])
     @DELETE
-    @Path("/")
+    @Path("/repository")
     fun delete(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -122,7 +122,7 @@ interface ApigwRepositoryResourceV4 {
 
     @ApiOperation("编辑关联代码库", tags = ["v4_app_repository_edit", "v4_user_repository_edit"])
     @PUT
-    @Path("/")
+    @Path("/repository")
     fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

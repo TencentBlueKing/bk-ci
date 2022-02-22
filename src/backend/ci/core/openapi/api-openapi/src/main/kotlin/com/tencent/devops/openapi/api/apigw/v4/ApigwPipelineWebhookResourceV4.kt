@@ -55,7 +55,7 @@ interface ApigwPipelineWebhookResourceV4 {
 
     @ApiOperation("获取流水线的webhook列表", tags = ["v4_user_pipeline_webhook_list", "v4_app_pipeline_webhook_list"])
     @GET
-    @Path("/")
+    @Path("/pipeline_webhook_list")
     fun listScmWebhook(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -83,7 +83,7 @@ interface ApigwPipelineWebhookResourceV4 {
         tags = ["v4_user_pipeline_webhook_build_log", "v4_app_pipeline_webhook_build_log"]
     )
     @GET
-    @Path("/buildLog")
+    @Path("/pipeline_webhook_build_log_detail")
     fun listPipelineWebhookBuildLog(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

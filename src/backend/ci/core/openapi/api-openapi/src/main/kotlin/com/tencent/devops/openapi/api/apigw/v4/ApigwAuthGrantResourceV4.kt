@@ -18,7 +18,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_AUTh_V4"], description = "OPENAPI-权限相关")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/auth")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/auth/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
@@ -26,7 +26,7 @@ interface ApigwAuthGrantResourceV4 {
 
     @ApiOperation("实例授权", tags = ["v4_app_permission_grant", "v4_user_permission_grant"])
     @POST
-    @Path("/projects/{projectId}/instance/grant")
+    @Path("/instance_grant")
     fun grantInstancePermission(
         @ApiParam(value = "appCode", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

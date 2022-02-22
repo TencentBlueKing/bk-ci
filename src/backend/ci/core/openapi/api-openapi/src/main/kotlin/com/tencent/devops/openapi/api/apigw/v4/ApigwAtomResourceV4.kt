@@ -59,7 +59,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwAtomResourceV4 {
     @ApiOperation("根据插件代码获取插件详细信息", tags = ["v4_app_atom_get", "v4_user_atom_get"])
     @GET
-    @Path("/")
+    @Path("/atom_info")
     fun getAtomByCode(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -77,7 +77,7 @@ interface ApigwAtomResourceV4 {
 
     @ApiOperation("根据插件代码获取插件统计信息", tags = ["v4_app_atom_statistic", "v4_user_atom_statistic"])
     @GET
-    @Path("/statistic")
+    @Path("/atom_statistic")
     fun getAtomStatisticByCode(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -95,7 +95,7 @@ interface ApigwAtomResourceV4 {
 
     @ApiOperation("根据插件代码获取使用的流水线详情", tags = ["v4_user_atom_pipeline_list", "v4_app_atom_pipeline_list"])
     @GET
-    @Path("/pipelines")
+    @Path("/atom_pipelines")
     fun getAtomPipelinesByCode(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -119,7 +119,7 @@ interface ApigwAtomResourceV4 {
 
     @ApiOperation("安装插件到项目", tags = ["v4_user_atom_install", "v4_app_atom_install"])
     @POST
-    @Path("/install")
+    @Path("/install_atom")
     fun installAtom(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

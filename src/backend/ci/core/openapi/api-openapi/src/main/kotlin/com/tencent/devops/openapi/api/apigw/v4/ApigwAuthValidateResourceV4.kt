@@ -18,13 +18,13 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_AUTh_V4"], description = "OPENAPI-权限相关")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/auth/validate")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/auth/validate/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwAuthValidateResourceV4 {
     @GET
-    @Path("/projects/{projectId}/isProjectUsers")
+    @Path("/check_project_users")
     @ApiOperation(
         "判断是否某个项目中某个组角色的成员",
         tags = ["v4_app_permission_project_check", "v4_user_permission_project_check"]

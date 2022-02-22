@@ -63,7 +63,7 @@ interface ApigwTemplateResourceV4 {
 
     @ApiOperation("获取所有种类流水线模板列表", tags = ["v4_app_template_list_all", "v4_user_template_list_all"])
     @GET
-    @Path("/allTemplates")
+    @Path("/all_templates")
     fun listAllTemplate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -81,7 +81,7 @@ interface ApigwTemplateResourceV4 {
 
     @ApiOperation("获取流水线模板详情", tags = ["v4_user_template_get", "v4_app_template_get"])
     @GET
-    @Path("/detail")
+    @Path("/template_detail")
     fun getTemplate(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -170,7 +170,7 @@ interface ApigwTemplateResourceV4 {
 
     @ApiOperation("删除流水线模板的版本", tags = ["v4_app_template_version_delete","v4_user_template_version_delete"])
     @DELETE
-    @Path("/versions")
+    @Path("/template_version")
     fun deleteTemplateVersion(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

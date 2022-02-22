@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
+import com.tencent.devops.openapi.resources.apigw.v3.ApigwBuildResourceV3Impl
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -126,6 +127,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             startType = StartType.SERVICE
         )
     }
+
     override fun stop(
         appCode: String?,
         apigwType: String?,
@@ -243,6 +245,21 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             pipelineId = checkPipelineId(projectId, pipelineId, buildId),
             buildId = buildId,
             taskPauseExecute = taskPauseExecute
+        )
+    }
+
+    override fun buildRestart(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String
+    ): Result<String> {
+        logger.info("v4|buildRestart $userId|$projectId|$pipelineId|$buildId")
+        return client.get(ServiceBuildResource::class).buildRestart(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
+            buildId = buildId
         )
     }
 

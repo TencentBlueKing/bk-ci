@@ -58,7 +58,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("获取所有分组信息", tags = ["v4_user_pipeline_group_get", "v4_app_pipeline_group_get"])
     @GET
-    @Path("/groups")
+    @Path("/group")
     fun getGroups(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -70,7 +70,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("添加分组", tags = ["v4_user_pipeline_group_create", "v4_app_pipeline_group_create"])
     @POST
-    @Path("/groups/")
+    @Path("/group")
     fun addGroup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -81,7 +81,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("更改分组", tags = ["v4_app_pipeline_group_update", "v4_user_pipeline_group_update"])
     @PUT
-    @Path("/groups/")
+    @Path("/group")
     fun updateGroup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -92,7 +92,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("删除分组", tags = ["v4_app_pipeline_group_delete", "v4_user_pipeline_group_delete"])
     @DELETE
-    @Path("/groups")
+    @Path("/group")
     fun deleteGroup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -107,7 +107,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("添加标签", tags = ["v4_user_pipeline_label_create", "v4_app_pipeline_label_create"])
     @POST
-    @Path("/labels/")
+    @Path("/label")
     fun addLabel(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -121,7 +121,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("删除标签", tags = ["v4_app_pipeline_label_delete", "v4_user_pipeline_label_delete"])
     @DELETE
-    @Path("/labels")
+    @Path("/label")
     fun deleteLabel(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -136,7 +136,7 @@ interface ApigwPipelineGroupResourceV4 {
 
     @ApiOperation("更改标签", tags = ["v4_app_pipeline_label_update", "v4_user_pipeline_label_update"])
     @PUT
-    @Path("/labels/")
+    @Path("/label")
     fun updateLabel(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

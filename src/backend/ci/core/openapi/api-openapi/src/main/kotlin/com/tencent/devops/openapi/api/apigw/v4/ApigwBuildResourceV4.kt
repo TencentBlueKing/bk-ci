@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -63,7 +64,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("启动构建", tags = ["v4_app_build_start", "v4_user_build_start"])
     @POST
-    @Path("/builds/start")
+    @Path("/build_start")
     fun start(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -89,7 +90,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("停止构建", tags = ["v4_app_build_stop", "v4_user_build_stop"])
     @POST
-    @Path("/builds/stop")
+    @Path("/build_stop")
     fun stop(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -113,7 +114,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("重试构建-重试或者跳过失败插件", tags = ["v4_app_build_retry", "v4_user_build_retry"])
     @POST
-    @Path("/builds/retry")
+    @Path("/build_retry")
     fun retry(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -170,7 +171,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("获取流水线构建历史", tags = ["v4_user_build_list", "v4_app_build_list"])
     @GET
-    @Path("/builds/history")
+    @Path("/build_histories")
     fun getHistoryBuild(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -197,7 +198,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("获取流水线手动启动参数", tags = ["v4_app_build_startInfo", "v4_user_build_startInfo"])
     @GET
-    @Path("/builds/manualStartupInfo")
+    @Path("/build_manual_startup_info")
     fun manualStartupInfo(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -218,7 +219,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])
     @GET
-    @Path("/builds/detail")
+    @Path("/build_detail")
     fun detail(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -242,7 +243,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("手动审核启动阶段", tags = ["v4_app_build_stage_start", "v4_user_build_stage_start"])
     @POST
-    @Path("/builds/stages/manualStart")
+    @Path("/manual_start_build_stage")
     fun manualStartStage(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -274,7 +275,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("获取构建中的变量值", tags = ["v4_app_build_variables_value", "v4_user_build_variables_value"])
     @POST
-    @Path("/builds/variables")
+    @Path("/build_variables")
     fun getVariableValue(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -300,7 +301,7 @@ interface ApigwBuildResourceV4 {
 
     @ApiOperation("操作暂停插件", tags = ["v4_app_pause_build_execute", "v4_user_pause_build_execute"])
     @POST
-    @Path("/builds/execute/pause")
+    @Path("/build_execute_pause")
     fun executionPauseAtom(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -316,4 +317,26 @@ interface ApigwBuildResourceV4 {
         buildId: String,
         taskPauseExecute: BuildTaskPauseInfo
     ): Result<Boolean>
+
+    @ApiOperation("取消并发起新构建", tags = ["v4_app_build_restart", "v4_user_build_restart"])
+    @POST
+    @Path("/build_restart")
+    fun buildRestart(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @BkField(required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @BkField(required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("构建ID", required = true)
+        @QueryParam("buildId")
+        @BkField(required = true)
+        buildId: String
+    ): Result<String>
 }

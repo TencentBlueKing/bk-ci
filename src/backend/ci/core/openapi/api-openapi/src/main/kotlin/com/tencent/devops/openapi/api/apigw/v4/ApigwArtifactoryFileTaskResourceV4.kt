@@ -37,6 +37,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -48,14 +49,14 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_ARTIFACTORY_FILE_TASK_V4"], description = "OPENAPI-构建产物托管任务资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/artifactory/fileTask/projects/{projectId}/pipelines/builds")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/artifactory/projects/{projectId}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwArtifactoryFileTaskResourceV4 {
 
     @ApiOperation("创建文件托管任务", tags = ["v4_app_file_task_create", "v4_user_file_task_create"])
-    @Path("/create")
+    @Path("/file_task")
     @POST
     fun createFileTask(
         @ApiParam("userId", required = true)
@@ -75,7 +76,7 @@ interface ApigwArtifactoryFileTaskResourceV4 {
     ): Result<String>
 
     @ApiOperation("查询文件托管任务状态", tags = ["v4_app_file_task_status", "v4_user_file_task_status"])
-    @Path("/tasks/status")
+    @Path("/file_task")
     @GET
     fun getStatus(
         @ApiParam("userId", required = true)
@@ -96,8 +97,8 @@ interface ApigwArtifactoryFileTaskResourceV4 {
     ): Result<FileTaskInfo?>
 
     @ApiOperation("清理文件托管任务", tags = ["v4_app_file_task_clear", "v4_user_file_task_clear"])
-    @Path("/tasks/clear")
-    @PUT
+    @Path("/file_task")
+    @DELETE
     fun clearFileTask(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
