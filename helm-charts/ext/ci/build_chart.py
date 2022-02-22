@@ -48,7 +48,7 @@ for c_path in os.listdir(config_server):
         service_tpl.close()
 
 # 生成lambda的es的certificate
-lambda_certificate_path = config_server+'lambda/'+spring_profile
+lambda_certificate_path = config_server+'lambda/certificate/'+spring_profile
 if os.path.isdir(lambda_certificate_path):
     keystore64 = ''
     truststore64 = ''
