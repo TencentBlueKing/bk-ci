@@ -30,13 +30,6 @@ package com.tencent.devops.common.pipeline.enums
 enum class ContainerMutexStatus {
     READY, // 0 准备就绪
     WAITING, // 1 继续等待
-    CANCELED; // 2 取消
-
-    companion object {
-        fun isReady(status: ContainerMutexStatus) = status == READY
-
-        fun isWAITING(status: ContainerMutexStatus) = status == WAITING
-
-        fun isCANCELED(status: ContainerMutexStatus) = status == CANCELED
-    }
+    CANCELED, // 2 取消
+    FIRST_LOG; // 3 打印日志信息
 }

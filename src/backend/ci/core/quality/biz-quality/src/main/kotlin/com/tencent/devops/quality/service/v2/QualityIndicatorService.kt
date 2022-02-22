@@ -45,6 +45,7 @@ import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
+import com.tencent.devops.quality.pojo.enum.RunElementType
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.atom.InstalledAtom
@@ -148,14 +149,35 @@ class QualityIndicatorService @Autowired constructor(
         return serviceListIndicatorRecord(indicatorRecords)
     }
 
-    fun serviceList(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+    fun serviceListALL(indicatorIds: Collection<Long>): List<QualityIndicator> {
+        val indicatorTMap = indicatorDao.listByIds(dslContext, indicatorIds)?.map { it.id to it }?.toMap()
+        return indicatorIds.map { id ->
+            val indicator = indicatorTMap?.get(id) ?: throw OperationException("indicator id $id is not exist")
+            val metadataIds = convertMetaIds(indicator.metadataIds)
+            val metadata = metadataService.serviceListMetadata(metadataIds).map {
+                QualityIndicator.Metadata(it.hashId, it.dataName, it.dataId)
+            }
+            convertRecord(indicator, metadata)
+        }
+    }
+
+    fun serviceList(
+        elementType: String,
+        enNameSet: Collection<String>,
+        projectId: String? = null
+    ): List<QualityIndicator> {
+        val tempProjectId = if (elementType == RunElementType.RUN.elementType) projectId else null
         val indicatorRecords = indicatorDao.listByElementType(
             dslContext = dslContext,
             elementType = elementType,
             type = null,
-            enNameSet = enNameSet
-        )
-        return serviceListIndicatorRecord(indicatorRecords)
+            enNameSet = enNameSet,
+            projectId = tempProjectId
+        )?.associateBy { it.enName }
+        val allIndicatorRecords = enNameSet.map {
+            indicatorRecords?.get(it) ?: throw OperationException("indicator id $it is not exist")
+        }
+        return serviceListIndicatorRecord(allIndicatorRecords)
     }
 
     fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {

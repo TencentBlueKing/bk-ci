@@ -67,12 +67,12 @@ interface ApigwSignResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("起始时间戳（毫秒）", required = true)
+        @ApiParam("起始时间戳（毫秒）", required = false)
         @QueryParam("startTime")
-        startTime: Long,
-        @ApiParam("截止时间戳（毫秒）", required = true)
+        startTime: Long?,
+        @ApiParam("截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
-        endTime: Long,
+        endTime: Long?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

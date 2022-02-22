@@ -32,5 +32,10 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface QualityGatewaySDKApi : WorkerRestApiSDK {
 
-    fun saveScriptHisMetadata(elementType: String, data: Map<String, String>): Result<String>
+    fun saveScriptHisMetadata(
+        elementType: String,
+        taskId: String,
+        taskName: String,
+        data: Map<String, String>
+    ): Result<String>
 }

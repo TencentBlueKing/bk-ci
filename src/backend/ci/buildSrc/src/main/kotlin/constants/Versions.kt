@@ -4,7 +4,7 @@ object Versions {
     const val CommonExec = "1.3"
     const val CommonText = "1.9"
     const val Vmware = "5.1"
-    const val BouncyCastle = "1.70"
+    const val BouncyCastle = "1.46"
     const val Dom4j = "1.6.1"
     const val JsonSchema = "2.2.6"
     const val Jasypt = "3.0.3"
@@ -37,4 +37,5 @@ object Versions {
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
+    const val Xinge = "1.2.4.9"
 }

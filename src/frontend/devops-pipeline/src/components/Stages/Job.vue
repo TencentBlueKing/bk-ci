@@ -87,7 +87,6 @@
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
-
                 'getAllContainers'
             ]),
             isEditPage () {
@@ -100,7 +99,7 @@
                 if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
                     return 'DISABLED'
                 }
-                
+
                 return this.container && this.container.status ? this.container.status : ''
             },
             showCheckedToatal () {
