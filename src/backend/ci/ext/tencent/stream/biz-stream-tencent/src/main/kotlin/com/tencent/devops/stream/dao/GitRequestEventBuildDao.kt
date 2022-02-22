@@ -328,7 +328,7 @@ class GitRequestEventBuildDao {
             if (!event.isNullOrBlank()) {
                 dsl.and(OBJECT_KIND.eq(event))
             }
-            return dsl.fetchOne(0,Int::class.java)!!
+            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
 
