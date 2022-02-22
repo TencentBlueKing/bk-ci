@@ -59,7 +59,7 @@ if os.path.isdir(lambda_certificate_path):
     os.mkdir(secret_template_parent)
     lambda_tpl = open(secret_template_parent+'_lambda.tpl', 'w')
     lambda_tpl.write('{{- define "secret.lambda.yaml" -}}\n')
-    lambda_tpl.write('CN=sgadmin-keystore.jks: "'+keystore64+'"\n')
+    lambda_tpl.write('keystore.jks: "'+keystore64+'"\n')
     lambda_tpl.write('truststore.jks: "'+truststore64+'"\n')
     lambda_tpl.write('{{- end -}}')
     lambda_tpl.flush()
