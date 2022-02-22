@@ -58,7 +58,7 @@ if os.path.isdir(lambda_certificate_path):
     with open(lambda_certificate_path+'/truststore.jks', 'rb') as tsObj:
         truststore64 = base64.b64encode(tsObj.read())
         print(truststore64)
-    lambda_tpl = open(secret_template_parent+'_lambda.tpl', 'w')
+    lambda_tpl = open(secret_template_parent+'_lambda.tpl', 'a+')
     lambda_tpl.write('{{- define "secret.lambda.yaml" -}}\n')
     lambda_tpl.write('keystore.jks: "'+keystore64+'"\n')
     lambda_tpl.write('truststore.jks: "'+truststore64+'"\n')
