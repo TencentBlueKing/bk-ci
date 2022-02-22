@@ -25,29 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.enums.code.tgit
+package com.tencent.devops.scm.pojo
 
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule"),
-    DELETE("delete"),
-    OPENAPI("openApi"),
-    ISSUE("issue"),
-    REVIEW("review");
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
 
-    // 方便Json初始化使用常量保存，需要同步维护
-    companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
-        const val OBJECT_KIND_DELETE = "delete"
-        const val OBJECT_KIND_OPENAPI = "openApi"
-        const val OBJECT_KIND_ISSUE = "issue"
-        const val OBJECT_KIND_REVIEW = "review"
-    }
-}
+@ApiModel("工蜂差异文件信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ChangeFileInfo(
+    @JsonProperty("old_path")
+    val oldPath: String,
+    @JsonProperty("new_path")
+    val newPath: String,
+    @JsonProperty("a_mode")
+    val aMode: Long?,
+    @JsonProperty("b_mode")
+    val bMode: Long?,
+    @JsonProperty("new_file")
+    val newFile: Boolean,
+    @JsonProperty("renamed_file")
+    val renameFile: Boolean,
+    @JsonProperty("deleted_file")
+    val deletedFile: Boolean,
+    @JsonProperty("additions")
+    val additions: Int,
+    @JsonProperty("deletions")
+    val deletions: Int
+)
