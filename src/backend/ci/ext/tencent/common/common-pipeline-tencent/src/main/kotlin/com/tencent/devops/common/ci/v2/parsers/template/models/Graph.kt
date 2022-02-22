@@ -25,20 +25,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.common.ci.v2.parsers.template.models
 
-/**
- * "email","wework-message","wework-chat"
- */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
+class Graph<T>(
+    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
+) {
 
-    // 邮件
-    EMAIL("email"),
+    fun addEdge(fromPath: String, toPath: String) {
+        if (adj[fromPath] != null) {
+            adj[fromPath]!!.add(toPath)
+        } else {
+            adj[fromPath] = mutableListOf(toPath)
+        }
+    }
 
-    // 企业微信群
-    RTX_GROUP("wework-chat");
+    fun hasCyclic(): Boolean {
+        val visited = adj.map { it.key to false }.toMap().toMutableMap()
+        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
 
-    companion object
+        for (i in adj.keys) {
+            if (hasCyclicUtil(i, visited, recStack)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasCyclicUtil(
+        i: String,
+        visited: MutableMap<String, Boolean>,
+        recStack: MutableMap<String, Boolean>
+    ): Boolean {
+
+        if (recStack[i] == null || visited[i] == null) {
+            return false
+        }
+
+        if (recStack[i]!!) {
+            return true
+        }
+
+        if (visited[i]!!) {
+            return false
+        }
+
+        visited[i] = true
+
+        recStack[i] = true
+
+        val children = adj[i]!!
+
+        for (c in children) {
+            if (hasCyclicUtil(c, visited, recStack)) {
+                return true
+            }
+        }
+
+        recStack[i] = false
+
+        return false
+    }
 }

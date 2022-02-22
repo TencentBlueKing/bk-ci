@@ -25,20 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.devops.process.yaml.modelCreate
 
-/**
- * "email","wework-message","wework-chat"
- */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
+abstract class ModelCreateException(message: String) : RuntimeException(message)
 
-    // 邮件
-    EMAIL("email"),
-
-    // 企业微信群
-    RTX_GROUP("wework-chat");
-
-    companion object
-}
+class QualityRulesException(message: String, val errorCode: String? = null) : ModelCreateException(message)

@@ -25,20 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.common.ci.v2.parsers.template
 
-/**
- * "email","wework-message","wework-chat"
- */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
-
-    // 邮件
-    EMAIL("email"),
-
-    // 企业微信群
-    RTX_GROUP("wework-chat");
-
-    companion object
-}
+class temp

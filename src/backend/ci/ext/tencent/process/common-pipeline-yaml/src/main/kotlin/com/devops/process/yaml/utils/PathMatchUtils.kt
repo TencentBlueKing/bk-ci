@@ -25,20 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.devops.process.yaml.utils
 
-/**
- * "email","wework-message","wework-chat"
- */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
+import java.util.regex.Pattern
 
-    // 邮件
-    EMAIL("email"),
+object PathMatchUtils {
+    fun isIncludePathMatch(pathList: List<String>?, fileChangeSet: Set<String>?): Boolean {
+        if (pathList.isNullOrEmpty()) {
+            return true
+        }
 
-    // 企业微信群
-    RTX_GROUP("wework-chat");
+        fileChangeSet?.forEach { path ->
+            pathList.forEach { includePath ->
+                if (isPathMatch(path, includePath)) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 
-    companion object
+    /**
+     * Check if the path match
+     * example:
+     * fullPath: a/1.txt
+     * prefixPath: a/
+     */
+    private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
+        val fullPathList = fullPath.removePrefix("/").split("/")
+        val prefixPathList = prefixPath.removePrefix("/").split("/")
+        if (fullPathList.size < prefixPathList.size) {
+            return false
+        }
+
+        for (i in prefixPathList.indices) {
+            val pattern = Pattern.compile(prefixPathList[i].replace("*", "\\S*"))
+            val matcher = pattern.matcher(fullPathList[i])
+            if (prefixPathList[i] != "*" && !matcher.matches()) {
+                return false
+            }
+        }
+
+        return true
+    }
 }

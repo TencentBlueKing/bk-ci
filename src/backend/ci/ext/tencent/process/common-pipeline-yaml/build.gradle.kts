@@ -25,20 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+dependencies {
+    api(project(":core:common:common-webhook:biz-common-webhook"))
+    api(project(":core:store:api-store"))
+    api(project(":core:quality:api-quality"))
 
-/**
- * "email","wework-message","wework-chat"
- */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
+    api(project(":ext:tencent:process:api-process-tencent"))
+}
 
-    // 邮件
-    EMAIL("email"),
-
-    // 企业微信群
-    RTX_GROUP("wework-chat");
-
-    companion object
+plugins {
+    `task-deploy-to-maven`
 }

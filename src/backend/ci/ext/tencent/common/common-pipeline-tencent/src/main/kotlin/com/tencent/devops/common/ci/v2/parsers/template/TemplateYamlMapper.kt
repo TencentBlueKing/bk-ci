@@ -25,20 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.common.ci.v2.parsers.template
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.tencent.devops.common.api.util.ReflectUtil
+import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import org.yaml.snakeyaml.Yaml
 
 /**
- * "email","wework-message","wework-chat"
+ * 部分yaml转换过程与公共的存在区别，template转换时需要保留meta信息字段
  */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
+object TemplateYamlMapper {
+    private val objectMapper = ObjectMapper(
+        YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
+    ).registerKotlinModule().setFilterProvider(SimpleFilterProvider().addFilter(
+        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAll()
+    ))
 
-    // 邮件
-    EMAIL("email"),
+    fun getObjectMapper() = objectMapper
 
-    // 企业微信群
-    RTX_GROUP("wework-chat");
+    fun toYaml(bean: Any): String {
+        if (ReflectUtil.isNativeType(bean) || bean is String) {
+            return bean.toString()
+        }
+        return getObjectMapper().writeValueAsString(bean)!!
+    }
 
-    companion object
+    fun <T> to(yamlStr: String): T {
+        val yaml = Yaml()
+        val obj = toYaml(yaml.load(yamlStr) as Any)
+        return getObjectMapper().readValue(obj, object : TypeReference<T>() {})
+    }
 }

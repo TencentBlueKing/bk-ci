@@ -25,20 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo.enums
+package com.tencent.devops.common.ci.v2.parsers.template.models
 
-/**
- * "email","wework-message","wework-chat"
- */
-enum class GitCINotifyType(val yamlText: String) {
-    // 企业微信客服
-    RTX_CUSTOM("wework-message"),
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.ci.v2.enums.TemplateType
 
-    // 邮件
-    EMAIL("email"),
-
-    // 企业微信群
-    RTX_GROUP("wework-chat");
-
-    companion object
-}
+data class GetTemplateParam(
+    val gitRequestEventId: Long,
+    val token: String?,
+    val forkToken: String?,
+    val gitProjectId: Long,
+    val targetRepo: String?,
+    val ref: String?,
+    val personalAccessToken: String?,
+    val fileName: String,
+    val changeSet: Set<String>?,
+    val event: GitEvent?,
+    val templateType: TemplateType?,
+    // 正在被替换的远程库
+    val nowRemoteGitProjectId: String?
+)
