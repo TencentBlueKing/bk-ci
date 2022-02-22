@@ -25,47 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
+import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 
-@Suppress("ALL")
-data class GitMergeRequestEvent(
-    val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
-) : GitEvent() {
+/**
+ * 正则包含过滤器，included中应为正则表达式
+ */
+class RegexContainFilter(
+    private val pipelineId: String,
+    // 过滤器名字
+    private val filterName: String,
+    private val triggerOn: String,
+    private val included: List<String>
+) : WebhookFilter {
+
     companion object {
-        const val classType = "merge_request"
+        private val logger = LoggerFactory.getLogger(RegexContainFilter::class.java)
+    }
+
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info("$pipelineId|triggerOn:$triggerOn|included:$included|$filterName filter")
+        if (included.isEmpty()) {
+            return true
+        }
+        included.forEach {
+            try {
+                if (Pattern.compile(it).matcher(triggerOn).find()) {
+                    return true
+                }
+            } catch (e: PatternSyntaxException) {
+                logger.warn("($it) syntax error :$e ")
+            }
+        }
+        return false
     }
 }
-
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
-    val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: Long,
-    val source_project_id: Long,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String?,
-    val action: String?,
-    val extension_action: String?,
-    @JsonProperty("merge_type")
-    val mergeType: String? = null,
-    @JsonProperty("merge_commit_sha")
-    val mergeCommitSha: String? = null
-)

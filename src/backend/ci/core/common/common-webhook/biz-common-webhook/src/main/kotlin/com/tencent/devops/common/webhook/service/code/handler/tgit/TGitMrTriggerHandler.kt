@@ -46,22 +46,6 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
-import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
-import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
-import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
-import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.util.WebhookUtils.convert
-import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
-import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
@@ -101,7 +85,23 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
+import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
+import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.util.WebhookUtils.convert
+import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
+import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -271,7 +271,7 @@ class TGitMrTriggerHandler(
             GitUtils.getProjectName(event.object_attributes.source.http_url)
         startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
             GitUtils.getProjectName(event.object_attributes.target.http_url)
-        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url ?: ""
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
@@ -280,7 +280,7 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_REPO_URL] = event.object_attributes.target.http_url
         startParams[PIPELINE_GIT_BASE_REPO_URL] = event.object_attributes.source.http_url
         startParams[PIPELINE_GIT_HEAD_REPO_URL] = event.object_attributes.target.http_url
-        startParams[PIPELINE_GIT_MR_URL] = event.object_attributes.url
+        startParams[PIPELINE_GIT_MR_URL] = event.object_attributes.url ?: ""
         startParams[PIPELINE_GIT_EVENT] = GitMergeRequestEvent.classType
         startParams[PIPELINE_GIT_HEAD_REF] = event.object_attributes.target_branch
         startParams[PIPELINE_GIT_BASE_REF] = event.object_attributes.source_branch
@@ -299,8 +299,8 @@ class TGitMrTriggerHandler(
             startParams[PIPELINE_GIT_MR_DESC] = event.object_attributes.description!!
         }
         startParams[PIPELINE_GIT_MR_PROPOSER] = event.user.username
-        startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action
-        startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url
+        startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
+        startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
         return startParams
     }
 

@@ -48,6 +48,7 @@ import com.tencent.devops.common.ci.v2.DeleteRule
 import com.tencent.devops.common.ci.v2.IssueRule
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.MrRule
+import com.tencent.devops.common.ci.v2.NoteRule
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
@@ -580,8 +581,27 @@ object ScriptYmlUtils {
             schedules = schedulesRule(preTriggerOn),
             delete = deleteRule(preTriggerOn),
             issue = issueRule(preTriggerOn),
-            review = reviewRule(preTriggerOn)
+            review = reviewRule(preTriggerOn),
+            note = noteRule(preTriggerOn)
         )
+    }
+
+    private fun noteRule(
+        preTriggerOn: PreTriggerOn
+    ): NoteRule? {
+        if (preTriggerOn.note != null) {
+            val note = preTriggerOn.note
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(note),
+                    NoteRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn noteRule failed.", e)
+                null
+            }
+        }
+        return null
     }
 
     private fun reviewRule(

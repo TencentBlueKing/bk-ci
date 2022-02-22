@@ -13,6 +13,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
@@ -42,8 +43,38 @@ object TriggerBuilder {
                 buildGitIssueElement(gitEvent, triggerOn)
             is GitReviewEvent ->
                 buildGitReviewElement(gitEvent, triggerOn)
+            is GitNoteEvent ->
+                buildGitNoteElement(gitEvent, triggerOn)
             else -> null
         }
+    }
+
+    private fun buildGitNoteElement(gitEvent: GitNoteEvent, triggerOn: TriggerOn?): CodeGitWebHookTriggerElement? {
+        if (triggerOn?.note == null) {
+            return null
+        }
+        return CodeGitWebHookTriggerElement(
+            id = "0",
+            repositoryHashId = null,
+            repositoryName = gitEvent.projectId.toString(),
+            repositoryType = RepositoryType.NAME,
+            branchName = null,
+            excludeBranchName = null,
+            includePaths = null,
+            excludePaths = null,
+            excludeUsers = null,
+            block = false,
+            includeNoteComment = triggerOn.note?.comment,
+            includeNoteTypes = triggerOn.note?.types?.map {
+                when (it) {
+                    "commit" -> "Commit"
+                    "merge_request" -> "Review"
+                    "issue" -> "Issue"
+                    else -> it
+                }
+            }?.toList(),
+            eventType = CodeEventType.NOTE
+        )
     }
 
     private fun buildGitReviewElement(gitEvent: GitReviewEvent, triggerOn: TriggerOn?): CodeGitWebHookTriggerElement? {

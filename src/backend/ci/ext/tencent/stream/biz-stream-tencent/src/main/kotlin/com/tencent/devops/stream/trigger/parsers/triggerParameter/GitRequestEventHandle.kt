@@ -38,6 +38,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
@@ -172,7 +173,7 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.ISSUE.value,
             operationKind = "",
-            extensionAction = TGitIssueAction.getDesc(gitIssueEvent.objectAttributes.action),
+            extensionAction = TGitIssueAction.getDesc(gitIssueEvent.objectAttributes.action ?: ""),
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
@@ -188,6 +189,42 @@ class GitRequestEventHandle @Autowired constructor(
             description = "",
             mrTitle = gitIssueEvent.objectAttributes.title,
             gitEvent = gitIssueEvent
+        )
+    }
+
+    fun createNoteEvent(gitNoteEvent: GitNoteEvent, e: String): GitRequestEvent {
+        val gitProjectId = gitNoteEvent.objectAttributes.projectId
+        val token = streamGitTokenService.getToken(gitProjectId)
+        val defaultBranch = streamScmService.getProjectInfoRetry(
+            token = token,
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = true
+        ).defaultBranch!!
+        val latestCommit = streamScmService.getCommitInfo(
+            gitToken = token,
+            projectName = gitProjectId.toString(),
+            sha = defaultBranch
+        )
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.NOTE.value,
+            operationKind = "",
+            extensionAction = null,
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = null,
+            branch = defaultBranch,
+            targetBranch = null,
+            commitId = latestCommit?.id ?: "0",
+            commitMsg = gitNoteEvent.objectAttributes.note,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
+            commitAuthorName = latestCommit?.author_name,
+            userId = latestCommit?.author_name ?: "",
+            totalCommitCount = 1,
+            mergeRequestId = null,
+            event = e,
+            description = "",
+            mrTitle = null,
+            gitEvent = gitNoteEvent
         )
     }
 
