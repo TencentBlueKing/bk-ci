@@ -45,6 +45,7 @@ import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -276,17 +277,18 @@ class ExperienceIndexService @Autowired constructor(
         } else ""
 
         // 同步版本号
-        if (StringUtils.isBlank(it.version)) {
-            val record = experienceDao.get(dslContext, it.recordId)
-            if (null == record) {
-                it.version = "0.0.0"
-            } else {
+        if (StringUtils.isBlank(it.version) && it.recordId > 0) {
+            try {
+                val record = experienceDao.get(dslContext, it.recordId)
                 it.version = record.version
                 experiencePublicDao.updateById(
                     dslContext = dslContext,
                     id = it.id,
                     version = it.version
                 )
+            } catch (e: Exception) {
+                logger.warn("Can`t not find experience:{}", it.recordId)
+                it.version = "0.0.0"
             }
         }
 
@@ -305,5 +307,9 @@ class ExperienceIndexService @Autowired constructor(
             type = it.type,
             version = it.version
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceIndexService::class.java)
     }
 }
