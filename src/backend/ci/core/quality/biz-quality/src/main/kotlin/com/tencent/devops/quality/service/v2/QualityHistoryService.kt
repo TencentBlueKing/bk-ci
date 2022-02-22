@@ -41,6 +41,8 @@ import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.quality.dao.HistoryDao
+import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.quality.util.QualityUrlUtils
@@ -62,6 +64,8 @@ class QualityHistoryService @Autowired constructor(
     private val ruleService: QualityRuleService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
     private val historyDao: HistoryDao,
+    private val qualityRuleDao: QualityRuleDao,
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityRuleBuildHisOperationService: QualityRuleBuildHisOperationService,
     private val client: Client,
     private val objectMapper: ObjectMapper,
@@ -204,18 +208,25 @@ class QualityHistoryService @Autowired constructor(
     }
 
     fun serviceListByBuildId(projectId: String, pipelineId: String, buildId: String): List<QualityRuleIntercept> {
-        return historyDao.listByBuildId(
+        val interceptHistory = historyDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
-        ).map {
+        )
+        val ruleIdSet = interceptHistory.map { it.ruleId }.toSet()
+        val ruleMap = qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleIds = ruleIdSet
+        )?.map { it.id to it }?.toMap()
+        return interceptHistory.map {
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
                 buildId = it.buildId,
                 ruleHashId = "",
-                ruleName = "",
+                ruleName = ruleMap?.get(it.ruleId)?.name ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
                 checkTimes = it.checkTimes,
@@ -230,12 +241,19 @@ class QualityHistoryService @Autowired constructor(
         buildId: String,
         ruleIds: Collection<String>?
     ): List<QualityRuleIntercept> {
-        return historyDao.listByBuildId(
+        val interceptHistory = historyDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId
-        ).filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }.distinctBy { it.ruleId }.map {
+        )
+        val ruleIdSet = interceptHistory.map { it.ruleId }.toSet()
+        val ruleMap = qualityRuleBuildHisDao.list(
+            dslContext = dslContext,
+            ruleIds = ruleIdSet
+        )?.map { it.id to it }?.toMap()
+        return interceptHistory.filter { ruleIds?.contains(HashUtil.encodeLongId(it.ruleId)) ?: false }
+            .distinctBy { it.ruleId }.map {
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { record ->
                 if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
@@ -253,7 +271,7 @@ class QualityHistoryService @Autowired constructor(
                 pipelineName = "",
                 buildId = it.buildId,
                 ruleHashId = "",
-                ruleName = "",
+                ruleName = ruleMap[it.ruleId]?.ruleName ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
                 checkTimes = it.checkTimes,
@@ -373,8 +391,11 @@ class QualityHistoryService @Autowired constructor(
         )
 
         val ruleIdList = recordList.map { it.ruleId }
-        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIdList.toSet())
-            .map { it.hashId to it.name }.toMap()
+        val ruleIdToNameMap = qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleIds = ruleIdList.toSet()
+        )?.map { it.id to it.name }?.toMap()
         val pipelineIdList = recordList.map { it.pipelineId }
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
@@ -398,7 +419,7 @@ class QualityHistoryService @Autowired constructor(
                 timestamp = it.createTime.timestamp(),
                 interceptResult = RuleInterceptResult.valueOf(it.result),
                 ruleHashId = hisRuleHashId,
-                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                ruleName = ruleIdToNameMap?.get(it.ruleId) ?: "",
                 pipelineId = it.pipelineId,
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,

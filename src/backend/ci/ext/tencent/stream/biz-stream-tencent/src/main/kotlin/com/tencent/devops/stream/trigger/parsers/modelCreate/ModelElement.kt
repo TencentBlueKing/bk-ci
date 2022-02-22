@@ -123,6 +123,7 @@ class ModelElement @Autowired constructor(
                     val data = mutableMapOf<String, Any>()
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
+                        id = step.taskId,
                         name = step.name ?: step.uses!!.split('@')[0],
                         stepId = step.id,
                         atomCode = step.uses!!.split('@')[0],
@@ -153,6 +154,7 @@ class ModelElement @Autowired constructor(
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
+                id = step.taskId,
                 name = step.name ?: "run",
                 stepId = step.id,
                 atomCode = runPlugInAtomCode ?: throw RuntimeException("runPlugInAtomCode must exist"),
@@ -162,6 +164,7 @@ class ModelElement @Autowired constructor(
             )
         } else {
             val linux = LinuxScriptElement(
+                id = step.taskId,
                 name = step.name ?: "run",
                 stepId = step.id,
                 scriptType = BuildScriptType.SHELL,
@@ -176,6 +179,7 @@ class ModelElement @Autowired constructor(
                     "linux" -> linux
                     "macos" -> linux
                     "windows" -> WindowsScriptElement(
+                        id = step.taskId,
                         name = step.name ?: "run",
                         stepId = step.id,
                         scriptType = BuildScriptType.BAT,
@@ -228,6 +232,7 @@ class ModelElement @Autowired constructor(
         data["input"] = inputMap
 
         return MarketBuildAtomElement(
+            id = step.taskId,
             name = step.name ?: "checkout",
             stepId = step.id,
             atomCode = "checkout",

@@ -71,7 +71,7 @@ class ExperienceConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
     fun streamExperiencePermissionServiceImpl(
         client: Client,
         tokenService: ClientTokenService,

@@ -31,18 +31,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.codecc.CodeccUtils
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -178,13 +179,39 @@ class QualityRuleCheckService @Autowired constructor(
     }
 
     fun check(buildCheckParams: BuildCheckParams): RuleCheckResult {
-        // 遍历项目下所有拦截规则
-        val ruleList = ruleService.serviceListRuleByPosition(
-            buildCheckParams.projectId,
-            buildCheckParams.position
-        )
+        val pipelineId = buildCheckParams.pipelineId
+        val templateId = buildCheckParams.templateId
+        val ruleList = mutableSetOf<QualityRule>()
+        val watcher = Watcher(id = "QUALITY|check|${buildCheckParams.projectId}|" +
+                "${buildCheckParams.buildId}|${buildCheckParams.position}")
+        try {
+            watcher.start("listPipelineRange")
+            // 匹配拦截规则
+            if (!pipelineId.isNullOrBlank()) {
+                ruleList.addAll(
+                    ruleService.serviceListByPipelineRange(
+                        buildCheckParams.projectId,
+                        buildCheckParams.pipelineId
+                    ).filter { it.controlPoint.position.name == buildCheckParams.position }
+                )
+            }
+            watcher.stop()
+            watcher.start("listTemplateRange")
+            if (!templateId.isNullOrBlank()) {
+                ruleList.addAll(
+                    ruleService.serviceListByTemplateRange(
+                        buildCheckParams.projectId,
+                        buildCheckParams.templateId
+                    ).filter { it.controlPoint.position.name == buildCheckParams.position }
+                )
+            }
+            watcher.stop()
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500, errorThreshold = 3000)
+        }
 
-        return doCheckRules(buildCheckParams, ruleList)
+        return doCheckRules(buildCheckParams, ruleList.toList())
     }
 
     fun checkBuildHis(buildCheckParams: BuildCheckParamsV3): RuleCheckResult {
@@ -673,7 +700,7 @@ class QualityRuleCheckService @Autowired constructor(
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
-        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
+        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: ""
         val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
 
@@ -739,7 +766,7 @@ class QualityRuleCheckService @Autowired constructor(
         runtimeVariable: Map<String, String>?
     ) {
         val projectName = getProjectName(projectId)
-        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: getPipelineName(projectId, pipelineId)
+        val pipelineName = runtimeVariable?.get(PIPELINE_NAME) ?: ""
         val url = qualityUrlBean.genBuildDetailUrl(projectId, pipelineId, buildId, position, stageId, runtimeVariable)
         val time = createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
@@ -817,15 +844,6 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
-    }
-
-    private fun getPipelineName(projectId: String, pipelineId: String): String {
-        val map = getPipelineIdToNameMap(projectId, setOf(pipelineId))
-        return map[pipelineId] ?: ""
-    }
-
-    private fun getPipelineIdToNameMap(projectId: String, pipelineIdSet: Set<String>): Map<String, String> {
-        return client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIdSet).data!!
     }
 
     companion object {

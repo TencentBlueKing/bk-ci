@@ -90,6 +90,7 @@ class QualityRuleBuildHisService constructor(
 
         return ruleRequestList.map { ruleRequest ->
             // run插件先创建指标
+            // todo performance upsert indicator
             val indicatorCreateList = ruleRequest.indicators.filter { it.atomCode == RunElementType.RUN.elementType }
                 .map {
                     IndicatorCreate(
@@ -390,7 +391,8 @@ class QualityRuleBuildHisService constructor(
         logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
-                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name || it?.status == null) {
+                if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name ||
+                    it?.status == RuleInterceptResult.PASS.name) {
                     passFlag = true
                 } else {
                     passFlag = false
