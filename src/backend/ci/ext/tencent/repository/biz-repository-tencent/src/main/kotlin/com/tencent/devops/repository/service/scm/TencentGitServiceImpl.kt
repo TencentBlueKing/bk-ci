@@ -45,6 +45,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -368,6 +369,36 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             ref = ref,
             token = token,
             tokenType = tokenType
+        )
+    }
+
+    override fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo> {
+        return client.getScm(ServiceGitResource::class).getChangeFileList(
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            token = token,
+            from = from,
+            to = to,
+            straight = straight,
+            page = page,
+            pageSize = pageSize
+        ).data!!
+    }
+
+    override fun getGitProjectInfo(id: String, token: String, tokenType: TokenTypeEnum): Result<GitProjectInfo?> {
+        return client.getScm(ServiceGitResource::class).getGitProjectInfo(
+            token = token,
+            tokenType = tokenType,
+            gitProjectId = id
         )
     }
 }

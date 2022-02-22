@@ -107,13 +107,13 @@ class GitCITriggerService @Autowired constructor(
         private const val ciFileDirectoryName = ".ci"
     }
 
-    fun externalCodeGitBuild(event: String): Boolean? {
+    fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
         val start = LocalDateTime.now().timestampmilli()
-        logger.info("Trigger code git build($event)")
+        logger.info("Trigger code git build($event, $eventType)")
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
-        } catch (e: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+        } catch (ignore: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
             return false
         }
 

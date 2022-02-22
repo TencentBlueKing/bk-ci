@@ -317,7 +317,7 @@ class StreamYamlBuild @Autowired constructor(
         params: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData
     ): BuildId? {
-        logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
+        logger.info("Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}, event: ${event.id}")
 
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
             pipeline = pipeline,
