@@ -393,6 +393,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun setTestIndicator(userId: String, elementType: String, indicatorUpdateList: Collection<IndicatorUpdate>): Int {
+        logger.info("QUALITY|setTestIndicator userId: $userId, elementType: $elementType")
         val testIndicatorList = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
             ?.filter { isTestIndicator(it) } ?: listOf()
         val testIndicatorMap = testIndicatorList.map { it.enName to it }.toMap()
@@ -418,6 +419,7 @@ class QualityIndicatorService @Autowired constructor(
 
     // 把测试的数据刷到正式的， 有或无都update，多余的删掉
     fun serviceRefreshIndicator(elementType: String, metadataMap: Map<String /* dataId */, String /* id */>): Int {
+        logger.info("QUALITY|refreshIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
         val testData = data?.filter { isTestIndicator(it) } ?: listOf()
         val prodData = data?.filter { !isTestIndicator(it) } ?: listOf()
@@ -491,6 +493,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceDeleteTestIndicator(elementType: String): Int {
+        logger.info("QUALITY|deleteTestIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { isTestIndicator(it) } ?: listOf()
         return indicatorDao.delete(testData.map { it.id }, dslContext)
