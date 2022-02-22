@@ -214,7 +214,7 @@ interface ApigwBuildResourceV4 {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
-        pipelineId: String,
+        pipelineId: String
     ): Result<BuildManualStartupInfo>
 
     @ApiOperation("构建详情", tags = ["v4_app_build_detail", "v4_user_build_detail"])

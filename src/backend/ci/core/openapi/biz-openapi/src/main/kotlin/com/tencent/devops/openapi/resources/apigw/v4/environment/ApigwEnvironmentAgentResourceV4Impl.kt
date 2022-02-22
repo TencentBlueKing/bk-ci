@@ -36,7 +36,6 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentAgentResourceV3
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

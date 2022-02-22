@@ -168,7 +168,7 @@ interface ApigwTemplateResourceV4 {
         templateId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线模板的版本", tags = ["v4_app_template_version_delete","v4_user_template_version_delete"])
+    @ApiOperation("删除流水线模板的版本", tags = ["v4_app_template_version_delete", "v4_user_template_version_delete"])
     @DELETE
     @Path("/template_version")
     fun deleteTemplateVersion(

@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwBuildResourceV4
-import com.tencent.devops.openapi.resources.apigw.v3.ApigwBuildResourceV3Impl
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource

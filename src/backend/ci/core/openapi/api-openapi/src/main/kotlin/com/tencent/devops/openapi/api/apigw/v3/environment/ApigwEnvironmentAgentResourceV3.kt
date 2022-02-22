@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwEnvironmentAgentResourceV3 {
 
-    @ApiOperation("获取项目下第三方构建机列表",tags = ["v3_app_node_list","v3_user_node_list"])
+    @ApiOperation("获取项目下第三方构建机列表", tags = ["v3_app_node_list", "v3_user_node_list"])
     @GET
     @Path("/thirdPartAgent/nodeList")
     fun thirdPartAgentList(
@@ -71,7 +71,7 @@ interface ApigwEnvironmentAgentResourceV3 {
         projectId: String
     ): Result<List<NodeBaseInfo>>
 
-    @ApiOperation("获取指定构建机状态",tags = ["v3_user_node_status","v3_app_node_status"])
+    @ApiOperation("获取指定构建机状态", tags = ["v3_user_node_status", "v3_app_node_status"])
     @Path("/thirdPartAgent/nodes/status")
     @GET
     fun getNodeStatus(
