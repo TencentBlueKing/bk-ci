@@ -149,7 +149,7 @@ class StreamScmService @Autowired constructor(
         ref: String,
         useAccessToken: Boolean
     ): String {
-        logger.info("getYamlFromGit: [$gitProjectId|$fileName|$token|$ref|$useAccessToken]")
+        logger.info("getYamlFromGit: [$gitProjectId|$fileName|$ref|$useAccessToken]")
         return retryFun(
             log = "$gitProjectId get yaml $fileName fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR,
@@ -170,7 +170,7 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo {
-        logger.info("getProjectInfoRetry: [$gitProjectId|$token]")
+        logger.info("getProjectInfoRetry: [$gitProjectId]")
         return retryFun(
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
@@ -189,7 +189,7 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
-        logger.info("GitCIProjectInfo: [$gitProjectId|$token|$useAccessToken]")
+        logger.info("GitCIProjectInfo: [$gitProjectId|$useAccessToken]")
         try {
             val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
                 accessToken = token,
@@ -242,7 +242,7 @@ class StreamScmService @Autowired constructor(
         page: Int?,
         perPage: Int?
     ): List<Commit>? {
-        logger.info("getCommits: [$gitProjectId|$filePath|$branch|$token|$since|$until|$page|$perPage]")
+        logger.info("getCommits: [$gitProjectId|$filePath|$branch|$since|$until|$page|$perPage]")
         return client.getScm(ServiceGitResource::class).getCommits(
             gitProjectId = gitProjectId,
             filePath = filePath,
@@ -261,7 +261,7 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         gitCICreateFile: GitCICreateFile
     ): Boolean {
-        logger.info("createNewFile: [$gitProjectId|$token|$gitCICreateFile]")
+        logger.info("createNewFile: [$gitProjectId|$gitCICreateFile]")
         try {
             return client.getScm(ServiceGitResource::class).gitCICreateFile(
                 gitProjectId = gitProjectId,
@@ -301,7 +301,7 @@ class StreamScmService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<GitMember>? {
-        logger.info("getProjectMembers: [$gitProjectId|$token|$page|$pageSize|$search]")
+        logger.info("getProjectMembers: [$gitProjectId|$page|$pageSize|$search]")
         return client.getScm(ServiceGitCiResource::class).getMembers(
             token = token,
             gitProjectId = gitProjectId,
@@ -365,7 +365,7 @@ class StreamScmService @Autowired constructor(
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): List<String>? {
-        logger.info("getProjectBranches: [$gitProjectId|$token|$page|$pageSize|$search|$orderBy|$sort]")
+        logger.info("getProjectBranches: [$gitProjectId|$page|$pageSize|$search|$orderBy|$sort]")
         return client.getScm(ServiceGitCiResource::class)
             .getBranches(
                 token = token,
@@ -424,7 +424,7 @@ class StreamScmService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo>? {
-        logger.info("getProjectList: [$accessToken|$userId|$page|$pageSize|$search]")
+        logger.info("getProjectList: [$userId|$page|$pageSize|$search]")
         return client.getScm(ServiceGitCiResource::class).getProjectList(
             accessToken = accessToken,
             userId = userId,
@@ -463,7 +463,7 @@ class StreamScmService @Autowired constructor(
         mergeRequestId: Long,
         token: String
     ): GitCIMrInfo {
-        logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId][$token]")
+        logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId]")
         return retryFun(
             log = "$gitProjectId get mr $mergeRequestId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO,
@@ -481,7 +481,8 @@ class StreamScmService @Autowired constructor(
         gitToken: String,
         gitRequestEvent: GitRequestEvent,
         filePath: String,
-        isMrEvent: Boolean = false
+        isMrEvent: Boolean = false,
+        ref: String?
     ): List<GitFileInfo> {
         val gitProjectId = getProjectId(isMrEvent, gitRequestEvent)
         return retryFun(
@@ -492,7 +493,7 @@ class StreamScmService @Autowired constructor(
                     gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
                     path = filePath,
                     token = gitToken,
-                    ref = getTriggerBranch(gitRequestEvent.branch)
+                    ref = ref
                 ).data ?: emptyList()
             }
         )
@@ -628,7 +629,7 @@ class StreamScmService @Autowired constructor(
         ).data
     }
 
-    private fun getTriggerBranch(branch: String): String {
+    fun getTriggerBranch(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")

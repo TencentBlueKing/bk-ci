@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.dispatch.docker.api.user
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,38 +38,46 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_METADATA"], description = "构建-质量红线")
-@Path("/build/metadata")
+@Api(tags = ["USER_DOCKER_HOST"], description = "用户-获取构建容器信息")
+@Path("/user/docker/debug")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildQualityMetadataResource {
+interface UserDockerDebugResource {
 
-    @ApiOperation("设置脚本原子指标的元数据")
-    @Path("/saveHisMetadata")
+    @ApiOperation("启动调试容器-新版")
     @POST
-    fun saveHisMetadata(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+    @Path("/start")
+    fun startDebug(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        debugStartParam: DebugStartParam
+    ): Result<String>?
+
+    @ApiOperation("终止调试容器")
+    @POST
+    @Path("/stop/projects/{projectId}/pipelines/{pipelineId}/vmseqs/{vmSeqId}")
+    fun stopDebug(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
         projectId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
+        @ApiParam("流水线Id", required = true)
+        @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam("原子类型", required = true)
-        @QueryParam("elementType")
-        elementType: String,
-        @ApiParam("任务节点ID", required = false)
-        @QueryParam("taskId")
-        taskId: String,
-        @ApiParam("任务节点名称", required = false)
-        @QueryParam("taskName")
-        taskName: String,
-        data: Map<String, String>
-    ): Result<Boolean>
+        @ApiParam("vmSeqId", required = true)
+        @PathParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("containerName", required = false)
+        @QueryParam("containerName")
+        containerName: String?
+    ): Result<Boolean>?
 }

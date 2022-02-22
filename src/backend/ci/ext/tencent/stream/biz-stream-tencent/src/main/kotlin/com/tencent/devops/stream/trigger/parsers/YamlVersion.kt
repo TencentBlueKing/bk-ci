@@ -74,7 +74,7 @@ class YamlVersion @Autowired constructor(
 
         val sourceFile = getFileInfo(
             token = sourceGitToken ?: targetGitToken,
-            ref = mrEvent.object_attributes.source_branch,
+            ref = mrEvent.object_attributes.last_commit.id,
             filePath = filePath,
             gitProjectId = mrEvent.object_attributes.source_project_id.toString()
         )

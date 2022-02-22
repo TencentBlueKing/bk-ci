@@ -726,7 +726,11 @@ open class MarketAtomTask : ITask() {
                     it.key to value
                 }?.toMap()
                 if (qualityMap != null) {
-                    qualityGatewayResourceApi.saveScriptHisMetadata(atomCode, qualityMap)
+                    qualityGatewayResourceApi.saveScriptHisMetadata(
+                        atomCode,
+                        buildTask.taskId ?: "",
+                        buildTask.elementName ?: "",
+                        qualityMap)
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {

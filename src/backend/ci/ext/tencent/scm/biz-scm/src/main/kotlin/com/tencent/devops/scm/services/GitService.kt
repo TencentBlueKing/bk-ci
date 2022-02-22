@@ -700,15 +700,19 @@ class GitService @Autowired constructor(
         gitProjectId: Long,
         path: String,
         token: String,
-        ref: String
+        ref: String?
     ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
-                "?path=${URLEncoder.encode(path, "UTF-8")}" +
-                "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
-                "&access_token=$token"
+                    "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)

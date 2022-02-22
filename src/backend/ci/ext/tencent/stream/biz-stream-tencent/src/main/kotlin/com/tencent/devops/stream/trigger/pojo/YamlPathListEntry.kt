@@ -25,17 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.stream.trigger.pojo
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+data class YamlPathListEntry(
+    val yamlPath: String,
+    val checkType: CheckType
+)
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
-        urlPrefix: String = "http://"
-    ): Request.Builder
+enum class CheckType {
+    // 需要校验
+    NEED_CHECK,
+    // 无需校验
+    NO_NEED_CHECK,
+    // 校验有问题，改流水线不触发
+    NO_TRIGGER
 }

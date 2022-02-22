@@ -37,22 +37,6 @@ class TriggerExceptionService @Autowired constructor(
         } catch (triggerE: TriggerBaseException) {
             return handleTriggerException(triggerE)
         } catch (e: Throwable) {
-            // story_871153869 暂时下掉mr锁，看效果，后续需要再加
-//            if (gitEvent != null && basicSetting != null) {
-//                // 触发只要出了异常就把Mr锁定取消，防止出现工蜂项目无法合并
-//                logger.error("Trigger handle catch Throwable ${e.message}")
-//                val mrEvent = gitEvent is GitMergeRequestEvent
-//                if (basicSetting.enableMrBlock && mrEvent) {
-//                    noPipelineCommitCheck(
-//                        gitRequestEvent = requestEvent,
-//                        block = false,
-//                        state = GitCICommitCheckState.FAILURE,
-//                        gitCIBasicSetting = basicSetting,
-//                        description = TriggerReason.UNKNOWN_ERROR.detail.format(e.message)
-//                    )
-//                }
-//            }
-
             gitCIEventService.saveTriggerNotBuildEvent(
                 userId = requestEvent.userId,
                 eventId = requestEvent.id!!,
@@ -78,17 +62,6 @@ class TriggerExceptionService @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch
             )
-            // story_871153869 暂时下掉mr锁，看效果，后续需要再加
-//            if (triggerE.commitCheck != null) {
-//                // 没有yaml前只有无流水线commitCheck
-//                noPipelineCommitCheck(
-//                    gitRequestEvent = triggerE.requestEvent,
-//                    block = triggerE.commitCheck.block,
-//                    state = triggerE.commitCheck.state,
-//                    gitCIBasicSetting = triggerE.basicSetting!!,
-//                    description = realReasonDetail
-//                )
-//            }
             return null
         } else {
             with(triggerE) {
@@ -207,27 +180,4 @@ class TriggerExceptionService @Autowired constructor(
             else -> Pair("", "")
         }
     }
-    // story_871153869 暂时下掉mr锁，看效果，后续需要再加
-//    private fun noPipelineCommitCheck(
-//        gitRequestEvent: GitRequestEvent,
-//        gitCIBasicSetting: GitCIBasicSetting,
-//        block: Boolean,
-//        state: GitCICommitCheckState,
-//        description: String?
-//    ) {
-//        if (!gitCIBasicSetting.enableCommitCheck) {
-//            return
-//        }
-//        scmClient.pushCommitCheckWithBlock(
-//            commitId = gitRequestEvent.commitId,
-//            mergeRequestId = gitRequestEvent.mergeRequestId ?: 0L,
-//            userId = gitRequestEvent.userId,
-//            block = block,
-//            state = state,
-//            context = GitCITriggerService.noPipelineBuildEvent,
-//            gitCIBasicSetting = gitCIBasicSetting,
-//            jumpNotification = false,
-//            description = description
-//        )
-//    }
 }
