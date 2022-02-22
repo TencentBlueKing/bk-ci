@@ -518,10 +518,8 @@ class GitRequestEventBuildDao {
                     dsl.and(PIPELINE_ID.`in`(pipelineIds))
                 }
                 return dsl.fetchOne(0, Int::class.java)!!
-
             }
         }
-    }
 
     private fun getRequestEventBuildListMultiple(
         dslContext: DSLContext,
