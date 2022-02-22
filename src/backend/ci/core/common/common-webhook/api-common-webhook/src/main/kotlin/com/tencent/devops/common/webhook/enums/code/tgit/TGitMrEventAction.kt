@@ -27,27 +27,36 @@
 
 package com.tencent.devops.common.webhook.enums.code.tgit
 
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule"),
-    DELETE("delete"),
-    OPENAPI("openApi"),
-    ISSUE("issue"),
-    REVIEW("review");
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 
-    // 方便Json初始化使用常量保存，需要同步维护
+/*
+ * Stream Mr 事件支持动作
+ * 根据Webhook事件抽象Stream action
+ */
+
+enum class TGitMrEventAction(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge");
+
     companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
-        const val OBJECT_KIND_DELETE = "delete"
-        const val OBJECT_KIND_OPENAPI = "openApi"
-        const val OBJECT_KIND_ISSUE = "issue"
-        const val OBJECT_KIND_REVIEW = "review"
+        fun getActionValue(event: GitMergeRequestEvent): String? {
+            return when (event.object_attributes.action) {
+                TGitMergeActionKind.OPEN.value -> OPEN.value
+                TGitMergeActionKind.CLOSE.value -> CLOSE.value
+                TGitMergeActionKind.REOPEN.value -> REOPEN.value
+                TGitMergeActionKind.UPDATE.value -> {
+                    if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
+                        PUSH_UPDATE.value
+                    } else {
+                        null
+                    }
+                }
+                TGitMergeActionKind.MERGE.value -> MERGE.value
+                else -> null
+            }
+        }
     }
 }

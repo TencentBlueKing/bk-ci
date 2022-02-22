@@ -25,29 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.enums.code.tgit
+package com.tencent.devops.common.webhook.pojo.code.git
 
-enum class TGitObjectKind(val value: String) {
-    PUSH("push"),
-    TAG_PUSH("tag_push"),
-    MERGE_REQUEST("merge_request"),
-    MANUAL("manual"),
-    SCHEDULE("schedule"),
-    DELETE("delete"),
-    OPENAPI("openApi"),
-    ISSUE("issue"),
-    REVIEW("review");
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-    // 方便Json初始化使用常量保存，需要同步维护
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitIssueEvent(
+    val user: GitUser,
+    val repository: GitRepository,
+    @JsonProperty("object_attributes")
+    val objectAttributes: GitIssueAttributes
+) : GitEvent() {
     companion object {
-        const val OBJECT_KIND_MANUAL = "manual"
-        const val OBJECT_KIND_PUSH = "push"
-        const val OBJECT_KIND_TAG_PUSH = "tag_push"
-        const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
-        const val OBJECT_KIND_SCHEDULE = "schedule"
-        const val OBJECT_KIND_DELETE = "delete"
-        const val OBJECT_KIND_OPENAPI = "openApi"
-        const val OBJECT_KIND_ISSUE = "issue"
-        const val OBJECT_KIND_REVIEW = "review"
+        const val classType = "issue"
     }
 }
+
+data class GitIssueAttributes(
+    val id: Long,
+    val title: String,
+    @JsonProperty("assignee_id")
+    val assigneeId: Long?,
+    @JsonProperty("assignee_ids")
+    val assigneeIds: List<Long>?,
+    @JsonProperty("author_id")
+    val authorId: String,
+    @JsonProperty("project_id")
+    val projectId: Long,
+    val position: Long,
+    @JsonProperty("branch_name")
+    val branchName: String? = null,
+    val description: String? = null,
+    @JsonProperty("milestone_id")
+    val milestoneId: String? = null,
+    val state: String,
+    val iid: String,
+    val url: String,
+    val action: String
+)
