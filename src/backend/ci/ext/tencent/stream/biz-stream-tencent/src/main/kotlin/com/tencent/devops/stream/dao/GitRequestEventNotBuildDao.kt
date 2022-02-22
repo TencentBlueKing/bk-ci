@@ -177,9 +177,9 @@ class GitRequestEventNotBuildDao {
         gitProjectId: Long
     ): Int {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount().from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .count()
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
