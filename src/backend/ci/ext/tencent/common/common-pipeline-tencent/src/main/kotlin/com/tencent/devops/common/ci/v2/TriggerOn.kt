@@ -41,7 +41,7 @@ data class TriggerOn(
     val mr: MrRule?,
     val schedules: SchedulesRule? = null,
     val delete: DeleteRule? = null,
-    val issues: IssuesRule? = null,
+    val issue: IssueRule? = null,
     val review: ReviewRule? = null,
     val note: NoteRule? = null
 )
@@ -54,7 +54,7 @@ data class PreTriggerOn(
     val mr: Any?,
     val schedules: SchedulesRule?,
     val delete: DeleteRule?,
-    val issues: IssuesRule? = null,
+    val issue: IssueRule? = null,
     val review: ReviewRule? = null,
     val note: NoteRule? = null
 )

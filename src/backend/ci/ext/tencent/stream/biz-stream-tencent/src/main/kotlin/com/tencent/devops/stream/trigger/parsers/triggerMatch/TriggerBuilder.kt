@@ -1,7 +1,7 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.ci.v2.IssuesRule
+import com.tencent.devops.common.ci.v2.IssueRule
 import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.PushRule
 import com.tencent.devops.common.ci.v2.TagRule
@@ -110,13 +110,13 @@ object TriggerBuilder {
             is GitMergeRequestEvent ->
                 TriggerOn(push = null, mr = MrRule(), tag = null)
             is GitIssueEvent ->
-                TriggerOn(push = null, mr = MrRule(), tag = null, issues = IssuesRule())
+                TriggerOn(push = null, mr = null, tag = null, issue = IssueRule())
             else -> null
         }
     }
 
     private fun buildGitIssueElement(gitEvent: GitIssueEvent, triggerOn: TriggerOn?): CodeGitWebHookTriggerElement? {
-        if (triggerOn?.issues == null) {
+        if (triggerOn?.issue == null) {
             return null
         }
         return CodeGitWebHookTriggerElement(
@@ -130,7 +130,7 @@ object TriggerBuilder {
             excludePaths = null,
             excludeUsers = null,
             block = false,
-            includeIssueAction = triggerOn.issues?.action,
+            includeIssueAction = triggerOn.issue?.action,
             eventType = CodeEventType.ISSUES
         )
     }

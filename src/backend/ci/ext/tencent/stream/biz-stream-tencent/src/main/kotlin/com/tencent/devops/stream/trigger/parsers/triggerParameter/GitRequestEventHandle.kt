@@ -28,8 +28,12 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -40,8 +44,6 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -171,21 +173,21 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.ISSUE.value,
             operationKind = "",
-            extensionAction = null,
+            extensionAction = TGitIssueAction.getDesc(gitIssueEvent.objectAttributes.action ?: ""),
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
             targetBranch = null,
             commitId = latestCommit?.id ?: "0",
-            commitMsg = latestCommit?.message,
+            commitMsg = gitIssueEvent.objectAttributes.title,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
-            userId = latestCommit?.author_name ?: "",
+            userId = gitIssueEvent.user.username,
             totalCommitCount = 1,
-            mergeRequestId = null,
+            mergeRequestId = gitIssueEvent.objectAttributes.iid.toLong(),
             event = e,
             description = "",
-            mrTitle = null,
+            mrTitle = gitIssueEvent.objectAttributes.title,
             gitEvent = gitIssueEvent
         )
     }
@@ -243,7 +245,11 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.REVIEW.value,
             operationKind = "",
-            extensionAction = null,
+            extensionAction = when (gitReviewEvent.event) {
+                TGitReviewEventKind.CREATE.value -> "created"
+                TGitReviewEventKind.INVITE.value -> "updated"
+                else -> gitReviewEvent.state
+            },
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
@@ -252,12 +258,16 @@ class GitRequestEventHandle @Autowired constructor(
             commitMsg = latestCommit?.message,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
-            userId = latestCommit?.author_name ?: "",
+            userId = if (gitReviewEvent.reviewer == null) {
+                gitReviewEvent.author.username
+            } else {
+                gitReviewEvent.reviewer!!.reviewer.username
+            },
             totalCommitCount = 1,
-            mergeRequestId = null,
+            mergeRequestId = gitReviewEvent.iid.toLong(),
             event = e,
             description = "",
-            mrTitle = null,
+            mrTitle = "",
             gitEvent = gitReviewEvent
         )
     }
