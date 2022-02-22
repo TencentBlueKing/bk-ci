@@ -307,7 +307,7 @@ class GitRequestEventBuildDao {
         event: String?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectFrom(this)
+            val dsl = dslContext.selectCount().from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
             if (!branchName.isNullOrBlank()) {
