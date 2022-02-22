@@ -79,7 +79,7 @@ object TriggerBuilder {
             is GitMergeRequestEvent ->
                 TriggerOn(push = null, mr = MrRule(), tag = null)
             is GitIssueEvent ->
-                TriggerOn(push = null, mr = MrRule(), tag = null, issue = IssueRule())
+                TriggerOn(push = null, mr = null, tag = null, issue = IssueRule())
             else -> null
         }
     }
