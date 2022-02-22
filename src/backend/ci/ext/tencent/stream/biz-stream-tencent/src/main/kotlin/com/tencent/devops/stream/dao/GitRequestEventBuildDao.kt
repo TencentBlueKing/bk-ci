@@ -306,15 +306,30 @@ class GitRequestEventBuildDao {
         pipelineId: String?,
         event: String?
     ): Int {
-        return getRequestEventBuildRecords(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            branchName = branchName,
-            sourceGitProjectId = sourceGitProjectId,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId,
-            event = event
-        ).count()
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(BUILD_ID.isNotNull)
+            if (!branchName.isNullOrBlank()) {
+                // 针对fork库的特殊分支名 namespace:branchName 进行查询
+                if (sourceGitProjectId != null && branchName.contains(":")) {
+                    dsl.and(BRANCH.eq(branchName.split(":")[1]))
+                        .and(SOURCE_GIT_PROJECT_ID.eq(sourceGitProjectId))
+                } else {
+                    dsl.and(BRANCH.eq(branchName))
+                }
+            }
+            if (!triggerUser.isNullOrBlank()) {
+                dsl.and(TRIGGER_USER.eq(triggerUser))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!event.isNullOrBlank()) {
+                dsl.and(OBJECT_KIND.eq(event))
+            }
+            return dsl.fetchOne(0,Int::class.java)!!
+        }
     }
 
     fun getRequestEventBuildList(
