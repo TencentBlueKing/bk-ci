@@ -57,6 +57,8 @@ const (
 	templateVarInstance         = "__crm_instance__"
 	templateVarCPU              = "__crm_cpu__"
 	templateVarMem              = "__crm_mem__"
+	templateRequestVarCPU       = "__crm_request_cpu__"
+	templateRequestVarMem       = "__crm_request_mem__"
 	templateVarEnv              = "__crm_env__"
 	templateVarEnvKey           = "__crm_env_key__"
 	templateVarEnvValue         = "__crm_env_value__"
@@ -425,8 +427,6 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.ReplaceAll(data, templateVarName, param.Name)
 	data = strings.ReplaceAll(data, templateVarNamespace, param.Namespace)
 	data = strings.ReplaceAll(data, templateVarInstance, strconv.Itoa(param.Instance))
-	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", o.conf.BcsCPUPerInstance*1000))
-	data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", o.conf.BcsMemPerInstance))
 	data = strings.ReplaceAll(data, templateVarRandPortNames, strings.Join(randPortsNames, ","))
 	data = insertYamlPorts(data, pm)
 	data = insertYamlEnv(data, param.Env)
@@ -451,13 +451,41 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.ReplaceAll(data, templateVarPlatformKey, o.platformLabelKey)
 
 	// set city
-	if city, ok := param.AttributeCondition[op.AttributeKeyCity]; ok {
-		data = strings.ReplaceAll(data, templateVarCity, city)
-		data = strings.ReplaceAll(data, templateVarCityKey, o.cityLabelKey)
-	} else {
+	if _, ok := param.AttributeCondition[op.AttributeKeyCity]; !ok {
 		return "", fmt.Errorf("unknown city for yaml")
 	}
+	city := param.AttributeCondition[op.AttributeKeyCity]
+	data = strings.ReplaceAll(data, templateVarCity, city)
+	data = strings.ReplaceAll(data, templateVarCityKey, o.cityLabelKey)
 
+	varCPU := o.conf.BcsCPUPerInstance
+	varMem := o.conf.BcsMemPerInstance
+	varRequestCPU := o.conf.BcsCPUPerInstance
+	varRequestMem := o.conf.BcsMemPerInstance
+	for _, istItem := range o.conf.InstanceType {
+		if !param.CheckQueueKey(istItem) {
+			continue
+		}
+		if istItem.CPUPerInstance > 0.0 {
+			varCPU = istItem.CPUPerInstance
+			varRequestCPU = istItem.CPUPerInstance
+		}
+		if istItem.MemPerInstance > 0.0 {
+			varMem = istItem.MemPerInstance
+			varRequestMem = istItem.MemPerInstance
+		}
+		if istItem.CPURequestPerInstance > 0.0 {
+			varRequestCPU = istItem.CPURequestPerInstance
+		}
+		if istItem.MemRequestPerInstance > 0.0 {
+			varRequestMem = istItem.MemRequestPerInstance
+		}
+		break
+	}
+	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU*1000))
+	data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", varMem))
+	data = strings.ReplaceAll(data, templateRequestVarCPU, fmt.Sprintf("%.2f", varRequestCPU*1000))
+	data = strings.ReplaceAll(data, templateRequestVarMem, fmt.Sprintf("%.2f", varRequestMem))
 	return data, nil
 }
 
