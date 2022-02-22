@@ -145,7 +145,7 @@ interface ApigwBuildResourceV3 {
         skipFailedTask: Boolean? = false
     ): Result<BuildId>
 
-    @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
+    @ApiOperation("查看构建状态信息,#4295增加stageStatus等", tags = ["v3_app_build_status", "v3_user_build_status"])
     @GET
     @Path("/{buildId}/status")
     fun getStatus(

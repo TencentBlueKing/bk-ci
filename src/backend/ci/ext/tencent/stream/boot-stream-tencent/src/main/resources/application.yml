@@ -9,4 +9,4 @@ spring:
       name: stream
 
 server:
-  port: 21940
+  port: 21952

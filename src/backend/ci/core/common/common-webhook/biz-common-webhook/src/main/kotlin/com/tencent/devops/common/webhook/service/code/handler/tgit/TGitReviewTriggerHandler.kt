@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
@@ -129,6 +130,7 @@ class TGitReviewTriggerHandler(
         return ""
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun retrieveParams(event: GitReviewEvent, projectId: String?, repository: Repository?): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID] = event.reviewableId ?: ""
@@ -164,6 +166,7 @@ class TGitReviewTriggerHandler(
 
         // 兼容stream变量
         startParams[PIPELINE_GIT_EVENT] = GitReviewEvent.classType
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
                 gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)

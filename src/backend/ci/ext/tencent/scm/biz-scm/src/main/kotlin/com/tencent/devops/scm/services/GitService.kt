@@ -96,7 +96,6 @@ import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
 import java.io.File
-import java.lang.IllegalArgumentException
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -127,9 +126,6 @@ class GitService @Autowired constructor(
 
     @Value("\${gitCI.url}")
     private lateinit var gitCIUrl: String
-
-    @Value("\${gitCI.oauthUrl}")
-    private lateinit var gitCIOauthUrl: String
 
     @Value("\${gitCI.tokenExpiresIn:#{null}}")
     private val tokenExpiresIn: Int? = 86400
@@ -353,6 +349,31 @@ class GitService @Autowired constructor(
         }
     }
 
+    fun refreshProjectToken(projectId: String, refreshToken: String): GitToken {
+        logger.info("Start to refresh the token of projectId $projectId")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "${gitConfig.gitUrl}/oauth/token?client_id=$gitCIClientId&" +
+                "client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
+                "&grant_type=refresh_token&refresh_token=$refreshToken&redirect_uri=$callbackUrl"
+            val request = Request.Builder()
+                .url(url)
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"),
+                        ""
+                    )
+                )
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body()!!.string()
+                return objectMapper.readValue(data, GitToken::class.java)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to refresh the token")
+        }
+    }
+
     fun getAuthUrl(authParamJsonStr: String): String {
         return "${gitConfig.gitUrl}/oauth/authorize?" +
             "client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
@@ -387,13 +408,15 @@ class GitService @Autowired constructor(
         logger.info("Start to get the token for git project($gitProjectId)")
         val startEpoch = System.currentTimeMillis()
         try {
-            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+            val tokenUrl = "${gitConfig.gitUrl}/oauth/token" +
                 "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
                 "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
             val request = Request.Builder()
                 .url(tokenUrl)
-                .post(RequestBody.create(
-                    MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), "")
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""
+                    )
                 )
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
@@ -441,7 +464,7 @@ class GitService @Autowired constructor(
         try {
             val token = getToken(gitProjectId)
             val url =
-                "$gitCIOauthUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
+                "$gitCIUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
 
             logger.info("[$userId]|[$gitProjectId]| Get git project member utl: $url")
             val request = Request.Builder()
@@ -467,7 +490,7 @@ class GitService @Autowired constructor(
     fun getGitCIUserId(rtxId: String, gitProjectId: String): String? {
         try {
             val token = getToken(gitProjectId)
-            val url = "$gitCIOauthUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
+            val url = "$gitCIUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
 
             logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId: $url")
             val request = Request.Builder()
@@ -702,15 +725,19 @@ class GitService @Autowired constructor(
         gitProjectId: Long,
         path: String,
         token: String,
-        ref: String
+        ref: String?
     ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
-                "?path=${URLEncoder.encode(path, "UTF-8")}" +
-                "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
-                "&access_token=$token"
+                    "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -1637,7 +1664,7 @@ class GitService @Autowired constructor(
         logger.info("Start to clear the token: $token")
         val startEpoch = System.currentTimeMillis()
         try {
-            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+            val tokenUrl = "$gitCIUrl/oauth/token" +
                 "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
             val request = Request.Builder()
                 .url(tokenUrl)

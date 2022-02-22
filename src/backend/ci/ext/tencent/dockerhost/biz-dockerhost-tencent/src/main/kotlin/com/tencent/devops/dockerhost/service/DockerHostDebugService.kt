@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dockerhost.service
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.AccessMode
@@ -41,6 +42,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
@@ -55,7 +57,11 @@ import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.io.File
 
@@ -76,6 +82,12 @@ class DockerHostDebugService(
     private val bkDistccLocalIp = "BK_DISTCC_LOCAL_IP"
 
     private val entryPointCmd = "/data/sleep.sh"
+
+    @Value("\${dockerhost.dockerDebug.authToken:#{null}}")
+    val dockerDebugAuthToken: String? = ""
+
+    @Value("\${dockerhost.dockerDebug.gateway:#{null}}")
+    val dockerDebugGateway: String? = ""
 
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
@@ -267,6 +279,48 @@ class DockerHostDebugService(
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${containerInfo.containerId}, error msg: $e")
         }
+    }
+
+    fun getWebSocketUrl(projectId: String, pipelineId: String, containerId: String): String {
+        val hostIp = CommonUtils.getInnerIP()
+
+        return getDockerConsoleUrl(
+            dockerIp = hostIp,
+            pipelineId = pipelineId,
+            projectId = projectId,
+            containerId = containerId
+        )
+    }
+
+    private fun getDockerConsoleUrl(
+        dockerIp: String,
+        pipelineId: String,
+        projectId: String,
+        containerId: String
+    ): String {
+        val requestBody = mapOf("cmd" to listOf("/bin/bash"), "container_id" to containerId)
+        val request = Request.Builder().url("http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?" +
+                "pipelineId=$pipelineId&projectId=$projectId&targetIp=$dockerIp")
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
+            .post(RequestBody.create(
+                MediaType.parse("application/json; charset=utf-8"),
+                JsonUtil.toJson(requestBody)))
+            .build()
+
+        logger.info("start get docker webconsole id, ${JsonUtil.toJson(requestBody)}  $dockerDebugAuthToken")
+        var eventId: String
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            logger.info("[$projectId|$pipelineId] get docker webconsole id responseBody: $responseBody")
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            eventId = response["Id"] as String
+        }
+
+        return "wss://$dockerDebugGateway/docker-console-new-v2?" +
+                "eventId=$eventId&pipelineId=$pipelineId&projectId=$projectId" +
+                "&targetIP=$dockerIp&containerId=$containerId"
     }
 
     fun getContainerNum(): Int {

@@ -277,7 +277,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         gitProjectId: Long,
         path: String,
         token: String,
-        ref: String
+        ref: String?
     ): Result<List<GitFileInfo>> {
         return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref))
     }

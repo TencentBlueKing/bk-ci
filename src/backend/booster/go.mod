@@ -48,7 +48,6 @@ require (
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca
 	github.com/shirou/gopsutil v3.21.7+incompatible
 	github.com/soheilhy/cmux v0.1.5 // indirect
-	github.com/spf13/cobra v1.3.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/tklauser/go-sysconf v0.3.8 // indirect
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802 // indirect
