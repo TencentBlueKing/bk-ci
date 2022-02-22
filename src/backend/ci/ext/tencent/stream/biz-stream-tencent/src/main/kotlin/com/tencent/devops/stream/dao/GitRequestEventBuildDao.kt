@@ -480,18 +480,46 @@ class GitRequestEventBuildDao {
         pipelineIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return getRequestEventBuildListMultiple(
-                dslContext = dslContext,
-                gitProjectId = gitProjectId,
-                branchName = branchName,
-                sourceGitProjectId = sourceGitProjectId,
-                triggerUser = triggerUser,
-                pipelineId = pipelineId,
-                event = event,
-                commitMsg = commitMsg,
-                buildStatus = buildStatus,
-                pipelineIds = pipelineIds
-            ).count()
+                val dsl = dslContext.selectCount().from(this)
+                    .where(GIT_PROJECT_ID.eq(gitProjectId))
+                    .and(BUILD_ID.isNotNull)
+                if (!pipelineId.isNullOrBlank()) {
+                    dsl.and(PIPELINE_ID.eq(pipelineId))
+                }
+                if (!branchName.isNullOrEmpty()) {
+                    val branchList = branchName.map {
+                        // 针对fork库的特殊分支名 namespace:branchName 进行查询
+                        if (it.contains(":")) {
+                            it.split(":")[1]
+                        } else {
+                            it
+                        }
+                    }.toSet()
+                    if (!sourceGitProjectId.isNullOrEmpty()) {
+                        dsl.and(BRANCH.`in`(branchList))
+                            .and(SOURCE_GIT_PROJECT_ID.`in`(sourceGitProjectId).or(SOURCE_GIT_PROJECT_ID.isNull))
+                    } else {
+                        dsl.and(BRANCH.`in`(branchList))
+                    }
+                }
+                if (!triggerUser.isNullOrEmpty()) {
+                    dsl.and(TRIGGER_USER.`in`(triggerUser))
+                }
+                if (!event.isNullOrEmpty()) {
+                    dsl.and(OBJECT_KIND.`in`(event))
+                }
+                if (!commitMsg.isNullOrBlank()) {
+                    dsl.and(COMMIT_MESSAGE.like("%$commitMsg%"))
+                }
+                if (!buildStatus.isNullOrEmpty()) {
+                    dsl.and(BUILD_STATUS.`in`(buildStatus))
+                }
+                if (!pipelineIds.isNullOrEmpty()) {
+                    dsl.and(PIPELINE_ID.`in`(pipelineIds))
+                }
+                return dsl.fetchOne(0, Int::class.java)!!
+
+            }
         }
     }
 
