@@ -141,8 +141,11 @@ class ModelCreateInnerImpl @Autowired constructor(
         }
 
         when (event.streamData!!.objectKind) {
-            TGitObjectKind.MERGE_REQUEST ->
+            TGitObjectKind.MERGE_REQUEST -> {
                 inputMap["pullType"] = "BRANCH"
+                // mr merged时,需要拉取目标分支,如果是mr open,插件不会读取这个值
+                inputMap["refName"] = gitData.branch
+            }
             TGitObjectKind.TAG_PUSH -> {
                 inputMap["pullType"] = "TAG"
                 inputMap["refName"] = gitData.branch
