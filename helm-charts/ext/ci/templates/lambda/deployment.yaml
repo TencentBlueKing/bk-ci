@@ -87,7 +87,7 @@ spec:
               cp /data/workspace/backend.bkci.sh .;
               /bin/bash backend.bkci.sh;
           volumeMounts:
-            - mountPath: /etc/nginx/ssl
+            - mountPath: /data1/certificate/
               name: secret-volume
           
           livenessProbe:
