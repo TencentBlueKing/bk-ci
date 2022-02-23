@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.between
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -208,7 +209,9 @@ class SendCommitCheck @Autowired constructor(
     private fun getFinishTime(startTimeTimeStamp: Long?): Long {
         val zoneId = ZoneId.systemDefault()
         val startTime = LocalDateTime.ofInstant(startTimeTimeStamp?.let { Instant.ofEpochMilli(it) }, zoneId)
-        return startTime.between(LocalDateTime.now()).toMinutes()
+        val nowTime = LocalDateTime.now()
+        logger.info("startTime: ${startTime.timestampmilli()}| nowTime:${nowTime.timestampmilli()}| between:${(startTime.between(nowTime).toMillis()) / 1000}")
+        return startTime.between(nowTime).toMinutes()
     }
 
     private fun getTargetUrl(
