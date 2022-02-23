@@ -34,3 +34,7 @@ dependencies:
   version: 7.6.21
   repository: https://charts.bitnami.com/bitnami
   condition: nginx-ingress-controller.enabled
+- name: mongodb
+  version: 10.10.2
+  repository: https://charts.bitnami.com/bitnami
+  condition: mongodb.enabled

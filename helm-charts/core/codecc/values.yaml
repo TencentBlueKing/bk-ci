@@ -350,11 +350,11 @@ task:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:
@@ -394,11 +394,11 @@ defect:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:
@@ -439,11 +439,11 @@ report:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:
@@ -484,11 +484,11 @@ asyncreport:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:
@@ -528,11 +528,11 @@ codeccjob:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:
@@ -572,11 +572,11 @@ quartz:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:
@@ -617,11 +617,11 @@ schedule:
     type: ""
     key: ""
     values: [ ]
-  affinity: { }
-  nodeSelector: { }
+  affinity: {}
+  nodeSelector: {}
   tolerations: [ ]
-  podLabels: { }
-  podAnnotations: { }
+  podLabels: {}
+  podAnnotations: {}
   priorityClassName: ""
   config:
     server:

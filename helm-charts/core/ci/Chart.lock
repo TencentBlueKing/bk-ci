@@ -20,5 +20,8 @@ dependencies:
 - name: nginx-ingress-controller
   repository: https://charts.bitnami.com/bitnami
   version: 7.6.21
-digest: sha256:3890cb0a18df40c70ea6b175b69cd1f0eef7d775a71017cc0bdbe894be65b48a
-generated: "2022-01-13T14:40:15.676693911+08:00"
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 10.10.2
+digest: sha256:fa218488738d77fec69f3b95a20323964c10b8bc82ae0daeb4ae02c65514e4ee
+generated: "2022-02-23T11:17:26.380277102+08:00"
