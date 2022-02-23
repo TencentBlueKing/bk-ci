@@ -69,7 +69,7 @@ class SendCommitCheck @Autowired constructor(
     private val client: Client,
     private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
-    private val gitCheckService: GitCheckService,
+    private val gitCheckService: GitCheckService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
