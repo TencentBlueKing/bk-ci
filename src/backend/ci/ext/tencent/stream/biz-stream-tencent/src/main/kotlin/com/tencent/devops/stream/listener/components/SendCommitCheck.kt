@@ -55,7 +55,6 @@ import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -71,7 +70,6 @@ class SendCommitCheck @Autowired constructor(
     private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
