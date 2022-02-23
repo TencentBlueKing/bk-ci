@@ -362,7 +362,6 @@ class PipelineListFacadeService @Autowired constructor(
             NumberUtils.toInt(redisOperation.hget("list:permission:pipeline:size", projectId), 1000)
         }
 
-
     fun hasPermissionList(
         userId: String,
         projectId: String,
