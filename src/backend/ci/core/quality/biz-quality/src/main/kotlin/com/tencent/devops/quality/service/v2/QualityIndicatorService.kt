@@ -180,11 +180,21 @@ class QualityIndicatorService @Autowired constructor(
         return serviceListIndicatorRecord(allIndicatorRecords)
     }
 
+    fun serviceListByElementType(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        val indicatorRecords = indicatorDao.listByElementType(
+            dslContext = dslContext,
+            elementType = elementType,
+            type = null,
+            enNameSet = enNameSet
+        )
+        return serviceListIndicatorRecord(indicatorRecords)
+    }
+
     fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
         return if (elementType in QualityIndicator.SCRIPT_ELEMENT) {
             listOf()
         } else {
-            serviceList(elementType, enNameSet).filter { it.enable ?: false }
+            serviceListByElementType(elementType, enNameSet).filter { it.enable ?: false }
         }
     }
 
