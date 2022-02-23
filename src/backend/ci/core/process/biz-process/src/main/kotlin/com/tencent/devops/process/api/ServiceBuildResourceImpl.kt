@@ -255,13 +255,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId, projectId, pipelineId,
-            page, pageSize, channelCode, ChannelCode.isNeedAuth(channelCode)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateTimeDesc = updateTimeDesc
         )
         return Result(result)
     }
