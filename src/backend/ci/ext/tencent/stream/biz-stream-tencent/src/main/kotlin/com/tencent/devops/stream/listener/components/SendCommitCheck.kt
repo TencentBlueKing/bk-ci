@@ -163,7 +163,7 @@ class SendCommitCheck @Autowired constructor(
     }
 
     private fun getStageReviewDesc(
-        context: StreamBuildListenerContextV2,
+        context: StreamBuildListenerContextV2
     ): String {
         if (context !is StreamBuildStageListenerContextV2) {
             return BUILD_RUNNING_DESC
