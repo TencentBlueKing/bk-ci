@@ -38,6 +38,7 @@ import com.tencent.devops.quality.dao.v2.QualityMetadataDao
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -46,6 +47,10 @@ class QualityMetadataService @Autowired constructor(
     private val dslContext: DSLContext,
     private val metadataDao: QualityMetadataDao
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(QualityMetadataService::class.java)
+    }
+
     fun serviceListMetadata(metadataIds: Collection<Long>): List<QualityIndicatorMetadata> {
         return metadataDao.list(dslContext, metadataIds)?.map {
             QualityIndicatorMetadata(
@@ -128,6 +133,7 @@ class QualityMetadataService @Autowired constructor(
         elementType: String,
         metadataList: List<QualityMetaData>
     ): Map<String, Long> {
+        logger.info("QUALITY|setTestMetadata userId: $userId, elementType: $elementType")
         val data = metadataDao.listByElementType(dslContext, elementType)?.filter { it.extra == "IN_READY_TEST" }
         val lastMetadataIdMap = data?.map { it.dataId to it.id }?.toMap() ?: mapOf()
         val newDataId = metadataList.map { it.dataId!! }
@@ -151,6 +157,7 @@ class QualityMetadataService @Autowired constructor(
 
     // 把测试的数据刷到正式的， 有则update，没也update，多余的删掉
     fun serviceRefreshMetadata(elementType: String): Map<String, String> {
+        logger.info("QUALITY|refreshMetadata elementType: $elementType")
         val data = metadataDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { it.extra == "IN_READY_TEST" } ?: listOf()
         val prodData = data?.filter { it.extra != "IN_READY_TEST" } ?: listOf()
@@ -206,6 +213,7 @@ class QualityMetadataService @Autowired constructor(
     }
 
     fun serviceDeleteTestMetadata(elementType: String): Int {
+        logger.info("QUALITY|deleteTestMetadata elementType: $elementType")
         val data = metadataDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { it.extra == "IN_READY_TEST" } ?: listOf()
         return metadataDao.delete(testData.map { it.id }, dslContext)
