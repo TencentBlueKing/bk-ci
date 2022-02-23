@@ -25,34 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 
-@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
-@Path("/service/scm")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalScmResource {
+/*
+ * Stream Mr 事件支持动作
+ * 根据Webhook事件抽象Stream action
+ */
 
-    @ApiOperation("Code平台Git仓库提交")
-    @POST
-    @Path("/codegit/commit")
-    fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
-        @ApiParam("X-Event")
-        @HeaderParam("X-Event")
-        eventType: String,
-        event: String
-    ): Result<Boolean>
+enum class TGitMrEventAction(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge");
+
+    companion object {
+        fun getActionValue(event: GitMergeRequestEvent): String? {
+            return when (event.object_attributes.action) {
+                TGitMergeActionKind.OPEN.value -> OPEN.value
+                TGitMergeActionKind.CLOSE.value -> CLOSE.value
+                TGitMergeActionKind.REOPEN.value -> REOPEN.value
+                TGitMergeActionKind.UPDATE.value -> {
+                    if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
+                        PUSH_UPDATE.value
+                    } else {
+                        null
+                    }
+                }
+                TGitMergeActionKind.MERGE.value -> MERGE.value
+                else -> null
+            }
+        }
+    }
 }

@@ -25,34 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.common.webhook.pojo.code.git
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
-@Path("/service/scm")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalScmResource {
-
-    @ApiOperation("Code平台Git仓库提交")
-    @POST
-    @Path("/codegit/commit")
-    fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
-        @ApiParam("X-Event")
-        @HeaderParam("X-Event")
-        eventType: String,
-        event: String
-    ): Result<Boolean>
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitNoteEvent(
+    val user: GitUser,
+    val repository: GitRepository,
+    @JsonProperty("object_attributes")
+    val objectAttributes: GitNoteAttributes,
+    @JsonProperty("project_id")
+    val projectId: Long,
+    @ApiParam("对提交进行评论时存在")
+    val commit: GitCommit?,
+    @JsonProperty("merge_request")
+    @ApiParam("对合并请求评论时存在")
+    val mergeRequest: GitMRAttributes?,
+    @ApiParam("对缺陷进行评论时存在")
+    val issue: GitIssueAttributes?
+) : GitEvent() {
+    companion object {
+        const val classType = "note"
+    }
 }
+
+data class GitNoteAttributes(
+    val id: Long,
+    val note: String,
+    @JsonProperty("noteable_type")
+    val noteableType: String,
+    @JsonProperty("author_id")
+    val authorId: Long,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("updated_at")
+    val updatedAt: String,
+    @JsonProperty("project_id")
+    val projectId: Long,
+    val attachment: String? = null,
+    @JsonProperty("line_code")
+    val lineCode: String? = null,
+    @JsonProperty("commit_id")
+    val commitId: String?,
+    @JsonProperty("noteable_id")
+    val noteableId: Long? = null,
+    val system: Boolean,
+    @JsonProperty("st_diff")
+    val stDiff: GitChangeFileInfo? = null,
+    val url: String
+)

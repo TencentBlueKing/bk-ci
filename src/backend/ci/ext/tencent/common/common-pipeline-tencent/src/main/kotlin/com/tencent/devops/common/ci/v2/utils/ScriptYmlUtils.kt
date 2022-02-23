@@ -45,8 +45,10 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Container2
 import com.tencent.devops.common.ci.v2.DeleteRule
+import com.tencent.devops.common.ci.v2.IssueRule
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.MrRule
+import com.tencent.devops.common.ci.v2.NoteRule
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
@@ -54,6 +56,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.PushRule
+import com.tencent.devops.common.ci.v2.ReviewRule
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -576,8 +579,65 @@ object ScriptYmlUtils {
             tag = tagRule(preTriggerOn),
             mr = mrRule(preTriggerOn),
             schedules = schedulesRule(preTriggerOn),
-            delete = deleteRule(preTriggerOn)
+            delete = deleteRule(preTriggerOn),
+            issue = issueRule(preTriggerOn),
+            review = reviewRule(preTriggerOn),
+            note = noteRule(preTriggerOn)
         )
+    }
+
+    private fun noteRule(
+        preTriggerOn: PreTriggerOn
+    ): NoteRule? {
+        if (preTriggerOn.note != null) {
+            val note = preTriggerOn.note
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(note),
+                    NoteRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn noteRule failed.", e)
+                null
+            }
+        }
+        return null
+    }
+
+    private fun reviewRule(
+        preTriggerOn: PreTriggerOn
+    ): ReviewRule? {
+        if (preTriggerOn.review != null) {
+            val issues = preTriggerOn.review
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(issues),
+                    ReviewRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn reviewRule failed.", e)
+                null
+            }
+        }
+        return null
+    }
+
+    private fun issueRule(
+        preTriggerOn: PreTriggerOn
+    ): IssueRule? {
+        if (preTriggerOn.issue != null) {
+            val issues = preTriggerOn.issue
+            return try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(issues),
+                    IssueRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn issueRule failed.", e)
+                null
+            }
+        }
+        return null
     }
 
     private fun deleteRule(

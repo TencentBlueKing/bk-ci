@@ -25,22 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import org.slf4j.LoggerFactory
-
-class CodeReviewStateFilter(
-    private val pipelineId: String,
-    private val triggerOnState: String,
-    private val includedState: List<String>
-) : WebhookFilter {
+/**
+ * open: 创建
+ * update: 更新
+ * reopen: 重新开启
+ * close: 关闭
+ */
+enum class TGitIssueAction(val value: String, val desc: String) {
+    OPEN("open", "opened"),
+    UPDATE("update", "updated"),
+    REOPEN("reopen", "reopened"),
+    CLOSE("close", "closed");
 
     companion object {
-        private val logger = LoggerFactory.getLogger(CodeReviewStateFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info("$pipelineId|triggerOnState:$triggerOnState|includedState:$includedState|code review state filter")
-        return includedState.isEmpty() || includedState.contains(triggerOnState)
+        fun getDesc(value: String): String {
+            values().forEach {
+                if (it.value == value) {
+                    return it.desc
+                }
+            }
+            return value
+        }
     }
 }

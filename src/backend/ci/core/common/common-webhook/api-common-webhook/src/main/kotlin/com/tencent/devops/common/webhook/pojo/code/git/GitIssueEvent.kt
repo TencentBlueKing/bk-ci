@@ -25,34 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.common.webhook.pojo.code.git
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
-@Path("/service/scm")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalScmResource {
-
-    @ApiOperation("Code平台Git仓库提交")
-    @POST
-    @Path("/codegit/commit")
-    fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
-        @ApiParam("X-Event")
-        @HeaderParam("X-Event")
-        eventType: String,
-        event: String
-    ): Result<Boolean>
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitIssueEvent(
+    val user: GitUser,
+    val repository: GitRepository,
+    @JsonProperty("object_attributes")
+    val objectAttributes: GitIssueAttributes
+) : GitEvent() {
+    companion object {
+        const val classType = "issue"
+    }
 }
+
+data class GitIssueAttributes(
+    val id: Long,
+    val title: String,
+    @JsonProperty("assignee_id")
+    val assigneeId: Long?,
+    @JsonProperty("assignee_ids")
+    val assigneeIds: List<Long>?,
+    @JsonProperty("author_id")
+    val authorId: String,
+    @JsonProperty("project_id")
+    val projectId: Long,
+    val position: Long,
+    @JsonProperty("branch_name")
+    val branchName: String? = null,
+    val description: String? = null,
+    @JsonProperty("milestone_id")
+    val milestoneId: String? = null,
+    val state: String,
+    val iid: String,
+    val url: String?,
+    val action: String?
+)

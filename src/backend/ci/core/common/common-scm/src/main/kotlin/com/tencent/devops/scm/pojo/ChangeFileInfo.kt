@@ -25,34 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
 
-@Api(tags = ["EXTERNAL_GIT_HOOKS"], description = "GIT WebHooks触发")
-@Path("/service/scm")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ExternalScmResource {
-
-    @ApiOperation("Code平台Git仓库提交")
-    @POST
-    @Path("/codegit/commit")
-    fun webHookCodeGitCommit(
-        @HeaderParam("X-Token")
-        token: String,
-        @ApiParam("X-Event")
-        @HeaderParam("X-Event")
-        eventType: String,
-        event: String
-    ): Result<Boolean>
-}
+@ApiModel("工蜂差异文件信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ChangeFileInfo(
+    @JsonProperty("old_path")
+    val oldPath: String,
+    @JsonProperty("new_path")
+    val newPath: String,
+    @JsonProperty("a_mode")
+    val aMode: Long?,
+    @JsonProperty("b_mode")
+    val bMode: Long?,
+    @JsonProperty("new_file")
+    val newFile: Boolean,
+    @JsonProperty("renamed_file")
+    val renameFile: Boolean,
+    @JsonProperty("deleted_file")
+    val deletedFile: Boolean,
+    @JsonProperty("additions")
+    val additions: Int,
+    @JsonProperty("deletions")
+    val deletions: Int
+)
