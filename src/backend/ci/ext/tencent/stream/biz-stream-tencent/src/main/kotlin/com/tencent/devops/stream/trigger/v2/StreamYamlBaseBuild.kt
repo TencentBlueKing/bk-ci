@@ -324,10 +324,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             if (CommitCheckUtils.needSendCheck(event, gitCIBasicSetting)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
-                    description = triggerMessageUtil.getCommitCheckDesc(
-                        event,
-                        buildRunningDesc.format(pipeline.displayName)
-                    ),
+                    description = buildRunningDesc,
                     mergeRequestId = event.mergeRequestId,
                     buildId = buildId,
                     userId = event.userId,

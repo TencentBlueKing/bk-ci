@@ -153,7 +153,7 @@ class SendCommitCheck @Autowired constructor(
         val pipelineName = context.pipeline.displayName
         return when (context.getBuildStatus()) {
             BuildStatus.REVIEWING -> {
-                getStageReviewDesc(context, pipelineName)
+                getStageReviewDesc(context)
             }
             BuildStatus.REVIEW_PROCESSED -> {
                 BUILD_RUNNING_DESC
@@ -166,7 +166,6 @@ class SendCommitCheck @Autowired constructor(
 
     private fun getStageReviewDesc(
         context: StreamBuildListenerContextV2,
-        pipelineName: String
     ): String {
         if (context !is StreamBuildStageListenerContextV2) {
             return BUILD_RUNNING_DESC
