@@ -28,10 +28,11 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-// 工蜂所有推过来的请求
+// 该类提供给前端页面使用
 @ApiModel("工蜂触发请求Req")
 data class GitRequestEventReq(
     @ApiModelProperty("ID")
@@ -78,7 +79,11 @@ data class GitRequestEventReq(
     @ApiModelProperty("是否是删除分支触发")
     val deleteBranch: Boolean,
     @ApiModelProperty("是否是删除Tag触发")
-    val deleteTag: Boolean
+    val deleteTag: Boolean,
+    @ApiModelProperty("评论Id")
+    var noteId: Long?,
+    @ApiModelProperty("评论连接")
+    var noteUrl: String?
 ) {
     constructor(gitRequestEvent: GitRequestEvent) : this(
         id = gitRequestEvent.id,
@@ -98,8 +103,19 @@ data class GitRequestEventReq(
         mergeRequestId = gitRequestEvent.mergeRequestId,
         description = gitRequestEvent.description,
         mrTitle = gitRequestEvent.mrTitle,
-        gitEvent = gitRequestEvent.gitEvent,
+        gitEvent = null,
         deleteBranch = gitRequestEvent.isDeleteBranch(),
-        deleteTag = gitRequestEvent.isDeleteTag()
-    )
+        deleteTag = gitRequestEvent.isDeleteTag(),
+        noteId = null,
+        noteUrl = null
+    ) {
+        when (gitRequestEvent.gitEvent) {
+            is GitNoteEvent -> {
+                val gitNoteEvent = gitRequestEvent.gitEvent as GitNoteEvent
+                noteId = gitNoteEvent.objectAttributes.id
+                noteUrl = gitNoteEvent.objectAttributes.url
+            }
+            else -> {}
+        }
+    }
 }

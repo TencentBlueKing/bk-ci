@@ -33,12 +33,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
-import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -53,12 +49,16 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
+import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -89,6 +89,17 @@ class StreamScmService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_TOKEN_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+            }
+        )
+    }
+
+    @Throws(ErrorCodeException::class)
+    fun refreshToken(projectId: String, refreshToken: String): GitToken {
+        return retryFun(
+            log = "$projectId refresh token fail",
+            apiErrorCode = ErrorCodeEnum.REFRESH_TOKEN_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).refreshToken(projectId, refreshToken).data!!
             }
         )
     }

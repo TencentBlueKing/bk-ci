@@ -28,9 +28,13 @@
 package com.tencent.devops.stream.mq.streamRequest
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.constant.MQ
+import org.slf4j.MDC
 
 @Event(MQ.EXCHANGE_STREAM_REQUEST_EVENT, MQ.ROUTE_STREAM_REQUEST_EVENT)
 data class GitCIRequestEvent(
-    val event: String
+    val event: String,
+    val eventType: String? = null,
+    val traceId: String? = MDC.get(TraceTag.BIZID)
 )
