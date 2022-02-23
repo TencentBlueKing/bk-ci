@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.trigger.v2
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.v2.YamlTransferData
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.client.Client
@@ -37,6 +37,15 @@ import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
+import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -44,29 +53,20 @@ import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.pojo.isFork
+import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.StreamBuildInfo
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.GitCheckService
-import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.v2.service.StreamWebsocketService
-import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
-import com.tencent.devops.process.api.user.UserPipelineGroupResource
-import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.pojo.TemplateAcrossInfoType
-import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.stream.pojo.isFork
-import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
+import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import com.tencent.devops.stream.v2.service.StreamScmService
+import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -98,7 +98,7 @@ class StreamYamlBaseBuild @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    private val buildRunningDesc = "Your pipeline「%s」is running."
+    private val buildRunningDesc = "Running."
 
     fun savePipeline(
         pipeline: GitProjectPipeline,
@@ -324,10 +324,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             if (CommitCheckUtils.needSendCheck(event, gitCIBasicSetting)) {
                 gitCheckService.pushCommitCheck(
                     commitId = event.commitId,
-                    description = triggerMessageUtil.getCommitCheckDesc(
-                        event,
-                        buildRunningDesc.format(pipeline.displayName)
-                    ),
+                    description = buildRunningDesc,
                     mergeRequestId = event.mergeRequestId,
                     buildId = buildId,
                     userId = event.userId,
