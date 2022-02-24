@@ -40,7 +40,7 @@ import org.springframework.context.annotation.Configuration
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.pipeline.utils.ChannelUtils
+import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 
 @Configuration
 class SDKConfiguration {

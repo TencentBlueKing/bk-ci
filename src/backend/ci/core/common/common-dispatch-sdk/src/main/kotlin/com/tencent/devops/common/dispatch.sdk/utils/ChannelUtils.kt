@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.utils
+package com.tencent.devops.common.dispatch.sdk.utils
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import org.slf4j.LoggerFactory
