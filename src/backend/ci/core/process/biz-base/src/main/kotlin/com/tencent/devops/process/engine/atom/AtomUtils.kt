@@ -135,7 +135,8 @@ object AtomUtils {
     ): Map<String, AtomRunInfo>? {
 
         val atomRunInfoResult = try {
-            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(task.starter, task.projectId, atomVersions)
+            client.get(ServiceMarketAtomEnvResource::class)
+                .batchGetAtomRunInfos(task.starter, task.projectId, atomVersions)
         } catch (ignored: Exception) {
             Result<Map<String, AtomRunInfo>?>(
                 status = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
