@@ -119,8 +119,8 @@ class StreamYamlTrigger @Autowired constructor(
         if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "${gitProjectPipeline.pipelineId}|" +
-                    "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                    "eventId: ${gitRequestEvent.id}"
+                        "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                        "eventId: ${gitRequestEvent.id}"
             )
             triggerError(
                 request = gitRequestEvent,
@@ -148,8 +148,10 @@ class StreamYamlTrigger @Autowired constructor(
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
 
-        // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
-        if (!changeSet.isNullOrEmpty() && changeSet.contains(gitProjectPipeline.filePath)) {
+        // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
+        if (gitProjectPipeline.pipelineId.isBlank() ||
+            (!changeSet.isNullOrEmpty() && changeSet.contains(gitProjectPipeline.filePath))
+        ) {
             gitProjectPipeline.displayName = yamlObject.name?.ifBlank {
                 gitProjectPipeline.filePath
             } ?: gitProjectPipeline.filePath
