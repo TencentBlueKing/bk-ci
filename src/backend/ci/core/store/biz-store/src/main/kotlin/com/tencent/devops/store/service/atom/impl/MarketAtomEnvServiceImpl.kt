@@ -71,7 +71,6 @@ import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -98,7 +97,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
     private val redisOperation: RedisOperation,
-        private val client: Client,
+    private val client: Client,
     private val storeDeptRelDao: StoreDeptRelDao,
     private val storeMemberDao: StoreMemberDao
 ) : MarketAtomEnvService {
@@ -286,7 +285,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum,
         deptStatus: DeptStatusEnum?
-    ):  MutableList<DeptInfo>? {
+    ): MutableList<DeptInfo>? {
         logger.info("the storeCode is :$storeCode,storeType is :$storeType,deptStatus is :$deptStatus")
         val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(
             dslContext = dslContext,
@@ -316,9 +315,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     /**
      * 效验项目是否在插件可见范围
      */
-    fun approveVisibleDept(dept: ProjectVO, deptInfos: List<DeptInfo>):Boolean {
+    fun approveVisibleDept(dept: ProjectVO, deptInfos: List<DeptInfo>): Boolean {
         val deptNumList = mutableSetOf<Int>()
-        if (dept.bgId!=null) {
+        if (dept.bgId != null) {
             deptNumList.add(0)
             deptNumList.add(dept.bgId!!.toInt())
             if (dept.deptId != null) {
