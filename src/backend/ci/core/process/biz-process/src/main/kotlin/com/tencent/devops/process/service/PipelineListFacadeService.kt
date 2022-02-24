@@ -263,8 +263,8 @@ class PipelineListFacadeService @Autowired constructor(
                 validateUserResourcePermission
             }
 
-            val pageNotNull = page ?: 0
-            val pageSizeNotNull = pageSize ?: -1
+            val pageNotNull = page ?: 1
+            val pageSizeNotNull = pageSize ?: 10
             val hasPermissionList = if (checkPermission) {
                 watcher.start("perm_r_perm")
                 val hasPermissionList = pipelinePermissionService.getResourceByPermission(
