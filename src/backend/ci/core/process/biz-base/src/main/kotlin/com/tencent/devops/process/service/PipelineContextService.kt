@@ -126,6 +126,9 @@ class PipelineContextService @Autowired constructor(
         val failTaskNameList = mutableListOf<String>()
         try {
             modelDetail.model.stages.forEach { stage ->
+                if (stage.finally) {
+                    return@forEach
+                }
                 if (!stage.status.isNullOrBlank()) {
                     previousStageStatus = BuildStatus.parse(stage.status)
                 }
@@ -147,9 +150,8 @@ class PipelineContextService @Autowired constructor(
             contextMap["ci.build_status"] = previousStageStatus.name
             contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
         } catch (ignore: Throwable) {
-            logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
+            logger.warn("BKSystemErrorMonitor|buildContextToNoticeFailed|", ignore)
         }
-
         return contextMap
     }
 
