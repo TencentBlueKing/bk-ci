@@ -178,7 +178,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
-                if (visibleDept == null || visibleDept.isEmpty()){
+                if (visibleDept == null || visibleDept.isEmpty()) {
                         if (!isStoreMember) {
                             throw ErrorCodeException(
                                 errorCode = CommonMessageCode.PERMISSION_DENIED,
@@ -186,7 +186,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                             )
                         }
                     } else {
-                        if ((dept == null) || !approveVisibleDept(dept, visibleDept)){
+                        if ((dept == null) || !approveVisibleDept(dept, visibleDept)) {
                             throw ErrorCodeException(
                                 errorCode = CommonMessageCode.PERMISSION_DENIED,
                                 params = arrayOf("不在组件可见范围 atomCode:$atomCode")
@@ -195,7 +195,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     }
                 // 判断是否存在未发布插件
                     val releaseAtomNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
-                    if (releaseAtomNum < 1 && !isStoreMember){
+                    if (releaseAtomNum < 1 && !isStoreMember) {
                         throw ErrorCodeException(
                             errorCode = CommonMessageCode.PERMISSION_DENIED,
                             params = arrayOf("存在未发布插件$releaseAtomNum atomCode:$atomCode")
@@ -294,22 +294,21 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             deptStatus = deptStatus,
             deptIdList = null
         )
-        if (storeDeptRelRecords == null) {
-            return  null
-            } else {
-                val deptInfos = mutableListOf<DeptInfo>()
-                storeDeptRelRecords.forEach {
-                    deptInfos.add(
-                        DeptInfo(
+        return if (storeDeptRelRecords == null) null
+        else {
+            val deptInfos = mutableListOf<DeptInfo>()
+            storeDeptRelRecords.forEach {
+                deptInfos.add(
+                    DeptInfo(
                         deptId = it.deptId,
                         deptName = it.deptName,
                         status = DeptStatusEnum.getStatus(it.status.toInt()),
                         comment = it.comment
-                        )
                     )
-                }
-            return  deptInfos
+                )
             }
+            deptInfos
+        }
     }
 
     /**
