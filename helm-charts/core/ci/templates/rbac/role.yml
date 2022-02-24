@@ -1,4 +1,5 @@
 # 用户权限管理
+{{ if .Values.gateway.enabled -}}
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -61,3 +62,4 @@ metadata:
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
   namespace: {{ .Release.Namespace }}
+{{- end -}}
