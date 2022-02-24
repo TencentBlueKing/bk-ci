@@ -25,41 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitIssue(
-    val user: GithubUser,
-    val repository: GitRepository,
-    @JsonProperty("object_attributes")
-    val objectAttributes: GitIssueAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "issue"
-    }
+/**
+ * git review事件event字段
+ * create: 创建
+ * invite: 邀请
+ * require_change: 要求修改
+ * reopen: 重开
+ * approve: 通过
+ * deny: 拒绝
+ * close: 关闭
+ */
+enum class TGitReviewEventKind(val value: String) {
+    CREATE("create"),
+    INVITE("invite"),
+    REQUIRE_CHANGE("require_change"),
+    REOPEN("reopen"),
+    APPROVE("approve"),
+    DENY("deny"),
+    CLOSE("close")
+    ;
 }
-
-data class GitIssueAttributes(
-    val id: Long,
-    val title: String,
-    @JsonProperty("assignee_id")
-    val assigneeId: String,
-    @JsonProperty("author_id")
-    val authorId: String,
-    @JsonProperty("project_id")
-    val projectId: String,
-    val position: Long,
-    @JsonProperty("branch_name")
-    val branchName: String? = null,
-    val description: String? = null,
-    @JsonProperty("milestone_id")
-    val milestoneId: String? = null,
-    val state: String,
-    val iid: String,
-    val url: String,
-    val action: String
-)

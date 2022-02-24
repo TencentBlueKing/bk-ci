@@ -113,11 +113,12 @@ class StreamBasicSettingService @Autowired constructor(
             return false
         }
 
-        val userUpdateInfo = updateProjectOrganizationInfo(gitProjectId.toString(), userId)
-
-        setting.creatorBgName = userUpdateInfo.bgName
-        setting.creatorDeptName = userUpdateInfo.deptName
-        setting.creatorCenterName = userUpdateInfo.centerName
+        val userUpdateInfo = updateProjectOrganizationInfo(gitProjectId.toString(), userId ?: setting.enableUserId)
+        userUpdateInfo?.let {
+            setting.creatorBgName = userUpdateInfo.bgName
+            setting.creatorDeptName = userUpdateInfo.deptName
+            setting.creatorCenterName = userUpdateInfo.centerName
+        }
 
         streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
@@ -158,39 +159,25 @@ class StreamBasicSettingService @Autowired constructor(
     // 更新项目组织架构信息
     fun updateProjectOrganizationInfo(
         projectId: String,
-        userId: String? = null
-    ): UserDeptDetail {
-        var userUpdateInfo = UserDeptDetail(
-            bgId = "0",
-            bgName = "",
-            deptId = "0",
-            deptName = "",
-            centerId = "0",
-            centerName = "",
-            groupId = "0",
-            groupName = ""
-        )
-        if (!userId.isNullOrBlank()) {
-            val userResult =
-                client.get(ServiceTxUserResource::class).get(userId)
-            if (userResult.isNotOk()) {
-                logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
-                // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
-                val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data
-                if (null != userInfo) {
-                    userUpdateInfo = userInfo
-                }
-            } else {
-                val userInfo = userResult.data!!
-                userUpdateInfo = userInfo
-            }
-            // 更新项目的组织架构信息
-            updateProjectInfo(
-                userId = userId,
-                projectId = GitCIUtils.GITLABLE + projectId,
-                userDeptDetail = userUpdateInfo
-            )
+        userId: String
+    ): UserDeptDetail? {
+        val userResult =
+            client.get(ServiceTxUserResource::class).get(userId)
+        val userUpdateInfo = if (userResult.isNotOk()) {
+            logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
+            // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
+            val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return null
+            userInfo
+        } else {
+            val userInfo = userResult.data!!
+            userInfo
         }
+        // 更新项目的组织架构信息
+        updateProjectInfo(
+            userId = userId,
+            projectId = GitCIUtils.GITLABLE + projectId,
+            userDeptDetail = userUpdateInfo
+        )
         return userUpdateInfo
     }
 

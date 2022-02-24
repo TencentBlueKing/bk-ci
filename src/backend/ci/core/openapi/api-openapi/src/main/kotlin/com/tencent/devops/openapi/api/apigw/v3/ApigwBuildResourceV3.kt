@@ -193,7 +193,13 @@ interface ApigwBuildResourceV3 {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam(
+            value = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            required = false, defaultValue = "20"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取流水线手动启动参数")

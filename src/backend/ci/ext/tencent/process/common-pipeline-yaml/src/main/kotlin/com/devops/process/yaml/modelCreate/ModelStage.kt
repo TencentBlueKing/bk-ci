@@ -249,8 +249,9 @@ class ModelStage constructor(
         elementNames: MutableList<QualityElementInfo>?
     ): List<String>? {
         val ruleList: MutableList<RuleCreateRequestV3> = mutableListOf()
-        val taskSteps: MutableList<RuleCreateRequestV3.CreateRequestTask> = mutableListOf()
+        val taskSteps: MutableMap<String, MutableList<RuleCreateRequestV3.CreateRequestTask>> = mutableMapOf()
         stageCheck.gates?.forEach GateEach@{ gate ->
+            taskSteps[gate.name] = mutableListOf()
             val indicators = gate.rule.map { rule ->
                 // threshold可能包含小数，所以把最后的一部分都取出来在分割
                 var (atomCode, stepName, mid) = getAtomCodeAndOther(rule, operations)
@@ -275,7 +276,7 @@ class ModelStage constructor(
                 // 步骤不为空时添加步骤参数
                 if (stepName != null) {
                     atomCode = checkAndGetRealStepName(stepName, elementNames) ?: atomCode
-                    taskSteps.add(
+                    taskSteps[gate.name]?.add(
                         RuleCreateRequestV3.CreateRequestTask(
                             taskName = stepName.removeSuffix("*"),
                             indicatorEnName = enNameAndThreshold.first().trim()
@@ -321,7 +322,7 @@ class ModelStage constructor(
                     opList = opList,
                     stageId = stageId,
                     gateKeepers = gate.continueOnFail?.gatekeepers,
-                    taskSteps = taskSteps
+                    taskSteps = taskSteps[gate.name]
                 )
             )
         }

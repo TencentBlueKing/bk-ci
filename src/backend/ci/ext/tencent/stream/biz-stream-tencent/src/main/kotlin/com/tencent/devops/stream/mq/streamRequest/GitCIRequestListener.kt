@@ -57,9 +57,17 @@ class GitCIRequestListener @Autowired constructor(
         ))]
     )
     fun listenGitCIRequestEvent(gitCIRequestEvent: GitCIRequestEvent) {
-        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+        val traceId = MDC.get(TraceTag.BIZID)
+        if (traceId.isNullOrEmpty()) {
+            if (!gitCIRequestEvent.traceId.isNullOrEmpty()) {
+                MDC.put(TraceTag.BIZID, gitCIRequestEvent.traceId)
+            } else {
+                MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            }
+        }
         try {
             gitCITriggerService.externalCodeGitBuild(
+                eventType = gitCIRequestEvent.eventType,
                 event = gitCIRequestEvent.event
             )
         } catch (ignore: Throwable) {
