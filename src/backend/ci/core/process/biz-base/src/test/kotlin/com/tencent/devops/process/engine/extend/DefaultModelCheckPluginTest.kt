@@ -134,7 +134,7 @@ class DefaultModelCheckPluginTest : TestBase() {
         whenever(client.get(ServiceMarketAtomEnvResource::class)).thenReturn(serviceMarketAtomEnvResource)
         whenever(
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
-                userId = userId,
+                userId = any(),
                 projectCode = any(),
                 atomVersions = any()
             )
