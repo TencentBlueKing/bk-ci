@@ -68,22 +68,4 @@ spec:
             - configMapRef:
                 name: {{ include "common.names.fullname" . }}-gateway
           workingDir: /usr/local/openresty/nginx/
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 20
-            periodSeconds: 15
-            timeoutSeconds: 10
-            failureThreshold: 5
-            successThreshold: 1
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 10
-            failureThreshold: 5
-            successThreshold: 1
 {{- end -}}
