@@ -9,7 +9,7 @@ COPY ./ci/gateway /data/workspace/gateway
 
 RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone && \
-    rm -rf /usr/local/openrestry/nginx/conf &&\
+    rm -rf /usr/local/openresty/nginx/conf &&\
     ln -s  /data/workspace/gateway/core /usr/local/openresty/nginx/conf
 
 WORKDIR /usr/local/openresty/nginx/
