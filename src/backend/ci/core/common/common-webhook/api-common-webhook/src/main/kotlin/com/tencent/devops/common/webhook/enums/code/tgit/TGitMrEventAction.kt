@@ -1,5 +1,3 @@
-// +build windows
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,14 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package command
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import (
-	"github.com/astaxie/beego/logs"
-	"os/exec"
-)
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 
-func setUser(cmd *exec.Cmd, runUser string) error {
-	logs.Info("set user(windows): ", runUser)
-	return nil
+/*
+ * Stream Mr 事件支持动作
+ * 根据Webhook事件抽象Stream action
+ */
+
+enum class TGitMrEventAction(val value: String) {
+    OPEN("open"),
+    CLOSE("close"),
+    REOPEN("reopen"),
+    PUSH_UPDATE("push-update"),
+    MERGE("merge");
+
+    companion object {
+        fun getActionValue(event: GitMergeRequestEvent): String? {
+            return when (event.object_attributes.action) {
+                TGitMergeActionKind.OPEN.value -> OPEN.value
+                TGitMergeActionKind.CLOSE.value -> CLOSE.value
+                TGitMergeActionKind.REOPEN.value -> REOPEN.value
+                TGitMergeActionKind.UPDATE.value -> {
+                    if (event.object_attributes.extension_action == TGitMergeExtensionActionKind.PUSH_UPDATE.value) {
+                        PUSH_UPDATE.value
+                    } else {
+                        null
+                    }
+                }
+                TGitMergeActionKind.MERGE.value -> MERGE.value
+                else -> null
+            }
+        }
+    }
 }

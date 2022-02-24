@@ -1,5 +1,3 @@
-// +build windows
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,14 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package command
+package com.tencent.devops.scm.pojo
 
-import (
-	"github.com/astaxie/beego/logs"
-	"os/exec"
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+
+@ApiModel("工蜂差异文件信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ChangeFileInfo(
+    @JsonProperty("old_path")
+    val oldPath: String,
+    @JsonProperty("new_path")
+    val newPath: String,
+    @JsonProperty("a_mode")
+    val aMode: Long?,
+    @JsonProperty("b_mode")
+    val bMode: Long?,
+    @JsonProperty("new_file")
+    val newFile: Boolean,
+    @JsonProperty("renamed_file")
+    val renameFile: Boolean,
+    @JsonProperty("deleted_file")
+    val deletedFile: Boolean,
+    @JsonProperty("additions")
+    val additions: Int,
+    @JsonProperty("deletions")
+    val deletions: Int
 )
-
-func setUser(cmd *exec.Cmd, runUser string) error {
-	logs.Info("set user(windows): ", runUser)
-	return nil
-}

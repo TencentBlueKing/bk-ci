@@ -34,7 +34,9 @@ enum class TGitObjectKind(val value: String) {
     MANUAL("manual"),
     SCHEDULE("schedule"),
     DELETE("delete"),
-    OPENAPI("openApi");
+    OPENAPI("openApi"),
+    ISSUE("issue"),
+    REVIEW("review");
 
     // 方便Json初始化使用常量保存，需要同步维护
     companion object {
@@ -45,5 +47,7 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_SCHEDULE = "schedule"
         const val OBJECT_KIND_DELETE = "delete"
         const val OBJECT_KIND_OPENAPI = "openApi"
+        const val OBJECT_KIND_ISSUE = "issue"
+        const val OBJECT_KIND_REVIEW = "review"
     }
 }

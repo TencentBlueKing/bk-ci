@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -57,6 +58,7 @@ const (
 	ConfigKeySlaveUser         = "devops.slave.user"
 	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
 	ConfigKeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
+	ConfigKeyDetectShell       = "devops.agent.detect.shell"
 	ConfigKeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
 	ConfigKeyBatchInstall      = "devops.agent.batch.install"
 )
@@ -73,6 +75,7 @@ type AgentConfig struct {
 	SlaveUser         string
 	CollectorOn       bool
 	TimeoutSec        int64
+	DetectShell       bool
 	IgnoreLocalIps    string
 	BatchInstallKey   string
 }
@@ -247,6 +250,7 @@ func LoadAgentConfig() error {
 	if err != nil {
 		timeout = 5
 	}
+	detectShell := conf.DefaultBool(ConfigKeyDetectShell, false)
 
 	ignoreLocalIps := strings.TrimSpace(conf.String(ConfigKeyIgnoreLocalIps))
 	if len(ignoreLocalIps) == 0 {
@@ -278,6 +282,8 @@ func LoadAgentConfig() error {
 	logs.Info("CollectorOn: ", GAgentConfig.CollectorOn)
 	GAgentConfig.TimeoutSec = timeout
 	logs.Info("TimeoutSec: ", GAgentConfig.TimeoutSec)
+	GAgentConfig.DetectShell = detectShell
+	logs.Info("DetectShell: ", GAgentConfig.DetectShell)
 	GAgentConfig.IgnoreLocalIps = ignoreLocalIps
 	logs.Info("IgnoreLocalIps: ", GAgentConfig.IgnoreLocalIps)
 	logs.Info("BatchInstallKey: ", GAgentConfig.BatchInstallKey)
@@ -298,6 +304,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
 	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
 	content.WriteString(ConfigKeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
+	content.WriteString(ConfigKeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
 	content.WriteString(ConfigKeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
