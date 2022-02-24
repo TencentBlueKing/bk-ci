@@ -209,7 +209,7 @@ class GitRequestEventHandle @Autowired constructor(
             id = null,
             objectKind = TGitObjectKind.NOTE.value,
             operationKind = "",
-            extensionAction = null,
+            extensionAction = "submitted",
             gitProjectId = gitProjectId,
             sourceGitProjectId = null,
             branch = defaultBranch,
