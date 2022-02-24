@@ -1,5 +1,6 @@
 # RBAC配置
 rbac:
+  enabled: true
   serviceAccount: bkci
 
 ## Add labels to all the deployed resources
