@@ -29,43 +29,51 @@ package com.tencent.devops.common.webhook.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiParam
 
-@Suppress("ALL")
-data class GitMergeRequestEvent(
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitNoteEvent(
     val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
+    val repository: GitRepository,
+    @JsonProperty("object_attributes")
+    val objectAttributes: GitNoteAttributes,
+    @JsonProperty("project_id")
+    val projectId: Long,
+    @ApiParam("对提交进行评论时存在")
+    val commit: GitCommit?,
+    @JsonProperty("merge_request")
+    @ApiParam("对合并请求评论时存在")
+    val mergeRequest: GitMRAttributes?,
+    @ApiParam("对缺陷进行评论时存在")
+    val issue: GitIssueAttributes?
 ) : GitEvent() {
     companion object {
-        const val classType = "merge_request"
+        const val classType = "note"
     }
 }
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
+data class GitNoteAttributes(
     val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: Long,
-    val source_project_id: Long,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String?,
-    val action: String?,
-    val extension_action: String?,
-    @JsonProperty("merge_type")
-    val mergeType: String? = null,
-    @JsonProperty("merge_commit_sha")
-    val mergeCommitSha: String? = null
+    val note: String,
+    @JsonProperty("noteable_type")
+    val noteableType: String,
+    @JsonProperty("author_id")
+    val authorId: Long,
+    @JsonProperty("created_at")
+    val createdAt: String,
+    @JsonProperty("updated_at")
+    val updatedAt: String,
+    @JsonProperty("project_id")
+    val projectId: Long,
+    val attachment: String? = null,
+    @JsonProperty("line_code")
+    val lineCode: String? = null,
+    @JsonProperty("commit_id")
+    val commitId: String?,
+    @JsonProperty("noteable_id")
+    val noteableId: Long? = null,
+    val system: Boolean,
+    @JsonProperty("st_diff")
+    val stDiff: GitChangeFileInfo? = null,
+    val url: String
 )
