@@ -59,8 +59,8 @@ class BuildVarResourceImpl @Autowired constructor(
         buildId: String,
         projectId: String,
         pipelineId: String,
+        containerId: String,
         contextName: String,
-        containerId: String?,
         check: Boolean?
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
