@@ -53,19 +53,18 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.v2.service.StreamScmService
-import com.tencent.devops.stream.trigger.template.YamlTemplate
+import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.common.exception.YamlBehindException
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.isFork
-import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
-import com.tencent.devops.stream.trigger.template.pojo.TemplateProjectData
+import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -119,7 +118,8 @@ class StreamYamlTrigger @Autowired constructor(
 
         if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
-                "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "${gitProjectPipeline.pipelineId}|" +
+                    "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                     "eventId: ${gitRequestEvent.id}"
             )
             triggerError(

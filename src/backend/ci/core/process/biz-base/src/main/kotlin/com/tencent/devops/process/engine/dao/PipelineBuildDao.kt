@@ -227,14 +227,19 @@ class PipelineBuildDao {
         projectId: String,
         pipelineId: String,
         offset: Int,
-        limit: Int
+        limit: Int,
+        updateTimeDesc: Boolean? = null
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .orderBy(BUILD_NUM.desc())
-                .limit(offset, limit)
+            when (updateTimeDesc) {
+                true -> select.orderBy(UPDATE_TIME.desc())
+                false -> select.orderBy(UPDATE_TIME.asc())
+                null -> select.orderBy(BUILD_NUM.desc())
+            }
+            select.limit(offset, limit)
                 .fetch()
         }
     }
@@ -487,7 +492,9 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
-                buildParameters = t.buildParameters?.let { self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters> },
+                buildParameters = t.buildParameters?.let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0
             )
@@ -534,7 +541,9 @@ class PipelineBuildDao {
             if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].aliasName", lower = true).like("%${materialAlias.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].aliasName", lower = true
+                ).like(
+                    "%${materialAlias.first().toLowerCase()}%"
                 )
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -550,7 +559,9 @@ class PipelineBuildDao {
             if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].branchName", lower = true).like("%${materialBranch.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].branchName", lower = true
+                ).like(
+                    "%${materialBranch.first().toLowerCase()}%"
                 )
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -657,7 +668,9 @@ class PipelineBuildDao {
             if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].aliasName", true).like("%${materialAlias.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].aliasName", true
+                ).like(
+                    "%${materialAlias.first().toLowerCase()}%"
                 )
                 materialAlias.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed
@@ -673,7 +686,9 @@ class PipelineBuildDao {
             if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
                 var conditionsOr: Condition
                 conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].branchName", lower = true).like("%${materialBranch.first().toLowerCase()}%"
+                    MATERIAL, "\$[*].branchName", lower = true
+                ).like(
+                    "%${materialBranch.first().toLowerCase()}%"
                 )
                 materialBranch.forEachIndexed { index, s ->
                     if (index == 0) return@forEachIndexed

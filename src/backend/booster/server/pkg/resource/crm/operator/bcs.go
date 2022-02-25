@@ -17,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/metric/controllers"
+	"github.com/Tencent/bk-ci/src/booster/server/config"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 	selfMetric "github.com/Tencent/bk-ci/src/booster/server/pkg/metric"
 	rsc "github.com/Tencent/bk-ci/src/booster/server/pkg/resource"
@@ -72,6 +73,15 @@ const (
 	AttributeKeyPlatform = "Platform"
 )
 
+//CheckQueueKey describe the function that get queue key from attributes
+func (param *BcsLaunchParam) CheckQueueKey(instanceType config.InstanceType) bool {
+	platform, city := getInstanceKey(param.AttributeCondition)
+	if instanceType.Group == city && instanceType.Platform == platform {
+		return true
+	}
+	return false
+}
+
 // InstanceFilterFunction describe the function that decide how many instance to launch/scale.
 type InstanceFilterFunction func(availableInstance int) (int, error)
 
@@ -108,13 +118,25 @@ func (ni *NodeInfo) valid() bool {
 }
 
 // NewNodeInfoPool get a new node info pool
-func NewNodeInfoPool(cpu, mem, disk float64) *NodeInfoPool {
-	return &NodeInfoPool{
+func NewNodeInfoPool(cpu, mem, disk float64, istTypes []config.InstanceType) *NodeInfoPool {
+	nip := NodeInfoPool{
 		cpuPerInstance:  cpu,
 		memPerInstance:  mem,
 		diskPerInstance: disk,
 		nodeBlockMap:    make(map[string]*NodeInfoBlock, 1000),
 	}
+	for _, istItem := range istTypes {
+		condition := map[string]string{
+			AttributeKeyCity:     istItem.Group,
+			AttributeKeyPlatform: istItem.Platform,
+		}
+		key := getBlockKey(condition)
+		nip.nodeBlockMap[key] = &NodeInfoBlock{
+			CPUPerInstance: istItem.CPUPerInstance,
+			MemPerInstance: istItem.MemPerInstance,
+		}
+	}
+	return &nip
 }
 
 // NodeInfoPool 描述了一个节点集合的资源情况, 一般用来管理整个集群的资源情况
@@ -147,9 +169,11 @@ func (nip *NodeInfoPool) GetStats() string {
 	message := ""
 	for city, block := range nip.nodeBlockMap {
 		message += fmt.Sprintf(
-			"\nCity: %s, available-instance: %d, report-instance: %d, noready-instance: %d "+
+			"\nCity: %s[cpuPerInstance: %.2f, memPerInstance:%.2f], available-instance: %d, report-instance: %d, noready-instance: %d "+
 				"CPU-Left: %.2f/%.2f, MEM-Left: %.2f/%.2f",
 			city,
+			block.CPUPerInstance,
+			block.MemPerInstance,
 			block.AvailableInstance-block.noReadyInstance,
 			block.AvailableInstance, block.noReadyInstance,
 			block.CPUTotal-block.CPUUsed,
@@ -192,6 +216,20 @@ func (nip *NodeInfoPool) GetLastUpdateTime() time.Time {
 	return nip.lastUpdateTime
 }
 
+func (nip *NodeInfoPool) getNodeInstance(key string) (float64, float64) {
+	cpuPerInstance := nip.cpuPerInstance
+	memPerInstance := nip.memPerInstance
+	if _, ok := nip.nodeBlockMap[key]; ok {
+		if nip.nodeBlockMap[key].CPUPerInstance > 0.0 {
+			cpuPerInstance = nip.nodeBlockMap[key].CPUPerInstance
+		}
+		if nip.nodeBlockMap[key].MemPerInstance > 0.0 {
+			memPerInstance = nip.nodeBlockMap[key].MemPerInstance
+		}
+	}
+	return cpuPerInstance, memPerInstance
+}
+
 // UpdateResources 更新资源数据, 给定从operators获取的节点信息列表, 将其信息与当前的资源信息进行整合同步
 // - 已经消失的节点: 剔除
 // - 新出现的节点: 增加
@@ -225,12 +263,15 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		newBlock.DiskUsed += NodeInfo.DiskUsed
 		newBlock.MemUsed += NodeInfo.MemUsed
 		newBlock.CPUUsed += NodeInfo.CPUUsed
+		//inherit the instance model if exist
+		cpuPerInstance, memPerInstance := nip.getNodeInstance(key)
 		newBlock.AvailableInstance += NodeInfo.figureAvailableInstanceFromFree(
-			nip.cpuPerInstance,
-			nip.memPerInstance,
+			cpuPerInstance,
+			memPerInstance,
 			nip.diskPerInstance,
 		)
-
+		newBlock.CPUPerInstance = cpuPerInstance
+		newBlock.MemPerInstance = memPerInstance
 		// inherit the no-ready instance records
 		if _, ok := nip.nodeBlockMap[key]; ok {
 			newBlock.noReadyInstance = nip.nodeBlockMap[key].noReadyInstance
@@ -250,13 +291,14 @@ func (nip *NodeInfoPool) UpdateResources(nodeInfoList []*NodeInfo) {
 		nodeBlock.DiskUsed = newBlock.DiskUsed
 		nodeBlock.MemUsed = newBlock.MemUsed
 		nodeBlock.CPUUsed = newBlock.CPUUsed
+		nodeBlock.CPUPerInstance = newBlock.CPUPerInstance
+		nodeBlock.MemPerInstance = newBlock.MemPerInstance
 		nodeBlock.AvailableInstance = newBlock.AvailableInstance
 		nodeBlock.noReadyInstance = newBlock.noReadyInstance
 	}
 
 	// record the last update time
 	nip.lastUpdateTime = time.Now()
-	return
 }
 
 // GetFreeInstances 在资源池中尝试获取可用的instance, 给定需求条件condition和资源数量函数function
@@ -308,12 +350,14 @@ func (nip *NodeInfoPool) ReleaseNoReadyInstance(key string, instance int) {
 // NodeInfoBlock 描述了一个特定区域的资源信息, 通常由多个区域组成一个完整的资源池NodeInfoPool
 // 例如 shenzhen区, shanghai区, projectA区等等, 同一个NodeInfoBlock内的资源是统一处理的, 拥有共同的noReady计数
 type NodeInfoBlock struct {
-	DiskTotal float64
-	MemTotal  float64
-	CPUTotal  float64
-	DiskUsed  float64
-	MemUsed   float64
-	CPUUsed   float64
+	DiskTotal      float64
+	MemTotal       float64
+	CPUTotal       float64
+	DiskUsed       float64
+	MemUsed        float64
+	CPUUsed        float64
+	CPUPerInstance float64
+	MemPerInstance float64
 
 	AvailableInstance int
 
@@ -359,7 +403,7 @@ type Endpoint struct {
 	Ports map[string]int
 }
 
-func getBlockKey(attributes map[string]string) string {
+func getInstanceKey(attributes map[string]string) (string, string) {
 	city, ok := attributes[AttributeKeyCity]
 	if !ok || city == "" {
 		city = "unknown_city"
@@ -369,6 +413,11 @@ func getBlockKey(attributes map[string]string) string {
 	if platform == "" {
 		platform = "default-platform"
 	}
+	return platform, city
+}
+
+func getBlockKey(attributes map[string]string) string {
+	platform, city := getInstanceKey(attributes)
 	return platform + "/" + city
 }
 

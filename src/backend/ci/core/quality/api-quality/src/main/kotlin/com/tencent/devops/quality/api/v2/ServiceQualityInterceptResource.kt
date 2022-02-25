@@ -69,7 +69,7 @@ interface ServiceQualityInterceptResource {
         buildId: String
     ): Result<List<QualityRuleIntercept>>
 
-    @ApiOperation("获取红线执行历史")
+    @ApiOperation("获取stream红线执行历史")
     @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/history")
     @POST
     fun listRuleHistory(

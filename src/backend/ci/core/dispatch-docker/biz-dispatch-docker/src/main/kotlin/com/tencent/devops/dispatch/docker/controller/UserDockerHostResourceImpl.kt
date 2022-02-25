@@ -41,12 +41,12 @@ import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
-import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoad
+import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
+import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
+import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
@@ -125,9 +125,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                         buildEnv = "",
                         registryUser = "",
                         registryPwd = "",
-                        imageType = "",
-                        imagePublicFlag = false,
-                        imageRDType = null
+                        imageType = ""
                     )
 
                     logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
@@ -138,39 +136,21 @@ class UserDockerHostResourceImpl @Autowired constructor(
 
             dockerIp = dockerBuildHistory.dockerIp
             poolNo = dockerBuildHistory.poolNo
-        } else {
-            // 没有构建历史的情况下debug，且没有分配构建IP，预先分配构建IP
-            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
-                dslContext = dslContext,
-                pipelineId = debugStartParam.pipelineId,
-                vmSeq = debugStartParam.vmSeqId
-            )
-            if (taskHistory != null) {
-                dockerIp = taskHistory.dockerIp
-            } else {
-                dockerIp = dockerHostUtils.getAvailableDockerIp(
-                    projectId = debugStartParam.projectId,
-                    pipelineId = debugStartParam.pipelineId,
-                    vmSeqId = debugStartParam.vmSeqId,
-                    unAvailableIpList = setOf()).first
-                pipelineDockerTaskSimpleDao.createOrUpdate(
-                    dslContext = dslContext,
-                    pipelineId = debugStartParam.pipelineId,
-                    vmSeq = debugStartParam.vmSeqId,
-                    dockerIp = dockerIp,
-                    dockerResourceOptionsId = 0
-                )
-            }
-            // 首次构建poolNo=1
-            poolNo = 1
-        }
 
-        dockerHostDebugService.startDebug(
-            dockerIp = dockerIp,
-            userId = userId,
-            poolNo = poolNo,
-            debugStartParam = debugStartParam
-        )
+            dockerHostDebugService.startDebug(
+                dockerIp = dockerIp,
+                userId = userId,
+                poolNo = poolNo,
+                debugStartParam = debugStartParam,
+                startupMessage = dockerBuildHistory.startupMessage
+            )
+        } else {
+            throw ErrorCodeException(
+                errorCode = "2103503",
+                defaultMessage = "Can not found debug container.",
+                params = arrayOf(debugStartParam.pipelineId)
+            )
+        }
 
         return Result(true)
     }

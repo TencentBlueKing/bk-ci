@@ -270,6 +270,7 @@
         "buildNumberFormat": "Build number format",
         "validatebuildNum": "Only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
         "correctBuildNumber": "Please enter the correct build number format",
+        "emptyPipelineName": "Please enter pipeline name",
         "runLock": "Locking behavior",
         "namePlaceholder": "Please enter a name for this pipeline within 40 letters",
         "descPlaceholder": "Please add a description within 100 letters",

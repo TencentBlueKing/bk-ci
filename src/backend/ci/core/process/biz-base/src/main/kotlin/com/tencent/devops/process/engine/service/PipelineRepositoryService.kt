@@ -428,9 +428,6 @@ class PipelineRepositoryService constructor(
 
     private fun matrixYamlCheck(option: MatrixControlOption?) {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if (option.strategyStr.isNullOrBlank()) {
-            throw DependNotFoundException("Matrix Yaml is blank")
-        }
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
                 "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX /" +

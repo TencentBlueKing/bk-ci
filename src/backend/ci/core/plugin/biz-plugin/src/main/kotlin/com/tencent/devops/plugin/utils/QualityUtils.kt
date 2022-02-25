@@ -30,13 +30,13 @@ package com.tencent.devops.plugin.utils
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
-import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
@@ -45,7 +45,8 @@ import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 object QualityUtils {
     fun getQualityGitMrResult(
         client: Client,
-        event: GitCommitCheckEvent
+        event: GitCommitCheckEvent,
+        ruleIntercept: QualityRuleIntercept
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
@@ -67,35 +68,32 @@ object QualityUtils {
         // key：质量红线产出插件
         // value：指标、预期、结果、状态
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
-        client.get(ServiceQualityInterceptResource::class)
-                .listHistory(projectId, pipelineId, buildId).data?.forEach { ruleIntercept ->
-            ruleIntercept.resultMsg.forEach { interceptItem ->
-                val indicator = client.get(ServiceQualityIndicatorResource::class)
-                        .get(projectId, interceptItem.indicatorId).data
-                val indicatorElementName = indicator?.elementType ?: ""
-                val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
-                val resultList = resultMap[elementCnName] ?: mutableListOf()
-                val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
-                    getActualValue(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        detail = indicator?.elementDetail,
-                        value = interceptItem.actualValue ?: "null",
-                        client = client)
-                } else {
-                    interceptItem.actualValue ?: "null"
-                }
-                resultList.add(listOf(
-                        interceptItem.indicatorName,
-                        actualValue,
-                        QualityOperation.convertToSymbol(interceptItem.operation) + "" + interceptItem.value,
-                        interceptItem.pass.toString(), ""
-                ))
-                resultMap[elementCnName] = resultList
+        ruleIntercept.resultMsg.forEach { interceptItem ->
+            val indicator = client.get(ServiceQualityIndicatorResource::class)
+                    .get(projectId, interceptItem.indicatorId).data
+            val indicatorElementName = indicator?.elementType ?: ""
+            val elementCnName = ElementUtils.getElementCnName(indicatorElementName, projectId)
+            val resultList = resultMap[elementCnName] ?: mutableListOf()
+            val actualValue = if (CodeccUtils.isCodeccAtom(indicatorElementName)) {
+                getActualValue(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    detail = indicator?.elementDetail,
+                    value = interceptItem.actualValue ?: "null",
+                    client = client)
+            } else {
+                interceptItem.actualValue ?: "null"
             }
-            ruleName.add(ruleIntercept.ruleName)
+            resultList.add(listOf(
+                    interceptItem.indicatorName,
+                    actualValue,
+                    QualityOperation.convertToSymbol(interceptItem.operation) + "" + interceptItem.value,
+                    interceptItem.pass.toString(), ""
+            ))
+            resultMap[elementCnName] = resultList
         }
+        ruleName.add(ruleIntercept.ruleName)
         titleData.add(ruleName.joinToString("、"))
         return Pair(titleData, resultMap)
     }
