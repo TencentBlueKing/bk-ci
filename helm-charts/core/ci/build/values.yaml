@@ -11,14 +11,10 @@ ingress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/proxy-body-size: "1024m"
 nginx-ingress-controller:
-  enabled: false #minikube 没发生效
+  enabled: false
   defaultBackend:
     enabled: false
-  service:
-    type: NodePort
-
 
 # 镜像配置
 gatewayImage:
