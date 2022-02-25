@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -88,6 +89,7 @@ class GitCIHistoryService @Autowired constructor(
         validateQueryTimeRange(startBeginTime, endBeginTime)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
+
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
         if (conf == null) {
             repositoryConfService.initGitCISetting(userId, gitProjectId)
@@ -98,7 +100,8 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
+
+        val totalPage = gitRequestEventBuildDao.getRequestEventBuildListCount(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             branchName = branch,
@@ -107,16 +110,36 @@ class GitCIHistoryService @Autowired constructor(
             pipelineId = pipelineId,
             event = event?.value
         )
+        if (totalPage == 0) {
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = pageNotNull, pageSize = pageSizeNotNull)
+        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            branchName = branch,
+            sourceGitProjectId = sourceGitProjectId,
+            triggerUser = triggerUser,
+            pipelineId = pipelineId,
+            event = event?.value,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
-        val buildHistoryList =
-            client.get(ServiceBuildResource::class).getBatchBuildStatus(
-                projectId = conf.projectCode!!,
-                buildId = builds,
-                channelCode = channelCode,
-                startBeginTime = startBeginTime,
-                endBeginTime = endBeginTime
-            ).data
+        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
+            projectId = conf.projectCode!!,
+            buildId = builds,
+            channelCode = channelCode,
+            startBeginTime = startBeginTime,
+            endBeginTime = endBeginTime
+        ).data
         if (null == buildHistoryList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             return Page(
@@ -126,14 +149,9 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
-        val lastIndex = if (pageNotNull * pageSizeNotNull > gitRequestBuildList.size) {
-            gitRequestBuildList.size
-        } else {
-            pageNotNull * pageSizeNotNull
-        }
+
         val records = mutableListOf<GitCIBuildHistory>()
-        gitRequestBuildList.subList(firstIndex, lastIndex).forEach {
+        gitRequestBuildList.forEach {
             val buildHistory = getBuildHistory(
                 buildId = it.buildId,
                 buildHistoryList = buildHistoryList,
@@ -156,7 +174,7 @@ class GitCIHistoryService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = records.size.toLong(),
+            count = totalPage.toLong(),
             records = records
         )
     }

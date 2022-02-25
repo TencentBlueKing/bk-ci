@@ -96,10 +96,10 @@ class StreamPipelineBranchDao {
         pipelineId: String
     ): Int {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount().from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .count()
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -124,7 +124,8 @@ class StreamPipelineBranchDao {
         gitProjectId: Long
     ): Boolean {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            return dslContext.selectFrom(this).where(GIT_PROJECT_ID.eq(gitProjectId)).count() > 0
+            return dslContext.selectCount().from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId)).fetchOne(0, Int::class.java)!! > 0
         }
     }
 
@@ -188,9 +189,7 @@ class StreamPipelineBranchDao {
         sort: GitCodeBranchesSort
     ): Int {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
-            return projectPipelineDsl(dslContext, gitProjectId, pipelineId, search, orderBy, sort)
-                .groupBy(BRANCH)
-                .count()
+            return projectPipelineDslCount(dslContext, gitProjectId, pipelineId, search)
         }
     }
 
@@ -243,5 +242,20 @@ class StreamPipelineBranchDao {
             }
         }
         return dsl
+    }
+
+    private fun TStreamPipelineBranch.projectPipelineDslCount(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        search: String?
+    ): Int {
+        val dsl = dslContext.selectCount().from(this)
+            .where(GIT_PROJECT_ID.eq(gitProjectId))
+            .and(PIPELINE_ID.eq(pipelineId))
+        if (!search.isNullOrBlank()) {
+            dsl.and(BRANCH.like("%$search%"))
+        }
+        return dsl.fetchOne(0, Int::class.java)!!
     }
 }

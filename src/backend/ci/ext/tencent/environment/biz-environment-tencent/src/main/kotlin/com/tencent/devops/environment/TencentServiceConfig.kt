@@ -37,8 +37,9 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.environment.permission.StreamEnvironmentPermissionServiceImp
 import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
-import com.tencent.devops.environment.permission.impl.GitCIEnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import com.tencent.devops.environment.service.TencentGITCIAgentUrlServiceImpl
@@ -66,16 +67,6 @@ class TencentServiceConfig {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCIEnvironmentPermissionServiceImpl(
-        client: Client,
-        dslContext: DSLContext,
-        nodeDao: NodeDao,
-        envDao: EnvDao,
-        tokenCheckService: ClientTokenService
-    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao, tokenCheckService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
@@ -113,5 +104,21 @@ class TencentServiceConfig {
         dslContext = dslContext,
         tokenCheckService = tokenCheckService,
         authResourceApiStr = authResourceApiStr
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamEnvironmentPermissionService(
+        client: Client,
+        dslContext: DSLContext,
+        nodeDao: NodeDao,
+        envDao: EnvDao,
+        tokenCheckService: ClientTokenService
+    ): EnvironmentPermissionService = StreamEnvironmentPermissionServiceImp(
+        client = client,
+        dslContext = dslContext,
+        nodeDao = nodeDao,
+        envDao = envDao,
+        tokenCheckService = tokenCheckService
     )
 }

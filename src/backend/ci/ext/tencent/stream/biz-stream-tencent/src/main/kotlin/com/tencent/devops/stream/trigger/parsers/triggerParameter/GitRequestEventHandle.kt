@@ -28,14 +28,19 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
@@ -148,6 +153,122 @@ class GitRequestEventHandle @Autowired constructor(
             description = "",
             mrTitle = null,
             gitEvent = gitTagPushEvent
+        )
+    }
+
+    fun createIssueEvent(gitIssueEvent: GitIssueEvent, e: String): GitRequestEvent {
+        val gitProjectId = gitIssueEvent.objectAttributes.projectId
+        val token = streamGitTokenService.getToken(gitProjectId)
+        val defaultBranch = streamScmService.getProjectInfoRetry(
+            token = token,
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = true
+        ).defaultBranch!!
+        val latestCommit = streamScmService.getCommitInfo(
+            gitToken = token,
+            projectName = gitProjectId.toString(),
+            sha = defaultBranch
+        )
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.ISSUE.value,
+            operationKind = "",
+            extensionAction = TGitIssueAction.getDesc(gitIssueEvent.objectAttributes.action ?: ""),
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = null,
+            branch = defaultBranch,
+            targetBranch = null,
+            commitId = latestCommit?.id ?: "0",
+            commitMsg = gitIssueEvent.objectAttributes.title,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
+            commitAuthorName = latestCommit?.author_name,
+            userId = gitIssueEvent.user.username,
+            totalCommitCount = 1,
+            mergeRequestId = gitIssueEvent.objectAttributes.iid.toLong(),
+            event = e,
+            description = "",
+            mrTitle = gitIssueEvent.objectAttributes.title,
+            gitEvent = gitIssueEvent
+        )
+    }
+
+    fun createNoteEvent(gitNoteEvent: GitNoteEvent, e: String): GitRequestEvent {
+        val gitProjectId = gitNoteEvent.objectAttributes.projectId
+        val token = streamGitTokenService.getToken(gitProjectId)
+        val defaultBranch = streamScmService.getProjectInfoRetry(
+            token = token,
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = true
+        ).defaultBranch!!
+        val latestCommit = streamScmService.getCommitInfo(
+            gitToken = token,
+            projectName = gitProjectId.toString(),
+            sha = defaultBranch
+        )
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.NOTE.value,
+            operationKind = "",
+            extensionAction = "submitted",
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = null,
+            branch = defaultBranch,
+            targetBranch = null,
+            commitId = latestCommit?.id ?: "0",
+            commitMsg = gitNoteEvent.objectAttributes.note,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
+            commitAuthorName = latestCommit?.author_name,
+            userId = latestCommit?.author_name ?: "",
+            totalCommitCount = 1,
+            mergeRequestId = null,
+            event = e,
+            description = "",
+            mrTitle = null,
+            gitEvent = gitNoteEvent
+        )
+    }
+
+    fun createReviewEvent(gitReviewEvent: GitReviewEvent, e: String): GitRequestEvent {
+        val gitProjectId = gitReviewEvent.projectId
+        val token = streamGitTokenService.getToken(gitProjectId)
+        val defaultBranch = streamScmService.getProjectInfoRetry(
+            token = token,
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = true
+        ).defaultBranch!!
+        val latestCommit = streamScmService.getCommitInfo(
+            gitToken = token,
+            projectName = gitProjectId.toString(),
+            sha = defaultBranch
+        )
+        return GitRequestEvent(
+            id = null,
+            objectKind = TGitObjectKind.REVIEW.value,
+            operationKind = "",
+            extensionAction = when (gitReviewEvent.event) {
+                TGitReviewEventKind.CREATE.value -> "created"
+                TGitReviewEventKind.INVITE.value -> "updated"
+                else -> gitReviewEvent.state
+            },
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = null,
+            branch = defaultBranch,
+            targetBranch = null,
+            commitId = latestCommit?.id ?: "0",
+            commitMsg = latestCommit?.message,
+            commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
+            commitAuthorName = latestCommit?.author_name,
+            userId = if (gitReviewEvent.reviewer == null) {
+                gitReviewEvent.author.username
+            } else {
+                gitReviewEvent.reviewer!!.reviewer.username
+            },
+            totalCommitCount = 1,
+            mergeRequestId = gitReviewEvent.iid.toLong(),
+            event = e,
+            description = "",
+            mrTitle = "",
+            gitEvent = gitReviewEvent
         )
     }
 

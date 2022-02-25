@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -464,10 +463,9 @@ class PipelineViewService @Autowired constructor(
     }
 
     private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.isProjectUser(
+        return pipelinePermissionService.checkProjectManager(
             userId = userId,
-            projectId = projectId,
-            group = BkAuthGroup.MANAGER
+            projectId = projectId
         )
     }
 

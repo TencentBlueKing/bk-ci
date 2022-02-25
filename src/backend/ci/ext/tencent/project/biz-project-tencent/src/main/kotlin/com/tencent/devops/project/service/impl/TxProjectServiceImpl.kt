@@ -40,7 +40,6 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -290,12 +289,11 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        val group = if (permission == AuthPermission.MANAGE) {
-            BkAuthGroup.MANAGER
+        return if (permission == AuthPermission.MANAGE) {
+            bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
         } else {
-            null
+            bsAuthProjectApi.checkProjectUser(userId, bsPipelineAuthServiceCode, projectCode)
         }
-        return bsAuthProjectApi.isProjectUser(userId, bsPipelineAuthServiceCode, projectCode, group)
     }
 
     override fun modifyProjectAuthResource(projectCode: String, projectName: String) {

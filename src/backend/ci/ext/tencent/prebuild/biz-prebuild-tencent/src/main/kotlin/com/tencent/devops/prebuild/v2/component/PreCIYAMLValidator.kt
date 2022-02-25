@@ -30,12 +30,15 @@ package com.tencent.devops.prebuild.v2.component
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
@@ -78,7 +81,11 @@ class PreCIYAMLValidator {
      * 获取整体schema
      */
     private fun getYamlSchema(): String {
-        val mapper = ObjectMapper()
+        val mapper = ObjectMapper().setFilterProvider(
+            SimpleFilterProvider().addFilter(
+                YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+            )
+        )
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
         val schemaGenerator = JsonSchemaGenerator(mapper)
         val schema = schemaGenerator.generateSchema(PreScriptBuildYaml::class.java)

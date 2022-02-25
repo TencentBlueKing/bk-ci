@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwRepositoryCommitResourceV3 {
 
-    @ApiOperation("获取代码提交记录")
+    @ApiOperation("获取代码提交记录", tags = ["v3_app_repository_commit_list", "v3_user_repository_commit_list"])
     @Path("")
     @GET
     fun getRepositoryCommit(

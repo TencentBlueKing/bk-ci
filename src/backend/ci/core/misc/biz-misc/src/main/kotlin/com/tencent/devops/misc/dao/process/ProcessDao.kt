@@ -115,7 +115,7 @@ class ProcessDao {
         }
     }
 
-    fun getMinPipelineInfoIdListByProjectId(
+    fun getMinPipelineInfoIdByProjectId(
         dslContext: DSLContext,
         projectId: String
     ): Long {
