@@ -63,6 +63,13 @@ spec:
           ports:
             - name: http
               containerPort: {{ .Values.config.bkCiHttpPort }}
+          env:
+            - name: MS_NAME
+              value: gateway
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}
           envFrom:
             - configMapRef:
                 name: {{ include "common.names.fullname" . }}-gateway
