@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -75,12 +76,12 @@ interface BuildVarResource {
         @ApiParam(value = "流水线ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
         pipelineId: String,
+        @ApiParam(value = "构建环境ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
+        containerId: String,
         @ApiParam(value = "变量名称", required = true)
         @QueryParam("contextName")
         contextName: String,
-        @ApiParam(value = "当前构建机ID", required = false)
-        @QueryParam("containerId")
-        containerId: String?,
         @ApiParam(value = "是否校验变量", required = false)
         @QueryParam("check")
         check: Boolean? = false
