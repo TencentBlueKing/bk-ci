@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineGroupResourceV3 {
 
-    @ApiOperation("获取所有分组信息")
+    @ApiOperation("获取所有分组信息", tags = ["v3_user_pipeline_group_get", "v3_app_pipeline_group_get"])
     @GET
     @Path("/groups")
     fun getGroups(
@@ -67,7 +67,7 @@ interface ApigwPipelineGroupResourceV3 {
         projectId: String
     ): Result<List<PipelineGroup>>
 
-    @ApiOperation("添加分组")
+    @ApiOperation("添加分组", tags = ["v3_user_pipeline_group_create", "v3_app_pipeline_group_create"])
     @POST
     @Path("/groups/")
     fun addGroup(
@@ -78,7 +78,7 @@ interface ApigwPipelineGroupResourceV3 {
         pipelineGroup: PipelineGroupCreate
     ): Result<Boolean>
 
-    @ApiOperation("更改分组")
+    @ApiOperation("更改分组", tags = ["v3_app_pipeline_group_update", "v3_user_pipeline_group_update"])
     @PUT
     @Path("/groups/")
     fun updateGroup(
@@ -89,7 +89,7 @@ interface ApigwPipelineGroupResourceV3 {
         pipelineGroup: PipelineGroupUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除分组")
+    @ApiOperation("删除分组", tags = ["v3_app_pipeline_group_delete", "v3_user_pipeline_group_delete"])
     @DELETE
     @Path("/groups/{groupId}")
     fun deleteGroup(
@@ -104,7 +104,7 @@ interface ApigwPipelineGroupResourceV3 {
         groupId: String
     ): Result<Boolean>
 
-    @ApiOperation("添加标签")
+    @ApiOperation("添加标签", tags = ["v3_user_pipeline_label_create", "v3_app_pipeline_label_create"])
     @POST
     @Path("/labels/")
     fun addLabel(
@@ -118,7 +118,7 @@ interface ApigwPipelineGroupResourceV3 {
         pipelineLabel: PipelineLabelCreate
     ): Result<Boolean>
 
-    @ApiOperation("删除标签")
+    @ApiOperation("删除标签", tags = ["v3_app_pipeline_label_delete", "v3_user_pipeline_label_delete"])
     @DELETE
     @Path("/labels/{labelId}")
     fun deleteLabel(
@@ -133,7 +133,7 @@ interface ApigwPipelineGroupResourceV3 {
         labelId: String
     ): Result<Boolean>
 
-    @ApiOperation("更改标签")
+    @ApiOperation("更改标签", tags = ["v3_app_pipeline_label_update", "v3_user_pipeline_label_update"])
     @PUT
     @Path("/labels/")
     fun updateLabel(
