@@ -128,7 +128,7 @@ class TGitNoteTriggerHandler(
             startParams[PIPELINE_GIT_COMMIT_MESSAGE] = commitInfo?.message ?: ""
         }
         // 兼容stream变量
-        startParams[PIPELINE_GIT_REPO_URL] = event.repository.url
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.homepage + ".git"
         startParams[PIPELINE_GIT_EVENT_URL] = event.objectAttributes.url
         startParams[PIPELINE_GIT_EVENT] = GitNoteEvent.classType
         event.commit?.apply {
