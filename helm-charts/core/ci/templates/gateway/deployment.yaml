@@ -27,7 +27,6 @@ spec:
         {{- include "common.tplvalues.render" (dict "value" .Values.gateway.podLabels "context" $) | nindent 8 }}
         {{- end }}
     spec:
-      serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.gateway.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.hostAliases "context" $) | nindent 8 }}
       {{- end }}
