@@ -68,11 +68,15 @@ class BuildVarResourceImpl @Autowired constructor(
             checkVariable(variableName = contextName)
         }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        // 如果无法替换上下文预置变量则保持原变量名去查取
-        val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
         val variables = buildVariableService.getAllVariable(projectId, buildId)
-        val allContext = pipelineContextService.buildContext(projectId, buildId, containerId, variables)
-        return Result(allContext[varName])
+        val context = pipelineContextService.getAllBuildContext(variables)
+        val allContext = pipelineContextService.buildContext(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            variables = context
+        )
+        return Result(allContext[contextName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
