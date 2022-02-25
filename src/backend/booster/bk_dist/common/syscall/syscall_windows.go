@@ -235,7 +235,10 @@ func (s *Sandbox) execCommand(name string, arg ...string) (int, error) {
 	}
 
 	var err error
-	name, err = s.LookPath(name)
+	// if not relative path find the command in PATH
+	if !strings.HasPrefix(name, ".") {
+		name, err = s.LookPath(name)
+	}
 
 	var cmd *exec.Cmd
 	if s.Ctx != nil {
@@ -293,8 +296,11 @@ func (s *Sandbox) startCommand(name string, arg ...string) (*exec.Cmd, error) {
 	}
 
 	var err error
-	name, err = s.LookPath(name)
-
+	// if not relative path find the command in PATH
+	if !strings.HasPrefix(name, ".") {
+		name, err = s.LookPath(name)
+	}
+	
 	var cmd *exec.Cmd
 	if s.Ctx != nil {
 		cmd = exec.CommandContext(s.Ctx, name, arg...)
