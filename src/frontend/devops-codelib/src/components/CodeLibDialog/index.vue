@@ -2,7 +2,7 @@
     <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" @confirm="submitCodelib" @cancel="handleCancel">
         <h3 slot="header" class="bk-dialog-title">{{title}}</h3>
         <form class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
-            <div class="bk-form-item is-required" v-if="isGit">
+            <div class="bk-form-item is-required" v-if="isGit || isGitLab">
                 <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
                     <bk-radio value="OAUTH" v-if="isGit">OAUTH</bk-radio>
@@ -141,7 +141,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4 } from '../../config/'
+    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
@@ -246,13 +246,16 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.codelibConfig.label || ''}${this.$t('codelib.codelib')}`
+                return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
             },
             isTGit () {
                 return isTGit(this.codelibTypeName)
+            },
+            isGitLab () {
+                return isGitLab(this.codelibTypeName)
             },
             isP4 () {
                 return isP4(this.codelibTypeName)
@@ -333,8 +336,8 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders.url[this.codelib.authType]
-                    || this.placeholders.url[this.codelibConfig.label]
+                    this.placeholders['url'][this.codelibConfig.label]
+                    || this.placeholders['url'][this.codelib.authType]
                 )
             },
             credentialPlaceholder () {

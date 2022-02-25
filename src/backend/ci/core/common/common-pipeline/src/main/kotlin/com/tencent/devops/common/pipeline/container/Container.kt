@@ -75,4 +75,6 @@ interface Container {
     fun retryFreshMatrixOption()
 
     fun fetchGroupContainers(): List<Container>?
+
+    fun fetchMatrixContext(): Map<String, String>?
 }
