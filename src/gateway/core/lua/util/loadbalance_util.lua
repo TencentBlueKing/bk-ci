@@ -18,6 +18,9 @@
 _M = {}
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
+    if devops_tag == 'kubernetes' then
+        return config.kubernetes.domain .. "/ms/" .. service_name
+    end
 
     -- 容器环境
     if ngx.var.namespace ~= '' and ngx.var.namespace ~= nil then
