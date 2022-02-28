@@ -33,7 +33,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
@@ -54,6 +56,39 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     ): Result<List<NodeWithPermission>> {
         logger.info("listUsableServerNodes userId[$userId] project[$projectId]")
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
+    }
+
+    override fun createEnv(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        environment: EnvCreateInfo
+    ): Result<EnvironmentId> {
+        logger.info("createEnv userId[$userId] project[$projectId]")
+        return client.get(ServiceEnvironmentResource::class).create(userId, projectId, environment)
+    }
+
+    override fun deleteEnv(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): Result<Boolean> {
+        logger.info("deleteEnv userId[$userId] project[$projectId]")
+        return client.get(ServiceEnvironmentResource::class).delete(userId, projectId, envHashId)
+    }
+
+    override fun deleteNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        logger.info("deleteNodes userId[$userId] project[$projectId]")
+        return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
     }
 
     override fun listUsableServerEnvs(
