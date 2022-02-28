@@ -34,5 +34,7 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 interface CredentialSDKApi : WorkerRestApiSDK {
     fun get(credentialId: String, publicKey: String): Result<CredentialInfo>
 
+    fun getProjectCredentials(publicKey: String): Result<List<CredentialInfo>>
+
     fun getAcrossProject(targetProjectId: String, credentialId: String, publicKey: String): Result<CredentialInfo>
 }

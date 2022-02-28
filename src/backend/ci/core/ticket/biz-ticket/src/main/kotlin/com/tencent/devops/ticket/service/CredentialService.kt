@@ -83,6 +83,8 @@ interface CredentialService {
 
     fun buildGet(projectId: String, buildId: String, credentialId: String, publicKey: String): CredentialInfo?
 
+    fun buildBatchGet(projectId: String, buildId: String, publicKey: String): List<CredentialInfo>
+
     fun buildGetAcrossProject(
         projectId: String,
         targetProjectId: String,
@@ -94,6 +96,8 @@ interface CredentialService {
     fun buildGetDetail(projectId: String, buildId: String, taskId: String?, credentialId: String): Map<String, String>
 
     fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo?
+
+    fun serviceBatchGet(projectId: String, publicKey: String): List<CredentialInfo>
 
     fun serviceGetAcrossProject(targetProjectId: String, credentialId: String, publicKey: String): CredentialInfo?
 

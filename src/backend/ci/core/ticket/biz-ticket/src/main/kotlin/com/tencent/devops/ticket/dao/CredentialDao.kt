@@ -64,6 +64,14 @@ class CredentialDao {
         }
     }
 
+    fun batchGet(dslContext: DSLContext, projectId: String): List<TCredentialRecord> {
+        with(TCredential.T_CREDENTIAL) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetch()
+        }
+    }
+
     fun create(
         dslContext: DSLContext,
         projectId: String,

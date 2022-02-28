@@ -263,7 +263,7 @@ class CredentialServiceImpl @Autowired constructor(
                 AuthPermission.EDIT
             )
         )
-        if (permissionToListMap.isNullOrEmpty()) {
+        if (permissionToListMap.isEmpty()) {
             return SQLPage(0, emptyList())
         }
         val hasListPermissionCredentialIdList = permissionToListMap[AuthPermission.LIST]!!
@@ -460,6 +460,16 @@ class CredentialServiceImpl @Autowired constructor(
         return serviceGet(buildBasicInfo.projectId, credentialId, publicKey)
     }
 
+    override fun buildBatchGet(projectId: String, buildId: String, publicKey: String): List<CredentialInfo> {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
+        if (buildBasicInfoResult.isNotOk()) {
+            throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        }
+        val buildBasicInfo = buildBasicInfoResult.data
+            ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
+        return serviceBatchGet(buildBasicInfo.projectId, publicKey)
+    }
+
     override fun buildGetAcrossProject(
         projectId: String,
         targetProjectId: String,
@@ -516,6 +526,12 @@ class CredentialServiceImpl @Autowired constructor(
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
 
         return credentialInfo(publicKey, credentialRecord)
+    }
+
+    override fun serviceBatchGet(projectId: String, publicKey: String): List<CredentialInfo> {
+        return credentialDao.batchGet(dslContext, projectId).map {
+            credentialInfo(publicKey, it)
+        }.toList()
     }
 
     override fun serviceGetAcrossProject(

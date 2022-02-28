@@ -49,15 +49,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         credentialId: String,
         publicKey: String
     ): Result<CredentialInfo?> {
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (vmSeqId.isBlank()) {
-            throw ParamBlankException("Invalid vmSeqId")
-        }
-        if (vmName.isBlank()) {
-            throw ParamBlankException("Invalid vmName")
-        }
+        checkParams(buildId, vmSeqId, vmName)
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
@@ -65,6 +57,20 @@ class BuildCredentialResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid publicKey")
         }
         return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
+    }
+
+    override fun getProjectCredentials(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        publicKey: String
+    ): Result<List<CredentialInfo>> {
+        checkParams(buildId, vmSeqId, vmName)
+        if (publicKey.isBlank()) {
+            throw ParamBlankException("Invalid publicKey")
+        }
+        return Result(credentialService.buildBatchGet(projectId, buildId, publicKey))
     }
 
     @SensitiveApiPermission("get_credential")
@@ -77,15 +83,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         targetProjectId: String,
         publicKey: String
     ): Result<CredentialInfo?> {
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        if (vmSeqId.isBlank()) {
-            throw ParamBlankException("Invalid vmSeqId")
-        }
-        if (vmName.isBlank()) {
-            throw ParamBlankException("Invalid vmName")
-        }
+        checkParams(buildId, vmSeqId, vmName)
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
@@ -106,6 +104,14 @@ class BuildCredentialResourceImpl @Autowired constructor(
         taskId: String?,
         credentialId: String
     ): Result<Map<String, String>> {
+        checkParams(buildId, vmSeqId, vmName)
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
+    }
+
+    private fun checkParams(buildId: String, vmSeqId: String, vmName: String) {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
@@ -115,9 +121,5 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (vmName.isBlank()) {
             throw ParamBlankException("Invalid vmName")
         }
-        if (credentialId.isBlank()) {
-            throw ParamBlankException("Invalid credentialId")
-        }
-        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
     }
 }

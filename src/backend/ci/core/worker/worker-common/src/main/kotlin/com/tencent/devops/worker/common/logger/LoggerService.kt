@@ -52,6 +52,7 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -69,6 +70,7 @@ import java.util.concurrent.locks.ReentrantLock
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
+    private val credentialResourceApi = ApiFactory.create(CredentialSDKApi::class)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
