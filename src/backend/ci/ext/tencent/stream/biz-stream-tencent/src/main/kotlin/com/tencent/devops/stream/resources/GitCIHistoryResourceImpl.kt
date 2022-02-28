@@ -35,8 +35,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.GitCIHistoryResource
 import com.tencent.devops.stream.pojo.GitCIBuildBranch
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
-import com.tencent.devops.stream.service.GitRepositoryConfService
 import com.tencent.devops.stream.service.GitCIHistoryService
+import com.tencent.devops.stream.service.GitRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -48,6 +48,8 @@ class GitCIHistoryResourceImpl @Autowired constructor(
     override fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
+        startBeginTime: String?,
+        endBeginTime: String?,
         page: Int?,
         pageSize: Int?,
         branch: String?,
@@ -59,15 +61,20 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
         }
-        return Result(gitCIHistoryService.getHistoryBuildList(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            page = page, pageSize = pageSize,
-            branch = branch,
-            sourceGitProjectId = sourceGitProjectId,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId
-        ))
+        return Result(
+            gitCIHistoryService.getHistoryBuildList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                startBeginTime = startBeginTime,
+                endBeginTime = endBeginTime,
+                page = page,
+                pageSize = pageSize,
+                branch = branch,
+                sourceGitProjectId = sourceGitProjectId,
+                triggerUser = triggerUser,
+                pipelineId = pipelineId
+            )
+        )
     }
 
     override fun getAllBuildBranchList(
@@ -81,13 +88,15 @@ class GitCIHistoryResourceImpl @Autowired constructor(
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
         }
-        return Result(gitCIHistoryService.getAllBuildBranchList(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20,
-            keyword = keyword
-        ))
+        return Result(
+            gitCIHistoryService.getAllBuildBranchList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                keyword = keyword
+            )
+        )
     }
 
     private fun checkParam(userId: String) {

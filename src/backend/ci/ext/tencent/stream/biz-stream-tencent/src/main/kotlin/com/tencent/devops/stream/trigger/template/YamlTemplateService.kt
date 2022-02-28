@@ -36,26 +36,32 @@ import com.tencent.devops.stream.common.exception.YamlBlankException
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
-import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
-import com.tencent.devops.stream.trigger.template.pojo.enums.TemplateType
+import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.util.CommonCredentialUtils
+import com.tencent.devops.stream.trigger.StreamTriggerCache
+import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ComplexCondition")
 @Service
 class YamlTemplateService @Autowired constructor(
+    private val client: Client,
     private val oauthService: StreamOauthService,
     private val streamScmService: StreamScmService,
-    private val ticketService: TicketService,
     private val yamlVersion: YamlVersion,
-    private val yamlSchemaCheck: YamlSchemaCheck
+    private val yamlSchemaCheck: YamlSchemaCheck,
+    private val streamTriggerCache: StreamTriggerCache
 ) {
 
     companion object {
         private const val templateDirectory = ".ci/templates/"
-        const val UN_SUPPORT_TICKET_ERROR = "Unsupported ticket type: [%s]"
+        const val GET_TICKET_ERROR = "get ticket type: [%s]"
         const val ONLY_SUPPORT_ERROR = "Only supports using the settings context to access credentials"
     }
 
@@ -72,6 +78,7 @@ class YamlTemplateService @Autowired constructor(
     fun getTemplate(
         param: GetTemplateParam
     ): String {
+        val gitRequestEventId = param.gitRequestEventId
         val token = param.token
         val event = param.event
         val forkToken = param.forkToken
@@ -118,11 +125,15 @@ class YamlTemplateService @Autowired constructor(
         }
         if (personalAccessToken.isNullOrBlank()) {
             val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-
             val content = streamScmService.getYamlFromGit(
                 token = oAuthToken,
                 gitProjectId = targetRepo!!,
-                ref = ref ?: getDefaultBranch(oAuthToken, targetRepo, true),
+                ref = ref ?: getGitProjectCache(
+                    gitRequestEventId = gitRequestEventId,
+                    token = oAuthToken,
+                    gitProjectId = targetRepo,
+                    useAccessToken = true
+                ).defaultBranch!!,
                 fileName = templateDirectory + fileName,
                 useAccessToken = true
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
@@ -131,16 +142,18 @@ class YamlTemplateService @Autowired constructor(
 
             return ScriptYmlUtils.formatYaml(content)
         } else {
-            val (isTicket, key) = getKey(personalAccessToken)
+            val content = getYamlByPersonToken(param)
+            return ScriptYmlUtils.formatYaml(content)
+        }
+    }
+
+    private fun getYamlByPersonToken(
+        param: GetTemplateParam
+    ): String {
+        with(param) {
+            val (isTicket, key) = getKey(personalAccessToken!!)
             val personToken = if (isTicket) {
-                val ticket = ticketService.getCredential(
-                    projectId = "git_$gitProjectId",
-                    credentialId = key
-                )
-                if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
-                    throw YamlFormatException(UN_SUPPORT_TICKET_ERROR.format(ticket["type"]))
-                }
-                ticket["v1"]!!
+                getTicket(param, key)
             } else {
                 key
             }
@@ -148,15 +161,57 @@ class YamlTemplateService @Autowired constructor(
             val content = streamScmService.getYamlFromGit(
                 token = personToken,
                 gitProjectId = targetRepo!!,
-                ref = ref ?: getDefaultBranch(personToken, targetRepo, false),
+                ref = ref ?: getGitProjectCache(
+                    gitRequestEventId = gitRequestEventId,
+                    token = personToken,
+                    gitProjectId = targetRepo!!,
+                    useAccessToken = false
+                ).defaultBranch!!,
                 fileName = templateDirectory + fileName,
                 useAccessToken = false
             ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
 
             // 针对模板替换时，如果类型为空就不校验
             schemaCheck(templateDirectory + fileName, content, templateType)
+            return content
+        }
+    }
 
-            return ScriptYmlUtils.formatYaml(content)
+    private fun getTicket(param: GetTemplateParam, key: String): String {
+        with(param) {
+            try {
+                return CommonCredentialUtils.getCredential(
+                    client = client,
+                    projectId = "git_$gitProjectId",
+                    credentialId = key,
+                    type = CredentialType.ACCESSTOKEN
+                )["v1"]!!
+            } catch (ignore: Exception) {
+                if (param.nowRemoteGitProjectId == null) {
+                    // 没有库信息说明是触发库，并不需要获取跨项目信息
+                    throw YamlFormatException(GET_TICKET_ERROR.format(ignore.message))
+                }
+            }
+            // 运行至此说明当前触发项目中没用保存凭证，需要校验远程库是否开启凭证共享
+            // 因为需要获取到引用的远程库的gitProjectId(num)才可以拿到凭证，所以需要先用开启人的oauth去拿
+            val token = oauthService.getGitCIEnableToken(gitProjectId).accessToken
+            val acrossGitProjectId = getGitProjectCache(
+                gitRequestEventId = gitRequestEventId,
+                token = token,
+                gitProjectId = param.nowRemoteGitProjectId!!,
+                useAccessToken = true
+            ).gitProjectId
+            try {
+                return CommonCredentialUtils.getCredential(
+                    client = client,
+                    projectId = "git_$acrossGitProjectId",
+                    credentialId = key,
+                    type = CredentialType.ACCESSTOKEN,
+                    acrossProject = true
+                )["v1"]!!
+            } catch (ignore: Exception) {
+                throw YamlFormatException(GET_TICKET_ERROR.format(ignore.message))
+            }
         }
     }
 
@@ -168,20 +223,53 @@ class YamlTemplateService @Autowired constructor(
         }
     }
 
-    private fun getDefaultBranch(token: String, gitProjectId: String, useAccessToken: Boolean): String {
-        return streamScmService.getProjectInfoRetry(token, gitProjectId, useAccessToken).defaultBranch!!
+    private fun getGitProjectCache(
+        gitRequestEventId: Long,
+        token: String,
+        gitProjectId: String,
+        useAccessToken: Boolean
+    ): StreamGitProjectCache {
+        return streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitRequestEventId = gitRequestEventId,
+            gitProjectId = gitProjectId,
+            token = token,
+            useAccessToken = useAccessToken,
+            getProjectInfo = streamScmService::getProjectInfoRetry
+        )
     }
 
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {
         return if (personalAccessToken.contains("\${{") && personalAccessToken.contains("}}")) {
             val str = personalAccessToken.split("\${{")[1].split("}}")[0].trim()
-            if (str.startsWith("settings.")) {
-                Pair(true, str.removePrefix("settings."))
+            val key = getCredentialKey(str)
+            if (str != key) {
+                Pair(true, key)
             } else {
                 throw YamlFormatException(ONLY_SUPPORT_ERROR)
             }
         } else {
             Pair(false, personalAccessToken)
+        }
+    }
+
+    private fun getCredentialKey(key: String): String {
+        // 参考CredentialType
+        return if (key.startsWith("settings.") && (
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )) {
+            key.substringAfter("settings.").substringBeforeLast(".")
+        } else {
+            key
         }
     }
 }

@@ -28,14 +28,24 @@
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object TriggerParameter {
+@Component
+class TriggerParameter @Autowired constructor(
+    private val gitRequestEventHandle: GitRequestEventHandle
+) {
 
     private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
 
@@ -45,14 +55,13 @@ object TriggerParameter {
                 if (!pushEventFilter(event)) {
                     return null
                 }
-                return GitRequestEventHandle.createPushEvent(event, e)
+                return gitRequestEventHandle.createPushEvent(event, e)
             }
             is GitTagPushEvent -> {
-                if (event.total_commits_count <= 0) {
-                    logger.info("Git web hook no commit(${event.total_commits_count})")
+                if (!tagPushEventFilter(event)) {
                     return null
                 }
-                return GitRequestEventHandle.createTagPushEvent(event, e)
+                return gitRequestEventHandle.createTagPushEvent(event, e)
             }
             is GitMergeRequestEvent -> {
                 // 目前不支持Mr信息更新的触发
@@ -63,7 +72,16 @@ object TriggerParameter {
                     return null
                 }
 
-                return GitRequestEventHandle.createMergeEvent(event, e)
+                return gitRequestEventHandle.createMergeEvent(event, e)
+            }
+            is GitIssueEvent -> {
+                return gitRequestEventHandle.createIssueEvent(event, e)
+            }
+            is GitReviewEvent -> {
+                return gitRequestEventHandle.createReviewEvent(event, e)
+            }
+            is GitNoteEvent -> {
+                return gitRequestEventHandle.createNoteEvent(event, e)
             }
         }
         logger.info("event invalid: $event")
@@ -72,11 +90,6 @@ object TriggerParameter {
 
     @SuppressWarnings("ReturnCount")
     private fun pushEventFilter(event: GitPushEvent): Boolean {
-        // 去掉创建分支的触发
-        if (event.isCreateBranch()) {
-            logger.info("${event.checkout_sha} Git push web hook is create branch")
-            return false
-        }
         // 放开删除分支操作为了流水线删除功能
         if (event.isDeleteBranch()) {
             return true
@@ -87,6 +100,17 @@ object TriggerParameter {
         }
         if (GitUtils.isPrePushBranch(event.ref)) {
             logger.info("Git web hook is pre-push event|branchName=${event.ref}")
+            return false
+        }
+        return true
+    }
+
+    private fun tagPushEventFilter(event: GitTagPushEvent): Boolean {
+        if (event.isDeleteTag()) {
+            return true
+        }
+        if (event.total_commits_count <= 0) {
+            logger.info("Git tag web hook no commit(${event.total_commits_count})")
             return false
         }
         return true

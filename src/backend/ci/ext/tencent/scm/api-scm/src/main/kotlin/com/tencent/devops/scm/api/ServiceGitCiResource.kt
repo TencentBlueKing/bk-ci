@@ -35,8 +35,9 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
@@ -87,6 +88,18 @@ interface ServiceGitCiResource {
         @QueryParam("token")
         token: String
     ): Result<Boolean>
+
+    @ApiOperation("刷新项目的token")
+    @GET
+    @Path("/refreshToken")
+    fun refreshToken(
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @QueryParam("refreshToken")
+        @ApiParam("refreshToken", required = true)
+        token: String
+    ): Result<GitToken>
 
     @ApiOperation("获取GitCode项目成员信息")
     @GET
@@ -323,4 +336,25 @@ interface ServiceGitCiResource {
         @ApiParam(value = "mr评论请求体")
         mrBody: MrCommentBody
     )
+
+    @ApiOperation("获取用户所有项目组列表，分页获取")
+    @GET
+    @Path("/getProjectGroupsList")
+    fun getProjectGroupsList(
+        @ApiParam("oauth accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数,最大值100", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("若为true则只返回owner为当前用户的group")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的group列表中，当前用户的group访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeGroup>>
 }

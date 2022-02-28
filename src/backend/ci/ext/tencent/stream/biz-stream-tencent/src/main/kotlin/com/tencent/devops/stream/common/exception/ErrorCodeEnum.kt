@@ -41,7 +41,9 @@ enum class ErrorCodeEnum(
 
     // 工蜂接口请求错误
     DEVNET_TIMEOUT_ERROR(ErrorType.THIRD_PARTY, 2129003, "request DEVNET gateway timeout"),
-    GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129003, "get token from git error %s"),
+    GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129004, "get token from git error %s"),
+    REFRESH_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129005, "refresh token from git error %s"),
+
     GET_YAML_CONTENT_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129004,
@@ -93,7 +95,7 @@ enum class ErrorCodeEnum(
     GET_GIT_LATEST_REVISION_ERROR(ErrorType.THIRD_PARTY, 2129021, "获取分支最新commit信息失败"),
     GET_COMMIT_CHANGE_FILE_LIST_ERROR(ErrorType.THIRD_PARTY, 2129022, "获取提交差异文件列表失败"),
     JOB_ID_CONFLICT_ERROR(ErrorType.USER, 2129023, "job id 流水线内不能重复"),
-    STEP_ID_CONFLICT_ERROR(ErrorType.USER, 2129024, "step id 同一job内不能重复"),
+//    STEP_ID_CONFLICT_ERROR(ErrorType.USER, 2129024, "step id 同一job内不能重复"),
     COMMON_USER_NOT_EXISTS(
         errorType = ErrorType.USER,
         errorCode = 2129025,

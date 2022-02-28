@@ -618,7 +618,7 @@ class ArtifactoryService @Autowired constructor(
             }
 
             val pipelineIdToNameMap = pipelineService.getPipelineNames(projectId, pipelineIdList.toSet())
-            val buildIdToNameMap = pipelineService.getBuildNames(buildIdList.toSet())
+            val buildIdToNameMap = pipelineService.getBuildNames(projectId, buildIdList.toSet())
             val fileInfoList = mutableListOf<FileInfo>()
             jFrogAQLFileInfoList.forEach {
                 var appVersion: String? = null
@@ -743,7 +743,7 @@ class ArtifactoryService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId)
 
         val pipelineName = pipelineService.getPipelineName(projectId, pipelineId)
-        val buildNo = pipelineService.getBuildName(buildId)
+        val buildNo = pipelineService.getBuildName(projectId, buildId)
         val fromPath = JFrogUtil.getPipelineBuildPath(projectId, pipelineId, buildId)
         val toPath = JFrogUtil.getPipelineToCustomPath(projectId, pipelineName, buildNo)
         if (copyToCustomReq.copyAll) {

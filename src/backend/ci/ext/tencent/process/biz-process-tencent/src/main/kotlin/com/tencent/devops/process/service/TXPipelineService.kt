@@ -162,14 +162,14 @@ class TXPipelineService @Autowired constructor(
         watch.stop()
 
         watch.start("s_r_summary")
-        val pipelineBuildSummary = pipelineRuntimeService.getBuildSummaryRecords(projectId, channelCode)
+        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(projectId, channelCode)
         watch.stop()
 
         watch.start("s_r_fav")
         val skipPipelineIdsNew = mutableListOf<String>()
-        if (pipelineBuildSummary.isNotEmpty) {
-            pipelineBuildSummary.forEach {
-                skipPipelineIdsNew.add(it["PIPELINE_ID"] as String)
+        if (buildPipelineRecords.isNotEmpty) {
+            buildPipelineRecords.forEach {
+                skipPipelineIdsNew.add(it.pipelineId)
             }
         }
         if (skipPipelineIds.isNotEmpty()) {
@@ -186,18 +186,22 @@ class TXPipelineService @Autowired constructor(
         var count = 0L
         try {
 
-            val list = if (pipelineBuildSummary.isNotEmpty) {
+            val list = if (buildPipelineRecords.isNotEmpty) {
 
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                val pipelines =
-                    pipelineListFacadeService.buildPipelines(pipelineBuildSummary, favorPipelines, authPipelines)
-                val allFilterPipelines =
-                    pipelineListFacadeService.filterViewPipelines(
-                        pipelines,
-                        filterByPipelineName,
-                        filterByCreator,
-                        filterByLabels
-                    )
+                val pipelines = pipelineListFacadeService.buildPipelines(
+                    pipelineInfoRecords = buildPipelineRecords,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    projectId = projectId
+                )
+                val allFilterPipelines = pipelineListFacadeService.filterViewPipelines(
+                    projectId = projectId,
+                    pipelines = pipelines,
+                    filterByName = filterByPipelineName,
+                    filterByCreator = filterByCreator,
+                    filterByLabels = filterByLabels
+                )
 
                 val hasPipelines = allFilterPipelines.isNotEmpty()
 
@@ -1080,7 +1084,7 @@ class TXPipelineService @Autowired constructor(
             permission = AuthPermission.EDIT,
             message = "用户($userId)无权限在工程($projectId)下导出流水线"
         )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
             Response.Status.BAD_REQUEST,
             "流水线已不存在！"
         )

@@ -28,15 +28,21 @@
 package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.stream.api.op.OpStreamPipelineResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -45,8 +51,12 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
-    private val gitCIEventService: GitCIEventService
+    private val gitCIEventService: GitCIEventService,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) : OpStreamPipelineResource {
+
+    private val logger = LoggerFactory.getLogger(OpStreamPipelineResourceImpl::class.java)
+
     override fun checkBranches(userId: String, gitProjectId: Long, pipelineId: String): Result<Boolean> {
         streamPipelineBranchService.deleteBranch(
             gitProjectId = gitProjectId,
@@ -61,5 +71,23 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
         // 删除相关的构建记录
         gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
         return Result(true)
+    }
+
+    override fun listJobIdConflict(startTime: Long?, endTime: Long?): Result<Int> {
+        var startTimeTemp = startTime
+        if (startTimeTemp == null) {
+            startTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MIN).timestampmilli()
+        }
+        var endTimeTemp = endTime
+        if (endTimeTemp == null) {
+            endTimeTemp = LocalDateTime.of(LocalDate.now(), LocalTime.MAX).timestampmilli()
+        }
+        val pipelineId2Yaml = gitRequestEventBuildDao.getLatestPipelineByDuration(
+            dslContext = dslContext,
+            startTime = startTimeTemp,
+            endTime = endTimeTemp
+        )
+        logger.info("listJobIdConflict: \n$pipelineId2Yaml")
+        return Result(pipelineId2Yaml.size)
     }
 }

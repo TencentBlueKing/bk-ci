@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
+import java.net.SocketTimeoutException
 
 @Service
 class BsArchiveServiceImpl @Autowired constructor(
@@ -74,6 +75,9 @@ class BsArchiveServiceImpl @Autowired constructor(
                     properties["appIcon"] = url
                 }
             }
+        } catch (e: SocketTimeoutException) {
+            logger.error("bk repo upload icon with timeout, need retry", e)
+            throw e
         } catch (ignored: Throwable) {
             logger.warn("load icon of ipa failed with error.", ignored)
         }
@@ -88,6 +92,9 @@ class BsArchiveServiceImpl @Autowired constructor(
                 metadata = properties ?: mapOf(),
                 override = true
             )
+        } catch (e: SocketTimeoutException) {
+            logger.error("bk repo upload file with timeout, need retry", e)
+            throw e
         } catch (e: Exception) {
             logger.error("archive upload file with error. path:$path", e)
             return false

@@ -55,7 +55,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwArtifactoryResourceV3 {
 
-    @ApiOperation("获取用户下载链接")
+    @ApiOperation("获取用户下载链接", tags = ["v3_app_artifactory_userDownloadUrl", "v3_user_artifactory_userDownloadUrl"])
     @Path("/userDownloadUrl")
     @GET
     fun getUserDownloadUrl(
@@ -79,7 +79,7 @@ interface ApigwArtifactoryResourceV3 {
         path: String
     ): Result<Url>
 
-    @ApiOperation("根据元数据获取文件")
+    @ApiOperation("根据元数据获取文件", tags = ["v3_app_artifactory_list", "v3_user_artifactory_list"])
     @Path("/")
     @GET
     fun search(
@@ -109,7 +109,10 @@ interface ApigwArtifactoryResourceV3 {
         pageSize: Int?
     ): Result<Page<FileInfo>>
 
-    @ApiOperation("下载熔断归档的全量日志（开源版暂未实现）")
+    @ApiOperation(
+        "下载熔断归档的全量日志（开源版暂未实现）",
+        tags = ["v3_app_artifactory_log_download", "v3_user_artifactory_log_download"]
+    )
     @GET
     @Path("/log/{pipelineId}/{buildId}/{elementId}/{executeCount}")
     fun getPluginLogUrl(

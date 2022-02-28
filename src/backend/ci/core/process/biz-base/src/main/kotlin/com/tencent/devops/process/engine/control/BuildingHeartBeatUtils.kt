@@ -69,6 +69,7 @@ class BuildingHeartBeatUtils @Autowired constructor(
 
     fun dispatchHeartbeatEvent(buildInfo: BuildInfo, containerId: String) {
         val ctr = pipelineContainerService.getContainer(
+            projectId = buildInfo.projectId,
             buildId = buildInfo.buildId,
             stageId = null,
             containerId = containerId

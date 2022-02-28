@@ -37,9 +37,9 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
+import com.tencent.devops.process.permission.StreamPipelinePermissionServiceImpl
 import com.tencent.devops.process.ws.GitCIDetailPageBuild
 import com.tencent.devops.process.ws.GitCIHistoryPageBuild
 import com.tencent.devops.process.ws.GitCIStatusPageBuild
@@ -87,15 +87,6 @@ class TxPipelineProcessConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun gitCIPipelinePermissionServiceImpl(
-        client: Client,
-        pipelineIndoDao: PipelineInfoDao,
-        dslContext: DSLContext,
-        checkTokenService: ClientTokenService
-    ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext, checkTokenService)
-
-    @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "stream")
     fun detailPage() = GitCIDetailPageBuild()
 
@@ -125,4 +116,18 @@ class TxPipelineProcessConfiguration {
             pipelineInfoDao = pipelineInfoDao,
             authResourceApi = authResourceApi
         )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
+    fun gitStreamPipelinePermissionService(
+        client: Client,
+        pipelineInfoDao: PipelineInfoDao,
+        dslContext: DSLContext,
+        checkTokenService: ClientTokenService
+    ): PipelinePermissionService = StreamPipelinePermissionServiceImpl(
+        client = client,
+        pipelineInfoDao = pipelineInfoDao,
+        dslContext = dslContext,
+        checkTokenService = checkTokenService
+    )
 }

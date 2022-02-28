@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
 import com.tencent.devops.worker.common.AGENT_ID
@@ -50,7 +51,10 @@ import okhttp3.Response
 import java.io.File
 import java.time.LocalDateTime
 
+@Suppress("ComplexMethod", "NestedBlockDepth")
 fun main(args: Array<String>) {
+    // 调用 DHUtil 初始化 SecurityProvider
+    DHUtil
     EnumLoader.enumModified()
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
     ApiFactory.init()
@@ -79,6 +83,7 @@ fun main(args: Array<String>) {
                         File(workspace)
                     }
                     workspaceDir.mkdirs()
+
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
@@ -90,10 +95,7 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(
-                        pipelineId = pipelineId,
-                        workspace = ""
-                    )
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, "")
                     if (workspaceDir.exists()) {
                         if (!workspaceDir.isDirectory) {
                             throw RuntimeException("Work space directory conflict: ${workspaceDir.canonicalPath}")
@@ -208,18 +210,17 @@ private fun waitBuildLessJobStart() {
     val dockerHostIp = DockerEnv.getDockerHostIp()
     val dockerHostPort = Integer.valueOf(DockerEnv.getDockerHostPort())
     val hostname = DockerEnv.getHostname()
-    val loopUrl = "http://$dockerHostIp:$dockerHostPort/api/build/task/claim?containerId=$hostname"
+    val loopUrl = "http://$dockerHostIp:$dockerHostPort/build/task/claim?containerId=$hostname"
 
     val request = Request.Builder()
         .url(loopUrl)
         .header("Accept", "application/json")
         .get()
         .build()
-
     do {
-        try {
-            println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+        println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
 
+        try {
             OkhttpUtils.doHttp(request).use { resp ->
                 startFlag = doResponse(resp)
             }
@@ -237,6 +238,7 @@ private fun doResponse(
     resp: Response
 ): Boolean {
     val responseBody = resp.body()?.string() ?: ""
+    println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
         val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
         buildLessTask.forEach { (t, u) ->
