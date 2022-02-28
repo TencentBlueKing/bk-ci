@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTemplateResourceV4
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.api.template.UserPTemplateResource
-import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
