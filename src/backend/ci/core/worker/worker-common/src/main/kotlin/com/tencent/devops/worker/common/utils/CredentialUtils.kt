@@ -75,21 +75,8 @@ object CredentialUtils {
         try {
             val pair = DHUtil.initKey()
             val result = requestCredential(credentialId, pair, acrossProjectId)
-
             val credential = result.data!!
-            val list = ArrayList<String>()
-
-            list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-            if (!credential.v2.isNullOrEmpty()) {
-                list.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))
-            }
-            if (!credential.v3.isNullOrEmpty()) {
-                list.add(decode(credential.v3!!, credential.publicKey, pair.privateKey))
-            }
-            if (!credential.v4.isNullOrEmpty()) {
-                list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
-            }
-            return Pair(list, credential.credentialType)
+            return Pair(getDecodedCredentialList(credential, pair), credential.credentialType)
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
@@ -97,6 +84,25 @@ object CredentialUtils {
             }
             throw ignored
         }
+    }
+
+    fun getProjectCredentials(
+        projectId: String
+    ): Set<String> {
+        val encoder = Base64.getEncoder()
+        val pair = DHUtil.initKey()
+        val credentialSet = mutableSetOf<String>()
+        try {
+            logger.info("Start to get credentials from the project($projectId)")
+            val result = sdkApi.getProjectCredentials(encoder.encodeToString(pair.publicKey))
+            val list = result.data ?: emptyList()
+            list.forEach { credentialInfo ->
+                credentialSet.addAll(getDecodedCredentialList(credentialInfo, pair))
+            }
+        } catch (ignored: Exception) {
+            logger.error("Fail to get credentials from the project($projectId)")
+        }
+        return credentialSet
     }
 
     private fun requestCredential(
@@ -283,6 +289,24 @@ object CredentialUtils {
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
+    }
+
+    private fun getDecodedCredentialList(
+        credential: CredentialInfo,
+        pair: DHKeyPair
+    ): List<String> {
+        val list = ArrayList<String>()
+        list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+        if (!credential.v2.isNullOrEmpty()) {
+            list.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))
+        }
+        if (!credential.v3.isNullOrEmpty()) {
+            list.add(decode(credential.v3!!, credential.publicKey, pair.privateKey))
+        }
+        if (!credential.v4.isNullOrEmpty()) {
+            list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
+        }
+        return list
     }
 
     private val logger = LoggerFactory.getLogger(CredentialUtils::class.java)

@@ -52,7 +52,7 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -70,12 +70,12 @@ import java.util.concurrent.locks.ReentrantLock
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
-    private val credentialResourceApi = ApiFactory.create(CredentialSDKApi::class)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+    private val sensitiveMixer = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -98,8 +98,14 @@ object LoggerService {
     private val elementId2LogProperty = mutableMapOf<String, TaskBuildLogProperty>()
 
     /**
+     * 每个插件的日志存储属性映射
+     */
+    private val sensitiveStringSet = mutableSetOf<String>()
+
+    /**
      * 当前执行插件的各类构建信息
      */
+    var projectId = ""
     var elementId = ""
     var elementName = ""
     var jobId = ""
@@ -170,6 +176,9 @@ object LoggerService {
     fun start() {
         logger.info("Start the log service")
         future = executorService.submit(loggerThread)
+        logger.info("Load sensitive string set")
+        // #4273 此处目前只将ticket服务中的凭据作为敏感内容，后续可追加
+        sensitiveStringSet.addAll(CredentialUtils.getProjectCredentials(projectId))
     }
 
     fun flush(): Int {
@@ -206,6 +215,8 @@ object LoggerService {
     fun addNormalLine(message: String) {
         var subTag: String? = null
         var realMessage = message
+
+        // #2342 处理插件内日志的前缀标签，进行日志分级
         if (message.contains(LOG_SUBTAG_FLAG)) {
             val prefix = message.substringBefore(LOG_SUBTAG_FLAG)
             val list = message.substringAfter(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
@@ -219,13 +230,20 @@ object LoggerService {
             }
             realMessage = prefix + realMessage
         }
-
         val logType = when {
             realMessage.startsWith(LOG_DEBUG_FLAG) -> LogType.DEBUG
             realMessage.startsWith(LOG_ERROR_FLAG) -> LogType.ERROR
             realMessage.startsWith(LOG_WARN_FLAG) -> LogType.WARN
             else -> LogType.LOG
         }
+
+        // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中（待优化）
+        sensitiveStringSet.forEach { sensitiveStr ->
+            if (realMessage.contains(sensitiveStr)) {
+                realMessage = realMessage.replace(sensitiveStr, sensitiveMixer)
+            }
+        }
+
         val logMessage = LogMessage(
             message = realMessage,
             timestamp = System.currentTimeMillis(),
@@ -236,7 +254,8 @@ object LoggerService {
             executeCount = executeCount
         )
         logger.info(logMessage.toString())
-        // 如果已经进入Job执行任务，则可以做日志本地落盘
+
+        // #3772 如果已经进入Job执行任务，则可以做日志本地落盘
         if (elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(logMessage)
         }

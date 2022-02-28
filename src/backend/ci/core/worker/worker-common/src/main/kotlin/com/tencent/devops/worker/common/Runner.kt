@@ -172,6 +172,7 @@ object Runner {
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
+                        LoggerService.projectId = buildVariables.projectId
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
 
