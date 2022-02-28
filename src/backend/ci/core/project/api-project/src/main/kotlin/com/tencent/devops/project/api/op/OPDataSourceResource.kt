@@ -30,6 +30,7 @@ package com.tencent.devops.project.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.project.pojo.DataSource
@@ -41,6 +42,7 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.QueryParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -107,4 +109,19 @@ interface OPDataSourceResource {
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
     ): Result<Boolean>
+
+    @ApiOperation("根据PROJECT_ID获取数据库分片信息")
+    @GET
+    @Path("/piecewise/get")
+    fun getDataBasePiecewiseById(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("微服务code", required = true)
+        @QueryParam("moduleCode")
+        moduleCode: String,
+        @ApiParam("集群名称", required = true)
+        @QueryParam("clusterName")
+        clusterName: String
+    ): Result<DataBasePiecewiseInfo>
 }

@@ -24,24 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.project.service
-
-import com.tencent.devops.project.pojo.DataSource
-
-interface DataSourceService {
-
-    fun addDataSource(userId: String, dataSource: DataSource): Boolean
-
-    fun deleteDataSource(userId: String, id: String): Boolean
-
-    fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean
-
-    fun getDataSourceById(id: String): DataSource?
-
-    fun getDataBasePiecewiseById(
-        projectId: String,
-        moduleCode: String,
-        clusterName: String
-    ): DataBasePiecewiseInfo
-}
+package com.tencent.devops.project.pojo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+@ApiModel("数据库分片信息")
+data class DataBasePiecewiseInfo(
+    @ApiModelProperty("项目ID/项目CODE")
+    val projectId: String,
+    @ApiModelProperty("集群名称")
+    val clusterName: String,
+    @ApiModelProperty("微服务模块名称")
+    val moduleCode: String,
+    @ApiModelProperty("数据源名称")
+    val dataSourceName: String,
+    @ApiModelProperty("数据源URL")
+    val dsUrl: String?
+)

@@ -29,6 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TDataSource
+import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TDataSourceRecord
 import com.tencent.devops.project.pojo.DataSource
 import org.jooq.Condition
@@ -121,6 +122,17 @@ class DataSourceDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun getDataBasePiecewiseById(dslContext: DSLContext, projectId: String, moduleCode: String, clusterName: String): TDataSourceRecord{
+        val tr = TShardingRoutingRule.T_SHARDING_ROUTING_RULE
+        val routingRule = dslContext.select(tr.ROUTING_RULE).from(tr).where(tr.ROUTING_NAME.eq(projectId)).fetchOne()!!.get(0) as String
+        with(TDataSource.T_DATA_SOURCE) {
+            return dslContext.selectFrom(this)
+                .where(MODULE_CODE.eq(moduleCode))
+                .and(DATA_SOURCE_NAME.eq(routingRule))
+                .and(CLUSTER_NAME.eq(clusterName)).fetchOne()!!
         }
     }
 }

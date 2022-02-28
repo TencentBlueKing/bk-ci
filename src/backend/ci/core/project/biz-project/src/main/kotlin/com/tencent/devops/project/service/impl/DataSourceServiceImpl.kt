@@ -107,4 +107,19 @@ class DataSourceServiceImpl @Autowired constructor(
             null
         }
     }
+
+    override fun getDataBasePiecewiseById(
+        projectId: String,
+        moduleCode: String,
+        clusterName: String
+    ): DataBasePiecewiseInfo {
+        val dataSource = dataSourceDao.getDataBasePiecewiseById(dslContext, projectId, moduleCode, clusterName)
+        return DataBasePiecewiseInfo(
+            projectId = projectId,
+            moduleCode = moduleCode,
+            clusterName = dataSource.clusterName,
+            dataSourceName = dataSource.dataSourceName,
+            dsUrl = dataSource.dsUrl
+        )
+    }
 }

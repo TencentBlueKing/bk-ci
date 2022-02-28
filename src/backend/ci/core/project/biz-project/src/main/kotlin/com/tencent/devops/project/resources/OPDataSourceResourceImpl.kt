@@ -32,6 +32,7 @@ import com.tencent.devops.project.api.op.OPDataSourceResource
 import com.tencent.devops.project.pojo.DataSource
 import com.tencent.devops.project.service.DataSourceService
 import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 
 @RestResource
 class OPDataSourceResourceImpl @Autowired constructor(
@@ -52,5 +53,13 @@ class OPDataSourceResourceImpl @Autowired constructor(
 
     override fun deleteDataSourceById(userId: String, id: String): Result<Boolean> {
         return Result(dataSourceService.deleteDataSource(userId, id))
+    }
+    
+    override fun getDataBasePiecewiseById(
+        projectId: String,
+        moduleCode: String,
+        clusterName: String
+    ): Result<DataBasePiecewiseInfo> {
+        return Result(dataSourceService.getDataBasePiecewiseById(projectId, moduleCode, clusterName))
     }
 }
