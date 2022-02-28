@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwTXEnvironmentResourceV3 {
 
-    @ApiOperation("导入CMDB节点")
+    @ApiOperation("导入CMDB节点", tags = ["v3_app_node_cmdb_import", "v3_user_node_cmdb_import"])
     @POST
     @Path("/projects/{projectId}/addCmdbNodes")
     fun addCmdbNodes(
