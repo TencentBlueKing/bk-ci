@@ -244,7 +244,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(PipelineTaskPauseListener::class.java)
         private const val VALUE_KEY = "BK_CI_OPERATOR"
     }
