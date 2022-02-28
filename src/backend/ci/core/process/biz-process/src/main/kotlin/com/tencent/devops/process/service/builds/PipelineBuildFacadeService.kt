@@ -147,7 +147,7 @@ class PipelineBuildFacadeService(
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
-    private var cancelIntervalLimitTime: Int = 60  // 取消间隔时间为60秒
+    private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
