@@ -25,18 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:openapi:biz-openapi"))
-    api(project(":ext:tencent:openapi:api-openapi-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":core:common:common-client"))
-    api("io.jsonwebtoken:jjwt-api")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
-    api("org.springframework.boot:spring-boot-starter-aop")
+package com.tencent.devops.environment.resources
+
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.ServiceCmdbNodeResource
+import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.service.CmdbNodeService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceCmdbNodeResourceImpl @Autowired constructor(
+    private val cmdbNodeService: CmdbNodeService
+) : ServiceCmdbNodeResource {
+
+    override fun listUserCmdbNodesNew(
+        userId: String,
+        bakOperator: Boolean,
+        page: Int,
+        pageSize: Int,
+        ips: List<String>?
+    ): Result<Page<CmdbNode>> {
+        return Result(cmdbNodeService.getUserCmdbNodesNew(
+            userId = userId,
+            bakOperator = bakOperator,
+            page = page,
+            pageSize = pageSize,
+            ips = ips ?: listOf()
+        ))
+    }
+
+    override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
+        cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
+        return Result(true)
+    }
 }
