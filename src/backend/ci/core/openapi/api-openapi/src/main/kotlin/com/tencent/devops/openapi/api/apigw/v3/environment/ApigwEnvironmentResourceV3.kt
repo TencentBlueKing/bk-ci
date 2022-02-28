@@ -139,6 +139,53 @@ interface ApigwEnvironmentResourceV3 {
         nodeHashIds: List<String>
     ): Result<Boolean>
 
+
+    @ApiOperation("添加节点到环境", tags = ["v3_app_env_add_node", "v3_user_env_add_node"])
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/addNodes")
+    fun envAddNodes(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("从环境删除节点", tags = ["v3_app_env_delete_node", "v3_user_env_delete_node"])
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/deleteNodes")
+    fun envDeleteNodes(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
     @ApiOperation("获取用户有权限使用的环境列表", tags = ["v3_app_env_list_usable_envs", "v3_user_env_list_usable_envs"])
     @GET
     @Path("/projects/{projectId}/envs/listUsableServerEnvs")
