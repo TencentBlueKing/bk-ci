@@ -69,7 +69,7 @@ class PipelineContextService @Autowired constructor(
             modelDetail.model.stages.forEach { stage ->
                 if (stage.finally && stage.id?.let { it == stageId } == true) {
                     contextMap["ci.build_status"] = previousStageStatus.name
-                    contextMap["ci.build_fail_tasknames"] = failTaskNameList.toString()
+                    contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
                 } else if (!stage.status.isNullOrBlank()) {
                     previousStageStatus = BuildStatus.parse(stage.status)
                 }
@@ -148,7 +148,7 @@ class PipelineContextService @Autowired constructor(
                 }
             }
             contextMap["ci.build_status"] = previousStageStatus.name
-            contextMap["ci.build_fail_tasknames"] = failTaskNameList.toString()
+            contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
         } catch (ignore: Throwable) {
             logger.warn("BKSystemErrorMonitor|buildContextToNoticeFailed|", ignore)
         }
