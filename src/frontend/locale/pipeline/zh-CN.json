@@ -783,6 +783,8 @@
         "repoConflict": "当前流水线存在多个代码拉取插件，你需设置此字段以解决冲突问题",
         "svnVersionTips": "Svn拉取代码插件指定的版本号",
         "certInstallTips": "第三方构建机暂不支持IOS证书安装插件",
+        "stepIdPlaceholder": "非必填，不为空时需在当前Job下唯一",
+        "stepIdDesc": "由英文字母、数字、下划线组成（英文字母或下划线开头）",
         "atomOutput": "插件输出",
         "outputNamespace": "输出字段命名空间",
         "outputItemList": "输出字段列表",
