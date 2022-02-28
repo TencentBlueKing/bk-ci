@@ -118,7 +118,6 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
     }
 
-
     override fun listUsableServerEnvs(
         appCode: String?,
         apigwType: String?,
