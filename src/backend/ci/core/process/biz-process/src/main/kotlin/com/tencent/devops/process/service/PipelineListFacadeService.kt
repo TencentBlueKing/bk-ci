@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -43,7 +42,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -86,7 +84,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
-import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -95,7 +92,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 @Suppress("ALL")
@@ -113,8 +109,7 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val pipelineFavorDao: PipelineFavorDao,
-    private val redisOperation: RedisOperation
+    private val pipelineFavorDao: PipelineFavorDao
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -268,9 +263,8 @@ class PipelineListFacadeService @Autowired constructor(
                 validateUserResourcePermission
             }
 
-            val pageNotNull = page ?: 0
-            val pageSizeNotNull = pageSize ?: -1
-            var slqLimit: SQLLimit? = null
+            val pageNotNull = page ?: 1
+            val pageSizeNotNull = pageSize ?: 10
             val hasPermissionList = if (checkPermission) {
                 watcher.start("perm_r_perm")
                 val hasPermissionList = pipelinePermissionService.getResourceByPermission(
@@ -300,18 +294,21 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 channelCode = channelCode,
                 pipelineIds = hasPermissionList,
-                // 防止流水线数目过大
-                page = 1,
-                pageSize = listPipelinesLimitCache.get(projectId)
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                sortType = sortType
+            )
+            val buildPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                channelCode = channelCode,
+                pipelineIds = hasPermissionList
             )
             watcher.stop()
 
             watcher.start("s_r_fav")
-            if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-            val offset = slqLimit?.offset ?: 0
-            val limit = slqLimit?.limit ?: -1
             // 得到列表和是否有收藏的流水线
-            val (allPipelines, hasFavorPipelines) = if (buildPipelineRecords.isNotEmpty) {
+            val (pagePipelines, hasFavorPipelines) = if (buildPipelineRecords.isNotEmpty) {
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
                 val pipelines = buildPipelines(
                     pipelineInfoRecords = buildPipelineRecords,
@@ -323,22 +320,12 @@ class PipelineListFacadeService @Autowired constructor(
             } else {
                 mutableListOf<Pipeline>() to false
             }
-
-            // 列表排序
-            sortPipelines(allPipelines, sortType)
-
-            // 列表分页
-            val toIndex =
-                if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
-            val pagePipelines =
-                if (offset >= allPipelines.size) listOf() else allPipelines.subList(offset, toIndex)
-
             watcher.stop()
 
             return PipelinePage(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                count = allPipelines.size.toLong(),
+                count = buildPipelineCount,
                 records = pagePipelines,
                 hasCreatePermission = hasCreatePermission,
                 hasPipelines = true,
@@ -351,16 +338,6 @@ class PipelineListFacadeService @Autowired constructor(
             processJmxApi.execute(ProcessJmxApi.LIST_APP_PIPELINES, watcher.totalTimeMillis)
         }
     }
-
-    /**
-     * 特殊项目流水线数量处理
-     */
-    private val listPipelinesLimitCache = Caffeine.newBuilder()
-        .maximumSize(1000)
-        .expireAfterWrite(10, TimeUnit.SECONDS)
-        .build<String, Int> { projectId ->
-            NumberUtils.toInt(redisOperation.hget("list:permission:pipeline:size", projectId), 1000)
-        }
 
     fun hasPermissionList(
         userId: String,
