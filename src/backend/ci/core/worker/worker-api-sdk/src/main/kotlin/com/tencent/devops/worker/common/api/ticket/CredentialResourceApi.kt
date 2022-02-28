@@ -60,6 +60,4 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val responseContent = request(request, "获取凭据失败")
         return objectMapper.readValue(responseContent)
     }
-
-
 }

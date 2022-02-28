@@ -179,6 +179,7 @@ object LoggerService {
         logger.info("Load sensitive string set")
         // #4273 此处目前只将ticket服务中的凭据作为敏感内容，后续可追加
         sensitiveStringSet.addAll(CredentialUtils.getProjectCredentials(projectId))
+        logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
     }
 
     fun flush(): Int {
