@@ -139,7 +139,6 @@ interface ApigwEnvironmentResourceV4 {
         nodeHashIds: List<String>
     ): Result<Boolean>
 
-
     @ApiOperation("添加节点到环境", tags = ["v4_app_env_add_node", "v4_user_env_add_node"])
     @POST
     @Path("/env_add_nodes")
