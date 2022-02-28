@@ -97,6 +97,40 @@ interface ServiceEnvironmentResource {
         envHashId: String
     ): Result<Boolean>
 
+    @ApiOperation("添加节点到环境")
+    @POST
+    @Path("/projects/{projectId}/{envHashId}/addNodes")
+    fun addNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("从环境删除节点")
+    @POST
+    @Path("/projects/{projectId}/{envHashId}/deleteNodes")
+    fun deleteNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
     @ApiOperation("获取环境（多个）的节点列表")
     @POST
     @Path("/projects/{projectId}/listNodesByEnvIds")

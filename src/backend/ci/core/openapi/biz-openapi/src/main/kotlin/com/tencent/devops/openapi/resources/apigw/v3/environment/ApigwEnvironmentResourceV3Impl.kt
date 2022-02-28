@@ -80,6 +80,33 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).delete(userId, projectId, envHashId)
     }
 
+    override fun envAddNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        logger.info("EnvAddNodes userId[$userId] project[$projectId] envHashId[$envHashId] nodeHashIds[$nodeHashIds]")
+        return client.get(ServiceEnvironmentResource::class).addNodes(userId, projectId, envHashId, nodeHashIds)
+    }
+
+    override fun envDeleteNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        logger.info(
+            "envDeleteNodes userId[$userId] project[$projectId] " +
+                "envHashId[$envHashId] nodeHashIds[$nodeHashIds]"
+        )
+        return client.get(ServiceEnvironmentResource::class).deleteNodes(userId, projectId, envHashId, nodeHashIds)
+    }
+
     override fun deleteNodes(
         appCode: String?,
         apigwType: String?,
@@ -166,7 +193,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     ): Result<List<AgentPipelineRef>> {
         logger.info(
             "listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
-                    " sortBy: $sortBy, sortDirection: $sortDirection"
+                " sortBy: $sortBy, sortDirection: $sortDirection"
         )
         return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(
             userId, projectId, nodeHashId,
@@ -182,7 +209,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "setShareEnv , userId:$userId , projectId:$projectId , " +
-                    "envHashId:$envHashId , sharedProjects:$sharedProjects"
+                "envHashId:$envHashId , sharedProjects:$sharedProjects"
         )
         return client.get(ServiceEnvironmentResource::class).setShareEnv(userId, projectId, envHashId, sharedProjects)
     }

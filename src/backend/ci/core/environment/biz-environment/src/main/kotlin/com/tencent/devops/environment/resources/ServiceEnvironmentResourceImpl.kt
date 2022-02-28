@@ -79,6 +79,42 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun addNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (nodeHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
+        }
+
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        return Result(true)
+    }
+
+    override fun deleteNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (nodeHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
+        }
+
+        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        return Result(true)
+    }
+
     override fun listNodesByEnvIds(
         userId: String,
         projectId: String,
