@@ -82,7 +82,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
             projectId = projectId,
             userId = userId,
             templateId = templateId,
-            versionName = versionName
+            versionName = String(Base64Util.decode(versionName))
         ))
     }
 
