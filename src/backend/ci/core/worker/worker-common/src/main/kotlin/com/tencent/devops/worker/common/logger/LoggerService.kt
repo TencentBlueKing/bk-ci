@@ -66,7 +66,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("MagicNumber", "TooManyFunctions")
+@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -75,7 +75,7 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-    private val sensitiveMixer = "******"
+    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -239,11 +239,7 @@ object LoggerService {
         }
 
         // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中（待优化）
-        sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, sensitiveMixer)
-            }
-        }
+        realMessage = fixSensitiveContent(realMessage)
 
         val logMessage = LogMessage(
             message = realMessage,
@@ -282,6 +278,16 @@ object LoggerService {
         } catch (ignored: InterruptedException) {
             logger.error("写入 $logType 日志行失败：", ignored)
         }
+    }
+
+    private fun fixSensitiveContent(message: String): String {
+        var realMessage = message
+        sensitiveStringSet.forEach { sensitiveStr ->
+            if (realMessage.contains(sensitiveStr)) {
+                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
+            }
+        }
+        return realMessage
     }
 
     fun addWarnLine(message: String) {
