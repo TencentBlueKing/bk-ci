@@ -119,7 +119,7 @@ interface ApigwEnvironmentResourceV3 {
         envHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除节点")
+    @ApiOperation("删除节点", tags = ["v3_app_node_delete", "v3_user_node_delete"])
     @POST
     @Path("/projects/{projectId}/nodes/deleteNodes")
     fun deleteNodes(
