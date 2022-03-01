@@ -25,42 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.common.dispatch.sdk.utils
 
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-enum class JobQuotaVmType(val displayName: String) {
-    DOCKER_VM("Docker on VM"),
-    DOCKER_DEVCLOUD("Docker on DevCloud"),
-    MACOS_DEVCLOUD("MacOS on DevCloud"),
-    OTHER("私有构建机或集群"),
-    AGENTLESS("无编译环境"),
-    DOCKER_GITCI("工蜂CI构建机"),
-    DOCKER_STREAM("STREAM构建机"),
-    DOCKER_BCS("Docker on Bcs"),
-    ALL("所有类型");
+@Component
+@Suppress("ALL")
+class ChannelUtils {
+
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
+
+    fun getChannelCode(): ChannelCode {
+        return if (consulTag.contains("stream")) {
+            ChannelCode.GIT
+        } else if (consulTag.contains("auto")) {
+            ChannelCode.GONGFENGSCAN
+        } else {
+            ChannelCode.BS
+        }
+    }
 
     companion object {
-        fun parse(vmType: String): JobQuotaVmType? {
-            values().forEach {
-                if (it.name == vmType) {
-                    return it
-                }
-            }
-            return null
-        }
-
-        fun parse(dispatchType: DispatchType): JobQuotaVmType? {
-            when (dispatchType) {
-                is DockerDispatchType -> {
-                    return DOCKER_VM
-                }
-                // 其他类型暂时不限制
-                else -> {
-                    return null
-                }
-            }
-        }
+        private val logger = LoggerFactory.getLogger(ChannelUtils::class.java)
     }
 }
