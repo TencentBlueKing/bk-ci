@@ -61,8 +61,8 @@ data class GitMRAttributes(
     val source: GitProject,
     val target: GitProject,
     val last_commit: GitCommit,
-    val url: String,
-    val action: String,
+    val url: String?,
+    val action: String?,
     val extension_action: String?,
     @JsonProperty("merge_type")
     val mergeType: String? = null,

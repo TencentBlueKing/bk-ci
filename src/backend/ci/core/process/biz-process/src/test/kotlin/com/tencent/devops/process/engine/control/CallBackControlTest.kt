@@ -88,7 +88,7 @@ class CallBackControlTest : TestBase() {
             executeTime = 100
         )
 
-        whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
+        whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))
             .thenReturn(modelDetail)
     }
 

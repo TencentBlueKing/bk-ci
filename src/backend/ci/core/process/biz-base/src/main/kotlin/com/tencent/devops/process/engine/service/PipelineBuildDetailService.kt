@@ -94,18 +94,25 @@ class PipelineBuildDetailService @Autowired constructor(
 
     /**
      * 查询ModelDetail
+     * @param projectId: 项目Id
      * @param buildId: 构建Id
      * @param refreshStatus: 是否刷新状态
      */
-    fun get(buildId: String, refreshStatus: Boolean = true): ModelDetail? {
+    fun get(projectId: String, buildId: String, refreshStatus: Boolean = true): ModelDetail? {
 
-        val record = buildDetailDao.get(dslContext, buildId) ?: return null
+        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
 
-        val buildInfo = pipelineBuildDao.convert(pipelineBuildDao.getBuildInfo(dslContext, buildId)) ?: return null
+        val buildInfo = pipelineBuildDao.convert(
+            pipelineBuildDao.getBuildInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId
+            )
+        ) ?: return null
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(buildInfo.pipelineId) ?: return null
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
 
-        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, buildInfo.pipelineId)
+        val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
 
         val model = JsonUtil.to(record.model, Model::class.java)
 
@@ -164,19 +171,20 @@ class PipelineBuildDetailService @Autowired constructor(
         )
     }
 
-    fun updateModel(buildId: String, model: Model) {
+    fun updateModel(projectId: String, buildId: String, model: Model) {
         buildDetailDao.update(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             model = JsonUtil.getObjectMapper().writeValueAsString(model),
             buildStatus = BuildStatus.RUNNING
         )
-        pipelineDetailChangeEvent(buildId)
+        pipelineDetailChangeEvent(projectId, buildId)
     }
 
-    fun buildCancel(buildId: String, buildStatus: BuildStatus) {
+    fun buildCancel(projectId: String, buildId: String, buildStatus: BuildStatus) {
         logger.info("Cancel the build $buildId")
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
 
             var update = false
 
@@ -269,10 +277,15 @@ class PipelineBuildDetailService @Autowired constructor(
         }, buildStatus = BuildStatus.RUNNING, operation = "buildCancel")
     }
 
-    fun buildEnd(buildId: String, buildStatus: BuildStatus, cancelUser: String? = null): List<BuildStageStatus> {
+    fun buildEnd(
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        cancelUser: String? = null
+    ): List<BuildStageStatus> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
         var allStageStatus: List<BuildStageStatus> = emptyList()
-        update(buildId = buildId, modelInterface = object : ModelInterface {
+        update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
             override fun onFindContainer(container: Container, stage: Stage): Traverse {
@@ -337,8 +350,13 @@ class PipelineBuildDetailService @Autowired constructor(
         return allStageStatus
     }
 
-    fun updateBuildCancelUser(buildId: String, cancelUserId: String) {
-        buildDetailDao.updateBuildCancelUser(dslContext, buildId, cancelUserId)
+    fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
+        buildDetailDao.updateBuildCancelUser(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            cancelUser = cancelUserId
+        )
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
@@ -361,6 +379,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
         update(
+            projectId = projectId,
             buildId = buildId,
             modelInterface = object : ModelInterface {
                 var update = false
@@ -384,5 +403,13 @@ class PipelineBuildDetailService @Autowired constructor(
             buildStatus = BuildStatus.RUNNING,
             operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
+    }
+
+    fun getBuildDetailPipelineId(projectId: String, buildId: String): String? {
+        return pipelineBuildDao.getBuildInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId
+        )?.pipelineId
     }
 }

@@ -53,7 +53,7 @@ import javax.ws.rs.core.Response
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwLogResourceV3 {
-    @ApiOperation("根据构建ID获取初始化所有日志")
+    @ApiOperation("根据构建ID获取初始化所有日志", tags = ["v3_app_log_init", "v3_user_log_init"])
     @GET
     @Path("/init")
     fun getInitLogs(
@@ -89,7 +89,7 @@ interface ApigwLogResourceV3 {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取更多日志")
+    @ApiOperation("获取更多日志", tags = ["v3_app_log_more", "v3_user_log_more"])
     @GET
     @Path("/more")
     fun getMoreLogs(
@@ -137,7 +137,7 @@ interface ApigwLogResourceV3 {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取某行后的日志")
+    @ApiOperation("获取某行后的日志", tags = ["v3_user_log_after", "v3_app_log_after"])
     @GET
     @Path("/after")
     fun getAfterLogs(
@@ -176,7 +176,7 @@ interface ApigwLogResourceV3 {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("下载日志接口")
+    @ApiOperation("下载日志接口", tags = ["v3_user_log_download", "v3_app_log_download"])
     @GET
     @Path("/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
@@ -210,7 +210,7 @@ interface ApigwLogResourceV3 {
         executeCount: Int?
     ): Response
 
-    @ApiOperation("获取插件的的日志状态")
+    @ApiOperation("获取插件的的日志状态", tags = ["v3_app_log_mode", "v3_user_log_mode"])
     @GET
     @Path("/mode")
     fun getLogMode(

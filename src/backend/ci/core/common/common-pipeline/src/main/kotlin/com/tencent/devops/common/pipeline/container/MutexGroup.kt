@@ -35,7 +35,8 @@ data class MutexGroup(
     val mutexGroupName: String? = "",
     val queueEnable: Boolean,
     val timeout: Int = 0,
-    val queue: Int = 0
+    val queue: Int = 0,
+    var linkTip: String? = null // #5454 占用锁定的信息用于日志提示/不写入到Model，仅在构建开始时产生
 ) {
     fun genMutexLockKey(projectId: String): String {
         val mutexGroupName = mutexGroupName ?: ""
@@ -45,5 +46,9 @@ data class MutexGroup(
     fun genMutexQueueKey(projectId: String): String {
         val mutexGroupName = mutexGroupName ?: ""
         return "lock:container:mutex:$projectId:$mutexGroupName:queue"
+    }
+
+    fun genMutexLinkTipKey(containerMutexId: String): String {
+        return "linkTip:$containerMutexId"
     }
 }

@@ -59,7 +59,7 @@
 
                     <div class='bk-form-content'>
                         {$slots.default}
-                        {isError ? $slots.errorTip || <span class='bk-form-help is-danger'>{errorMsg}</span> : null}
+                        {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
                     </div>
                 </div>
             )
@@ -76,12 +76,6 @@
     }
     .form-field.bk-form-item {
         position: relative;
-    }
-    .form-field-icon {
-        position: absolute;
-        right:  14px;
-        top: 0;
-        font-size: 0;
     }
     .bk-form-item,
     .bk-form-inline-item {
