@@ -30,9 +30,9 @@ package com.tencent.devops.project.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -42,12 +42,12 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.QueryParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_DATA_SOURCE"], description = "OP-数据源")
@@ -123,5 +123,5 @@ interface OPDataSourceResource {
         @ApiParam("集群名称", required = true)
         @QueryParam("clusterName")
         clusterName: String
-    ): Result<DataBasePiecewiseInfo>
+    ): Result<DataBasePiecewiseInfo?>
 }

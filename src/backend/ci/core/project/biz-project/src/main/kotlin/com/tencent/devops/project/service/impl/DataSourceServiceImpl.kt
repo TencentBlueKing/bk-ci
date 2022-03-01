@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 import com.tencent.devops.project.service.DataSourceService
 import org.jooq.DSLContext
@@ -112,8 +113,9 @@ class DataSourceServiceImpl @Autowired constructor(
         projectId: String,
         moduleCode: String,
         clusterName: String
-    ): DataBasePiecewiseInfo {
+    ): DataBasePiecewiseInfo? {
         val dataSource = dataSourceDao.getDataBasePiecewiseById(dslContext, projectId, moduleCode, clusterName)
+            ?: return null
         return DataBasePiecewiseInfo(
             projectId = projectId,
             moduleCode = moduleCode,
