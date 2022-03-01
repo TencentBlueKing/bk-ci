@@ -88,7 +88,10 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
         envHashId: String,
         nodeHashIds: List<String>
     ): Result<Boolean> {
-        logger.info("v4|EnvAddNodes userId[$userId] project[$projectId] envHashId[$envHashId] nodeHashIds[$nodeHashIds]")
+        logger.info(
+            "v4|EnvAddNodes userId[$userId] project[$projectId] " +
+                "envHashId[$envHashId] nodeHashIds[$nodeHashIds]"
+        )
         return client.get(ServiceEnvironmentResource::class).addNodes(userId, projectId, envHashId, nodeHashIds)
     }
 
@@ -193,7 +196,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     ): Result<List<AgentPipelineRef>> {
         logger.info(
             "v4|listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
-                    " sortBy: $sortBy, sortDirection: $sortDirection"
+                " sortBy: $sortBy, sortDirection: $sortDirection"
         )
         return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(
             userId, projectId, nodeHashId,
@@ -209,7 +212,7 @@ class ApigwEnvironmentResourceV4Impl @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "v4|setShareEnv , userId:$userId , projectId:$projectId , " +
-                    "envHashId:$envHashId , sharedProjects:$sharedProjects"
+                "envHashId:$envHashId , sharedProjects:$sharedProjects"
         )
         return client.get(ServiceEnvironmentResource::class).setShareEnv(userId, projectId, envHashId, sharedProjects)
     }
