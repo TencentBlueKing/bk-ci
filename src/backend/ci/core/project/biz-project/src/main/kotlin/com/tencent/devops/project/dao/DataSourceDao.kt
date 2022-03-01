@@ -133,10 +133,8 @@ class DataSourceDao {
                     return dslContext.selectFrom(this)
                         .where(MODULE_CODE.eq(moduleCode))
                         .and(DATA_SOURCE_NAME.eq(routingRule.get(0) as String))
-                        .and(CLUSTER_NAME.eq(clusterName)).fetchOne()!!
+                        .and(CLUSTER_NAME.eq(clusterName)).fetchOne()
                 }
             } else return null
-
         }
-
 }
