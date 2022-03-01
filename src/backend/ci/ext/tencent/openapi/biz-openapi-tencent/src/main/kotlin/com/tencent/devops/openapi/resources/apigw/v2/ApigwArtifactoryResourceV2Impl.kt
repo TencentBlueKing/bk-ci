@@ -35,7 +35,6 @@ import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -65,15 +64,15 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         var buildId: String? = null
         var subPath = path
         if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val normalizedPath = PathUtils.normalizeFullPath(path)
-            val pathList = normalizedPath.split("/")
+            val normalizePath = PathUtils.normalizeFullPath(path)
+            val pathList = normalizePath.split("/")
             logger.info("getThirdPartyDownloadUrl pathList:$pathList")
             if (pathList.size < 3) {
-                throw InvalidParamException("invalid path: $path")
+                throw IllegalArgumentException("invalid path: $path")
             }
             pipelineId = pathList[1]
             buildId = pathList[2]
-            subPath = normalizedPath.replace("/$pipelineId/$buildId", "")
+            subPath = normalizePath.replace("/$pipelineId/$buildId", "")
         }
 
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
