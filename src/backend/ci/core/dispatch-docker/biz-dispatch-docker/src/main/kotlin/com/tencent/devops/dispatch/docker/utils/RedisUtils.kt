@@ -57,6 +57,11 @@ class RedisUtils @Autowired constructor(
     fun deleteHeartBeat(buildId: String, vmSeqId: String) =
         redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId))
 
+    // 专机集群项目管理白名单
+    fun getSpecialProjectListKey(): String? {
+        return redisOperation.get("dispatchdocker:special_project_list_key")
+    }
+
     private fun dockerBuildKey(id: Long, secretKey: String) =
         "docker_build_key_${HashUtil.encodeLongId(id)}_$secretKey"
 
