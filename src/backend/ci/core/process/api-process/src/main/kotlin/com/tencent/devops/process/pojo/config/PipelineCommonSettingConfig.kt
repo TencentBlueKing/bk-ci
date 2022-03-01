@@ -38,4 +38,10 @@ class PipelineCommonSettingConfig {
 
     @Value("\${pipeline.setting.common.stage.maxStageNum:20}")
     val maxStageNum: Int = 20
+
+    @Value("\${pipeline.setting.common.maxPipelineNameSize:20}")
+    val maxPipelineNameSize: Int = 255
+
+    @Value("\${pipeline.setting.common.maxPipelineDescSize:20}")
+    val maxPipelineDescSize: Int = 255
 }
