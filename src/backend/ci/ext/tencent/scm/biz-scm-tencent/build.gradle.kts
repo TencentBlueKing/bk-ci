@@ -26,6 +26,6 @@
  */
 
 dependencies {
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":ext:tencent:scm:biz-scm"))
 }

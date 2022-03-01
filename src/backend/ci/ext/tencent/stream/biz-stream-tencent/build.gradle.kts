@@ -47,7 +47,7 @@ dependencies {
     api(project(":core:store:api-store"))
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:stream:model-stream-tencent"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":core:plugin:api-plugin"))
     api(project(":core:quality:api-quality"))

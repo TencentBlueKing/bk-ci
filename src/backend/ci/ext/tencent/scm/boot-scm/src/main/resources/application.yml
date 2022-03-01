@@ -1,9 +1,0 @@
-spring:
-  application:
-    name: scm
-    desc: DevOps Scm Service
-    version: 4.0
-    packageName: com.tencent.devops.scm
-
-server:
-  port: 21926
