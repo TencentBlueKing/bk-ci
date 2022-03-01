@@ -1180,7 +1180,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
-                        "true".equals(paramValueMap["required"].toString(), true)
+                    "true".equals(paramValueMap["required"].toString(), true)
                 val defaultValue = paramValueMap["default"]
                 val multipleMap = paramValueMap["optionsConf"]
                 val multiple = if (null != multipleMap && null != (multipleMap as Map<String, String>)["multiple"]) {
@@ -1228,10 +1228,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         )
                         sb.append("\r\n")
                         sb.append("    $paramKey: ")
-                        if (type == "atom-checkbox") {
-                            sb.append("boolean")
-                        } else {
-                            sb.append("string")
+                        when (type) {
+                            "atom-checkbox" -> sb.append("boolean")
+                            "key-value-normal" -> sb.append("list # 例: [{\"key\":\"string\",\"value\":\"string\"}]")
+                            else -> sb.append("string")
                         }
                         sb.append("\r\n")
                     }
