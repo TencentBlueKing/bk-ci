@@ -51,10 +51,6 @@ spec:
       {{- if .Values.engine.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.engine.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
-      volumes:
-        - name: secret-volume
-          secret:
-            secretName: {{ include "common.names.fullname" . }}-engine
       containers:
         - name: engine
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
@@ -85,11 +81,7 @@ spec:
             - "-c"
             - |
               cp /data/workspace/backend.bkci.sh .;
-              /bin/bash backend.bkci.sh;
-          volumeMounts:
-            - mountPath: /data1/certificate/
-              name: secret-volume
-          
+              /bin/bash backend.bkci.sh;     
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
