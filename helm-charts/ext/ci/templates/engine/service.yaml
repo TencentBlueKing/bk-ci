@@ -1,10 +1,10 @@
-{{ if .Values.lambda.enabled -}}
+{{ if .Values.engine.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "common.names.fullname" . }}-lambda
+  name: {{ include "common.names.fullname" . }}-engine
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/name: lambda
+    app.kubernetes.io/name: engine
     app.kubernetes.io/component: microservice
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
@@ -16,7 +16,7 @@ spec:
   type: ClusterIP
   selector: {{- include "bkci.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: microservice
-    app.kubernetes.io/name: lambda
+    app.kubernetes.io/name: engine
   ports:
     - name: http
       port: 80

@@ -1,5 +1,5 @@
 #lambda Deployment
-{{ if .Values.external.enabled -}}
+{{ if .Values.lambda.enabled -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
