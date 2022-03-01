@@ -27,6 +27,7 @@
 
 package com.tencent.devops.openapi.resources.apigw.v2
 
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -34,6 +35,7 @@ import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -63,16 +65,15 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         var buildId: String? = null
         var subPath = path
         if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pathList = path.split("/")
+            val normalizedPath = PathUtils.normalizeFullPath(path)
+            val pathList = normalizedPath.split("/")
             logger.info("getThirdPartyDownloadUrl pathList:$pathList")
-            if (pathList[0].isBlank()) {
-                pipelineId = pathList[1]
-                buildId = pathList[2]
-            } else {
-                pipelineId = pathList[0]
-                buildId = pathList[1]
+            if (pathList.size < 3) {
+                throw InvalidParamException("invalid path: $path")
             }
-            subPath = path.replace("/$pipelineId/$buildId", "")
+            pipelineId = pathList[1]
+            buildId = pathList[2]
+            subPath = normalizedPath.replace("/$pipelineId/$buildId", "")
         }
 
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
