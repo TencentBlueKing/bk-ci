@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 
 interface DataSourceService {
@@ -43,5 +44,5 @@ interface DataSourceService {
         projectId: String,
         moduleCode: String,
         clusterName: String
-    ): DataBasePiecewiseInfo
+    ): DataBasePiecewiseInfo?
 }
