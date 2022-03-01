@@ -26,9 +26,7 @@
  */
 package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OPDataSourceResource
 import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
@@ -63,7 +61,6 @@ class OPDataSourceResourceImpl @Autowired constructor(
         clusterName: String
     ): Result<DataBasePiecewiseInfo?> {
         val result = dataSourceService.getDataBasePiecewiseById(projectId, moduleCode, clusterName)
-        return if (result != null) Result(result) else Result(0,null,result)
-
+        return if (result != null) Result(result) else Result(0, null, result)
     }
 }
