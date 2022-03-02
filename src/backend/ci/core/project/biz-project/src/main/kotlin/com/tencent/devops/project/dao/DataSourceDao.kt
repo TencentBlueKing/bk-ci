@@ -125,10 +125,11 @@ class DataSourceDao {
         }
     }
 
-    fun getDataBasePiecewiseById(dslContext: DSLContext,
-                                 projectId: String,
-                                 moduleCode: String,
-                                 clusterName: String
+    fun getDataBasePiecewiseById(
+        dslContext: DSLContext,
+        projectId: String,
+        moduleCode: String,
+        clusterName: String
     ): TDataSourceRecord? {
         val tr = TShardingRoutingRule.T_SHARDING_ROUTING_RULE
         val routingRule = dslContext.select(tr.ROUTING_RULE)
