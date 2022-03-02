@@ -213,71 +213,23 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     private fun addDevelopPermission(roleId: Int, projectCode: String) {
-//        val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
-//        actions.add(PIPELINEACTION)
-//        actions.add(CREDENTIALACTION)
-//        actions.add(CERTACTION)
-//        actions.add(REPERTORYACTION)
-//        actions.add(ENVIRONMENTACTION)
-//        actions.add(NODEACTION)
-//        actions.add(REPORTACTION)
-//        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-//        iamManagerService.createRolePermission(roleId, authorizationScopes)
         addIamGroupAction(roleId, projectCode, DefaultGroupType.DEVELOPER)
     }
 
     private fun addTestPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
-//        actions.add(PIPELINEACTION)
-//        actions.add(CREDENTIALACTION)
-//        actions.add(REPERTORYACTION)
-//        actions.add(ENVIRONMENTACTION)
-//        actions.add(NODEACTION)
-//        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-//        iamManagerService.createRolePermission(roleId, authorizationScopes)
         addIamGroupAction(roleId, projectCode, DefaultGroupType.TESTER)
     }
 
     private fun addPMPermission(roleId: Int, projectCode: String) {
-//        val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
-//        actions.add(CREDENTIALACTION)
-//        actions.add(REPERTORYACTION)
-//        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-//        iamManagerService.createRolePermission(roleId, authorizationScopes)
         addIamGroupAction(roleId, projectCode, DefaultGroupType.PM)
     }
 
     private fun addQCPermission(roleId: Int, projectCode: String) {
-//        val createActions = mutableListOf<String>()
-//        createActions.add(PROJECT)
-//        createActions.add(CREDENTIALACTION)
-//        createActions.add(REPERTORYACTION)
-//        createActions.add(RULECREATEACTION)
-//        createActions.add(GROUPCREATEACTION)
-//        val createAuthorizationScopes = buildCreateAuthorizationScopes(createActions, projectCode)
-//        iamManagerService.createRolePermission(roleId, createAuthorizationScopes)
-//        val ruleAction = RULEACTION.split(",")
-//        val ruleAuthorizationScopes = buildOtherAuthorizationScopes(ruleAction, projectCode, "rule")
-//        iamManagerService.createRolePermission(roleId, ruleAuthorizationScopes)
-//        val groupAction = GROUPACTION.split(",")
-//        val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode, "quality_group")
-//        iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
         addIamGroupAction(roleId, projectCode, DefaultGroupType.QC)
     }
 
     private fun addMaintainerPermission(roleId: Int, projectCode: String) {
-//        val actions = mutableListOf<String>()
-//        actions.add(PROJECT)
-//        actions.add(PIPELINEACTION)
-//        actions.add(CREDENTIALACTION)
-//        actions.add(REPERTORYACTION)
-//        actions.add(ENVIRONMENTACTION)
-//        actions.add(NODEACTION)
-//        val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-//        iamManagerService.createRolePermission(roleId, authorizationScopes)
         addIamGroupAction(roleId, projectCode, DefaultGroupType.MAINTAINER)
     }
 
