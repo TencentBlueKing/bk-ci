@@ -34,7 +34,10 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 object StreamTriggerDispatch {
     fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamTriggerEvent) {
         try {
-            logger.info("Dispatch stream trigger event: $event")
+            logger.info(
+                "${event.gitProjectPipeline.pipelineId}|${event.gitProjectPipeline.filePath}" +
+                "|Dispatch stream trigger event"
+            )
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {

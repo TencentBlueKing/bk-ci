@@ -50,6 +50,7 @@ import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
@@ -295,7 +296,7 @@ class ManualTriggerService @Autowired constructor(
         triggerBuildReq: TriggerBuildReq,
         gitCIBasicSetting: GitCIBasicSetting
     ): BuildId? {
-        val objects = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
+        val yamlReplaceResult = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
             gitRequestEvent = gitRequestEvent,
             isMr = false,
             originYaml = originYaml,
@@ -306,13 +307,13 @@ class ManualTriggerService @Autowired constructor(
             changeSet = null,
             forkGitProjectId = null
         )!!
-        val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
+        val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
             eventId = gitRequestEvent.id!!,
             originYaml = originYaml,
             parsedYaml = parsedYaml,
-            normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
+            normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml),
             gitProjectId = gitRequestEvent.gitProjectId,
             branch = gitRequestEvent.branch,
             objectKind = gitRequestEvent.objectKind,
@@ -336,21 +337,21 @@ class ManualTriggerService @Autowired constructor(
                     originYaml = originYaml,
                     mrChangeSet = null
                 ),
-                triggerOn = null,
-                isTrigger = true
-            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+                triggerOn = TriggerBuilder.buildManualTriggerOn(gitEvent = gitRequestEvent.gitEvent!!)
+            )
         }
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
             event = gitRequestEvent,
-            yaml = objects.normalYaml,
+            yaml = yamlReplaceResult.normalYaml,
             parsedYaml = parsedYaml,
             originYaml = originYaml,
-            normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
+            normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml),
             gitBuildId = gitBuildId,
             isTimeTrigger = false,
             onlySavePipeline = false,
-            params = params
+            params = params,
+            yamlTransferData = yamlReplaceResult.yamlTransferData
         )
     }
 

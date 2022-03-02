@@ -364,6 +364,7 @@ include(":ext:tencent:process:biz-engine-tencent")
 include(":ext:tencent:process:biz-process-tencent")
 include(":ext:tencent:process:boot-process-tencent")
 include(":ext:tencent:process:boot-engine-tencent")
+include(":ext:tencent:process:common-pipeline-yaml")
 
 include(":ext:tencent:dispatch")
 include(":ext:tencent:dispatch:api-dispatch-bcs")
