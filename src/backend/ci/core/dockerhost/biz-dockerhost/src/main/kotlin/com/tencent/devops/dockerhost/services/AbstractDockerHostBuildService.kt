@@ -38,7 +38,6 @@ import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -232,15 +231,6 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
-    private fun getWorkspace(
-        pipelineId: String,
-        vmSeqId: Int,
-        poolNo: Int,
-        path: String
-    ): String {
-        return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
-    }
-
     fun afterOverlayFs(
         projectId: String,
         pipelineId: String,
@@ -264,6 +254,15 @@ abstract class AbstractDockerHostBuildService constructor(
         } catch (e: Throwable) {
             logger.info("afterOverlayFs $pipelineId $vmSeqId $poolNo error: ${e.message}")
         }
+    }
+
+    fun getWorkspace(
+        pipelineId: String,
+        vmSeqId: Int,
+        poolNo: Int,
+        path: String
+    ): String {
+        return "$path/$pipelineId/${getTailPath(vmSeqId, poolNo)}/"
     }
 
     private fun getTailPath(vmSeqId: Int, poolNo: Int): String {
