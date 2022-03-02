@@ -153,10 +153,10 @@ class PipelineBuildSummaryDao {
         projectId: String,
         channelCode: ChannelCode,
         pipelineIds: Collection<String>? = null,
-        viewId: String?,
-        favorPipelines: List<String>,
-        authPipelines: List<String>,
-        pipelineFilterParamList: List<PipelineFilterParam>?,
+        viewId: String? = null,
+        favorPipelines: List<String> = emptyList(),
+        authPipelines: List<String> = emptyList(),
+        pipelineFilterParamList: List<PipelineFilterParam>? = null,
         permissionFlag: Boolean? = null
     ): Long {
         val conditions = generatePipelineFilterCondition(

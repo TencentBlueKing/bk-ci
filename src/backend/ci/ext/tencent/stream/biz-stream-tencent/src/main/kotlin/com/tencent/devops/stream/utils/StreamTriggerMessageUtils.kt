@@ -2,10 +2,12 @@ package com.tencent.devops.stream.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
@@ -82,7 +84,12 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 "Review [${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
             TGitObjectKind.NOTE.value -> {
-                "Note [${event.commitMsg?.take(7)}...] submitted by ${event.userId}"
+                val noteEvent = try {
+                    JsonUtil.to(event.event, GitNoteEvent::class.java)
+                } catch (e: Exception) {
+                    null
+                }
+                "Note [${noteEvent?.objectAttributes?.id}] submitted by ${event.userId}"
             }
             else -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
