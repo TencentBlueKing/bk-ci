@@ -381,7 +381,7 @@ object ScriptYmlUtils {
                 runsOn
             }
         } catch (e: MismatchedInputException) {
-            if (preRunsOn is String) {
+            if (preRunsOn is String || preRunsOn is List<*>) {
                 return RunsOn(
                     poolName = preRunsOn.toString()
                 )
