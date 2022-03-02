@@ -110,7 +110,7 @@ class PipelineBuildDetailService @Autowired constructor(
             )
         ) ?: return null
 
-        val latestVersion = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId)?.version ?: -1
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
 
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
 
@@ -164,8 +164,9 @@ class PipelineBuildDetailService @Autowired constructor(
             buildNum = buildInfo.buildNum,
             cancelUserId = record.cancelUser ?: "",
             curVersion = buildInfo.version,
-            latestVersion = latestVersion,
+            latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime
         )
     }

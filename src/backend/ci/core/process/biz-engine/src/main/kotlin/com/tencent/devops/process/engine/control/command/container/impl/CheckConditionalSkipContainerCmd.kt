@@ -95,6 +95,7 @@ class CheckConditionalSkipContainerCmd constructor(
                     projectId = container.projectId,
                     buildId = container.buildId,
                     containerId = container.containerId,
+                    stageId = container.stageId,
                     variables = containerContext.variables
                 )
                 ControlUtils.checkJobSkipCondition(
