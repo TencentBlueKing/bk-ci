@@ -84,6 +84,7 @@ class CheckConditionalSkipStageCmd constructor(
                 projectId = stage.projectId,
                 buildId = stage.buildId,
                 containerId = null,
+                stageId = stage.stageId,
                 variables = variables
             )
             skip = ControlUtils.checkStageSkipCondition(
