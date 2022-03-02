@@ -64,6 +64,7 @@ data class StartBuildContext(
     val parentTaskId: String?,
     val channelCode: ChannelCode,
     val retryFailedContainer: Boolean,
+    var needUpdateStage: Boolean,
     val skipFailedTask: Boolean // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
 ) {
 
@@ -168,7 +169,8 @@ data class StartBuildContext(
                     ChannelCode.BS
                 },
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() ?: false,
-                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false
+                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false,
+                needUpdateStage = false
             )
         }
     }

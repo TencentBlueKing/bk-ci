@@ -50,7 +50,6 @@ class BuildRepositoryMaterialResourceImpl @Autowired constructor(
         return Result(pipelineBuildMaterialService.saveBuildMaterial(
             buildId = buildId,
             projectId = projectId,
-            pipelineId = pipelineId,
             pipelineBuildMaterials = pipelineBuildMaterials
         ))
     }

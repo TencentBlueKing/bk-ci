@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
@@ -45,6 +46,8 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
+import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
+import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -62,6 +65,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.util.ProjectUtils
@@ -88,7 +92,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     val client: Client,
     private val projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val projectDataSourceAssignService: ProjectDataSourceAssignService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -100,7 +105,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
-                if (name.isEmpty() || name.length > 32) {
+                if (name.isEmpty() || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                         errorCode = ProjectMessageCode.NAME_TOO_LONG
@@ -114,8 +119,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             ProjectValidateType.english_name -> {
-                // 2 ~ 32 个字符+数字，以小写字母开头
-                if (name.length < 2 || name.length > 32) {
+                // 2 ~ 64 个字符+数字，以小写字母开头
+                if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
                         defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR),
                         errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
@@ -208,6 +213,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectDao.delete(dslContext, projectId)
                     throw e
                 }
+                // 为项目分配数据源
+                projectDataSourceAssignService.assignDataSource(
+                    channelCode = projectChannel,
+                    projectId = projectCreateInfo.englishName,
+                    moduleCodes = listOf(SystemModuleEnum.PROCESS)
+                )
                 if (projectInfo.secrecy) {
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }

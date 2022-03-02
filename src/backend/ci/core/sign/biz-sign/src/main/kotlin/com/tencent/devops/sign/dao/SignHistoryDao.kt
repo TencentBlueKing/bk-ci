@@ -27,12 +27,16 @@
 
 package com.tencent.devops.sign.dao
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.sign.tables.TSignHistory
 import com.tencent.devops.model.sign.tables.records.TSignHistoryRecord
 import com.tencent.devops.sign.api.enums.EnumResignStatus
+import com.tencent.devops.sign.api.pojo.SignHistory
+import java.sql.Timestamp
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.Result
 
 @Repository
 class SignHistoryDao {
@@ -72,6 +76,7 @@ class SignHistoryDao {
                 ARCHIVE_PATH,
                 FILE_MD5,
                 STATUS,
+                CREATE_TIME,
                 RESULT_FILE_MD5,
                 UPLOAD_FINISH_TIME,
                 UNZIP_FINISH_TIME,
@@ -90,6 +95,7 @@ class SignHistoryDao {
                 archivePath,
                 md5,
                 EnumResignStatus.RUNNING.getValue(),
+                LocalDateTime.now(),
                 null,
                 null,
                 null,
@@ -199,6 +205,65 @@ class SignHistoryDao {
                 .where(
                     RESIGN_ID.eq(resignId)
                 ).fetchAny()
+        }
+    }
+
+    fun count(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Long {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .fetchOne(0, Long::class.java)!!
+        }
+    }
+
+    fun list(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long,
+        offset: Int,
+        limit: Int
+    ): Result<TSignHistoryRecord> {
+        with(TSignHistory.T_SIGN_HISTORY) {
+            return dslContext.selectFrom(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .orderBy(CREATE_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun convert(tSignHistoryRecord: TSignHistoryRecord): SignHistory {
+        return with(tSignHistoryRecord) {
+            SignHistory(
+                resignId = resignId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                userId = userId,
+                md5 = fileMd5,
+                resultFileName = resultFileName,
+                resultFileMd5 = resultFileMd5,
+                archiveType = archiveType,
+                archivePath = archivePath,
+                status = status,
+                createTime = createTime?.timestampmilli(),
+                endTime = endTime?.timestampmilli(),
+                uploadFinishTime = uploadFinishTime?.timestampmilli(),
+                unzipFinishTime = unzipFinishTime?.timestampmilli(),
+                resignFinishTime = resignFinishTime?.timestampmilli(),
+                zipFinishTime = zipFinishTime?.timestampmilli(),
+                archiveFinishTime = archiveFinishTime?.timestampmilli(),
+                errorMessage = errorMessage,
+                ipaSignInfoStr = null
+            )
         }
     }
 }

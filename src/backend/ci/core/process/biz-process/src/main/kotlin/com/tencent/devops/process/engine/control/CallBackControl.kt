@@ -108,6 +108,7 @@ class CallBackControl @Autowired constructor(
         }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
             pipelineId = pipelineId,
             delete = null
         ) ?: return
@@ -161,7 +162,11 @@ class CallBackControl @Autowired constructor(
             return
         }
 
-        val modelDetail = pipelineBuildDetailService.get(buildId = event.buildId, refreshStatus = false) ?: return
+        val modelDetail = pipelineBuildDetailService.get(
+            projectId = projectId,
+            buildId = event.buildId,
+            refreshStatus = false
+        ) ?: return
 
         val buildEvent = BuildEvent(
             buildId = event.buildId,
@@ -275,7 +280,13 @@ class CallBackControl @Autowired constructor(
         val stages = mutableListOf<SimpleStage>()
         model.stages.forEachIndexed { pos, s ->
             val jobs = mutableListOf<SimpleJob>()
-            val stage = SimpleStage(stageName = "Stage-${pos + 1}", status = "", jobs = jobs)
+            val stage = SimpleStage(
+                stageName = "Stage-${pos + 1}",
+                name = s.name ?: "",
+                status = "",
+                jobs = jobs
+            )
+            logger.info("parseModel ${model.name}|${stage.stageName}|${stage.name}|")
             stage.startTime = s.startEpoch ?: 0
             stages.add(stage)
 

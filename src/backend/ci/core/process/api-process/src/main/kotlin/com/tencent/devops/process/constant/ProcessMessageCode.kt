@@ -113,7 +113,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP = "2101055" // Stage[{0}]准入配置不正确
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
     const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2101057" // 定时触发器的定时参数[{0}]不能秒级触发
-    const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 前端缓存异常,请刷新后重新操作
+    const val ERROR_PIPLEINE_INPUT = "2101058" // 流水线: 入参buildId与pipelineId不匹配
     const val MODEL_ATOMCODE_NOT_EXSIT = "2101059" // 流水线内包含插件市场不存在的插件
     const val MODEL_ATOMCODE_PROJECT_NOT_INSTALL = "2101060" // 流水线内存在该项目未安装的插件:[{0}]. 请先安装插件
     const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
@@ -130,6 +130,8 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
     const val ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND = "2101074" // Stage[{0}]的准入准出标识[{1}]不正确
     const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
+    const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
+    const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -197,6 +199,7 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_DELETE_NEED = "2101984" // 无删除权限
     const val ERROR_PERMISSION_LIST_NEED = "2101985" // 无列表权限
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
+    const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2101991" // {0}非项目{1}管理员
 
     // 流水线模块业务错误21011
     const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
@@ -206,6 +209,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
     const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101191" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
     const val ERROR_PIPELINE_IS_NOT_THE_LATEST = "2101192" // 异常：保存已拒绝，因为保存流水线时已不是最新版本
+    const val ERROR_RESTART_EXSIT = "2101193" // 流水线: 待restart构建{0}已在restart中
 
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
@@ -213,6 +217,7 @@ object ProcessMessageCode {
     const val ERROR_CALLBACK_HISTORY_NOT_FOUND = "2101182" // 回调历史记录({0})不存在
     const val ERROR_CALLBACK_REPLY_FAIL = "2101183" // 回调重试失败
     const val ERROR_CALLBACK_NOT_FOUND = "2101184" // 回调记录({0})不存在
+    const val ERROR_CALLBACK_SAVE_FAIL = "2101185" // 创建callback失败,失败原因:{0}
 
     const val ERROR_PIPELINE_DEPENDON_CYCLE = "2101301" // ({0})与({1})的jobId循环依赖
     const val ERROR_PIPELINE_JOBID_EXIST = "2101302" // ({0})的jobId({1})已存在

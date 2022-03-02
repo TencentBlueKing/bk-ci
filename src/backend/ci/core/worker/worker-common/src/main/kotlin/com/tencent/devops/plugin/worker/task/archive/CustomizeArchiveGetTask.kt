@@ -35,7 +35,7 @@ import com.tencent.devops.common.archive.element.CustomizeArchiveGetElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -49,7 +49,7 @@ import java.net.URLDecoder
 @TaskClassType(classTypes = [CustomizeArchiveGetElement.classType])
 class CustomizeArchiveGetTask : ITask() {
 
-    private val archiveGetResourceApi = ApiFactory.create(ArchiveSDKApi::class)
+    private val archiveGetResourceApi = ArtifactApiFactory.create(ArchiveSDKApi::class)
 
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()

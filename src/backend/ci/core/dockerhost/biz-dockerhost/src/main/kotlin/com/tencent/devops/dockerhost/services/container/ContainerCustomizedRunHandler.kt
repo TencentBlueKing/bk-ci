@@ -46,7 +46,6 @@ import com.tencent.devops.dockerhost.services.generator.DockerEnvLoader
 import com.tencent.devops.dockerhost.services.generator.DockerMountLoader
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -88,7 +87,7 @@ class ContainerCustomizedRunHandler(
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
 
                 if (!(dockerRunParam!!.command.isEmpty() || dockerRunParam.command.equals("[]"))) {
-                    createContainerCmd.withCmd(dockerRunParam!!.command)
+                    createContainerCmd.withCmd(dockerRunParam.command)
                 }
 
                 val container = createContainerCmd.exec()
@@ -107,7 +106,7 @@ class ContainerCustomizedRunHandler(
                     buildId = buildId,
                     red = true,
                     message = "启动构建环境失败，错误信息:${er.message}",
-                    tag = VMUtils.genStartVMTaskId(vmSeqId.toString()),
+                    tag = taskId(),
                     containerHashId = containerHashId
                 )
                 if (er is NotFoundException) {
@@ -155,7 +154,7 @@ class ContainerCustomizedRunHandler(
                 throw ContainerException(
                     errorCodeEnum = ErrorCodeEnum.NO_AVAILABLE_PORT_ERROR,
                     message = "No enough port to use in dockerRun. " +
-                            "startPort: ${dockerHostConfig.dockerRunStartPort}"
+                        "startPort: ${dockerHostConfig.dockerRunStartPort}"
                 )
             }
             val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
