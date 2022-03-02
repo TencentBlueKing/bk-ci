@@ -223,7 +223,7 @@ class DockerService @Autowired constructor(
                 buildType = buildType,
                 qpcUniquePath = qpcUniquePath,
                 dockerResource = dockerResource,
-                specialProjectList = specialProjectList,
+                specialProjectList = specialProjectList
             )
 
             containerPullImageHandler.setNextHandler(
