@@ -84,10 +84,11 @@ class CallBackControlTest : TestBase() {
             curVersion = 2,
             latestBuildNum = 1,
             latestVersion = 1,
+            lastModifyUser = "yongyiduan",
             executeTime = 100
         )
 
-        whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
+        whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))
             .thenReturn(modelDetail)
     }
 

@@ -34,13 +34,11 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class P4ChangeEvent(
     val change: Int,
-    override val p4Port: String,
+    val p4Port: String,
     @JsonProperty("event_type")
-    override val eventType: CodeEventType
-) : P4Event(
-    p4Port = p4Port,
-    eventType = eventType
-) {
+    val eventType: CodeEventType,
+    val user: String? = null
+) : P4Event() {
     companion object {
         const val classType = "CHANGE"
     }

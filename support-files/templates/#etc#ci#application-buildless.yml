@@ -1,0 +1,82 @@
+spring:
+  cloud:
+    consul:
+      discovery:
+        register: false
+        enabled: false
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21960
+server:
+  port: __BK_CI_BUILDLESS_API_PORT__
+
+containerPool:
+  coreSize: # 表示容器池默认初始容器数大小，默认：20
+  maxSize: # 表示容器池最大可创建容器数大小，默认：30
+  baseImage: # 表示容器池容器默认镜像，默认：blueking/bk-ci
+
+gateway: __BK_CI_PUBLIC_URL__
+
+# docker client 配置
+dockerCli:
+  dockerHost: unix:///var/run/docker.sock
+  dockerConfig: /root/.docker
+  apiVersion: 1.23
+  # docker hub 配置
+  registryUrl: __BK_CI_DOCKER_REGISTRY_URL__
+  registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
+  registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+
+  # 以下一般不用修改
+  volumeWorkspace: /data/devops/workspace
+  volumeApps: /data/devops/apps/
+  volumeInit: /data/init.sh
+  volumeSleep: /data/devops/sleep.sh
+  volumeLogs: /data/devops/logs
+  volumeCodecc: /data/devops/codecc/
+  volumeProjectShare: /data/devops/share
+  volumeMavenRepo: /root/.m2/repository
+  volumeNpmPrefix: /root/Downloads/npm/prefix
+  volumeNpmCache: /root/Downloads/npm/cache
+  volumeNpmRc: /root/.npmrc
+  volumeCcache: /root/.ccache
+  volumeGradleCache: /root/.gradle/caches
+  volumeGolangCache: /root/go/pkg/mod
+  volumeSbtCache: /root/.ivy2
+  volumeSbt2Cache: /root/.cache
+  volumeYarnCache: /usr/local/share/.cache/
+  hostPathLinkDir: /tmp/bkci
+  hostPathHosts: /etc/hosts
+
+  # docker 母机上的配置，workspace用于存放构建的工作空间，可以以挂载的方式提供
+  hostPathWorkspace: __BK_CI_DATA_DIR__/docker/workspace
+  hostPathApps: __BK_CI_DATA_DIR__/docker/apps/
+  hostPathInit: __BK_CI_HOME__/agent-package/script/init.sh
+  hostPathSleep: __BK_CI_HOME__/agent-package/script/sleep.sh
+  hostPathLogs: __BK_CI_LOGS_DIR__/docker
+  hostPathCodecc: /data/devops/codecc
+  hostPathProjectShare: __BK_CI_DATA_DIR__/docker/share/project
+  hostPathMavenRepo: __BK_CI_DATA_DIR__/docker/thirdparty/maven_repo
+  hostPathNpmPrefix: __BK_CI_DATA_DIR__/docker/thirdparty/npm_prefix
+  hostPathNpmCache: __BK_CI_DATA_DIR__/docker/thirdparty/npm_cache
+  hostPathNpmRc: __BK_CI_DATA_DIR__/docker/thirdparty/.npmrc
+  hostPathCcache: __BK_CI_DATA_DIR__/docker/thirdparty/ccache/
+  hostPathGradleCache: __BK_CI_DATA_DIR__/docker/thirdparty/gradle_caches
+  hostPathGolangCache: __BK_CI_DATA_DIR__/docker/thirdparty/go_cache/
+  hostPathSbtCache: __BK_CI_DATA_DIR__/docker/thirdparty/.ivy2/
+  hostPathSbt2Cache: __BK_CI_DATA_DIR__/docker/thirdparty/sbt_cache/
+  hostPathYarnCache: __BK_CI_DATA_DIR__/docker/thirdparty/yarn_cache/
+  # 需要共享的项目
+  shareProjectCodeWhiteList:
+  # docker.jar 存储路径
+  dockerAgentPath: __BK_CI_HOME__/agent-package/worker-agent.jar
+  downloadDockerAgentUrl: __BK_CI_PRIVATE_URL__/ms/dispatch/gw/build/docker.jar
+  # 定期下载
+  downloadAgentCron: 0 0 3 * * ?
+  landunEnv: prod
+  clearLocalImageCron: 0 0 2 * * ?
+  localImageCacheDays: 7
+
+  # 无编译构建容器配置
+  memoryLimitBytes: 2147483648
+  cpuPeriod: 50000
+  cpuQuota: 50000

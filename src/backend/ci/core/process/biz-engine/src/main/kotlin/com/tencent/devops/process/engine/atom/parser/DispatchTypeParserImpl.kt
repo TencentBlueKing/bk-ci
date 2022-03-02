@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -86,5 +88,15 @@ class DispatchTypeParserImpl @Autowired constructor(
         } else {
             dispatchType.credentialProject = projectId
         }
+    }
+
+    override fun parseInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        customInfo: DispatchInfo,
+        context: Map<String, String>
+    ): SampleDispatchInfo? {
+        return null
     }
 }

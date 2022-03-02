@@ -54,7 +54,7 @@ class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineG
     }
 
     override fun deleteGroup(userId: String, projectId: String, groupId: String): Result<Boolean> {
-        return Result(pipelineGroupService.deleteGroup(userId, groupId))
+        return Result(pipelineGroupService.deleteGroup(userId, projectId, groupId))
     }
 
     override fun addLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelCreate): Result<Boolean> {
@@ -62,10 +62,24 @@ class UserPipelineGroupResourceImpl @Autowired constructor(private val pipelineG
     }
 
     override fun deleteLabel(userId: String, projectId: String, labelId: String): Result<Boolean> {
-        return Result(pipelineGroupService.deleteLabel(userId, labelId))
+        return Result(pipelineGroupService.deleteLabel(userId, projectId, labelId))
     }
 
     override fun updateLabel(userId: String, projectId: String, pipelineLabel: PipelineLabelUpdate): Result<Boolean> {
-        return Result(pipelineGroupService.updateLabel(userId, pipelineLabel))
+        return Result(pipelineGroupService.updateLabel(userId, projectId, pipelineLabel))
+    }
+
+    override fun updatePipelineLabel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        labelIds: List<String>
+    ): Result<Boolean> {
+        return try {
+            pipelineGroupService.updatePipelineLabel(userId, projectId, pipelineId, labelIds)
+            Result(true)
+        } catch (e: Exception) {
+            Result(data = false, message = e.message)
+        }
     }
 }

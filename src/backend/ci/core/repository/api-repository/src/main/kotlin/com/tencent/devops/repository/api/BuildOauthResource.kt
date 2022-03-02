@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.Api
@@ -51,6 +52,9 @@ interface BuildOauthResource {
     @GET
     @Path("/git/{userId}")
     fun gitGet(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam("构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
         buildId: String,

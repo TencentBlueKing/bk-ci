@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserGithubResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
@@ -51,7 +52,7 @@ class UserGithubResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getGithubAppUrl(): Result<String> {
+    override fun getGithubAppUrl(): Result<GithubAppUrl> {
         return Result(githubOAuthService.getGithubAppUrl())
     }
 }

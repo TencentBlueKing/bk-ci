@@ -46,7 +46,6 @@ import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
@@ -257,7 +256,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineIds: List<String>,
         channelCode: ChannelCode
-    ): Result<List<PipelineWithModel>> {
+    ): Result<List<Pipeline>> {
         checkParams(userId, projectId, pipelineIds)
         return Result(data = pipelineListFacadeService.getBatchPipelinesWithModel(
             userId = userId,
@@ -357,8 +356,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.getPipelineNameByIds(projectId, pipelineIds))
     }
 
-    override fun getBuildNoByBuildIds(buildIds: Set<String>): Result<Map<String, String>> {
-        return Result(pipelineListFacadeService.getBuildNoByByPair(buildIds))
+    override fun getBuildNoByBuildIds(buildIds: Set<String>, projectId: String?): Result<Map<String, String>> {
+        return Result(pipelineListFacadeService.getBuildNoByByPair(buildIds, projectId))
     }
 
     override fun getAllstatus(userId: String, projectId: String, pipelineId: String): Result<List<Pipeline>?> {

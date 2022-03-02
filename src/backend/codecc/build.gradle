@@ -19,7 +19,7 @@ buildscript {
         commonExecVersion = "1.3"
         bouncyCastleVersion = "1.46"
         dom4jVersion = "1.6.1"
-        slf4jVersion = "1.7.25"
+        slf4jVersion = "1.7.30"
         mockitoVersion = "1.10.19"
         httpclientVersion = "4.5.2"
         compressVersion = "1.15"
@@ -47,6 +47,7 @@ buildscript {
         commonsHttpclientVersion = "3.1"
         ciVersion = "1.5.8-RELEASE"
         jsonVersion = "20180130"
+        log4jVersion = "2.17.1"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -281,6 +282,11 @@ subprojects {
             }
             dependency "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
             dependency "org.json:json:$jsonVersion"
+            dependencySet(group: 'org.apache.logging.log4j', version: "$log4jVersion") {
+                entry "log4j-api"
+                entry "log4j-core"
+                entry "log4j-slf4j-impl"
+            }
         }
     }
 

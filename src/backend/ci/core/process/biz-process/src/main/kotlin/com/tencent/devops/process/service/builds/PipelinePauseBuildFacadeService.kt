@@ -42,6 +42,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelinePauseValue
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.slf4j.LoggerFactory
@@ -57,6 +58,7 @@ import javax.ws.rs.core.Response
 class PipelinePauseBuildFacadeService(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskPauseService: PipelineTaskPauseService
@@ -88,7 +90,7 @@ class PipelinePauseBuildFacadeService(
             )
         }
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
@@ -102,7 +104,7 @@ class PipelinePauseBuildFacadeService(
             )
         }
 
-        val taskRecord = pipelineRuntimeService.getBuildTask(buildId, taskId)
+        val taskRecord = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
 
         if (taskRecord?.status != BuildStatus.PAUSE) {
             throw ErrorCodeException(

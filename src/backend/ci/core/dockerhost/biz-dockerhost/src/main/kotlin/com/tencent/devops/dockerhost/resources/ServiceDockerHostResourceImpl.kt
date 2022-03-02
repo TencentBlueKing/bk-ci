@@ -89,12 +89,13 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         pipelineId: String,
         vmSeqId: String,
         buildId: String,
+        pipelineTaskId: String?,
         dockerRunParam: DockerRunParam,
         request: HttpServletRequest
     ): Result<DockerRunResponse> {
         checkReq(request)
         logger.info("[$buildId]|Enter ServiceDockerHostResourceImpl.dockerRun...")
-        return Result(dockerService.dockerRun(projectId, pipelineId, vmSeqId, buildId, dockerRunParam))
+        return Result(dockerService.dockerRun(projectId, pipelineId, vmSeqId, buildId, pipelineTaskId, dockerRunParam))
     }
 
     override fun getDockerRunLogs(

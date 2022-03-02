@@ -41,7 +41,7 @@ import java.time.LocalDateTime
 @Repository@Suppress("ALL")
 class PipelineDockerBuildDao {
 
-    fun startBuild(
+    fun saveBuildHistory(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -51,7 +51,8 @@ class PipelineDockerBuildDao {
         status: PipelineTaskStatus,
         zone: String?,
         dockerIp: String,
-        poolNo: Int
+        poolNo: Int,
+        startupMessage: String? = ""
     ): Long {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             val now = LocalDateTime.now()
@@ -65,6 +66,7 @@ class PipelineDockerBuildDao {
                     .set(ZONE, zone)
                     .set(DOCKER_IP, dockerIp)
                     .set(POOL_NO, poolNo)
+                    .set(STARTUP_MESSAGE, startupMessage)
                     .where(ID.eq(preRecord.id)).execute()
                 return preRecord.id
             }
@@ -80,7 +82,8 @@ class PipelineDockerBuildDao {
                 UPDATED_TIME,
                 ZONE,
                 DOCKER_IP,
-                POOL_NO
+                POOL_NO,
+                STARTUP_MESSAGE
             )
                 .values(
                     projectId,
@@ -93,7 +96,8 @@ class PipelineDockerBuildDao {
                     now,
                     zone,
                     dockerIp,
-                    poolNo
+                    poolNo,
+                    startupMessage
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -132,16 +136,14 @@ class PipelineDockerBuildDao {
         }
     }
 
-    fun updateContainerIdAndDockerIp(
+    fun updateDockerIp(
         dslContext: DSLContext,
         buildId: String,
         vmSeqId: Int,
-        containerId: String,
         dockerIp: String
     ): Boolean {
         with(TDispatchPipelineDockerBuild.T_DISPATCH_PIPELINE_DOCKER_BUILD) {
             return dslContext.update(this)
-                .set(CONTAINER_ID, containerId)
                 .set(DOCKER_IP, dockerIp)
                 .set(UPDATED_TIME, LocalDateTime.now())
                 .where(BUILD_ID.eq(buildId))
@@ -193,7 +195,7 @@ class PipelineDockerBuildDao {
             return dslContext.selectFrom(this)
                 .where(STATUS.eq(2))
                 .and(DOCKER_IP.notEqual(""))
-                .and(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
+                .and(UPDATED_TIME.lessOrEqual(timestampSubDay(7)))
                 .fetch()
         }
     }

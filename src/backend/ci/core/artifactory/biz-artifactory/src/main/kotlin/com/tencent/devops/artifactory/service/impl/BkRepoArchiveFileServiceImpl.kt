@@ -39,7 +39,9 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
+import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileDetail
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -134,9 +136,20 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         }
     }
 
-    override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
+    override fun downloadFile(
+        userId: String,
+        filePath: String,
+        response: HttpServletResponse,
+        logo: Boolean?
+    ) {
         response.contentType = MimeUtil.mediaType(filePath)
-        return downloadFile(userId, filePath, response.outputStream)
+        val path = if (logo == true) {
+            "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/" +
+                URLDecoder.decode(filePath, Charsets.UTF_8.name()).removePrefix("/")
+        } else {
+            filePath
+        }
+        downloadFile(userId, path, response.outputStream)
     }
 
     override fun downloadFileToLocal(userId: String, filePath: String, response: HttpServletResponse) {
