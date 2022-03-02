@@ -395,12 +395,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
         if (model.events?.isEmpty() == true) {
             newEventMap[callbackInfo.callbackName] = callbackInfo
         } else {
-            model.events?.forEach { eventName, event ->
-                // 事件名称重复,以新的为准
-                if (eventName == callbackInfo.callbackName) {
-                    newEventMap[callbackInfo.callbackName] = callbackInfo
-                } else newEventMap[eventName] = event
-            }
+            newEventMap.putAll(model.events!!)
+            // 若key存在会覆盖原来的value,否则就是追加新key
+            newEventMap[callbackInfo.callbackName] = callbackInfo
         }
         model.events = newEventMap
         val newModel = mutableListOf<PipelineModelVersion>()
