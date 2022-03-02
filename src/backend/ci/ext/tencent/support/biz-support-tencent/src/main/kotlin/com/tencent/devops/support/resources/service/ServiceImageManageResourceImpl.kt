@@ -27,22 +27,26 @@
 
 package com.tencent.devops.support.resources.service
 
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceImageManageResource
-import com.tencent.devops.support.services.AwsClientService
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.commons.codec.binary.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.File
 import java.io.InputStream
 import java.net.URL
 import java.nio.charset.Charset
 import java.nio.file.Files
 
 @RestResource
-class ServiceImageManageResourceImpl @Autowired constructor(private val awsClientService: AwsClientService) : ServiceImageManageResource {
+class ServiceImageManageResourceImpl @Autowired constructor(private val client: Client) : ServiceImageManageResource {
 
     private val logger = LoggerFactory.getLogger(ServiceImageManageResourceImpl::class.java)
 
@@ -73,14 +77,19 @@ class ServiceImageManageResourceImpl @Autowired constructor(private val awsClien
         disposition: FormDataContentDisposition
     ): Result<String?> {
         val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
-        val index = fileName.lastIndexOf(".")
-        val fileSuffix = fileName.substring(index + 1)
-        val file = Files.createTempFile("random_" + System.currentTimeMillis(), ".$fileSuffix").toFile()
+        val tmpdir = System.getProperty("java.io.tmpdir")
+        val file = File(tmpdir, fileName)
         file.outputStream().use {
             inputStream.copyTo(it)
         }
+        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         try {
-            return awsClientService.uploadFile(file)
+            return CommonUtils.serviceUploadFile(
+                userId = userId,
+                serviceUrlPrefix = serviceUrlPrefix,
+                file = file,
+                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name
+            )
         } finally {
             file.delete()
         }
