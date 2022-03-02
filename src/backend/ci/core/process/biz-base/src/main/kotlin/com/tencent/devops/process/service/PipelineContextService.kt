@@ -58,12 +58,21 @@ class PipelineContextService @Autowired constructor(
         projectId: String,
         buildId: String,
         containerId: String?,
+        stageId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
+        var previousStageStatus = BuildStatus.RUNNING
+        val failTaskNameList = mutableListOf<String>()
         try {
             modelDetail.model.stages.forEach { stage ->
+                if (stage.finally && stage.id?.let { it == stageId } == true) {
+                    contextMap["ci.build_status"] = previousStageStatus.name
+                    contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
+                } else if (!stage.status.isNullOrBlank()) {
+                    previousStageStatus = BuildStatus.parse(stage.status)
+                }
                 stage.containers.forEach nextContainer@{ container ->
                     // 如果有分裂Job则只处理分裂Job的上下文
                     container.fetchGroupContainers()?.let { self ->
@@ -76,7 +85,8 @@ class PipelineContextService @Autowired constructor(
                                 contextMap = contextMap,
                                 variables = variables,
                                 outputArrayMap = outputArrayMap,
-                                groupIndex = i
+                                groupIndex = i,
+                                failTaskNameList = failTaskNameList
                             )
                         }
                         container.jobId?.let { jobId ->
@@ -93,7 +103,8 @@ class PipelineContextService @Autowired constructor(
                         contextMap = contextMap,
                         variables = variables,
                         outputArrayMap = null,
-                        groupIndex = 0
+                        groupIndex = 0,
+                        failTaskNameList = failTaskNameList
                     )
                 }
             }
@@ -102,6 +113,45 @@ class PipelineContextService @Autowired constructor(
             logger.warn("BKSystemErrorMonitor|buildContextFailed|", ignore)
         }
 
+        return contextMap
+    }
+
+    fun buildContextToNotice(
+        projectId: String,
+        buildId: String
+    ): Map<String, String> {
+        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
+        val contextMap = mutableMapOf<String, String>()
+        var previousStageStatus = BuildStatus.RUNNING
+        val failTaskNameList = mutableListOf<String>()
+        try {
+            modelDetail.model.stages.forEach { stage ->
+                if (stage.finally) {
+                    return@forEach
+                }
+                if (!stage.status.isNullOrBlank()) {
+                    previousStageStatus = BuildStatus.parse(stage.status)
+                }
+                stage.containers.forEach nextContainer@{ container ->
+                    // 如果有分裂Job则只处理分裂Job的上下文
+                    container.fetchGroupContainers()?.let { self ->
+                        self.forEachIndexed { i, c ->
+                            c.elements.forEach { e ->
+                                checkStatus(e, failTaskNameList)
+                            }
+                        }
+                        return@nextContainer
+                    }
+                    container.elements.forEach { e ->
+                        checkStatus(e, failTaskNameList)
+                    }
+                }
+            }
+            contextMap["ci.build_status"] = previousStageStatus.name
+            contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
+        } catch (ignore: Throwable) {
+            logger.warn("BKSystemErrorMonitor|buildContextToNoticeFailed|", ignore)
+        }
         return contextMap
     }
 
@@ -142,7 +192,8 @@ class PipelineContextService @Autowired constructor(
         contextMap: MutableMap<String, String>,
         variables: Map<String, String>,
         outputArrayMap: MutableMap<String, MutableList<String>>?,
-        groupIndex: Int
+        groupIndex: Int,
+        failTaskNameList: MutableList<String>
     ) {
         // current job
         if (c.id?.let { it == containerId } == true) {
@@ -167,7 +218,13 @@ class PipelineContextService @Autowired constructor(
         contextMap["jobs.$jobId.stage_name"] = stage.name ?: ""
 
         // all element
-        buildStepContext(c, variables, contextMap, outputArrayMap)
+        buildStepContext(
+            c = c,
+            variables = variables,
+            contextMap = contextMap,
+            outputArrayMap = outputArrayMap,
+            failTaskNameList = failTaskNameList
+        )
 
         // #6071 如果当前job为矩阵则追加矩阵上下文
         if (c.id?.let { it == containerId } != true) return
@@ -184,9 +241,11 @@ class PipelineContextService @Autowired constructor(
         c: Container,
         variables: Map<String, String>,
         contextMap: MutableMap<String, String>,
-        outputArrayMap: MutableMap<String, MutableList<String>>?
+        outputArrayMap: MutableMap<String, MutableList<String>>?,
+        failTaskNameList: MutableList<String>
     ) {
         c.elements.forEach { e ->
+            checkStatus(e, failTaskNameList)
             val stepId = e.stepId ?: return@forEach
             contextMap["steps.$stepId.name"] = e.name
             contextMap["steps.$stepId.id"] = e.id ?: ""
@@ -204,6 +263,19 @@ class PipelineContextService @Autowired constructor(
                     variables = variables,
                     outputArrayMap = self
                 )
+            }
+        }
+    }
+
+    private fun checkStatus(
+        e: Element,
+        failTaskNameList: MutableList<String>
+    ) {
+        if (!e.status.isNullOrBlank()) {
+            BuildStatus.parse(e.status).apply {
+                if (isFailure() || isCancel()) {
+                    failTaskNameList.add(e.name)
+                }
             }
         }
     }
