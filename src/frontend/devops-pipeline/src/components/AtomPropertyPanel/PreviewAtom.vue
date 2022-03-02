@@ -63,12 +63,6 @@
             handleUpdatePreviewInput: Function,
             atomValue: Object
         },
-        data () {
-            return {
-                outputNamespaceDesc: this.$t('editPage.namespaceTips'),
-                namespace: ''
-            }
-        },
         computed: {
             inputProps () {
                 try {
@@ -76,14 +70,6 @@
                 } catch (e) {
                     console.warn('getAtomModalInput error', e)
                     return {}
-                }
-            },
-            outputProps () {
-                try {
-                    return this.atomPropsModel.output
-                } catch (e) {
-                    console.warn('getAtomModalOpt error', e)
-                    return null
                 }
             },
             paramsGroupMap () {
@@ -117,9 +103,6 @@
 </script>
 
 <style lang="scss">
-    .output-namespace {
-        margin-bottom: 12px;
-    }
     .atom-output-var-list {
         > h4,
         > p {
