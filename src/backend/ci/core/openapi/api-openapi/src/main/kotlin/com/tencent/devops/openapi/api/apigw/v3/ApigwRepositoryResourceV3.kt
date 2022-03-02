@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @SuppressWarnings("All")
 interface ApigwRepositoryResourceV3 {
 
-    @ApiOperation("代码库列表")
+    @ApiOperation("代码库列表", tags = ["v3_app_repository_list", "v3_user_repository_list"])
     @GET
     @Path("/{projectId}/hasPermissionList")
     fun hasPermissionList(
@@ -79,7 +79,7 @@ interface ApigwRepositoryResourceV3 {
         repositoryType: ScmType?
     ): Result<Page<RepositoryInfo>>
 
-    @ApiOperation("关联代码库")
+    @ApiOperation("关联代码库", tags = ["v3_app_repository_create", "v3_user_repository_create"])
     @POST
     @Path("/{projectId}/")
     fun create(
@@ -99,7 +99,7 @@ interface ApigwRepositoryResourceV3 {
         repository: Repository
     ): Result<RepositoryId>
 
-    @ApiOperation("删除代码库")
+    @ApiOperation("删除代码库", tags = ["v3_user_repository_delete", "v3_app_repository_delete"])
     @DELETE
     @Path("/{projectId}/{repositoryHashId}")
     fun delete(
@@ -120,7 +120,7 @@ interface ApigwRepositoryResourceV3 {
         repositoryHashId: String
     ): Result<Boolean>
 
-    @ApiOperation("编辑关联代码库")
+    @ApiOperation("编辑关联代码库", tags = ["v3_app_repository_edit", "v3_user_repository_edit"])
     @PUT
     @Path("/{projectId}/{repositoryHashId}/")
     fun edit(
