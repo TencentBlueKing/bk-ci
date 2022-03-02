@@ -386,7 +386,7 @@ object ScriptYmlUtils {
                     poolName = preRunsOn.toString()
                 )
             }
-            throw Exception("runs-on 中 ${e.path[0].fieldName} 格式有误,应为 ${e.targetType.name}")
+            throw Exception("runs-on 中 ${e?.path[0]?.fieldName} 格式有误,应为 ${e?.targetType?.name} error message:${e.message}")
         }
     }
 
