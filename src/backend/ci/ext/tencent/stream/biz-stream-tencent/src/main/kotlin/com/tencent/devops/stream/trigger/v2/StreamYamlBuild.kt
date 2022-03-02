@@ -70,7 +70,7 @@ import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.PipelineInfo
 import com.devops.process.yaml.modelCreate.inner.StreamData
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreateInnerImpl
+import com.tencent.devops.stream.trigger.parsers.modelCreate.InnerModelCreatorImpl
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
@@ -91,7 +91,7 @@ class StreamYamlBuild @Autowired constructor(
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineService: GitCIPipelineService,
     private val redisOperation: RedisOperation,
-    private val modelCreateInnerImpl: ModelCreateInnerImpl,
+    private val modelCreateInnerImpl: InnerModelCreatorImpl,
     private val streamStorageBean: StreamStorageBean,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService

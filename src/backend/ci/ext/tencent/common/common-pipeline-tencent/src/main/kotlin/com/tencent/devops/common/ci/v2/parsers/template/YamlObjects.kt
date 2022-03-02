@@ -235,7 +235,7 @@ object YamlObjects {
     }
 }
 
-fun YamlTemplate.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
+fun <T> YamlTemplate<T>.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
     return PreStage(
         name = stage["name"]?.toString(),
         label = stage["label"],
@@ -284,7 +284,7 @@ fun YamlTemplate.getStage(fromPath: String, stage: Map<String, Any>, deepTree: T
 }
 
 // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
-fun YamlTemplate.getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
+fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
     return PreJob(
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],

@@ -47,11 +47,10 @@ import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateDeepTreeNode
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 
 @Suppress("ALL")
-class YamlTemplate(
-    val projectData: TemplateProjectData,
+class YamlTemplate<T>(
+    val extraParameters: T,
 
     // 当前文件
     var filePath: String,
@@ -77,11 +76,11 @@ class YamlTemplate(
 
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
-        param: GetTemplateParam
+        param: GetTemplateParam<T>
     ) -> String
 ) {
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
-    private val templateLib = TemplateLibrary(projectData, getTemplateMethod)
+    private val templateLib = TemplateLibrary(extraParameters, getTemplateMethod)
 
     // 添加图防止模版的循环嵌套
     private val templateGraph = TemplateGraph()
@@ -629,7 +628,7 @@ class YamlTemplate(
             yamlObject = null,
             fileFromPath = filePath,
             filePath = toPath.split(Constants.FILE_REPO_SPLIT)[0],
-            projectData = projectData,
+            extraParameters = extraParameters,
             nowRepo = repo,
             repo = toRepo,
             rootDeepTree = deepTree,

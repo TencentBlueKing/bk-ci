@@ -65,6 +65,45 @@ class YamlTemplateService @Autowired constructor(
         const val ONLY_SUPPORT_ERROR = "Only supports using the settings context to access credentials"
     }
 
+    fun getTemplate(
+        param: GetTemplateParam<TemplateProjectData>
+    ): String {
+        val streamParam = with(param) {
+            if (targetRepo == null) {
+                StreamGetTemplateData(
+                    gitRequestEventId = extraParameters.gitRequestEventId,
+                    token = extraParameters.triggerToken,
+                    forkToken = extraParameters.forkGitToken,
+                    gitProjectId = extraParameters.triggerProjectId,
+                    targetRepo = null,
+                    ref = extraParameters.triggerRef,
+                    personalAccessToken = null,
+                    fileName = path,
+                    changeSet = extraParameters.changeSet,
+                    event = extraParameters.event,
+                    templateType = templateType,
+                    nowRemoteGitProjectId = nowRepoId
+                )
+            } else {
+                StreamGetTemplateData(
+                    gitRequestEventId = extraParameters.gitRequestEventId,
+                    token = null,
+                    forkToken = null,
+                    gitProjectId = extraParameters.sourceProjectId,
+                    targetRepo = targetRepo?.repository,
+                    ref = targetRepo?.ref,
+                    personalAccessToken = targetRepo?.credentials?.personalAccessToken,
+                    fileName = path,
+                    changeSet = extraParameters.changeSet,
+                    event = null,
+                    templateType = templateType,
+                    nowRemoteGitProjectId = targetRepo?.repository
+                )
+            }
+        }
+        return getTemplate(streamParam)
+    }
+
     /**
      * 获取代码库文件，
      * 1、有token直接使用token
@@ -76,79 +115,69 @@ class YamlTemplateService @Autowired constructor(
     @Suppress("ComplexMethod")
     @Throws(YamlBlankException::class, YamlFormatException::class, JsonProcessingException::class)
     fun getTemplate(
-        param: GetTemplateParam
+        param: StreamGetTemplateData
     ): String {
-        val gitRequestEventId = param.gitRequestEventId
-        val token = param.token
-        val event = param.event
-        val forkToken = param.forkToken
-        val gitProjectId = param.gitProjectId
-        val targetRepo = param.targetRepo
-        val ref = param.ref
-        val personalAccessToken = param.personalAccessToken
-        val fileName = param.fileName
-        val changeSet = param.changeSet
-        val templateType = param.templateType
-
-        if (token != null) {
-            // 获取触发库的模板需要对比版本问题
-            val content = if (event is GitMergeRequestEvent && event.object_attributes.action !=
-                TGitMergeActionKind.MERGE.value
-            ) {
-                val (result, orgYaml) = yamlVersion.checkYmlVersion(
-                    mrEvent = event,
-                    targetGitToken = token,
-                    sourceGitToken = forkToken,
-                    filePath = templateDirectory + fileName,
-                    changeSet = changeSet ?: emptySet()
-                )
-                if (!result) {
-                    throw YamlBehindException(templateDirectory + fileName)
+        with(param) {
+            if (token != null) {
+                // 获取触发库的模板需要对比版本问题
+                val content = if (event is GitMergeRequestEvent && event.object_attributes.action !=
+                    TGitMergeActionKind.MERGE.value
+                ) {
+                    val (result, orgYaml) = yamlVersion.checkYmlVersion(
+                        mrEvent = event,
+                        targetGitToken = token,
+                        sourceGitToken = forkToken,
+                        filePath = templateDirectory + fileName,
+                        changeSet = changeSet ?: emptySet()
+                    )
+                    if (!result) {
+                        throw YamlBehindException(templateDirectory + fileName)
+                    }
+                    orgYaml
+                } else {
+                    streamScmService.getYamlFromGit(
+                        token = forkToken ?: token,
+                        gitProjectId = gitProjectId.toString(),
+                        ref = ref!!,
+                        fileName = templateDirectory + fileName,
+                        useAccessToken = true
+                    )
                 }
-                orgYaml
-            } else {
-                streamScmService.getYamlFromGit(
-                    token = forkToken ?: token,
-                    gitProjectId = gitProjectId.toString(),
-                    ref = ref!!,
+                if (content.isBlank()) {
+                    throw YamlBlankException(templateDirectory + fileName)
+                }
+
+                schemaCheck(templateDirectory + fileName, content, templateType)
+
+                return ScriptYmlUtils.formatYaml(content)
+            }
+            if (personalAccessToken.isNullOrBlank()) {
+                val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
+                val content = streamScmService.getYamlFromGit(
+                    token = oAuthToken,
+                    gitProjectId = targetRepo!!,
+                    ref = ref ?: getGitProjectCache(
+                        gitRequestEventId = gitRequestEventId,
+                        token = oAuthToken,
+                        gitProjectId = targetRepo,
+                        useAccessToken = true
+                    ).defaultBranch!!,
                     fileName = templateDirectory + fileName,
                     useAccessToken = true
-                )
+                ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
+
+                schemaCheck(templateDirectory + fileName, content, templateType)
+
+                return ScriptYmlUtils.formatYaml(content)
+            } else {
+                val content = getYamlByPersonToken(param)
+                return ScriptYmlUtils.formatYaml(content)
             }
-            if (content.isBlank()) {
-                throw YamlBlankException(templateDirectory + fileName)
-            }
-
-            schemaCheck(templateDirectory + fileName, content, templateType)
-
-            return ScriptYmlUtils.formatYaml(content)
-        }
-        if (personalAccessToken.isNullOrBlank()) {
-            val oAuthToken = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            val content = streamScmService.getYamlFromGit(
-                token = oAuthToken,
-                gitProjectId = targetRepo!!,
-                ref = ref ?: getGitProjectCache(
-                    gitRequestEventId = gitRequestEventId,
-                    token = oAuthToken,
-                    gitProjectId = targetRepo,
-                    useAccessToken = true
-                ).defaultBranch!!,
-                fileName = templateDirectory + fileName,
-                useAccessToken = true
-            ).ifBlank { throw YamlBlankException(templateDirectory + fileName, targetRepo) }
-
-            schemaCheck(templateDirectory + fileName, content, templateType)
-
-            return ScriptYmlUtils.formatYaml(content)
-        } else {
-            val content = getYamlByPersonToken(param)
-            return ScriptYmlUtils.formatYaml(content)
         }
     }
 
     private fun getYamlByPersonToken(
-        param: GetTemplateParam
+        param: StreamGetTemplateData
     ): String {
         with(param) {
             val (isTicket, key) = getKey(personalAccessToken!!)
@@ -164,7 +193,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref ?: getGitProjectCache(
                     gitRequestEventId = gitRequestEventId,
                     token = personToken,
-                    gitProjectId = targetRepo!!,
+                    gitProjectId = targetRepo,
                     useAccessToken = false
                 ).defaultBranch!!,
                 fileName = templateDirectory + fileName,
@@ -177,7 +206,7 @@ class YamlTemplateService @Autowired constructor(
         }
     }
 
-    private fun getTicket(param: GetTemplateParam, key: String): String {
+    private fun getTicket(param: StreamGetTemplateData, key: String): String {
         with(param) {
             try {
                 return CommonCredentialUtils.getCredential(
@@ -254,8 +283,7 @@ class YamlTemplateService @Autowired constructor(
 
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
-        return if (key.startsWith("settings.") && (
-                key.endsWith(".password") ||
+        return if (key.startsWith("settings.") && (key.endsWith(".password") ||
                     key.endsWith(".access_token") ||
                     key.endsWith(".username") ||
                     key.endsWith(".secretKey") ||
@@ -266,7 +294,8 @@ class YamlTemplateService @Autowired constructor(
                     key.endsWith(".cosappId") ||
                     key.endsWith(".secretId") ||
                     key.endsWith(".region")
-                )) {
+                    )
+        ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {
             key
