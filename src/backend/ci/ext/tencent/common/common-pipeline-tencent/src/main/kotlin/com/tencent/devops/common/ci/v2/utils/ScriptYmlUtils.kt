@@ -36,6 +36,7 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
@@ -386,7 +387,7 @@ object ScriptYmlUtils {
                     poolName = preRunsOn.toString()
                 )
             }
-            throw Exception("runs-on 中 ${e?.path[0]?.fieldName} 格式有误,应为 ${e?.targetType?.name} error message:${e.message}")
+            throw YamlFormatException("runs-on 中 ${e?.path[0]?.fieldName} 格式有误,应为 ${e?.targetType?.name} error message:${e.message}")
         }
     }
 
