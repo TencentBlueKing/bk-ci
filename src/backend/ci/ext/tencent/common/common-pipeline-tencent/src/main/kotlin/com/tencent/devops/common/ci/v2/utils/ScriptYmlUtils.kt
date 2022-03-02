@@ -380,9 +380,15 @@ object ScriptYmlUtils {
             } else {
                 runsOn
             }
-        } catch (e: Exception) {
-            return RunsOn(
-                poolName = preRunsOn.toString()
+        } catch (e: MismatchedInputException) {
+            if (preRunsOn is String || preRunsOn is List<*>) {
+                return RunsOn(
+                    poolName = preRunsOn.toString()
+                )
+            }
+            throw YamlFormatException(
+                "runs-on 中 ${e?.path[0]?.fieldName} 格式有误," +
+                    "应为 ${e?.targetType?.name}, error message:${e.message}"
             )
         }
     }
