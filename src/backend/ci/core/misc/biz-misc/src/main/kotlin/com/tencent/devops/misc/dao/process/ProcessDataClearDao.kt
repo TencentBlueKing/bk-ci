@@ -33,6 +33,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.TPipelineBuildSummary
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
+import com.tencent.devops.model.process.tables.TPipelineBuildTemplateAcrossInfo
 import com.tencent.devops.model.process.tables.TPipelineBuildVar
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineLabelPipeline
@@ -227,6 +228,22 @@ class ProcessDataClearDao {
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(PROJECT_ID.eq(projectId))
                 .execute()
+        }
+    }
+
+    fun deletePipelineTemplateAcrossInfo(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+        }
+    }
+
+    fun deletePipelineBuildTemplateAcrossInfo(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
         }
     }
 }

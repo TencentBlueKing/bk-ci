@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiModelProperty
 data class ManualReviewParam(
     @ApiModelProperty("参数名", required = true)
     var key: String = "",
-    @ApiModelProperty("参数内容", required = true)
+    @ApiModelProperty("参数内容(Any 类型)", required = true, dataType = "string")
     var value: Any? = "",
     @ApiModelProperty("参数类型", required = false)
     val valueType: ManualReviewParamType = ManualReviewParamType.STRING,

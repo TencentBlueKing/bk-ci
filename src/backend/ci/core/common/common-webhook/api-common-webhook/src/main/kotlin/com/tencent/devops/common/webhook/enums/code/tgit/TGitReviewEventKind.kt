@@ -25,54 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.code.git.api
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+package com.tencent.devops.common.webhook.enums.code.tgit
 
 /**
- * {
- *   "id": 21382,
- *   "forks_count": 0,
- *   "config_storage": {
- *     "limit_lfs_file_size": 512000,
- *     "limit_size": 512000,
- *     "limit_file_size": 512000,
- *     "limit_lfs_size": 512000
- *   },
- *   "description": "abcdefg",
- *   "public": false,
- *   "archived": false,
- *   "visibility_level": 0,
- *   "name": "devops",
- *   "name_with_namespace": "devops/devops",
- *   "path": "devops",
- *   "path_with_namespace": "devops/devops",
- *   "default_branch": "master",
- *   "ssh_url_to_repo": "git@git.com:devops/devops.git",
- *   "http_url_to_repo": "http://git.com/devops/devops.git",
- *   "web_url": "http://git.com/devops/devops",
- *   "issues_enabled": true,
- *   "merge_requests_enabled": true,
- *   "wiki_enabled": true,
- *   "snippets_enabled": true,
- *   "created_at": "2017-01-13T09:25:27+0000",
- *   "last_activity_at": "2018-01-08T06:53:14+0000",
- *   "creator_id": 8919,
- *   "namespace": {
- *     "created_at": "2016-11-24T07:18:38+0000",
- *     "description": "DEVOPS",
- *     "id": 9456,
- *     "name": "devops",
- *     "owner_id": null,
- *     "path": "devops",
- *     "updated_at": "2016-11-24T07:18:38+0000"
- *   },
- *   "avatar_url": null,
- *   "star_count": 0
- *   }
+ * git review事件event字段
+ * create: 创建
+ * invite: 邀请
+ * require_change: 要求修改
+ * reopen: 重开
+ * approve: 通过
+ * deny: 拒绝
+ * close: 关闭
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitProject(
-    val id: Long,
-    val description: String
-)
+enum class TGitReviewEventKind(val value: String) {
+    CREATE("create"),
+    INVITE("invite"),
+    REQUIRE_CHANGE("require_change"),
+    REOPEN("reopen"),
+    APPROVE("approve"),
+    DENY("deny"),
+    CLOSE("close")
+    ;
+}

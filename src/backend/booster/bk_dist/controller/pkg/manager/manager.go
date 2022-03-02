@@ -709,20 +709,26 @@ func (m *mgr) getCommonSetting(projectID, scene string, batchMode bool) []*types
 func (m *mgr) setWorkerConfig(config *types.CommonConfig) error {
 	blog.Debugf("mgr: ready set worker config with config:%+v", *config)
 
-	work := m.worksPool.find(config.WorkerKey.ProjectID, config.WorkerKey.Scene, config.WorkerKey.BatchMode)
-	if work == nil {
-		blog.Infof("mgr: work no existed with batch mode(%v) for project(%s) scene(%s)",
-			config.WorkerKey.BatchMode, config.WorkerKey.ProjectID, config.WorkerKey.Scene)
-		return nil
+	works := []*types.Work{}
+	for _, work := range m.worksPool.all() {
+		info := work.Basic().Info()
+		if info.ProjectID() == config.WorkerKey.ProjectID &&
+			info.Scene() == config.WorkerKey.Scene &&
+			info.IsBatchMode() == config.WorkerKey.BatchMode {
+			works = append(works, work)
+		}
 	}
 
 	if config.Configkey == dcSDK.CommonConfigKeyToolChain {
 		sdkToolChain, ok := config.Config.(dcSDK.OneToolChain)
 		if ok {
 			toolchain := sdkToolChain2Types(&sdkToolChain)
-			work.Lock()
-			defer work.Unlock()
-			_ = work.Basic().SetToolChain(toolchain)
+			for _, work := range works {
+				work.Lock()
+				blog.Infof("mgr: ready set tool chain(%s) to worker(%s)", sdkToolChain.ToolKey, work.ID())
+				_ = work.Basic().SetToolChain(toolchain)
+				work.Unlock()
+			}
 		}
 	}
 

@@ -84,6 +84,7 @@ class CallBackControlTest : TestBase() {
             curVersion = 2,
             latestBuildNum = 1,
             latestVersion = 1,
+            lastModifyUser = "yongyiduan",
             executeTime = 100
         )
 

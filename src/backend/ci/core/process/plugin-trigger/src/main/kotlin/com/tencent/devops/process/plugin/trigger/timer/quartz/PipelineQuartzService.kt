@@ -147,7 +147,7 @@ class PipelineJobBean(
     fun execute(context: JobExecutionContext?) {
         val jobKey = context?.jobDetail?.key ?: return
         val comboKey = jobKey.name
-        val comboKeys = comboKey.split("_")
+        val comboKeys = comboKey.split(Regex("_"), 3)
         val pipelineId = comboKeys[0]
         val crontabMd5 = comboKeys[1]
         val projectId = comboKeys[2]

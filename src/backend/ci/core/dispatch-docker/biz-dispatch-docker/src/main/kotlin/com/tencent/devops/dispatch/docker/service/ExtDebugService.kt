@@ -25,41 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
+package com.tencent.devops.dispatch.docker.service
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
+interface ExtDebugService {
+    fun startDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String?
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitIssue(
-    val user: GithubUser,
-    val repository: GitRepository,
-    @JsonProperty("object_attributes")
-    val objectAttributes: GitIssueAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "issue"
-    }
+    fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String?
+
+    fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean
 }
-
-data class GitIssueAttributes(
-    val id: Long,
-    val title: String,
-    @JsonProperty("assignee_id")
-    val assigneeId: String,
-    @JsonProperty("author_id")
-    val authorId: String,
-    @JsonProperty("project_id")
-    val projectId: String,
-    val position: Long,
-    @JsonProperty("branch_name")
-    val branchName: String? = null,
-    val description: String? = null,
-    @JsonProperty("milestone_id")
-    val milestoneId: String? = null,
-    val state: String,
-    val iid: String,
-    val url: String,
-    val action: String
-)
