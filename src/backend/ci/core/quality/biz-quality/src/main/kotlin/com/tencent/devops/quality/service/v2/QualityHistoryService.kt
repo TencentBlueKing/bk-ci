@@ -207,7 +207,11 @@ class QualityHistoryService @Autowired constructor(
         )
     }
 
-    fun serviceListByBuildId(projectId: String, pipelineId: String, buildId: String): List<QualityRuleIntercept> {
+    fun serviceListByBuildId(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<QualityRuleIntercept> {
         val interceptHistory = historyDao.listByBuildId(
             dslContext = dslContext,
             projectId = projectId,
@@ -220,12 +224,12 @@ class QualityHistoryService @Autowired constructor(
             projectId = projectId,
             ruleIds = ruleIdSet
         )?.map { it.id to it }?.toMap()
-        return interceptHistory.map {
+        return interceptHistory.distinctBy { it.ruleId }.map {
             QualityRuleIntercept(
                 pipelineId = it.pipelineId,
                 pipelineName = "",
                 buildId = it.buildId,
-                ruleHashId = "",
+                ruleHashId = HashUtil.encodeLongId(it.ruleId),
                 ruleName = ruleMap?.get(it.ruleId)?.name ?: "",
                 interceptTime = it.createTime.timestampmilli(),
                 result = RuleInterceptResult.valueOf(it.result),
@@ -391,8 +395,11 @@ class QualityHistoryService @Autowired constructor(
         )
 
         val ruleIdList = recordList.map { it.ruleId }
-        val ruleIdToNameMap = ruleService.serviceListRuleByIds(projectId = projectId, ruleIds = ruleIdList.toSet())
-            .map { it.hashId to it.name }.toMap()
+        val ruleIdToNameMap = qualityRuleDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            ruleIds = ruleIdList.toSet()
+        )?.map { it.id to it.name }?.toMap()
         val pipelineIdList = recordList.map { it.pipelineId }
         val pipelineIdToNameMap = getPipelineByIds(projectId = projectId, pipelineIdSet = pipelineIdList.toSet())
             .map { it.pipelineId to it }.toMap()
@@ -416,7 +423,7 @@ class QualityHistoryService @Autowired constructor(
                 timestamp = it.createTime.timestamp(),
                 interceptResult = RuleInterceptResult.valueOf(it.result),
                 ruleHashId = hisRuleHashId,
-                ruleName = ruleIdToNameMap[hisRuleHashId] ?: "",
+                ruleName = ruleIdToNameMap?.get(it.ruleId) ?: "",
                 pipelineId = it.pipelineId,
                 pipelineName = pipeline?.pipelineName ?: "",
                 buildId = it.buildId,

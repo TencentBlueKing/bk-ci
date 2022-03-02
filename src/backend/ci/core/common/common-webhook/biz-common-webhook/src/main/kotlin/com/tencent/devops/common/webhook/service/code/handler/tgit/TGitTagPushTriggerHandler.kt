@@ -28,21 +28,33 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
-import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
-import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
-import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_OPERATION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
+import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
+import com.tencent.devops.common.webhook.service.code.filter.UserFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
+import com.tencent.devops.common.webhook.util.WebhookUtils
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
@@ -100,6 +112,24 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
         startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.user_name
         startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = event.create_from ?: ""
         startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits ?: emptyList()))
+
+        // 兼容stream变量
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url
+        startParams[PIPELINE_GIT_REF] = event.ref
+        startParams[CI_BRANCH] = getBranchName(event)
+        startParams[PIPELINE_GIT_EVENT] = if (event.isDeleteTag()) {
+            DELETE_EVENT
+        } else {
+            GitTagPushEvent.classType
+        }
+        startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
+            event.commits?.firstOrNull()?.author?.name ?: ""
+        startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
+        startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
+        if (!event.create_from.isNullOrBlank()) {
+            startParams[PIPELINE_GIT_TAG_FROM] = event.create_from!!
+        }
+        startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/-/tags/${getBranchName(event)}"
         return startParams
     }
 
@@ -128,7 +158,23 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 includedBranches = WebhookUtils.convert(tagName),
                 excludedBranches = WebhookUtils.convert(excludeTagName)
             )
-            return listOf(urlFilter, eventTypeFilter, branchFilter)
+            val userFilter = UserFilter(
+                pipelineId = pipelineId,
+                triggerOnUser = getUsername(event),
+                includedUsers = WebhookUtils.convert(includeUsers),
+                excludedUsers = WebhookUtils.convert(excludeUsers)
+            )
+            val filters = mutableListOf(urlFilter, eventTypeFilter, branchFilter, userFilter)
+            if (event.create_from != null) {
+                val fromBranchFilter = BranchFilter(
+                    pipelineId = pipelineId,
+                    triggerOnBranchName = event.create_from!!,
+                    includedBranches = WebhookUtils.convert(fromBranches),
+                    excludedBranches = emptyList()
+                )
+                filters.add(fromBranchFilter)
+            }
+            return filters
         }
     }
 }

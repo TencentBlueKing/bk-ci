@@ -110,7 +110,8 @@ open class ScriptTask : ITask() {
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
                 continueNoneZero = continueNoneZero.toBoolean(),
                 errorMessage = "Fail to run the plugin",
-                charsetType = charsetType
+                charsetType = charsetType,
+                taskId = buildTask.taskId
             )
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
@@ -161,7 +162,7 @@ open class ScriptTask : ITask() {
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
 
             // 设置质量红线指标信息
-            setGatewayValue(workspace)
+            setGatewayValue(workspace, buildTask.taskId ?: "", buildTask.elementName ?: "")
         }
     }
 
@@ -170,7 +171,7 @@ open class ScriptTask : ITask() {
         buildVariables: BuildVariables
     ): List<BuildEnv> = buildVariables.buildEnvs
 
-    private fun setGatewayValue(workspace: File) {
+    private fun setGatewayValue(workspace: File, taskId: String, taskName: String) {
         try {
             val gatewayFile = File(workspace, ScriptEnvUtils.getQualityGatewayEnvFile())
             if (!gatewayFile.exists()) return
@@ -193,7 +194,7 @@ open class ScriptTask : ITask() {
                 LinuxScriptElement.classType
             }
             LoggerService.addNormalLine("save gateway value($elementType): $data")
-            gatewayResourceApi.saveScriptHisMetadata(elementType, data)
+            gatewayResourceApi.saveScriptHisMetadata(elementType, taskId, taskName, data)
             gatewayFile.delete()
         } catch (ignore: Exception) {
             LoggerService.addErrorLine("save gateway value fail: ${ignore.message}")

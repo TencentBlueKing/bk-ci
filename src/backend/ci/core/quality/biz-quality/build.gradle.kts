@@ -41,4 +41,5 @@ dependencies {
 
     api(project(":core:project:api-project"))
     api(project(":core:notify:api-notify"))
+    api(project(":core:auth:api-auth"))
 }

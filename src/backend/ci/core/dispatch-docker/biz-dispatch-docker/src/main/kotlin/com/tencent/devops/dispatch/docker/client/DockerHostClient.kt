@@ -52,7 +52,9 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.Credential
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.Pool
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
@@ -101,23 +103,6 @@ class DockerHostClient @Autowired constructor(
         poolNo: Int,
         driftIpInfo: String
     ) {
-        pipelineDockerBuildDao.startBuild(
-            dslContext = dslContext,
-            projectId = dispatchMessage.projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId.toInt(),
-            secretKey = dispatchMessage.secretKey,
-            status = PipelineTaskStatus.RUNNING,
-            zone = if (null == dispatchMessage.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                dispatchMessage.zone!!.name
-            },
-            dockerIp = dockerIp,
-            poolNo = poolNo
-        )
-
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion
@@ -156,6 +141,29 @@ class DockerHostClient @Autowired constructor(
                 password = ticketsMap["v2"] as String
             }
         }
+
+        pipelineDockerBuildDao.saveBuildHistory(
+            dslContext = dslContext,
+            projectId = dispatchMessage.projectId,
+            pipelineId = dispatchMessage.pipelineId,
+            buildId = dispatchMessage.buildId,
+            vmSeqId = dispatchMessage.vmSeqId.toInt(),
+            secretKey = dispatchMessage.secretKey,
+            status = PipelineTaskStatus.RUNNING,
+            zone = if (null == dispatchMessage.zone) {
+                Zone.SHENZHEN.name
+            } else {
+                dispatchMessage.zone!!.name
+            },
+            dockerIp = dockerIp,
+            poolNo = poolNo,
+            startupMessage = JsonUtil.toJson(Pool(
+                container = dockerImage,
+                credential = Credential(userName, password),
+                env = null,
+                imageType = dispatchType.imageType?.type
+            ))
+        )
 
         val requestBody = DockerHostBuildInfo(
             projectId = dispatchMessage.projectId,
@@ -202,7 +210,7 @@ class DockerHostClient @Autowired constructor(
     ) {
         val secretKey = ApiUtil.randomSecretKey()
 
-        val id = pipelineDockerBuildDao.startBuild(
+        val id = pipelineDockerBuildDao.saveBuildHistory(
             dslContext = dslContext,
             projectId = event.projectId,
             pipelineId = event.pipelineId,

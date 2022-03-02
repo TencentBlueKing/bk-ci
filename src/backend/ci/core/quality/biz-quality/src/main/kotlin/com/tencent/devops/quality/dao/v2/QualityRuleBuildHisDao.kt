@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
+import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
@@ -71,7 +72,8 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 CREATE_TIME,
                 CREATE_USER,
                 GATE_KEEPERS,
-                STAGE_ID
+                STAGE_ID,
+                TASK_STEPS
             ).values(
                 projectId,
                 pipelineId,
@@ -88,7 +90,8 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 LocalDateTime.now(),
                 userId,
                 ruleRequest.gateKeepers?.joinToString(",") ?: "",
-                ruleRequest.stageId
+                ruleRequest.stageId,
+                JsonUtil.toJson(ruleRequest.taskSteps ?: listOf<QualityRule.RuleTask>())
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -175,30 +178,6 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 .set(INDICATOR_THRESHOLDS, indicatorThreshold)
                 .where(ID.eq(ruleBuildId))
                 .execute()
-        }
-    }
-
-    fun listTimeOutRuleCount(dslContext: DSLContext, dateTime: LocalDateTime): Int? {
-        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
-            dslContext.selectCount().from(this)
-                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
-                .and(CREATE_TIME.lt(dateTime))
-                .fetchOne(0, Int::class.java)
-        }
-    }
-
-    fun listTimeoutRule(
-        dslContext: DSLContext,
-        dateTime: LocalDateTime,
-        limit: Int,
-        offset: Int
-    ): Result<TQualityRuleBuildHisRecord> {
-        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
-            dslContext.selectFrom(this)
-                .where(STATUS.eq(RuleInterceptResult.WAIT.name))
-                .and(CREATE_TIME.lt(dateTime))
-                .limit(limit).offset(offset)
-                .fetch()
         }
     }
 
