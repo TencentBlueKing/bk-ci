@@ -132,6 +132,7 @@ object Runner {
         LoggerService.start()
         val variables = buildVariables.variablesWithType
         val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
+        LoggerService.projectId = buildVariables.projectId
         LoggerService.executeCount = retryCount.toInt() + 1
         LoggerService.jobId = buildVariables.containerHashId
         LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
@@ -172,7 +173,6 @@ object Runner {
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
-                        LoggerService.projectId = buildVariables.projectId
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
 
