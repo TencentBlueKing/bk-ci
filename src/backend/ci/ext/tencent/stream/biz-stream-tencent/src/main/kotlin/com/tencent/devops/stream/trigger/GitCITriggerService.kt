@@ -497,10 +497,7 @@ class GitCITriggerService @Autowired constructor(
     ): Pair<List<YamlPathListEntry>, Set<String>> {
         // 获取目标分支的文件列表
         val targetBranchYamlPathList = getYamlPathList(
-            isFork = isFork,
-            forkGitToken = forkGitToken,
-            gitRequestEvent = gitRequestEvent,
-            mrEvent = true,
+            gitProjectId = gitRequestEvent.gitProjectId,
             gitToken = gitToken,
             ref = streamScmService.getTriggerBranch(targetBranch)
         ).toSet()
@@ -526,11 +523,12 @@ class GitCITriggerService @Autowired constructor(
 
         // 获取源分支文件列表
         val sourceBranchYamlPathList = getYamlPathList(
-            isFork = isFork,
-            forkGitToken = forkGitToken,
-            gitRequestEvent = gitRequestEvent,
-            mrEvent = true,
-            gitToken = gitToken,
+            gitProjectId = gitRequestEvent.sourceGitProjectId,
+            gitToken = if (isFork) {
+                forkGitToken!!
+            } else {
+                gitToken
+            },
             ref = gitRequestEvent.commitId
         ).toSet()
 
@@ -644,8 +642,8 @@ class GitCITriggerService @Autowired constructor(
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
     private fun getProjectId(isMrEvent: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
         with(gitRequestEvent) {
-            return if (isMrEvent && sourceGitProjectId != null && sourceGitProjectId != gitProjectId) {
-                sourceGitProjectId!!
+            return if (isMrEvent && sourceGitProjectId != gitProjectId) {
+                sourceGitProjectId
             } else {
                 gitProjectId
             }

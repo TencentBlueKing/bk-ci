@@ -50,7 +50,7 @@ data class GitRequestEvent(
     @ApiModelProperty("工蜂项目ID")
     val gitProjectId: Long,
     @ApiModelProperty("源工蜂项目ID")
-    val sourceGitProjectId: Long?,
+    val sourceGitProjectId: Long,
     @ApiModelProperty("分支名")
     val branch: String,
     @ApiModelProperty("目标分支名")
@@ -89,7 +89,7 @@ data class GitRequestEvent(
     // 获取fork库的项目id
     fun getForkGitProjectId(): Long? {
         return if (isFork() && sourceGitProjectId != gitProjectId) {
-            sourceGitProjectId!!
+            sourceGitProjectId
         } else {
             null
         }
@@ -102,9 +102,7 @@ data class GitRequestEvent(
 fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
-        sourceGitProjectId != null &&
-        sourceGitProjectId != gitProjectId
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value && sourceGitProjectId != gitProjectId
 }
 
 /**
