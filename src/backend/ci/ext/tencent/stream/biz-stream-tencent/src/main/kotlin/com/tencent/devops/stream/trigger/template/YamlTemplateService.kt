@@ -36,7 +36,7 @@ import com.tencent.devops.stream.common.exception.YamlBlankException
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
-import com.tencent.devops.stream.trigger.template.pojo.GetTemplateParam
+import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.util.CommonCredentialUtils
@@ -164,7 +164,7 @@ class YamlTemplateService @Autowired constructor(
                 ref = ref ?: getGitProjectCache(
                     gitRequestEventId = gitRequestEventId,
                     token = personToken,
-                    gitProjectId = targetRepo,
+                    gitProjectId = targetRepo!!,
                     useAccessToken = false
                 ).defaultBranch!!,
                 fileName = templateDirectory + fileName,

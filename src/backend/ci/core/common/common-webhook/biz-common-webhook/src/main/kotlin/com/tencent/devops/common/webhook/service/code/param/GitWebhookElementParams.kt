@@ -42,6 +42,7 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         return CodeGitWebHookTriggerElement::class.java
     }
 
+    @SuppressWarnings("ComplexMethod")
     override fun getWebhookElementParams(
         element: CodeGitWebHookTriggerElement,
         variables: Map<String, String>
@@ -57,6 +58,12 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         } else {
             EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
         }
+        params.includeUsers = if (element.includeUsers == null || element.includeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.includeUsers!!.joinToString(","), variables)
+        }
+        params.block = isBlock(element)
         params.branchName = EnvUtils.parseEnv(element.branchName ?: "", variables)
         params.eventType = element.eventType
         params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
@@ -69,13 +76,22 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
         params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         params.webhookQueue = element.webhookQueue ?: false
-        params.includeCrState = if (element.includeCrState.isNullOrEmpty()) {
+        params.includeCrState = joinToString(element.includeCrState)
+        params.includeCrTypes = joinToString(element.includeCrTypes)
+        params.includeNoteComment = joinToString(element.includeNoteComment)
+        params.includeNoteTypes = joinToString(element.includeNoteTypes)
+        params.includeIssueAction = joinToString(element.includeIssueAction)
+        params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
+        params.includeMrAction = joinToString(element.includeMrAction)
+        return params
+    }
+
+    private fun joinToString(list: List<String>?): String {
+        return if (list.isNullOrEmpty()) {
             ""
         } else {
-            element.includeCrState!!.joinToString(",")
+            list.joinToString(",")
         }
-        params.block = isBlock(element)
-        return params
     }
 
     private fun isBlock(element: CodeGitWebHookTriggerElement): Boolean {

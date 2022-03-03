@@ -53,7 +53,9 @@ data class RuleCreateRequestV3(
     @ApiModelProperty("红线把关人", required = false)
     val gateKeepers: List<String>?,
     @ApiModelProperty("红线所在stage", required = false)
-    val stageId: String
+    val stageId: String,
+    @ApiModelProperty("红线指定的任务节点", required = false)
+    val taskSteps: List<CreateRequestTask>?
 ) {
     data class CreateRequestIndicator(
         val atomCode: String,
@@ -75,5 +77,12 @@ data class RuleCreateRequestV3(
         val auditUserList: List<String>?,
         @ApiModelProperty("审核超时时间", required = false)
         val auditTimeoutMinutes: Int?
+    )
+
+    data class CreateRequestTask(
+        @ApiModelProperty("任务节点名", required = false)
+        val taskName: String?,
+        @ApiModelProperty("指标名", required = false)
+        val indicatorEnName: String?
     )
 }
