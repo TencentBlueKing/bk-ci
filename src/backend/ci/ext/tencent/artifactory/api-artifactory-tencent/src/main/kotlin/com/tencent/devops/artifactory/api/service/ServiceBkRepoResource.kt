@@ -25,41 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.artifactory.api.service
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * 仓库配置
- */
-@Component
-class BkRepoConfig {
+@Api(tags = ["SERVICE_BK_REPO"], description = "版本仓库-BkRepo")
+@Path("/service/bkrepos")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceBkRepoResource {
 
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl:}")
-    val bkrepoApiUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库名称
-    @Value("\${bkrepo.staticRepoName:static}")
-    val bkrepoStaticRepoName: String = "static"
-
-    // 蓝盾新仓库静态资源仓库用户名
-    @Value("\${bkrepo.staticUserName:g_bkstore}")
-    val bkrepoStaticUserName: String = "g_bkstore"
-
-    // 蓝盾新仓库静态资源仓库密码
-    @Value("\${bkrepo.staticPassword:}")
-    val bkrepoStaticPassword: String = ""
-
-    // 蓝盾新仓库执行包仓库名称
-    @Value("\${bkrepo.pkgRepoName:generic-local}")
-    val bkrepoPkgRepoName: String = "generic-local"
-
-    // 蓝盾新仓库docker仓库名称
-    @Value("\${bkrepo.dockerRepoName:docker-local}")
-    val bkrepoDockerRepoName: String = "docker-local"
-
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
+    @ApiOperation("上传静态文件")
+    @POST
+    @Path("/repos/{repoName}/static/file/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadStaticFile(
+        @ApiParam("仓库名称", required = true)
+        @PathParam("repoName")
+        repoName: String,
+        @ApiParam("目标路径", required = true)
+        @QueryParam("destPath")
+        destPath: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }
