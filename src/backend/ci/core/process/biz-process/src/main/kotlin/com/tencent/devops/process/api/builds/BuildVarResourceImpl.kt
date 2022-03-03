@@ -69,6 +69,9 @@ class BuildVarResourceImpl @Autowired constructor(
             checkVariable(variableName = contextName)
         }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
+        if (VariableType.valueOf(contextName) == VariableType.BK_CI_BUILD_TASK_ID){
+            return Result(taskId)
+        }
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
         val variables = buildVariableService.getAllVariable(projectId, buildId)
