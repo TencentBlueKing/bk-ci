@@ -791,7 +791,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 channelCode = channelCode ?: ChannelCode.BS
             )
-            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, existModel, param)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
 
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(

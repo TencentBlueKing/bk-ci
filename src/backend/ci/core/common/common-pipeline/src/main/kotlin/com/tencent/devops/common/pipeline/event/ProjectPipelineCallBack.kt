@@ -25,13 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service
+package com.tencent.devops.common.pipeline.event
 
-import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface ProjectPipelineCallBackUrlGenerator {
-
-    fun generateCallBackUrl(region: CallBackNetWorkRegionType?, url: String): String
-
-    fun encodeCallbackUrl(url: String): String
-}
+@ApiModel("项目的流水线回调配置")
+data class ProjectPipelineCallBack(
+    @ApiModelProperty("流水线id", required = false)
+    val id: Long? = null,
+    @ApiModelProperty("项目id", required = false)
+    val projectId: String,
+    @ApiModelProperty("回调url地址", required = false)
+    val callBackUrl: String,
+    @ApiModelProperty("事件", required = false)
+    val events: String,
+    @ApiModelProperty("密钥", required = false)
+    val secretToken: String?
+)

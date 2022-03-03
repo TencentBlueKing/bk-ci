@@ -25,10 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.enums
+package com.tencent.devops.common.pipeline.event
 
-enum class CallBackNetWorkRegionType {
-    DEVNET,
-    OSS,
-    IDC
-}
+data class PipelineCallbackEvent(
+    val callbackEvent: CallBackEvent,
+    var callbackUrl: String,
+    val secretToken: String?,
+    val callbackName: String,
+    val region: CallBackNetWorkRegionType?
+)
