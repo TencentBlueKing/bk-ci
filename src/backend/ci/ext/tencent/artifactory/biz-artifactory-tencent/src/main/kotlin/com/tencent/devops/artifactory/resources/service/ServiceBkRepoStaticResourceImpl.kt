@@ -25,43 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.api.service
+package com.tencent.devops.artifactory.resources.service
 
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoStaticResource
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoStaticService
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
+import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
+import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_BK_REPO"], description = "版本仓库-BkRepo")
-@Path("/service/bkrepos")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceBkRepoResource {
+@RestResource
+class ServiceBkRepoStaticResourceImpl @Autowired constructor(
+    private val bkRepoStaticService: BkRepoStaticService
+) : ServiceBkRepoStaticResource {
 
-    @ApiOperation("上传静态文件")
-    @POST
-    @Path("/static/file/upload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun uploadStaticFile(
-        @ApiParam("用户ID", required = true)
-        @QueryParam("userId")
+    override fun uploadStaticFile(
         userId: String,
-        @ApiParam("目标路径", required = true)
-        @QueryParam("destPath")
         destPath: String,
-        @ApiParam("文件", required = true)
-        @FormDataParam("file")
         inputStream: InputStream,
-        @FormDataParam("file")
         disposition: FormDataContentDisposition
-    ): Result<String>
+    ): Result<String> {
+        return Result(bkRepoStaticService.uploadStaticFile(
+            userId = userId,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        ))
+    }
 }

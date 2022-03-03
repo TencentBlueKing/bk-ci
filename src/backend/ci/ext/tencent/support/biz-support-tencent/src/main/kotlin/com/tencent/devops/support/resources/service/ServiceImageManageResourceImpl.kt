@@ -89,8 +89,11 @@ class ServiceImageManageResourceImpl @Autowired constructor(private val client: 
             inputStream.copyTo(it)
         }
         val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
+        val destPath = "image/$fileName"
+        val serviceUrl =
+            "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
-            OkhttpUtils.uploadFile(serviceUrlPrefix, file).use { response ->
+            OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
                     return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
