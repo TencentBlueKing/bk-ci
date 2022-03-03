@@ -33,7 +33,6 @@ import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import org.junit.Test
 
@@ -125,17 +124,7 @@ class YamlTemplateTest {
         val preScriptBuildYaml = YamlTemplate(
             filePath = testYaml,
             yamlObject = preTemplateYamlObject,
-            projectData = TemplateProjectData(
-                gitRequestEventId = 1,
-                triggerUserId = "ruotiantang",
-                triggerProjectId = 580280,
-                triggerToken = "",
-                triggerRef = "master",
-                sourceProjectId = 580280,
-                changeSet = null,
-                event = null,
-                forkGitToken = null
-            ),
+            extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
             nowRepo = null,
             repo = null
@@ -151,12 +140,12 @@ class YamlTemplateTest {
     }
 
     private fun getTestTemplate(
-        param: GetTemplateParam
+        param: GetTemplateParam<Any?>
     ): String {
         val newPath = if (param.targetRepo == null) {
-            "templates/${param.fileName}"
+            "templates/${param.path}"
         } else {
-            "templates/${param.targetRepo}/templates/${param.fileName}"
+            "templates/${param.targetRepo!!.repository}/templates/${param.path}"
         }
         val sb = getStrFromResource(newPath)
         return ScriptYmlUtils.formatYaml(sb)
