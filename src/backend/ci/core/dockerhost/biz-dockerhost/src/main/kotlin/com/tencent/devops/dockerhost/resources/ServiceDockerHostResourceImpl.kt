@@ -42,8 +42,6 @@ import com.tencent.devops.dockerhost.pojo.DockerRunResponse
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
-import com.tencent.devops.dockerhost.utils.ThreadPoolName
-import com.tencent.devops.dockerhost.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -142,11 +140,9 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     }
 
     override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
-        ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.DEFAULT.name).run {
-            logger.info("Start stop the container, containerId: ${dockerHostBuildInfo.containerId}")
-            dockerHostBuildService.stopContainer(dockerHostBuildInfo)
-            logger.info("Stop the container success, containerId: ${dockerHostBuildInfo.containerId}")
-        }
+        logger.info("Start stop the container, containerId: ${dockerHostBuildInfo.containerId}")
+        dockerHostBuildService.stopContainer(dockerHostBuildInfo)
+        logger.info("Stop the container success, containerId: ${dockerHostBuildInfo.containerId}")
 
         return Result(true)
     }
