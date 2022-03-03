@@ -99,8 +99,8 @@ class QualityHisMetadataService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementType: String,
-        taskId: String,
-        taskName: String,
+        taskId: String?,
+        taskName: String?,
         data: Map<String, String>
     ): Boolean {
         logger.info("save history metadata for build($elementType): $buildId")
@@ -134,8 +134,8 @@ class QualityHisMetadataService @Autowired constructor(
                 detail = metadata?.elementDetail ?: "",
                 type = type,
                 elementType = metadata?.elementType ?: "",
-                taskId = taskId,
-                taskName = taskName,
+                taskId = taskId ?: "",
+                taskName = taskName ?: "",
                 msg = "from script element",
                 value = value,
                 extra = null
