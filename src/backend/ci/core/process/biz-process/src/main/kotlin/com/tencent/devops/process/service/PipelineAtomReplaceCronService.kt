@@ -910,7 +910,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
-            atomName = toAtomInfo.name,
             version = toAtomVersion,
             data = dataMap
         )
@@ -944,7 +943,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
-            atomName = toAtomInfo.name,
             version = toAtomVersion,
             data = dataMap
         )
