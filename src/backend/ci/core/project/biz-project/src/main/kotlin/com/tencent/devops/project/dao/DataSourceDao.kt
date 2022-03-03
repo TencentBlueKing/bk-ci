@@ -50,6 +50,7 @@ class DataSourceDao {
                 MODULE_CODE,
                 DATA_SOURCE_NAME,
                 FULL_FLAG,
+                DS_URL,
                 CREATOR,
                 MODIFIER
             )
@@ -59,6 +60,7 @@ class DataSourceDao {
                     dataSource.moduleCode.name,
                     dataSource.dataSourceName,
                     dataSource.fullFlag,
+                    dataSource.dsUrl,
                     userId,
                     userId
                 ).onDuplicateKeyUpdate()
@@ -119,6 +121,7 @@ class DataSourceDao {
                 .set(MODULE_CODE, dataSource.moduleCode.name)
                 .set(DATA_SOURCE_NAME, dataSource.dataSourceName)
                 .set(FULL_FLAG, dataSource.fullFlag)
+                .set(DS_URL, dataSource.dsUrl)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(id))
                 .execute()

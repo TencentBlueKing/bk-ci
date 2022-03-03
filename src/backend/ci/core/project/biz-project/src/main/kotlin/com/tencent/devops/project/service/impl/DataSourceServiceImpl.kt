@@ -102,7 +102,8 @@ class DataSourceServiceImpl @Autowired constructor(
                 clusterName = record.clusterName,
                 moduleCode = SystemModuleEnum.valueOf(record.moduleCode),
                 dataSourceName = record.dataSourceName,
-                fullFlag = record.fullFlag
+                fullFlag = record.fullFlag,
+                dsUrl = record.dsUrl
             )
         } else {
             null
