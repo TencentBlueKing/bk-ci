@@ -400,8 +400,9 @@ class LambdaDataService @Autowired constructor(
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
         taskMap["ATOM_CODE"] = atomCode
         taskMap.remove("TASK_PARAMS")
-
-        kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
+        val gitTaskTopic = checkParamBlank(lambdaKafkaTopicConfig.gitTaskTopic, "gitTaskTopic")
+        kafkaClient.send(gitTaskTopic, JsonUtil.toJson(taskMap))
+//        kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
     }
 
     private val projectCache = CacheBuilder.newBuilder()
