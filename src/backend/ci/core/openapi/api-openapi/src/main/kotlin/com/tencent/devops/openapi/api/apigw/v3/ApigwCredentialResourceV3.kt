@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwCredentialResourceV3 {
 
-    @ApiOperation("获取用户拥有对应权限凭据列表")
+    @ApiOperation("获取用户拥有对应权限凭据列表", tags = ["v3_app_credential_list", "v3_user_credential_list"])
     @Path("/")
     @GET
     fun list(
@@ -109,7 +109,7 @@ interface ApigwCredentialResourceV3 {
 //        pageSize: Int?
 //    ): Result<Page<Credential>>
 
-    @ApiOperation("新增凭据")
+    @ApiOperation("新增凭据", tags = ["v3_app_credential_create", "v3_user_credential_create"])
     @Path("/")
     @POST
     fun create(
@@ -129,7 +129,7 @@ interface ApigwCredentialResourceV3 {
         credential: CredentialCreate
     ): Result<Boolean>
 
-    @ApiOperation("获取凭据")
+    @ApiOperation("获取凭据", tags = ["v3_user_credential_get", "v3_app_credential_get"])
     @Path("/{credentialId}")
     @GET
     fun get(
@@ -150,7 +150,7 @@ interface ApigwCredentialResourceV3 {
         credentialId: String
     ): Result<CredentialWithPermission>
 
-    @ApiOperation("编辑凭据")
+    @ApiOperation("编辑凭据", tags = ["v3_user_credential_edit", "v3_app_credential_edit"])
     @Path("/{credentialId}")
     @PUT
     fun edit(
@@ -173,7 +173,7 @@ interface ApigwCredentialResourceV3 {
         credential: CredentialUpdate
     ): Result<Boolean>
 
-    @ApiOperation("删除凭据")
+    @ApiOperation("删除凭据", tags = ["v3_user_credential_delete", "v3_app_credential_delete"])
     @Path("{credentialId}")
     @DELETE
     fun delete(

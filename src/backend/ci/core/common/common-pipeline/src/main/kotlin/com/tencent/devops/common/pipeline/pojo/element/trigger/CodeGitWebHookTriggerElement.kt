@@ -82,6 +82,10 @@ data class CodeGitWebHookTriggerElement(
     val includeCrState: List<String>? = null,
     @ApiModelProperty("code review 类型", required = false)
     val includeCrTypes: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: List<String>? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
     @ApiModelProperty("是否启用回写")
     val enableCheck: Boolean? = true,
     @ApiModelProperty("issue事件action")
