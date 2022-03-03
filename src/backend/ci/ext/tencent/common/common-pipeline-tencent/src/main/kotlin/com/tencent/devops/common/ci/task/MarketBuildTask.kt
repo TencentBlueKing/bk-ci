@@ -55,7 +55,6 @@ data class MarketBuildTask(
             id = null,
             status = null,
             atomCode = inputs.atomCode,
-            atomName = inputs.name ?: inputs.atomCode,
             version = inputs.version,
             data = inputs.data
         )

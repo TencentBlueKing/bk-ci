@@ -218,7 +218,7 @@ class GitRequestEventHandle @Autowired constructor(
             commitMsg = gitNoteEvent.objectAttributes.note,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
-            userId = gitNoteEvent.user.username,
+            userId = latestCommit?.author_name ?: "",
             totalCommitCount = 1,
             mergeRequestId = null,
             event = e,
