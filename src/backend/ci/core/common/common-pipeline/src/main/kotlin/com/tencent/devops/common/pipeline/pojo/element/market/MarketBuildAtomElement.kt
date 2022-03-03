@@ -42,6 +42,8 @@ data class MarketBuildAtomElement(
     override var status: String? = null,
     @ApiModelProperty("插件的唯一标识", required = true)
     private val atomCode: String = "",
+    @ApiModelProperty("插件的名称", required = true)
+    private val atomName: String = "",
     @ApiModelProperty("插件版本", required = false)
     override var version: String = "1.*",
     @ApiModelProperty("用户自定义ID", required = false)
@@ -58,6 +60,10 @@ data class MarketBuildAtomElement(
 
     override fun getAtomCode(): String {
         return atomCode
+    }
+
+    override fun getAtomName(): String {
+        return atomName
     }
 
     override fun getClassType() = classType

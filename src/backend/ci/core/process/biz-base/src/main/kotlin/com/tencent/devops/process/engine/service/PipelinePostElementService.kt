@@ -236,6 +236,7 @@ class PipelinePostElementService @Autowired constructor(
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
+                atomName = originAtomElement.getAtomName(),
                 version = originAtomElement.version,
                 data = originAtomElement.data
             )
@@ -247,6 +248,7 @@ class PipelinePostElementService @Autowired constructor(
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
+                atomName = originAtomElement.getAtomName(),
                 version = originAtomElement.version,
                 data = originAtomElement.data
             )
