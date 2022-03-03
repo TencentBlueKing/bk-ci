@@ -25,31 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.service
+package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
 
 @Service
-class BkRepoService constructor(
+class BkRepoStaticService constructor(
     private val bkRepoConfig: BkRepoConfig,
     private val bkRepoClient: BkRepoClient
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(BkRepoService::class.java)!!
+        private val logger = LoggerFactory.getLogger(BkRepoStaticService::class.java)!!
     }
 
     fun uploadStaticFile(
@@ -57,11 +52,12 @@ class BkRepoService constructor(
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): String? {
+    ): String {
         val fileName = String(
             bytes = disposition.fileName.toByteArray(Charset.forName("ISO8859-1")),
             charset = Charset.forName("UTF-8")
         )
+        logger.info("uploadStaticFile userId:$userId,fileName:$fileName,destPath:$destPath")
         val index = fileName.lastIndexOf(".")
         val fileSuffix = fileName.substring(index + 1)
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileSuffix").toFile()
@@ -83,6 +79,6 @@ class BkRepoService constructor(
         } finally {
             file.delete()
         }
-        return "https://devstaticfile.woa.com/$destPath"
+        return "${bkRepoConfig.bkrepoStaticRepoPrefixUrl}/$destPath"
     }
 }

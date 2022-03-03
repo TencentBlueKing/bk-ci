@@ -27,11 +27,17 @@
 
 package com.tencent.devops.support.resources.service
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceImageManageResource
 import net.coobird.thumbnailator.Thumbnails
@@ -82,14 +88,15 @@ class ServiceImageManageResourceImpl @Autowired constructor(private val client: 
         file.outputStream().use {
             inputStream.copyTo(it)
         }
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+        val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
         try {
-            return CommonUtils.serviceUploadFile(
-                userId = userId,
-                serviceUrlPrefix = serviceUrlPrefix,
-                file = file,
-                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name
-            )
+            OkhttpUtils.uploadFile(serviceUrlPrefix, file).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                }
+                return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
+            }
         } finally {
             file.delete()
         }

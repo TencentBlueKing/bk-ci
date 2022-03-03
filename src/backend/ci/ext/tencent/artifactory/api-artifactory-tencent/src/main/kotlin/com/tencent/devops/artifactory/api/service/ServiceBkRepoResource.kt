@@ -37,7 +37,6 @@ import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -50,12 +49,12 @@ interface ServiceBkRepoResource {
 
     @ApiOperation("上传静态文件")
     @POST
-    @Path("/repos/{repoName}/static/file/upload")
+    @Path("/static/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStaticFile(
-        @ApiParam("仓库名称", required = true)
-        @PathParam("repoName")
-        repoName: String,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
         @ApiParam("目标路径", required = true)
         @QueryParam("destPath")
         destPath: String,
@@ -64,5 +63,5 @@ interface ServiceBkRepoResource {
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
-    ): Result<String?>
+    ): Result<String>
 }

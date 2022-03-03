@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirGsService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoStaticService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -37,15 +37,20 @@ import java.io.InputStream
 
 @RestResource
 class ServiceBkRepoResourceImpl @Autowired constructor(
-    private val bkRepoCustomDirGsService: BkRepoCustomDirGsService
+    private val bkRepoStaticService: BkRepoStaticService
 ) : ServiceBkRepoResource {
 
     override fun uploadStaticFile(
-        repoName: String,
+        userId: String,
         destPath: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
-    ): Result<String?> {
-        TODO("Not yet implemented")
+    ): Result<String> {
+        return Result(bkRepoStaticService.uploadStaticFile(
+            userId = userId,
+            destPath = destPath,
+            inputStream = inputStream,
+            disposition = disposition
+        ))
     }
 }
