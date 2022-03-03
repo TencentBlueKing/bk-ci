@@ -106,8 +106,6 @@ abstract class Element(
 
     open fun getAtomCode() = getClassType()
 
-    open fun getAtomName() = getClassType()
-
     abstract fun getClassType(): String
 
     open fun getTaskAtom(): String = ""
