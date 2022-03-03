@@ -32,6 +32,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -52,6 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
+import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
@@ -91,7 +93,8 @@ class LambdaDataService @Autowired constructor(
     private val lambdaBuildTaskDao: LambdaBuildTaskDao,
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
     private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
-    private val kafkaClient: KafkaClient
+    private val kafkaClient: KafkaClient,
+    private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -278,7 +281,9 @@ class LambdaDataService @Autowired constructor(
         try {
             logger.info("pushBuildHistory buildId: ${historyRecord.buildId}|${historyRecord.executeTime}|${historyRecord.buildNum}")
             val history = genBuildHistory(projectInfo, historyRecord, BuildStatus.values(), System.currentTimeMillis())
-            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
+            val buildHistoryTopic = checkParamBlank(lambdaKafkaTopicConfig.buildHistoryTopic, "buildHistoryTopic")
+            kafkaClient.send(buildHistoryTopic, JsonUtil.toJson(history))
+//            kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
             logger.error("Push build history to kafka error, buildId: ${historyRecord.buildId}", e)
         }
@@ -288,7 +293,9 @@ class LambdaDataService @Autowired constructor(
         try {
             logger.info("pushBuildDetail buildId: ${model.buildId}|${model.buildNum}")
             val buildDetail = genBuildDetail(projectInfo, pipelineId, model)
-            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
+            val buildDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.buildDetailTopic, "buildDetailTopic")
+            kafkaClient.send(buildDetailTopic, JsonUtil.toJson(buildDetail))
+//            kafkaClient.send(KafkaTopic.LANDUN_BUILD_DETAIL_TOPIC, JsonUtil.toJson(buildDetail))
         } catch (e: Exception) {
             logger.error("Push build detail to kafka error, buildId: ${model.buildId}", e)
         }
@@ -555,6 +562,10 @@ class LambdaDataService @Autowired constructor(
                 labels = labelList
             )
         }
+    }
+
+    private fun checkParamBlank(param: String?, message: String): String {
+        return param ?: throw ParamBlankException("启动配置缺少 $message")
     }
 
     private fun getStartType(trigger: String, webhookType: String?): String {
