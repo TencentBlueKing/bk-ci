@@ -39,7 +39,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
-import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -207,8 +206,9 @@ class LambdaDataService @Autowired constructor(
                             baseOS = taskParamMap["baseOS"] as String,
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
-
-                        kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
+                        val jobDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.jobDetailTopic, "jobDetailTopic")
+                        kafkaClient.send(jobDetailTopic, JsonUtil.toJson(dataPlatJobDetail))
+//                        kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
                     }
                 }
             } else {
@@ -268,9 +268,10 @@ class LambdaDataService @Autowired constructor(
                     starter = task.starter,
                     washTime = LocalDateTime.now().format(dateTimeFormatter)
                 )
-
                 logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
-                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
+                val taskDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.taskDetailTopic, "taskDetailTopic")
+                kafkaClient.send(taskDetailTopic, JsonUtil.toJson(dataPlatTaskDetail))
+//                kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
             }
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
