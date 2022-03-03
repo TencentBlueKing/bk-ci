@@ -105,7 +105,6 @@ object LoggerService {
     /**
      * 当前执行插件的各类构建信息
      */
-    var projectId = ""
     var elementId = ""
     var elementName = ""
     var jobId = ""
@@ -173,7 +172,7 @@ object LoggerService {
         }
     }
 
-    fun start() {
+    fun start(projectId: String) {
         logger.info("Start the log service")
         future = executorService.submit(loggerThread)
         logger.info("Load sensitive string set")

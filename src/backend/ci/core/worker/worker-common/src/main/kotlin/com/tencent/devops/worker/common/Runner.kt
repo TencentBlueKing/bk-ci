@@ -129,10 +129,9 @@ object Runner {
         )
 
         // 启动日志服务
-        LoggerService.start()
+        LoggerService.start(buildVariables.projectId)
         val variables = buildVariables.variablesWithType
         val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
-        LoggerService.projectId = buildVariables.projectId
         LoggerService.executeCount = retryCount.toInt() + 1
         LoggerService.jobId = buildVariables.containerHashId
         LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
