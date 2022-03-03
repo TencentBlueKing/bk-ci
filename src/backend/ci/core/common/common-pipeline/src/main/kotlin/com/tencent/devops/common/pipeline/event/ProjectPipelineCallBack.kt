@@ -25,18 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.common.pipeline.event
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.pojo.tcm.TcmReqParam
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceTcmResource
-import com.tencent.devops.plugin.service.TcmService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceTcmResourceImpl @Autowired constructor(private val tcmService: TcmService) : ServiceTcmResource {
-    override fun startTask(tcmReqParam: TcmReqParam, buildId: String, userId: String): Result<String> {
-        return Result(tcmService.startTask(tcmReqParam, buildId, userId))
-    }
-}
+@ApiModel("项目的流水线回调配置")
+data class ProjectPipelineCallBack(
+    @ApiModelProperty("流水线id", required = false)
+    val id: Long? = null,
+    @ApiModelProperty("项目id", required = false)
+    val projectId: String,
+    @ApiModelProperty("回调url地址", required = false)
+    val callBackUrl: String,
+    @ApiModelProperty("事件", required = false)
+    val events: String,
+    @ApiModelProperty("密钥", required = false)
+    val secretToken: String?
+)

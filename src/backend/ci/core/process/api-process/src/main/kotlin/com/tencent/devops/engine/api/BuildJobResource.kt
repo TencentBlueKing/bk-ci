@@ -182,7 +182,10 @@ interface BuildJobResource {
         vmSeqId: String,
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @ApiParam(value = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int? = null
     ): Result<HeartBeatInfo>
 
     @ApiOperation("job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话
