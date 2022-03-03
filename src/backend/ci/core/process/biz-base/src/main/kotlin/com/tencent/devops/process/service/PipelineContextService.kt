@@ -260,7 +260,6 @@ class PipelineContextService @Autowired constructor(
                 contextMap["step.outcome"] = e.status ?: ""
                 contextMap["step.atom_version"] = e.version
                 contextMap["step.atom_code"] = e.getAtomCode()
-                contextMap["step.atom_name"] = e.status ?: ""
             }
             val stepId = e.stepId ?: return@forEach
             contextMap["steps.$stepId.name"] = e.name
