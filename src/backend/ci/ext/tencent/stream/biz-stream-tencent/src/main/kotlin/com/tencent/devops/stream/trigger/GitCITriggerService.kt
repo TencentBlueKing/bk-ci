@@ -332,7 +332,6 @@ class GitCITriggerService @Autowired constructor(
                             forkGitToken = forkGitToken,
                             gitToken = gitToken,
                             changeSet = changeSet,
-                            displayName = filePath,
                             mrEvent = mrEvent,
                             isMerged = isMerged,
                             gitProjectConf = gitProjectConf,
@@ -358,7 +357,6 @@ class GitCITriggerService @Autowired constructor(
         forkGitToken: String?,
         gitToken: String,
         changeSet: Set<String>,
-        displayName: String,
         mrEvent: Boolean,
         isMerged: Boolean,
         gitProjectConf: GitCIBasicSetting,
@@ -459,9 +457,6 @@ class GitCITriggerService @Autowired constructor(
         }
 
         yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
-
-        // 为已存在的流水线设置名称
-        buildPipeline.displayName = displayName
 
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
