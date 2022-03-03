@@ -393,6 +393,7 @@ class PipelineLayout private constructor(
                 name = step.name ?: step.uses!!.split('@')[0],
                 id = step.id,
                 atomCode = step.uses!!.split('@')[0],
+                atomName = step.uses!!.split('@')[0],
                 version = step.uses!!.split('@')[1],
                 data = data,
                 additionalOptions = additionalOptions
