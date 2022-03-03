@@ -2,7 +2,7 @@
     <div class="bk-pipeline-matrix-group">
         <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
             <div class="matrix-name" @click.stop="toggleMatrixOpen">
-                <i :class="matrixToggleCls"></i>
+                <Logo name="angle-down" size="12" :class="matrixToggleCls"></Logo>
                 <span :class="matrixTitleCls">
                     {{t('jobMatrix')}}
                 </span>
@@ -34,6 +34,7 @@
 <script>
     import StatusIcon from './StatusIcon'
     import Job from './Job'
+    import Logo from './Logo'
     import { STATUS_MAP, CLICK_EVENT_NAME } from './constants'
     import { getDependOnDesc, eventBus, isTriggerContainer } from './util'
     import { localeMixins } from './locale'
@@ -41,7 +42,8 @@
     export default {
         components: {
             StatusIcon,
-            Job
+            Job,
+            Logo
         },
         mixins: [localeMixins],
         props: {
@@ -86,6 +88,7 @@
                 type: String,
                 default: 'unknow'
             },
+            stageLength: Number,
             updateCruveConnectHeight: Function,
             matchRules: {
                 type: Array,
@@ -99,7 +102,7 @@
         },
         computed: {
             matrixToggleCls () {
-                return `matrix-fold-icon devops-icon icon-angle-down ${this.isMatrixOpen ? 'open' : ''}`
+                return `matrix-fold-icon ${this.isMatrixOpen ? 'open' : ''}`
             },
             matrixTitleCls () {
                 return {

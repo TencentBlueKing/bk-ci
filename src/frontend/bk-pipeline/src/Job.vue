@@ -28,7 +28,7 @@
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="disabled"></bk-checkbox>
             </span>
             <Logo
-                v-if="editable && container.matrixGroupFlag"
+                v-if="(editable || isPreview) && container.matrixGroupFlag"
                 name="matrix"
                 size="16"
                 class="matrix-flag-icon"
@@ -244,11 +244,11 @@
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
                     const container = {
                         ...copyContainer,
-                        containerId: `c-${hashID(32)}`,
+                        containerId: `c-${hashID()}`,
                         jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map(element => ({
                             ...element,
-                            id: `e-${hashID(32)}`
+                            id: `e-${hashID()}`
                         })),
                         jobControlOption: copyContainer.jobControlOption
                             ? {

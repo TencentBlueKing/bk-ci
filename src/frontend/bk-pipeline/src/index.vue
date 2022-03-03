@@ -208,14 +208,12 @@
 </script>
 
 <style lang="scss">
-    @import './index';
     .bk-pipeline {
         display: flex;
         padding-right: 120px;
         width: fit-content;
         position: relative;
         align-items: flex-start;
-        padding-top: $StagepaddingTop;
     }
 
     .list-item {
