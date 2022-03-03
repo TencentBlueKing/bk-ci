@@ -39,6 +39,7 @@ import com.tencent.devops.auth.common.Constants.HTTP_RESULT
 import com.tencent.devops.auth.common.Constants.NAME
 import com.tencent.devops.auth.common.Constants.USERNAME
 import com.tencent.devops.auth.common.Constants.USER_LABLE
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
@@ -47,11 +48,12 @@ import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -286,16 +288,22 @@ class AuthDeptServiceImpl @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 // 请求错误
-                throw RemoteServiceException("call user center fail, response: ($it)")
+                logger.warn("call user center fail, $url| $searchEntity|response: ($it)")
+                throw OperationException(
+                    MessageCodeUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.USER_NOT_EXIST
+                ))
             }
             val responseStr = it.body()!!.string()
             logger.info("user center response： $responseStr")
             val responseDTO = JsonUtil.to(responseStr, ResponseDTO::class.java)
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
-                throw RemoteServiceException(
-                    "call user center fail: $responseStr"
-                )
+                logger.warn("call user center fail, $url| $searchEntity| response: ($it)")
+                throw OperationException(
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.USER_NOT_EXIST
+                    ))
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return objectMapper.writeValueAsString(responseDTO.data)

@@ -38,7 +38,7 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.junit.Assert
 import org.junit.Before
@@ -84,6 +84,7 @@ class CallBackControlTest : TestBase() {
             curVersion = 2,
             latestBuildNum = 1,
             latestVersion = 1,
+            lastModifyUser = "yongyiduan",
             executeTime = 100
         )
 

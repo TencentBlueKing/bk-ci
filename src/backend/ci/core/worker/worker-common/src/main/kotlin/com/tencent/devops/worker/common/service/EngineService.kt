@@ -108,14 +108,14 @@ object EngineService {
         }
     }
 
-    fun heartbeat(): HeartBeatInfo {
+    fun heartbeat(executeCount: Int = 1): HeartBeatInfo {
         var retryCount = 0
         val result = HttpRetryUtils.retryWhenHttpRetryException {
             if (retryCount > 0) {
                 logger.warn("retryWhenHttpRetryException|time=$retryCount|heartbeat")
             }
             retryCount++
-            buildApi.heartbeat()
+            buildApi.heartbeat(executeCount)
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to do heartbeat task")

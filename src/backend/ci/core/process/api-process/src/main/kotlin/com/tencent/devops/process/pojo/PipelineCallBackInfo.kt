@@ -25,23 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.config
+package com.tencent.devops.process.pojo
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 
-@Component
-class PipelineCommonSettingConfig {
-
-    @Value("\${pipeline.setting.common.maxModelSize:16777215}")
-    val maxModelSize: Int = 16777215
-
-    @Value("\${pipeline.setting.common.stage.maxStageNum:20}")
-    val maxStageNum: Int = 20
-
-    @Value("\${pipeline.setting.common.maxPipelineNameSize:255}")
-    val maxPipelineNameSize: Int = 255
-
-    @Value("\${pipeline.setting.common.maxPipelineDescSize:255}")
-    val maxPipelineDescSize: Int = 255
-}
+data class PipelineCallBackInfo(
+    val callbackEvent: CallBackEvent,
+    val callbackUrl: String,
+    val secretToken: String?,
+    val callbackName: String,
+    val region: CallBackNetWorkRegionType?
+)
