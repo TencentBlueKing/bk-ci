@@ -30,16 +30,17 @@ package com.tencent.devops.process.api.builds
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_TASK_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.Consumes
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -79,6 +80,9 @@ interface BuildVarResource {
         @ApiParam(value = "构建环境ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         containerId: String,
+        @ApiParam(value = "TASK ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
+        taskId: String,
         @ApiParam(value = "变量名称", required = true)
         @QueryParam("contextName")
         contextName: String,

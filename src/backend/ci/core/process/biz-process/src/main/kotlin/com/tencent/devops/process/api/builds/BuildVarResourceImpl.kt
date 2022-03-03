@@ -60,6 +60,7 @@ class BuildVarResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         containerId: String,
+        taskId: String,
         contextName: String,
         check: Boolean?
     ): Result<String?> {
@@ -71,8 +72,15 @@ class BuildVarResourceImpl @Autowired constructor(
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
         val variables = buildVariableService.getAllVariable(projectId, buildId)
-        val allContext = pipelineContextService.buildContext(projectId, buildId, containerId, variables)
-        return Result(allContext[varName])
+        val allContext = pipelineContextService.buildContext(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = null,
+            containerId = containerId,
+            taskId = taskId,
+            variables = variables
+        )
+        return Result(allContext[varName] ?: allContext[VariableType.valueOf(contextName).alisName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
