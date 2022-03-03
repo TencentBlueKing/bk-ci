@@ -46,8 +46,8 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
         return url + paramConcat + "buildId=${buildInfo?.buildId}"
     }
 
-    override fun getRequestUrl(path: String, retryCount: Int): String {
-        return identifyUrl("/ms/engine/$path?retryCount=$retryCount")
+    override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
+        return identifyUrl("/ms/engine/$path?retryCount=$retryCount&executeCount=$executeCount")
     }
 
     override fun getJobContext(): Map<String, String> {
