@@ -18,6 +18,9 @@ nginx-ingress-controller:
   service:
     type: NodePort
 
+# 是否安装configmap
+configmap:
+  enabled: true
 
 # 镜像配置
 gatewayImage:
