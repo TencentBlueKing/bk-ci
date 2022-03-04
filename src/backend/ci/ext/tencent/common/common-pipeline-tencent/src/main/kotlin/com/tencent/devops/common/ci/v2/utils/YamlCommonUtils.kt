@@ -34,14 +34,14 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import com.tencent.devops.common.ci.v2.YAME_META_DATA_JSON_FILTER
 
 object YamlCommonUtils {
     private val objectMapper = ObjectMapper(YAMLFactory().enable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)).apply {
         // 去掉替换模板中间过程中生成的中间变量
         registerKotlinModule().setFilterProvider(
             SimpleFilterProvider().addFilter(
-                YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+                YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
             )
         )
     }
