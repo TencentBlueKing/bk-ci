@@ -84,7 +84,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("删除环境")
     @DELETE
-    @Path("/projects/{projectId}/{envHashId}")
+    @Path("/projects/{projectId}/envs/{envHashId}")
     fun delete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -99,7 +99,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("添加节点到环境")
     @POST
-    @Path("/projects/{projectId}/{envHashId}/addNodes")
+    @Path("/projects/{projectId}/envs/{envHashId}/add_nodes")
     fun addNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -116,7 +116,7 @@ interface ServiceEnvironmentResource {
 
     @ApiOperation("从环境删除节点")
     @POST
-    @Path("/projects/{projectId}/{envHashId}/deleteNodes")
+    @Path("/projects/{projectId}/envs/{envHashId}/delete_nodes")
     fun deleteNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
