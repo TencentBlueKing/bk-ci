@@ -60,7 +60,7 @@ class BuildVarResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         containerId: String,
-        taskId: String,
+        taskId: String?,
         contextName: String,
         check: Boolean?
     ): Result<String?> {
@@ -69,6 +69,9 @@ class BuildVarResourceImpl @Autowired constructor(
             checkVariable(variableName = contextName)
         }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
+        if (taskId.isNullOrBlank() && VariableType.valueOf(contextName).alisName.isNotBlank()) {
+            throw ParamBlankException("Plugin SDK needs to be upgraded")
+        }
         if (VariableType.valueOf(contextName) == VariableType.BK_CI_BUILD_TASK_ID) {
             return Result(taskId)
         }
