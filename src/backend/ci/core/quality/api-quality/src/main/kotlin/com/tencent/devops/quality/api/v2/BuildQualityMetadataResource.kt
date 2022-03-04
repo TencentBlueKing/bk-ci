@@ -66,10 +66,10 @@ interface BuildQualityMetadataResource {
         elementType: String,
         @ApiParam("任务节点ID", required = false)
         @QueryParam("taskId")
-        taskId: String,
+        taskId: String?,
         @ApiParam("任务节点名称", required = false)
         @QueryParam("taskName")
-        taskName: String,
+        taskName: String?,
         data: Map<String, String>
     ): Result<Boolean>
 }
