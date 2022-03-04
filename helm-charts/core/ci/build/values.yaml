@@ -16,6 +16,10 @@ nginx-ingress-controller:
   defaultBackend:
     enabled: false
 
+# 是否安装configmap
+configmap:
+  enabled: true
+
 # 镜像配置
 gatewayImage:
   registry: mirrors.tencent.com/bkce

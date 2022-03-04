@@ -1,4 +1,5 @@
 #turbo configmap
+{{ if .Values.configmap.enabled -}}
 {{if .Values.turbo.enabled -}}
 kind: ConfigMap
 apiVersion: v1
@@ -79,3 +80,4 @@ data:
     org.quartz.threadPool.threadCount=50
     org.quartz.jobStore.misfireThreshold=20000
 {{- end }}
+{{- end -}}
