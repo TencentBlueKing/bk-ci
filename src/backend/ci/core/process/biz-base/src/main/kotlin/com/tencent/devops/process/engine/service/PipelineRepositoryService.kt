@@ -1145,11 +1145,19 @@ class PipelineRepositoryService constructor(
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
 
+        val version = pipelineInfoDao.getPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            channelCode = channelCode
+        )
         pipelineEventDispatcher.dispatch(
             PipelineRestoreEvent(
                 source = "restore_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 userId = userId
             )
         )
