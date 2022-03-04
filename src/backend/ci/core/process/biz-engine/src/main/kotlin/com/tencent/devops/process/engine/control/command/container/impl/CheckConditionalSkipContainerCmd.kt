@@ -94,8 +94,9 @@ class CheckConditionalSkipContainerCmd constructor(
                 val contextMap = pipelineContextService.buildContext(
                     projectId = container.projectId,
                     buildId = container.buildId,
-                    containerId = container.containerId,
                     stageId = container.stageId,
+                    containerId = container.containerId,
+                    taskId = null,
                     variables = containerContext.variables
                 )
                 ControlUtils.checkJobSkipCondition(

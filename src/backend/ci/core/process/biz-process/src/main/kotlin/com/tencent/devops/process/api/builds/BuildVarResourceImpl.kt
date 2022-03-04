@@ -59,17 +59,31 @@ class BuildVarResourceImpl @Autowired constructor(
         buildId: String,
         projectId: String,
         pipelineId: String,
+        containerId: String,
+        taskId: String,
         contextName: String,
-        check: Boolean
+        check: Boolean?
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
-        if (check) {
+        if (check == true) {
             checkVariable(variableName = contextName)
         }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
+        if (VariableType.valueOf(contextName) == VariableType.BK_CI_BUILD_TASK_ID) {
+            return Result(taskId)
+        }
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
-        return Result(buildVariableService.getVariable(projectId, buildId, varName))
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val allContext = pipelineContextService.buildContext(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = null,
+            containerId = containerId,
+            taskId = taskId,
+            variables = variables
+        )
+        return Result(allContext[varName] ?: allContext[VariableType.valueOf(contextName).alisName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
