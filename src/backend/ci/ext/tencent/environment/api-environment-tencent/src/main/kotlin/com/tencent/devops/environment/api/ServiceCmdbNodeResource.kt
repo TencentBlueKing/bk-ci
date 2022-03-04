@@ -52,7 +52,7 @@ interface ServiceCmdbNodeResource {
 
     @ApiOperation("获取用户CMDB节点")
     @POST
-    @Path("/listUserCmdbNodesNew")
+    @Path("/list_user_cmdb_nodes_new")
     fun listUserCmdbNodesNew(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -72,7 +72,7 @@ interface ServiceCmdbNodeResource {
 
     @ApiOperation("导入CMDB节点")
     @POST
-    @Path("/projects/{projectId}/addCmdbNodes")
+    @Path("/projects/{projectId}/add_cmdb_nodes")
     fun addCmdbNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

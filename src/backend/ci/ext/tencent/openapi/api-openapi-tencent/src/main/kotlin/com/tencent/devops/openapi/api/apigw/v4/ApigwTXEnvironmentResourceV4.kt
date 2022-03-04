@@ -24,7 +24,7 @@ interface ApigwTXEnvironmentResourceV4 {
 
     @ApiOperation("导入CMDB节点", tags = ["v4_app_node_cmdb_import", "v4_user_node_cmdb_import"])
     @POST
-    @Path("/projects/{projectId}/addCmdbNodes")
+    @Path("/projects/{projectId}/add_cmdb_nodes")
     fun addCmdbNodes(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
