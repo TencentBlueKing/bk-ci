@@ -1,4 +1,5 @@
 #gateway configmap
+{{ if .Values.configmap.enabled -}}
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -13,3 +14,4 @@ metadata:
   {{- end }}
 data:
 {{- include "bkci.gateway.yaml" . | nindent 2 -}}
+{{- end -}}
