@@ -60,6 +60,24 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwTemplateResourceV4 {
 
+    @ApiOperation("获取所有种类流水线模板列表", tags = ["v4_app_template_list_all", "v4_user_template_list_all"])
+    @GET
+    @Path("/all_templates")
+    fun listAllTemplate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<OptionalTemplateList>
+
     @ApiOperation("获取流水线模板详情", tags = ["v4_user_template_get", "v4_app_template_get"])
     @GET
     @Path("/template_detail")
