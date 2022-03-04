@@ -8,6 +8,7 @@
         <root level="INFO">
             <appender-ref ref="app-log"/>
             <appender-ref ref="error-log"/>
+            <appender-ref ref="console"/>
         </root>
         <logger name="com.tencent" level="DEBUG" />
     </springProfile>
