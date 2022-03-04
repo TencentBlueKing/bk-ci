@@ -163,6 +163,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                         vmSeqId = record.vmSeqId?.toInt() ?: 0,
                         containerId = record.containerId,
                         dockerIp = record.dockerIp,
+                        poolNo = record.poolNo,
                         clusterType = DockerHostClusterType.AGENT_LESS
                     )
                 }
