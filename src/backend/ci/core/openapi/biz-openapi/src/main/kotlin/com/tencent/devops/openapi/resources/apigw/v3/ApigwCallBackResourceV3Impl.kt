@@ -32,13 +32,13 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCallBackResourceV3
 import com.tencent.devops.process.api.service.ServiceCallBackResource
 import com.tencent.devops.process.pojo.CreateCallBackResult
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 

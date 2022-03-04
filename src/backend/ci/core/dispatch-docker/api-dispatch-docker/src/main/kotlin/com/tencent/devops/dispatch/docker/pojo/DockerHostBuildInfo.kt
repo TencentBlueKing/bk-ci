@@ -41,8 +41,8 @@ data class DockerHostBuildInfo(
     val status: Int? = 0,
     val imageName: String,
     val containerId: String,
-    @Deprecated("待废除")
-    val wsInHost: Boolean? = true,
+//    @Deprecated("待废除")
+//    val wsInHost: Boolean? = true,
     val poolNo: Int,
     val registryUser: String?,
     val registryPwd: String?,
@@ -63,5 +63,6 @@ data class DockerHostBuildInfo(
         blkioDeviceWriteBps = 125829120,
         disk = 100,
         description = ""
-    )
+    ),
+    val specialProjectList: String? = null
 )

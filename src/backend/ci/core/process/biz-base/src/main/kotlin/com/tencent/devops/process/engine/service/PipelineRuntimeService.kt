@@ -634,9 +634,12 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        terminateFlag: Boolean = false
     ): Boolean {
-        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
+        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 发送取消事件
+        val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
@@ -645,14 +648,16 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                status = buildStatus
+                status = buildStatus,
+                actionType = actionType
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                buildId = buildId
+                buildId = buildId,
+                actionType = actionType
             )
         )
         // 给未结束的job发送心跳监控事件

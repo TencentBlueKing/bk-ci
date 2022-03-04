@@ -39,10 +39,16 @@ object VersionUtils {
      * @param version 版本号
      */
     fun generateQueryVersion(version: String): String {
-        return if (version.contains("*")) {
+        return if (isLatestVersion(version)) {
             version.replace("*", "") + "%"
         } else {
             version
         }
     }
+
+    /**
+     * 是否是x.latest这种最新版本号
+     * @param version 版本号
+     */
+    fun isLatestVersion(version: String) = version.contains("*")
 }
