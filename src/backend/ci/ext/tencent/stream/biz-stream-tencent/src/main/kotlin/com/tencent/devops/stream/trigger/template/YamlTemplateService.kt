@@ -97,7 +97,7 @@ class YamlTemplateService @Autowired constructor(
                     changeSet = extraParameters.changeSet,
                     event = null,
                     templateType = templateType,
-                    nowRemoteGitProjectId = targetRepo?.repository
+                    nowRemoteGitProjectId = nowRepoId
                 )
             }
         }
@@ -216,7 +216,7 @@ class YamlTemplateService @Autowired constructor(
                     type = CredentialType.ACCESSTOKEN
                 )["v1"]!!
             } catch (ignore: Exception) {
-                if (param.nowRemoteGitProjectId == null) {
+                if (nowRemoteGitProjectId == null) {
                     // 没有库信息说明是触发库，并不需要获取跨项目信息
                     throw YamlFormatException(GET_TICKET_ERROR.format(ignore.message))
                 }
@@ -227,7 +227,7 @@ class YamlTemplateService @Autowired constructor(
             val acrossGitProjectId = getGitProjectCache(
                 gitRequestEventId = gitRequestEventId,
                 token = token,
-                gitProjectId = param.nowRemoteGitProjectId!!,
+                gitProjectId = nowRemoteGitProjectId!!,
                 useAccessToken = true
             ).gitProjectId
             try {
