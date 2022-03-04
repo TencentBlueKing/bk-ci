@@ -523,7 +523,7 @@ class GitCITriggerService @Autowired constructor(
 
         // 获取源分支文件列表
         val sourceBranchYamlPathList = getYamlPathList(
-            gitProjectId = gitRequestEvent.sourceGitProjectId,
+            gitProjectId = gitRequestEvent.sourceGitProjectId!!,
             gitToken = if (isFork) {
                 forkGitToken!!
             } else {
@@ -642,8 +642,8 @@ class GitCITriggerService @Autowired constructor(
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
     private fun getProjectId(isMrEvent: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
         with(gitRequestEvent) {
-            return if (isMrEvent && sourceGitProjectId != gitProjectId) {
-                sourceGitProjectId
+            return if (isMrEvent && sourceGitProjectId != null && sourceGitProjectId != gitProjectId) {
+                sourceGitProjectId!!
             } else {
                 gitProjectId
             }

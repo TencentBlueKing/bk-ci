@@ -50,7 +50,7 @@ data class GitRequestEvent(
     @ApiModelProperty("工蜂项目ID")
     val gitProjectId: Long,
     @ApiModelProperty("源工蜂项目ID")
-    val sourceGitProjectId: Long,
+    val sourceGitProjectId: Long?,
     @ApiModelProperty("分支名")
     val branch: String,
     @ApiModelProperty("目标分支名")
@@ -89,7 +89,7 @@ data class GitRequestEvent(
     // 获取fork库的项目id
     fun getForkGitProjectId(): Long? {
         return if (isFork() && sourceGitProjectId != gitProjectId) {
-            sourceGitProjectId
+            sourceGitProjectId!!
         } else {
             null
         }
@@ -111,11 +111,14 @@ fun GitRequestEvent.isFork(): Boolean {
 fun GitRequestEvent.isDeleteBranch(): Boolean {
     return objectKind == TGitObjectKind.PUSH.value &&
         operationKind == TGitPushOperationKind.DELETE.value &&
-        (extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
-            commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT)
+        (
+            extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
+                commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT
+            )
 }
 
 fun GitRequestEvent.isDeleteTag(): Boolean {
-    return objectKind == TGitObjectKind.TAG_PUSH.value &&
-        operationKind == TGitPushOperationKind.DELETE.value
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+        sourceGitProjectId != null &&
+        sourceGitProjectId != gitProjectId
 }
