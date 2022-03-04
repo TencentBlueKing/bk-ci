@@ -46,7 +46,6 @@ import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageLongCpuLoad
 import com.tencent.devops.dockerhost.utils.SystemInfoUtil.getAverageLongMemLoad
-import com.tencent.devops.dockerhost.utils.ThreadPoolUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.core.env.Environment
@@ -140,13 +139,6 @@ class DockerHostBuildService(
             }
         } catch (e: Throwable) {
             logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
-        } finally {
-            // 将bazel 缓存回写到 lower层
-            ThreadPoolUtils.getInstance().run {
-                logger.info("reWriteBazelCache start: $pipelineId $vmSeqId $poolNo ")
-                reWriteBazelCache(projectId, pipelineId, buildId, vmSeqId, poolNo)
-                logger.info("reWriteBazelCache end: $pipelineId $vmSeqId $poolNo")
-            }
         }
 
         try {
@@ -157,6 +149,11 @@ class DockerHostBuildService(
         } finally {
             // 找出所有跟本次构建关联的dockerRun启动容器并停止容器
             stopLinkedDockerRunContainer(dockerHostBuildInfo)
+
+            // 针对overlayfs代码缓存的后续动作
+            logger.info("afterOverlayFs start: $pipelineId $vmSeqId $poolNo ")
+            afterOverlayFs(projectId, pipelineId, buildId, vmSeqId, poolNo)
+            logger.info("afterOverlayFs end: $pipelineId $vmSeqId $poolNo")
         }
     }
 

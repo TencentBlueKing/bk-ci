@@ -37,10 +37,12 @@ import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -72,6 +74,13 @@ class StrategyService @Autowired constructor(
     fun createStrategy(userId: String, strategy: ManageStrategyDTO, name: String): Int {
         logger.info("createStrategy | $userId | $name | $strategy")
         checkResourceType(strategy.strategy)
+
+        val strategyNameCheck = strategyDao.getByName(dslContext, name)
+        if (strategyNameCheck != null) {
+            logger.warn("createStrategy: $name is exist")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.STRATEGT_NAME_EXIST))
+        }
+
         val strategyStr = objectMapper.writeValueAsString(strategy.strategy)
         val strategyInfo = StrategyInfo(
             name = name,
@@ -129,6 +138,11 @@ class StrategyService @Autowired constructor(
 
     fun getStrategy(strategyId: Int): StrategyEntity? {
         val strategyRecord = strategyDao.get(dslContext, strategyId) ?: return null
+        return record2Entity(strategyRecord)
+    }
+
+    fun getStrategyByName(strategyName: String): StrategyEntity? {
+        val strategyRecord = strategyDao.getByName(dslContext, strategyName) ?: return null
         return record2Entity(strategyRecord)
     }
 

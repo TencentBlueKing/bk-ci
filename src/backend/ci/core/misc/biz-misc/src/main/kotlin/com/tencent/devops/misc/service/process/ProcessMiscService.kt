@@ -121,6 +121,13 @@ class ProcessMiscService @Autowired constructor(
         return processDao.getMaxPipelineBuildNum(dslContext, projectId, pipelineId)
     }
 
+    fun getMinPipelineBuildNum(
+        projectId: String,
+        pipelineId: String
+    ): Long {
+        return processDao.getMinPipelineBuildNum(dslContext, projectId, pipelineId)
+    }
+
     fun getTotalBuildCount(
         projectId: String,
         pipelineId: String,
