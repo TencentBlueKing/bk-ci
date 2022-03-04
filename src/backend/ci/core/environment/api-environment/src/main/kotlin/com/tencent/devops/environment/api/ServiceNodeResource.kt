@@ -145,7 +145,7 @@ interface ServiceNodeResource {
 
     @ApiOperation("删除节点")
     @POST
-    @Path("/projects/{projectId}/deleteNodes")
+    @Path("/projects/{projectId}/delete_nodes")
     fun deleteNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

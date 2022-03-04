@@ -76,6 +76,20 @@ class ApigwTemplateResourceV4Impl @Autowired constructor(private val client: Cli
         )
     }
 
+    override fun listAllTemplate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<OptionalTemplateList> {
+        logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
+        return client.get(ServicePTemplateResource::class).listAllTemplate(
+            userId = userId,
+            projectId = projectId,
+            templateType = null
+        )
+    }
+
     override fun createTemplate(
         appCode: String?,
         apigwType: String?,
