@@ -82,7 +82,7 @@ interface BuildVarResource {
         containerId: String,
         @ApiParam(value = "TASK ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
-        taskId: String,
+        taskId: String?,
         @ApiParam(value = "变量名称", required = true)
         @QueryParam("contextName")
         contextName: String,
