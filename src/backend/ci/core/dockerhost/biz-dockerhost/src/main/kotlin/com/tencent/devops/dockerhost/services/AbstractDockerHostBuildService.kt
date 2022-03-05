@@ -248,10 +248,8 @@ abstract class AbstractDockerHostBuildService constructor(
 
             // 针对overlayfs白名单项目清理工作空间
             if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
-                val upperDir = "${getWorkspace(buildId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
-                val workDir = "${getWorkspace(buildId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
+                val upperDir = "${dockerHostConfig.hostPathWorkspace}/$buildId"
                 FileUtils.deleteQuietly(File(upperDir))
-                FileUtils.deleteQuietly(File(workDir))
             }
         } catch (e: Throwable) {
             logger.info("afterOverlayFs $buildId $vmSeqId $poolNo error: ${e.message}")
