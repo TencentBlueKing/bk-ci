@@ -93,7 +93,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 varName = storeEnvVarRequest.varName
         )) {
             return MessageCodeUtil.generateResponseDataObject(
-                messageCode =StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(storeEnvVarRequest.varName),
                 data = false
             )
@@ -164,7 +164,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 varName = storeEnvVarRequest.varName
             )) {
             return MessageCodeUtil.generateResponseDataObject(
-                messageCode =StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(storeEnvVarRequest.varName),
                 data = false
             )
@@ -187,7 +187,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                         )
                     ) {
                         return MessageCodeUtil.generateResponseDataObject(
-                            messageCode =StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                            messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                             params = arrayOf(storeEnvVarRequest.varName),
                             data = false
                         )
