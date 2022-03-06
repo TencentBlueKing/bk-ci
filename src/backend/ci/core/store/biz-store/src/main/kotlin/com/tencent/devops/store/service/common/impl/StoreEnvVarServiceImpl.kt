@@ -92,7 +92,11 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 scope = storeEnvVarRequest.scope,
                 varName = storeEnvVarRequest.varName
         )) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode =StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                params = arrayOf(storeEnvVarRequest.varName),
+                data = false
+            )
         }
         val lockKey = "$storeCode:$storeType:${storeEnvVarRequest.varName}"
         val lock = RedisLock(redisOperation, lockKey, 60)
@@ -130,7 +134,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         // 查询该环境变量在数据库中最大的版本的一行记录
-        val envVarOne = storeEnvVarDao.getEnvVarOne(
+        val envVarOne = storeEnvVarDao.getNewEnvVar(
             dslContext = dslContext,
             storeType = storeType,
             storeCode = storeCode,
@@ -159,7 +163,11 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 scope = storeEnvVarRequest.scope,
                 varName = storeEnvVarRequest.varName
             )) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode =StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                params = arrayOf(storeEnvVarRequest.varName),
+                data = false
+            )
         }
         val lockKey = "$storeCode:$storeType:${storeEnvVarRequest.varName}"
         val lock = RedisLock(redisOperation, lockKey, 60)
@@ -178,7 +186,11 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                             varName = storeEnvVarRequest.varName
                         )
                     ) {
-                        return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST)
+                        return MessageCodeUtil.generateResponseDataObject(
+                            messageCode =StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
+                            params = arrayOf(storeEnvVarRequest.varName),
+                            data = false
+                        )
                     }
                 }
                 // 如变量值变更，则添加新记录
@@ -306,7 +318,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        scopes: String,
+        scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?> {
         logger.info("storeEnvVar getEnvVarChangeLogList userId:$userId,storeType:$storeType,storeCode:$storeCode")
@@ -319,7 +331,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeType = storeTypeObj.type.toByte(),
             storeCode = storeCode,
-            scopes = scopes,
+            scope = scope,
             varName = varName
         )
         return if (storeEnvVarRecords != null && storeEnvVarRecords.size > 1) {

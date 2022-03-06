@@ -135,8 +135,11 @@ class StoreEnvVarDao {
         varName: String
     ): Boolean {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            return dslContext.select().from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(scope)).and(VAR_NAME.eq(varName)))
+            return dslContext.select(ID.`as`(KEY_ID)).from(this)
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(SCOPE.eq(scope))
+                    .and(VAR_NAME.eq(varName)))
                 .execute()>0
         }
     }
@@ -198,7 +201,7 @@ class StoreEnvVarDao {
     /**
      * 获取环境变量最新记录
      */
-    fun getEnvVarOne(
+    fun getNewEnvVar(
         dslContext: DSLContext,
         storeType: Byte,
         storeCode: String,
@@ -231,12 +234,15 @@ class StoreEnvVarDao {
         dslContext: DSLContext,
         storeType: Byte,
         storeCode: String,
-        scopes: String,
+        scope: String,
         varName: String
     ): Result<TStoreEnvVarRecord>? {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.selectFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(scopes)).and(VAR_NAME.eq(varName)))
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(SCOPE.eq(scope))
+                    .and(VAR_NAME.eq(varName)))
                 .orderBy(VERSION.desc())
                 .fetch()
         }
@@ -260,7 +266,7 @@ class StoreEnvVarDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
-            if (scopeList != null && scopeList[0].isNotEmpty()) {
+            if (scopeList != null && scopeList.isNullOrEmpty()) {
                 conditions.add(SCOPE.`in`(scopeList))
             }
             if (varName != null) {

@@ -52,14 +52,14 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        scopes: String,
+        scope: String,
         varNames: String
     ): Result<Boolean> {
         return storeEnvVarService.delete(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
-            scope = scopes,
+            scope = scope,
             varNames = varNames
         )
     }

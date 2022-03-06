@@ -98,10 +98,10 @@ interface UserStoreEnvVarResource {
         @PathParam("storeCode")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
-        @ApiParam("生效范围 TEST：测试 PRD：正式 ALL：所有", required = false)
+        @ApiParam("生效范围 TEST：测试 PRD：正式 ALL：所有", required = true)
         @QueryParam("scope")
         @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = false)
-        scopes: String,
+        scope: String,
         @ApiParam("环境变量名称集合，用\",\"分隔进行拼接（如1,2,3）", required = true)
         @QueryParam("varNames")
         @BkField(patternStyle = BkStyleEnum.COMMON_STYLE)
@@ -124,9 +124,9 @@ interface UserStoreEnvVarResource {
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
         storeCode: String,
         @ApiParam("生效范围 TEST：测试 PRD：正式 ALL：所有，用\",\"分隔进行拼接", required = false)
-        @QueryParam("scopes")
-        @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = false)
-        scopes: String?,
+        @QueryParam("scope")
+        @BkField(patternStyle = BkStyleEnum.SCOPE_STYLE, required = true)
+        scope: String?,
         @ApiParam("变量名", required = false)
         @QueryParam("varName")
         @BkField(patternStyle = BkStyleEnum.CODE_STYLE, required = false)
