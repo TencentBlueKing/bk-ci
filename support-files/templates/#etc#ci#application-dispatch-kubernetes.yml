@@ -11,7 +11,7 @@ server:
 
 # kubernetes-dispatch集群配置
 kubernetes:
-  nameSpace: default
+  nameSpace: __BK_CI_DISPATCH_KUBERNETES_NS__
   configMap:
     name: dispatch-kubernetes-init
 
