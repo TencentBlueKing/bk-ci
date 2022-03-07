@@ -25,6 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.parsers.template
+package com.tencent.devops.process.pojo
 
-class temp
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+
+data class PipelineCallBackInfo(
+    val callbackEvent: CallBackEvent,
+    val callbackUrl: String,
+    val secretToken: String?,
+    val callbackName: String,
+    val region: CallBackNetWorkRegionType?
+)

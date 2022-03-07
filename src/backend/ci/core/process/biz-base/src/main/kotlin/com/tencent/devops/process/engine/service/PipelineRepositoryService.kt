@@ -125,7 +125,8 @@ class PipelineRepositoryService constructor(
         channelCode: ChannelCode,
         create: Boolean,
         useTemplateSettings: Boolean? = false,
-        templateId: String? = null
+        templateId: String? = null,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -166,7 +167,8 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 channelCode = channelCode,
-                maxPipelineResNum = pipelineSetting?.maxPipelineResNum
+                maxPipelineResNum = pipelineSetting?.maxPipelineResNum,
+                updateLastModifyUser = updateLastModifyUser
             )
         } else {
             create(
@@ -583,25 +585,42 @@ class PipelineRepositoryService constructor(
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>,
         channelCode: ChannelCode,
-        maxPipelineResNum: Int? = null
+        maxPipelineResNum: Int? = null,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            version = pipelineInfoDao.update(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                userId = userId,
-                updateVersion = true,
-                pipelineName = null,
-                pipelineDesc = null,
-                manualStartup = canManualStartup,
-                canElementSkip = canElementSkip,
-                taskCount = taskCount,
-                latestVersion = model.latestVersion
-            )
+            version = if (updateLastModifyUser != null && updateLastModifyUser == false) {
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = null,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
+            } else {
+                pipelineInfoDao.update(
+                    dslContext = transactionContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId,
+                    updateVersion = true,
+                    pipelineName = null,
+                    pipelineDesc = null,
+                    manualStartup = canManualStartup,
+                    canElementSkip = canElementSkip,
+                    taskCount = taskCount,
+                    latestVersion = model.latestVersion
+                )
+            }
             if (version == 0) {
                 // 传过来的latestVersion已经不是最新
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
@@ -1126,11 +1145,19 @@ class PipelineRepositoryService constructor(
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
 
+        val version = pipelineInfoDao.getPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            userId = userId,
+            channelCode = channelCode
+        )
         pipelineEventDispatcher.dispatch(
             PipelineRestoreEvent(
                 source = "restore_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 userId = userId
             )
         )

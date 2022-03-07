@@ -25,20 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceMigCDNResource
-import com.tencent.devops.plugin.pojo.migcdn.MigCDNUploadParam
-import com.tencent.devops.plugin.service.MigCDNService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-@RestResource
-class ServiceMigCDNResourceImpl @Autowired constructor(
-    private val migCDNService: MigCDNService
-) : ServiceMigCDNResource {
-    override fun pushFile(uploadParam: MigCDNUploadParam): Result<String> {
-        return Result(migCDNService.pushFile(uploadParam))
-    }
-}
+class StreamBuildLock(redisOperation: RedisOperation, gitProjectId: Long, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:gitProject:$gitProjectId:pipelineId:$pipelineId",
+        expiredTimeInSeconds = 60
+    )

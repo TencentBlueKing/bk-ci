@@ -26,11 +26,8 @@
  */
 package com.tencent.devops.lambda.service.process
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
-import com.tencent.devops.common.api.enums.RepositoryConfig
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -42,7 +39,6 @@ import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
@@ -67,10 +63,8 @@ import com.tencent.devops.lambda.pojo.ProjectOrganize
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
-import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.apache.kafka.common.errors.RecordTooLargeException
 import org.jooq.DSLContext
 import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
@@ -82,6 +76,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
 
 @Service
+@Suppress("ALL")
 class LambdaDataService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -106,7 +101,9 @@ class LambdaDataService @Autowired constructor(
         }
         val model = lambdaPipelineModelDao.getBuildDetailModel(dslContext, event.projectId, event.buildId)
         if (model == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model")
+            logger.warn(
+                "[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the pipeline detail model"
+            )
             return
         }
         val projectInfo = projectCache.get(history.projectId)
@@ -122,11 +119,13 @@ class LambdaDataService @Autowired constructor(
             taskId = event.taskId
         )
         if (task == null) {
-            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task")
+            logger.warn(
+                "[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.taskId}] Fail to get the build task"
+            )
             return
         }
         pushTaskDetail(task)
-        pushGitTaskInfo(event, task)
+//        pushGitTaskInfo(event, task)
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
@@ -182,6 +181,7 @@ class LambdaDataService @Autowired constructor(
                         containerId = task.containerId
                     )
                     if (buildContainer != null) {
+                        @Suppress("UNCHECKED_CAST")
                         val dispatchType = taskParamMap["dispatchType"] as Map<String, Any>
                         val dataPlatJobDetail = DataPlatJobDetail(
                             pipelineId = task.pipelineId,
@@ -209,15 +209,20 @@ class LambdaDataService @Autowired constructor(
                     }
                 }
             } else {
-                val taskParams = if (taskParamMap["@type"] != "marketBuild" && taskParamMap["@type"] != "marketBuildLess") {
+                val taskParams = if (
+                    taskParamMap["@type"] != "marketBuild" &&
+                    taskParamMap["@type"] != "marketBuildLess"
+                ) {
                     val inputMap = mutableMapOf<String, String>()
                     when {
                         taskParamMap["@type"] == "linuxScript" -> {
                             inputMap["name"] = taskParamMap["name"] as String
                             inputMap["scriptType"] = taskParamMap["scriptType"] as String
                             inputMap["script"] = taskParamMap["script"] as String
-                            inputMap["continueNoneZero"] = (taskParamMap["continueNoneZero"] as Boolean).toString()
-                            inputMap["enableArchiveFile"] = (taskParamMap["enableArchiveFile"] as Boolean).toString()
+                            inputMap["continueNoneZero"] =
+                                (taskParamMap["continueNoneZero"] as Boolean?)?.toString() ?: ""
+                            inputMap["enableArchiveFile"] =
+                                (taskParamMap["enableArchiveFile"] as Boolean?)?.toString() ?: ""
                             if (taskParamMap["archiveFile"] != null) {
                                 inputMap["archiveFile"] = taskParamMap["archiveFile"] as String
                             }
@@ -266,9 +271,11 @@ class LambdaDataService @Autowired constructor(
                     washTime = LocalDateTime.now().format(dateTimeFormatter)
                 )
 
-                logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
+                logger.info("pushTaskDetail buildId=${dataPlatTaskDetail.buildId}| taskId=${dataPlatTaskDetail.itemId}")
                 kafkaClient.send(KafkaTopic.LANDUN_TASK_DETAIL_TOPIC, JsonUtil.toJson(dataPlatTaskDetail))
             }
+        } catch (e: RecordTooLargeException) {
+            logger.warn("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
         } catch (e: Exception) {
             logger.error("Push task detail to kafka error, buildId: ${task.buildId}, taskId: ${task.taskId}", e)
         }
@@ -276,7 +283,10 @@ class LambdaDataService @Autowired constructor(
 
     private fun pushBuildHistory(projectInfo: ProjectOrganize, historyRecord: TPipelineBuildHistoryRecord) {
         try {
-            logger.info("pushBuildHistory buildId: ${historyRecord.buildId}|${historyRecord.executeTime}|${historyRecord.buildNum}")
+            logger.info(
+                "pushBuildHistory buildId=${historyRecord.buildId}" +
+                    "|${historyRecord.executeTime}|${historyRecord.buildNum}"
+            )
             val history = genBuildHistory(projectInfo, historyRecord, BuildStatus.values(), System.currentTimeMillis())
             kafkaClient.send(KafkaTopic.LANDUN_BUILD_HISTORY_TOPIC, JsonUtil.toJson(history))
         } catch (e: Exception) {
@@ -294,113 +304,10 @@ class LambdaDataService @Autowired constructor(
         }
     }
 
-    private fun pushGitTaskInfo(event: PipelineBuildTaskFinishBroadCastEvent, task: TPipelineBuildTaskRecord) {
-        try {
-            val gitUrl: String
-            val taskParamsMap = JsonUtil.toMap(task.taskParams)
-            val atomCode = taskParamsMap["atomCode"]
-            when (atomCode) {
-                "CODE_GIT" -> {
-                    val repositoryHashId = taskParamsMap["repositoryHashId"]
-                    val gitRepository = client.get(ServiceRepositoryResource::class)
-                        .get(event.projectId, repositoryHashId.toString(), RepositoryType.ID)
-                    gitUrl = gitRepository.data!!.url
-                    sendGitTask2Kafka(atomCode as String, task, gitUrl)
-                }
-                "gitCodeRepoCommon" -> {
-                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
-                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                    gitUrl = inputMap["repositoryUrl"].toString()
-                    sendGitTask2Kafka(atomCode as String, task, gitUrl)
-                }
-                "PullFromGithub", "GitLab" -> {
-                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
-                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                    val repositoryHashId = if (atomCode == "Gitlab") {
-                        inputMap["repository"].toString()
-                    } else {
-                        inputMap["repositoryHashId"].toString()
-                    }
-                    val gitRepository = client.get(ServiceRepositoryResource::class)
-                        .get(event.projectId, repositoryHashId, RepositoryType.ID)
-                    gitUrl = gitRepository.data!!.url
-                    sendGitTask2Kafka(atomCode as String, task, gitUrl)
-                }
-                "gitCodeRepo" -> {
-                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
-                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                    val repositoryType = inputMap["repositoryType"].toString()
-                    val repositoryHashId = inputMap["repositoryHashId"] as String?
-                    val repositoryName = inputMap["repositoryName"] as String?
-                    val repositoryConfig = RepositoryConfig(
-                        repositoryHashId = repositoryHashId,
-                        repositoryName = repositoryName,
-                        repositoryType = RepositoryType.parseType(repositoryType)
-                    )
-
-                    val gitRepository = client.get(ServiceRepositoryResource::class)
-                        .get(
-                            projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
-                            repositoryType = RepositoryType.parseType(repositoryType)
-                        )
-                    gitUrl = gitRepository.data!!.url
-                    if (gitUrl.isNotBlank()) {
-                        sendGitTask2Kafka(atomCode as String, task, gitUrl)
-                    }
-                }
-                "checkout" -> {
-                    // post action阶段不需要统计
-                    if (task.taskName == "POST：checkout") {
-                        return
-                    }
-                    val dataMap = JsonUtil.toMap(taskParamsMap["data"] ?: error(""))
-                    val inputMap = JsonUtil.toMap(dataMap["input"] ?: error(""))
-                    val repositoryType = inputMap["repositoryType"].toString()
-                    gitUrl = when (repositoryType) {
-                        "URL" -> inputMap["repositoryUrl"].toString()
-                        "ID", "NAME" -> {
-                            val repositoryHashId = inputMap["repositoryHashId"] as String?
-                            val repositoryName = inputMap["repositoryName"] as String?
-                            val repositoryConfig = RepositoryConfig(
-                                repositoryHashId = repositoryHashId,
-                                repositoryName = repositoryName,
-                                repositoryType = RepositoryType.parseType(repositoryType)
-                            )
-
-                            val gitRepository = client.get(ServiceRepositoryResource::class)
-                                .get(
-                                    projectId = event.projectId, repositoryId = repositoryConfig.getRepositoryId(),
-                                    repositoryType = RepositoryType.parseType(repositoryType)
-                                )
-                            gitRepository.data!!.url
-                        }
-                        else -> ""
-                    }
-                    if (gitUrl.isNotBlank()) {
-                        sendGitTask2Kafka(atomCode as String, task, gitUrl)
-                    }
-                }
-            }
-        } catch (ignore: Exception) {
-            logger.error("Push git task to kafka error, buildId: ${event.buildId}, taskId: ${event.taskId}", ignore)
-        }
-    }
-
-    private fun sendGitTask2Kafka(atomCode: String, task: TPipelineBuildTaskRecord, gitUrl: String) {
-        val taskMap = task.intoMap()
-        taskMap["GIT_URL"] = gitUrl
-        taskMap["GIT_PROJECT_NAME"] = GitUtils.getProjectName(gitUrl)
-        taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
-        taskMap["ATOM_CODE"] = atomCode
-        taskMap.remove("TASK_PARAMS")
-
-        kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
-    }
-
     private val projectCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*Build*/, ProjectOrganize>(
+        .build(
             object : CacheLoader<String, ProjectOrganize>() {
                 override fun load(projectId: String): ProjectOrganize {
                     val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
@@ -425,7 +332,7 @@ class LambdaDataService @Autowired constructor(
     private val templateCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*pipelineId*/, String/*templateId*/>(
+        .build(
             object : CacheLoader<String, String>() {
                 override fun load(cacheKey: String): String {
                     val arrs = cacheKey.split("::")
@@ -459,36 +366,6 @@ class LambdaDataService @Autowired constructor(
                 startTime = startTime?.format(dateTimeFormatter) ?: "",
                 endTime = endTime?.format(dateTimeFormatter) ?: "",
                 status = status
-            )
-        }
-    }
-
-    private fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
-        return if (t == null) {
-            null
-        } else {
-            BuildInfo(
-                projectId = t.projectId,
-                pipelineId = t.pipelineId,
-                buildId = t.buildId,
-                version = t.version,
-                buildNum = t.buildNum,
-                trigger = t.trigger,
-                status = BuildStatus.values()[t.status],
-                startUser = t.startUser,
-                queueTime = t.queueTime?.timestampmilli() ?: 0L,
-                startTime = t.startTime?.timestampmilli() ?: 0L,
-                endTime = t.endTime?.timestampmilli() ?: 0L,
-                taskCount = t.taskCount,
-                firstTaskId = t.firstTaskId,
-                parentBuildId = t.parentBuildId,
-                parentTaskId = t.parentTaskId,
-                channelCode = ChannelCode.valueOf(t.channel),
-                errorInfoList = null,
-                executeTime = t.executeTime ?: 0,
-                buildParameters = t.buildParameters?.let {
-                    self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
-                }
             )
         }
     }
@@ -537,7 +414,7 @@ class LambdaDataService @Autowired constructor(
                 remark = remark,
                 totalTime = totalTime,
                 executeTime = if (executeTime == null || executeTime == 0L) {
-                    if (BuildStatus.isFinish(buildStatus[status])) {
+                    if (buildStatus[status].isFinish()) {
                         totalTime
                     } else 0L
                 } else {

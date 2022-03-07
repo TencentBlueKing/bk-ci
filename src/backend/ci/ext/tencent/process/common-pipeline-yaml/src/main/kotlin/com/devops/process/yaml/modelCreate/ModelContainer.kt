@@ -69,7 +69,7 @@ class ModelContainer constructor(
         resources: Resources? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
-        val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0"
+        val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
                 name = "dispatchInfo_${job.id}",

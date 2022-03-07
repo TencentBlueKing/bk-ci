@@ -25,18 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.common.pipeline.event
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.pojo.tcm.TcmReqParam
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceTcmResource
-import com.tencent.devops.plugin.service.TcmService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class ServiceTcmResourceImpl @Autowired constructor(private val tcmService: TcmService) : ServiceTcmResource {
-    override fun startTask(tcmReqParam: TcmReqParam, buildId: String, userId: String): Result<String> {
-        return Result(tcmService.startTask(tcmReqParam, buildId, userId))
-    }
-}
+data class PipelineCallbackEvent(
+    val callbackEvent: CallBackEvent,
+    var callbackUrl: String,
+    val secretToken: String?,
+    val callbackName: String,
+    val region: CallBackNetWorkRegionType?
+)

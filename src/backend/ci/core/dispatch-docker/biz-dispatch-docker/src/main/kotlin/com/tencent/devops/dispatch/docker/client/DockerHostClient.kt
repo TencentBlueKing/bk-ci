@@ -175,7 +175,6 @@ class DockerHostClient @Autowired constructor(
             status = PipelineTaskStatus.RUNNING.status,
             imageName = dockerImage!!,
             containerId = "",
-            wsInHost = true,
             poolNo = poolNo,
             registryUser = userName ?: "",
             registryPwd = password ?: "",
@@ -189,7 +188,8 @@ class DockerHostClient @Autowired constructor(
             containerHashId = dispatchMessage.containerHashId,
             customBuildEnv = dispatchMessage.customBuildEnv,
             dockerResource = getDockerResource(dispatchType),
-            qpcUniquePath = getQpcUniquePath(dispatchMessage)
+            qpcUniquePath = getQpcUniquePath(dispatchMessage),
+            specialProjectList = getSpecialProjectList()
         )
 
         pipelineDockerTaskSimpleDao.createOrUpdate(
@@ -268,7 +268,6 @@ class DockerHostClient @Autowired constructor(
             status = PipelineTaskStatus.RUNNING.status,
             imageName = dockerImage,
             containerId = "",
-            wsInHost = true,
             poolNo = 0,
             registryUser = defaultImageConfig.agentLessRegistryUserName ?: "",
             registryPwd = defaultImageConfig.agentLessRegistryPassword ?: "",
@@ -320,16 +319,17 @@ class DockerHostClient @Autowired constructor(
         vmSeqId: Int,
         containerId: String,
         dockerIp: String,
+        poolNo: Int,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
-        if (clusterType == DockerHostClusterType.AGENT_LESS && projectId == "test-sawyer2") {
+        if (clusterType == DockerHostClusterType.AGENT_LESS) {
             client.get(ServiceBuildlessResource::class).endBuild(
                 BuildLessEndInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
-                    poolNo = 0,
+                    poolNo = poolNo,
                     containerId = containerId
                 )
             )
@@ -347,8 +347,7 @@ class DockerHostClient @Autowired constructor(
             status = 0,
             imageName = "",
             containerId = containerId,
-            wsInHost = true,
-            poolNo = 0,
+            poolNo = poolNo,
             registryUser = "",
             registryPwd = "",
             imageType = "",
@@ -548,6 +547,10 @@ class DockerHostClient @Autowired constructor(
         } else {
             null
         }
+    }
+
+    fun getSpecialProjectList(): String? {
+        return redisUtils.getSpecialProjectListKey()
     }
 
     private fun getDockerResource(dockerDispatchType: DockerDispatchType): DockerResourceOptionsVO {

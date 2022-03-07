@@ -1,7 +1,7 @@
 <template>
     <section @click="toggleAtomSelectorPopup(false)" v-if="element" class="atom-property-panel">
         <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
-            <form-field :desc="$t('editPage.stepIdDesc')" label="Step ID" :is-error="errors.has('stepId')" :error-msg="errors.first('stepId')">
+            <form-field v-if="atom && !isTriggerContainer(container)" :desc="$t('editPage.stepIdDesc')" label="Step ID" :is-error="errors.has('stepId')" :error-msg="errors.first('stepId')">
                 <vuex-input :value="element.stepId" :clearable="false"
                     :placeholder="$t('editPage.stepIdPlaceholder')"
                     name="stepId"
