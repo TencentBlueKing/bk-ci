@@ -56,5 +56,5 @@ data class PushRule(
     @JsonProperty("users-ignore")
     val usersIgnore: List<String>? = null,
 
-    val action: List<String>? = null,
+    val action: List<String>? = null
 )
