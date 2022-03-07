@@ -65,16 +65,17 @@ class BuildVarResourceImpl @Autowired constructor(
         check: Boolean?
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
-        if (check == true) {
-            checkVariable(variableName = contextName)
-        }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        if (taskId.isNullOrBlank() && VariableType.valueOf(contextName).alisName.isNotBlank()) {
-            throw ParamBlankException("Plugin SDK needs to be upgraded")
-        }
-        if (VariableType.valueOf(contextName) == VariableType.BK_CI_BUILD_TASK_ID) {
-            return Result(taskId)
-        }
+        val alisName = if (check == true) {
+            checkVariable(variableName = contextName)
+            if (taskId.isNullOrBlank() && VariableType.valueOf(contextName).alisName.isNotBlank()) {
+                throw ParamBlankException("Plugin SDK needs to be upgraded")
+            }
+            if (VariableType.valueOf(contextName) == VariableType.BK_CI_BUILD_TASK_ID) {
+                return Result(taskId)
+            }
+            VariableType.valueOf(contextName).alisName
+        } else ""
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
         val variables = buildVariableService.getAllVariable(projectId, buildId)
@@ -86,7 +87,7 @@ class BuildVarResourceImpl @Autowired constructor(
             taskId = taskId,
             variables = variables
         )
-        return Result(allContext[varName] ?: allContext[VariableType.valueOf(contextName).alisName])
+        return Result(allContext[varName] ?: allContext[alisName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
