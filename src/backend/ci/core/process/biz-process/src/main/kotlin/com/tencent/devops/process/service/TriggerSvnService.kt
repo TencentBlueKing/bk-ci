@@ -84,22 +84,22 @@ class TriggerSvnService(
                 logger.info("The other process is processing polling job, ignore")
                 return
             }
-            val value = redisOperation.get(getRedisKey)
+//            val value = redisOperation.get(getRedisKey)
 
             val currentTimeMillis = System.currentTimeMillis()
-            if (value != null) {
-                val time = JsonUtil.to(value, Long::class.java)
-                // 如果 redis 中的时间比间隔小, 说明是别的节点执行不久, 终止本次执行
-                logger.info(
-                    "[last svn polling timestamp is: $time|" +
-                            "now is: $currentTimeMillis|${currentTimeMillis - time}]"
-                )
-                // 增加三秒误差
-                if (currentTimeMillis - time < (interval - THREE) * 1000) {
-                    logger.info("[this time is ignore ${currentTimeMillis - time} ${(interval - THREE) * 1000}]")
-                    return
-                }
-            }
+//            if (value != null) {
+//                val time = JsonUtil.to(value, Long::class.java)
+//                // 如果 redis 中的时间比间隔小, 说明是别的节点执行不久, 终止本次执行
+//                logger.info(
+//                    "[last svn polling timestamp is: $time|" +
+//                            "now is: $currentTimeMillis|${currentTimeMillis - time}]"
+//                )
+//                // 增加三秒误差
+//                if (currentTimeMillis - time < (interval - THREE) * 1000) {
+//                    logger.info("[this time is ignore ${currentTimeMillis - time} ${(interval - THREE) * 1000}]")
+//                    return
+//                }
+//            }
             // 将本次执行时间存入 redis
             redisOperation.set(getRedisKey, JsonUtil.toJson(currentTimeMillis))
 
