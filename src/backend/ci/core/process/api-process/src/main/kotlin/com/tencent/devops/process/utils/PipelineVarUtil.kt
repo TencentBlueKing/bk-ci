@@ -211,7 +211,7 @@ object PipelineVarUtil {
         "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
         "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
-        "ci.action" to PIPELINE_GIT_ACTION,
+        "ci.action" to PIPELINE_GIT_ACTION
     )
 
     /**
