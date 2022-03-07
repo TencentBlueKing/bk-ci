@@ -114,8 +114,10 @@ object TemplateYamlUtil {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
                             error(
                                 Constants.VALUE_NOT_IN_ENUM.format(
-                                    fromPath, valueName, newValue,
-                                    param.values!!.joinToString(",")
+                                    fromPath,
+                                    valueName,
+                                    newValue,
+                                    param.values.joinToString(",")
                                 )
                             )
                         } else {

@@ -126,19 +126,19 @@ class YamlTemplate<T>(
         }
 
         if (newYamlObject.extends != null) {
-            replaceExtends(newYamlObject.extends!!, preYamlObject, rootDeepTree)
+            replaceExtends(newYamlObject.extends, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.variables != null) {
-            replaceVariables(newYamlObject.variables!!, preYamlObject, rootDeepTree)
+            replaceVariables(newYamlObject.variables, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.stages != null) {
-            replaceStages(newYamlObject.stages!!, preYamlObject, rootDeepTree)
+            replaceStages(newYamlObject.stages, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.jobs != null) {
-            replaceJobs(newYamlObject.jobs!!, preYamlObject, rootDeepTree)
+            replaceJobs(newYamlObject.jobs, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.steps != null) {
-            replaceSteps(newYamlObject.steps!!, preYamlObject, rootDeepTree)
+            replaceSteps(newYamlObject.steps, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.finally != null) {
             replaceFinally(newYamlObject.finally!!, preYamlObject, rootDeepTree)
@@ -440,6 +440,10 @@ class YamlTemplate<T>(
                     jobMap.putAll(newJob)
                 }
             } else {
+                // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
+                if (key.length > 64) {
+                    throw YamlFormatException("$fromPath job.id 超过长度限制64 $key")
+                }
                 jobMap[key] = getJob(fromPath, YamlObjects.transValue(fromPath, TemplateType.JOB.text, value), deepTree)
             }
         }
