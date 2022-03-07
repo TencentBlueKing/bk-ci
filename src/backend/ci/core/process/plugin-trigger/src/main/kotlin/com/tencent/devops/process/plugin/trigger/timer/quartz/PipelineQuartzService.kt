@@ -92,7 +92,7 @@ class PipelineQuartzService @Autowired constructor(
             list.forEach { timer ->
                 logger.info("TIMER_RELOAD| load crontab($timer)")
                 timer.crontabExpressions.forEach { crontab ->
-                    addJob(pipelineId = timer.pipelineId, crontab = crontab)
+                    addJob(projectId = timer.projectId, pipelineId = timer.pipelineId, crontab = crontab)
                 }
             }
             start += limit
@@ -101,10 +101,10 @@ class PipelineQuartzService @Autowired constructor(
         logger.warn("TIMER_RELOAD| reload ok!")
     }
 
-    fun addJob(pipelineId: String, crontab: String) {
+    fun addJob(projectId: String, pipelineId: String, crontab: String) {
         try {
             val md5 = DigestUtils.md5Hex(crontab)
-            val comboKey = "${pipelineId}_$md5"
+            val comboKey = "${pipelineId}_${md5}_$projectId"
             schedulerManager.addJob(
                 comboKey, crontab,
                 jobBeanClass
@@ -147,12 +147,13 @@ class PipelineJobBean(
     fun execute(context: JobExecutionContext?) {
         val jobKey = context?.jobDetail?.key ?: return
         val comboKey = jobKey.name
-        val comboKeys = comboKey.split("_")
+        val comboKeys = comboKey.split(Regex("_"), 3)
         val pipelineId = comboKeys[0]
         val crontabMd5 = comboKeys[1]
+        val projectId = comboKeys[2]
         val watcher = Watcher(id = "timer|[$comboKey]")
         try {
-            val pipelineTimer = pipelineTimerService.get(pipelineId)
+            val pipelineTimer = pipelineTimerService.get(projectId, pipelineId)
             if (null == pipelineTimer) {
                 logger.info("[$comboKey]|PIPELINE_TIMER_EXPIRED|Timer is expire, delete it from queue!")
                 schedulerManager.deleteJob(comboKey)

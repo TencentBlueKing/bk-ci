@@ -32,12 +32,14 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.SampleProjectEventListener
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.BluekingProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.V3ProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -103,5 +105,14 @@ class ProjectConfiguration {
         projectDao = projectDao,
         dslContext = dslContext,
         authResourceApi = authResourceApi
+    )
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamProjectPermissionService(
+        client: Client,
+        tokenService: ClientTokenService
+    ): ProjectPermissionService = StreamProjectPermissionServiceImpl(
+        client = client,
+        tokenService = tokenService
     )
 }

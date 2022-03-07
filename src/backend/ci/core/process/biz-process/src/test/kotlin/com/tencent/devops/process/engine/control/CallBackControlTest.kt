@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control
 
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -37,7 +38,7 @@ import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.junit.Assert
 import org.junit.Before
@@ -48,11 +49,13 @@ class CallBackControlTest : TestBase() {
     private val pipelineBuildDetailService: PipelineBuildDetailService = mock()
     private val pipelineRepositoryService: PipelineRepositoryService = mock()
     private val projectPipelineCallBackService: ProjectPipelineCallBackService = mock()
+    private val client: Client = mock()
 
     private val callBackControl = CallBackControl(
         pipelineBuildDetailService = pipelineBuildDetailService,
         pipelineRepositoryService = pipelineRepositoryService,
-        projectPipelineCallBackService = projectPipelineCallBackService
+        projectPipelineCallBackService = projectPipelineCallBackService,
+        client = client
     )
 
     private val testUrl = "https://mock/callback"
@@ -81,10 +84,11 @@ class CallBackControlTest : TestBase() {
             curVersion = 2,
             latestBuildNum = 1,
             latestVersion = 1,
+            lastModifyUser = "yongyiduan",
             executeTime = 100
         )
 
-        whenever(pipelineBuildDetailService.get(buildId = buildId, refreshStatus = false))
+        whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))
             .thenReturn(modelDetail)
     }
 

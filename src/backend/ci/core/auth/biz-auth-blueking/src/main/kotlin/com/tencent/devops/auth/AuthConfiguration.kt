@@ -27,16 +27,32 @@
 
 package com.tencent.devops.auth
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
+import com.tencent.devops.auth.service.SimpleAuthPermissionProjectService
+import com.tencent.devops.auth.service.SimpleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.BkPermissionProjectService
+import com.tencent.devops.auth.service.BkPermissionService
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
+import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
+import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
+import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -72,11 +88,11 @@ class AuthConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PermissionService::class)
-    fun permissionService() = BkAuthPermissionService()
+    fun permissionService() = SimpleAuthPermissionService()
 
     @Bean
     @ConditionalOnMissingBean(PermissionProjectService::class)
-    fun permissionProjectService() = BkAuthPermissionProjectService()
+    fun permissionProjectService() = SimpleAuthPermissionProjectService()
 
     @Bean
     @ConditionalOnMissingBean
@@ -94,4 +110,61 @@ class AuthConfiguration {
         redisOperation: RedisOperation,
         objectMapper: ObjectMapper
     ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3permissionService(
+        authHelper: AuthHelper,
+        policyService: PolicyService,
+        iamConfiguration: IamConfiguration,
+        iamCacheService: IamCacheService
+    ) = BkPermissionService(authHelper, policyService, iamConfiguration, iamCacheService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3permissionProjectService(
+        permissionRoleService: PermissionRoleService,
+        permissionRoleMemberService: PermissionRoleMemberService,
+        authHelper: AuthHelper,
+        policyService: PolicyService,
+        client: Client,
+        iamConfiguration: IamConfiguration,
+        deptService: DeptService,
+        groupService: AuthGroupService,
+        iamCacheService: IamCacheService,
+        authProjectApi: AuthProjectApi,
+        projectAuthServiceCode: BluekingV3ProjectAuthServiceCode
+    ) = BkPermissionProjectService(
+        permissionRoleService = permissionRoleService,
+        permissionRoleMemberService = permissionRoleMemberService,
+        authHelper = authHelper,
+        policyService = policyService,
+        client = client,
+        iamConfiguration = iamConfiguration,
+        deptService = deptService,
+        groupService = groupService,
+        iamCacheService = iamCacheService,
+        authProjectApi = authProjectApi,
+        projectAuthServiceCode = projectAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamPermissionService() = GithubStreamPermissionServiceImpl()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamProjectPermissionService(
+        streamPermissionService: StreamPermissionServiceImpl
+    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamPermissionService() = GitlabStreamPermissionServiceImpl()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamProjectPermissionService(
+        streamPermissionService: StreamPermissionServiceImpl
+    ) = StreamPermissionProjectServiceImpl(streamPermissionService)
 }

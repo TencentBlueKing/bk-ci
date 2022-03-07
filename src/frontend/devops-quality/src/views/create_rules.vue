@@ -235,7 +235,7 @@
                                                 指标所需插件完整
                                             </p>
                                             <p class="atom-tips" v-if="checkAtomCount(props.row.existElement)">
-                                                <span class="mark-circle"></span>有多个控制点插件。请将需配置红线的控制点插件别名开头加上红线ID+下划线
+                                                <span class="mark-circle"></span>有多个控制点插件。请将需配置红线的控制点插件别名开头加上控制点前缀+下划线
                                             </p>
                                             <p v-if="props.row.isSetPipeline">-</p>
                                         </template>
@@ -840,7 +840,7 @@
                 this.loading.isLoading = true
 
                 try {
-                    const res = await this.$store.dispatch('quality/getControlPoint', { element })
+                    const res = await this.$store.dispatch('quality/getControlPoint', { element, projectId: this.projectId })
 
                     // 控制点处理
                     this.createRuleForm.controlPointName = res.name
@@ -937,7 +937,9 @@
             },
             async requestRuleTemplate () {
                 try {
-                    const res = await this.$store.dispatch('quality/requestRuleTemplate')
+                    const res = await this.$store.dispatch('quality/requestRuleTemplate', {
+                        projectId: this.projectId
+                    })
 
                     this.fastTypeRuleList.splice(0, this.fastTypeRuleList.length)
                     if (res.length) {

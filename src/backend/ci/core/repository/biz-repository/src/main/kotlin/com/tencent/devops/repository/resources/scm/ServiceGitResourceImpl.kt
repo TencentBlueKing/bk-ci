@@ -45,7 +45,9 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
@@ -285,5 +287,57 @@ class ServiceGitResourceImpl @Autowired constructor(
             mrId = mrId
         )
         return Result(true)
+    }
+
+    override fun getProjectGroupInfo(
+        id: String,
+        includeSubgroups: Boolean?,
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitProjectGroupInfo> {
+        return Result(
+            gitService.getProjectGroupInfo(
+                id = id,
+                includeSubgroups = includeSubgroups,
+                token = token,
+                tokenType = tokenType
+            )
+        )
+    }
+
+    override fun getChangeFileList(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        from: String,
+        to: String,
+        straight: Boolean?,
+        page: Int,
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>> {
+        return Result(
+            gitService.getChangeFileList(
+                tokenType = tokenType,
+                gitProjectId = gitProjectId,
+                token = token,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize
+            )
+        )
+    }
+
+    override fun getProjectInfo(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String
+    ): Result<GitProjectInfo?> {
+        return gitService.getGitProjectInfo(
+            id = gitProjectId,
+            token = token,
+            tokenType = tokenType
+        )
     }
 }

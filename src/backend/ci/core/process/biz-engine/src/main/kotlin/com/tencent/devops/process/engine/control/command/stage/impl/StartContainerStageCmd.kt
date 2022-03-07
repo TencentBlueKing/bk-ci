@@ -134,8 +134,9 @@ class StartContainerStageCmd(
         var cancel: BuildStatus? = null
 
         // 查找最后一个结束状态的Stage (排除Finally）
-        if (commandContext.stage.controlOption?.finally == true) {
-            val previousStage = pipelineStageService.listStages(commandContext.stage.buildId)
+        val stage = commandContext.stage
+        if (stage.controlOption?.finally == true) {
+            val previousStage = pipelineStageService.listStages(stage.projectId, stage.buildId)
                 .lastOrNull {
                     it.stageId != commandContext.stage.stageId &&
                         (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS || hasFailedCheck(it))
@@ -169,7 +170,7 @@ class StartContainerStageCmd(
             }
         }
 
-        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后是成功
+        // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功
         return running ?: fail ?: cancel ?: BuildStatus.SUCCEED
     }
 
@@ -201,6 +202,7 @@ class StartContainerStageCmd(
                 previousStageStatus = commandContext.previousStageStatus,
                 containerType = container.containerType,
                 containerId = container.containerId,
+                containerHashId = container.containerHashId,
                 actionType = actionType,
                 errorCode = errorCode,
                 errorTypeName = errorTypeName,

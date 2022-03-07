@@ -221,7 +221,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName
             )
-            val logoUrl = it["logoUrl"] as? String
+            var logoUrl = it["logoUrl"] as? String
+            logoUrl = if (logoUrl?.contains("?") == true) {
+                logoUrl.plus("&logo=true")
+            } else {
+                logoUrl?.plus("?logo=true")
+            }
             val icon = it["icon"] as? String
             val categoryFlag = it["category"] as Byte
             val summary = it["summary"] as? String
@@ -331,7 +336,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 null
             }
         }
-        if (atomStatus == null) {
+        if (atomStatus == null && !VersionUtils.isLatestVersion(version)) {
             atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
         }
         val pipelineAtomRecord = if (projectCode != null) {

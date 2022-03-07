@@ -27,62 +27,11 @@
 
 package com.tencent.devops.misc
 
-import com.mysql.cj.jdbc.Driver
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import com.zaxxer.hikari.HikariDataSource
-import org.jooq.SQLDialect
-import org.jooq.impl.DefaultConfiguration
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Primary
-import javax.sql.DataSource
 
 @MicroService
-class MiscApplication {
-
-    @ConditionalOnMissingBean(name = ["dataSource"])
-    class PrimaryDSConfiguration {
-
-        @Bean
-        @Primary
-        fun dataSource(
-            @Value("\${spring.datasource.process.url}")
-            datasourceUrl: String,
-            @Value("\${spring.datasource.process.username}")
-            datasourceUsername: String,
-            @Value("\${spring.datasource.process.password}")
-            datasourcePassword: String,
-            @Value("\${spring.datasource.process.initSql:#{null}}")
-            datasourceInitSql: String? = null,
-            @Value("\${spring.datasource.process.leakDetectionThreshold:#{0}}")
-            datasouceLeakDetectionThreshold: Long = 0
-        ): DataSource {
-            return HikariDataSource().apply {
-                poolName = "DBPool-Misc-Process"
-                jdbcUrl = datasourceUrl
-                username = datasourceUsername
-                password = datasourcePassword
-                driverClassName = Driver::class.java.name
-                minimumIdle = 1
-                maximumPoolSize = 10
-                idleTimeout = 60000
-                connectionInitSql = datasourceInitSql
-                leakDetectionThreshold = datasouceLeakDetectionThreshold
-            }
-        }
-
-        @Bean
-        fun defaultJooqConfiguration(@Qualifier("dataSource") dataSource: DataSource): DefaultConfiguration {
-            val configuration = DefaultConfiguration()
-            configuration.set(SQLDialect.MYSQL)
-            configuration.set(dataSource)
-            return configuration
-        }
-    }
-}
+class MiscApplication
 
 fun main(args: Array<String>) {
     MicroServiceApplication.run(MiscApplication::class, args)

@@ -21,9 +21,23 @@
     export default {
         name: 'code-git-web-hook-trigger',
         mixins: [atomMixin, validMixins],
+        watch: {
+            'element.enableCheck': {
+                // git事件触发选中commit check ， 同时锁定提交才显示
+                handler (newVal) {
+                    if (newVal) {
+                        this.atomPropsModel.block.hidden = false
+                    } else {
+                        this.atomPropsModel.block.hidden = true
+                        this.handleUpdateElement('block', false)
+                    }
+                },
+                immediate: true,
+                deep: true
+            }
+        },
         created () {
             if (this.element.eventType === 'MERGE_REQUEST') {
-                this.atomPropsModel.block.hidden = false
                 this.atomPropsModel.webhookQueue.hidden = false
             } else {
                 this.atomPropsModel.block.hidden = true

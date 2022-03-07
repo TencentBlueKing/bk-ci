@@ -49,7 +49,8 @@ class PipelineWebHookQueueDao {
         targetProjectId: Long,
         targetRepoName: String,
         targetBranch: String,
-        buildId: String
+        buildId: String,
+        id: Long? = null
     ) {
         with(T_PIPELINE_WEBHOOK_QUEUE) {
             dslContext.insertInto(
@@ -63,7 +64,8 @@ class PipelineWebHookQueueDao {
                 TARGET_REPO_NAME,
                 TARGET_BRANCH,
                 BUILD_ID,
-                CREATE_TIME
+                CREATE_TIME,
+                ID
             ).values(
                 projectId,
                 pipelineId,
@@ -74,13 +76,15 @@ class PipelineWebHookQueueDao {
                 targetRepoName,
                 targetBranch,
                 buildId,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                id
             ).execute()
         }
     }
 
     fun getWebHookBuildHistory(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         sourceProjectId: Long,
         sourceBranch: String,
@@ -94,6 +98,7 @@ class PipelineWebHookQueueDao {
                 .and(SOURCE_BRANCH.eq(sourceBranch))
                 .and(TARGET_PROJECT_ID.eq(targetProjectId))
                 .and(TARGET_BRANCH.eq(targetBranch))
+                .and(PROJECT_ID.eq(projectId))
                 .fetch()
         }.map {
             convert(it)
@@ -102,22 +107,26 @@ class PipelineWebHookQueueDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String
     ): PipelineWebHookQueue? {
         return with(T_PIPELINE_WEBHOOK_QUEUE) {
             dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
                 .fetchOne()
         }?.let { convert(it) }
     }
 
     fun deleteByBuildIds(
         dslContext: DSLContext,
+        projectId: String,
         buildIds: List<String>
     ) {
         with(T_PIPELINE_WEBHOOK_QUEUE) {
             dslContext.deleteFrom(this)
                 .where(BUILD_ID.`in`(buildIds))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }

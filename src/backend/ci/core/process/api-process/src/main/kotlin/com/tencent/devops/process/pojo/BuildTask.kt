@@ -41,8 +41,11 @@ data class BuildTask(
     val status: BuildTaskStatus,
     @ApiModelProperty("任务ID", required = true)
     val taskId: String? = null,
+    @Deprecated("原本用于标识上下文但统一传了taskId，现废弃")
     @ApiModelProperty("插件ID", required = true)
     val elementId: String? = null,
+    @ApiModelProperty("标识上下文的插件ID", required = true)
+    val stepId: String? = null,
     @ApiModelProperty("插件名字", required = true)
     val elementName: String? = null,
     @ApiModelProperty("任务类型", required = false)
@@ -60,5 +63,5 @@ data class BuildTask(
      * 2、防止敏感信息打印到日志
      */
     override fun toString() = "buildId=$buildId|vmSeqId=$vmSeqId|status=$status|taskId=$taskId|name=$elementName" +
-        "elementId=$elementId|type=$type|paramSize=${params?.size}|buildVarSize=${buildVariable?.size}"
+        "stepId=$stepId|type=$type|paramSize=${params?.size}|buildVarSize=${buildVariable?.size}"
 }
