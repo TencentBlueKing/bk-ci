@@ -102,7 +102,7 @@
                 return this.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
             },
             showLastCruveLine () {
-                return this.stageIndex !== this.stageLength - 1 && !this.isExecDetail
+                return this.stageIndex !== this.stageLength - 1 || !this.isExecDetail
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job
