@@ -1299,6 +1299,23 @@ class RepositoryService @Autowired constructor(
         return result
     }
 
+    fun getSvnInfoByHashIds(hashIds: List<String>): List<CodeSvnRepository>{
+        val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds,
+            checkDelete = true
+        )
+        val result = mutableListOf<CodeSvnRepository>()
+        repositoryInfos?.map {
+            val repository = compose(it)
+            if(repository is CodeSvnRepository){
+                result.add(repository)
+            }
+        }
+        return result
+    }
+
     fun getInfoByIds(ids: List<Long>): List<RepositoryInfo> {
         val repositoryInfos = repositoryDao.getRepoByIds(
             dslContext = dslContext,

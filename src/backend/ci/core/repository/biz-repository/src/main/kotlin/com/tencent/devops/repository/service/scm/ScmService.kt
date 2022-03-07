@@ -29,7 +29,6 @@ package com.tencent.devops.repository.service.scm
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
@@ -37,13 +36,8 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitDiff
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.*
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,6 +79,34 @@ class ScmService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the latest revision")
         }
+    }
+
+    override fun getSvnRevisionList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        branchName: String?,
+        privateKey: String?,
+        passPhrase: String?,
+        token: String?,
+        region: CodeSvnRegion?,
+        userName: String?,
+        currentRevision: String?
+    ): Pair<Long, List<SvnRevisionInfo>> {
+        if (ScmType.CODE_SVN != type) {
+            throw ScmException("scm类型必须为Svn仓库", type.name)
+        }
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = branchName,
+            privateKey = privateKey,
+            passPhrase = passPhrase,
+            token = token,
+            region = region,
+            userName = userName
+        ).getSvnRevisionList(currentRevision)!!
     }
 
     override fun listBranches(

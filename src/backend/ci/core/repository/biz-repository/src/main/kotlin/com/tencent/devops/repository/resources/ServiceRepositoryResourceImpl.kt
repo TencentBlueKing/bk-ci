@@ -37,10 +37,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.RepositoryId
-import com.tencent.devops.repository.pojo.RepositoryInfo
-import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.*
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepositoryService
 import org.springframework.beans.factory.annotation.Autowired
@@ -181,5 +178,11 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         repositoryService.userEdit(userId, projectId, repositoryHashId, repository)
         return Result(true)
+    }
+
+    override fun listSvnRepoByIds(
+        repositoryIds: Set<String>
+    ) : Result<List<CodeSvnRepository>>{
+        return (Result(repositoryService.getSvnInfoByHashIds(repositoryIds.toList())))
     }
 }
