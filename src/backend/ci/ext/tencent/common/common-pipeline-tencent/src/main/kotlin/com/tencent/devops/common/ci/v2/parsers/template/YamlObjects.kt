@@ -35,7 +35,6 @@ import com.tencent.devops.common.ci.v2.MetaData
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
-import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
@@ -348,8 +347,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree
             YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!!)
         }
     )
-
-
+    
     // 检测job env合法性
     GitCIEnvUtils.checkEnv(preJob.env, fromPath)
     return preJob
