@@ -318,9 +318,8 @@ class PreBuildService @Autowired constructor(
     ): AbstractTask {
         var step = oldStep
         val isRunOnDocker = job.job.resourceType == ResourceType.REMOTE &&
-            (job.job.pool?.type == PoolType.DockerOnDevCloud ||
-                job.job.pool?.type == PoolType.DockerOnBcs ||
-                job.job.pool?.type == PoolType.DockerOnVm)
+                (job.job.pool?.type == PoolType.DockerOnDevCloud ||
+                        job.job.pool?.type == PoolType.DockerOnVm)
         if (step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) {
             val whitePath = getWhitePath(startUpReq, isRunOnDocker)
             val data = step.inputs.data.toMutableMap()
@@ -521,7 +520,7 @@ class PreBuildService @Autowired constructor(
     fun getBuildLink(userId: String, preProjectId: String, buildId: String): String {
         val preProjectRecord = getPreProjectInfo(preProjectId, userId)
         return HomeHostUtil.innerServerHost() +
-            "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
+                "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
     }
 
     fun getOrCreatePreAgent(

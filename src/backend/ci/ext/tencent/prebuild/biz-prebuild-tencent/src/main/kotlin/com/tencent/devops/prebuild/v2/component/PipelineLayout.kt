@@ -550,9 +550,6 @@ class PipelineLayout private constructor(
             JobRunsOnType.DEV_CLOUD.type -> {
                 PoolType.DockerOnDevCloud.toDispatchType(containerPool)
             }
-            JobRunsOnType.BCS.type -> {
-                PoolType.DockerOnBcs.toDispatchType(containerPool)
-            }
             JobRunsOnType.DOCKER.type -> {
                 PoolType.DockerOnVm.toDispatchType(containerPool)
             }
