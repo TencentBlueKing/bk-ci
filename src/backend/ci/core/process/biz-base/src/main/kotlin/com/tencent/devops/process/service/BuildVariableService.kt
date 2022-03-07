@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.dao.PipelineBuildSensitiveValueDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val buildSensitiveValueDao: PipelineBuildSensitiveValueDao,
     private val redisOperation: RedisOperation
 ) {
 
@@ -121,6 +123,11 @@ class BuildVariableService @Autowired constructor(
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
         pipelineBuildVarDao.deletePipelineBuildVar(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        buildSensitiveValueDao.deletePipelineSensitiveValue(
             dslContext = commonDslContext,
             projectId = projectId,
             pipelineId = pipelineId
