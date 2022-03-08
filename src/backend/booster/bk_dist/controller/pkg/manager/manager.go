@@ -372,7 +372,7 @@ func (m *mgr) ExecuteLocalTask(
 	work.Basic().UpdateJobStats(req.Stats)
 	withlocalresource := m.checkRunWithLocalResource(work)
 	if withlocalresource {
-		defer atomic.AddInt32(&m.localResourceTaskNum, -1)
+		defer m.decLocalResourceTask()
 	}
 	result, err := work.Local().ExecuteTask(req, globalWork, withlocalresource)
 	if err != nil {
@@ -826,4 +826,8 @@ func (m *mgr) checkRunWithLocalResource(work *types.Work) bool {
 
 	atomic.AddInt32(&m.localResourceTaskNum, 1)
 	return true
+}
+
+func (m *mgr) decLocalResourceTask() {
+	atomic.AddInt32(&m.localResourceTaskNum, -1)
 }

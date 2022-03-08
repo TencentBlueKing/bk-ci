@@ -56,15 +56,7 @@ func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *reso
 	}
 
 	usageMap := make(map[dcSDK.JobUsage]*usageWorkerSet, 10)
-	// for k, v := range usageLimit {
-	// 	if v <= 0 {
-	// 		v = total
-	// 	}
-	// 	usageMap[k] = &usageWorkerSet{
-	// 		limit:    v,
-	// 		occupied: 0,
-	// 	}
-	// }
+	// do not use usageLimit, we only need JobUsageRemoteExe, and it is always 0 by now
 	usageMap[dcSDK.JobUsageRemoteExe] = &usageWorkerSet{
 		limit:    total,
 		occupied: 0,
@@ -160,6 +152,10 @@ func (wr *resource) TotalSlots() int {
 }
 
 func (wr *resource) disableWorker(host *dcProtocol.Host) {
+	if host == nil {
+		return
+	}
+
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
@@ -167,6 +163,11 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 	for _, w := range wr.worker {
 		if !host.Equal(w.host) {
 			continue
+		}
+
+		if w.disabled {
+			blog.Infof("remote slot: host:%v disabled before,do nothing now", *host)
+			break
 		}
 
 		w.disabled = true

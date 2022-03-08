@@ -266,12 +266,11 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		},
 
 		Transport: dcType.BoosterTransport{
-			ServerDomain:  ServerDomain,
-			ServerHost:    ServerHost,
-			Timeout:       5 * time.Second,
-			HeartBeatTick: 5 * time.Second,
-			// InspectTaskTick:        100 * time.Millisecond,
-			InspectTaskTick:        1 * time.Second,
+			ServerDomain:           ServerDomain,
+			ServerHost:             ServerHost,
+			Timeout:                5 * time.Second,
+			HeartBeatTick:          5 * time.Second,
+			InspectTaskTick:        100 * time.Millisecond,
 			TaskPreparingTimeout:   time.Duration(waitResourceSeconds) * time.Second,
 			PrintTaskInfoEveryTime: 5,
 			CommitSuicideCheckTick: 5 * time.Second,
