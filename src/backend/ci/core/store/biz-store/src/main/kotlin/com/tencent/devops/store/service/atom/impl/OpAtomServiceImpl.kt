@@ -274,7 +274,7 @@ class OpAtomServiceImpl @Autowired constructor(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = atom.version,
-                    atomStatus = atom.atomStatus,
+                    atomStatus = atomStatus,
                     releaseType = releaseType,
                     repositoryHashId = atom.repositoryHashId,
                     branch = atom.branch
