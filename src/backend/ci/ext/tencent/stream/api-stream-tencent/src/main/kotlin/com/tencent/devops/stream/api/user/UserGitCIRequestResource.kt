@@ -75,6 +75,6 @@ interface UserGitCIRequestResource {
     fun getEventTypeConf(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String
     ): Result<List<EventTypeConf>>
 }
