@@ -63,11 +63,11 @@ class UserGitCIRequestResourceImpl @Autowired constructor(
     override fun getEventTypeConf(userId: String): Result<List<EventTypeConf>> {
         val eventTypeList = mutableListOf<EventTypeConf>()
         eventTypeList.let { e ->
-            TGitObjectKind.values().forEach { obj ->
+            TGitObjectKind.values().forEach {
                 e.add(
                     EventTypeConf(
-                        id = obj.value,
-                        name = obj.value.capitalize()
+                        id = it.value,
+                        name = it.value.capitalize()
                     )
                 )
             }
