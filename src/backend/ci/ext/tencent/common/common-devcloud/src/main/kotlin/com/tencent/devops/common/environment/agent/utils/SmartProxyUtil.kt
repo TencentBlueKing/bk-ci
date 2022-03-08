@@ -35,7 +35,14 @@ import org.apache.commons.lang3.RandomStringUtils
  */
 object SmartProxyUtil {
 
-    fun makeHeaders(appId: String, token: String, staffName: String, proxyToken: String): Map<String, String> {
+    fun makeHeaders(
+        appId: String,
+        token: String,
+        staffName: String,
+        proxyToken: String,
+        projectId: String? = "",
+        pipelineId: String? = ""
+    ): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
         headerBuilder["APPID"] = appId
         val random = RandomStringUtils.randomAlphabetic(8)
@@ -53,6 +60,8 @@ object SmartProxyUtil {
         headerBuilder["X-RIO-SEQ"] = seq
         val signature = ShaUtils.sha256("$timestamp$proxyToken$seq,$staffId,$staffName,$timestamp")
         headerBuilder["SIGNATURE"] = signature.toUpperCase()
+        headerBuilder["X-Project"] = projectId ?: ""
+        headerBuilder["X-Pipeline-Id"] = pipelineId ?: ""
 
         return headerBuilder
     }
