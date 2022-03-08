@@ -136,7 +136,11 @@
                 this.getOptionList()
                 this.debounceGetOptionList = debounce(this.getOptionList)
             } else {
-                this.displayName = this.getDisplayName(this.value)
+                if (this.isMultiple) {
+                    this.getMultipleDisplayName(this.value, 'id')
+                } else {
+                    this.displayName = this.getDisplayName(this.value)
+                }
             }
         },
         beforeDestroy () {
@@ -217,7 +221,7 @@
             },
 
             isEnvVar (str) {
-                return String.prototype.isBkVar(str)
+                return typeof str === 'string' && str.isBkVar()
             },
 
             handleBlur () {
@@ -264,48 +268,52 @@
                 this.adjustViewPort()
             },
             getMultipleDisplayName (val, type = 'name') {
-                if (type === 'name') {
-                    val = val.split(',')
-                }
-                const nameArr = []
-                this.selectedMap = {}
-                if (this.hasGroup) {
-                    val.forEach(v => {
-                        for (let i = 0; i < this.optionList.length; i++) {
-                            const option = this.optionList[i]
-                            option.children.forEach(child => {
-                                if (child[type] === v) {
-                                    if (!nameArr.includes(child.name)) {
-                                        nameArr.push(child.name)
-                                        this.$set(this.selectedMap, child.id, child.name)
+                if (!this.optionList.length) {
+                    this.displayName = val
+                } else {
+                    if (type === 'name') {
+                        val = val.split(',')
+                    }
+                    const nameArr = []
+                    this.selectedMap = {}
+                    if (this.hasGroup) {
+                        val.forEach(v => {
+                            for (let i = 0; i < this.optionList.length; i++) {
+                                const option = this.optionList[i]
+                                option.children.forEach(child => {
+                                    if (child[type] === v) {
+                                        if (!nameArr.includes(child.name)) {
+                                            nameArr.push(child.name)
+                                            this.$set(this.selectedMap, child.id, child.name)
+                                        }
+                                    } else if (this.isEnvVar(v)) {
+                                        if (!nameArr.includes(v)) {
+                                            nameArr.push(v)
+                                            this.$set(this.selectedMap, v, v)
+                                        }
+                                    }
+                                })
+                            }
+                        })
+                    } else {
+                        val.forEach(v => {
+                            this.optionList.forEach(option => {
+                                if (option[type] === v) {
+                                    if (!nameArr.includes(option.name)) {
+                                        nameArr.push(option.name)
+                                        this.$set(this.selectedMap, option.id, option.name)
                                     }
                                 } else if (this.isEnvVar(v)) {
                                     if (!nameArr.includes(v)) {
-                                        nameArr.push(v)
                                         this.$set(this.selectedMap, v, v)
+                                        nameArr.push(v)
                                     }
                                 }
                             })
-                        }
-                    })
-                } else {
-                    val.forEach(v => {
-                        this.optionList.forEach(option => {
-                            if (option[type] === v) {
-                                if (!nameArr.includes(option.name)) {
-                                    nameArr.push(option.name)
-                                    this.$set(this.selectedMap, option.id, option.name)
-                                }
-                            } else if (this.isEnvVar(v)) {
-                                if (!nameArr.includes(v)) {
-                                    this.$set(this.selectedMap, v, v)
-                                    nameArr.push(v)
-                                }
-                            }
                         })
-                    })
+                    }
+                    this.displayName = nameArr.join(',')
                 }
-                this.displayName = nameArr.join(',')
             },
             getDisplayName (val) {
                 if (this.isEnvVar(val)) {
@@ -329,7 +337,13 @@
             },
             async getOptionList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
-                    if (this.value.length) this.displayName = this.getDisplayName(this.value)
+                    if (this.value.length) {
+                        if (this.isMultiple) {
+                            this.getMultipleDisplayName(this.value, 'id')
+                        } else {
+                            this.displayName = this.getDisplayName(this.value)
+                        }
+                    }
                     this.optionList = []
                     return
                 }
