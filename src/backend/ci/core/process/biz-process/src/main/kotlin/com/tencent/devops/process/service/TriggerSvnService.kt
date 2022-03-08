@@ -227,7 +227,6 @@ class TriggerSvnService(
         return true
     }
 
-
     private fun getWebhookSvnRevisionMap(
         projectNameSet: Set<String>
     ): Map<String, String> {
