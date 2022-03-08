@@ -289,14 +289,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        queryOfflineFlag: Boolean
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus")
+        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
         val atomResult = getPipelineAtomDetail(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            atomStatus = atomStatus
+            atomStatus = atomStatus,
+            queryOfflineFlag = queryOfflineFlag
         )
         val atom = atomResult.data
         if (null != atom) {
@@ -326,9 +328,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         projectCode: String?,
         atomCode: String,
         version: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        queryOfflineFlag: Boolean
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus")
+        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
         val atomStatusList = if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -338,7 +341,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 null
             }
         }
-        if (atomStatus == null && !VersionUtils.isLatestVersion(version)) {
+        if (queryOfflineFlag) {
             atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
         }
         val pipelineAtomRecord = if (projectCode != null) {

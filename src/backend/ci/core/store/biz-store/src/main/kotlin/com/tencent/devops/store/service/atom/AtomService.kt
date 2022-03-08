@@ -87,7 +87,8 @@ interface AtomService {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        queryOfflineFlag: Boolean = false
     ): Result<PipelineAtom?>
 
     /**
@@ -98,7 +99,8 @@ interface AtomService {
         projectCode: String? = null,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        queryOfflineFlag: Boolean = false
     ): Result<PipelineAtom?>
 
     /**

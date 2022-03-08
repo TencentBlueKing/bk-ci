@@ -266,7 +266,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            atomStatus = atomStatus
+            atomStatus = atomStatus,
+            queryOfflineFlag = atomStatus == null
         )
         if (atomResult.isNotOk()) {
             return Result(atomResult.status, atomResult.message ?: "")
