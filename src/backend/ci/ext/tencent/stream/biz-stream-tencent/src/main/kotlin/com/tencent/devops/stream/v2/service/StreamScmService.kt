@@ -95,6 +95,10 @@ class StreamScmService @Autowired constructor(
 
     @Throws(ErrorCodeException::class)
     fun refreshToken(projectId: String, refreshToken: String): GitToken {
+        throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
+            defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
+        )
         return retryFun(
             log = "$projectId refresh token fail",
             apiErrorCode = ErrorCodeEnum.REFRESH_TOKEN_ERROR,
