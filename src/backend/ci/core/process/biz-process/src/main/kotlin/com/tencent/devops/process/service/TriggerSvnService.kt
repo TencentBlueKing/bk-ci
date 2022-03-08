@@ -287,7 +287,7 @@ class TriggerSvnService(
                 type = "U",
                 file = it,
                 fileFlag = true,
-                size = 0,
+                size = 0
             )
         }
         return SvnCommitEvent(

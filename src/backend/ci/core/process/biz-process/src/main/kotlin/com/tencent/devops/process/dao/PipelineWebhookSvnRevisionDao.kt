@@ -36,7 +36,6 @@ class PipelineWebhookSvnRevisionDao {
         }
     }
 
-
     fun getSvnRevisonByProjectNames(
         dslContext: DSLContext,
         projectName: List<String>
@@ -45,5 +44,4 @@ class PipelineWebhookSvnRevisionDao {
             dslContext.select(PROJECT_NAME, REVISION).from(this).where(PROJECT_NAME.`in`(projectName)).fetch()
         }
     }
-
 }
