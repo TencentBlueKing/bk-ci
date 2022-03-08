@@ -525,7 +525,7 @@ class TaskBuildDetailService(
 
     private val atomCache = Caffeine.newBuilder()
         .maximumSize(20000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .expireAfterAccess(6, TimeUnit.HOURS)
         .build<String/*projectCode VS atomCode VS atomVersion*/, String/*true version*/> { mix ->
             val keys = mix.split(" VS ")
             client.get(ServiceAtomResource::class)
