@@ -280,6 +280,10 @@ class ScmService @Autowired constructor(
         hookUrl: String?
     ) {
         logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
+        if (type == ScmType.CODE_SVN) {
+            logger.info("社区svn仓库注册svn触发器不调用api接口")
+            return
+        }
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = if (!hookUrl.isNullOrBlank()) {
