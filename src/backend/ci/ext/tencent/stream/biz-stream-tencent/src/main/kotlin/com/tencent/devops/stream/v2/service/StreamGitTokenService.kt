@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-
+@Suppress("all")
 @Service
 class StreamGitTokenService @Autowired constructor(
     private val streamScmService: StreamScmService,
