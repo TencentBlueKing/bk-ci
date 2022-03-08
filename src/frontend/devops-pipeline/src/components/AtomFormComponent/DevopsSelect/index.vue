@@ -26,10 +26,8 @@
                             v-for="(child, childIndex) in item.children"
                             :key="child.id"
                             :class="{
-                                active: child.id === value,
-                                selected: selectedPointer === childIndex
-                                    && selectedGroupPointer === index
-                                    && !isMultiple
+                                active: child.active,
+                                selected: child.selected
                             }"
                             :disabled="child.disabled"
                             @click.stop="selectOption(child)"
@@ -44,8 +42,8 @@
                         :key="item.id"
                         :class="{
                             'option-item': true,
-                            active: !isMultiple ? item.id === value : value.includes(item.id),
-                            selected: selectedPointer === index && !isMultiple
+                            active: item.active,
+                            selected: item.selected
                         }"
                         :title="item.name"
                         :disabled="item.disabled"
@@ -156,13 +154,15 @@
                     noSensiveKeyword = keyword.toLowerCase()
                 }
                 if (this.hasGroup) {
-                    return list.reduce((result, item) => {
+                    return list.reduce((result, item, index) => {
                         if (isObject(item) && Array.isArray(item.children) && item.children.length > 0) {
-                            const children = item.children.map(child => {
+                            const children = item.children.map((child, childIndex) => {
                                 return {
                                     ...child,
                                     id: child[paramId],
-                                    name: child[paramName]
+                                    name: child[paramName],
+                                    active: child.id === this.value,
+                                    selected: this.selectedPointer === childIndex && this.selectedGroupPointer === index && !this.isMultiple
                                 }
                             })
                             result.push({
@@ -173,12 +173,14 @@
                         return result
                     }, [])
                 }
-                const resultList = list.map(item => {
+                const resultList = list.map((item, index) => {
                     if (isObject(item)) {
                         return {
                             ...item,
                             id: item[paramId],
-                            name: item[paramName]
+                            name: item[paramName],
+                            active: !this.isMultiple ? item.id === this.value : this.value.includes(item.id),
+                            selected: this.selectedPointer === index && !this.isMultiple
                         }
                     }
 
