@@ -42,7 +42,7 @@ data class GitCIModelDetail(
     @ApiModelProperty("构建历史-备注信息")
     val buildHistoryRemark: String? = null
 ) {
-    fun changeElementCanRetryFalse(): GitCIModelDetail {
+    init {
         modelDetail.model.stages.forEach {
             it.containers.forEach { cit ->
                 cit.elements.forEach { eit ->
@@ -50,6 +50,5 @@ data class GitCIModelDetail(
                 }
             }
         }
-        return this
     }
 }

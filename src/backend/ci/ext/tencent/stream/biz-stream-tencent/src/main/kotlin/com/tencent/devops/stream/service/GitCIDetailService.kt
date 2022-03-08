@@ -127,7 +127,7 @@ class GitCIDetailService @Autowired constructor(
             modelDetail.copy(
                 pipelineName = getPipelineName(modelDetail) ?: pipeline?.displayName ?: modelDetail.pipelineName
             )
-        ).changeElementCanRetryFalse()
+        )
     }
 
     private fun getPipelineName(modelDetail: ModelDetail): String? {
