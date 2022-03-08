@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.config
 
-
 import com.tencent.devops.process.service.TriggerSvnService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +36,6 @@ import org.springframework.scheduling.annotation.SchedulingConfigurer
 import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.util.Calendar
 import java.util.Date
-
 
 @Configuration
 class PollSvnConfig : SchedulingConfigurer {

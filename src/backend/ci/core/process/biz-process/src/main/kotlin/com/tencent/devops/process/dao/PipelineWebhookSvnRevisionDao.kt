@@ -13,7 +13,7 @@ class PipelineWebhookSvnRevisionDao {
     fun saveOrUpdateSvnRevision(
         dslContext: DSLContext,
         projectName: String,
-        revision: String,
+        revision: String
     ) {
         with(T_PIPELINE_WEBHOOK_SVN_REVISION) {
             dslContext.insertInto(
@@ -40,9 +40,9 @@ class PipelineWebhookSvnRevisionDao {
     fun getSvnRevisonByProjectNames(
         dslContext: DSLContext,
         projectName: List<String>
-    ):Result<Record2<String, String>>{
-        return with(T_PIPELINE_WEBHOOK_SVN_REVISION){
-            dslContext.select(PROJECT_NAME,REVISION).from(this).where(PROJECT_NAME.`in`(projectName)).fetch()
+    ): Result<Record2<String, String>> {
+        return with(T_PIPELINE_WEBHOOK_SVN_REVISION) {
+            dslContext.select(PROJECT_NAME, REVISION).from(this).where(PROJECT_NAME.`in`(projectName)).fetch()
         }
     }
 

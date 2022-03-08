@@ -36,7 +36,7 @@ class TriggerSvnService(
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val rabbitTemplate: RabbitTemplate,
+    private val rabbitTemplate: RabbitTemplate
 ) {
     /**
      *  触发流水线用
