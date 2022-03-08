@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Base64
 import java.util.concurrent.Executors
 
 @Service
@@ -169,7 +169,6 @@ class TriggerSvnService(
                                 logger.error("$projectName 没有可用的凭证用于获取一个可用的svn提交信息")
                                 return@forEach
                             }
-                            logger.info("获取revisionList success! 最新仓库版本 : ${svnRevisonList!!.first} | 当前数据：${svnRevision}")
                             val revision = svnRevisonList!!.first
                             if (svnRevision == null || revision > svnRevision.toLong()) {
                                 // 如果commit库中无commit信息，则存储一份，并且触发流水线
@@ -243,7 +242,6 @@ class TriggerSvnService(
             result.put(projectName, repoInfoList)
         }
         return result
-
     }
 
     fun triggerPipelines(projectName: String, url: String, revisionMessage: List<SvnRevisionInfo>) {
