@@ -6,7 +6,7 @@
             v-bind="restProps"
             v-model="displayName"
             :disabled="disabled || loading"
-            :title="value"
+            :title="displayName"
             autocomplete="off"
             @focus="handleFocus"
             @keypress.enter.prevent="handleEnterOption"
@@ -215,7 +215,7 @@
             },
 
             isEnvVar (str) {
-                return /^\$(\{[^\},\s]+\}{1,2}|\w+)$/.test(str)
+                return String.prototype.isBkVar(str)
             },
 
             handleBlur () {
@@ -266,6 +266,7 @@
                     val = val.split(',')
                 }
                 const nameArr = []
+                this.selectedMap = {}
                 if (this.hasGroup) {
                     val.forEach(v => {
                         for (let i = 0; i < this.optionList.length; i++) {
