@@ -88,44 +88,47 @@ class TriggerSvnService(
                 return
             }
             // 开始分页查询
-            var start = 0
-            val limit = 200
-            loop@ while (true) {
-                try {
-                    // 获取svn触发器
-                    val svnTriggerList =
-                        pipelineWebhookDao.getPipelineWebHooksByRepositoryType(
-                            dslContext,
-                            ScmType.CODE_SVN.name,
-                            start,
-                            limit
-                        )
-                    if (svnTriggerList.isEmpty()) {
-                        logger.info("list timer pipeline finish|start=$start|limit=$limit")
-                        break@loop
-                    }
-                    logger.info("svn 触发器获取，开始准备轮询遍历")
-                    // 通过触发器获取所有仓库id
-                    val repoHashIds = svnTriggerList.map { it.repoHashId!! }.toSet()
-                    // 由hashId获取所有的仓库信息
-                    // map<projectName, url+凭证信息>
-                    val svnRepositoryMap = getSvnRepositoryMap(repoHashIds)
-                    // 获取仓库的projectName数据
-                    val svnProjectNameList = svnRepositoryMap.keys
-                    // 由projectName数据获取流水线触发器的仓库版本信息
-                    val svnRevisionMap = getWebhookSvnRevisionMap(svnProjectNameList)
-                    pollAllWebhook(
-                        svnProjectNameList = svnProjectNameList,
-                        svnRepositoryMap = svnRepositoryMap,
-                        svnRevisionMap = svnRevisionMap
-                    )
-                    start += limit
-                } catch (err: Throwable) {
-                    logger.info("err is ${JsonUtil.toJson(err)}")
-                }
-            }
+            pagingLoopSvnWebhook(limit = 200)
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun pagingLoopSvnWebhook(limit: Int) {
+        var start = 0
+        loop@ while (true) {
+            try {
+                // 获取svn触发器
+                val svnTriggerList =
+                    pipelineWebhookDao.getPipelineWebHooksByRepositoryType(
+                        dslContext,
+                        ScmType.CODE_SVN.name,
+                        start,
+                        limit
+                    )
+                if (svnTriggerList.isEmpty()) {
+                    logger.info("list timer pipeline finish|start=$start|limit=$limit")
+                    break@loop
+                }
+                logger.info("svn 触发器获取，开始准备轮询遍历")
+                // 通过触发器获取所有仓库id
+                val repoHashIds = svnTriggerList.map { it.repoHashId!! }.toSet()
+                // 由hashId获取所有的仓库信息
+                // map<projectName, url+凭证信息>
+                val svnRepositoryMap = getSvnRepositoryMap(repoHashIds)
+                // 获取仓库的projectName数据
+                val svnProjectNameList = svnRepositoryMap.keys
+                // 由projectName数据获取流水线触发器的仓库版本信息
+                val svnRevisionMap = getWebhookSvnRevisionMap(svnProjectNameList)
+                pollAllWebhook(
+                    svnProjectNameList = svnProjectNameList,
+                    svnRepositoryMap = svnRepositoryMap,
+                    svnRevisionMap = svnRevisionMap
+                )
+                start += limit
+            } catch (err: Throwable) {
+                logger.info("err is ${JsonUtil.toJson(err)}")
+            }
         }
     }
 
