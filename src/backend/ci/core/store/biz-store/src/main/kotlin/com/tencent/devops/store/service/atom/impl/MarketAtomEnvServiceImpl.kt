@@ -273,7 +273,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             return Result(atomResult.status, atomResult.message ?: "")
         }
         val atom = atomResult.data ?: return Result(data = null)
-        val props = if (atom.props != null) JsonUtil.toJson(atom.props!!) else null
+        val props = if (atom.props != null) JsonUtil.toJson(atom.props!!, formatted = false) else null
         val classType = atom.classType
         if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion ||
             (classType != MarketBuildAtomElement.classType && classType != MarketBuildLessAtomElement.classType)
