@@ -78,31 +78,15 @@ class TriggerSvnService(
         logger.info("SVN 仓库轮询, 当前时间: {}", LocalDateTime.now())
         // 使用 redis, 防止多节点同时执行
         val lock = RedisLock(redisOperation, getRedisLockKey, 30)
-
         try {
             if (!lock.tryLock()) {
                 logger.info("The other process is processing polling job, ignore")
                 return
             }
-            val value = redisOperation.get(getRedisKey)
-
-            val currentTimeMillis = System.currentTimeMillis()
-            if (value != null) {
-                val time = JsonUtil.to(value, Long::class.java)
-                // 如果 redis 中的时间比间隔小, 说明是别的节点执行不久, 终止本次执行
-                logger.info(
-                    "[last svn polling timestamp is: $time|" +
-                            "now is: $currentTimeMillis|${currentTimeMillis - time}]"
-                )
-                // 增加三秒误差
-                if (currentTimeMillis - time < (interval - THREE) * 1000) {
-                    logger.info("[this time is ignore ${currentTimeMillis - time} ${(interval - THREE) * 1000}]")
-                    return
-                }
+            if (!checkLastPollTime(interval)) {
+                logger.info("距离上次执行时间太近")
+                return
             }
-            // 将本次执行时间存入 redis
-            redisOperation.set(getRedisKey, JsonUtil.toJson(currentTimeMillis))
-
             // 开始分页查询
             var start = 0
             val limit = 200
@@ -130,65 +114,11 @@ class TriggerSvnService(
                     val svnProjectNameList = svnRepositoryMap.keys
                     // 由projectName数据获取流水线触发器的仓库版本信息
                     val svnRevisionMap = getWebhookSvnRevisionMap(svnProjectNameList)
-                    svnProjectNameList.forEach {
-                        try {
-                            // 仓库的projectName
-                            val projectName = it
-                            // svn仓库目前的提交版本,可能为空，为空无条件运行触发器
-                            val svnRevision = svnRevisionMap[projectName]
-                            val repoInfoList = svnRepositoryMap[projectName]
-                            // 如果获取svn仓库最新数据失败，则不触发
-                            if (repoInfoList == null || repoInfoList.isEmpty()) {
-                                logger.warn("仓库 : $it 没有获取相关凭证信息")
-                                return@forEach
-                            }
-                            var svnRevisonList: Pair<Long, List<SvnRevisionInfo>>? = null
-                            // 获取最新的version数据
-                            run loopSvnInfo@{
-                                repoInfoList.forEach {
-                                    try {
-                                        svnRevisonList = getRevisionList(
-                                            projectName = projectName,
-                                            url = it.url,
-                                            privateKey = it.privateKey,
-                                            passPhrase = it.passPhrase,
-                                            userName = it.userName,
-                                            current = svnRevision
-                                        )
-                                        if (svnRevisonList != null) {
-                                            // 获取到一个可用的svn记录时，跳出循环
-                                            logger.info("获取仓库${it}关联最新提交记录成功")
-                                            return@loopSvnInfo
-                                        }
-                                    } catch (err: Throwable) {
-                                        logger.error("获取仓库${it}关联最新提交记录时错误，错误信息为${JsonUtil.toJson(err)}")
-                                    }
-                                }
-                            }
-                            if (svnRevisonList == null) {
-                                logger.error("$projectName 没有可用的凭证用于获取一个可用的svn提交信息")
-                                return@forEach
-                            }
-                            val revision = svnRevisonList!!.first
-                            if (svnRevision == null || revision > svnRevision.toLong()) {
-                                // 如果commit库中无commit信息，则存储一份，并且触发流水线
-                                // 如果仓库版本大于commit版本，则触发流水线
-                                // 获取最新的信息
-                                // 保存最新的提交版本号
-                                logger.info("开始触发流水线")
-                                pipelineWebhookSvnRevisionDao.saveOrUpdateSvnRevision(
-                                    dslContext = dslContext,
-                                    projectName = projectName,
-                                    revision = revision.toString()
-                                )
-                                // 触发流水线
-                                triggerPipelines(projectName, repoInfoList[0].url, svnRevisonList!!.second)
-                                logger.info("${projectName}仓库关联的流水线触发成功")
-                            }
-                        } catch (err: Throwable) {
-                            logger.error("触发仓库${it}关联流水线时出错，错误信息为${JsonUtil.toJson(err)}")
-                        }
-                    }
+                    pollAllWebhook(
+                        svnProjectNameList = svnProjectNameList,
+                        svnRepositoryMap = svnRepositoryMap,
+                        svnRevisionMap = svnRevisionMap
+                    )
                     start += limit
                 } catch (err: Throwable) {
                     logger.info("err is ${JsonUtil.toJson(err)}")
@@ -198,6 +128,105 @@ class TriggerSvnService(
             lock.unlock()
         }
     }
+
+    private fun findRevisionList(
+        projectName: String,
+        svnRevision: String?,
+        repoInfoList: List<SvnRepoInfo>
+    ): Pair<Long, List<SvnRevisionInfo>>? {
+        var result: Pair<Long, List<SvnRevisionInfo>>? = null
+        repoInfoList.forEach {
+            try {
+                result = getRevisionList(
+                    projectName = projectName,
+                    url = it.url,
+                    privateKey = it.privateKey,
+                    passPhrase = it.passPhrase,
+                    userName = it.userName,
+                    current = svnRevision
+                )
+                if (result != null) {
+                    // 获取到一个可用的svn记录时，跳出循环
+                    logger.info("获取仓库${it}关联最新提交记录成功")
+                    return result
+                }
+            } catch (err: Throwable) {
+                logger.error("获取仓库${it}关联最新提交记录时错误，错误信息为${JsonUtil.toJson(err)}")
+            }
+        }
+        return result
+    }
+
+    private fun pollAllWebhook(
+        svnProjectNameList: Set<String>,
+        svnRepositoryMap: Map<String, List<SvnRepoInfo>>,
+        svnRevisionMap: Map<String, String>
+    ) {
+        svnProjectNameList.forEach {
+            try {
+                // 仓库的projectName
+                val projectName = it
+                // svn仓库目前的提交版本,可能为空，为空无条件运行触发器
+                val svnRevision = svnRevisionMap[projectName]
+                val repoInfoList = svnRepositoryMap[projectName]
+                // 如果获取svn仓库最新数据失败，则不触发
+                if (repoInfoList == null || repoInfoList.isEmpty()) {
+                    logger.warn("仓库 : $it 没有获取相关凭证信息")
+                    return@forEach
+                }
+                // 获取最新的version数据
+                val svnRevisonList = findRevisionList(
+                    projectName = projectName,
+                    svnRevision = svnRevision,
+                    repoInfoList = repoInfoList
+                )
+                if (svnRevisonList == null) {
+                    logger.error("$projectName 没有可用的凭证用于获取一个可用的svn提交信息")
+                    return@forEach
+                }
+                val revision = svnRevisonList.first
+                if (svnRevision == null || revision > svnRevision.toLong()) {
+                    // 如果commit库中无commit信息，则存储一份，并且触发流水线
+                    // 如果仓库版本大于commit版本，则触发流水线
+                    // 获取最新的信息
+                    // 保存最新的提交版本号
+                    logger.info("开始触发流水线")
+                    pipelineWebhookSvnRevisionDao.saveOrUpdateSvnRevision(
+                        dslContext = dslContext,
+                        projectName = projectName,
+                        revision = revision.toString()
+                    )
+                    // 触发流水线
+                    triggerPipelines(projectName, repoInfoList[0].url, svnRevisonList.second)
+                    logger.info("${projectName}仓库关联的流水线触发成功")
+                }
+            } catch (err: Throwable) {
+                logger.error("触发仓库${it}关联流水线时出错，错误信息为${JsonUtil.toJson(err)}")
+            }
+        }
+    }
+
+    private fun checkLastPollTime(interval: Long): Boolean {
+        val value = redisOperation.get(getRedisKey)
+        val currentTimeMillis = System.currentTimeMillis()
+        if (value != null) {
+            val time = JsonUtil.to(value, Long::class.java)
+            // 如果 redis 中的时间比间隔小, 说明是别的节点执行不久, 终止本次执行
+            logger.info(
+                "[last svn polling timestamp is: $time|" +
+                        "now is: $currentTimeMillis|${currentTimeMillis - time}]"
+            )
+            // 增加三秒误差
+            if (currentTimeMillis - time < (interval - THREE) * 1000) {
+                logger.info("[this time is ignore ${currentTimeMillis - time} ${(interval - THREE) * 1000}]")
+                return false
+            }
+        }
+        // 将本次执行时间存入 redis
+        redisOperation.set(getRedisKey, JsonUtil.toJson(currentTimeMillis))
+        return true
+    }
+
 
     private fun getWebhookSvnRevisionMap(
         projectNameSet: Set<String>
