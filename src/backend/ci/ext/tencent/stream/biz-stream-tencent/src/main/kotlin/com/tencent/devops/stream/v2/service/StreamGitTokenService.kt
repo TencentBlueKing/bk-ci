@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.v2.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -58,26 +59,32 @@ class StreamGitTokenService @Autowired constructor(
         // 设置过期时间为24个小时
         val validTime = TimeUnit.HOURS.toSeconds(23)
         return if (token == null) {
-            updateLock.use {
-                updateLock.lock()
-                val newToken = streamScmService.getToken(gitProjectId.toString())
-                setTokenCreateTime(newToken)
-                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
-                val objJsonStr = JsonUtil.toJson(newToken, false)
-                redisOperation.set(projectId, objJsonStr, validTime)
-                newToken.accessToken
-            }
+            getToken(gitProjectId, validTime)
+//            updateLock.use {
+//                updateLock.lock()
+//                val newToken = streamScmService.getToken(gitProjectId.toString())
+//                setTokenCreateTime(newToken)
+//                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
+//                val objJsonStr = JsonUtil.toJson(newToken, false)
+//                redisOperation.set(projectId, objJsonStr, validTime)
+//                newToken.accessToken
+//            }
         } else {
             // 如果过期，获取使用refreshToken去刷新token
             if (isExpire(token)) {
                 updateLock.use {
                     updateLock.lock()
-                    val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
-                    setTokenCreateTime(refreshToken)
-                    logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
-                    val objJsonStr = JsonUtil.toJson(refreshToken, false)
-                    redisOperation.set(projectId, objJsonStr, validTime)
-                    refreshToken.accessToken
+                    try {
+                        val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
+                        setTokenCreateTime(refreshToken)
+                        logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
+                        val objJsonStr = JsonUtil.toJson(refreshToken, false)
+                        redisOperation.set(projectId, objJsonStr, validTime)
+                        refreshToken.accessToken
+                    } catch (e: ErrorCodeException) {
+                        logger.error("STREAM|getToken|gitProjectId=$gitProjectId|refreshTokenFail", e)
+                        getToken(gitProjectId, validTime)
+                    }
                 }
             } else {
                 // 未过期，直接返回token
@@ -86,13 +93,28 @@ class StreamGitTokenService @Autowired constructor(
         }
     }
 
+    private fun getToken(gitProjectId: Long, validTime: Long): String {
+        val projectId = getGitTokenKey(gitProjectId)
+        val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
+        return updateLock.use {
+            updateLock.lock()
+            val newToken = streamScmService.getToken(gitProjectId.toString())
+            setTokenCreateTime(newToken)
+            logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
+            val objJsonStr = JsonUtil.toJson(newToken, false)
+            redisOperation.set(projectId, objJsonStr, validTime)
+            newToken.accessToken
+        }
+    }
+
     private fun setTokenCreateTime(newToken: GitToken) {
         newToken.createTime = System.currentTimeMillis()
     }
 
     private fun isExpire(accessToken: GitToken): Boolean {
+        return true
         // 提前半个小时刷新token
-        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
+//        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
     }
 
     // TODO 暂时不加入销毁逻辑
