@@ -47,7 +47,7 @@ class StreamGitTokenService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
         private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
-        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:v2:"
+        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:newKey:"
         fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
         fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
     }
@@ -112,9 +112,8 @@ class StreamGitTokenService @Autowired constructor(
     }
 
     private fun isExpire(accessToken: GitToken): Boolean {
-        return true
         // 提前半个小时刷新token
-//        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
+        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
     }
 
     // TODO 暂时不加入销毁逻辑
