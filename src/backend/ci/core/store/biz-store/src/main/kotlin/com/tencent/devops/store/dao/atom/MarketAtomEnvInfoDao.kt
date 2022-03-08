@@ -149,7 +149,6 @@ class MarketAtomEnvInfoDao {
             .on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
     }
 
-
     private fun getBaseQueryCondition(
         tAtom: TAtom,
         atomCode: String,
