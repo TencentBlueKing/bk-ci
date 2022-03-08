@@ -68,7 +68,7 @@ class UserGitCIRequestResourceImpl @Autowired constructor(
                e.add(
                    EventTypeConf(
                        id = it.value,
-                       name = it.name.capitalize()
+                       name = it.value.capitalize()
                    )
                )
             }
