@@ -1467,10 +1467,8 @@ class RepositoryService @Autowired constructor(
                 }
             }
             is CodeTGitRepository -> {
-                logger.info("code into codeTGitRepository")
                 when (repo.authType) {
                     RepoAuthType.SSH -> {
-                        logger.info("repoAUthType is ssh | list is ${JsonUtil.toJson(list)} | size is ${list.size}")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
@@ -1503,7 +1501,6 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     RepoAuthType.HTTP -> {
-                        logger.info("repoAUthType is http | list is ${JsonUtil.toJson(list)} | size is ${list.size}")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
@@ -1536,7 +1533,6 @@ class RepositoryService @Autowired constructor(
                         )
                     }
                     RepoAuthType.HTTPS -> {
-                        logger.info("repoAUthType is https | list is ${JsonUtil.toJson(list)} | size is ${list.size}")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
