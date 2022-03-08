@@ -438,10 +438,9 @@ open class MarketAtomTask : ITask() {
             }
             OSType.LINUX, OSType.MAC_OS -> {
                 if (preCmds.isNotEmpty()) {
-                    val linefeed = if (AgentEnv.getOS() == OSType.LINUX) "\n" else "\r"
                     val preCommand = preCmds.joinToString(
-                            separator = linefeed
-                        ) { "$linefeed$it" }
+                        separator = "\n"
+                    ) { "\n$it" }
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
