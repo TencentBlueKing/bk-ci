@@ -347,7 +347,7 @@ fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree
             YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!!)
         }
     )
-    
+
     // 检测job env合法性
     GitCIEnvUtils.checkEnv(preJob.env, fromPath)
     return preJob
