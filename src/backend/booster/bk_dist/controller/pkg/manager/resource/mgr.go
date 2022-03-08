@@ -127,6 +127,7 @@ func (m *Mgr) GetHosts() []*dcProtocol.Host {
 			blog.Warnf("resource: got invalid jobs for host %s", v)
 			continue
 		}
+		blog.Infof("resource: tomtian got jobs %d for host %s", jobs, v)
 
 		host := &dcProtocol.Host{
 			Server:       hostField[0],

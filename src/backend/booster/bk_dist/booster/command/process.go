@@ -205,6 +205,11 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		waitResourceSeconds = c.Int(FlagResourceTimeoutSecs)
 	}
 
+	useLocalCPUPercent := 0
+	if c.IsSet(FlagLocalIdleCPUPercent) {
+		useLocalCPUPercent = c.Int(FlagLocalIdleCPUPercent)
+	}
+
 	// generate a new booster.
 	cmdConfig := dcType.BoosterConfig{
 		Type:      dcType.GetBoosterType(bt),
@@ -261,11 +266,12 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		},
 
 		Transport: dcType.BoosterTransport{
-			ServerDomain:           ServerDomain,
-			ServerHost:             ServerHost,
-			Timeout:                5 * time.Second,
-			HeartBeatTick:          5 * time.Second,
-			InspectTaskTick:        100 * time.Millisecond,
+			ServerDomain:  ServerDomain,
+			ServerHost:    ServerHost,
+			Timeout:       5 * time.Second,
+			HeartBeatTick: 5 * time.Second,
+			// InspectTaskTick:        100 * time.Millisecond,
+			InspectTaskTick:        1 * time.Second,
 			TaskPreparingTimeout:   time.Duration(waitResourceSeconds) * time.Second,
 			PrintTaskInfoEveryTime: 5,
 			CommitSuicideCheckTick: 5 * time.Second,
@@ -285,13 +291,14 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 				}
 				return 0
 			}(),
-			TotalSlots: c.Int(FlagMaxLocalTotalJobs),
-			PreSlots:   c.Int(FlagMaxLocalPreJobs),
-			ExeSlots:   c.Int(FlagMaxLocalExeJobs),
-			PostSlots:  c.Int(FlagMaxLocalPostJobs),
-			Sudo:       c.Bool(FlagSudoController),
-			NoWait:     c.Bool(FlagControllerNoWait),
-			RemainTime: remaintime,
+			TotalSlots:         c.Int(FlagMaxLocalTotalJobs),
+			PreSlots:           c.Int(FlagMaxLocalPreJobs),
+			ExeSlots:           c.Int(FlagMaxLocalExeJobs),
+			PostSlots:          c.Int(FlagMaxLocalPostJobs),
+			Sudo:               c.Bool(FlagSudoController),
+			NoWait:             c.Bool(FlagControllerNoWait),
+			RemainTime:         remaintime,
+			UseLocalCPUPercent: useLocalCPUPercent,
 		},
 	}
 
