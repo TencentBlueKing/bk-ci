@@ -33,7 +33,6 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.SvnRevisionInfo
 
 @Suppress("ALL")
 interface IScm {
@@ -75,8 +74,4 @@ interface IScm {
     fun getMrInfo(mrId: Long): GitMrInfo? = null
 
     fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? = null
-    /**
-     * 只有Svn仓库会使用这个方法，与getLatestRevision方法的唯一不同是获取由currentVersion到latestVersion的所有commitLog
-     */
-    fun getSvnRevisionList(currentVersion: String?): Pair<Long, List<SvnRevisionInfo>>? = null
 }

@@ -31,14 +31,12 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import javax.ws.rs.NotSupportedException
 
 @Suppress("ALL")
 interface IScmService {
@@ -53,22 +51,6 @@ interface IScmService {
         region: CodeSvnRegion?,
         userName: String?
     ): RevisionInfo
-
-    fun getSvnRevisionList(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        branchName: String?,
-        privateKey: String?,
-        passPhrase: String?,
-        token: String?,
-        region: CodeSvnRegion?,
-        userName: String?,
-        currentRevision: String?
-    ): Pair<Long, List<SvnRevisionInfo>> {
-
-        throw NotSupportedException()
-    }
 
     fun listBranches(
         projectName: String,

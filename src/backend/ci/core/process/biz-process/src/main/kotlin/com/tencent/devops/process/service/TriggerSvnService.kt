@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -8,14 +9,14 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEventFile
-import com.tencent.devops.process.dao.PipelineWebhookSvnRevisionDao
+import com.tencent.devops.process.dao.PipelineWebhookRevisionDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.process.webhook.CodeWebhookEventDispatcher
 import com.tencent.devops.process.webhook.pojo.event.commit.SvnWebhookEvent
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.repository.api.scm.ServiceScmResource
+import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.SvnRevisionInfo
@@ -28,11 +29,12 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.Base64
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Service
 class TriggerSvnService(
     private val client: Client,
-    private val pipelineWebhookSvnRevisionDao: PipelineWebhookSvnRevisionDao,
+    private val pipelineWebhookRevisionDao: PipelineWebhookRevisionDao,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
@@ -43,31 +45,30 @@ class TriggerSvnService(
      */
     private val triggerTaskExecutor = Executors.newWorkStealingPool(10)
 
+    private val cache = CacheBuilder.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(8, TimeUnit.HOURS)
+        .build<String, CodeSvnRepository>()
+
     fun start(interval: Long) {
         pollingSvnRepoTask(interval)
     }
 
     private fun getRevisionList(
-        projectName: String,
         url: String,
         privateKey: String,
         passPhrase: String?,
         userName: String,
         current: String?
     ): Pair<Long, List<SvnRevisionInfo>> {
-        val scmService = client.get(ServiceScmResource::class)
-        return scmService.getSvnRevisionList(
-            projectName = projectName,
+        val svnService = client.get(ServiceSvnResource::class)
+        return svnService.getSvnRevisionList(
             url = url,
-            type = ScmType.CODE_SVN,
-            branchName = "",
-            additionalPath = "",
             privateKey = privateKey,
             passPhrase = passPhrase,
-            userName = userName,
-            token = "",
-            region = null,
-            current = current
+            username = userName,
+            branchName = "",
+            currentVersion = current
         ).data!!
     }
 
@@ -133,7 +134,6 @@ class TriggerSvnService(
     }
 
     private fun findRevisionList(
-        projectName: String,
         svnRevision: String?,
         repoInfoList: List<SvnRepoInfo>
     ): Pair<Long, List<SvnRevisionInfo>>? {
@@ -141,7 +141,6 @@ class TriggerSvnService(
         repoInfoList.forEach {
             try {
                 result = getRevisionList(
-                    projectName = projectName,
                     url = it.url,
                     privateKey = it.privateKey,
                     passPhrase = it.passPhrase,
@@ -179,7 +178,6 @@ class TriggerSvnService(
                 }
                 // 获取最新的version数据
                 val svnRevisonList = findRevisionList(
-                    projectName = projectName,
                     svnRevision = svnRevision,
                     repoInfoList = repoInfoList
                 )
@@ -194,7 +192,7 @@ class TriggerSvnService(
                     // 获取最新的信息
                     // 保存最新的提交版本号
                     logger.info("开始触发流水线")
-                    pipelineWebhookSvnRevisionDao.saveOrUpdateSvnRevision(
+                    pipelineWebhookRevisionDao.saveOrUpdateRevision(
                         dslContext = dslContext,
                         projectName = projectName,
                         revision = revision.toString()
@@ -235,7 +233,7 @@ class TriggerSvnService(
     ): Map<String, String> {
         // 根据projectName获取revision信息，此时为二元组<projectName,revision>
         val svnRevisionList =
-            pipelineWebhookSvnRevisionDao.getSvnRevisonByProjectNames(dslContext, projectNameSet.toList())
+            pipelineWebhookRevisionDao.getRevisonByProjectNames(dslContext, projectNameSet.toList())
         val result = mutableMapOf<String, String>()
         svnRevisionList.map {
             result.put(it.value1(), it.value2())
@@ -248,10 +246,9 @@ class TriggerSvnService(
     ): Map<String, List<SvnRepoInfo>> {
         val result = mutableMapOf<String, MutableList<SvnRepoInfo>>()
         // 获取所有的仓库
-        val repositoryService = client.get(ServiceRepositoryResource::class)
-        val repos = repositoryService.listSvnRepoByIds(
-            repoHashIds
-        ).data ?: emptyList()
+        val repos = listSvnRepoByIds(
+            repoHashIds = repoHashIds
+        )
         repos.map {
             val projectName = getProjectName(it.url)
             val credential = getCredential(
@@ -271,6 +268,34 @@ class TriggerSvnService(
                 repoInfoList = mutableListOf(repoInfo)
             }
             result.put(projectName, repoInfoList)
+        }
+        return result
+    }
+
+    private fun listSvnRepoByIds(
+        repoHashIds: Set<String>
+    ): List<CodeSvnRepository> {
+        val hashIdWithoutCatch = mutableSetOf<String>()
+        val result = mutableListOf<CodeSvnRepository>()
+        repoHashIds.forEach {
+            val repo = cache.getIfPresent(it)
+            if(repo != null){
+                // 获取缓存中有的仓库
+                result.add(repo)
+            } else {
+                hashIdWithoutCatch.add(it)
+            }
+        }
+        val repositoryService = client.get(ServiceRepositoryResource::class)
+        val repos = repositoryService.listRepoByIds(
+            repositoryIds = hashIdWithoutCatch
+        ).data ?: emptyList()
+        repos.forEach{
+            // 将缓存中没有的加入缓存，并且返回
+            if(it is CodeSvnRepository){
+                result.add(it)
+                cache.put(it.repoHashId!!,it)
+            }
         }
         return result
     }

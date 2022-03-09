@@ -38,7 +38,6 @@ import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.repository.pojo.enums.Permission
-import com.tencent.devops.repository.pojo.CodeSvnRepository
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -203,9 +202,9 @@ interface ServiceRepositoryResource {
     @ApiOperation("通过hashId来获取SVN仓库信息")
     @GET
     @Path("/listByRepoHashIds")
-    fun listSvnRepoByIds(
+    fun listRepoByIds(
         @ApiParam("仓库hashIdSet", required = true)
         @QueryParam("repositoryIds")
         repositoryIds: Set<String>
-    ): Result<List<CodeSvnRepository>>
+    ): Result<List<Repository>>
 }

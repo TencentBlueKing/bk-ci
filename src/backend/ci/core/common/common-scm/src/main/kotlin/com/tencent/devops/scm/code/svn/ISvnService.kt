@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.code.svn
 
 import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnRevisionInfo
 
 @Suppress("ALL")
 interface ISvnService {
@@ -51,4 +52,13 @@ interface ISvnService {
         credential2: String,
         credential3: String?
     ): List<SvnFileInfo>
+
+    fun getSvnRevisionList(
+        url: String,
+        username: String,
+        privateKey: String,
+        passphrase: String?,
+        branchName: String?,
+        currentVersion: String?
+    ): Pair<Long, List<SvnRevisionInfo>>
 }

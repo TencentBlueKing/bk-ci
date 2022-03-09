@@ -29,6 +29,7 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -102,4 +103,28 @@ interface ServiceSvnResource {
         @QueryParam("credential3")
         credential3: String?
     ): Result<List<SvnFileInfo>>
+
+    @ApiOperation("获取svn仓库的提交信息列表")
+    @GET
+    @Path("/getSvnRevisionList")
+    fun getSvnRevisionList(
+        @ApiParam(value = "仓库地址")
+        @QueryParam("url")
+        url: String,
+        @ApiParam(value = "仓库用户")
+        @QueryParam("username")
+        username: String,
+        @ApiParam(value = "私钥")
+        @QueryParam("privateKey")
+        privateKey: String,
+        @ApiParam(value = "passphrase")
+        @QueryParam("passPhrase")
+        passPhrase: String?,
+        @ApiParam(value = "branchName")
+        @QueryParam("branchName")
+        branchName: String?,
+        @ApiParam(value = "当前版本")
+        @QueryParam("currentVersion")
+        currentVersion: String?
+    ): Result<Pair<Long, List<SvnRevisionInfo>>>
 }

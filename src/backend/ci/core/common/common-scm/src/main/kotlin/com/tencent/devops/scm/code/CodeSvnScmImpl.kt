@@ -36,7 +36,6 @@ import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
 import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.tmatesoft.svn.core.SVNAuthenticationException
@@ -267,83 +266,6 @@ class CodeSvnScmImpl constructor(
                 }
             }
             return sb.toString()
-        } catch (e: SVNException) {
-            logger.error("获取工程($projectName})版本更新日志失败", e)
-            throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
-                scmType = ScmType.CODE_SVN.name
-            )
-        }
-    }
-
-    override fun getSvnRevisionList(currentVersion: String?): Pair<Long, List<SvnRevisionInfo>> {
-        val branch = branchName ?: "trunk"
-        var success = false
-        val svnBean = JMX.getSvnBean()
-        try {
-            svnBean.latestRevision()
-            val repository = getRepository()
-            val revision = getLatestRevision(repository)
-            val result = getRevisionInfoList(repository, getCurrentRevision(currentVersion, revision), revision, branch)
-            success = true
-            return Pair(revision, result)
-        } catch (e: SVNAuthenticationException) {
-            if ((!e.message.isNullOrBlank()) && e.message!!.contains("timeout")) {
-                svnBean.latestRevisionTimeout()
-            }
-            throw e
-        } catch (e: SVNException) {
-            if ((!e.message.isNullOrBlank()) && e.message!!.contains("There was a problem while connecting")) {
-                svnBean.latestRevisionTimeout()
-            }
-            throw e
-        } finally {
-            if (!success) {
-                svnBean.latestRevisionFail()
-            }
-        }
-    }
-
-    /**
-     * 如果currentRevision为null，则使用最新的revision
-     */
-    private fun getCurrentRevision(
-        svnRevision: String?,
-        revision: Long
-    ): Long {
-        if (svnRevision == null) {
-            return revision
-        }
-        return svnRevision.toLong()
-    }
-
-    private fun getRevisionInfoList(
-        svnRepository: SVNRepository,
-        currentVersion: Long,
-        revision: Long,
-        branchName: String
-    ): List<SvnRevisionInfo> {
-        try {
-            val collection = svnRepository.log(arrayOf(""), null, currentVersion, revision, true, true)
-            val result = mutableListOf<SvnRevisionInfo>()
-            if (!collection.isEmpty()) {
-                for (aCollection in collection) {
-                    val logEntry = aCollection as SVNLogEntry
-                    if (currentVersion != revision && currentVersion == logEntry.revision) {
-                        logger.info("this revision is builded, ignoer this one")
-                        continue
-                    }
-                    val revisionInfo = SvnRevisionInfo(
-                        revision = logEntry.revision.toString(),
-                        branchName = branchName,
-                        authorName = logEntry.author,
-                        commitTime = logEntry.date.time,
-                        paths = logEntry.changedPaths.values.map { it.path }
-                    )
-                    result.add(revisionInfo)
-                }
-            }
-            return result
         } catch (e: SVNException) {
             logger.error("获取工程($projectName})版本更新日志失败", e)
             throw ScmException(

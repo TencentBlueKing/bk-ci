@@ -35,7 +35,6 @@ import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -73,35 +72,6 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 token = token,
                 region = region,
                 userName = userName
-            )
-        )
-    }
-
-    override fun getSvnRevisionList(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        branchName: String?,
-        additionalPath: String?,
-        privateKey: String?,
-        passPhrase: String?,
-        token: String?,
-        region: CodeSvnRegion?,
-        userName: String?,
-        current: String?
-    ): Result<Pair<Long, List<SvnRevisionInfo>>> {
-        return Result(
-            scmService.getSvnRevisionList(
-                projectName = projectName,
-                url = url,
-                type = type,
-                branchName = branchName,
-                privateKey = privateKey,
-                passPhrase = passPhrase,
-                token = token,
-                region = region,
-                userName = userName,
-                currentRevision = current
             )
         )
     }

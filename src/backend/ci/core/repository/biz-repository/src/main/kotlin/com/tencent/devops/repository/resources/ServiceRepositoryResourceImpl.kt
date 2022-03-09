@@ -184,9 +184,9 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun listSvnRepoByIds(
+    override fun listRepoByIds(
         repositoryIds: Set<String>
-    ): Result<List<CodeSvnRepository>> {
-        return (Result(repositoryService.getSvnInfoByHashIds(repositoryIds.toList())))
+    ): Result<List<Repository>> {
+        return (Result(repositoryService.getRepositoryByHashIds(repositoryIds.toList())))
     }
 }

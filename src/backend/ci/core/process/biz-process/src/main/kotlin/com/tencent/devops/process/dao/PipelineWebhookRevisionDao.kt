@@ -9,8 +9,8 @@ import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
-class PipelineWebhookSvnRevisionDao {
-    fun saveOrUpdateSvnRevision(
+class PipelineWebhookRevisionDao {
+    fun saveOrUpdateRevision(
         dslContext: DSLContext,
         projectName: String,
         revision: String
@@ -36,7 +36,7 @@ class PipelineWebhookSvnRevisionDao {
         }
     }
 
-    fun getSvnRevisonByProjectNames(
+    fun getRevisonByProjectNames(
         dslContext: DSLContext,
         projectName: List<String>
     ): Result<Record2<String, String>> {
