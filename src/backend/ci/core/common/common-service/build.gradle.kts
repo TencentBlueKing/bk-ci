@@ -39,4 +39,5 @@ dependencies {
     api("org.springframework.cloud:spring-cloud-starter-bootstrap")
     api("org.jooq:jooq")
     api("io.micrometer:micrometer-registry-prometheus")
+    api("io.micrometer:micrometer-jersey2")
 }
