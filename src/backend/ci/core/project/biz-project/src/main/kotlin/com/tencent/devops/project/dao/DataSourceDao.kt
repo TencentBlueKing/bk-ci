@@ -128,24 +128,21 @@ class DataSourceDao {
         }
     }
 
-    fun getDataBasePiecewiseById(
-        dslContext: DSLContext,
-        projectId: String,
-        moduleCode: String,
-        clusterName: String
-    ): TDataSourceRecord? {
+    fun getRoutingRule(dslContext: DSLContext, projectId: String): Record1<String>? {
         val tr = TShardingRoutingRule.T_SHARDING_ROUTING_RULE
-        val routingRule = dslContext.select(tr.ROUTING_RULE)
+        return dslContext
+            .select(tr.ROUTING_RULE)
             .from(tr)
             .where(tr.ROUTING_NAME.eq(projectId))
             .fetchOne()
-            if (routingRule != null && routingRule[0] != null) {
-                with(TDataSource.T_DATA_SOURCE) {
-                    return dslContext.selectFrom(this)
-                        .where(MODULE_CODE.eq(moduleCode))
-                        .and(DATA_SOURCE_NAME.eq(routingRule.get(0) as String))
-                        .and(CLUSTER_NAME.eq(clusterName)).fetchOne()
-                }
-            } else return null
+    }
+
+    fun getDataBasePiecewiseById(dslContext: DSLContext, moduleCode: String, clusterName: String, routingRule: String): TDataSourceRecord? {
+        with(TDataSource.T_DATA_SOURCE) {
+            return dslContext.selectFrom(this)
+                .where(MODULE_CODE.eq(moduleCode))
+                .and(DATA_SOURCE_NAME.eq(routingRule))
+                .and(CLUSTER_NAME.eq(clusterName)).fetchOne()
         }
+    }
 }

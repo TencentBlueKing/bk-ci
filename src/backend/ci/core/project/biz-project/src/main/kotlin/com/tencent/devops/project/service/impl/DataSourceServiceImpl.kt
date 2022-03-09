@@ -37,6 +37,7 @@ import com.tencent.devops.project.service.DataSourceService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 
 @Service
 class DataSourceServiceImpl @Autowired constructor(
@@ -115,14 +116,22 @@ class DataSourceServiceImpl @Autowired constructor(
         moduleCode: String,
         clusterName: String
     ): DataBasePiecewiseInfo? {
-        val dataSource = dataSourceDao.getDataBasePiecewiseById(dslContext, projectId, moduleCode, clusterName)
-            ?: return null
-        return DataBasePiecewiseInfo(
-            projectId = projectId,
-            moduleCode = moduleCode,
-            clusterName = dataSource.clusterName,
-            dataSourceName = dataSource.dataSourceName,
-            dsUrl = dataSource.dsUrl
-        )
+        val routingRule = dataSourceDao.getRoutingRule(dslContext, projectId)?.get(0) as String
+        if (!StringUtils.isEmpty(routingRule)) {
+            val dataSource = dataSourceDao.getDataBasePiecewiseById(
+                dslContext = dslContext,
+                moduleCode = moduleCode,
+                clusterName = clusterName,
+                routingRule = routingRule
+            ) ?: return null
+            return DataBasePiecewiseInfo(
+                projectId = projectId,
+                moduleCode = moduleCode,
+                clusterName = dataSource.clusterName,
+                dataSourceName = dataSource.dataSourceName,
+                dsUrl = dataSource.dsUrl
+            )
+        }
+        return null
     }
 }
