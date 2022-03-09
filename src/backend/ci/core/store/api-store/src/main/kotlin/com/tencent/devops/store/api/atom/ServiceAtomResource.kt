@@ -100,5 +100,5 @@ interface ServiceAtomResource {
     fun getAtomProps(
         @ApiParam("插件标识列表", required = true)
         atomCodes: Set<String>
-    ): Result<List<AtomProp>?>
+    ): Result<Map<String, AtomProp>?>
 }

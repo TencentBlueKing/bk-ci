@@ -51,17 +51,17 @@ class AtomPropServiceImpl @Autowired constructor(
         .expireAfterWrite(6, TimeUnit.HOURS)
         .build<String, AtomProp>()
 
-    override fun getAtomProps(atomCodes: Set<String>): List<AtomProp>? {
-        var atomProps: MutableList<AtomProp>? = null
+    override fun getAtomProps(atomCodes: Set<String>): Map<String, AtomProp>? {
+        var atomPropMap: MutableMap<String, AtomProp>? = null
         // 从缓存中查找插件属性信息
         var queryDbAtomCodes: MutableList<String>? = null
         atomCodes.forEach { atomCode ->
             val atomProp = atomPropCache.getIfPresent(atomCode)
             if (atomProp != null) {
-                if (atomProps == null) {
-                    atomProps = mutableListOf()
+                if (atomPropMap == null) {
+                    atomPropMap = mutableMapOf()
                 }
-                atomProps!!.add(atomProp)
+                atomPropMap!![atomCode] = atomProp
             } else {
                 // 缓存中不存在则需要从db中查
                 if (queryDbAtomCodes == null) {
@@ -72,13 +72,13 @@ class AtomPropServiceImpl @Autowired constructor(
         }
         if (queryDbAtomCodes.isNullOrEmpty()) {
             // 无需从db查数据则直接返回结果数据
-            return atomProps
+            return atomPropMap
         }
         ListUtils.partition(queryDbAtomCodes!!, 100).forEach { rids ->
             val atomPropRecords = atomPropDao.getAtomProps(dslContext, rids)
             if (!atomPropRecords.isNullOrEmpty()) {
-                if (atomProps == null) {
-                    atomProps = mutableListOf()
+                if (atomPropMap == null) {
+                    atomPropMap = mutableMapOf()
                 }
                 val tAtom = TAtom.T_ATOM
                 atomPropRecords.forEach { atomPropRecord ->
@@ -89,12 +89,12 @@ class AtomPropServiceImpl @Autowired constructor(
                         logoUrl = atomPropRecord[tAtom.LOGO_URL],
                         buildLessRunFlag = atomPropRecord[tAtom.BUILD_LESS_RUN_FLAG]
                     )
-                    atomProps!!.add(atomProp)
+                    atomPropMap!![atomCode] = atomProp
                     // 把数据放入缓存
                     atomPropCache.put(atomCode, atomProp)
                 }
             }
         }
-        return atomProps
+        return atomPropMap
     }
 }

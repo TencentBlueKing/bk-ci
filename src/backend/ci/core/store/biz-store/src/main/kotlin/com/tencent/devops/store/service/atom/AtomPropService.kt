@@ -34,9 +34,9 @@ interface AtomPropService {
     /**
      * 获取插件属性列表
      * @param atomCodes 插件代码集合
-     * @return 插件属性列表
+     * @return 插件属性集合
      */
     fun getAtomProps(
         atomCodes: Set<String>
-    ): List<AtomProp>?
+    ): Map<String, AtomProp>?
 }

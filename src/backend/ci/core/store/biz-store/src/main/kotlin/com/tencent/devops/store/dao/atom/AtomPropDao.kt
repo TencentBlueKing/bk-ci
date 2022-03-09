@@ -47,7 +47,7 @@ class AtomPropDao {
                 OS,
                 BUILD_LESS_RUN_FLAG
             ).from(this)
-                .where(ATOM_CODE.`in`(atomCodes))
+                .where(ATOM_CODE.`in`(atomCodes).and(LATEST_FLAG.eq(true)))
                 .fetch()
         }
     }

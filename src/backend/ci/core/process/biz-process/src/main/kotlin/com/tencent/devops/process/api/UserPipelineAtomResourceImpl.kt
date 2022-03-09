@@ -84,7 +84,7 @@ class UserPipelineAtomResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String
-    ): Result<List<AtomProp>?> {
+    ): Result<Map<String, AtomProp>?> {
         return pipelineAtomService.getPipelineAtomPropList(userId, projectId, pipelineId)
     }
 }

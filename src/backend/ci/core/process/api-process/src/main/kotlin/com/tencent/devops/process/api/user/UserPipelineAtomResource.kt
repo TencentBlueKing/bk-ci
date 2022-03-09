@@ -117,5 +117,5 @@ interface UserPipelineAtomResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<List<AtomProp>?>
+    ): Result<Map<String, AtomProp>?>
 }

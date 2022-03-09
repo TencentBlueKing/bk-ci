@@ -390,7 +390,7 @@ class PipelineAtomService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         checkPermission: Boolean = true
-    ): Result<List<AtomProp>?> {
+    ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
