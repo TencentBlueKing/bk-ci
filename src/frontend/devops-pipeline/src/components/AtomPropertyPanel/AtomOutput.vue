@@ -6,9 +6,9 @@
         </header>
         <div slot="content">
             <div :class="{ 'output-namespace': true, 'form-field': true, 'is-danger': errors.has('namespace') }">
-                <label class="bk-label">
+                <label class="bk-label" style="line-height: 32px;">
                     {{ $t('editPage.outputNamespace') }}：
-                    <bk-popover placement="top" class="form-field-icon">
+                    <bk-popover placement="top">
                         <i class="bk-icon icon-info-circle"></i>
                         <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
                             <div>{{ outputNamespaceDesc }}</div>

@@ -25,50 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.environment.resources
 
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.api.ServiceCmdbNodeResource
+import com.tencent.devops.environment.pojo.CmdbNode
+import com.tencent.devops.environment.service.CmdbNodeService
+import org.springframework.beans.factory.annotation.Autowired
 
-class UserFilter(
-    private val pipelineId: String,
-    private val triggerOnUser: String,
-    private val includedUsers: List<String>,
-    private val excludedUsers: List<String>
-) : WebhookFilter {
+@RestResource
+class ServiceCmdbNodeResourceImpl @Autowired constructor(
+    private val cmdbNodeService: CmdbNodeService
+) : ServiceCmdbNodeResource {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(UserFilter::class.java)
+    override fun listUserCmdbNodesNew(
+        userId: String,
+        bakOperator: Boolean,
+        page: Int,
+        pageSize: Int,
+        ips: List<String>?
+    ): Result<Page<CmdbNode>> {
+        return Result(cmdbNodeService.getUserCmdbNodesNew(
+            userId = userId,
+            bakOperator = bakOperator,
+            page = page,
+            pageSize = pageSize,
+            ips = ips ?: listOf()
+        ))
     }
 
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info(
-            "$pipelineId|triggerOnUser:$triggerOnUser|includedUsers:$includedUsers" +
-                "|excludedUsers:$excludedUsers|user filter"
-        )
-        return hasNoUserSpecs() || (isUserNotExcluded() && isUserIncluded())
-    }
-
-    private fun hasNoUserSpecs(): Boolean {
-        return includedUsers.isEmpty() && excludedUsers.isEmpty()
-    }
-
-    private fun isUserNotExcluded(): Boolean {
-        excludedUsers.forEach { excludeUser ->
-            if (excludeUser == triggerOnUser) {
-                logger.warn("$pipelineId|$excludeUser|the exclude user match the git event user")
-                return false
-            }
-        }
-        return true
-    }
-
-    private fun isUserIncluded(): Boolean {
-        includedUsers.forEach { includedUser ->
-            if (includedUser == triggerOnUser) {
-                logger.warn("$pipelineId|includedUser|the included user match the git event user")
-                return true
-            }
-        }
-        return includedUsers.isEmpty()
+    override fun addCmdbNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
+        cmdbNodeService.addCmdbNodes(userId = userId, projectId = projectId, nodeIps = nodeIps)
+        return Result(true)
     }
 }

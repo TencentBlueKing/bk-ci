@@ -25,56 +25,62 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.api.user
+package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.EventTypeConf
-import com.tencent.devops.stream.pojo.GitRequestHistory
+import com.tencent.devops.environment.pojo.CmdbNode
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.GET
+import javax.ws.rs.POST
+import javax.ws.rs.Path
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_REQUEST"], description = "user-Request页面")
-@Path("/user/request")
+@Api(tags = ["SERVICE_NODE"], description = "服务-节点")
+@Path("/service/node")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserGitCIRequestResource {
+interface ServiceCmdbNodeResource {
 
-    @ApiOperation("查询Request列表")
-    @GET
-    @Path("/list/{projectId}")
-    fun getMergeBuildList(
+    @ApiOperation("获取用户CMDB节点")
+    @POST
+    @Path("/list_user_cmdb_nodes_new")
+    fun listUserCmdbNodesNew(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
+        @ApiParam("true 时为备份负责人，false 时为主负责人", required = true)
+        @QueryParam("bakOperator")
+        bakOperator: Boolean,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        page: Int = 1,
+        @ApiParam("每页多少条", required = false, defaultValue = "100")
         @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<GitRequestHistory>>
+        pageSize: Int = 100,
+        @ApiParam("指定IP", required = false)
+        ips: List<String>?
+    ): Result<Page<CmdbNode>>
 
-    @ApiOperation("获取工蜂事件类型枚举数据")
-    @GET
-    @Path("/eventType")
-    fun getEventTypeConf(
+    @ApiOperation("导入CMDB节点")
+    @POST
+    @Path("/projects/{projectId}/add_cmdb_nodes")
+    fun addCmdbNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<List<EventTypeConf>>
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "CMDB节点 IP", required = true)
+        nodeIps: List<String>
+    ): Result<Boolean>
 }

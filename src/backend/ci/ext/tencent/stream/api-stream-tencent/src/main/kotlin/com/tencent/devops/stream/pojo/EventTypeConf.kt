@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:openapi:biz-openapi"))
-    api(project(":ext:tencent:openapi:api-openapi-tencent"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":core:common:common-client"))
-    api("io.jsonwebtoken:jjwt-api")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson")
-    api("org.springframework.boot:spring-boot-starter-aop")
-}
+package com.tencent.devops.stream.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("工蜂事件类型")
+data class EventTypeConf(
+    @ApiModelProperty("事件ID")
+    val id: String,
+    @ApiModelProperty("事件名称")
+    val name: String
+)
