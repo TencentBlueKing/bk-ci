@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.pojo.measure.AtomMonitorReportBroadCastEv
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITORING_INSERT_DATA_FAIL
 import com.tencent.devops.monitoring.consumer.processor.monitor.AbstractMonitorProcessor
+import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
@@ -72,14 +73,14 @@ class AtomMonitorReportListener @Autowired constructor(
         influxdbClient.insert(data)
 
         // 暴露prometheus
-        Timer.builder("atom_monitor")
+        Counter.builder("atom_monitor")
             .tag("atomCode", data.atomCode)
             .tag("projectId", data.projectId)
             .tag("pipelineId", data.pipelineId)
             .tag("errorCode", data.errorCode.toString())
             .tag("errorType", data.errorType ?: "null")
             .register(meterRegistry)
-            .record(1, TimeUnit.SECONDS)
+            .increment()
     }
 
     companion object {
