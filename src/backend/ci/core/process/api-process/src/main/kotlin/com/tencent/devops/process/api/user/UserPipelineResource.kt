@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import io.micrometer.core.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -375,7 +376,7 @@ interface UserPipelineResource {
 
     @ApiOperation("有权限流水线编排列表")
     @GET
-    // @Path("/projects/{projectId}/authPipelines")
+    @Timed
     @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
