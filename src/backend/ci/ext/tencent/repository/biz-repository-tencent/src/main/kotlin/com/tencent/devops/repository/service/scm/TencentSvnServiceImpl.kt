@@ -31,6 +31,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -82,6 +83,24 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
             credential1 = credential1,
             credential2 = credential2,
             credential3 = credential3
+        ).data!!
+    }
+
+    override fun getSvnRevisionList(
+        url: String,
+        username: String,
+        privateKey: String,
+        passphrase: String?,
+        branchName: String?,
+        currentVersion: String?
+    ): Pair<Long, List<SvnRevisionInfo>> {
+        return client.getScm(ServiceSvnResource::class).getSvnRevisionList(
+            url = url,
+            username = username,
+            privateKey = privateKey,
+            passPhrase = passphrase,
+            branchName = branchName,
+            currentVersion = currentVersion
         ).data!!
     }
 }

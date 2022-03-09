@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.services.SvnService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -62,5 +63,25 @@ class ServiceSvnResourceImpl @Autowired constructor(
         credential3: String?
     ): Result<List<SvnFileInfo>> {
         return Result(svnService.getDirectories(url, userId, svnType, svnPath, revision, credential1, credential2, credential3))
+    }
+
+    override fun getSvnRevisionList(
+        url: String,
+        username: String,
+        privateKey: String,
+        passPhrase: String?,
+        branchName: String?,
+        currentVersion: String?
+    ): Result<Pair<Long, List<SvnRevisionInfo>>> {
+        return Result(
+            svnService.getSvnRevisionList(
+                url = url,
+                username = username,
+                privateKey = privateKey,
+                passphrase = passPhrase,
+                branchName = branchName,
+                currentVersion = currentVersion
+            )
+        )
     }
 }
