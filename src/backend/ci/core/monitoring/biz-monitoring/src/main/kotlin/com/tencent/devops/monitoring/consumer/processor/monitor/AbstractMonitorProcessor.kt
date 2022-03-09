@@ -29,6 +29,8 @@ package com.tencent.devops.monitoring.consumer.processor.monitor
 
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.monitoring.client.InfluxdbClient
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 
 /**
@@ -46,7 +48,7 @@ abstract class AbstractMonitorProcessor {
      */
     protected abstract fun process(extData: Map<String, Any>, monitorDatas: ArrayList<MonitorData>)
 
-    fun process(influxdbClient: InfluxdbClient, atomMonitorData: AtomMonitorData) {
+    fun process(influxdbClient: InfluxdbClient, meterRegistry: MeterRegistry, atomMonitorData: AtomMonitorData) {
 
         val extData = atomMonitorData.extData
 
@@ -63,6 +65,7 @@ abstract class AbstractMonitorProcessor {
         val monitorDatas = ArrayList<MonitorData>()
         process(extData, monitorDatas)
 
+        // 写入
         monitorDatas.asSequence().onEach {
             it.fields["projectId"] = atomMonitorData.projectId
             it.fields["pipelineId"] = atomMonitorData.pipelineId
@@ -71,6 +74,18 @@ abstract class AbstractMonitorProcessor {
             it.fields["channel"] = atomMonitorData.channel ?: ""
             it.fields["starter"] = atomMonitorData.starter
         }.forEach { influxdbClient.insert(this.measurement(), it.tags, it.fields) }
+
+
+        // 暴露prometheus
+        Timer.start(meterRegistry).stop(
+            Timer.builder("atom_monitor")
+                .tag("atomCode", atomMonitorData.atomCode)
+                .tag("projectId", atomMonitorData.projectId)
+                .tag("pipelineId", atomMonitorData.pipelineId)
+                .tag("errorCode", atomMonitorData.errorCode.toString())
+                .tag("errorType", atomMonitorData.errorType ?: "null")
+                .register(meterRegistry)
+        )
     }
 
     companion object {
