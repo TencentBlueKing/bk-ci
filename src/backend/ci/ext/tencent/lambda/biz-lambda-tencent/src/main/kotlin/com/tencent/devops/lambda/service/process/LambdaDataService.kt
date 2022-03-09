@@ -39,6 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -401,9 +402,8 @@ class LambdaDataService @Autowired constructor(
         taskMap["WASH_TIME"] = LocalDateTime.now().format(dateTimeFormatter)
         taskMap["ATOM_CODE"] = atomCode
         taskMap.remove("TASK_PARAMS")
-        val gitTaskTopic = checkParamBlank(lambdaKafkaTopicConfig.gitTaskTopic, "gitTaskTopic")
-        kafkaClient.send(gitTaskTopic, JsonUtil.toJson(taskMap))
-//        kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
+
+        kafkaClient.send(KafkaTopic.LANDUN_GIT_TASK_TOPIC, JsonUtil.toJson(taskMap))
     }
 
     private val projectCache = CacheBuilder.newBuilder()
