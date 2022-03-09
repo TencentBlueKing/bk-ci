@@ -137,7 +137,12 @@ class DataSourceDao {
             .fetchOne()
     }
 
-    fun getDataBasePiecewiseById(dslContext: DSLContext, moduleCode: String, clusterName: String, routingRule: String): TDataSourceRecord? {
+    fun getDataBasePiecewiseById(
+        dslContext: DSLContext,
+        moduleCode: String,
+        clusterName: String,
+        routingRule: String
+    ): TDataSourceRecord? {
         with(TDataSource.T_DATA_SOURCE) {
             return dslContext.selectFrom(this)
                 .where(MODULE_CODE.eq(moduleCode))
