@@ -71,7 +71,6 @@ import javax.ws.rs.core.Response
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
-@Timed
 interface UserPipelineResource {
 
     @ApiOperation("用户是否拥有创建流水线权限")
@@ -343,7 +342,7 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图流水线编排列表")
     @GET
-    @Timed
+    @Timed(longTask = true)
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
