@@ -52,6 +52,7 @@ import io.micrometer.core.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import java.lang.annotation.Inherited
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
@@ -342,7 +343,6 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图流水线编排列表")
     @GET
-    @Timed(longTask = true)
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
