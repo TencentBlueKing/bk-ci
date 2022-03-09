@@ -35,6 +35,7 @@ import com.tencent.devops.project.pojo.DataSource
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.Record1
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
