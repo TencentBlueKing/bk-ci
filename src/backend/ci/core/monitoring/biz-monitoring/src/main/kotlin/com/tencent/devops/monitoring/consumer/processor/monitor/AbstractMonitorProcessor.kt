@@ -74,18 +74,6 @@ abstract class AbstractMonitorProcessor {
             it.fields["channel"] = atomMonitorData.channel ?: ""
             it.fields["starter"] = atomMonitorData.starter
         }.forEach { influxdbClient.insert(this.measurement(), it.tags, it.fields) }
-
-
-        // 暴露prometheus
-        Timer.start(meterRegistry).stop(
-            Timer.builder("atom_monitor")
-                .tag("atomCode", atomMonitorData.atomCode)
-                .tag("projectId", atomMonitorData.projectId)
-                .tag("pipelineId", atomMonitorData.pipelineId)
-                .tag("errorCode", atomMonitorData.errorCode.toString())
-                .tag("errorType", atomMonitorData.errorType ?: "null")
-                .register(meterRegistry)
-        )
     }
 
     companion object {
