@@ -39,6 +39,9 @@ import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 @Component
 class AtomMonitorReportListener @Autowired constructor(
@@ -54,7 +57,7 @@ class AtomMonitorReportListener @Autowired constructor(
             insertAtomMonitorData(monitorData)
 
             monitorProcessors.asSequence().filter { it.atomCode() == monitorData.atomCode }
-                .forEach { it.process(influxdbClient, meterRegistry, monitorData) }
+                .forEach { it.process(influxdbClient, monitorData) }
         } catch (ignored: Throwable) {
             logger.warn("Fail to insert the atom monitor data", ignored)
             throw ErrorCodeException(
@@ -69,15 +72,14 @@ class AtomMonitorReportListener @Autowired constructor(
         influxdbClient.insert(data)
 
         // 暴露prometheus
-        Timer.start(meterRegistry).stop(
-            Timer.builder("atom_monitor")
-                .tag("atomCode", data.atomCode)
-                .tag("projectId", data.projectId)
-                .tag("pipelineId", data.pipelineId)
-                .tag("errorCode", data.errorCode.toString())
-                .tag("errorType", data.errorType ?: "null")
-                .register(meterRegistry)
-        )
+        Timer.builder("atom_monitor")
+            .tag("atomCode", data.atomCode)
+            .tag("projectId", data.projectId)
+            .tag("pipelineId", data.pipelineId)
+            .tag("errorCode", data.errorCode.toString())
+            .tag("errorType", data.errorType ?: "null")
+            .register(meterRegistry)
+            .record(1, TimeUnit.SECONDS)
     }
 
     companion object {

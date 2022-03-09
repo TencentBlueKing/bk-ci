@@ -29,8 +29,6 @@ package com.tencent.devops.monitoring.consumer.processor.monitor
 
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 import com.tencent.devops.monitoring.client.InfluxdbClient
-import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 
 /**
@@ -48,7 +46,7 @@ abstract class AbstractMonitorProcessor {
      */
     protected abstract fun process(extData: Map<String, Any>, monitorDatas: ArrayList<MonitorData>)
 
-    fun process(influxdbClient: InfluxdbClient, meterRegistry: MeterRegistry, atomMonitorData: AtomMonitorData) {
+    fun process(influxdbClient: InfluxdbClient, atomMonitorData: AtomMonitorData) {
 
         val extData = atomMonitorData.extData
 
