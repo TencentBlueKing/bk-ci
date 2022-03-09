@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.pojo.SvnFileInfo
+import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -82,6 +83,26 @@ class ServiceSvnResourceImpl @Autowired constructor(
                 credential1 = credential1,
                 credential2 = credential2,
                 credential3 = credential3
+            )
+        )
+    }
+
+    override fun getSvnRevisionList(
+        url: String,
+        username: String,
+        privateKey: String,
+        passPhrase: String?,
+        branchName: String?,
+        currentVersion: String?
+    ): Result<Pair<Long, List<SvnRevisionInfo>>> {
+        return Result(
+            svnService.getSvnRevisionList(
+                url = url,
+                username = username,
+                privateKey = privateKey,
+                passphrase = passPhrase,
+                branchName = branchName,
+                currentVersion = currentVersion
             )
         )
     }
