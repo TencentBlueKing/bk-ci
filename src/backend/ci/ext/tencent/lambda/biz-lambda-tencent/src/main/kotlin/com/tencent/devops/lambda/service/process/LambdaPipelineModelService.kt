@@ -104,7 +104,8 @@ class LambdaPipelineModelService @Autowired constructor(
                     creator = pipelineResource.creator,
                     createTime = pipelineResource.createTime.timestampmilli().toString()
                 )
-                val pipelineResourceTopic = checkParamBlank(lambdaKafkaTopicConfig.pipelineResourceTopic, "pipelineResourceTopic")
+                val pipelineResourceTopic1 = lambdaKafkaTopicConfig.pipelineResourceTopic
+                val pipelineResourceTopic = checkParamBlank(pipelineResourceTopic1, "pipelineResourceTopic")
                 kafkaClient.send(pipelineResourceTopic, JsonUtil.toJson(dataPlatPipelineResource))
 //                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
             } else {
