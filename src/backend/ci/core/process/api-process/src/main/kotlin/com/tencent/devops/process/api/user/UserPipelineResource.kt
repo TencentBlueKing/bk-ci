@@ -342,7 +342,7 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图流水线编排列表")
     @GET
-    // @Path("/projects/{projectId}/listViewPipelines")
+    @Timed
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -376,7 +376,6 @@ interface UserPipelineResource {
 
     @ApiOperation("有权限流水线编排列表")
     @GET
-    @Timed
     @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
