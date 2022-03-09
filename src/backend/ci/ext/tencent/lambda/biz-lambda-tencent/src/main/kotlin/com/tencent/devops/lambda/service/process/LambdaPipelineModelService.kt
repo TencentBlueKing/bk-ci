@@ -154,7 +154,10 @@ class LambdaPipelineModelService @Autowired constructor(
     }
 
     private fun checkParamBlank(param: String?, message: String): String {
-        return param ?: throw ParamBlankException("启动配置缺少 $message")
+        if (param.isNullOrBlank()) {
+            throw ParamBlankException("启动配置缺少 $message")
+        }
+        return param
     }
 
     companion object {
