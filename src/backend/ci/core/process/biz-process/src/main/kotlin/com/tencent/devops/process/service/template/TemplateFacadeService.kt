@@ -1023,13 +1023,16 @@ class TemplateFacadeService @Autowired constructor(
         model.labels = labels
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
-        try {
-            checkTemplate(templateResult, projectId)
-        } catch (ignored: ErrorCodeException) {
-            // 兼容历史数据，模板内容有问题给出错误提示
-            val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-            templateResult.tips = message ?: ignored.defaultMessage
+        if (!constrainedTemplate.storeFlag) {
+            try {
+                checkTemplate(templateResult, projectId)
+            } catch (ignored: ErrorCodeException) {
+                // 兼容历史数据，模板内容有问题给出错误提示
+                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
+                templateResult.tips = message ?: ignored.defaultMessage
+            }
         }
+
         val params = (templateResult.stages[0].containers[0] as TriggerContainer).params
         val templateParams = (templateResult.stages[0].containers[0] as TriggerContainer).templateParams
         return TemplateModelDetail(
