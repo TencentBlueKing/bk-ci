@@ -28,9 +28,8 @@
 package com.devops.process.yaml.modelCreate
 
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
+import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.devops.process.yaml.utils.PathMatchUtils
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
@@ -45,16 +44,14 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
 class ModelElement constructor(
     val client: Client,
-    val inner: ModelCreateInner
+    val inner: InnerModelCreator
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
-        private const val STREAM_CHECK_AUTH_TYPE = "AUTH_USER_TOKEN"
     }
 
     @Suppress("ComplexMethod", "NestedBlockDepth")
@@ -95,7 +92,7 @@ class ModelElement constructor(
                     makeRunElement(step, job, additionalOptions)
                 }
                 step.checkout != null -> {
-                    makeCheckoutElement(step, event).copy(additionalOptions = additionalOptions)
+                    inner.makeCheckoutElement(step, event, additionalOptions)
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
@@ -167,55 +164,6 @@ class ModelElement constructor(
                 }
             }
         }
-    }
-
-    private fun makeCheckoutElement(
-        step: Step,
-        event: ModelCreateEvent
-    ): MarketBuildAtomElement {
-        // checkout插件装配
-        val inputMap = mutableMapOf<String, Any?>()
-        if (!step.with.isNullOrEmpty()) {
-            inputMap.putAll(step.with!!)
-        }
-
-        // 用户不允许指定 stream的开启人参数
-        if ((inputMap["authType"] != null && inputMap["authType"] == STREAM_CHECK_AUTH_TYPE) ||
-            inputMap["authUserId"] != null
-        ) {
-            throw CustomException(
-                Response.Status.BAD_REQUEST,
-                "The parameter authType:AUTH_USER_TOKEN or authUserId does not support user-specified"
-            )
-        }
-
-        // 非mr和tag触发下根据commitId拉取本地工程代码
-        if (step.checkout == "self") {
-            inner.makeCheckoutSelf(inputMap, event)
-        } else {
-            inputMap["repositoryUrl"] = step.checkout!!
-        }
-
-        // 用户未指定时缺省为 AUTH_USER_TOKEN 同时指定 开启人
-        if (inputMap["authType"] == null) {
-            inputMap["authUserId"] = event.streamData?.enableUserId
-            inputMap["authType"] = STREAM_CHECK_AUTH_TYPE
-        }
-
-        // 拼装插件固定参数
-        inputMap["repositoryType"] = "URL"
-
-        val data = mutableMapOf<String, Any>()
-        data["input"] = inputMap
-
-        return MarketBuildAtomElement(
-            id = step.taskId,
-            name = step.name ?: "checkout",
-            stepId = step.id,
-            atomCode = "checkout",
-            version = "1.*",
-            data = data
-        )
     }
 
     private fun makeServiceElementList(job: Job): MutableList<Element> {

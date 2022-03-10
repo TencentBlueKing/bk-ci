@@ -25,23 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.parsers.template.models
+package com.tencent.devops.stream.trigger.template
 
-import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 
-/**
- * 获取模板的参数接口，
- * @param path yaml中的模板路径
- * @param templateType 模板类型
- * @param nowRepoId 当前正在替换的仓库id
- * @param targetRepo 需要获取的yaml 中定义的远程模板库
- * @param extraParameters 额外参数，由各个服务具体定义
- */
-data class GetTemplateParam<T>(
-    val path: String,
-    val templateType: TemplateType?,
-    val nowRepoId: String?,
-    val targetRepo: Repositories?,
-    val extraParameters: T
+// 传入template的泛型接口
+data class TemplateProjectData(
+    val gitRequestEventId: Long,
+    // 发起者的库ID,用户名,分支
+    val triggerProjectId: Long,
+    // sourceProjectId，在fork时是源库的ID
+    val sourceProjectId: Long,
+    val triggerUserId: String,
+    val triggerRef: String,
+    val triggerToken: String,
+    val forkGitToken: String?,
+    val changeSet: Set<String>?,
+    val event: GitEvent?
+)
+
+// 获取远程模板需要是用的参数
+data class StreamGetTemplateData(
+    val gitRequestEventId: Long,
+    val token: String?,
+    val forkToken: String?,
+    val gitProjectId: Long,
+    val targetRepo: String?,
+    val ref: String?,
+    val personalAccessToken: String?,
+    val fileName: String,
+    val changeSet: Set<String>?,
+    val event: GitEvent?,
+    // 正在被替换的远程库
+    val nowRemoteGitProjectId: String?,
+    val templateType: TemplateType?
 )

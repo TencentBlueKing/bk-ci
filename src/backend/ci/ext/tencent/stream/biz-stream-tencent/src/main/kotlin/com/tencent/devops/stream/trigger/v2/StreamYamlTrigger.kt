@@ -64,7 +64,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
+import com.tencent.devops.stream.trigger.template.TemplateProjectData
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -291,7 +291,7 @@ class StreamYamlTrigger @Autowired constructor(
             val preYamlObject = YamlTemplate(
                 yamlObject = preTemplateYamlObject,
                 filePath = filePath,
-                projectData = TemplateProjectData(
+                extraParameters = TemplateProjectData(
                     gitRequestEventId = gitRequestEvent.id!!,
                     triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
                     triggerUserId = gitRequestEvent.userId,
