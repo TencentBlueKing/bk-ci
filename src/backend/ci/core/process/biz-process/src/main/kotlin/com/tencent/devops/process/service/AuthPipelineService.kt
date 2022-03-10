@@ -183,14 +183,6 @@ class AuthPipelineService @Autowired constructor(
 
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineInfos?.map {
-            val projectManager = authProjectApi.getProjectUsers(
-                projectCode = it.projectId,
-                group = BkAuthGroup.MANAGER,
-                serviceCode = pipelineAuthServiceCode
-            )
-            val approve = mutableListOf<String>()
-            approve.addAll(projectManager)
-            it.createUser?.let { it1 -> approve.add(it1) }
             val entityId = if (returnPipelineId) {
                 it.pipelineId
             } else {
@@ -199,7 +191,7 @@ class AuthPipelineService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = entityId
             entity.displayName = it.pipelineName
-            entity.iamApprover = approve
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")
