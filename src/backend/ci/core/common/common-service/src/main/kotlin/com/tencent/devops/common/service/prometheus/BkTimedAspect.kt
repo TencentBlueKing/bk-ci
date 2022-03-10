@@ -66,7 +66,7 @@ class BkTimedAspect
         )
     }
 ) {
-    @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..)) && !@annotation(javax.ws.rs.Path)")
+    @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
     @Throws(Throwable::class)
     fun timedMethod(pjp: ProceedingJoinPoint): Any {
         var method = (pjp.signature as MethodSignature).method
