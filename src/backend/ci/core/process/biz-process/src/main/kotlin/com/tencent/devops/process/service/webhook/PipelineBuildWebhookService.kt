@@ -108,6 +108,12 @@ abstract class PipelineBuildWebhookService @Autowired constructor() {
     @Autowired
     lateinit var buildLogPrinter: BuildLogPrinter
 
+    /**
+     * 给AOP调用
+     */
+    @Autowired
+    lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService
+
     private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
 
     fun externalCodeSvnBuild(e: String): Boolean {
@@ -258,7 +264,7 @@ abstract class PipelineBuildWebhookService @Autowired constructor() {
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(
+                    if (pipelinebuildWebhookService.webhookTriggerPipelineBuild(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             codeRepositoryType = codeRepositoryType,
