@@ -59,7 +59,7 @@ class BkTimedAspect(
             method = pjp.target.javaClass.getMethod(method.name, *method.parameterTypes)
             timed = method.getAnnotation(BkTimed::class.java)
         }
-        val metricName = if (timed!!.value.isEmpty()) DEFAULT_METRIC_NAME else timed.value
+        val metricName = timed.value.ifEmpty { DEFAULT_METRIC_NAME }
         val stopWhenCompleted = CompletionStage::class.java.isAssignableFrom(method.returnType)
         return if (!timed.longTask) {
             processWithTimer(pjp, timed, metricName, stopWhenCompleted)
@@ -71,7 +71,7 @@ class BkTimedAspect(
     @Throws(Throwable::class)
     private fun processWithTimer(
         pjp: ProceedingJoinPoint,
-        timed: BkTimed?,
+        timed: BkTimed,
         metricName: String,
         stopWhenCompleted: Boolean
     ): Any {
@@ -105,7 +105,7 @@ class BkTimedAspect(
 
     private fun record(
         pjp: ProceedingJoinPoint,
-        timed: BkTimed?,
+        timed: BkTimed,
         metricName: String,
         sample: Timer.Sample,
         exceptionClass: String
@@ -113,13 +113,13 @@ class BkTimedAspect(
         try {
             sample.stop(
                 Timer.builder(metricName)
-                    .description(if (timed!!.description.isEmpty()) null else timed.description)
+                    .description(timed.description)
                     .tags(*timed.extraTags)
                     .tags(EXCEPTION_TAG, exceptionClass)
                     .tags(tagsBasedOnJoinPoint(pjp))
                     .tag(APPLICATION_TAG, applicationName ?: "")
                     .publishPercentileHistogram(timed.histogram)
-                    .publishPercentiles(*(if (timed.percentiles.isEmpty()) null else timed.percentiles)!!)
+                    .publishPercentiles(*(timed.percentiles))
                     .register(registry)
             )
         } catch (e: Exception) {
@@ -140,14 +140,14 @@ class BkTimedAspect(
         }
         return if (throwable.cause == null) {
             throwable.javaClass.simpleName
-        } else throwable.cause!!.javaClass.simpleName
+        } else throwable.cause?.javaClass?.simpleName ?: "null"
     }
 
     @Suppress("NAME_SHADOWING")
     @Throws(Throwable::class)
     private fun processWithLongTaskTimer(
         pjp: ProceedingJoinPoint,
-        timed: BkTimed?,
+        timed: BkTimed,
         metricName: String,
         stopWhenCompleted: Boolean
     ): Any {
@@ -193,13 +193,13 @@ class BkTimedAspect(
      */
     private fun buildLongTaskTimer(
         pjp: ProceedingJoinPoint,
-        timed: BkTimed?,
+        timed: BkTimed,
         metricName: String
     ): Optional<LongTaskTimer> {
         return try {
             Optional.of(
                 LongTaskTimer.builder(metricName)
-                    .description(if (timed!!.description.isEmpty()) null else timed.description)
+                    .description(timed.description)
                     .tags(*timed.extraTags)
                     .tags(tagsBasedOnJoinPoint(pjp))
                     .register(registry)
