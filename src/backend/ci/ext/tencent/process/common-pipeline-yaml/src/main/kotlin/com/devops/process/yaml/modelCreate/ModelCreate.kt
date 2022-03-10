@@ -28,7 +28,7 @@
 package com.devops.process.yaml.modelCreate
 
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
+import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.devops.process.yaml.pojo.QualityElementInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory
 class ModelCreate constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val inner: ModelCreateInner
+    val inner: InnerModelCreator
 ) {
 
     private val modelStage = ModelStage(client, objectMapper, inner)
@@ -82,7 +82,7 @@ class ModelCreate constructor(
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
 
-        val jobBuildTemplateAcrossInfos = if (event.yamlTransferData != null && event.streamData != null) {
+        val jobBuildTemplateAcrossInfo = if (event.yamlTransferData != null && event.streamData != null) {
             inner.getJobTemplateAcrossInfo(
                 yamlTransferData = event.yamlTransferData,
                 gitRequestEventId = event.streamData.requestEventId,
@@ -122,7 +122,7 @@ class ModelCreate constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfo,
                     elementNames = elementNames
                 )
             )
@@ -144,7 +144,7 @@ class ModelCreate constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfo,
                     elementNames = null
                 )
             )
