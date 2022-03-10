@@ -277,7 +277,7 @@ class TriggerSvnService(
         val result = mutableListOf<CodeSvnRepository>()
         repoHashIds.forEach {
             val repo = cache.getIfPresent(it)
-            if(repo != null){
+            if (repo != null) {
                 // 获取缓存中有的仓库
                 result.add(repo)
             } else {
@@ -288,11 +288,11 @@ class TriggerSvnService(
         val repos = repositoryService.listRepoByIds(
             repositoryIds = hashIdWithoutCatch
         ).data ?: emptyList()
-        repos.forEach{
+        repos.forEach {
             // 将缓存中没有的加入缓存，并且返回
-            if(it is CodeSvnRepository){
+            if (it is CodeSvnRepository) {
                 result.add(it)
-                cache.put(it.repoHashId!!,it)
+                cache.put(it.repoHashId!!, it)
             }
         }
         return result
