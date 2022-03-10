@@ -114,7 +114,9 @@ abstract class PipelineBuildWebhookService @Autowired constructor() {
     @Autowired
     lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService
 
-    private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+    }
 
     fun externalCodeSvnBuild(e: String): Boolean {
         logger.info("Trigger code svn build - $e")
