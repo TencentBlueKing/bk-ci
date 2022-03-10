@@ -90,6 +90,8 @@ class OpStreamCheckResourceImpl @Autowired constructor(
                     logger.error("check failed with buildId(${record.buildId}): ", t)
                 }
             }
+            logger.info("finished build forEach")
+            logger.info("offset:$offset,limmit:$limit")
             offset += limit
         } while (offset < 15)
         val sb = StringBuilder("buildId,pipelineId,triggerUser,createTime\n")
