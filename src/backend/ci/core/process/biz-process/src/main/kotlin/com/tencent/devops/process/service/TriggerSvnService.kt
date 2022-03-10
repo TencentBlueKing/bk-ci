@@ -197,10 +197,10 @@ class TriggerSvnService(
                     )
                     // 触发流水线
                     triggerPipelines(projectName, repoInfoList[0].url, svnRevisonList.second)
-                    logger.info("${projectName} repository trigger pipeline success")
+                    logger.info("$projectName repository trigger pipeline success")
                 }
             } catch (err: Throwable) {
-                logger.error("trigger pipeline with repositroy:${it} fail，error message is${err.message}")
+                logger.error("trigger pipeline with repositroy:$it fail，error message is${err.message}")
             }
         }
     }
