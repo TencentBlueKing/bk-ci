@@ -28,44 +28,21 @@
 package com.tencent.devops.common.service.prometheus
 
 import io.micrometer.core.instrument.*
-import io.micrometer.core.instrument.Timer
 import io.micrometer.core.lang.NonNullApi
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
-import org.springframework.stereotype.Component
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.CompletionStage
-import java.util.function.Function
 
 
 /**
  * AspectJ aspect for intercepting types or methods annotated with [@BkTimed][BkTimed].
- *
- * @author David J. M. Karlsen
- * @author Jon Schneider
- * @author Johnny Lim
- * @author Nejc Korasa
- * @since 1.0.0
  */
 @Aspect
 @NonNullApi
-@Component
-class BkTimedAspect
-/**
- * Create a `TimedAspect` instance with [Metrics.globalRegistry].
- *
- * @since 1.2.0
- */ @JvmOverloads constructor(
-    private val registry: MeterRegistry = Metrics.globalRegistry,
-    private val tagsBasedOnJoinPoint: Function<ProceedingJoinPoint, Iterable<Tag>> = Function { pjp: ProceedingJoinPoint ->
-        Tags.of(
-            "class", pjp.staticPart.signature.declaringTypeName,
-            "method", pjp.staticPart.signature.name
-        )
-    }
-) {
+class BkTimedAspect(private val registry: MeterRegistry) {
     @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
     @Throws(Throwable::class)
     fun timedMethod(pjp: ProceedingJoinPoint): Any {
@@ -132,7 +109,7 @@ class BkTimedAspect
                     .description(if (timed!!.description.isEmpty()) null else timed.description)
                     .tags(*timed.extraTags)
                     .tags(EXCEPTION_TAG, exceptionClass)
-                    .tags(tagsBasedOnJoinPoint.apply(pjp))
+                    .tags(tagsBasedOnJoinPoint(pjp))
                     .publishPercentileHistogram(timed.histogram)
                     .publishPercentiles(*(if (timed.percentiles.isEmpty()) null else timed.percentiles)!!)
                     .register(registry)
@@ -140,6 +117,13 @@ class BkTimedAspect
         } catch (e: Exception) {
             // ignoring on purpose
         }
+    }
+
+    private fun tagsBasedOnJoinPoint(pjp: ProceedingJoinPoint): Iterable<Tag> {
+        return Tags.of(
+            "class", pjp.staticPart.signature.declaringTypeName,
+            "method", pjp.staticPart.signature.name
+        )
     }
 
     private fun getExceptionTag(throwable: Throwable?): String {
@@ -209,7 +193,7 @@ class BkTimedAspect
                 LongTaskTimer.builder(metricName)
                     .description(if (timed!!.description.isEmpty()) null else timed.description)
                     .tags(*timed.extraTags)
-                    .tags(tagsBasedOnJoinPoint.apply(pjp))
+                    .tags(tagsBasedOnJoinPoint(pjp))
                     .register(registry)
             )
         } catch (e: Exception) {
