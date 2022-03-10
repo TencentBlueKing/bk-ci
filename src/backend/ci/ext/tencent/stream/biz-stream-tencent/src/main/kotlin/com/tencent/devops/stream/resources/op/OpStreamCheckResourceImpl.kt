@@ -90,12 +90,16 @@ class OpStreamCheckResourceImpl @Autowired constructor(
                 }
             }
             offset += limit
-        } while (offset < 100000)
+        } while (offset < 100)
         val sb = StringBuilder("buildId,pipelineId,triggerUser,createTime\n")
         conflictList.forEach { conflict ->
-            sb.append("${conflict.buildId},${conflict.pipelineId}," +
-                "${conflict.triggerUser},${conflict.createTime}\n")
+            sb.append(
+                "${conflict.buildId},${conflict.pipelineId}," +
+                    "${conflict.triggerUser},${conflict.createTime}\n"
+            )
         }
+        logger.info("conflictJobsFinished")
+
         return Result(sb.toString())
     }
 }
