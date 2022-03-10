@@ -1034,8 +1034,6 @@ class AtomDao : AtomBaseDao() {
                 defaultFlag = false,
                 atomStatusList = atomStatusList
             )
-            conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-            conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             dslContext.select(tAtom.VERSION).from(tAtom)
                 .where(conditions)
                 .andExists(
