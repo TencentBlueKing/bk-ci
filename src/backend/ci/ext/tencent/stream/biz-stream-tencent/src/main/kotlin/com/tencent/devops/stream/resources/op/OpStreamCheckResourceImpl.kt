@@ -99,7 +99,7 @@ class OpStreamCheckResourceImpl @Autowired constructor(
             )
         }
         logger.info("conflictJobsFinished")
-
+        logger.info(sb.toString())
         return Result(sb.toString())
     }
 }
