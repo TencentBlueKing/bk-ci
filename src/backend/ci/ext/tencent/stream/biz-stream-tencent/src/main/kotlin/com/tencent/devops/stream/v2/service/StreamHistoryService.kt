@@ -137,7 +137,7 @@ class StreamHistoryService @Autowired constructor(
                     pipelineId = pipeline.pipelineId,
                     gitRequestEvent = GitRequestEventReq(realEvent),
                     buildHistory = buildHistory,
-                    reason =  eventMessageUtil.getEventMessageTitle(realEvent, pipeline.pipelineId.toLong())
+                    reason = eventMessageUtil.getEventMessageTitle(realEvent, gitProjectId)
                 )
             )
         }
