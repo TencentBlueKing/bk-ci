@@ -28,7 +28,9 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.constant.HTTP_200
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.config.GitConfig
@@ -36,6 +38,7 @@ import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.GitApiException
+import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -235,7 +238,7 @@ class ScmService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = if (!hookUrl.isNullOrBlank()) {
-                hookUrl!!
+                hookUrl
             } else {
                 when (type) {
                     ScmType.CODE_GIT -> {
@@ -332,7 +335,10 @@ class ScmService @Autowired constructor(
             responseTime = System.currentTimeMillis()
             statusCode = e.code
             statusMessage = e.message
-            throw e
+            throw ScmException(
+                e.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_GIT.name
+            )
         } finally {
             scmMonitorService.reportCommitCheck(
                 requestTime = requestTime,

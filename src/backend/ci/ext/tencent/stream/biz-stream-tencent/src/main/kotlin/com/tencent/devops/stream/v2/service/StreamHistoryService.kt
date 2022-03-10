@@ -41,6 +41,7 @@ import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.v2.GitCIBuildHistorySearch
 import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +54,8 @@ class StreamHistoryService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val eventMessageUtil: StreamTriggerMessageUtils
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamHistoryService::class.java)
@@ -134,7 +136,8 @@ class StreamHistoryService @Autowired constructor(
                     displayName = pipeline.displayName,
                     pipelineId = pipeline.pipelineId,
                     gitRequestEvent = GitRequestEventReq(realEvent),
-                    buildHistory = buildHistory
+                    buildHistory = buildHistory,
+                    reason = eventMessageUtil.getEventMessageTitle(realEvent, gitProjectId)
                 )
             )
         }

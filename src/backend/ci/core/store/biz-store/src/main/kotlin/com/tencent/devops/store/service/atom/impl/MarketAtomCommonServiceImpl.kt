@@ -553,4 +553,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         }
         return inputTypeInfos
     }
+
+    override fun isPublicAtom(atomCode: String): Boolean {
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
+        if (!redisOperation.hasKey(storePublicFlagKey)) {
+            // 从db去查查默认插件
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
+            val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
+            redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+        }
+        // 判断是否是默认插件
+        return redisOperation.isMember(storePublicFlagKey, atomCode)
+    }
 }

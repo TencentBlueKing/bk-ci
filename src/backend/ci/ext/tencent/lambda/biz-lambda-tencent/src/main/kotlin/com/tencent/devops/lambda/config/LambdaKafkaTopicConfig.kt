@@ -25,6 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.lambda.config
 
-const AgentVersion = "v1.8.1"
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class LambdaKafkaTopicConfig {
+
+    @Value("\${spring.kafka.topics.buildHistoryTopic:#{null}}")
+    val buildHistoryTopic: String? = null
+
+    @Value("\${spring.kafka.topics.buildDetailTopic:#{null}}")
+    val buildDetailTopic: String? = null
+
+    @Value("\${spring.kafka.topics.jobDetailTopic:#{null}}")
+    val jobDetailTopic: String? = null
+
+    @Value("\${spring.kafka.topics.taskDetailTopic:#{null}}")
+    val taskDetailTopic: String? = null
+
+    @Value("\${spring.kafka.topics.projectInfoTopic:#{null}}")
+    val projectInfoTopic: String? = null
+
+    @Value("\${spring.kafka.topics.pipelineInfoTopic:#{null}}")
+    val pipelineInfoTopic: String? = null
+
+    @Value("\${spring.kafka.topics.pipelineResourceTopic:#{null}}")
+    val pipelineResourceTopic: String? = null
+
+    @Value("\${spring.kafka.topics.gitTaskTopic:#{null}}")
+    val gitTaskTopic: String? = null
+}
