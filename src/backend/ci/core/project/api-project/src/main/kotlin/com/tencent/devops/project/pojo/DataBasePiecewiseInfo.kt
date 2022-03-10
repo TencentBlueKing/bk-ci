@@ -24,26 +24,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.tencent.devops.project.pojo
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
+
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("数据源")
-data class DataSource(
+@ApiModel("数据库分片信息")
+data class DataBasePiecewiseInfo(
+    @ApiModelProperty("项目ID/项目CODE")
+    val projectId: String,
     @ApiModelProperty("集群名称")
-    @field:BkField(minLength = 1, maxLength = 64)
     val clusterName: String,
-    @ApiModelProperty("模块标识")
-    val moduleCode: SystemModuleEnum,
+    @ApiModelProperty("微服务模块名称")
+    val moduleCode: String,
     @ApiModelProperty("数据源名称")
-    @field:BkField(minLength = 1, maxLength = 128)
     val dataSourceName: String,
-    @ApiModelProperty("容量是否满标识")
-    @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
-    val fullFlag: Boolean = false,
     @ApiModelProperty("数据源URL")
     val dsUrl: String?
 )
