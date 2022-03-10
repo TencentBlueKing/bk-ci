@@ -54,7 +54,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         logger.info("StreamExperiencePermissionServiceImpl user:$user projectId: $projectId ")
-        val permissionCheck = checkPermission(user, projectId)
+        val permissionCheck = checkPermission(user, projectId, authPermission)
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
@@ -74,13 +74,14 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        if (!checkPermission(user, projectId)) {
-            return emptyMap()
-        }
         val experienceIds = experienceDao.list(dslContext, projectId, null, null).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
-            experienceMap[it] = experienceIds
+            if (checkPermission(user, projectId, it)) {
+                experienceMap[it] = experienceIds
+            } else {
+                experienceMap[it] = emptyList()
+            }
         }
         return experienceMap
     }
@@ -98,7 +99,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
             token = tokenService.getSystemToken(null) ?: "",
             action = "",
             projectCode = projectId,
-            resourceCode = ""
+            resourceCode = authPermission.value
         ).data ?: false
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
@@ -131,24 +132,25 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        if (!checkPermission(user, projectId)) {
-            return emptyMap()
-        }
         val groupIds = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
-            experienceMap[it] = groupIds
+            if (checkPermission(user, projectId, it)) {
+                experienceMap[it] = groupIds
+            } else {
+                experienceMap[it] = emptyList()
+            }
         }
         return experienceMap
     }
 
-    private fun checkPermission(userId: String, projectId: String): Boolean {
+    private fun checkPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenService.getSystemToken(null) ?: "",
             action = "",
             projectCode = projectId,
-            resourceCode = ""
+            resourceCode = authPermission.value
         ).data ?: false
     }
 
