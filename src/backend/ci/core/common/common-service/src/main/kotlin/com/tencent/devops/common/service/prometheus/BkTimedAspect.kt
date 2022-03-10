@@ -140,7 +140,7 @@ class BkTimedAspect(
         }
         return if (throwable.cause == null) {
             throwable.javaClass.simpleName
-        } else throwable.cause?.javaClass?.simpleName ?: "null"
+        } else throwable.cause?.javaClass?.simpleName ?: "unknown"
     }
 
     @Suppress("NAME_SHADOWING")
