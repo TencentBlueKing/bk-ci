@@ -59,13 +59,14 @@ class OpStreamCheckResourceImpl @Autowired constructor(
         val conflictList = mutableListOf<TGitRequestEventBuildRecord>()
         do {
             var offset = 0
-            val limit = 100
+            val limit = 10
             val builds = gitRequestEventBuildDao.getBuildInLastDays(
                 dslContext = dslContext,
                 buildDays = buildDays ?: 1,
                 offset = offset,
                 limit = limit
             )
+            logger.info(builds.toString())
             builds.forEach nextRecord@{ record ->
                 try {
                     val normalYaml = YamlUtil.getObjectMapper().readValue(
@@ -90,7 +91,7 @@ class OpStreamCheckResourceImpl @Autowired constructor(
                 }
             }
             offset += limit
-        } while (offset < 100)
+        } while (offset < 15)
         val sb = StringBuilder("buildId,pipelineId,triggerUser,createTime\n")
         conflictList.forEach { conflict ->
             sb.append(
