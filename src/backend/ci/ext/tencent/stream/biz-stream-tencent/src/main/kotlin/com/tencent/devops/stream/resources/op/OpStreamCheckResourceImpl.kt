@@ -57,8 +57,8 @@ class OpStreamCheckResourceImpl @Autowired constructor(
 
     override fun conflictJobs(buildDays: Long?): Result<String> {
         val conflictList = mutableListOf<TGitRequestEventBuildRecord>()
+        var offset = 0
         do {
-            var offset = 0
             val limit = 10
             val builds = gitRequestEventBuildDao.getBuildInLastDays(
                 dslContext = dslContext,
@@ -90,8 +90,6 @@ class OpStreamCheckResourceImpl @Autowired constructor(
                     logger.error("check failed with buildId(${record.buildId}): ", t)
                 }
             }
-            logger.info("finished build forEach")
-            logger.info("offset:$offset,limmit:$limit")
             offset += limit
         } while (offset < 15)
         val sb = StringBuilder("buildId,pipelineId,triggerUser,createTime\n")
