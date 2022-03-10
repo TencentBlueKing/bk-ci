@@ -84,18 +84,28 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
     private lateinit var applicationContext: ApplicationContext
     override fun setApplicationContext(applicationContext: ApplicationContext) {
         this.applicationContext = applicationContext
+        this.objectMapper = applicationContext.getBean(ObjectMapper::class.java)
+        this.client = applicationContext.getBean(Client::class.java)
+        this.pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
+        this.pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
+        this.pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
+        this.scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
+        this.gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
+        this.pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
+        this.buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
+        this.pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
     }
 
-    val objectMapper = applicationContext.getBean(ObjectMapper::class.java)
-    val client = applicationContext.getBean(Client::class.java)
-    val pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
-    val pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
-    val pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
-    val scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
-    val gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
-    val pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
-    val buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
-    val pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
+    lateinit var objectMapper: ObjectMapper
+    lateinit var client: Client
+    lateinit var pipelineWebhookService: PipelineWebhookService
+    lateinit var pipelineRepositoryService: PipelineRepositoryService
+    lateinit var pipelineBuildService: PipelineBuildService
+    lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+    lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
+    lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
+    lateinit var buildLogPrinter: BuildLogPrinter
+    lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
