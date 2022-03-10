@@ -75,7 +75,10 @@ interface ServiceFileResource {
         projectCode: String? = null,
         @ApiParam("渠道类型", required = true)
         @QueryParam("fileChannelType")
-        fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE
+        fileChannelType: FileChannelTypeEnum = FileChannelTypeEnum.SERVICE,
+        @ApiParam("是否为插件logo", required = false)
+        @QueryParam("logo")
+        logo: Boolean? = false
     ): Result<String?>
 
     @ApiOperation("下载文件")

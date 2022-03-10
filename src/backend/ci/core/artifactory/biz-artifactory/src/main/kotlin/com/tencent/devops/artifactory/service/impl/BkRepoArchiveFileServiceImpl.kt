@@ -88,7 +88,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileName: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         val destPath = filePath ?: DefaultPathUtils.randomFileName()
         val metadata = mutableMapOf<String, String>()
@@ -102,8 +103,20 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             projectId!!
         }
         val repoName = BkRepoUtils.getRepoName(fileType)
-        defaultBkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, metadata)
-        return generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
+        return if (logo == true) {
+            defaultBkRepoClient.uploadLocalFile(
+                userId = userId,
+                projectId = BKREPO_STORE_PROJECT_ID,
+                repoName = REPO_NAME_STATIC,
+                path = destPath,
+                file = file,
+                metadata = metadata
+            )
+            generateFileDownloadUrl(fileChannelType, destPath).plus("?logo=true")
+        } else {
+            defaultBkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, metadata)
+            generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
+        }
     }
 
     override fun downloadArchiveFile(
