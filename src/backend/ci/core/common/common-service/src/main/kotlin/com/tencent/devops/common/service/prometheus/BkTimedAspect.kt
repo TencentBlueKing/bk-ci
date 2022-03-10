@@ -33,6 +33,8 @@ import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationContext
 import java.util.Optional
 import java.util.concurrent.CompletionStage
 
@@ -42,7 +44,12 @@ import java.util.concurrent.CompletionStage
  */
 @Aspect
 @NonNullApi
-class BkTimedAspect(private val registry: MeterRegistry) {
+class BkTimedAspect(
+    private val registry: MeterRegistry
+) {
+    @Value("\${spring.application.name:#{null}}")
+    val applicationName: String? = null
+
     @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
     @Throws(Throwable::class)
     fun timedMethod(pjp: ProceedingJoinPoint): Any {
@@ -110,6 +117,7 @@ class BkTimedAspect(private val registry: MeterRegistry) {
                     .tags(*timed.extraTags)
                     .tags(EXCEPTION_TAG, exceptionClass)
                     .tags(tagsBasedOnJoinPoint(pjp))
+                    .tag(APPLICATION_NAME, applicationName ?: "")
                     .publishPercentileHistogram(timed.histogram)
                     .publishPercentiles(*(if (timed.percentiles.isEmpty()) null else timed.percentiles)!!)
                     .register(registry)
@@ -204,12 +212,7 @@ class BkTimedAspect(private val registry: MeterRegistry) {
     companion object {
         const val DEFAULT_METRIC_NAME = "method.timed"
         const val DEFAULT_EXCEPTION_TAG_VALUE = "none"
-
-        /**
-         * Tag key for an exception.
-         *
-         * @since 1.1.0
-         */
         const val EXCEPTION_TAG = "exception"
+        const val APPLICATION_NAME = "application"
     }
 }
