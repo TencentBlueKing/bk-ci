@@ -30,6 +30,7 @@ package com.tencent.devops.experience.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -54,7 +55,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         logger.info("StreamExperiencePermissionServiceImpl user:$user projectId: $projectId ")
-        val permissionCheck = checkPermission(user, projectId, authPermission)
+        val permissionCheck = checkTaskPermission(user, projectId, authPermission)
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
@@ -77,7 +78,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         val experienceIds = experienceDao.list(dslContext, projectId, null, null).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
-            if (checkPermission(user, projectId, it)) {
+            if (checkTaskPermission(user, projectId, it)) {
                 experienceMap[it] = experienceIds
             } else {
                 experienceMap[it] = emptyList()
@@ -93,14 +94,8 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        logger.info("validateGroupPermission user:$userId projectId: $projectId ")
-        val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId = userId,
-            token = tokenService.getSystemToken(null) ?: "",
-            action = "",
-            projectCode = projectId,
-            resourceCode = authPermission.value
-        ).data ?: false
+        logger.info("validateGroupPermission user:$userId projectId: $projectId $authPermission ")
+        val permissionCheck = checkGroupPermission(userId, projectId, authPermission)
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
@@ -135,7 +130,7 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         val groupIds = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
-            if (checkPermission(user, projectId, it)) {
+            if (checkGroupPermission(user, projectId, it)) {
                 experienceMap[it] = groupIds
             } else {
                 experienceMap[it] = emptyList()
@@ -144,13 +139,33 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         return experienceMap
     }
 
-    private fun checkPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+    private fun checkGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             token = tokenService.getSystemToken(null) ?: "",
-            action = "",
+            action = authPermission.value,
             projectCode = projectId,
-            resourceCode = authPermission.value
+            resourceCode = "",
+            resourceType = AuthResourceType.EXPERIENCE_GROUP_NEW.value
+        ).data ?: false
+    }
+
+    private fun checkTaskPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            userId = userId,
+            token = tokenService.getSystemToken(null) ?: "",
+            action = authPermission.value,
+            projectCode = projectId,
+            resourceCode = "",
+            resourceType = AuthResourceType.EXPERIENCE_TASK_NEW.value
         ).data ?: false
     }
 
