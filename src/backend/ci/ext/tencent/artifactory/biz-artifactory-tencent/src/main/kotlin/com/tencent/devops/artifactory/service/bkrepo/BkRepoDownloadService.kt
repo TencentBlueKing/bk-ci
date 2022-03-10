@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -49,6 +50,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -199,7 +201,14 @@ open class BkRepoDownloadService @Autowired constructor(
 
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
+                pipelineService.validatePermission(
+                    userId,
+                    projectId,
+                    message = MessageCodeUtil.getCodeMessage(
+                        ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        arrayOf(userId, projectId)
+                    )
+                )
             }
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
@@ -208,7 +217,10 @@ open class BkRepoDownloadService @Autowired constructor(
                     projectId,
                     pipelineId,
                     AuthPermission.SHARE,
-                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}分享权限"
+                    MessageCodeUtil.getCodeMessage(
+                        ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
+                        arrayOf(userId, projectId, pipelineId)
+                    )
                 )
             }
         }
@@ -219,7 +231,7 @@ open class BkRepoDownloadService @Autowired constructor(
             RepoUtils.getRepoByType(artifactoryType),
             path
         ) ?: throw BadRequestException("文件（$path) 不存在")
-        val fileName = fileDetail.nodeInfo.name
+        val fileName = fileDetail.name
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
 
         val days = ttl / (3600 * 24)
@@ -229,7 +241,7 @@ open class BkRepoDownloadService @Autowired constructor(
             title,
             userId,
             days,
-            listOf(FileShareInfo(fileName, fileDetail.nodeInfo.md5 ?: "", projectName, downloadUrl))
+            listOf(FileShareInfo(fileName, fileDetail.md5 ?: "", projectName, downloadUrl))
         )
         val receivers = downloadUsers.split(",").toSet()
         receivers.forEach {
@@ -263,7 +275,7 @@ open class BkRepoDownloadService @Autowired constructor(
         var targetPipelineId = pipelineId
         var targetBuildId = buildId
         if (!crossProjectId.isNullOrBlank()) {
-            targetProjectId = crossProjectId!!
+            targetProjectId = crossProjectId
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
@@ -276,11 +288,30 @@ open class BkRepoDownloadService @Autowired constructor(
             }
         }
 
-        val accessUserId = if (!userId.isNullOrBlank()) {
-            userId
+        val accessUserId: String
+        val projectDownloadErrorMsg: String?
+        val pipelineDownloadErrorMsg: String?
+        if (!userId.isNullOrBlank()) {
+            accessUserId = userId
+            projectDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
+                ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                arrayOf(accessUserId, targetProjectId)
+            )
+            pipelineDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
+                ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            )
         } else {
-            client.get(ServicePipelineResource::class)
+            accessUserId = client.get(ServicePipelineResource::class)
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
+            projectDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
+                ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                arrayOf(accessUserId, targetProjectId)
+            )
+            pipelineDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
+                ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            )
         }
         logger.info(
             "accessUserId: $accessUserId, targetProjectId: $targetProjectId, " +
@@ -293,7 +324,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 targetProjectId
             )
         ) {
-            throw PermissionForbiddenException("用户（$accessUserId) 没有项目（$targetProjectId）下载权限)")
+            throw PermissionForbiddenException(projectDownloadErrorMsg)
         }
         if (artifactoryType == ArtifactoryType.PIPELINE) {
             pipelineService.validatePermission(
@@ -301,7 +332,7 @@ open class BkRepoDownloadService @Autowired constructor(
                 projectId = targetProjectId,
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
-                message = "用户($accessUserId)在项目($targetProjectId)下没有流水线($targetPipelineId)下载构件权限"
+                message = pipelineDownloadErrorMsg
             )
         }
 

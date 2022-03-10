@@ -49,4 +49,9 @@ object ArtifactoryMessageCode {
     const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
     const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
     const val SHORT_URL_EXPIRED = "2102005" // 短链接已过期
+    const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006" // 用户{0}没有项目{1}下载权限
+    const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007" // 用户{0}在项目{1}下没有流水线{2}下载构件权限
+    const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
+    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
+    const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
 }
