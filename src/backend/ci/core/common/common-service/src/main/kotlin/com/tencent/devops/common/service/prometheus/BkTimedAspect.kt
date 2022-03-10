@@ -33,8 +33,8 @@ import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.ApplicationContext
 import java.util.Optional
 import java.util.concurrent.CompletionStage
 
@@ -117,13 +117,13 @@ class BkTimedAspect(
                     .tags(*timed.extraTags)
                     .tags(EXCEPTION_TAG, exceptionClass)
                     .tags(tagsBasedOnJoinPoint(pjp))
-                    .tag(APPLICATION_NAME, applicationName ?: "")
+                    .tag(APPLICATION_TAG, applicationName ?: "")
                     .publishPercentileHistogram(timed.histogram)
                     .publishPercentiles(*(if (timed.percentiles.isEmpty()) null else timed.percentiles)!!)
                     .register(registry)
             )
         } catch (e: Exception) {
-            // ignoring on purpose
+            logger.warn("record failed", e)
         }
     }
 
@@ -184,7 +184,7 @@ class BkTimedAspect(
         try {
             sample.stop()
         } catch (e: Exception) {
-            // ignoring on purpose
+            logger.warn("stopTimer failed", e)
         }
     }
 
@@ -210,9 +210,11 @@ class BkTimedAspect(
     }
 
     companion object {
-        const val DEFAULT_METRIC_NAME = "method.timed"
-        const val DEFAULT_EXCEPTION_TAG_VALUE = "none"
+        const val DEFAULT_METRIC_NAME = "bk_method_time"
+        const val DEFAULT_EXCEPTION_TAG_VALUE = "null"
         const val EXCEPTION_TAG = "exception"
-        const val APPLICATION_NAME = "application"
+        const val APPLICATION_TAG = "application"
+
+        private val logger = LoggerFactory.getLogger(BkTimedAspect::class.java)
     }
 }
