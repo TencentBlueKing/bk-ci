@@ -469,7 +469,7 @@ class TOFService @Autowired constructor(
         )
     }
 
-    fun checkUserLeave(userInfo: UserDeptDetail) : Boolean {
+    fun checkUserLeave(userInfo: UserDeptDetail): Boolean {
         // 没有bgId的用户，一律视为离职用户
         if (userInfo.bgId.toInt() == 0) {
             return true
