@@ -259,7 +259,7 @@ class ScmService @Autowired constructor(
     ) {
         logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
         if (type == ScmType.CODE_SVN) {
-            logger.info("社区svn仓库注册svn触发器不调用api接口")
+            logger.info("svn webhook api does not support, ignore")
             return
         }
         val startEpoch = System.currentTimeMillis()

@@ -76,7 +76,7 @@ class TriggerSvnService(
      *  轮询 SVN 仓库
      */
     private fun pollingSvnRepoTask(interval: Long) {
-        logger.info("SVN 仓库轮询, 当前时间: {}", LocalDateTime.now())
+        logger.info("SVN repositroy pooling, now time: {}", LocalDateTime.now())
         // 使用 redis, 防止多节点同时执行
         val lock = RedisLock(redisOperation, getRedisLockKey, 30)
         try {
@@ -85,7 +85,7 @@ class TriggerSvnService(
                 return
             }
             if (!checkLastPollTime(interval)) {
-                logger.info("距离上次执行时间太近")
+                logger.info("")
                 return
             }
             // 开始分页查询
@@ -111,7 +111,6 @@ class TriggerSvnService(
                     logger.info("list timer pipeline finish|start=$start|limit=$limit")
                     break@loop
                 }
-                logger.info("svn 触发器获取，开始准备轮询遍历")
                 // 通过触发器获取所有仓库id
                 val repoHashIds = svnTriggerList.map { it.repoHashId!! }.toSet()
                 // 由hashId获取所有的仓库信息
@@ -128,7 +127,7 @@ class TriggerSvnService(
                 )
                 start += limit
             } catch (err: Throwable) {
-                logger.info("err is ${JsonUtil.toJson(err)}")
+                logger.info("loop err, error message : ${err.message}")
             }
         }
     }
@@ -149,11 +148,11 @@ class TriggerSvnService(
                 )
                 if (result != null) {
                     // 获取到一个可用的svn记录时，跳出循环
-                    logger.info("获取仓库${it}关联最新提交记录成功")
+                    logger.info("the repositroy : ${it.url} get revision info success")
                     return result
                 }
             } catch (err: Throwable) {
-                logger.error("获取仓库${it}关联最新提交记录时错误，错误信息为${JsonUtil.toJson(err)}")
+                logger.error("the repository ${it.url} get revision fail，error message is${err.message}")
             }
         }
         return result
@@ -173,7 +172,7 @@ class TriggerSvnService(
                 val repoInfoList = svnRepositoryMap[projectName]
                 // 如果获取svn仓库最新数据失败，则不触发
                 if (repoInfoList == null || repoInfoList.isEmpty()) {
-                    logger.warn("仓库 : $it 没有获取相关凭证信息")
+                    logger.warn("repository:$it get certificate info fail")
                     return@forEach
                 }
                 // 获取最新的version数据
@@ -182,7 +181,7 @@ class TriggerSvnService(
                     repoInfoList = repoInfoList
                 )
                 if (svnRevisonList == null) {
-                    logger.error("$projectName 没有可用的凭证用于获取一个可用的svn提交信息")
+                    logger.error("$projectName get revison list fail")
                     return@forEach
                 }
                 val revision = svnRevisonList.first
@@ -191,7 +190,6 @@ class TriggerSvnService(
                     // 如果仓库版本大于commit版本，则触发流水线
                     // 获取最新的信息
                     // 保存最新的提交版本号
-                    logger.info("开始触发流水线")
                     pipelineWebhookRevisionDao.saveOrUpdateRevision(
                         dslContext = dslContext,
                         projectName = projectName,
@@ -199,10 +197,10 @@ class TriggerSvnService(
                     )
                     // 触发流水线
                     triggerPipelines(projectName, repoInfoList[0].url, svnRevisonList.second)
-                    logger.info("${projectName}仓库关联的流水线触发成功")
+                    logger.info("$projectName repository trigger pipeline success")
                 }
             } catch (err: Throwable) {
-                logger.error("触发仓库${it}关联流水线时出错，错误信息为${JsonUtil.toJson(err)}")
+                logger.error("trigger pipeline with repositroy:$it fail，error message is${err.message}")
             }
         }
     }
@@ -279,7 +277,7 @@ class TriggerSvnService(
         val result = mutableListOf<CodeSvnRepository>()
         repoHashIds.forEach {
             val repo = cache.getIfPresent(it)
-            if(repo != null){
+            if (repo != null) {
                 // 获取缓存中有的仓库
                 result.add(repo)
             } else {
@@ -290,11 +288,11 @@ class TriggerSvnService(
         val repos = repositoryService.listRepoByIds(
             repositoryIds = hashIdWithoutCatch
         ).data ?: emptyList()
-        repos.forEach{
+        repos.forEach {
             // 将缓存中没有的加入缓存，并且返回
-            if(it is CodeSvnRepository){
+            if (it is CodeSvnRepository) {
                 result.add(it)
-                cache.put(it.repoHashId!!,it)
+                cache.put(it.repoHashId!!, it)
             }
         }
         return result
@@ -311,7 +309,7 @@ class TriggerSvnService(
                         SvnWebhookEvent(requestContent = JsonUtil.toJson(event))
                     )
                 } catch (e: Exception) {
-                    logger.warn("请求启动流水线端口发生异常", e)
+                    logger.warn("trigger pipeline fail")
                 }
             }
         }
