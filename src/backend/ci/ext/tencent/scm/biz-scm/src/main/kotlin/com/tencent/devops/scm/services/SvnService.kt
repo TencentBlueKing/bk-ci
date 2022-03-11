@@ -249,22 +249,23 @@ class SvnService {
         try {
             val collection = svnRepository.log(arrayOf(""), null, currentVersion, revision, true, true)
             val result = mutableListOf<SvnRevisionInfo>()
-            if (!collection.isEmpty()) {
-                for (aCollection in collection) {
-                    val logEntry = aCollection as SVNLogEntry
-                    if (currentVersion != revision && currentVersion == logEntry.revision) {
-                        logger.info("this revision is builded, ignoer this one")
-                        continue
-                    }
-                    val revisionInfo = SvnRevisionInfo(
-                        revision = logEntry.revision.toString(),
-                        branchName = branchName,
-                        authorName = logEntry.author,
-                        commitTime = logEntry.date.time,
-                        paths = logEntry.changedPaths.values.map { it.path }
-                    )
-                    result.add(revisionInfo)
+            if (collection.isEmpty()) {
+                return result
+            }
+            for (aCollection in collection) {
+                val logEntry = aCollection as SVNLogEntry
+                if (currentVersion != revision && currentVersion == logEntry.revision) {
+                    logger.info("this revision is builded, ignoer this one")
+                    continue
                 }
+                val revisionInfo = SvnRevisionInfo(
+                    revision = logEntry.revision.toString(),
+                    branchName = branchName,
+                    authorName = logEntry.author,
+                    commitTime = logEntry.date.time,
+                    paths = logEntry.changedPaths.values.map { it.path }
+                )
+                result.add(revisionInfo)
             }
             return result
         } catch (e: SVNException) {
