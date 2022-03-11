@@ -42,4 +42,14 @@ class TxPipelineBuildWebhookService : PipelineBuildWebhookService() {
     override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
         permFixService.checkPermission(userId, projectId, pipelineId)
     }
+
+    @BkTimed // 要aop生效必须在子类上拦截
+    override fun webhookTriggerPipelineBuild(
+        projectId: String,
+        pipelineId: String,
+        codeRepositoryType: String,
+        matcher: ScmWebhookMatcher
+    ): Boolean {
+        return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
+    }
 }
