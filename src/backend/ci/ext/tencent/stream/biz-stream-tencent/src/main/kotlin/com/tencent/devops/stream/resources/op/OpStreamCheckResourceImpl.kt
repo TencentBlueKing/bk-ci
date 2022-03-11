@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
@@ -66,15 +65,12 @@ class OpStreamCheckResourceImpl @Autowired constructor(
                 offset = offset,
                 limit = limit
             )
-            logger.info(builds.toString())
             builds.forEach nextRecord@{ record ->
                 try {
                     val normalYaml = YamlUtil.getObjectMapper().readValue(
                         ScriptYmlUtils.formatYaml(record.normalizedYaml),
                         ScriptBuildYaml::class.java
                     )
-                    val toString = JsonUtil.toJson(normalYaml, true)
-                    logger.info(toString)
                     val jobIdSet = mutableSetOf<String>()
                     normalYaml.stages.forEach { stage ->
                         stage.jobs.forEach { job ->
