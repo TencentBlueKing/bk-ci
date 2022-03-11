@@ -81,33 +81,30 @@ import org.springframework.context.ApplicationContextAware
 @Suppress("ALL")
 abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
-    private lateinit var applicationContext: ApplicationContext
     override fun setApplicationContext(applicationContext: ApplicationContext) {
-        this.applicationContext = applicationContext
-        this.objectMapper = applicationContext.getBean(ObjectMapper::class.java)
-        this.client = applicationContext.getBean(Client::class.java)
-        this.pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
-        this.pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
-        this.pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
-        this.scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
-        this.gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
-        this.pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
-        this.buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
-        this.pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
+        objectMapper = applicationContext.getBean(ObjectMapper::class.java)
+        client = applicationContext.getBean(Client::class.java)
+        pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
+        pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
+        pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
+        scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
+        gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
+        pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
+        buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
+        pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
     }
 
-    lateinit var objectMapper: ObjectMapper
-    lateinit var client: Client
-    lateinit var pipelineWebhookService: PipelineWebhookService
-    lateinit var pipelineRepositoryService: PipelineRepositoryService
-    lateinit var pipelineBuildService: PipelineBuildService
-    lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
-    lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
-    lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
-    lateinit var buildLogPrinter: BuildLogPrinter
-    lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
-
     companion object {
+        lateinit var objectMapper: ObjectMapper
+        lateinit var client: Client
+        lateinit var pipelineWebhookService: PipelineWebhookService
+        lateinit var pipelineRepositoryService: PipelineRepositoryService
+        lateinit var pipelineBuildService: PipelineBuildService
+        lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+        lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
+        lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
+        lateinit var buildLogPrinter: BuildLogPrinter
+        lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
