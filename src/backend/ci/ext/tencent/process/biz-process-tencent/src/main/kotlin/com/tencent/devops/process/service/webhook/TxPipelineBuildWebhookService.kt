@@ -42,14 +42,4 @@ class TxPipelineBuildWebhookService : PipelineBuildWebhookService() {
     override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
         permFixService.checkPermission(userId, projectId, pipelineId)
     }
-
-    @BkTimed
-    override fun webhookTriggerPipelineBuild(
-        projectId: String,
-        pipelineId: String,
-        codeRepositoryType: String,
-        matcher: ScmWebhookMatcher
-    ): Boolean {
-        return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
-    }
 }

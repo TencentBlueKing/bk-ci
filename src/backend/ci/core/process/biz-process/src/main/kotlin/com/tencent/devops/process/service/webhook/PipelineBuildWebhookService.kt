@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTrig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
@@ -331,7 +332,8 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         return canWebhookStartup
     }
 
-    open fun webhookTriggerPipelineBuild(
+    @BkTimed
+    fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,
         codeRepositoryType: String,
