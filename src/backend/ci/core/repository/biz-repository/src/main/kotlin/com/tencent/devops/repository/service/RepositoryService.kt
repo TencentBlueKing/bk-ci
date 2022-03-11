@@ -790,7 +790,7 @@ class RepositoryService @Autowired constructor(
             /**
              * 类型为tGit,去掉凭据验证
              */
-            if ((repository !is CodeTGitRepository) and (repository !is GithubRepository)) {
+            if (repository !is GithubRepository) {
                 checkRepositoryToken(projectId, repository)
             }
         }
