@@ -36,17 +36,17 @@ class StreamTriggerMessageUtils @Autowired constructor(
                     branch = event.branch,
                     client = client
                 )
-                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+                "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
             TGitObjectKind.MANUAL.value -> {
-                "[${event.branch}] Manual Triggered by ${event.userId}"
+                "Manually run by ${event.userId}"
             }
             TGitObjectKind.OPENAPI.value -> {
-                "[${event.branch}] openApi Triggered by ${event.userId}"
+                "Run by OPENAPI(${event.userId})"
             }
             TGitObjectKind.TAG_PUSH.value -> {
                 if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
-                    "[${event.branch}] tag [${event.branch}] deleted by ${event.userId}"
+                    "Tag [${event.branch}] deleted by ${event.userId}"
                 } else {
                     val eventMap = try {
                         objectMapper.readValue<GitTagPushEvent>(event.event)
@@ -54,15 +54,15 @@ class StreamTriggerMessageUtils @Autowired constructor(
                         logger.error("event as GitTagPushEvent error ${e.message}")
                         null
                     }
-                    "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
+                    "Tag [${event.branch}] pushed by ${event.userId}"
                 }
             }
             TGitObjectKind.SCHEDULE.value -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
+                "Scheduled"
             }
             TGitObjectKind.PUSH.value -> {
                 if (event.operationKind == TGitPushOperationKind.DELETE.value) {
-                    "[${event.branch}] branch [${event.branch}] deleted by ${event.userId}"
+                    "Branch [${event.branch}] deleted by ${event.userId}"
                 } else {
                     val eventMap = try {
                         objectMapper.readValue<GitPushEvent>(event.event)
@@ -73,7 +73,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
                     if (eventMap?.isCreateBranch() == true) {
                         "Branch [${event.branch}] added by ${event.userId}"
                     } else {
-                        "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                        "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
                     }
                 }
             }
@@ -92,7 +92,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 "Note [${noteEvent?.objectAttributes?.id}] submitted by ${event.userId}"
             }
             else -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
         return messageTitle
