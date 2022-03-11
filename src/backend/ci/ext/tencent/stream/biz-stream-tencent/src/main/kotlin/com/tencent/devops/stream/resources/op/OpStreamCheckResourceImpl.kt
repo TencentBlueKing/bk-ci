@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class OpStreamCheckResourceImpl @Autowired constructor(
     private val streamAsyncService: StreamAsyncService,
     private val dslContext: DSLContext,
