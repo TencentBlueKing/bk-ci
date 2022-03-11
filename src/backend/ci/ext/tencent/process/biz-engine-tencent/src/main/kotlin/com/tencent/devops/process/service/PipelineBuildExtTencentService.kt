@@ -64,8 +64,9 @@ class PipelineBuildExtTencentService @Autowired constructor(
         extMap.putAll(pipelineContextService.buildContext(
             projectId = task.projectId,
             buildId = task.buildId,
-            containerId = task.containerId,
             stageId = task.stageId,
+            containerId = task.containerId,
+            taskId = null,
             variables = variables
         ))
         extMap["ci.build_url"] = pipelineUrlBean.genBuildDetailUrl(

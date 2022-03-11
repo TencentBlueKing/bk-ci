@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.v2.Step
@@ -44,11 +44,11 @@ import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 class InnerModelCreatorImpl @Autowired constructor(
@@ -203,15 +203,18 @@ class InnerModelCreatorImpl @Autowired constructor(
         }
 
         when (event.streamData!!.objectKind) {
-            TGitObjectKind.MERGE_REQUEST ->
+            TGitObjectKind.MERGE_REQUEST -> {
                 inputMap["pullType"] = "BRANCH"
+                // mr merged时,需要拉取目标分支,如果是mr open,插件不会读取这个值
+                inputMap["refName"] = gitData.branch
+            }
             TGitObjectKind.TAG_PUSH -> {
                 inputMap["pullType"] = "TAG"
-                inputMap["refName"] = gitData
+                inputMap["refName"] = gitData.branch
             }
             TGitObjectKind.PUSH -> {
                 inputMap["pullType"] = "BRANCH"
-                inputMap["refName"] = "\${STREAM_CHECKOUT_BRANCH}"
+                inputMap["refName"] = gitData.branch
             }
             TGitObjectKind.MANUAL -> {
                 if (gitData.commitId.isNotBlank()) {

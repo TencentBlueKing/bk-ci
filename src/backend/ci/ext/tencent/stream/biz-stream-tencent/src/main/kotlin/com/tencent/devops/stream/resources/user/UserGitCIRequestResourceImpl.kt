@@ -66,7 +66,7 @@ class UserGitCIRequestResourceImpl @Autowired constructor(
             TGitObjectKind.values().forEach {
                 e.add(
                     EventTypeConf(
-                        id = it.value,
+                        id = it.name,
                         name = it.value.capitalize()
                     )
                 )

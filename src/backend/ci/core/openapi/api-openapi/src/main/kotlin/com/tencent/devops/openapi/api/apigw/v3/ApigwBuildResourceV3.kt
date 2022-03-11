@@ -196,7 +196,7 @@ interface ApigwBuildResourceV3 {
         pageSize: Int?,
         @ApiParam(
             value = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
-            required = false, defaultValue = "20"
+            required = false, defaultValue = "null"
         )
         @QueryParam("updateTimeDesc")
         updateTimeDesc: Boolean? = null
