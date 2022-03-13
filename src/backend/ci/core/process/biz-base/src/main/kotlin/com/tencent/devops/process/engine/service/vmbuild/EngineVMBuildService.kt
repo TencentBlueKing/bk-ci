@@ -229,7 +229,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         jobId = c.jobId,
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
-                        containerType = c.getClassType()
+                        containerType = c.getClassType(),
+                        sensitiveValues = buildVariableService.getAllSensitiveValues(projectId, buildId)
                     )
                 }
                 vmId++
@@ -478,7 +479,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         !it.first.startsWith("@type")
                     }.toMap(),
                     buildVariable = buildVariable,
-                    containerType = task.containerType
+                    containerType = task.containerType,
+                    sensitiveValues = buildVariableService.getAllSensitiveValues(task.projectId, buildId)
                 )
             }
         }

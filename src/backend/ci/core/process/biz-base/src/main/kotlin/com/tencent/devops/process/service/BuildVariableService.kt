@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
@@ -34,10 +35,13 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSensitiveValueDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
+import javax.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -48,12 +52,14 @@ import org.springframework.stereotype.Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val buildSensitiveValueDao: PipelineBuildSensitiveValueDao,
     private val redisOperation: RedisOperation
 ) {
 
     companion object {
         private const val PIPELINE_BUILD_VAR_KEY = "pipelineBuildVar"
+        private const val PIPELINE_SENSITIVE_VALUE_KEY = "pipelineSensitiveValue"
     }
 
     /**
@@ -127,7 +133,7 @@ class BuildVariableService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId
         )
-        buildSensitiveValueDao.deletePipelineSensitiveValue(
+        buildSensitiveValueDao.deletePipelineSensitiveValues(
             dslContext = commonDslContext,
             projectId = projectId,
             pipelineId = pipelineId
@@ -230,6 +236,48 @@ class BuildVariableService @Autowired constructor(
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
+    }
+
+    fun batchSetSensitiveValue(
+        projectId: String,
+        pipelineId: String?,
+        buildId: String,
+        values: List<String>
+    ): Boolean {
+        val realPipelineId = if (pipelineId.isNullOrBlank()) {
+            pipelineBuildDao.getBuildInfo(
+                dslContext = commonDslContext,
+                projectId = projectId,
+                buildId = buildId
+            )?.pipelineId ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "流水线不存在"
+            )
+        } else pipelineId
+        val watch = Watcher(id = "batchSetSensitiveValue| $realPipelineId| $buildId")
+        val redisLock = RedisLock(redisOperation, "$PIPELINE_SENSITIVE_VALUE_KEY:$buildId", 60)
+        try {
+            watch.start("getLock")
+            // 加锁防止数据被重复插入
+            redisLock.lock()
+            watch.start("batchSave")
+            buildSensitiveValueDao.batchSave(
+                dslContext = commonDslContext,
+                projectId = projectId,
+                pipelineId = realPipelineId,
+                buildId = buildId,
+                values = values
+            )
+        } finally {
+            redisLock.unlock()
+            LogUtils.printCostTimeWE(watch)
+        }
+        return true
+    }
+
+    fun getAllSensitiveValues(projectId: String, buildId: String): List<String> {
+        return buildSensitiveValueDao.getValues(commonDslContext, projectId, buildId)
     }
 
     private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {

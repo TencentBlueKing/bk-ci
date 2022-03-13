@@ -55,7 +55,9 @@ data class BuildTask(
     @ApiModelProperty("环境参数", required = false)
     val buildVariable: Map<String, String>? = null,
     @ApiModelProperty("容器类型", required = false)
-    val containerType: String? = null
+    val containerType: String? = null,
+    @ApiModelProperty("日志敏感信息（未加密勿打印）", required = false)
+    val sensitiveValues: List<String>? = null
 ) {
 
     /**

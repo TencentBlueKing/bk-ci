@@ -52,6 +52,7 @@ import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +63,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
+    private val buildVariableService: BuildVariableService
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
@@ -601,6 +603,17 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
+            )
+        )
+    }
+
+    override fun saveSensitiveValues(projectId: String, buildId: String, values: List<String>): Result<Boolean> {
+        return Result(
+            buildVariableService.batchSetSensitiveValue(
+                projectId = projectId,
+                pipelineId = null,
+                buildId = buildId,
+                values = values
             )
         )
     }

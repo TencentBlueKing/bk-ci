@@ -86,6 +86,24 @@ class PipelineBuildSensitiveValueDao @Autowired constructor() {
         }
     }
 
+    fun batchUpdate(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        values: List<String>
+    ) {
+        with(T_PIPELINE_BUILD_SENSITIVE_VALUE) {
+            values.forEach { v ->
+                dslContext.update(this)
+                    .set(BUILD_ID, buildId)
+                    .set(VALUE, v)
+                    .where(
+                        BUILD_ID.eq(buildId).and(VALUE.eq(v)).and(PROJECT_ID.eq(projectId))
+                    ).execute()
+            }
+        }
+    }
+
     fun getValues(
         dslContext: DSLContext,
         projectId: String,
@@ -104,7 +122,7 @@ class PipelineBuildSensitiveValueDao @Autowired constructor() {
         }
     }
 
-    fun deletePipelineSensitiveValue(dslContext: DSLContext, projectId: String, pipelineId: String) {
+    fun deletePipelineSensitiveValues(dslContext: DSLContext, projectId: String, pipelineId: String) {
         return with(T_PIPELINE_BUILD_SENSITIVE_VALUE) {
             dslContext.delete(this).where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId)).execute()

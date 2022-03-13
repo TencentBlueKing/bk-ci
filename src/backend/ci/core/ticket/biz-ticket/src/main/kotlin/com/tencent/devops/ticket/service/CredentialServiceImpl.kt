@@ -457,7 +457,23 @@ class CredentialServiceImpl @Autowired constructor(
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceGet(buildBasicInfo.projectId, credentialId, publicKey)
+        val credentialRecord = credentialDao.getOrNull(
+            dslContext = dslContext,
+            projectId = buildBasicInfo.projectId,
+            credentialId = credentialId
+        ) ?: return null
+
+        client.get(ServiceBuildResource::class).saveSensitiveValues(
+            projectId = projectId,
+            buildId = buildId,
+            values = setOf(
+                credentialRecord.credentialV1,
+                credentialRecord.credentialV2,
+                credentialRecord.credentialV3,
+                credentialRecord.credentialV4
+            )
+        )
+        return credentialInfo(publicKey, credentialRecord)
     }
 
     override fun buildBatchGet(projectId: String, buildId: String, publicKey: String): List<CredentialInfo> {
@@ -467,7 +483,20 @@ class CredentialServiceImpl @Autowired constructor(
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceBatchGet(buildBasicInfo.projectId, publicKey)
+        val sensitiveValues = mutableSetOf<String>()
+        val credentialList = credentialDao.batchGet(dslContext, buildBasicInfo.projectId).map {
+            sensitiveValues.add(it.credentialV1)
+            sensitiveValues.add(it.credentialV2)
+            sensitiveValues.add(it.credentialV3)
+            sensitiveValues.add(it.credentialV4)
+            credentialInfo(publicKey, it)
+        }.toList()
+        client.get(ServiceBuildResource::class).saveSensitiveValues(
+            projectId = projectId,
+            buildId = buildId,
+            values = sensitiveValues
+        )
+        return credentialList
     }
 
     override fun buildGetAcrossProject(
@@ -524,7 +553,6 @@ class CredentialServiceImpl @Autowired constructor(
 
     override fun serviceGet(projectId: String, credentialId: String, publicKey: String): CredentialInfo? {
         val credentialRecord = credentialDao.getOrNull(dslContext, projectId, credentialId) ?: return null
-
         return credentialInfo(publicKey, credentialRecord)
     }
 

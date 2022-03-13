@@ -650,4 +650,18 @@ interface ServiceBuildResource {
         @BkField(required = true)
         buildId: String
     ): Result<String>
+
+    @ApiOperation("保存构建涉及的敏感信息")
+    @POST
+    @Path("/projects/{projectId}/builds/{buildId}/save_sensitive_value")
+    fun saveSensitiveValues(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("参数", required = true)
+        values: Set<String>
+    ): Result<Boolean>
 }
