@@ -61,7 +61,7 @@ object WorkRunner {
 
             ThirdPartyAgentBuildInfoUtils.setBuildInfo(buildInfo)
 
-            LoggerService.start(buildInfo.projectId)
+            LoggerService.start()
 
             Runner.run(object : WorkspaceInterface {
                 val workspace = buildInfo.workspace

@@ -129,7 +129,7 @@ object Runner {
         )
 
         // 启动日志服务
-        LoggerService.start(buildVariables.projectId)
+        LoggerService.start(buildVariables.sensitiveValues)
         val variables = buildVariables.variablesWithType
         val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
         LoggerService.executeCount = retryCount.toInt() + 1

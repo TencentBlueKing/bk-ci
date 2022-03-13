@@ -52,7 +52,6 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -172,13 +171,10 @@ object LoggerService {
         }
     }
 
-    fun start(projectId: String) {
+    fun start(sensitiveValues: List<String>? = null) {
         logger.info("Start the log service")
         future = executorService.submit(loggerThread)
-        logger.info("Load sensitive string set")
-        // #4273 此处目前只将ticket服务中的凭据作为敏感内容，后续可追加
-        sensitiveStringSet.addAll(CredentialUtils.getProjectCredentials(projectId))
-        logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
+        sensitiveValues?.let { addSensitiveValues(it) }
     }
 
     fun flush(): Int {
@@ -397,6 +393,12 @@ object LoggerService {
             logger.info("Remove temp log files in [$pipelineLogDir].")
             FileUtils.deleteRecursivelyOnExit(pipelineLogDir!!)
         }
+    }
+
+    fun addSensitiveValues(sensitiveValues: List<String>) {
+        logger.info("Append sensitive string set")
+        sensitiveStringSet.addAll(sensitiveValues)
+        logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
     }
 
     private fun addLog(message: LogMessage) = uploadQueue.put(message)

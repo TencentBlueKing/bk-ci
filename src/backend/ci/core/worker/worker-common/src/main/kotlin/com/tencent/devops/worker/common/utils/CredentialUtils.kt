@@ -76,7 +76,9 @@ object CredentialUtils {
             val pair = DHUtil.initKey()
             val result = requestCredential(credentialId, pair, acrossProjectId)
             val credential = result.data!!
-            return Pair(getDecodedCredentialList(credential, pair), credential.credentialType)
+            val decodeCredentialList = getDecodedCredentialList(credential, pair)
+            LoggerService.addSensitiveValues(decodeCredentialList)
+            return Pair(decodeCredentialList, credential.credentialType)
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
@@ -84,25 +86,6 @@ object CredentialUtils {
             }
             throw ignored
         }
-    }
-
-    fun getProjectCredentials(
-        projectId: String
-    ): Set<String> {
-        val encoder = Base64.getEncoder()
-        val pair = DHUtil.initKey()
-        val credentialSet = mutableSetOf<String>()
-        try {
-            logger.info("Start to get credentials from the project($projectId)")
-            val result = sdkApi.getProjectCredentials(encoder.encodeToString(pair.publicKey))
-            val list = result.data ?: emptyList()
-            list.forEach { credentialInfo ->
-                credentialSet.addAll(getDecodedCredentialList(credentialInfo, pair))
-            }
-        } catch (ignored: Exception) {
-            logger.error("Fail to get credentials from the project($projectId)")
-        }
-        return credentialSet
     }
 
     private fun requestCredential(
