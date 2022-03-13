@@ -54,8 +54,8 @@ class SystemDockerMountGenerator @Autowired constructor(private val dockerHostCo
                     poolNo = poolNo
                 ))
 
-                val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
-                val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
+                val upperDir = "${getWorkspace(buildId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
+                val workDir = "${getWorkspace(buildId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
                 val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"
 
                 mountList.add(mountOverlayfs(

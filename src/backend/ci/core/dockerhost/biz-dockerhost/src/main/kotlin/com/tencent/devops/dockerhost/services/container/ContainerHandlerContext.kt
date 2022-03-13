@@ -19,6 +19,7 @@ data class ContainerHandlerContext(
     val qpcUniquePath: String? = null,
     val dockerResource: DockerResourceOptionsVO? = null,
     val dockerRunParam: DockerRunParam? = null,
+    val specialProjectList: String? = null,
     var formatImageName: String? = "",
     var containerId: String? = "",
     var dockerRunResponse: DockerRunResponse? = null,

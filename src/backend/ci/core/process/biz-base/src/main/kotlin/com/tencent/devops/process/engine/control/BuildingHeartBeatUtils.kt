@@ -50,10 +50,10 @@ class BuildingHeartBeatUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BuildingHeartBeatUtils::class.java)
     }
 
-    fun addHeartBeat(buildId: String, vmSeqId: String, time: Long, retry: Int = 3) {
+    fun addHeartBeat(buildId: String, vmSeqId: String, time: Long, retry: Int = 3, executeCount: Int? = null) {
         try {
             redisOperation.set(
-                key = HeartBeatUtils.genHeartBeatKey(buildId = buildId, vmSeqId = vmSeqId),
+                key = HeartBeatUtils.genHeartBeatKey(buildId = buildId, vmSeqId = vmSeqId, executeCount = executeCount),
                 value = time.toString(),
                 expiredInSecond = TimeUnit.MINUTES.toSeconds(REDIS_EXPIRED_MIN)
             )
@@ -87,7 +87,9 @@ class BuildingHeartBeatUtils @Autowired constructor(
         )
     }
 
-    fun dropHeartbeat(buildId: String, vmSeqId: String) {
+    fun dropHeartbeat(buildId: String, vmSeqId: String, executeCount: Int? = null) {
+        redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId, executeCount))
+        // 兼容旧版agent心跳接口没有传executeCount的逻辑
         redisOperation.delete(HeartBeatUtils.genHeartBeatKey(buildId, vmSeqId))
     }
 }

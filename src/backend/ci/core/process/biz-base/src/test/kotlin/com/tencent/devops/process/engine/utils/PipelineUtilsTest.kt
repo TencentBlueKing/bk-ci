@@ -38,13 +38,13 @@ class PipelineUtilsTest {
     @Test
     fun checkPipelineNameLength() {
         val name = "1234567890123456789012345678901234567890123456789012345678901234"
-        PipelineUtils.checkPipelineName(name)
+        PipelineUtils.checkPipelineName(name, 64)
     }
 
     @Test(expected = ErrorCodeException::class)
     fun checkPipelineNameTooLength() {
         val name = "12345678901234567890123456789012345678901234567890123456789012345" // exceed 64 char
-        PipelineUtils.checkPipelineName(name)
+        PipelineUtils.checkPipelineName(name, 64)
     }
 
     @Test
@@ -72,16 +72,16 @@ class PipelineUtilsTest {
     @Test
     fun checkPipelineDescLength() {
         var desc: String? = null
-        PipelineUtils.checkPipelineDescLength(desc)
+        PipelineUtils.checkPipelineDescLength(desc, 100)
         desc = "1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"
-        PipelineUtils.checkPipelineDescLength(desc)
+        PipelineUtils.checkPipelineDescLength(desc, 100)
     }
 
     @Test(expected = ErrorCodeException::class)
     fun checkPipelineDescLength101() {
         val desc =
             "12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901"
-        PipelineUtils.checkPipelineDescLength(desc)
+        PipelineUtils.checkPipelineDescLength(desc, 100)
     }
 
     private fun make(id: String): BuildFormProperty {

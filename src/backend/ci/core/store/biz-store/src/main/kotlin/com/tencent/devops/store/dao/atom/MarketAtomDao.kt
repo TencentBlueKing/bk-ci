@@ -780,7 +780,6 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
                 .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
                 .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(approveReq.serviceScope))
-                .set(LATEST_FLAG, latestFlag)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
             val weight = approveReq.weight

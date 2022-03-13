@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -524,12 +524,12 @@ class TaskBuildDetailService(
     }
 
     private val atomCache = Caffeine.newBuilder()
-        .maximumSize(2000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .maximumSize(20000)
+        .expireAfterAccess(6, TimeUnit.HOURS)
         .build<String/*projectCode VS atomCode VS atomVersion*/, String/*true version*/> { mix ->
             val keys = mix.split(" VS ")
-            client.get(ServiceMarketAtomEnvResource::class)
-                .getAtomEnv(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data?.version
+            client.get(ServiceAtomResource::class)
+                .getAtomRealVersion(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data
         }
 
     fun findTaskVersion(
