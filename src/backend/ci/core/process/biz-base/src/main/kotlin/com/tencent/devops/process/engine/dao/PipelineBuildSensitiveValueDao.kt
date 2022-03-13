@@ -65,7 +65,7 @@ class PipelineBuildSensitiveValueDao @Autowired constructor() {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        values: List<String>
+        values: Set<String>
     ) {
         with(T_PIPELINE_BUILD_SENSITIVE_VALUE) {
             val maxLength = VALUE.dataType.length()

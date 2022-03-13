@@ -607,7 +607,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun saveSensitiveValues(projectId: String, buildId: String, values: List<String>): Result<Boolean> {
+    override fun saveSensitiveValues(projectId: String, buildId: String, values: Set<String>): Result<Boolean> {
         return Result(
             buildVariableService.batchSetSensitiveValue(
                 projectId = projectId,

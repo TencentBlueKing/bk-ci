@@ -242,7 +242,7 @@ class BuildVariableService @Autowired constructor(
         projectId: String,
         pipelineId: String?,
         buildId: String,
-        values: List<String>
+        values: Set<String>
     ): Boolean {
         val realPipelineId = if (pipelineId.isNullOrBlank()) {
             pipelineBuildDao.getBuildInfo(
