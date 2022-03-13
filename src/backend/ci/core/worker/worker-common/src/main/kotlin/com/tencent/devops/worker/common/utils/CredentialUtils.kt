@@ -77,6 +77,7 @@ object CredentialUtils {
             val result = requestCredential(credentialId, pair, acrossProjectId)
             val credential = result.data!!
             val decodeCredentialList = getDecodedCredentialList(credential, pair)
+            // #4732 日志脱敏，被请求过的凭据统一过滤
             LoggerService.addSensitiveValues(decodeCredentialList)
             return Pair(decodeCredentialList, credential.credentialType)
         } catch (ignored: Exception) {
