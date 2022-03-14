@@ -1593,6 +1593,7 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
+                        logger.info("debug use | privateKey is $privateKey | $passPhrase | $token")
                         scmService.checkPrivateKeyAndToken(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
