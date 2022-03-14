@@ -210,9 +210,14 @@ func (s *sdk) launchServer() error {
 		nowait = "--no_wait"
 	}
 
+	disablefilelock := ""
+	if s.config.DisableFileLock {
+		disablefilelock = "--disable_file_lock"
+	}
+
 	return dcSyscall.RunServer(fmt.Sprintf("%s%s -a=%s -p=%d --log-dir=%s --v=%d --local_slots=%d "+
 		"--local_pre_slots=%d --local_exe_slots=%d --local_post_slots=%d --async_flush %s --remain_time=%d "+
-		"--use_local_cpu_percent=%d",
+		"--use_local_cpu_percent=%d %s",
 		sudo,
 		ctrlPath,
 		s.config.IP,
@@ -226,6 +231,7 @@ func (s *sdk) launchServer() error {
 		nowait,
 		s.config.RemainTime,
 		s.config.UseLocalCPUPercent,
+		disablefilelock,
 	))
 }
 

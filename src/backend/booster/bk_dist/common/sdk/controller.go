@@ -124,6 +124,7 @@ type ControllerConfig struct {
 	Sudo               bool
 	NoWait             bool
 	UseLocalCPUPercent int
+	DisableFileLock    bool
 }
 
 // Target return the server ip and port of controller

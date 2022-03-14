@@ -81,6 +81,7 @@ const (
 	FlagIdleKeepSecs         = "idle_keep_secs"
 	FlagResourceTimeoutSecs  = "resource_timeout_secs"
 	FlagLocalIdleCPUPercent  = "use_local_cpu_percent"
+	FlagDisableFileLock      = "disable_file_lock"
 
 	EnvBuildIDOld  = "TURBO_PLAN_BUILD_ID"
 	EnvBuildID     = "TBS_BUILD_ID"
@@ -325,6 +326,10 @@ var (
 		commandCli.IntFlag{
 			Name:  "use_local_cpu_percent",
 			Usage: "how many local idle cpu will be used to execute tasks(0~100), default 0",
+		},
+		commandCli.BoolFlag{
+			Name:  "disable_file_lock",
+			Usage: "whether need disable file lock when launch program, false by default",
 		},
 	}
 )

@@ -298,6 +298,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 			NoWait:             c.Bool(FlagControllerNoWait),
 			RemainTime:         remaintime,
 			UseLocalCPUPercent: useLocalCPUPercent,
+			DisableFileLock:    c.Bool(FlagDisableFileLock),
 		},
 	}
 
