@@ -91,6 +91,10 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
     fun emptyGroup(groups: Set<String>): Boolean {
         if (groups.isEmpty()) {
             return true
+        } else {
+            if (groups.size == 1 && groups.first().isEmpty()) {
+                return true
+            }
         }
         return false
     }
