@@ -32,6 +32,7 @@ import org.jooq.SQLDialect
 import org.jooq.conf.Settings
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
+import org.jooq.impl.DefaultExecuteListenerProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,13 +40,15 @@ import org.springframework.context.annotation.Import
 import javax.sql.DataSource
 
 @Configuration
-@Import(BkShardingDataSourceConfiguration::class)
+@Import(BkShardingDataSourceConfiguration::class, DBBaseConfiguration::class)
 class BkShardingJooqConfiguration {
 
     @Bean
-    fun shardingDslContest(
+    fun shardingDslContext(
         @Qualifier("shardingDataSource")
-        shardingDataSource: DataSource
+        shardingDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DSLContext {
         val configuration: org.jooq.Configuration = DefaultConfiguration()
             .set(shardingDataSource)
@@ -53,6 +56,7 @@ class BkShardingJooqConfiguration {
                 .withExecuteLogging(true)
                 .withRenderFormatted(false))
             .set(SQLDialect.MYSQL)
+            .set(bkJooqExecuteListenerProvider)
         return DSL.using(configuration)
     }
 }
