@@ -572,7 +572,8 @@ class RepositoryService @Autowired constructor(
                         repositoryId = repositoryId,
                         projectName = GitUtils.getProjectName(repository.url),
                         userName = repository.userName,
-                        privateToken = repository.credentialId
+                        privateToken = repository.credentialId,
+                        authType = repository.authType
                     )
                     repositoryId
                 }
@@ -1018,7 +1019,9 @@ class RepositoryService @Autowired constructor(
                     (svnRepo?.svnType?.toUpperCase() ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
                 }
                 ScmType.CODE_GITLAB.name -> {
-                    RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
+                    val gitlabRepo = gitlabAuthMap?.get(it.repositoryId)
+                    val gitlabAuthType = gitlabRepo?.authType ?: RepoAuthType.HTTP.name
+                    gitlabAuthType to gitlabRepo?.credentialId
                 }
                 ScmType.CODE_P4.name -> {
                     RepoAuthType.HTTP.name to p4RepoAuthMap?.get(it.repositoryId)?.credentialId
@@ -1570,7 +1573,6 @@ class RepositoryService @Autowired constructor(
             is CodeGitlabRepository -> {
                 when (repo.authType) {
                     RepoAuthType.SSH -> {
-                        logger.info("well be delete | into gitlab ssh")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
@@ -1591,8 +1593,6 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        logger.info("well be delete | checkout gitlab ssh |" +
-                                " privateKey is $privateKey | passPhrase is $passPhrase | token is $token")
                         scmService.checkPrivateKeyAndToken(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),

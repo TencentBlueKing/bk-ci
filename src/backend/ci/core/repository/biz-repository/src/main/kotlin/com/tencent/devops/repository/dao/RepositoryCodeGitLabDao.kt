@@ -31,6 +31,7 @@ import com.tencent.devops.model.repository.tables.TRepositoryCodeGit
 import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitlabRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -44,7 +45,8 @@ class RepositoryCodeGitLabDao {
         repositoryId: Long,
         projectName: String,
         userName: String,
-        privateToken: String
+        privateToken: String,
+        authType: RepoAuthType?
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
@@ -55,7 +57,8 @@ class RepositoryCodeGitLabDao {
                 USER_NAME,
                 CREDENTIAL_ID,
                 CREATED_TIME,
-                UPDATED_TIME
+                UPDATED_TIME,
+                AUTH_TYPE
             )
                 .values(
                     repositoryId,
@@ -63,7 +66,8 @@ class RepositoryCodeGitLabDao {
                     userName,
                     privateToken,
                     now,
-                    now
+                    now,
+                    authType?.name
                 ).execute()
         }
     }
