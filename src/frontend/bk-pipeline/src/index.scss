@@ -314,6 +314,11 @@ span.skip-name {
     }
     
     .bk-pipeline-atom {
+        &.UNEXEC,
+        &.SKIP,
+        &.DISABLED {
+            color: $fontWeightColor;
+        }
         &.CANCELED,
         &.REVIEW_ABORT,
         &.REVIEWING {

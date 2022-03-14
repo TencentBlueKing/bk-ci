@@ -14,7 +14,8 @@ module.exports = (env = {}, argv) => {
         entry: './index.js',
         output: {
             library: {
-                type: 'umd'
+                type: 'umd',
+                name: 'bkPipeline'
             },
             filename: 'bk-pipeline.min.js',
             path: path.resolve(__dirname, 'dist'),

@@ -276,7 +276,7 @@
 
 <style lang="scss">
     @use "sass:math";
-    @import "./index";
+    @import "./conf";
     .devops-stage-container {
         .container-title {
             display: flex;

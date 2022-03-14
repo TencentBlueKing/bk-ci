@@ -168,7 +168,7 @@
 </script>
 
 <style lang="scss">
-  @import "./index";
+  @import "./conf";
   .bk-pipeline-matrix-group {
     border: 1px solid $borderNormalColor;
     padding: 10px;

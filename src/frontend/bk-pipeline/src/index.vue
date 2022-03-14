@@ -95,7 +95,7 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {
@@ -214,6 +214,11 @@
         width: fit-content;
         position: relative;
         align-items: flex-start;
+        ul,
+        li {
+            margin: 0;
+            padding: 0;
+        }
     }
 
     .list-item {

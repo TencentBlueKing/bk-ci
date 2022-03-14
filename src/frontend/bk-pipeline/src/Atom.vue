@@ -447,8 +447,8 @@
 </script>
 
 <style lang="scss">
-@import "./index";
-.bk-pipeline-atom {
+    @import "./conf";
+    .bk-pipeline .bk-pipeline-atom {
     cursor: pointer;
     position: relative;
     display: flex;

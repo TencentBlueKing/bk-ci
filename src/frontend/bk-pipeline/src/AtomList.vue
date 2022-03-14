@@ -207,7 +207,7 @@
 </script>
 
 <style lang="scss">
-    @import "./index";
+    @import "./conf";
     .container-atom-list {
         position: relative;
         z-index: 3;

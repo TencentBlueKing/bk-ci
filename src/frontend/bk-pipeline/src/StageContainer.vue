@@ -151,7 +151,7 @@
 
 <style lang="scss">
     @use "sass:math";
-    @import "./index";
+    @import "./conf";
     .devops-stage-container {
         text-align: left;
         margin: 16px 20px 0 20px;
