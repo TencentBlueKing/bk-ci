@@ -535,6 +535,23 @@ class PipelineInfoDao {
         }
     }
 
+    fun getPipelineVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        channelCode: ChannelCode
+    ): Int {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(this.VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CHANNEL.eq(channelCode.name))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun listByProject(dslContext: DSLContext, projectCode: String): Result<Record2<String, Long>> {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)

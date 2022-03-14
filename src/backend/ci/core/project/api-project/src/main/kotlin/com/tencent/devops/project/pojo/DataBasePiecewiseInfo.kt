@@ -25,6 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.project.pojo
 
-const AgentVersion = "v1.8.1"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("数据库分片信息")
+data class DataBasePiecewiseInfo(
+    @ApiModelProperty("项目ID/项目CODE")
+    val projectId: String,
+    @ApiModelProperty("集群名称")
+    val clusterName: String,
+    @ApiModelProperty("微服务模块名称")
+    val moduleCode: String,
+    @ApiModelProperty("数据源名称")
+    val dataSourceName: String,
+    @ApiModelProperty("数据源URL")
+    val dsUrl: String?
+)
