@@ -125,7 +125,6 @@ class JooqConfiguration {
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         return generateDefaultConfiguration(dispatchDataSource, bkJooqExecuteListenerProvider)
-
     }
 
     @Bean
@@ -136,7 +135,6 @@ class JooqConfiguration {
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         return generateDefaultConfiguration(pluginDataSource, bkJooqExecuteListenerProvider)
-
     }
 
     @Bean
@@ -147,7 +145,6 @@ class JooqConfiguration {
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         return generateDefaultConfiguration(qualityDataSource, bkJooqExecuteListenerProvider)
-
     }
 
     @Bean
@@ -158,7 +155,6 @@ class JooqConfiguration {
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         return generateDefaultConfiguration(artifactoryDataSource, bkJooqExecuteListenerProvider)
-
     }
 
     @Bean
