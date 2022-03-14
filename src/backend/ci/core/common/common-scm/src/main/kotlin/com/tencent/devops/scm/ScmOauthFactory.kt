@@ -116,6 +116,8 @@ object ScmOauthFactory {
                     projectName = projectName,
                     branchName = branchName,
                     url = url,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
                     token = token,
                     gitConfig = gitConfig,
                     event = event
