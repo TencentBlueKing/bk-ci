@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.store.dao.atom.AtomPropDao
 import com.tencent.devops.store.pojo.atom.AtomProp
@@ -86,7 +87,7 @@ class AtomPropServiceImpl @Autowired constructor(
                     val atomProp = AtomProp(
                         atomCode = atomCode,
                         os = JsonUtil.to(atomPropRecord[tAtom.OS], object : TypeReference<List<String>>() {}),
-                        logoUrl = atomPropRecord[tAtom.LOGO_URL],
+                        logoUrl = RegexUtils.trimProtocol(atomPropRecord[tAtom.LOGO_URL]),
                         buildLessRunFlag = atomPropRecord[tAtom.BUILD_LESS_RUN_FLAG]
                     )
                     atomPropMap!![atomCode] = atomProp
