@@ -48,8 +48,8 @@ class CodeGitlabScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
     override val url: String,
-    private var privateKey: String?,
-    private var passPhrase: String?,
+    private var privateKey: String? = null,
+    private var passPhrase: String? = null,
     private val token: String,
     gitConfig: GitConfig,
     private val event: String? = null
