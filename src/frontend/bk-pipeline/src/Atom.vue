@@ -37,13 +37,12 @@
             />
             
             <img
-                v-else-if="atom.atomIcon"
-                :src="atom.atomIcon"
+                v-else-if="atom.logoUrl"
+                :src="atom.logoUrl"
                 :class="logoCls"
             />
             <Logo v-else
                 :class="logoCls"
-                :is-atom-icon="true"
                 :name="svgAtomIcon"
                 size="18"
             />

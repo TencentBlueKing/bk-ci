@@ -171,7 +171,6 @@
                 const to = event.to || {}
                 const dataSet = to.dataset || {}
                 const baseOS = dataSet.baseos || ''
-
                 const isJobTypeOk = os.includes(baseOS) || (os.length <= 0 && (!baseOS || baseOS === 'normal'))
                 return !!atomCode && (
                     (isTriggerAtom && baseOS === 'trigger')

@@ -287,7 +287,6 @@
                 return getStage(pipeline.stages, stageIndex)
             },
             handlePipelineChange (pipeline) {
-                console.log('handle pipeline change', pipeline)
                 this.setPipeline(pipeline)
                 this.setPipelineEditing(true)
             },

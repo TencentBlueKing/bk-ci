@@ -96,6 +96,7 @@
                 </template>
             </span>
             <span v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleAddMenu(!lastAddMenuShow, true)" class="append-stage pointer">
+                <span class="add-plus-connector"></span>
                 <i class="add-plus-icon" />
                 <insert-stage-menu v-if="lastAddMenuShow" :disabled="disableFinally" :is-last="true" :edit-stage="editStage"></insert-stage-menu>
             </span>
@@ -255,7 +256,7 @@
                     {
                         'is-final-stage': this.isFinallyStage,
                         'pipeline-drag': this.editable && !this.isTriggerStage,
-                        'readonly': !this.editable || this.stageDisabled
+                        readonly: !this.editable || this.stageDisabled
                     }
                 ]
             },
@@ -658,6 +659,14 @@
             .line-add {
                 top: -46px;
                 left: -16px;
+            }
+            .add-plus-connector {
+                position: absolute;
+                width: 40px;
+                height: 2px;
+                left: -26px;
+                top: 8px;
+                background-color: $primaryColor;
             }
         }
 

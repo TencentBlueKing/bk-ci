@@ -96,7 +96,7 @@
                         if (isMultipleParam(param.type)) { // 去除不在选项里面的值
                             const mdv = this.getMultiSelectorValue(this.paramValues[param.id], param.options.map(v => v.key))
                             const mdvStr = mdv.join(',')
-                            // debugger
+
                             Object.assign(restParam, {
                                 multiSelect: true,
                                 value: mdv

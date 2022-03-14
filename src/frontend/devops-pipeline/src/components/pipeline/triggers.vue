@@ -82,7 +82,7 @@
             async toggleStatus () {
                 if (this.disabled || this.status === 'running' || !this.canManualStartup) return
                 this.disabled = true
-                // debugger
+
                 if (this.beforeExec && typeof this.beforeExec === 'function') {
                     const result = await this.beforeExec(true)
                     if (result.code !== 0) {
