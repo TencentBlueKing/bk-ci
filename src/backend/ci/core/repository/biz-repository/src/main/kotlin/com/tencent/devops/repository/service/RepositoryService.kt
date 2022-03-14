@@ -1591,11 +1591,12 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        logger.info("well be delete | checkout gitlab ssh")
+                        logger.info("well be delete | checkout gitlab ssh |" +
+                                " privateKey is $privateKey | passPhrase is $passPhrase | token is $token")
                         scmService.checkPrivateKeyAndToken(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
-                            type = ScmType.CODE_GIT,
+                            type = ScmType.CODE_GITLAB,
                             privateKey = privateKey,
                             passPhrase = passPhrase,
                             token = token,
