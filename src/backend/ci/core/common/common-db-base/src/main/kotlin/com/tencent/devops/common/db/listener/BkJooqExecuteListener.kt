@@ -22,10 +22,9 @@ class BkJooqExecuteListener : DefaultExecuteListener() {
         val costTime = stopWatch.split() / 1000000 // 单位：毫秒
         if (costTime > 1000) {
             // sql执行超时打印告警日志
-            logger.warn("Bk Slow SQL:[${ctx.query().toString()}] cost $costTime ms")
+            logger.warn("Bk Slow SQL:[${ctx.query()}] cost $costTime ms")
         }
     }
 
     private fun getStopWatchName() = "${this.javaClass.name}.watch"
 }
-
