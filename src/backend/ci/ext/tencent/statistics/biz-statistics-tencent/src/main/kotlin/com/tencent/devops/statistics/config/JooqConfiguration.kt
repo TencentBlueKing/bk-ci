@@ -27,10 +27,12 @@
 
 package com.tencent.devops.statistics.config
 
+import com.tencent.devops.common.db.config.DBBaseConfiguration
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
+import org.jooq.impl.DefaultExecuteListenerProvider
 import org.springframework.beans.factory.InjectionPoint
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Qualifier
@@ -49,7 +51,7 @@ import javax.sql.DataSource
  * Powered By Tencent
  */
 @Configuration
-@Import(DataSourceConfig::class)
+@Import(DataSourceConfig::class, DBBaseConfiguration::class)
 class JooqConfiguration {
 
     @Bean
@@ -86,36 +88,42 @@ class JooqConfiguration {
     @Bean
     fun processJooqConfiguration(
         @Qualifier("shardingDataSource")
-        processDataSource: DataSource
+        shardingDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(processDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(shardingDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun projectJooqConfiguration(
         @Qualifier("projectDataSource")
-        projectDataSource: DataSource
+        projectDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
-        val configuration = DefaultConfiguration()
-        configuration.set(SQLDialect.MYSQL)
-        configuration.set(projectDataSource)
-        configuration.settings().isRenderSchema = false
-        return configuration
+        return generateDefaultConfiguration(projectDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean
     fun openapiJooqConfiguration(
         @Qualifier("openapiDataSource")
-        openapiDataSource: DataSource
+        openapiDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(openapiDataSource, bkJooqExecuteListenerProvider)
+    }
+
+    private fun generateDefaultConfiguration(
+        dataSource: DataSource,
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
-        configuration.set(openapiDataSource)
+        configuration.set(dataSource)
         configuration.settings().isRenderSchema = false
+        configuration.set(bkJooqExecuteListenerProvider)
         return configuration
     }
 }
