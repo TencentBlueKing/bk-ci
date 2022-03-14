@@ -72,6 +72,7 @@ import javax.ws.rs.core.Response
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val yamlTriggerFactory: YamlTriggerFactory,
+    private val gitRequestEventHandle: GitRequestEventHandle,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
@@ -101,7 +102,7 @@ class ManualTriggerService @Autowired constructor(
         val gitRequestEvent = if (!triggerBuildReq.payload.isNullOrEmpty()) {
             mockWebhookTrigger(triggerBuildReq)
         } else {
-            GitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
+            gitRequestEventHandle.createManualTriggerEvent(userId, triggerBuildReq)
         }
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id

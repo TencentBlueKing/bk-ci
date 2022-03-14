@@ -27,21 +27,21 @@
 
 package com.tencent.devops.common.ci.v2.parsers.template.models
 
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
-data class GetTemplateParam(
-    val gitRequestEventId: Long,
-    val token: String?,
-    val forkToken: String?,
-    val gitProjectId: Long,
-    val targetRepo: String?,
-    val ref: String?,
-    val personalAccessToken: String?,
-    val fileName: String,
-    val changeSet: Set<String>?,
-    val event: GitEvent?,
+/**
+ * 获取模板的参数接口，
+ * @param path yaml中的模板路径
+ * @param templateType 模板类型
+ * @param nowRepoId 当前正在替换的仓库id
+ * @param targetRepo 需要获取的yaml 中定义的远程模板库
+ * @param extraParameters 额外参数，由各个服务具体定义
+ */
+data class GetTemplateParam<T>(
+    val path: String,
     val templateType: TemplateType?,
-    // 正在被替换的远程库
-    val nowRemoteGitProjectId: String?
+    val nowRepoId: String?,
+    val targetRepo: Repositories?,
+    val extraParameters: T
 )

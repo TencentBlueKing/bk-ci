@@ -56,5 +56,7 @@ data class AddCommitCheckStatus(
     @ApiModelProperty("block", required = false)
     val block: Boolean? = null,
     @ApiModelProperty("详情url", required = false)
-    val targetUrl: String? = null
+    val targetUrl: String? = null,
+    @ApiModelProperty("渠道", required = false)
+    val channel: String? = null
 )

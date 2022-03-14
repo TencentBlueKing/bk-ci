@@ -25,6 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.stream.pojo
 
-const AgentVersion = "v1.8.1"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("工蜂事件类型")
+data class EventTypeConf(
+    @ApiModelProperty("事件ID")
+    val id: String,
+    @ApiModelProperty("事件名称")
+    val name: String
+)

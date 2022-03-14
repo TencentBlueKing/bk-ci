@@ -54,7 +54,7 @@ class UserFilter(
 
     private fun isUserNotExcluded(): Boolean {
         excludedUsers.forEach { excludeUser ->
-            if (triggerOnUser.matches(Regex(excludeUser))) {
+            if (excludeUser == triggerOnUser) {
                 logger.warn("$pipelineId|$excludeUser|the exclude user match the git event user")
                 return false
             }
@@ -64,7 +64,7 @@ class UserFilter(
 
     private fun isUserIncluded(): Boolean {
         includedUsers.forEach { includedUser ->
-            if (triggerOnUser.matches(Regex(includedUser))) {
+            if (includedUser == triggerOnUser) {
                 logger.warn("$pipelineId|includedUser|the included user match the git event user")
                 return true
             }
