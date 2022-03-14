@@ -1570,6 +1570,7 @@ class RepositoryService @Autowired constructor(
             is CodeGitlabRepository -> {
                 when (repo.authType) {
                     RepoAuthType.SSH -> {
+                        logger.info("well be delete | into gitlab ssh")
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
@@ -1590,6 +1591,7 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
+                        logger.info("well be delete | checkout gitlab ssh")
                         scmService.checkPrivateKeyAndToken(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
