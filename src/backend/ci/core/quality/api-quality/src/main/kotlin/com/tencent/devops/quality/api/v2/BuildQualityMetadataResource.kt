@@ -64,6 +64,12 @@ interface BuildQualityMetadataResource {
         @ApiParam("原子类型", required = true)
         @QueryParam("elementType")
         elementType: String,
+        @ApiParam("任务节点ID", required = false)
+        @QueryParam("taskId")
+        taskId: String?,
+        @ApiParam("任务节点名称", required = false)
+        @QueryParam("taskName")
+        taskName: String?,
         data: Map<String, String>
     ): Result<Boolean>
 }

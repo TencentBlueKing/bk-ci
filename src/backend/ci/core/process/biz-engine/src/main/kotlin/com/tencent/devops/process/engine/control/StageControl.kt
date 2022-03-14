@@ -44,9 +44,11 @@ import com.tencent.devops.process.engine.control.command.stage.impl.StartContain
 import com.tencent.devops.process.engine.control.command.stage.impl.UpdateStateForStageCmdFinally
 import com.tencent.devops.process.engine.control.lock.StageIdLock
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
+import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -59,7 +61,9 @@ import org.springframework.stereotype.Service
 class StageControl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineContainerService: PipelineContainerService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineContextService: PipelineContextService,
     private val pipelineStageService: PipelineStageService
 ) {
 
@@ -96,20 +100,25 @@ class StageControl @Autowired constructor(
 
     private fun PipelineBuildStageEvent.execute(watcher: Watcher) {
         watcher.start("init_context")
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
             LOG.info("ENGINE|$buildId|$source|STAGE_REPEAT_EVENT|$stageId|${buildInfo?.status}")
             return
         }
-        val stage = pipelineStageService.getStage(buildId, stageId)
+        val stage = pipelineStageService.getStage(projectId, buildId, stageId)
             ?: run {
                 LOG.warn("ENGINE|$buildId|$source|BAD_STAGE|$stageId|${buildInfo.status}")
                 return
             }
-        val variables = buildVariableService.getAllVariable(buildId)
-        val containers = pipelineRuntimeService.listContainers(buildId, stageId)
-        val executeCount = buildVariableService.getBuildExecuteCount(buildId)
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val containers = pipelineContainerService.listContainers(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containsMatrix = false
+        )
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,
@@ -117,7 +126,7 @@ class StageControl @Autowired constructor(
             containers = containers,
             latestSummary = "init",
             watcher = watcher,
-            variables = variables,
+            variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
             executeCount = executeCount
         )
         watcher.stop()

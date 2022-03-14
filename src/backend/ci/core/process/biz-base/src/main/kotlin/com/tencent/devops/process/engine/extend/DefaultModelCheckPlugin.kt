@@ -74,8 +74,14 @@ open class DefaultModelCheckPlugin constructor(
 
     override fun checkModelIntegrity(model: Model, projectId: String?) {
         // 检查流水线名称
-        PipelineUtils.checkPipelineName(model.name)
-        PipelineUtils.checkPipelineDescLength(model.desc)
+        PipelineUtils.checkPipelineName(
+            name = model.name,
+            maxPipelineNameSize = pipelineCommonSettingConfig.maxPipelineNameSize
+        )
+        PipelineUtils.checkPipelineDescLength(
+            desc = model.desc,
+            maxPipelineNameSize = pipelineCommonSettingConfig.maxPipelineDescSize
+        )
         // 检查流水线model是否过大
         val modelSize = JsonUtil.toJson(model).length
         if (modelSize > pipelineCommonSettingConfig.maxModelSize.toLong()) {
@@ -168,7 +174,7 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     private fun checkStageReviewers(stage: Stage) {
-        stage.refreshReviewOption()
+        stage.resetBuildOption()
         if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
                 defaultMessage = "Stage(${stage.name})准入配置不正确",
@@ -307,12 +313,12 @@ open class DefaultModelCheckPlugin constructor(
     }
 
     /**
-     * When edit the pipeline, it need to check if the element delete
+     * When edit the pipeline, it needs to check if the element delete
      */
-    private fun Model.elementExist(elementId: String?): Boolean {
+    private fun Model.elementExist(originElement: Element): Boolean {
         stages.forEach { s ->
             s.containers.forEach { c ->
-                if (loopFind(c.elements, elementId)) {
+                if (loopFind(c.elements, originElement)) {
                     return true
                 }
             }
@@ -320,9 +326,9 @@ open class DefaultModelCheckPlugin constructor(
         return false
     }
 
-    private fun loopFind(elements: List<Element>, elementId: String?): Boolean {
+    private fun loopFind(elements: List<Element>, originElement: Element): Boolean {
         elements.forEach { e ->
-            if (e.id == elementId) {
+            if (e.stepId?.let { it == originElement.stepId } == true || e.id == originElement.id) {
                 return true
             }
         }
@@ -343,12 +349,12 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    private fun deletePrepare(sourceModel: Model?, e: Element, param: BeforeDeleteParam) {
-        if (sourceModel == null || !sourceModel.elementExist(e.id)) {
-            logger.info("The element(${e.name}/${e.id}) is delete")
-            ElementBizRegistrar.getPlugin(e)?.beforeDelete(e, param)
+    private fun deletePrepare(sourceModel: Model?, originElement: Element, param: BeforeDeleteParam) {
+        if (sourceModel == null || !sourceModel.elementExist(originElement)) {
+            logger.info("The element(${originElement.name}/${originElement.id}) is delete")
+            ElementBizRegistrar.getPlugin(originElement)?.beforeDelete(originElement, param)
         } else {
-            logger.info("The element(${e.name}/${e.id}) is not delete")
+            logger.info("The element(${originElement.name}/${originElement.id}) is not delete")
         }
     }
 

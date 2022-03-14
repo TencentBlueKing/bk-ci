@@ -79,7 +79,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         filePath: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
         val file = DefaultPathUtils.randomFile(fileName)
@@ -93,7 +94,8 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 fileName = fileName,
                 fileType = fileType,
                 props = props,
-                fileChannelType = fileChannelType
+                fileChannelType = fileChannelType,
+                logo = logo
             )
         } finally {
             file.delete()
@@ -121,7 +123,7 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
             projectId = projectId,
             pipelineIds = setOf(pipelineId)
         ).data!![pipelineId] ?: ""
-        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId)).data!![buildId] ?: ""
+        val buildNum = servicePipelineResource.getBuildNoByBuildIds(setOf(buildId), projectId).data!![buildId] ?: ""
         val props: Map<String, String?> = mapOf(
             "pipelineId" to pipelineId,
             "pipelineName" to pipelineName,

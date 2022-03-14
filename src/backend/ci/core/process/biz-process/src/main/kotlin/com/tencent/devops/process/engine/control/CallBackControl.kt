@@ -52,7 +52,7 @@ import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CallBackHeader
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
@@ -108,6 +108,7 @@ class CallBackControl @Autowired constructor(
         }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
+            projectId = projectId,
             pipelineId = pipelineId,
             delete = null
         ) ?: return
@@ -153,15 +154,28 @@ class CallBackControl @Autowired constructor(
             }
 
         logger.info("$projectId|$pipelineId|$buildId|${callBackEvent.name}|${event.stageId}|${event.taskId}|callback")
-        val list = projectPipelineCallBackService.listProjectCallBack(
-            projectId = projectId,
-            events = callBackEvent.name
+        val list = mutableListOf<ProjectPipelineCallBack>()
+        list.addAll(
+            projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = callBackEvent.name
+            )
         )
+        val pipelineCallback = pipelineRepositoryService.getModel(projectId, pipelineId)
+            ?.getPipelineCallBack(projectId, callBackEvent) ?: emptyList()
+        if (pipelineCallback.isNotEmpty()) {
+            list.addAll(pipelineCallback)
+        }
+
         if (list.isEmpty()) {
             return
         }
 
-        val modelDetail = pipelineBuildDetailService.get(buildId = event.buildId, refreshStatus = false) ?: return
+        val modelDetail = pipelineBuildDetailService.get(
+            projectId = projectId,
+            buildId = event.buildId,
+            refreshStatus = false
+        ) ?: return
 
         val buildEvent = BuildEvent(
             buildId = event.buildId,

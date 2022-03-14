@@ -57,8 +57,11 @@ class QualityHisMetadataService @Autowired constructor(
         logger.info("save history metadata for build: $buildId")
         logger.info("save history metadata data:\n$callback")
 
-        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId)
-            ?: "0"
+        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(
+            buildIds = setOf(buildId),
+            projectId = projectId
+        ).data?.get(buildId) ?: "0"
+        // todo performance can be removed
         hisMetadataDao.saveHisOriginMetadata(
             dslContext = dslContext,
             projectId = projectId,
@@ -80,6 +83,8 @@ class QualityHisMetadataService @Autowired constructor(
                     detail = it.detail,
                     type = it.type,
                     elementType = callback.elementType,
+                    taskId = callback.taskId,
+                    taskName = callback.taskName,
                     msg = it.msg,
                     value = it.value,
                     extra = it.extra
@@ -94,13 +99,17 @@ class QualityHisMetadataService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementType: String,
+        taskId: String?,
+        taskName: String?,
         data: Map<String, String>
     ): Boolean {
         logger.info("save history metadata for build($elementType): $buildId")
         logger.info("save history metadata data:\n$data")
 
-        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(setOf(buildId)).data?.get(buildId)
-            ?: "0"
+        val buildNo = client.get(ServicePipelineResource::class).getBuildNoByBuildIds(
+            buildIds = setOf(buildId),
+            projectId = projectId
+        ).data?.get(buildId) ?: "0"
         val metadataMap = metadataService.serviceListByDataId(elementType, data.keys).map { it.dataId to it }.toMap()
         val qualityMetadataList = data.map {
             val key = it.key
@@ -125,6 +134,8 @@ class QualityHisMetadataService @Autowired constructor(
                 detail = metadata?.elementDetail ?: "",
                 type = type,
                 elementType = metadata?.elementType ?: "",
+                taskId = taskId ?: "",
+                taskName = taskName ?: "",
                 msg = "from script element",
                 value = value,
                 extra = null
@@ -151,6 +162,8 @@ class QualityHisMetadataService @Autowired constructor(
                 detail = it.elementDetail,
                 type = QualityDataType.valueOf(it.dataType),
                 elementType = it.elementType ?: "",
+                taskId = it.taskId ?: "",
+                taskName = it.taskName ?: "",
                 msg = it.dataDesc,
                 value = it.dataValue,
                 extra = it.extra

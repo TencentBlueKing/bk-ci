@@ -31,6 +31,9 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -54,7 +57,9 @@ data class Model(
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null,
     @ApiModelProperty("提示", required = false)
-    var tips: String? = null
+    var tips: String? = null,
+    @ApiModelProperty("流水线事件回调", required = false)
+    var events: Map<String, PipelineCallbackEvent>? = emptyMap()
 ) {
     @ApiModelProperty("提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -75,6 +80,7 @@ data class Model(
                     is VMBuildContainer -> {
                         VMBuildContainer(
                             containerId = container.containerId,
+                            containerHashId = container.containerHashId,
                             id = container.id,
                             name = container.name,
                             elements = elementList,
@@ -105,6 +111,7 @@ data class Model(
                     is NormalContainer -> {
                         NormalContainer(
                             containerId = container.containerId,
+                            containerHashId = container.containerHashId,
                             id = container.id,
                             name = container.name,
                             elements = elementList,
@@ -159,11 +166,14 @@ data class Model(
             if (index == 0) {
                 return@forEachIndexed
             }
-            stage.containers.forEach { container ->
-                if (container.id == vmSeqId) {
-                    return container
-                }
-            }
+            return stage.getContainer(vmSeqId) ?: return@forEachIndexed
+        }
+        return null
+    }
+
+    fun getStage(stageId: String): Stage? {
+        stages.forEach { stage ->
+            if (stage.id == stageId) return stage
         }
         return null
     }
@@ -180,5 +190,23 @@ data class Model(
             }
         }
         return count
+    }
+
+    fun getPipelineCallBack(projectId: String, callbackEvent: CallBackEvent): List<ProjectPipelineCallBack> {
+        val pipelineCallBack = mutableListOf<ProjectPipelineCallBack>()
+        events?.forEach { eventName, event ->
+            if (event.callbackEvent == callbackEvent) {
+                pipelineCallBack.add(
+                    ProjectPipelineCallBack(
+                        id = null,
+                        projectId = projectId,
+                        events = event.callbackEvent.name,
+                        callBackUrl = event.callbackUrl,
+                        secretToken = event.secretToken
+                    )
+                )
+            }
+        }
+        return pipelineCallBack
     }
 }

@@ -81,4 +81,6 @@ interface MarketAtomCommonService {
     )
 
     fun generateInputTypeInfos(props: String?): Map<String, String>?
+
+    fun isPublicAtom(atomCode: String): Boolean
 }
