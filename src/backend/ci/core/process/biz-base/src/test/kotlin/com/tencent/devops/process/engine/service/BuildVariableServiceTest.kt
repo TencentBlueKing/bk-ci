@@ -30,6 +30,8 @@ package com.tencent.devops.process.engine.service
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineBuildSensitiveValueDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -48,11 +50,15 @@ class BuildVariableServiceTest {
 
     private val dslContext: DSLContext = mock()
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
+    private val pipelineBuildDao: PipelineBuildDao = mock()
+    private val buildSensitiveValueDao: PipelineBuildSensitiveValueDao = mock()
     private val redisOperation: RedisOperation = RedisOperation(mock())
 
     private val buildVariableService = BuildVariableService(
         commonDslContext = dslContext,
         pipelineBuildVarDao = pipelineBuildVarDao,
+        pipelineBuildDao = pipelineBuildDao,
+        buildSensitiveValueDao = buildSensitiveValueDao,
         redisOperation = redisOperation
     )
 
