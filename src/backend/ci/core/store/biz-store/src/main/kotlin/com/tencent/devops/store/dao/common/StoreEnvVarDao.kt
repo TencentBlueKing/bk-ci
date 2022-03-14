@@ -152,16 +152,16 @@ class StoreEnvVarDao {
         userId: String,
         storeType: Byte,
         storeCode: String,
-        oldScope: String,
+        pastScope: String,
         scope: String,
-        oldName: String,
+        pastName: String,
         varName: String
     ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.update(this)
                 .set(this.SCOPE, scope)
                 .set(this.VAR_NAME, varName)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(oldScope)).and(VAR_NAME.eq(oldName)))
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(pastScope)).and(VAR_NAME.eq(pastName)))
                 .execute()
         }
     }

@@ -182,9 +182,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                             userId = userId,
                             storeType = storeType,
                             storeCode = storeCode,
-                            oldScope = maxVersionData.scope,
+                            pastScope = maxVersionData.scope,
                             scope = storeEnvVarRequest.scope,
-                            oldName = maxVersionData.varName,
+                            pastName = maxVersionData.varName,
                             varName = storeEnvVarRequest.varName
                         ) == 0
                     ) {
