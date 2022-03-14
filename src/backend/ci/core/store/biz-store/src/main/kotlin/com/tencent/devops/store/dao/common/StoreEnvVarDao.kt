@@ -133,14 +133,14 @@ class StoreEnvVarDao {
         storeCode: String,
         scope: String,
         varName: String
-    ): Boolean {
+    ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.select(ID.`as`(KEY_ID)).from(this)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(SCOPE.eq(scope))
                     .and(VAR_NAME.eq(varName)))
-                .execute()>0
+                .execute()
         }
     }
 
@@ -156,13 +156,13 @@ class StoreEnvVarDao {
         scope: String,
         oldName: String,
         varName: String
-    ): Boolean {
+    ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.update(this)
                 .set(this.SCOPE, scope)
                 .set(this.VAR_NAME, varName)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(oldScope)).and(VAR_NAME.eq(oldName)))
-                .execute() == 0
+                .execute()
         }
     }
 
@@ -174,13 +174,13 @@ class StoreEnvVarDao {
         varValue: String,
         varDesc: String,
         encryptFlag: Boolean
-    ): Boolean {
+    ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             return dslContext.update(this).set(this.VAR_VALUE, varValue).set(this.VAR_DESC, varDesc).set(this.ENCRYPT_FLAG, encryptFlag)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(ID.eq(variableId)))
-                .execute() == 0
+                .execute()
         }
     }
 
