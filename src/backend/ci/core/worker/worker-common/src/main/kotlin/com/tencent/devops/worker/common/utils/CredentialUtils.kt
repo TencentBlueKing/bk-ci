@@ -126,7 +126,7 @@ object CredentialUtils {
         return try {
             val valueTypePair = getCredentialWithType(ticketId, false, acrossProjectId)
             val value = getCredentialValue(valueTypePair.first, valueTypePair.second, key)
-            logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId, value: $value")
+            logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId")
             value
         } catch (ignore: Exception) {
             logger.warn("凭证ID变量($ticketId)不存在", ignore.message)

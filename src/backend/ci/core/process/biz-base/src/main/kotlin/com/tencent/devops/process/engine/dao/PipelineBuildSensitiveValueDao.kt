@@ -70,7 +70,7 @@ class PipelineBuildSensitiveValueDao @Autowired constructor() {
         with(T_PIPELINE_BUILD_SENSITIVE_VALUE) {
             val maxLength = VALUE.dataType.length()
             values.forEach { v ->
-                if (v.length > maxLength) {
+                if (v.isNullOrBlank() || v.length > maxLength) {
                     LOG.error("$buildId|ABANDON_DATA|len[${v.length}(max=$maxLength)")
                     return@forEach
                 }

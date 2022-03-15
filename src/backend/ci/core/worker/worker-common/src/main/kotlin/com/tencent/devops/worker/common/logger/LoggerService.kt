@@ -233,7 +233,7 @@ object LoggerService {
             else -> LogType.LOG
         }
 
-        // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中（待优化）
+        // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中
         realMessage = fixSensitiveContent(realMessage)
 
         val logMessage = LogMessage(

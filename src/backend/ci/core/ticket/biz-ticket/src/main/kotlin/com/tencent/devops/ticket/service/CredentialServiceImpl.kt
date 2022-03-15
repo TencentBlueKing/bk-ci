@@ -462,17 +462,8 @@ class CredentialServiceImpl @Autowired constructor(
             projectId = buildBasicInfo.projectId,
             credentialId = credentialId
         ) ?: return null
-
-        client.get(ServiceBuildResource::class).saveSensitiveValues(
-            projectId = projectId,
-            buildId = buildId,
-            values = setOf(
-                credentialRecord.credentialV1,
-                credentialRecord.credentialV2,
-                credentialRecord.credentialV3,
-                credentialRecord.credentialV4
-            )
-        )
+        val sensitiveValues = filterValues(credentialRecord)
+        saveSensitiveValues(projectId, buildId, sensitiveValues)
         return credentialInfo(publicKey, credentialRecord)
     }
 
@@ -484,18 +475,11 @@ class CredentialServiceImpl @Autowired constructor(
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
         val sensitiveValues = mutableSetOf<String>()
-        val credentialList = credentialDao.batchGet(dslContext, buildBasicInfo.projectId).map {
-            sensitiveValues.add(it.credentialV1)
-            sensitiveValues.add(it.credentialV2)
-            sensitiveValues.add(it.credentialV3)
-            sensitiveValues.add(it.credentialV4)
-            credentialInfo(publicKey, it)
+        val credentialList = credentialDao.batchGet(dslContext, buildBasicInfo.projectId).map { credentialRecord ->
+            sensitiveValues.addAll(filterValues(credentialRecord))
+            credentialInfo(publicKey, credentialRecord)
         }.toList()
-        client.get(ServiceBuildResource::class).saveSensitiveValues(
-            projectId = projectId,
-            buildId = buildId,
-            values = sensitiveValues
-        )
+        saveSensitiveValues(projectId, buildId, sensitiveValues)
         return credentialList
     }
 
@@ -739,6 +723,27 @@ class CredentialServiceImpl @Autowired constructor(
             it.templateType == TemplateAcrossInfoType.STEP &&
                 it.templateInstancesIds.contains(taskId)
         }
+    }
+
+    private fun saveSensitiveValues(projectId: String, buildId: String, sensitiveValues: MutableSet<String>) {
+        try {
+            client.get(ServiceBuildResource::class).saveSensitiveValues(
+                projectId = projectId,
+                buildId = buildId,
+                values = sensitiveValues
+            )
+        } catch (ignore: Throwable) {
+            logger.warn("TICKET|saveSensitiveValues error|sensitiveValues=$sensitiveValues", ignore)
+        }
+    }
+
+    private fun filterValues(credentialRecord: TCredentialRecord): MutableSet<String> {
+        val sensitiveValues = mutableSetOf<String>()
+        credentialRecord.credentialV1?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV2?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV3?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV4?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        return sensitiveValues
     }
 
     companion object {
