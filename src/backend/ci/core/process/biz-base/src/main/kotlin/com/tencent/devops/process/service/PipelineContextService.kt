@@ -57,8 +57,9 @@ class PipelineContextService @Autowired constructor(
     fun buildContext(
         projectId: String,
         buildId: String,
-        containerId: String?,
         stageId: String?,
+        containerId: String?,
+        taskId: String?,
         variables: Map<String, String>
     ): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
@@ -82,6 +83,7 @@ class PipelineContextService @Autowired constructor(
                                 stage = stage,
                                 c = c,
                                 containerId = containerId,
+                                taskId = taskId,
                                 contextMap = contextMap,
                                 variables = variables,
                                 outputArrayMap = outputArrayMap,
@@ -100,6 +102,7 @@ class PipelineContextService @Autowired constructor(
                         stage = stage,
                         c = container,
                         containerId = containerId,
+                        taskId = taskId,
                         contextMap = contextMap,
                         variables = variables,
                         outputArrayMap = null,
@@ -189,6 +192,7 @@ class PipelineContextService @Autowired constructor(
         stage: Stage,
         c: Container,
         containerId: String?,
+        taskId: String?,
         contextMap: MutableMap<String, String>,
         variables: Map<String, String>,
         outputArrayMap: MutableMap<String, MutableList<String>>?,
@@ -220,6 +224,7 @@ class PipelineContextService @Autowired constructor(
         // all element
         buildStepContext(
             c = c,
+            taskId = taskId,
             variables = variables,
             contextMap = contextMap,
             outputArrayMap = outputArrayMap,
@@ -239,6 +244,7 @@ class PipelineContextService @Autowired constructor(
 
     private fun buildStepContext(
         c: Container,
+        taskId: String?,
         variables: Map<String, String>,
         contextMap: MutableMap<String, String>,
         outputArrayMap: MutableMap<String, MutableList<String>>?,
@@ -246,6 +252,15 @@ class PipelineContextService @Autowired constructor(
     ) {
         c.elements.forEach { e ->
             checkStatus(e, failTaskNameList)
+            // current step
+            if (e.id?.let { it == taskId } == true) {
+                contextMap["step.name"] = e.name
+                contextMap["step.id"] = e.id ?: ""
+                contextMap["step.status"] = getStepStatus(e)
+                contextMap["step.outcome"] = e.status ?: ""
+                contextMap["step.atom_version"] = e.version
+                contextMap["step.atom_code"] = e.getAtomCode()
+            }
             val stepId = e.stepId ?: return@forEach
             contextMap["steps.$stepId.name"] = e.name
             contextMap["steps.$stepId.id"] = e.id ?: ""
