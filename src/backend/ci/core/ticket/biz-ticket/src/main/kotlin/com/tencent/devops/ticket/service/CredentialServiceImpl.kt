@@ -739,10 +739,18 @@ class CredentialServiceImpl @Autowired constructor(
 
     private fun filterValues(credentialRecord: TCredentialRecord): MutableSet<String> {
         val sensitiveValues = mutableSetOf<String>()
-        credentialRecord.credentialV1?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
-        credentialRecord.credentialV2?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
-        credentialRecord.credentialV3?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
-        credentialRecord.credentialV4?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialHelper.decryptCredential(credentialRecord.credentialV1)?.let {
+            if (it.isNotBlank()) sensitiveValues.add(it)
+        }
+        credentialHelper.decryptCredential(credentialRecord.credentialV2)?.let {
+            if (it.isNotBlank()) sensitiveValues.add(it)
+        }
+        credentialHelper.decryptCredential(credentialRecord.credentialV3)?.let {
+            if (it.isNotBlank()) sensitiveValues.add(it)
+        }
+        credentialHelper.decryptCredential(credentialRecord.credentialV4)?.let {
+            if (it.isNotBlank()) sensitiveValues.add(it)
+        }
         return sensitiveValues
     }
 
