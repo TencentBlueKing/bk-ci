@@ -126,7 +126,10 @@ class StreamHistoryService @Autowired constructor(
                 buildId = it.buildId,
                 buildHistoryList = buildHistoryList
             ) ?: return@forEach
-            val gitRequestEvent = gitRequestEventDao.get(dslContext = dslContext, id = it.eventId) ?: return@forEach
+            val gitRequestEvent = gitRequestEventDao.getWithEvent(
+                dslContext = dslContext,
+                id = it.eventId
+            ) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
             val pipeline =
