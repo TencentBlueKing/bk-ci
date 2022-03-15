@@ -48,11 +48,9 @@ import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import io.micrometer.core.annotation.Timed
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import java.lang.annotation.Inherited
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE

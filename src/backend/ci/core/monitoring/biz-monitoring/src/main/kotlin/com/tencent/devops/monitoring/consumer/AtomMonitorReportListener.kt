@@ -36,13 +36,9 @@ import com.tencent.devops.monitoring.constant.MonitoringMessageCode.ERROR_MONITO
 import com.tencent.devops.monitoring.consumer.processor.monitor.AbstractMonitorProcessor
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import io.micrometer.core.instrument.Timer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-import java.util.concurrent.TimeUnit
 
 @Component
 class AtomMonitorReportListener @Autowired constructor(
