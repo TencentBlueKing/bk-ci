@@ -34,11 +34,8 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.service.BuildLogQueryService
-import io.micrometer.core.annotation.Counted
-import io.micrometer.core.aop.CountedAspect
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
-import org.aspectj.lang.ProceedingJoinPoint
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
