@@ -35,9 +35,9 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
@@ -88,6 +88,18 @@ interface ServiceGitCiResource {
         @QueryParam("token")
         token: String
     ): Result<Boolean>
+
+    @ApiOperation("刷新项目的token")
+    @GET
+    @Path("/refreshToken")
+    fun refreshToken(
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @QueryParam("refreshToken")
+        @ApiParam("refreshToken", required = true)
+        token: String
+    ): Result<GitToken>
 
     @ApiOperation("获取GitCode项目成员信息")
     @GET

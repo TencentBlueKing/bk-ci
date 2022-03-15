@@ -53,13 +53,19 @@ class ApigwSignResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<SignHistory>> {
-        logger.info("get the sign task list by user($userId)")
+        logger.info("get the sign task list by user($userId), startTime($startTime), " +
+                        "endTime($endTime), page($page), pageSize($pageSize)")
+        val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
+            MAX_PAGE_SIZE
+        } else {
+            pageSize
+        }
         return client.getGateway(ServiceIpaResource::class, GatewayType.IDC_PROXY).getHistorySign(
             userId = userId,
             startTime = startTime,
             endTime = endTime,
             page = page,
-            pageSize = pageSize
+            pageSize = realPageSize
         )
     }
 
@@ -111,6 +117,7 @@ class ApigwSignResourceV3Impl @Autowired constructor(
     }
 
     companion object {
+        private const val MAX_PAGE_SIZE = 50
         private val logger = LoggerFactory.getLogger(ApigwSignResourceV3Impl::class.java)
     }
 }

@@ -37,33 +37,17 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.v3.TxV3AuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.auth.api.v3.TxV3AuthResourceApiStr
-import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
-import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
-import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
-import com.tencent.devops.common.auth.code.BSEnvironmentAuthServiceCode
-import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
-import com.tencent.devops.common.auth.code.BSQualityAuthServiceCode
-import com.tencent.devops.common.auth.code.BSRepoAuthServiceCode
-import com.tencent.devops.common.auth.code.BSTicketAuthServiceCode
-import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
-import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
-import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
-import org.springframework.jmx.export.MBeanExporter
 
 @Suppress("ALL")
 @Configuration
@@ -72,30 +56,16 @@ import org.springframework.jmx.export.MBeanExporter
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
 class TxV3AuthAutoConfiguration {
 
-    @Value("\${auth.url:}")
-    val iamBaseUrl = ""
-
-    @Value("\${auth.iamSystem:}")
-    val systemId = ""
-
-    @Value("\${auth.appCode:}")
-    val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    val appSecret = ""
-
-    @Value("\${auth.apigwUrl:#{null}}")
-    val iamApigw = ""
+    @Bean
+    fun apigwHttpClientServiceImpl(
+        iamConfiguration: IamConfiguration
+    ) = ApigwHttpClientServiceImpl(iamConfiguration)
 
     @Bean
-    @ConditionalOnMissingBean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+    fun iamManagerService(
+        iamConfiguration: IamConfiguration
+    ) = ManagerServiceImpl(apigwHttpClientServiceImpl(iamConfiguration), iamConfiguration)
 
-    @Bean
-    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
-
-    @Bean
-    fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
     @Bean
     @Primary
     fun bkAuthProperties() = BkAuthProperties()
@@ -140,43 +110,4 @@ class TxV3AuthAutoConfiguration {
 
     @Bean
     fun iamEsbService() = IamEsbService()
-
-    @Bean
-    fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)
-
-    @Bean
-    fun bcsAuthServiceCode() = BSBcsAuthServiceCode()
-
-    @Bean
-    fun bsPipelineAuthServiceCode() = BSPipelineAuthServiceCode()
-
-    @Bean
-    fun codeAuthServiceCode() = BSCodeAuthServiceCode()
-
-    @Bean
-    fun vsAuthServiceCode() = BSVSAuthServiceCode()
-
-    @Bean
-    fun environmentAuthServiceCode() = BSEnvironmentAuthServiceCode()
-
-    @Bean
-    fun repoAuthServiceCode() = BSRepoAuthServiceCode()
-
-    @Bean
-    fun ticketAuthServiceCode() = BSTicketAuthServiceCode()
-
-    @Bean
-    fun qualityAuthServiceCode() = BSQualityAuthServiceCode()
-
-    @Bean
-    fun wetestAuthServiceCode() = BSWetestAuthServiceCode()
-
-    @Bean
-    fun experienceAuthServiceCode() = BSExperienceAuthServiceCode()
-
-    @Bean
-    fun projectAuthSeriviceCode() = BSProjectServiceCodec()
-
-    @Bean
-    fun artifactoryAuthServiceCode() = BSArtifactoryAuthServiceCode()
 }

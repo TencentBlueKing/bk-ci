@@ -429,7 +429,9 @@ open class MarketAtomTask : ITask() {
         when (AgentEnv.getOS()) {
             OSType.WINDOWS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\r\n${it}\r\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\r\n"
+                    ) { "\r\n$it" }
                     BatScriptUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
@@ -443,7 +445,9 @@ open class MarketAtomTask : ITask() {
             }
             OSType.LINUX, OSType.MAC_OS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\n${it}\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\n"
+                    ) { "\n$it" }
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
@@ -726,7 +730,11 @@ open class MarketAtomTask : ITask() {
                     it.key to value
                 }?.toMap()
                 if (qualityMap != null) {
-                    qualityGatewayResourceApi.saveScriptHisMetadata(atomCode, qualityMap)
+                    qualityGatewayResourceApi.saveScriptHisMetadata(
+                        atomCode,
+                        buildTask.taskId ?: "",
+                        buildTask.elementName ?: "",
+                        qualityMap)
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {

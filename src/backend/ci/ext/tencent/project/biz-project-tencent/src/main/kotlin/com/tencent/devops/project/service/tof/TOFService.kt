@@ -105,6 +105,14 @@ class TOFService @Autowired constructor(
         if (detail == null) {
             detail = getDeftFromCache(userId) ?: getDeptFromTof(operator, userId, bkTicket)
 
+            if (checkUserLeave(detail)) {
+                logger.warn("user $userId is level office")
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(
+                    messageCode = QUERY_USER_INFO_FAIL,
+                    defaultMessage = "用户$userId 已离职",
+                    params = arrayOf(userId)
+                ))
+            }
             userDeptCache.put(userId, detail!!)
         }
 
@@ -459,6 +467,14 @@ class TOFService @Autowired constructor(
                 groupId = groupId,
                 groupName = groupName
         )
+    }
+
+    fun checkUserLeave(userInfo: UserDeptDetail): Boolean {
+        // 没有bgId的用户，一律视为离职用户
+        if (userInfo.bgId.toInt() == 0) {
+            return true
+        }
+        return false
     }
 
     companion object {

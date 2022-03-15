@@ -69,6 +69,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -322,7 +323,13 @@ class PipelineRuntimeService @Autowired constructor(
         return ret
     }
 
-    fun listPipelineBuildHistory(projectId: String, pipelineId: String, offset: Int, limit: Int): List<BuildHistory> {
+    fun listPipelineBuildHistory(
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int,
+        updateTimeDesc: Boolean? = null
+    ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
@@ -330,7 +337,8 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             offset = offset,
-            limit = if (limit < 0) 1000 else limit
+            limit = if (limit < 0) 1000 else limit,
+            updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -511,7 +519,8 @@ class PipelineRuntimeService @Autowired constructor(
                     startType = StartType.toStartType(trigger),
                     channelCode = ChannelCode.valueOf(channel)
                 ),
-                buildNumAlias = buildNumAlias
+                buildNumAlias = buildNumAlias,
+                updateTime = updateTime.timestampmilli()
             )
         }
     }
@@ -625,9 +634,12 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        terminateFlag: Boolean = false
     ): Boolean {
-        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
+        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 发送取消事件
+        val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
@@ -636,14 +648,16 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                status = buildStatus
+                status = buildStatus,
+                actionType = actionType
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                buildId = buildId
+                buildId = buildId,
+                actionType = actionType
             )
         )
         // 给未结束的job发送心跳监控事件
@@ -1144,7 +1158,8 @@ class PipelineRuntimeService @Autowired constructor(
                     params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
-                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?,
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?
             ),
             formatted = false
         )

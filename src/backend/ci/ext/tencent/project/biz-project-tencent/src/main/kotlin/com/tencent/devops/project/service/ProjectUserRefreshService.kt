@@ -159,6 +159,12 @@ class ProjectUserRefreshService @Autowired constructor(
                 logger.info("user info diff, bk:${userInfo.groupId}, tof :${staffInfo.GroupId}")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
                 val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
+                if (tofService.checkUserLeave(tofDeptInfo)) {
+                    logger.warn("user $userId is level office")
+                    // 删除已离职用户
+                    projectUserDao.delete(dslContext, userId)
+                    return null
+                }
                 userDao.update(
                     userId = userId,
                     groupId = tofDeptInfo.groupId.toInt(),

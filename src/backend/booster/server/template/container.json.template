@@ -36,6 +36,10 @@
               "limits": {
                 "cpu": "__crm_cpu__",
                 "memory": "__crm_mem__"
+              },
+              "requests": {
+                "cpu": "__crm_request_cpu__",
+                "memory": "__crm_request_mem__"
               }
             },
             "image": "__crm_image__",

@@ -63,9 +63,10 @@ import com.tencent.devops.stream.trigger.parsers.PreTrigger
 import com.tencent.devops.stream.trigger.parsers.YamlVersion
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.TriggerParameter
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
@@ -94,7 +95,6 @@ class GitCITriggerService @Autowired constructor(
     private val pipelineDelete: PipelineDelete,
     private val triggerExceptionService: TriggerExceptionService,
     private val tokenService: StreamGitTokenService,
-    private val deleteEventService: DeleteEventService,
     private val triggerParameter: TriggerParameter,
     private val yamlSchemaCheck: YamlSchemaCheck,
     private val streamTriggerCache: StreamTriggerCache
@@ -107,13 +107,13 @@ class GitCITriggerService @Autowired constructor(
         private const val ciFileDirectoryName = ".ci"
     }
 
-    fun externalCodeGitBuild(event: String): Boolean? {
+    fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
         val start = LocalDateTime.now().timestampmilli()
-        logger.info("Trigger code git build($event)")
+        logger.info("Trigger code git build($event, $eventType)")
         val eventObject = try {
             objectMapper.readValue<GitEvent>(event)
-        } catch (e: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
+        } catch (ignore: Exception) {
+            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
             return false
         }
 
@@ -143,7 +143,9 @@ class GitCITriggerService @Autowired constructor(
         streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
         return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {
-            checkRequest(gitRequestEvent, eventObject, gitCIBasicSetting)
+            triggerExceptionService.handleErrorCode(request = gitRequestEvent) {
+                checkRequest(gitRequestEvent, eventObject, gitCIBasicSetting)
+            }
         }
     }
 
@@ -242,24 +244,40 @@ class GitCITriggerService @Autowired constructor(
             getProjectInfo = streamScmService::getProjectInfoRetry
         )
 
-        val yamlPathList = if (isDeleteEvent) {
-            getYamlPathList(
-                isFork = false,
-                forkGitToken = null,
-                gitRequestEvent = gitRequestEvent.copy(branch = gitProjectInfoCache.defaultBranch ?: ""),
-                mrEvent = false,
-                gitToken = gitToken
+        val (yamlPathList, changeSet) = if (isDeleteEvent) {
+            Pair(
+                getYamlPathList(
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    gitToken = gitToken,
+                    ref = gitProjectInfoCache.defaultBranch
+                ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }, emptySet()
+            )
+        } else if (event is GitMergeRequestEvent) {
+            getMrYamlPathList(
+                isFork = isFork,
+                forkGitToken = forkGitToken,
+                gitRequestEvent = gitRequestEvent,
+                gitToken = gitToken,
+                targetBranch = event.object_attributes.target_branch,
+                mrId = event.object_attributes.id,
+                merged = isMerged
             )
         } else {
-            getYamlPathList(isFork, forkGitToken, gitRequestEvent, mrEvent, gitToken)
+            Pair(
+                getYamlPathList(
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    gitToken = gitToken,
+                    ref = gitRequestEvent.branch
+                ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }, emptySet()
+            )
         }
 
         logger.info(
             "matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
-                "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
-                "commitTime:${gitRequestEvent.commitTimeStamp}, " +
-                "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
-                "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
+                    "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
+                    "commitTime:${gitRequestEvent.commitTimeStamp}, " +
+                    "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
+                    "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
         )
 
         // 如果没有Yaml文件则直接不触发
@@ -271,42 +289,9 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
-        // mr提交锁定,这时还没有流水线，所以提交的是无流水线锁
-        // story_871153869 暂时下掉mr锁，看效果，后续需要再加
-//        blockCommitCheck(
-//            mrEvent = mrEvent,
-//            event = gitRequestEvent,
-//            gitProjectConf = gitProjectConf,
-//            block = true,
-//            state = GitCICommitCheckState.PENDING
-//        )
-
-        // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = if (mrEvent) {
-            // 由于前面提交无流水线锁，所以这个出错需要解锁
-            triggerExceptionService.handleErrorCode(
-                request = gitRequestEvent,
-                commitCheck = CommitCheck(
-                    isNoPipelineCheck = true,
-                    block = false,
-                    state = GitCICommitCheckState.FAILURE
-                ),
-                action = {
-                    streamScmService.getMergeRequestChangeInfo(
-                        userId = null,
-                        token = gitToken,
-                        gitProjectId = gitRequestEvent.gitProjectId,
-                        mrId = (event as GitMergeRequestEvent).object_attributes.id
-                    )
-                }
-            )?.files?.filter { !it.deletedFile }?.map { it.newPath }?.toSet() ?: emptySet()
-        } else {
-            emptySet()
-        }
-
         streamStorageBean.yamlListCheckTime(LocalDateTime.now().timestampmilli() - start)
 
-        yamlPathList.forEach { filePath ->
+        yamlPathList.forEach { (filePath, checkType) ->
             // 如果该流水线已保存过，则继续使用
             // 对于来自fork库的mr新建的流水线，当前库不维护其状态
             val buildPipeline = path2PipelineExists[filePath] ?: GitProjectPipeline(
@@ -321,6 +306,15 @@ class GitCITriggerService @Autowired constructor(
             )
             // 针对每个流水线处理异常
             triggerExceptionService.handle(gitRequestEvent, event, gitProjectConf) {
+                // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
+                if (checkType == CheckType.NO_TRIGGER) {
+                    triggerError(
+                        request = gitRequestEvent,
+                        reason = TriggerReason.MR_BRANCH_FILE_ERROR,
+                        reasonParams = listOf(filePath)
+                    )
+                }
+
                 // ErrorCode都是系统错误，在最外面统一处理,都要发送无锁的commitCheck
                 triggerExceptionService.handleErrorCode(
                     request = gitRequestEvent,
@@ -334,7 +328,6 @@ class GitCITriggerService @Autowired constructor(
                             forkGitToken = forkGitToken,
                             gitToken = gitToken,
                             changeSet = changeSet,
-                            displayName = filePath,
                             mrEvent = mrEvent,
                             isMerged = isMerged,
                             gitProjectConf = gitProjectConf,
@@ -349,15 +342,6 @@ class GitCITriggerService @Autowired constructor(
                 )
             }
         }
-        // yml校验全部结束后，解除锁定
-        // story_871153869 暂时下掉mr锁，看效果，后续需要再加
-//        blockCommitCheck(
-//            mrEvent = mrEvent,
-//            event = gitRequestEvent,
-//            gitProjectConf = gitProjectConf,
-//            block = false,
-//            state = GitCICommitCheckState.SUCCESS
-//        )
         return true
     }
 
@@ -369,7 +353,6 @@ class GitCITriggerService @Autowired constructor(
         forkGitToken: String?,
         gitToken: String,
         changeSet: Set<String>,
-        displayName: String,
         mrEvent: Boolean,
         isMerged: Boolean,
         gitProjectConf: GitCIBasicSetting,
@@ -471,9 +454,6 @@ class GitCITriggerService @Autowired constructor(
 
         yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
 
-        // 为已存在的流水线设置名称
-        buildPipeline.displayName = displayName
-
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
         val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
@@ -501,25 +481,112 @@ class GitCITriggerService @Autowired constructor(
         streamStorageBean.triggerCheckTime(LocalDateTime.now().timestampmilli() - start)
     }
 
-    private fun getYamlPathList(
+    private fun getMrYamlPathList(
         isFork: Boolean,
         forkGitToken: String?,
+        targetBranch: String,
         gitRequestEvent: GitRequestEvent,
-        mrEvent: Boolean,
-        gitToken: String
+        gitToken: String,
+        mrId: Long,
+        merged: Boolean
+    ): Pair<List<YamlPathListEntry>, Set<String>> {
+        // 获取目标分支的文件列表
+        val targetBranchYamlPathList = getYamlPathList(
+            gitProjectId = gitRequestEvent.gitProjectId,
+            gitToken = gitToken,
+            ref = streamScmService.getTriggerBranch(targetBranch)
+        ).toSet()
+
+        // 获取mr请求的变更文件列表，用来给后面判断
+        val changeSet = streamScmService.getMergeRequestChangeInfo(
+            userId = null,
+            token = gitToken,
+            gitProjectId = gitRequestEvent.gitProjectId,
+            mrId = mrId
+        )?.files?.map {
+            if (it.deletedFile) {
+                it.oldPath
+            } else {
+                it.newPath
+            }
+        }?.toSet() ?: emptySet()
+
+        // 已经merged的直接返回目标分支的文件列表即可
+        if (merged) {
+            return Pair(targetBranchYamlPathList.map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }, changeSet)
+        }
+
+        // 获取源分支文件列表
+        val sourceBranchYamlPathList = getYamlPathList(
+            gitProjectId = gitRequestEvent.sourceGitProjectId!!,
+            gitToken = if (isFork) {
+                forkGitToken!!
+            } else {
+                gitToken
+            },
+            ref = gitRequestEvent.commitId
+        ).toSet()
+
+        val comparedMap = checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, changeSet)
+        return Pair(comparedMap.map { YamlPathListEntry(it.key, it.value) }, changeSet)
+    }
+
+    @Suppress("ComplexMethod")
+    fun checkMrYamlPathList(
+        sourceBranchYamlPathList: Set<String>,
+        targetBranchYamlPathList: Set<String>,
+        changeSet: Set<String>
+    ): MutableMap<String, CheckType> {
+        val comparedMap = mutableMapOf<String, CheckType>()
+        sourceBranchYamlPathList.forEach { source ->
+            when {
+                // 源分支有，目标分支没有，变更列表有，以源分支为主，不需要校验版本
+                source !in targetBranchYamlPathList && source in changeSet -> {
+                    comparedMap[source] = CheckType.NO_NEED_CHECK
+                }
+                // 源分支有，目标分支没有，变更列表没有，不触发且提示错误
+                source !in targetBranchYamlPathList && source !in changeSet -> {
+                    comparedMap[source] = CheckType.NO_TRIGGER
+                }
+                // 源分支有，目标分支有，变更列表有，需要校验版本
+                source in targetBranchYamlPathList && source in changeSet -> {
+                    comparedMap[source] = CheckType.NEED_CHECK
+                }
+                // 源分支有，目标分支有，变更列表无，以目标分支为主，不需要校验版本
+                source in targetBranchYamlPathList && source !in changeSet -> {
+                    comparedMap[source] = CheckType.NO_NEED_CHECK
+                }
+            }
+        }
+        targetBranchYamlPathList.forEach { target ->
+            if (target in comparedMap.keys) {
+                return@forEach
+            }
+            when {
+                // 源分支没有，目标分支有，变更列表有，说明是删除，无需触发
+                target !in sourceBranchYamlPathList && target in changeSet -> {
+                    return@forEach
+                }
+                // 源分支没有，目标分支有，变更列表没有，说明是目标分支新增的，加入文件列表
+                target !in sourceBranchYamlPathList && target !in changeSet -> {
+                    comparedMap[target] = CheckType.NO_NEED_CHECK
+                }
+            }
+        }
+        return comparedMap
+    }
+
+    private fun getYamlPathList(
+        gitProjectId: Long,
+        gitToken: String,
+        ref: String?
     ): MutableList<String> {
         // 获取指定目录下所有yml文件
-        val yamlPathList = if (isFork) {
-            getCIYamlList(forkGitToken!!, gitRequestEvent, mrEvent)
-        } else {
-            getCIYamlList(gitToken, gitRequestEvent, mrEvent)
-        }.toMutableList()
+        val yamlPathList = getCIYamlList(gitProjectId, gitToken, ref).toMutableList()
+
         // 兼容旧的根目录yml文件
-        val isCIYamlExist = if (isFork) {
-            isCIYamlExist(forkGitToken!!, gitRequestEvent, mrEvent)
-        } else {
-            isCIYamlExist(gitToken, gitRequestEvent, mrEvent)
-        }
+        val isCIYamlExist = isCIYamlExist(gitProjectId, gitToken, ref)
+
         if (isCIYamlExist) {
             yamlPathList.add(ciFileName)
         }
@@ -530,34 +597,6 @@ class GitCITriggerService @Autowired constructor(
         StreamTriggerDispatch.dispatch(rabbitTemplate, event)
     }
 
-    // mr锁定提交
-    // story_871153869 暂时下掉mr锁，看效果，后续需要再加
-//    private fun blockCommitCheck(
-//        mrEvent: Boolean,
-//        event: GitRequestEvent,
-//        gitProjectConf: GitCIBasicSetting,
-//        block: Boolean,
-//        state: GitCICommitCheckState
-//    ) {
-//        logger.info(
-//            "CommitCheck with block, gitProjectId:${event.gitProjectId}, mrEvent:$mrEvent, " +
-//                    "block:$block, state:$state, enableMrBlock:${gitProjectConf.enableMrBlock}"
-//        )
-//        if (gitProjectConf.enableCommitCheck && gitProjectConf.enableMrBlock && mrEvent) {
-//            scmClient.pushCommitCheckWithBlock(
-//                commitId = event.commitId,
-//                mergeRequestId = event.mergeRequestId ?: 0L,
-//                userId = event.userId,
-//                block = block,
-//                state = state,
-//                context = noPipelineBuildEvent,
-//                gitCIBasicSetting = gitProjectConf,
-//                jumpNotification = false,
-//                description = null
-//            )
-//        }
-//    }
-
     private fun handleGetToken(gitRequestEvent: GitRequestEvent, isMrEvent: Boolean = false): String? {
         return triggerExceptionService.handleErrorCode(
             request = gitRequestEvent,
@@ -567,34 +606,31 @@ class GitCITriggerService @Autowired constructor(
 
     @Throws(TriggerThirdException::class)
     private fun getCIYamlList(
+        gitProjectId: Long,
         gitToken: String,
-        gitRequestEvent: GitRequestEvent,
-        isMrEvent: Boolean = false
+        ref: String?
     ): List<String> {
-        val ciFileList =
-            triggerExceptionService.handleErrorCode(request = gitRequestEvent,
-                action = {
-                    streamScmService.getFileTreeFromGit(
-                        gitToken = gitToken,
-                        gitRequestEvent = gitRequestEvent,
-                        filePath = ciFileDirectoryName,
-                        isMrEvent = isMrEvent
-                    )
-                }
-            )?.filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
-        return ciFileList?.map { ciFileDirectoryName + File.separator + it.name }?.toList() ?: emptyList()
+        val ciFileList = streamScmService.getFileTreeFromGit(
+            gitProjectId = gitProjectId,
+            token = gitToken,
+            filePath = ciFileDirectoryName,
+            ref = ref?.let { streamScmService.getTriggerBranch(it) }
+        ).filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
+        return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toList()
     }
 
     @Throws(TriggerThirdException::class)
     private fun isCIYamlExist(
+        gitProjectId: Long,
         gitToken: String,
-        gitRequestEvent: GitRequestEvent,
-        isMrEvent: Boolean = false
+        ref: String?
     ): Boolean {
-        val ciFileList =
-            triggerExceptionService.handleErrorCode(request = gitRequestEvent,
-                action = { streamScmService.getFileTreeFromGit(gitToken, gitRequestEvent, "", isMrEvent) }
-            )?.filter { it.name == ciFileName } ?: emptyList()
+        val ciFileList = streamScmService.getFileTreeFromGit(
+            gitProjectId = gitProjectId,
+            token = gitToken,
+            filePath = "",
+            ref = ref?.let { streamScmService.getTriggerBranch(it) }
+        ).filter { it.name == ciFileName }
         return ciFileList.isNotEmpty()
     }
 

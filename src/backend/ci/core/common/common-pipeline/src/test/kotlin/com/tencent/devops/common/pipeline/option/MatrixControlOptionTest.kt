@@ -258,108 +258,6 @@ var2:
     }
 
     @Test
-    fun calculateValueMatrix2() {
-        val matrixControlOption = MatrixControlOption(
-            // 2*3*3 = 18
-            strategyStr = """
-                    {
-                        "include": [
-                            {
-                                "os": "docker",
-                                "var3": "form_json",
-                                "var2": 2
-                            },
-                            {
-                                "os": "macos",
-                                "var3": "form_json",
-                                "var2": 1
-                            }
-                        ],
-                        "exclude": [
-                            {
-                                "os": "docker",
-                                "var1": "b",
-                                "var2": 3
-                            },
-                            {
-                                "os": "macos",
-                                "var1": "c",
-                                "var2": 2
-                            }
-                        ],
-                        "strategy": {
-                            "os": [
-                                "docker",
-                                "macos"
-                            ],
-                            "var1": [
-                                "a",
-                                "b",
-                                "c"
-                            ],
-                            "var2": [
-                                1,
-                                2,
-                                3
-                            ]
-                        }
-                    }
-                """,
-            // +2
-            includeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "d",
-                        "var2" to "0"
-                    ),
-                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "a",
-                        "var2" to "1",
-                        "var3" to "xxx"
-                    ),
-                    // +0 符合 os = macos, var1 = b 的增加 var3 = yyy
-                    mapOf(
-                        "os" to "macos",
-                        "var1" to "b",
-                        "var3" to "yyy"
-                    ),
-                    // +0 符合 var1 = c 的增加 var3 = zzz
-                    mapOf(
-                        "var1" to "c",
-                        "var3" to "zzz"
-                    )
-                )
-            ),
-            // -1
-            excludeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1"
-                    )
-                )
-            ),
-            totalCount = 10, // 3*3 + 2 - 1
-            finishCount = 1,
-            fastKill = true,
-            maxConcurrency = 50
-        )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
-        println(contextCase.size)
-        contextCase.forEachIndexed { index, map ->
-            println("$index: $map")
-        }
-        Assert.assertEquals(
-            contextCase.size, 20
-        )
-    }
-
-    @Test
     fun calculateValueMatrix3() {
         val matrixControlOption = MatrixControlOption(
             // 2*3*3 = 18
@@ -397,6 +295,202 @@ var2:
             "depends.job1.outputs.matrix" to """
             {"service":["api","project","gateway"],"cpu":["amd64", "arm64"]}
         """
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 7
+        )
+    }
+
+    @Test
+    fun calculateValueMatrix8() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = null,
+            includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
+            // -1
+            excludeCaseStr = null,
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val buildContext = mapOf(
+            "depends.job1.outputs.matrix" to """
+            {"service": "${'$'}{{ fromJSON(depends.job1.outputs.service) }}","cpu":"${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}"}
+        """,
+            "depends.job1.outputs.matrix1" to JsonUtil.toJson(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
+                )
+            ),
+            "depends.job1.outputs.matrix_include" to """
+                [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
+            """,
+            "depends.job1.outputs.matrix_exclude" to """
+                [{"service":"project","cpu":"arm64"}]
+            """,
+            "depends.job1.outputs.service" to """
+                ["api","project","gateway"]
+            """.trim(),
+            "depends.job1.outputs.cpu" to """
+                ["amd64", "arm64"]
+            """.trim()
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 2
+        )
+    }
+
+    @Test
+    fun calculateValueMatrix7() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = YamlUtil.toYaml(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to listOf("amd64", "arm64")
+                )
+            ),
+            includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
+            // -1
+            excludeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_exclude) }}",
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val buildContext = mapOf(
+            "depends.job1.outputs.matrix" to """
+            {"service": "${'$'}{{ fromJSON(depends.job1.outputs.service) }}","cpu":"${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}"}
+        """,
+            "depends.job1.outputs.matrix1" to JsonUtil.toJson(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
+                )
+            ),
+            "depends.job1.outputs.matrix_include" to """
+                [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
+            """,
+            "depends.job1.outputs.matrix_exclude" to """
+                [{"service":"project","cpu":"arm64"}]
+            """,
+            "depends.job1.outputs.service" to """
+                ["api","project","gateway"]
+            """.trim(),
+            "depends.job1.outputs.cpu" to """
+                ["amd64", "arm64"]
+            """.trim()
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 7
+        )
+    }
+
+    @Test
+    fun calculateValueMatrix6() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """---
+service: ${'$'}{{ fromJSON(depends.job1.outputs.service) }}
+cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
+            includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
+            // -1
+            excludeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_exclude) }}",
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val buildContext = mapOf(
+            "depends.job1.outputs.matrix" to """
+            {"service": "${'$'}{{ fromJSON(depends.job1.outputs.service) }}","cpu":"${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}"}
+        """,
+            "depends.job1.outputs.matrix1" to JsonUtil.toJson(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
+                )
+            ),
+            "depends.job1.outputs.matrix_include" to """
+                [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
+            """,
+            "depends.job1.outputs.matrix_exclude" to """
+                [{"service":"project","cpu":"arm64"}]
+            """,
+            "depends.job1.outputs.service" to """
+                ["api","project","gateway"]
+            """.trim(),
+            "depends.job1.outputs.cpu" to """
+                ["amd64", "arm64"]
+            """.trim()
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assert.assertEquals(
+            contextCase.size, 7
+        )
+    }
+
+    @Test
+    fun calculateValueMatrix5() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = YamlUtil.toYaml(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
+                )
+            ),
+            includeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_include) }}",
+            // -1
+            excludeCaseStr = "\${{ fromJSON(depends.job1.outputs.matrix_exclude) }}",
+            totalCount = 10,
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val buildContext = mapOf(
+            "depends.job1.outputs.matrix" to """
+            {"service": "${'$'}{{ fromJSON(depends.job1.outputs.service) }}","cpu":"${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}"}
+        """,
+            "depends.job1.outputs.matrix1" to JsonUtil.toJson(
+                mapOf(
+                    "service" to "\${{ fromJSON(depends.job1.outputs.service) }}",
+                    "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
+                )
+            ),
+            "depends.job1.outputs.matrix_include" to """
+                [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
+            """,
+            "depends.job1.outputs.matrix_exclude" to """
+                [{"service":"project","cpu":"arm64"}]
+            """,
+            "depends.job1.outputs.service" to """
+                ["api","project","gateway"]
+            """.trim(),
+            "depends.job1.outputs.cpu" to """
+                ["amd64", "arm64"]
+            """.trim()
         )
         val contextCase = matrixControlOption.convertMatrixConfig(buildContext).getAllCombinations()
         println(contextCase.size)
@@ -703,7 +797,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 0)
+        Assert.assertEquals(contextCase.size, 2)
     }
 
     @Test
@@ -755,78 +849,6 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assert.assertEquals(contextCase.size, 0)
-    }
-
-    @Test
-    fun calculateValueMatrixJson3() {
-        val matrixControlOption = MatrixControlOption(
-            // 2*3*3-2= 16
-            strategyStr = """
-                    {
-                        "exclude": [
-                            {
-                                "os": "docker",
-                                "var1": "b",
-                                "var2": 3
-                            },
-                            {
-                                "os": "macos",
-                                "var1": "c",
-                                "var2": 2
-                            }
-                        ],
-                        "strategy": {
-                            "os": [
-                                "docker",
-                                "macos"
-                            ],
-                            "var1": [
-                                "a",
-                                "b",
-                                "c"
-                            ],
-                            "var2": [
-                                1,
-                                2,
-                                3
-                            ]
-                        }
-                    }
-                """,
-            includeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    // +1
-                    mapOf(
-                        "os" to "docker",
-                        "var4" to "d",
-                        "var2" to "1"
-                    )
-                )
-            ),
-            // -1
-            excludeCaseStr = YamlUtil.toYaml(
-                listOf(
-                    mapOf(
-                        "os" to "docker",
-                        "var1" to "a",
-                        "var2" to "1"
-                    )
-                )
-            ),
-            totalCount = 10, // 3*3 + 2 - 1
-            finishCount = 1,
-            fastKill = true,
-            maxConcurrency = 50
-        )
-        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
-        println(contextCase.size)
-        contextCase.forEachIndexed { index, map ->
-            println("$index: $map")
-        }
-        // println(JsonUtil.toJson(contextCase, false))
-        Assert.assertEquals(
-            contextCase.size, 16
-        )
+        Assert.assertEquals(contextCase.size, 1)
     }
 }

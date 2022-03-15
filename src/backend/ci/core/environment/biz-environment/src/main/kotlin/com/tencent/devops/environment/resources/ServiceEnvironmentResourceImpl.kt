@@ -34,8 +34,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.service.EnvService
@@ -59,6 +61,58 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
 
     override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listEnvironment(userId, projectId))
+    }
+
+    override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
+        if (environment.name.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
+        }
+
+        return Result(envService.createEnvironment(userId, projectId, environment))
+    }
+
+    override fun delete(userId: String, projectId: String, envHashId: String): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+        envService.deleteEnvironment(userId, projectId, envHashId)
+        return Result(true)
+    }
+
+    override fun addNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (nodeHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
+        }
+
+        envService.addEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        return Result(true)
+    }
+
+    override fun deleteNodes(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        nodeHashIds: List<String>
+    ): Result<Boolean> {
+        if (envHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
+        }
+
+        if (nodeHashIds.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
+        }
+
+        envService.deleteEnvNodes(userId, projectId, envHashId, nodeHashIds)
+        return Result(true)
     }
 
     override fun listNodesByEnvIds(

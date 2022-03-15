@@ -261,7 +261,8 @@ class SignHistoryDao {
                 resignFinishTime = resignFinishTime?.timestampmilli(),
                 zipFinishTime = zipFinishTime?.timestampmilli(),
                 archiveFinishTime = archiveFinishTime?.timestampmilli(),
-                errorMessage = errorMessage
+                errorMessage = errorMessage,
+                ipaSignInfoStr = null
             )
         }
     }

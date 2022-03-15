@@ -76,4 +76,19 @@ interface ServiceAtomResource {
         @PathParam("version")
         version: String
     ): Result<PipelineAtom?>
+
+    @ApiOperation("获取插件真实版本号")
+    @GET
+    @Path("/projects/{projectCode}/codes/{atomCode}/versions/{version}/real")
+    fun getAtomRealVersion(
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String
+    ): Result<String?>
 }

@@ -326,7 +326,13 @@ interface ServiceBuildResource {
         pageSize: Int?,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam(
+            value = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
+            required = false, defaultValue = "20"
+        )
+        @QueryParam("updateTimeDesc")
+        updateTimeDesc: Boolean? = null
     ): Result<BuildHistoryPage<BuildHistory>>
 
     @ApiOperation("获取构建详情")
