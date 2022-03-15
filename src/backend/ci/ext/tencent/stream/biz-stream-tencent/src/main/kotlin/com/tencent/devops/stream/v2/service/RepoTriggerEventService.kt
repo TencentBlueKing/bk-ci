@@ -36,6 +36,7 @@ import com.tencent.devops.stream.dao.GitPipelineRepoResourceDao
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -45,6 +46,9 @@ class RepoTriggerEventService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitPipelineRepoResourceDao: GitPipelineRepoResourceDao
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(RepoTriggerEventService::class.java)
+    }
 
     fun saveRepoTriggerEvent(
         sourceGitProjectPath: String,
@@ -71,9 +75,11 @@ class RepoTriggerEventService @Autowired constructor(
             sourceGitProjectPathList.add(sourceGitProjectPath.substring(0, begin) + "/**")
             begin = sourceGitProjectPath.indexOf("/", begin + 1)
         }
+        sourceGitProjectPathList.add(sourceGitProjectPath)
+        logger.info("find target repo pipelines in ($sourceGitProjectPathList)")
         return gitPipelineRepoResourceDao.getPipelineBySourcePath(
             dslContext = dslContext,
-            sourceGitProjectPathList = sourceGitProjectPathList.plus(sourceGitProjectPath)
+            sourceGitProjectPathList = sourceGitProjectPathList
         )
     }
 

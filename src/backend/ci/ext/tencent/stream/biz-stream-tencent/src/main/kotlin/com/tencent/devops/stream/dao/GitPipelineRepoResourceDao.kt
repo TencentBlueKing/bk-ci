@@ -28,9 +28,9 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class GitPipelineRepoResourceDao {
@@ -77,7 +77,7 @@ class GitPipelineRepoResourceDao {
     */
     fun getPipelineBySourcePath(
         dslContext: DSLContext,
-        sourceGitProjectPathList: Collection<String>
+        sourceGitProjectPathList: List<String>
     ): List<String> {
         with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
             return dslContext.select(PIPELINE_ID)
