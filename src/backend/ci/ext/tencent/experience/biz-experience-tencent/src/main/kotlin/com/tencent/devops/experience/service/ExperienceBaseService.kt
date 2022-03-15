@@ -141,6 +141,8 @@ class ExperienceBaseService @Autowired constructor(
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
         val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
+        val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
+            .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
 
         val result = records.map {
             AppExperience(
@@ -161,7 +163,7 @@ class ExperienceBaseService @Autowired constructor(
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
                 expired = now.isAfter(it.endDate),
-                subscribe = RandomUtils.nextBoolean(), // TODO 等greyson那边的订阅逻辑
+                subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}"),
                 redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
