@@ -11,7 +11,6 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -22,9 +21,6 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     private val streamGitTokenService: StreamGitTokenService
 
 ) : ServiceStreamTriggerResource {
-    companion object {
-        private val logger = LoggerFactory.getLogger(ServiceStreamTriggerResourceImpl::class.java)
-    }
 
     override fun triggerStartup(
         userId: String,
@@ -72,7 +68,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
 
         return if (branch.isNullOrEmpty() || path.isNullOrEmpty()) {
             null
-        } else{
+        } else {
             streamScmService.getYamlFromGit(
                 token = streamGitTokenService.getToken(gitProjectId),
                 gitProjectId = gitProjectId.toString(),
