@@ -108,6 +108,7 @@ type HandlerWithUser interface {
 	Release(resourceID string) error
 	AddBroker(name string, strategyType StrategyType, strategy BrokerStrategy,
 		param BrokerParam) error
+	GetInstanceType(platform, group string) *config.InstanceType
 }
 
 // ResourceParam describe the request parameters to container resource manager.
@@ -391,7 +392,7 @@ func (rm *resourceManager) recover() error {
 		return err
 	}
 
-	rm.nodeInfoPool = op.NewNodeInfoPool(rm.conf.BcsCPUPerInstance, rm.conf.BcsMemPerInstance, 1)
+	rm.nodeInfoPool = op.NewNodeInfoPool(rm.conf.BcsCPUPerInstance, rm.conf.BcsMemPerInstance, 1, rm.conf.InstanceType)
 
 	rm.registeredResourceMapLock.Lock()
 	defer rm.registeredResourceMapLock.Unlock()
@@ -1104,6 +1105,27 @@ func (hwu *handlerWithUser) AddBroker(
 	param BrokerParam) error {
 
 	return hwu.mgr.addBroker(name, hwu.user, strategyType, strategy, param)
+}
+
+//GetInstanceType return the instanceType from key
+func (hwu *handlerWithUser) GetInstanceType(platform string, group string) *config.InstanceType {
+	retIst := config.InstanceType{
+		CPUPerInstance: hwu.mgr.conf.BcsCPUPerInstance,
+		MemPerInstance: hwu.mgr.conf.BcsMemPerInstance,
+	}
+	for _, istItem := range hwu.mgr.conf.InstanceType {
+		if !(istItem.Group == group && istItem.Platform == platform) {
+			continue
+		}
+		if istItem.CPUPerInstance > 0.0 {
+			retIst.CPUPerInstance = istItem.CPUPerInstance
+		}
+		if istItem.MemPerInstance > 0.0 {
+			retIst.MemPerInstance = istItem.MemPerInstance
+		}
+		break
+	}
+	return &retIst
 }
 
 func (hwu *handlerWithUser) resourceID(id string) string {

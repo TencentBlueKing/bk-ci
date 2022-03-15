@@ -142,4 +142,18 @@ interface ServiceNodeResource {
         @PathParam("projectId")
         projectId: String
     ): Result<List<NodeWithPermission>>
+
+    @ApiOperation("删除节点")
+    @POST
+    @Path("/projects/{projectId}/delete_nodes")
+    fun deleteNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "节点列表", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
 }

@@ -29,17 +29,17 @@ package com.tencent.devops.quality.constant
 
 val codeccToolUrlPathMap = mapOf(
     "COVERITY" to "/codecc/##projectId##/task/##taskId##/defect/compile/##detail##/list" +
-        "?buildId=##buildId##&status=13&sortField=createBuildNumber",
+        "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "KLOCWORK" to "/codecc/##projectId##/task/##taskId##/defect/compile/##detail##/list" +
-        "?buildId=##buildId##&status=13&sortField=createBuildNumber",
+        "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "PINPOINT" to "/codecc/##projectId##/task/##taskId##/defect/compile/##detail##/list" +
-        "?buildId=##buildId##&status=13&sortField=createBuildNumber",
+        "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "SPOTBUGS" to "/codecc/##projectId##/task/##taskId##/defect/compile/##detail##/list" +
-        "?buildId=##buildId##&status=13&sortField=createBuildNumber",
+        "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "CCN" to "/codecc/##projectId##/task/##taskId##/defect/##detail##/list" +
-        "?buildId=##buildId##&status=13&sortField=createBuildNumber",
+        "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "DUPC" to "/codecc/##projectId##/task/##taskId##/defect/##detail##/list" +
-        "?buildId=##buildId##&status=13&sortField=createBuildNumber",
+        "?buildId=##buildId##&status=7&sortField=createBuildNumber",
     "STANDARD" to "/codecc/##projectId##/task/##taskId##/defect/standard/list?dimension=STANDARD&" +
         "buildId=##buildId##",
     "SECURITY" to "/codecc/##projectId##/task/##taskId##/defect/security/list?dimension=SECURITY&" +
@@ -47,4 +47,4 @@ val codeccToolUrlPathMap = mapOf(
     "DEFECT" to "/codecc/##projectId##/task/##taskId##/defect/defect/list?dimension=DEFECT&buildId=##buildId##")
 
 const val DEFAULT_CODECC_URL = "/codecc/##projectId##/task/##taskId##/defect/lint/##detail##/list" +
-    "?buildId=##buildId##&status=13&sortField=createBuildNumber"
+    "?buildId=##buildId##&status=7&sortField=createBuildNumber"

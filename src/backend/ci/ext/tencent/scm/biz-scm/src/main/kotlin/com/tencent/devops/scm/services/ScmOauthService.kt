@@ -28,12 +28,15 @@
 package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.constant.HTTP_200
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.exception.GitApiException
+import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -270,7 +273,10 @@ class ScmOauthService @Autowired constructor(
             responseTime = System.currentTimeMillis()
             statusCode = e.code
             statusMessage = e.message
-            throw e
+            throw ScmException(
+                e.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_GIT.name
+            )
         } finally {
             scmMonitorService.reportCommitCheck(
                 requestTime = requestTime,

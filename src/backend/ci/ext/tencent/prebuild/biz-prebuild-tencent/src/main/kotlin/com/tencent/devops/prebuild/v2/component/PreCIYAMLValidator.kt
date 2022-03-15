@@ -38,7 +38,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
-import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import com.tencent.devops.common.ci.v2.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
@@ -83,7 +83,7 @@ class PreCIYAMLValidator {
     private fun getYamlSchema(): String {
         val mapper = ObjectMapper().setFilterProvider(
             SimpleFilterProvider().addFilter(
-                YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+                YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
             )
         )
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)

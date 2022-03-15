@@ -57,6 +57,7 @@
                             @change="toggleAllSelect"
                         ></bk-checkbox>
                         <div class="table-node-item node-item-ip">IP</div>
+                        <div class="table-node-item node-item-displayname">{{ $t('environment.nodeInfo.displayName') }}</div>
                         <div class="table-node-item node-item-name">{{ $t('environment.nodeInfo.cpuName') }}</div>
                         <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
                         <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
@@ -79,6 +80,9 @@
                             </div>
                             <div class="table-node-item node-item-name" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
                                 <span class="node-name">{{ col.name }}</span>
+                            </div>
+                            <div class="table-node-item node-item-displayname">
+                                <span class="node-displayname">{{ col.displayName }}</span>
                             </div>
                             <div class="table-node-item node-item-type" :class="{ 'over-content': selectHandlercConf.curDisplayCount > 6 }">
                                 <div>
@@ -466,6 +470,9 @@
 
         .node-item-name {
             flex: 5;
+        }
+        .node-item-displayname {
+            flex: 4;
         }
 
         .node-item-ip,

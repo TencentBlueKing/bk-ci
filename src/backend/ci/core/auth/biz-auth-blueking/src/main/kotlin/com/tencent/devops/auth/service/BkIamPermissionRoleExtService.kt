@@ -49,15 +49,17 @@ class BkIamPermissionRoleExtService @Autowired constructor(
     private val groupService: AuthGroupService,
     private val authGroupDao: AuthGroupDao,
     private val dslContext: DSLContext,
-    private val client: Client
+    private val client: Client,
+    private val strategyService: StrategyService
 ) : IamPermissionRoleExtService(
-    iamManagerService,
-    permissionGradeService,
-    iamConfiguration,
-    groupService,
-    authGroupDao,
-    dslContext,
-    client
+    iamManagerService = iamManagerService,
+    permissionGradeService = permissionGradeService,
+    iamConfiguration = iamConfiguration,
+    groupService = groupService,
+    groupDao = authGroupDao,
+    dslContext = dslContext,
+    client = client,
+    strategyService = strategyService
 ) {
     override fun groupCreateExt(
         roleId: Int,

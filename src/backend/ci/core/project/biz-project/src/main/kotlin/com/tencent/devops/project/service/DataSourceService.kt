@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 
 interface DataSourceService {
@@ -38,4 +39,10 @@ interface DataSourceService {
     fun updateDataSource(userId: String, id: String, dataSource: DataSource): Boolean
 
     fun getDataSourceById(id: String): DataSource?
+
+    fun getDataBasePiecewiseById(
+        projectId: String,
+        moduleCode: String,
+        clusterName: String
+    ): DataBasePiecewiseInfo?
 }

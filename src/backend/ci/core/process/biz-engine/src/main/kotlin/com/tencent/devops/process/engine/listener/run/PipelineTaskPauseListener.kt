@@ -46,7 +46,10 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -60,6 +63,8 @@ class PipelineTaskPauseListener @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val buildVariableService: BuildVariableService,
+    private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
@@ -111,6 +116,15 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = task.containerId,
             taskId = task.taskId,
             element = newElement
+        )
+        // issues_6210 添加继续操作操作人变量
+        buildVariableService.saveVariable(
+            dslContext = dslContext,
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            name = "${VALUE_KEY}_${task.taskId}",
+            value = userId
         )
 
         // 触发引擎container事件，继续后续流程
@@ -228,5 +242,10 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = current.containerId,
             buildStatus = BuildStatus.QUEUE
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTaskPauseListener::class.java)
+        private const val VALUE_KEY = "BK_CI_OPERATOR"
     }
 }

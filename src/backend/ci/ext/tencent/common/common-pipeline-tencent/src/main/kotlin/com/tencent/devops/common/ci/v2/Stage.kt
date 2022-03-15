@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import io.swagger.annotations.ApiModelProperty
@@ -34,6 +35,7 @@ import io.swagger.annotations.ApiModelProperty
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci)异常
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Stage(
     val name: String?,
     val label: List<String> = emptyList(),

@@ -48,4 +48,4 @@ data class TemplateInfo(
     val remoteTemplateProjectId: String? = null
 )
 
-const val YamlMetaDataJsonFilter = "yamlMetaData"
+const val YAME_META_DATA_JSON_FILTER = "yamlMetaData"

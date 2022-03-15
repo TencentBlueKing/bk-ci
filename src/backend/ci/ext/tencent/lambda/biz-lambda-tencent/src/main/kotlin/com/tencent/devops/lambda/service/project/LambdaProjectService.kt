@@ -26,9 +26,10 @@
  */
 package com.tencent.devops.lambda.service.project
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.kafka.KafkaClient
-import com.tencent.devops.common.kafka.KafkaTopic
+import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.project.LambdaProjectDao
 import com.tencent.devops.lambda.pojo.project.DataPlatProjectInfo
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
@@ -45,7 +46,8 @@ import java.util.concurrent.ForkJoinPool
 class LambdaProjectService @Autowired constructor(
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
-    private val lambdaProjectDao: LambdaProjectDao
+    private val lambdaProjectDao: LambdaProjectDao,
+    private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig
 ) {
 
     fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
@@ -68,7 +70,9 @@ class LambdaProjectService @Autowired constructor(
                 secrecy = event.projectInfo.secrecy,
                 washTime = LocalDateTime.now().format(dateTimeFormatter)
             )
-            kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
+            val projectInfoTopic = checkParamBlank(lambdaKafkaTopicConfig.projectInfoTopic, "projectInfoTopic")
+            kafkaClient.send(projectInfoTopic, JsonUtil.toJson(projectInfo))
+//            kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
         } catch (e: Exception) {
             logger.error("onReceiveProjectCreate failed, projectId: ${event.projectId}", e)
         }
@@ -94,7 +98,9 @@ class LambdaProjectService @Autowired constructor(
                 secrecy = event.projectInfo.secrecy,
                 washTime = LocalDateTime.now().format(dateTimeFormatter)
             )
-            kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
+            val projectInfoTopic = checkParamBlank(lambdaKafkaTopicConfig.projectInfoTopic, "projectInfoTopic")
+            kafkaClient.send(projectInfoTopic, JsonUtil.toJson(projectInfo))
+//            kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
         } catch (e: Exception) {
             logger.error("onReceiveProjectUpdate failed, projectId: ${event.projectId}", e)
         }
@@ -124,7 +130,9 @@ class LambdaProjectService @Autowired constructor(
                         secrecy = it.isSecrecy,
                         washTime = LocalDateTime.now().format(dateTimeFormatter)
                     )
-                    kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
+                    val projectInfoTopic = checkParamBlank(lambdaKafkaTopicConfig.projectInfoTopic, "projectInfoTopic")
+                    kafkaClient.send(projectInfoTopic, JsonUtil.toJson(projectInfo))
+//                    kafkaClient.send(KafkaTopic.LANDUN_PROJECT_INFO_TOPIC, JsonUtil.toJson(projectInfo))
                     logger.info("Success send project: ${it.projectId} to kafka.")
                 } catch (e: Exception) {
                     logger.error("Failed send project: ${it.projectId} to kafka.", e)
@@ -133,6 +141,13 @@ class LambdaProjectService @Autowired constructor(
         }
 
         return true
+    }
+
+    private fun checkParamBlank(param: String?, message: String): String {
+        if (param.isNullOrBlank()) {
+            throw ParamBlankException("启动配置缺少 $message")
+        }
+        return param
     }
 
     companion object {
