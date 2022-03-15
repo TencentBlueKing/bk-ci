@@ -27,9 +27,9 @@ echo "insert entry if not exist."
 $cmd_mysql -e "select code from paas_app where code='$app_code';" | grep -q "$app_code" || {
     $cmd_mysql << EOF
 INSERT INTO paas_app
-(name,code,introduction,creater,state,is_already_test,is_already_online,first_test_time,first_online_time,language,auth_token,tags_id,deploy_token,is_use_celery,is_use_celery_beat,is_saas,logo,height,is_max,is_resize,is_setbar,use_count,width,external_url,is_default,is_sysapp,is_third,is_platform,is_lapp,is_display,open_mode,introduction_en,name_en,visiable_labels)
+(name,code,introduction,creater,state,is_already_test,is_already_online,first_test_time,first_online_time,language,auth_token,tags_id,deploy_token,is_use_celery,is_use_celery_beat,is_saas,logo,height,is_max,is_resize,is_setbar,use_count,width,external_url,is_default,is_sysapp,is_third,is_platform,is_lapp,is_display,open_mode,introduction_en,name_en,visiable_labels,from_paasv3,migrated_to_paasv3)
  VALUES (
-"$name","$app_code","$introduction","$creater",4,TRUE ,TRUE,NULL,NOW(),"Java","$app_token",4,NULL,FALSE,FALSE,FALSE,"$logo",700,TRUE,TRUE,FALSE,0,1200,"$external_url",TRUE,FALSE,TRUE,TRUE,FALSE,TRUE,"desktop",introduction_en,name_en,"") ;
+"$name","$app_code","$introduction","$creater",4,TRUE ,TRUE,NULL,NOW(),"Java","$app_token",4,NULL,FALSE,FALSE,FALSE,"$logo",700,TRUE,TRUE,FALSE,0,1200,"$external_url",TRUE,FALSE,TRUE,TRUE,FALSE,TRUE,"desktop",introduction_en,name_en,"",0,0) ;
 EOF
 }
 
