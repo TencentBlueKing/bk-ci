@@ -462,9 +462,9 @@ class CredentialServiceImpl @Autowired constructor(
             projectId = buildBasicInfo.projectId,
             credentialId = credentialId
         ) ?: return null
-        val info = credentialInfo(publicKey, credentialRecord)
-        saveSensitiveValues(projectId, buildId, filterValues(info))
-        return info
+        val sensitiveValues = filterValues(credentialRecord)
+        saveSensitiveValues(projectId, buildId, sensitiveValues)
+        return credentialInfo(publicKey, credentialRecord)
     }
 
     override fun buildBatchGet(projectId: String, buildId: String, publicKey: String): List<CredentialInfo> {
@@ -476,8 +476,7 @@ class CredentialServiceImpl @Autowired constructor(
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
         val sensitiveValues = mutableSetOf<String>()
         val credentialList = credentialDao.batchGet(dslContext, buildBasicInfo.projectId).map { credentialRecord ->
-            val info = credentialInfo(publicKey, credentialRecord)
-            sensitiveValues.addAll(filterValues(info))
+            sensitiveValues.addAll(filterValues(credentialRecord))
             credentialInfo(publicKey, credentialRecord)
         }.toList()
         saveSensitiveValues(projectId, buildId, sensitiveValues)
@@ -738,12 +737,12 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
-    private fun filterValues(credentialInfo: CredentialInfo): MutableSet<String> {
+    private fun filterValues(credentialRecord: TCredentialRecord): MutableSet<String> {
         val sensitiveValues = mutableSetOf<String>()
-        credentialInfo.v1.let { if (it.isNotBlank()) sensitiveValues.add(it) }
-        credentialInfo.v2?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
-        credentialInfo.v3?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
-        credentialInfo.v4?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV1?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV2?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV3?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
+        credentialRecord.credentialV4?.let { if (it.isNotBlank()) sensitiveValues.add(it) }
         return sensitiveValues
     }
 
