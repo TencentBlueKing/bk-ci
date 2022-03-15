@@ -57,6 +57,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
@@ -69,6 +72,14 @@ class CredentialServiceImpl @Autowired constructor(
     private val client: Client,
     private val credentialDao: CredentialDao
 ) : CredentialService {
+
+    private val sensitiveValueExecutorService = ThreadPoolExecutor(
+        Runtime.getRuntime().availableProcessors(),
+        Runtime.getRuntime().availableProcessors(),
+        0L,
+        TimeUnit.MILLISECONDS,
+        ArrayBlockingQueue(16000)
+    )
 
     override fun serviceEdit(userId: String?, projectId: String, credentialId: String, credential: CredentialUpdate) {
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
@@ -727,11 +738,13 @@ class CredentialServiceImpl @Autowired constructor(
 
     private fun saveSensitiveValues(projectId: String, buildId: String, sensitiveValues: MutableSet<String>) {
         try {
-            client.get(ServiceBuildResource::class).saveSensitiveValues(
-                projectId = projectId,
-                buildId = buildId,
-                values = sensitiveValues
-            )
+            sensitiveValueExecutorService.execute {
+                client.get(ServiceBuildResource::class).saveSensitiveValues(
+                    projectId = projectId,
+                    buildId = buildId,
+                    values = sensitiveValues
+                )
+            }
         } catch (ignore: Throwable) {
             logger.warn("TICKET|saveSensitiveValues error|sensitiveValues=$sensitiveValues", ignore)
         }
