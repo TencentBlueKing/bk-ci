@@ -95,12 +95,15 @@ class RepoTriggerEventService @Autowired constructor(
             repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
             else -> return false
         }
-        val userId = client.getScm(ServiceGitResource::class).getUserInfoByToken(token = token).data?.username
+        val userId = client.getScm(ServiceGitResource::class)
+            .getUserInfoByToken(token = token, useAccessToken = false).data?.username
             ?: gitRequestEventForHandle.userId
         return client.getScm(ServiceGitCiResource::class)
             .checkUserGitAuth(
                 userId = userId,
                 gitProjectId = gitRequestEventForHandle.gitProjectId.toString(),
+                privateToken = token,
+                useAccessToken = false,
                 accessLevel = 40
             ).data ?: false
     }
