@@ -11,6 +11,7 @@ import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -21,6 +22,9 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
     private val streamGitTokenService: StreamGitTokenService
 
 ) : ServiceStreamTriggerResource {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceStreamTriggerResourceImpl::class.java)
+    }
 
     override fun triggerStartup(
         userId: String,
@@ -31,6 +35,8 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        logger.info("ServiceStreamTriggerResourceImpl|streamTriggerBuildReq|$streamTriggerBuildReq")
+
         val new = with(streamTriggerBuildReq) {
             com.tencent.devops.stream.pojo.TriggerBuildReq(
                 gitProjectId = gitProjectId,
