@@ -274,45 +274,27 @@
                     if (type === 'name') {
                         val = val.split(',')
                     }
-                    const nameArr = []
-                    this.selectedMap = {}
+                    const nameSet = new Set()
+                    let opts = this.optionList
                     if (this.hasGroup) {
-                        val.forEach(v => {
-                            for (let i = 0; i < this.optionList.length; i++) {
-                                const option = this.optionList[i]
-                                option.children.forEach(child => {
-                                    if (child[type] === v) {
-                                        if (!nameArr.includes(child.name)) {
-                                            nameArr.push(child.name)
-                                            this.$set(this.selectedMap, child.id, child.name)
-                                        }
-                                    } else if (this.isEnvVar(v)) {
-                                        if (!nameArr.includes(v)) {
-                                            nameArr.push(v)
-                                            this.$set(this.selectedMap, v, v)
-                                        }
-                                    }
-                                })
-                            }
-                        })
-                    } else {
-                        val.forEach(v => {
-                            this.optionList.forEach(option => {
-                                if (option[type] === v) {
-                                    if (!nameArr.includes(option.name)) {
-                                        nameArr.push(option.name)
-                                        this.$set(this.selectedMap, option.id, option.name)
-                                    }
-                                } else if (this.isEnvVar(v)) {
-                                    if (!nameArr.includes(v)) {
-                                        this.$set(this.selectedMap, v, v)
-                                        nameArr.push(v)
-                                    }
-                                }
-                            })
-                        })
+                        opts = this.optionList.reduce((cur, option) => {
+                            cur = [...cur, ...option.children]
+                            return cur
+                        }, [])
                     }
-                    this.displayName = nameArr.join(',')
+                    const typeMap = opts.reduce((cur, opt) => {
+                        cur[opt.id] = opt
+                        return cur
+                    }, [])
+                    val.forEach(v => {
+                        if (this.isEnvVar(v)) {
+                            nameSet.add(v)
+                            this.$set(this.selectedMap, v, v)
+                        } else if (typeMap.hasOwnProperty(v)) {
+                            const selectOpt = typeMap[v]
+                            this.$set(this.selectedMap, selectOpt.id, selectOpt.name)
+                        }
+                    })
                 }
             },
             getDisplayName (val) {
