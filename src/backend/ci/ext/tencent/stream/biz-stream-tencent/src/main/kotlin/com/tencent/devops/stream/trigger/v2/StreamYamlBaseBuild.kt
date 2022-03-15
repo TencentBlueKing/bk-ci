@@ -37,6 +37,7 @@ import com.tencent.devops.common.kafka.KafkaTopic.STREAM_BUILD_INFO_TOPIC
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -46,13 +47,12 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_NAME
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.pojo.StreamBuildLock
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isFork
@@ -61,23 +61,20 @@ import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.StreamBuildInfo
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.GitCheckService
-import com.tencent.devops.stream.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import com.tencent.devops.stream.v2.service.StreamWebsocketService
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class StreamYamlBaseBuild @Autowired constructor(
@@ -367,9 +364,11 @@ class StreamYamlBaseBuild @Autowired constructor(
                     }
                     gitCheckService.pushCommitCheck(
                         streamGitProjectInfo = streamGitProjectInfo,
-                        gitRequestEvent = gitRequestEvent,
+                        commitId = gitRequestEvent.commitId,
                         description = buildRunningDesc,
+                        mergeRequestId = gitRequestEvent.mergeRequestId,
                         buildId = buildId,
+                        userId = gitRequestEvent.userId,
                         status = GitCICommitCheckState.PENDING,
                         context = "${pipeline.filePath}@${gitRequestEvent.objectKind.toUpperCase()}",
                         targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(

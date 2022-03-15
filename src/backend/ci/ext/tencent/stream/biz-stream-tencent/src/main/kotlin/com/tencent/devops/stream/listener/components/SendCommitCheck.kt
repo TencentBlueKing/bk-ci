@@ -53,14 +53,15 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
+import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 @Suppress("NestedBlockDepth")
 @Component
@@ -114,6 +115,13 @@ class SendCommitCheck @Autowired constructor(
     ) {
         with(context) {
             gitCheckService.pushCommitCheck(
+                streamGitProjectInfo = StreamGitProjectCache(
+                    gitProjectName = streamSetting.gitProjectId.toString(),
+                    gitProjectId = streamSetting.gitProjectId,
+                    gitHttpUrl = streamSetting.gitHttpUrl,
+                    defaultBranch = null,
+                    name = streamSetting.name
+                ),
                 commitId = requestEvent.commitId,
                 description = getDescByBuildStatus(this),
                 // 由stage event红线评论发送
@@ -122,7 +130,6 @@ class SendCommitCheck @Autowired constructor(
                 userId = buildEvent.userId,
                 status = getGitCommitCheckState(),
                 context = "${pipeline.filePath}@${requestEvent.objectKind.toUpperCase()}",
-                gitCIBasicSetting = streamSetting,
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 targetUrl = getTargetUrl(context)

@@ -38,15 +38,13 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.trigger.v3.StreamTriggerPushService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
 class TriggerParameter @Autowired constructor(
-    private val gitRequestEventHandle: GitRequestEventHandle,
-    private val streamTriggerPushService: StreamTriggerPushService
+    private val gitRequestEventHandle: GitRequestEventHandle
 ) {
 
     private val logger = LoggerFactory.getLogger(TriggerParameter::class.java)
@@ -88,14 +86,6 @@ class TriggerParameter @Autowired constructor(
         }
         logger.info("event invalid: $event")
         return null
-    }
-
-    fun gitRequestTrigger(event: GitEvent, e: String) {
-        when (event) {
-            is GitPushEvent -> {
-                streamTriggerPushService.checkGitRequestEvent(event, e)
-            }
-        }
     }
 
     @SuppressWarnings("ReturnCount")

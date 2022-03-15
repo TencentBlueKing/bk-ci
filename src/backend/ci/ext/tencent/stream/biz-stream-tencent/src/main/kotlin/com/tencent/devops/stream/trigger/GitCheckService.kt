@@ -34,9 +34,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -45,9 +42,9 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.ExecuteSource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
+import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,9 +63,11 @@ class GitCheckService @Autowired constructor(
 
     fun pushCommitCheck(
         streamGitProjectInfo: StreamGitProjectCache,
-        gitRequestEvent: GitRequestEvent,
+        commitId: String,
         description: String,
+        mergeRequestId: Long?,
         buildId: String,
+        userId: String,
         status: GitCICommitCheckState,
         context: String,
         targetUrl: String,
@@ -76,7 +75,7 @@ class GitCheckService @Autowired constructor(
         block: Boolean,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     ) {
-        val gitProjectId = gitRequestEvent.gitProjectId
+        val gitProjectId = streamGitProjectInfo.gitProjectId
         pushCommitCheck(
             event = GitCommitCheckEvent(
                 projectId = GitCommonUtils.getCiProjectId(gitProjectId),
@@ -87,13 +86,13 @@ class GitCheckService @Autowired constructor(
                     repositoryName = null,
                     repositoryType = RepositoryType.ID
                 ),
-                commitId = gitRequestEvent.commitId,
+                commitId = commitId,
                 state = status.value,
                 block = block,
                 status = status.value,
-                mergeRequestId = gitRequestEvent.mergeRequestId,
+                mergeRequestId = mergeRequestId,
                 source = "",
-                userId = gitRequestEvent.userId
+                userId = userId
             ),
             streamGitProjectInfo = streamGitProjectInfo,
             context = context,
