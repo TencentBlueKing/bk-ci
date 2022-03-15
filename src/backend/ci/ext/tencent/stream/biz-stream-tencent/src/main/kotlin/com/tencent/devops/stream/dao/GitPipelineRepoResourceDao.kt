@@ -80,7 +80,7 @@ class GitPipelineRepoResourceDao {
         sourceGitProjectPathList: List<String>
     ): List<String> {
         with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
-            return dslContext.select(PIPELINE_ID)
+            return dslContext.select(PIPELINE_ID).from(this)
                 .where(SOURCE_GIT_PROJECT_PATH.`in`(sourceGitProjectPathList))
                 .fetch(PIPELINE_ID)
         }
