@@ -1376,7 +1376,6 @@ class RepositoryService @Autowired constructor(
                 }
             }
         }
-        logger.info("debug use | url is ${repo.getFormatURL()}")
         val checkResult = when (repo) {
             is CodeSvnRepository -> {
                 val svnCredential = CredentialUtils.getCredential(repo, list, result.data!!.credentialType)
@@ -1593,7 +1592,6 @@ class RepositoryService @Autowired constructor(
                         } else {
                             null
                         }
-                        logger.info("debug use | privateKey is $privateKey | $passPhrase | $token")
                         scmService.checkPrivateKeyAndToken(
                             projectName = repo.projectName,
                             url = repo.getFormatURL(),
