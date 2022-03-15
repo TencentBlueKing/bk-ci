@@ -37,17 +37,18 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("ComplexCondition")
 @Service
@@ -68,7 +69,7 @@ class GitCITriggerRepoService @Autowired constructor(
 
     // 通用不区分projectId，多流水线触发
     fun repoTriggerBuild(
-        triggerPipelineList: List<String>?,
+        triggerPipelineList: List<StreamRepoHookEvent>?,
         gitRequestEvent: GitRequestEvent,
         event: GitEvent
     ): Boolean? {
@@ -82,7 +83,7 @@ class GitCITriggerRepoService @Autowired constructor(
         gitPipelineResourceDao.getPipelinesInIds(
             dslContext = dslContext,
             gitProjectId = null,
-            pipelineIds = triggerPipelineList
+            pipelineIds = triggerPipelineList.map { it.pipelineId }
         ).map {
             GitProjectPipeline(
                 gitProjectId = it.gitProjectId,

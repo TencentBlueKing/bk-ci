@@ -28,6 +28,7 @@
 package com.tencent.devops.common.ci.v2.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
@@ -564,63 +565,66 @@ object ScriptYmlUtils {
         )
     }
 
-    fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?): TriggerOn? {
+    fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?, name: String?): TriggerOn? {
         if (preTriggerOn?.repoHook == null) {
             logger.info("流水线已不存在远程触发配置，不做处理，返回null进行相关检查")
             return null
         }
 
-        val repositoryHook = try {
+        val repositoryHookList = try {
             YamlUtil.getObjectMapper().readValue(
                 JsonUtil.toJson(preTriggerOn.repoHook),
-                PreRepositoryHook::class.java
+                object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
             logger.error("Format triggerOn repoHook failed.", e)
             return null
         }
+        repositoryHookList.find { it.name == name }?.let { repositoryHook ->
+            if (repositoryHook.events == null) {
+                return TriggerOn(
+                    push = PushRule(
+                        branches = listOf("*")
+                    ),
+                    tag = TagRule(
+                        tags = listOf("*")
+                    ),
+                    // TODO: 暂时使用工蜂的事件，等后续修改为Stream事件
+                    mr = MrRule(
+                        targetBranches = listOf("*"),
+                        action = listOf(
+                            TGitMergeActionKind.OPEN.value,
+                            TGitMergeActionKind.REOPEN.value,
+                            TGitMergeExtensionActionKind.PUSH_UPDATE.value
+                        )
+                    ),
+                    repoHook = repoHookRule(repositoryHook)
+                )
+            }
+            val repoPreTriggerOn = try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(repositoryHook.events),
+                    PreTriggerOn::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn repoHook events failed.", e)
+                return null
+            }
 
-        if (repositoryHook.events == null) {
             return TriggerOn(
-                push = PushRule(
-                    branches = listOf("*")
-                ),
-                tag = TagRule(
-                    tags = listOf("*")
-                ),
-                // TODO: 暂时使用工蜂的事件，等后续修改为Stream事件
-                mr = MrRule(
-                    targetBranches = listOf("*"),
-                    action = listOf(
-                        TGitMergeActionKind.OPEN.value,
-                        TGitMergeActionKind.REOPEN.value,
-                        TGitMergeExtensionActionKind.PUSH_UPDATE.value
-                    )
-                ),
+                push = pushRule(repoPreTriggerOn),
+                tag = tagRule(repoPreTriggerOn),
+                mr = mrRule(repoPreTriggerOn),
+                schedules = schedulesRule(repoPreTriggerOn),
+                delete = deleteRule(repoPreTriggerOn),
+                issue = issueRule(repoPreTriggerOn),
+                review = reviewRule(repoPreTriggerOn),
+                note = noteRule(repoPreTriggerOn),
                 repoHook = repoHookRule(repositoryHook)
             )
         }
-        val repoPreTriggerOn = try {
-            YamlUtil.getObjectMapper().readValue(
-                JsonUtil.toJson(repositoryHook.events),
-                PreTriggerOn::class.java
-            )
-        } catch (e: MismatchedInputException) {
-            logger.error("Format triggerOn repoHook events failed.", e)
-            return null
-        }
-
-        return TriggerOn(
-            push = pushRule(repoPreTriggerOn),
-            tag = tagRule(repoPreTriggerOn),
-            mr = mrRule(repoPreTriggerOn),
-            schedules = schedulesRule(repoPreTriggerOn),
-            delete = deleteRule(repoPreTriggerOn),
-            issue = issueRule(repoPreTriggerOn),
-            review = reviewRule(repoPreTriggerOn),
-            note = noteRule(repoPreTriggerOn),
-            repoHook = repoHookRule(repositoryHook)
-        )
+        logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
+        return null
     }
 
 

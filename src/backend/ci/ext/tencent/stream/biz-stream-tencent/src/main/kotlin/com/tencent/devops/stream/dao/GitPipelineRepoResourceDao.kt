@@ -28,8 +28,11 @@
 package com.tencent.devops.stream.dao
 
 import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
+import com.tencent.devops.model.stream.tables.records.TGitPipelineRepoResourceRecord
+import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Record3
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -37,9 +40,7 @@ class GitPipelineRepoResourceDao {
 
     fun create(
         dslContext: DSLContext,
-        sourceGitProjectPath: String,
-        targetGitProjectId: Long,
-        pipelineId: String
+        streamRepoHookEvent: StreamRepoHookEvent
     ): Int {
         with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
             return dslContext.insertInto(
@@ -49,9 +50,9 @@ class GitPipelineRepoResourceDao {
                 PIPELINE_ID,
                 CREATE_TIME
             ).values(
-                sourceGitProjectPath,
-                targetGitProjectId,
-                pipelineId,
+                streamRepoHookEvent.sourceGitProjectPath,
+                streamRepoHookEvent.targetGitProjectId,
+                streamRepoHookEvent.pipelineId,
                 LocalDateTime.now()
             ).execute()
         }
@@ -72,17 +73,23 @@ class GitPipelineRepoResourceDao {
         }
     }
 
+    fun get(dslContext: DSLContext, pipelineId: String): TGitPipelineRepoResourceRecord? {
+        return with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
+            dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId)).fetchAny()
+        }
+    }
+
     /*
     * 需要将sourceGitProjectPath分解成所有能匹配上的字段
     */
     fun getPipelineBySourcePath(
         dslContext: DSLContext,
         sourceGitProjectPathList: List<String>
-    ): List<String> {
+    ): List<Record3<String, String, Long>> {
         with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
-            return dslContext.select(PIPELINE_ID).from(this)
+            return dslContext.select(PIPELINE_ID, SOURCE_GIT_PROJECT_PATH, TARGET_GIT_PROJECT_ID).from(this)
                 .where(SOURCE_GIT_PROJECT_PATH.`in`(sourceGitProjectPathList))
-                .fetch(PIPELINE_ID)
+                .fetch()
         }
     }
 

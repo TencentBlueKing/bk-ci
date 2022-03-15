@@ -35,37 +35,37 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
+import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.stream.common.exception.CommitCheck
-import com.tencent.devops.stream.common.exception.TriggerBaseException
-import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
-import com.tencent.devops.stream.common.exception.YamlBlankException
-import com.tencent.devops.stream.common.exception.Yamls
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
-import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
-import com.tencent.devops.stream.trigger.YamlTriggerInterface
-import com.tencent.devops.stream.v2.service.StreamScmService
-import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
-import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.common.exception.CommitCheck
+import com.tencent.devops.stream.common.exception.TriggerBaseException
+import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
 import com.tencent.devops.stream.common.exception.YamlBehindException
+import com.tencent.devops.stream.common.exception.YamlBlankException
+import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.config.StreamStorageBean
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isFork
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.template.TemplateProjectData
-import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.trigger.template.YamlTemplateService
+import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -109,7 +109,7 @@ class StreamYamlTrigger @Autowired constructor(
             useAccessToken = true
         )
 
-        val (isTrigger, isTiming, startParams, isDelete) = triggerMatcher.isMatch(
+        val (isTrigger, isTiming, startParams, isDelete, repoHookName) = triggerMatcher.isMatch(
             context = context,
             defaultBranch = gitProjectInfo.defaultBranch
         )
@@ -161,7 +161,7 @@ class StreamYamlTrigger @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         gitBasicSettingService.updateProjectInfo(gitRequestEventForHandle.userId, gitProjectInfo)
 
-        if (isTiming || isDelete) {
+        if (isTiming || isDelete || !repoHookName.isNullOrEmpty()) {
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register timer: $isTiming delete: $isDelete" +
@@ -179,6 +179,7 @@ class StreamYamlTrigger @Autowired constructor(
                 // 没有触发只有定时任务的需要保存一下蓝盾流水线
                 isTimeTrigger = isTiming,
                 isDeleteTrigger = isDelete,
+                repoHookName = repoHookName,
                 // 没有触发只有特殊任务的需要保存一下蓝盾流水线
                 onlySavePipeline = !isTrigger,
                 gitProjectInfo = gitProjectInfo,

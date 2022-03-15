@@ -27,6 +27,11 @@
 
 package com.tencent.devops.stream.trigger.v2
 
+import com.devops.process.yaml.modelCreate.ModelCreate
+import com.devops.process.yaml.modelCreate.inner.GitData
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.devops.process.yaml.modelCreate.inner.PipelineInfo
+import com.devops.process.yaml.modelCreate.inner.StreamData
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -36,50 +41,45 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.YamlTransferData
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.GitCITriggerLock
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
 import com.tencent.devops.stream.service.GitCIPipelineService
-import com.devops.process.yaml.modelCreate.ModelCreate
-import com.devops.process.yaml.modelCreate.inner.GitData
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.modelCreate.inner.PipelineInfo
-import com.devops.process.yaml.modelCreate.inner.StreamData
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.stream.trigger.parsers.modelCreate.InnerModelCreatorImpl
-import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.trigger.StreamTriggerCache
+import com.tencent.devops.stream.trigger.parsers.modelCreate.InnerModelCreatorImpl
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.utils.GitCIPipelineUtils
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.DeleteEventService
+import com.tencent.devops.stream.v2.service.RepoTriggerEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
-import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -103,7 +103,8 @@ class StreamYamlBuild @Autowired constructor(
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val streamGitTokenService: StreamGitTokenService,
-    private val streamScmService: StreamScmService
+    private val streamScmService: StreamScmService,
+    private val repoTriggerEventService: RepoTriggerEventService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -135,6 +136,7 @@ class StreamYamlBuild @Autowired constructor(
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
         isDeleteTrigger: Boolean = false,
+        repoHookName: String? = null,
         gitProjectInfo: GitCIProjectInfo? = null,
         changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf(),
@@ -181,7 +183,8 @@ class StreamYamlBuild @Autowired constructor(
                 yaml = yaml,
                 gitProjectInfo = gitProjectInfo,
                 originYaml = originYaml,
-                isDeleteTrigger = isDeleteTrigger
+                isDeleteTrigger = isDeleteTrigger,
+                repoHookName = repoHookName
             )
 
             return if (gitBuildId != null) {
@@ -257,7 +260,8 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitProjectInfo: GitCIProjectInfo?,
         originYaml: String,
-        isDeleteTrigger: Boolean
+        isDeleteTrigger: Boolean,
+        repoHookName: String?
     ) {
         // 如果是定时触发需要注册事件
         if (isTimeTrigger) {
@@ -279,7 +283,7 @@ class StreamYamlBuild @Autowired constructor(
                 )
             )
         }
-        // TODO 需要考虑远程仓库触发是否兼容
+
         if (isDeleteTrigger && deleteEventService.getDeleteEvent(realPipeline.pipelineId) == null) {
             deleteEventService.saveDeleteEvent(
                 StreamDeleteEvent(
@@ -289,6 +293,17 @@ class StreamYamlBuild @Autowired constructor(
                     eventId = gitRequestEventForHandle.id!!,
                     originYaml = originYaml
                 )
+            )
+        }
+        // 储存远程仓库触发的特殊事件
+        if (!repoHookName.isNullOrEmpty() && repoTriggerEventService.getTargetProjectIdByPipeline(realPipeline.pipelineId) == null) {
+            repoTriggerEventService.saveRepoTriggerEvent(
+                StreamRepoHookEvent(
+                    targetGitProjectId = gitRequestEventForHandle.gitProjectId,
+                    sourceGitProjectPath = repoHookName,
+                    pipelineId = realPipeline.pipelineId
+                )
+
             )
         }
     }
@@ -327,8 +342,10 @@ class StreamYamlBuild @Autowired constructor(
         params: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData
     ): BuildId? {
-        logger.info("Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}," +
-            " event: ${gitRequestEventForHandle.id}")
+        logger.info(
+            "Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}," +
+                    " event: ${gitRequestEventForHandle.id}"
+        )
 
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
             pipeline = pipeline,

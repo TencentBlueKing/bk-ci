@@ -25,44 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.stream.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
-
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class TriggerOn(
-    val push: PushRule?,
-    val tag: TagRule?,
-    val mr: MrRule?,
-    val schedules: SchedulesRule? = null,
-    val delete: DeleteRule? = null,
-    val issue: IssueRule? = null,
-    val review: ReviewRule? = null,
-    val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
-    @JsonProperty("repo_hook")
-    val repoHook: RepositoryHook? = null
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTriggerOn(
-    val push: Any?,
-    val tag: Any?,
-    val mr: Any?,
-    val schedules: SchedulesRule?,
-    val delete: DeleteRule?,
-    val issue: IssueRule? = null,
-    val review: ReviewRule? = null,
-    val note: NoteRule? = null,
-    @ApiModelProperty(name = "repo_hook")
-    @JsonProperty("repo_hook")
-    val repoHook: List<Any>? = null
+data class StreamRepoHookEvent(
+    val pipelineId: String,
+    val sourceGitProjectPath: String,
+    val targetGitProjectId: Long?
 )

@@ -34,6 +34,7 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.stream.dao.GitPipelineRepoResourceDao
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -51,21 +52,21 @@ class RepoTriggerEventService @Autowired constructor(
     }
 
     fun saveRepoTriggerEvent(
-        sourceGitProjectPath: String,
-        targetGitProjectId: Long,
-        pipelineId: String
+        streamRepoHookEvent: StreamRepoHookEvent
     ) {
         gitPipelineRepoResourceDao.create(
             dslContext = dslContext,
-            sourceGitProjectPath = sourceGitProjectPath,
-            targetGitProjectId = targetGitProjectId,
-            pipelineId = pipelineId
+            streamRepoHookEvent = streamRepoHookEvent
         )
+    }
+
+    fun getTargetProjectIdByPipeline(pipelineId: String): Long? {
+        return gitPipelineRepoResourceDao.get(dslContext = dslContext, pipelineId = pipelineId)?.targetGitProjectId
     }
 
     fun getTargetPipelines(
         sourceGitProjectPath: String?
-    ): List<String> {
+    ): List<StreamRepoHookEvent> {
         if (sourceGitProjectPath.isNullOrEmpty()) {
             return emptyList()
         }
@@ -80,7 +81,13 @@ class RepoTriggerEventService @Autowired constructor(
         return gitPipelineRepoResourceDao.getPipelineBySourcePath(
             dslContext = dslContext,
             sourceGitProjectPathList = sourceGitProjectPathList
-        )
+        ).map {
+            StreamRepoHookEvent(
+                pipelineId = it.value1(),
+                sourceGitProjectPath = it.value2(),
+                targetGitProjectId = it.value3()
+            )
+        }
     }
 
     fun checkRepoTriggerCredentials(

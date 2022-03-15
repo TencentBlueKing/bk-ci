@@ -90,7 +90,11 @@ class TriggerMatcher @Autowired constructor(
         }
 
         return if (context.gitRequestEventForHandle.checkRepoTrigger) {
-            val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(newYaml.triggerOn)
+            val repoTriggerPipelineList = context.gitRequestEventForHandle.gitRequestEvent.repoTriggerPipelineList
+            val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
+                newYaml.triggerOn,
+                repoTriggerPipelineList?.find { it.pipelineId == context.pipeline.pipelineId }?.sourceGitProjectPath
+            )
             if (repoTriggerOn == null) {
                 repoTriggerEventService.deleteRepoTriggerEvent(context.pipeline.pipelineId)
                 return TriggerResult(
@@ -102,14 +106,23 @@ class TriggerMatcher @Autowired constructor(
             }
             triggerResult(context, repoTriggerOn, defaultBranch)
         } else {
-            checkRepoHook(context.gitRequestEventForHandle.gitProjectId, context.pipeline.pipelineId, newYaml.triggerOn)
-            triggerResult(context, ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn), defaultBranch)
+            triggerResult(context, ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn), defaultBranch).let {
+                return TriggerResult(
+                    trigger = it.trigger,
+                    timeTrigger = it.timeTrigger,
+                    startParams = it.startParams,
+                    deleteTrigger = it.deleteTrigger,
+                    repoHookName = checkRepoHook(
+                        newYaml.triggerOn
+                    )
+                )
+            }
         }
     }
 
-    private fun checkRepoHook(gitProjectId: Long, pipelineId: String, preTriggerOn: PreTriggerOn?) {
+    private fun checkRepoHook(preTriggerOn: PreTriggerOn?): String? {
         if (preTriggerOn?.repoHook == null) {
-            return
+            return null
         }
         val repositoryHook = try {
             YamlUtil.getObjectMapper().readValue(
@@ -118,18 +131,16 @@ class TriggerMatcher @Autowired constructor(
             )
         } catch (e: MismatchedInputException) {
             logger.error("Format triggerOn repoHook failed.", e)
-            return
+            return null
         }
+
         // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
         repositoryHook.name?.let { name ->
             if (name.contains("/") && !name.startsWith("/")) {
-                repoTriggerEventService.saveRepoTriggerEvent(
-                    targetGitProjectId = gitProjectId,
-                    sourceGitProjectPath = name,
-                    pipelineId = pipelineId
-                )
+                return name
             }
         }
+        return null
     }
 
     private fun triggerResult(
@@ -228,7 +239,12 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        return TriggerResult(isTrigger, isTime, startParams, isDelete)
+        return TriggerResult(
+            trigger = isTrigger,
+            timeTrigger = isTime,
+            startParams = startParams,
+            deleteTrigger = isDelete
+        )
     }
 
     private fun deleteEventMatch(
