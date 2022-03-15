@@ -29,6 +29,7 @@ import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -88,9 +89,8 @@ class TriggerMatcher @Autowired constructor(
                 }
             }
         }
-
+        val repoTriggerPipelineList = context.gitRequestEventForHandle.gitRequestEvent.repoTriggerPipelineList
         return if (context.gitRequestEventForHandle.checkRepoTrigger) {
-            val repoTriggerPipelineList = context.gitRequestEventForHandle.gitRequestEvent.repoTriggerPipelineList
             val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
                 newYaml.triggerOn,
                 repoTriggerPipelineList?.find { it.pipelineId == context.pipeline.pipelineId }?.sourceGitProjectPath
@@ -113,32 +113,39 @@ class TriggerMatcher @Autowired constructor(
                     startParams = it.startParams,
                     deleteTrigger = it.deleteTrigger,
                     repoHookName = checkRepoHook(
-                        newYaml.triggerOn
+                        preTriggerOn = newYaml.triggerOn,
+                        repoTriggerPipelineList = repoTriggerPipelineList,
+                        pipelineId = context.pipeline.pipelineId
                     )
                 )
             }
         }
     }
 
-    private fun checkRepoHook(preTriggerOn: PreTriggerOn?): String? {
+    private fun checkRepoHook(
+        preTriggerOn: PreTriggerOn?,
+        repoTriggerPipelineList: List<StreamRepoHookEvent>?,
+        pipelineId: String
+    ): String? {
         if (preTriggerOn?.repoHook == null) {
             return null
         }
-        val repositoryHook = try {
+        val repositoryHookList = try {
             YamlUtil.getObjectMapper().readValue(
                 JsonUtil.toJson(preTriggerOn.repoHook!!),
-                PreRepositoryHook::class.java
+                object : TypeReference<List<PreRepositoryHook>>() {}
             )
         } catch (e: MismatchedInputException) {
             logger.error("Format triggerOn repoHook failed.", e)
             return null
         }
-
-        // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
-        repositoryHook.name?.let { name ->
+        val sourceGitProjectPath = repoTriggerPipelineList?.find { it.pipelineId == pipelineId }?.sourceGitProjectPath
+        repositoryHookList.find { it.name == sourceGitProjectPath }?.name?.let { name ->
+            // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
             if (name.contains("/") && !name.startsWith("/")) {
                 return name
             }
+
         }
         return null
     }
