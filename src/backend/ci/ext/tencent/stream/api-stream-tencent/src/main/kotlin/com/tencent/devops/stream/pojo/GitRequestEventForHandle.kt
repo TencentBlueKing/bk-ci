@@ -25,31 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.mq.streamTrigger
+package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.stream.pojo.GitRequestEventForHandle
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import org.slf4j.MDC
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
-data class StreamTriggerEvent(
-    // TODO 为了保证消息生产消费兼容，下次发布再去掉event的token字段
-    val gitToken: GitToken,
-    val forkGitToken: GitToken?,
-    val gitRequestEventForHandle: GitRequestEventForHandle,
-    val gitProjectPipeline: GitProjectPipeline,
-    val event: GitEvent,
-    val originYaml: String?,
-    val filePath: String,
-    val gitCIBasicSetting: GitCIBasicSetting,
-    val changeSet: Set<String>? = null,
-    val forkGitProjectId: Long? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
+@ApiModel("工蜂触发请求-封装给流水线执行库处理使用")
+data class GitRequestEventForHandle(
+    @ApiModelProperty("Git Request Event ID")
+    val id: Long?,
+    @ApiModelProperty("流水线所在工蜂项目ID")
+    val gitProjectId: Long,
+    @ApiModelProperty("流水线所在分支名")
+    val branch: String,
+    @ApiModelProperty("触发用户")
+    val userId: String,
+    @ApiModelProperty("是否为远程仓库触发")
+    val checkRepoTrigger: Boolean = false,
+    @ApiModelProperty("工蜂触发的请求内容")
+    val gitRequestEvent: GitRequestEvent
 )

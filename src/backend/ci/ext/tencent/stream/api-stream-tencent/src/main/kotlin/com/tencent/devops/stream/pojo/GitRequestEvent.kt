@@ -79,7 +79,11 @@ data class GitRequestEvent(
     var mrTitle: String?,
     // TODO: 后续修改统一参数时可以将GitEvent统一放在这里维护
     @ApiModelProperty("Git事件对象")
-    var gitEvent: GitEvent?
+    var gitEvent: GitEvent?,
+    @ApiModelProperty("去掉头部url的homepage")
+    var gitProjectName: String?,
+    @ApiModelProperty("远程仓库触发时得到的主库流水线列表")
+    var repoTriggerPipelineList: List<String>? = null
 ) {
     companion object {
         // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。

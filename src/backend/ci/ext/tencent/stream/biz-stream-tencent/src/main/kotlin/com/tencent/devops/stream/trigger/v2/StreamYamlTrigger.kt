@@ -45,7 +45,6 @@ import com.tencent.devops.stream.common.exception.TriggerException.Companion.tri
 import com.tencent.devops.stream.common.exception.YamlBlankException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
@@ -65,6 +64,7 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.template.TemplateProjectData
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -101,11 +101,11 @@ class StreamYamlTrigger @Autowired constructor(
         val start = LocalDateTime.now().timestampmilli()
 
         // TODO: 暂时先全部展开，后续函数全替换为上下文参数即可去掉
-        val (event, gitRequestEvent, _, gitProjectPipeline, originYaml, mrChangeSet) = context
+        val (event, gitRequestEventForHandle, _, gitProjectPipeline, originYaml, mrChangeSet) = context
 
         val gitProjectInfo = streamScmService.getProjectInfoRetry(
-            token = streamGitTokenService.getToken(gitRequestEvent.gitProjectId),
-            gitProjectId = gitRequestEvent.gitProjectId.toString(),
+            token = streamGitTokenService.getToken(gitRequestEventForHandle.gitProjectId),
+            gitProjectId = gitRequestEventForHandle.gitProjectId.toString(),
             useAccessToken = true
         )
 
@@ -119,11 +119,11 @@ class StreamYamlTrigger @Autowired constructor(
         if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "${gitProjectPipeline.pipelineId}|" +
-                        "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}"
+                    "Matcher is false, return, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                    "eventId: ${gitRequestEventForHandle.id}"
             )
             triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 event = event,
                 pipeline = gitProjectPipeline,
                 reason = TriggerReason.TRIGGER_NOT_MATCH,
@@ -133,15 +133,14 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         val yamlReplaceResult = prepareCIBuildYaml(
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = gitProjectPipeline.filePath,
             pipelineId = gitProjectPipeline.pipelineId,
             pipelineName = gitProjectPipeline.displayName,
             event = event,
-            changeSet = mrChangeSet,
-            forkGitProjectId = gitRequestEvent.getForkGitProjectId()
+            changeSet = mrChangeSet
         ) ?: return false
         val yamlObject = yamlReplaceResult.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
@@ -150,7 +149,9 @@ class StreamYamlTrigger @Autowired constructor(
 
         // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
         if (gitProjectPipeline.pipelineId.isBlank() ||
-            (!changeSet.isNullOrEmpty() && changeSet.contains(gitProjectPipeline.filePath))
+            (!changeSet.isNullOrEmpty() &&
+                changeSet.contains(gitProjectPipeline.filePath) &&
+                !gitRequestEventForHandle.checkRepoTrigger)
         ) {
             gitProjectPipeline.displayName = yamlObject.name?.ifBlank {
                 gitProjectPipeline.filePath
@@ -158,17 +159,17 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
-        gitBasicSettingService.updateProjectInfo(gitRequestEvent.userId, gitProjectInfo)
+        gitBasicSettingService.updateProjectInfo(gitRequestEventForHandle.userId, gitProjectInfo)
 
         if (isTiming || isDelete) {
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register timer: $isTiming delete: $isDelete" +
-                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                    "gitProjectId: ${gitRequestEventForHandle.gitProjectId}, eventId: ${gitRequestEventForHandle.id}"
             )
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
-                event = gitRequestEvent,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 yaml = yamlObject,
                 parsedYaml = parsedYaml,
                 originYaml = originYaml,
@@ -190,30 +191,30 @@ class StreamYamlTrigger @Autowired constructor(
         if (isTrigger) {
             // 正常匹配仓库操作触发
             logger.info(
-                "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                "Matcher is true, display the event, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                    "eventId: ${gitRequestEventForHandle.id}, dispatched pipeline: $gitProjectPipeline"
             )
             // TODO：后续将这个先存储再修改的操作全部重构，打平过度设计的抽象BaseBuild类，将构建分为准备段和构建段
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
+                eventId = gitRequestEventForHandle.id!!,
                 originYaml = originYaml,
                 parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
-                gitProjectId = gitRequestEvent.gitProjectId,
-                branch = gitRequestEvent.branch,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
+                branch = gitRequestEventForHandle.branch,
                 objectKind = if (context.gitEvent.isDeleteEvent()) {
                     TGitObjectKind.OBJECT_KIND_DELETE
-                } else gitRequestEvent.objectKind,
-                commitMsg = gitRequestEvent.commitMsg,
-                triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                } else gitRequestEventForHandle.gitRequestEvent.objectKind,
+                commitMsg = gitRequestEventForHandle.gitRequestEvent.commitMsg,
+                triggerUser = gitRequestEventForHandle.userId,
+                sourceGitProjectId = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING,
                 version = ymlVersion
             )
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
-                event = gitRequestEvent,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 yaml = yamlObject,
                 parsedYaml = parsedYaml,
                 originYaml = originYaml,
@@ -231,15 +232,14 @@ class StreamYamlTrigger @Autowired constructor(
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
         pipelineId: String?,
         pipelineName: String?,
         event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
+        changeSet: Set<String>?
     ): YamlReplaceResult? {
         if (originYaml.isNullOrBlank()) {
             return null
@@ -247,17 +247,16 @@ class StreamYamlTrigger @Autowired constructor(
         logger.info("input yamlStr: $originYaml")
         val preTemplateYamlObject = YamlFormat.formatYaml(
             originYaml = originYaml,
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             filePath = filePath,
             isMr = isMr
         )
         return replaceYamlTemplate(
-            isFork = gitRequestEvent.isFork(),
+            isFork = gitRequestEventForHandle.gitRequestEvent.isFork(),
             isMr = isMr,
-            forkGitProjectId = forkGitProjectId,
             preTemplateYamlObject = preTemplateYamlObject,
             filePath = filePath.ifBlank { STREAM_TEMPLATE_ROOT_FILE },
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             originYaml = originYaml,
             event = event,
             changeSet = changeSet
@@ -280,11 +279,10 @@ class StreamYamlTrigger @Autowired constructor(
         isMr: Boolean,
         preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         originYaml: String?,
         event: GitEvent?,
-        changeSet: Set<String>?,
-        forkGitProjectId: Long?
+        changeSet: Set<String>?
     ): YamlReplaceResult {
         // 替换yaml文件中的模板引用
         try {
@@ -292,15 +290,17 @@ class StreamYamlTrigger @Autowired constructor(
                 yamlObject = preTemplateYamlObject,
                 filePath = filePath,
                 extraParameters = TemplateProjectData(
-                    gitRequestEventId = gitRequestEvent.id!!,
-                    triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
-                    triggerUserId = gitRequestEvent.userId,
-                    sourceProjectId = gitRequestEvent.gitProjectId,
-                    triggerRef = gitRequestEvent.branch,
-                    triggerToken = tokenService.getToken(gitRequestEvent.gitProjectId),
-                    forkGitToken = if (forkGitProjectId != null) {
-                        tokenService.getToken(forkGitProjectId)
-                    } else null,
+                    gitRequestEventId = gitRequestEventForHandle.id!!,
+                    triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEventForHandle),
+                    triggerUserId = gitRequestEventForHandle.userId,
+                    sourceProjectId = gitRequestEventForHandle.gitProjectId,
+                    triggerRef = gitRequestEventForHandle.branch,
+                    triggerToken = tokenService.getToken(gitRequestEventForHandle.gitProjectId),
+                    forkGitToken = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId?.let {
+                        if (isFork) {
+                            tokenService.getToken(it)
+                        } else null
+                    },
                     changeSet = changeSet,
                     event = event
                 ),
@@ -313,7 +313,7 @@ class StreamYamlTrigger @Autowired constructor(
                 preYaml = preYamlObject, normalYaml = normalYaml, yamlTransferData = transferData
             )
         } catch (e: Throwable) {
-            logger.info("event ${gitRequestEvent.id} yaml template replace error", e)
+            logger.info("event ${gitRequestEventForHandle.id} yaml template replace error", e)
             val (block, message, reason) = when (e) {
                 is YamlBlankException -> {
                     Triple(isMr, "${e.repo} ${e.filePath} is null", TriggerReason.CI_YAML_CONTENT_NULL)
@@ -332,12 +332,12 @@ class StreamYamlTrigger @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("event: ${gitRequestEvent.id} unknow error: ${e.message}")
+                    logger.error("event: ${gitRequestEventForHandle.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
             triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 filePath = filePath,
                 reason = reason,
                 reasonParams = listOf(message ?: ""),

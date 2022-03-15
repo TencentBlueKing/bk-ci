@@ -57,8 +57,22 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         return Result(gitService.getToken(gitProjectId))
     }
 
-    override fun checkUserGitAuth(userId: String, gitProjectId: String): Result<Boolean> {
-        return Result(gitService.checkUserGitAuth(userId, gitProjectId))
+    override fun checkUserGitAuth(
+        userId: String,
+        gitProjectId: String,
+        accessLevel: Int,
+        privateToken: String?,
+        useAccessToken: Boolean
+    ): Result<Boolean> {
+        return Result(
+            gitService.checkUserGitAuth(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                accessLevel = accessLevel,
+                privateToken = privateToken,
+                useAccessToken = useAccessToken
+            )
+        )
     }
 
     override fun clearToken(token: String): Result<Boolean> {
@@ -103,13 +117,15 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         ref: String,
         useAccessToken: Boolean
     ): Result<String> {
-        return Result(gitCiService.getGitCIFileContent(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            token = token,
-            ref = ref,
-            useAccessToken = useAccessToken
-        ))
+        return Result(
+            gitCiService.getGitCIFileContent(
+                gitProjectId = gitProjectId,
+                filePath = filePath,
+                token = token,
+                ref = ref,
+                useAccessToken = useAccessToken
+            )
+        )
     }
 
     override fun getProjectInfo(
@@ -221,12 +237,14 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeGroup>> {
-        return Result(gitCiService.getProjectGroupList(
-            accessToken = accessToken,
-            page = page,
-            pageSize = pageSize,
-            owned = owned,
-            minAccessLevel = minAccessLevel
-        ))
+        return Result(
+            gitCiService.getProjectGroupList(
+                accessToken = accessToken,
+                page = page,
+                pageSize = pageSize,
+                owned = owned,
+                minAccessLevel = minAccessLevel
+            )
+        )
     }
 }

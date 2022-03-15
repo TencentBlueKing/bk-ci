@@ -74,7 +74,9 @@ class StreamTriggerCache @Autowired constructor(
         val cacheData = StreamGitProjectCache(
             gitProjectName = gitProjectId,
             gitProjectId = gitProjectInfo.gitProjectId,
-            defaultBranch = gitProjectInfo.defaultBranch
+            defaultBranch = gitProjectInfo.defaultBranch,
+            gitHttpUrl = gitProjectInfo.gitHttpUrl,
+            name = gitProjectInfo.name
         )
         saveRequestGitProjectInfo(
             gitRequestEventId = gitRequestEventId,

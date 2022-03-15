@@ -29,6 +29,8 @@ package com.tencent.devops.stream.trigger.pojo
 
 data class StreamGitProjectCache(
     val gitProjectName: String?,
-    val gitProjectId: Long?,
-    val defaultBranch: String?
+    val gitProjectId: Long,
+    val defaultBranch: String?,
+    val gitHttpUrl: String,
+    val name: String
 )

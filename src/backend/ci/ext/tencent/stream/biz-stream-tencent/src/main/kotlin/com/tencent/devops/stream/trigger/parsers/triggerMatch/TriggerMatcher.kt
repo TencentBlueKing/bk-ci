@@ -2,17 +2,23 @@ package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.DeleteRule
+import com.tencent.devops.common.ci.v2.PreRepositoryHook
+import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.check
 import com.tencent.devops.common.ci.v2.getTypesObjectKind
+import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -24,17 +30,16 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isMr
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
-import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
+import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
+import com.tencent.devops.stream.v2.service.RepoTriggerEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +48,7 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
+    private val repoTriggerEventService: RepoTriggerEventService,
     private val streamScmService: StreamScmService,
     private val streamTimerService: StreamTimerService,
     private val streamDeleteEventService: DeleteEventService
@@ -65,14 +71,14 @@ class TriggerMatcher @Autowired constructor(
             when (e) {
                 is JsonProcessingException, is TypeCastException -> {
                     TriggerException.triggerError(
-                        request = context.requestEvent,
+                        request = context.gitRequestEventForHandle,
                         event = context.gitEvent,
                         pipeline = context.pipeline,
                         reason = TriggerReason.CI_YAML_INVALID,
                         reasonParams = listOf(e.message ?: ""),
                         yamls = Yamls(context.originYaml, null, null),
                         commitCheck = CommitCheck(
-                            block = context.requestEvent.isMr(),
+                            block = context.gitRequestEventForHandle.gitRequestEvent.isMr(),
                             state = GitCICommitCheckState.FAILURE
                         )
                     )
@@ -83,21 +89,67 @@ class TriggerMatcher @Autowired constructor(
             }
         }
 
-        return if (context.gitEvent.isDeleteEvent()) {
-            deleteEventMatch(
-                context = context,
-                triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-                objectKind = context.requestEvent.objectKind
-            )
+        return if (context.gitRequestEventForHandle.checkRepoTrigger) {
+            val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(newYaml.triggerOn)
+            if (repoTriggerOn == null) {
+                repoTriggerEventService.deleteRepoTriggerEvent(context.pipeline.pipelineId)
+                return TriggerResult(
+                    trigger = false,
+                    timeTrigger = false,
+                    startParams = emptyMap(),
+                    deleteTrigger = false
+                )
+            }
+            triggerResult(context, repoTriggerOn, defaultBranch)
         } else {
-            match(
-                context = context,
-                defaultBranch = defaultBranch,
-                triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-                changeSet = getChangeSet(context),
-                pipelineFilePath = context.pipeline.filePath
-            )
+            checkRepoHook(context.gitRequestEventForHandle.gitProjectId, context.pipeline.pipelineId, newYaml.triggerOn)
+            triggerResult(context, ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn), defaultBranch)
         }
+    }
+
+    private fun checkRepoHook(gitProjectId: Long, pipelineId: String, preTriggerOn: PreTriggerOn?) {
+        if (preTriggerOn?.repoHook == null) {
+            return
+        }
+        val repositoryHook = try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(preTriggerOn.repoHook!!),
+                PreRepositoryHook::class.java
+            )
+        } catch (e: MismatchedInputException) {
+            logger.error("Format triggerOn repoHook failed.", e)
+            return
+        }
+        // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
+        repositoryHook.name?.let { name ->
+            if (name.contains("/") && !name.startsWith("/")) {
+                repoTriggerEventService.saveRepoTriggerEvent(
+                    targetGitProjectId = gitProjectId,
+                    sourceGitProjectPath = name,
+                    pipelineId = pipelineId
+                )
+            }
+        }
+    }
+
+    private fun triggerResult(
+        context: StreamTriggerContext,
+        triggerOn: TriggerOn,
+        defaultBranch: String?
+    ) = if (context.gitEvent.isDeleteEvent()) {
+        deleteEventMatch(
+            context = context,
+            triggerOn = triggerOn,
+            objectKind = context.gitRequestEventForHandle.gitRequestEvent.objectKind
+        )
+    } else {
+        match(
+            context = context,
+            defaultBranch = defaultBranch,
+            triggerOn = triggerOn,
+            changeSet = getChangeSet(context),
+            pipelineFilePath = context.pipeline.filePath
+        )
     }
 
     fun match(
@@ -109,11 +161,24 @@ class TriggerMatcher @Autowired constructor(
     ): TriggerResult {
         val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
 
-        val gitRequestEvent = context.requestEvent
+        val gitRequestEvent = context.gitRequestEventForHandle.gitRequestEvent
+
+        if (!repoTriggerEventService.checkRepoTriggerCredentials(
+                gitRequestEventForHandle = context.gitRequestEventForHandle,
+                repoHook = triggerOn.repoHook
+            )
+        ) {
+            return TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+        }
 
         // 判断是否是默认分支上的push，来判断是否注册定时任务
         val isTime = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
-            isSchedulesMatch(triggerOn, targetBranch, gitRequestEvent, context.pipeline)
+            isSchedulesMatch(
+                triggerOn = triggerOn,
+                eventBranch = targetBranch,
+                gitRequestEvent = gitRequestEvent,
+                pipeline = context.pipeline
+            )
         } else {
             false
         }
@@ -121,7 +186,7 @@ class TriggerMatcher @Autowired constructor(
         val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
             // 只有更改了delete相关流水线才做更新
             PathMatchUtils.isIncludePathMatch(listOf(pipelineFilePath), changeSet) &&
-                isDeleteMatch(triggerOn.delete, context.requestEvent, context.pipeline)
+                    isDeleteMatch(triggerOn.delete, gitRequestEvent, context.pipeline)
         } else {
             false
         }
@@ -166,12 +231,11 @@ class TriggerMatcher @Autowired constructor(
         return TriggerResult(isTrigger, isTime, startParams, isDelete)
     }
 
-    fun deleteEventMatch(
+    private fun deleteEventMatch(
         context: StreamTriggerContext,
         triggerOn: TriggerOn,
         objectKind: String
     ): TriggerResult {
-
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
                 trigger = false,

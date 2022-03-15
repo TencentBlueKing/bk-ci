@@ -209,8 +209,16 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getToken(gitProjectId.toString()))
     }
 
-    override fun getUserInfoByToken(token: String): Result<GitUserInfo> {
-        return Result(gitService.getUserInfoByToken(token))
+    override fun getUserInfoByToken(
+        token: String,
+        useAccessToken: Boolean
+    ): Result<GitUserInfo> {
+        return Result(
+            gitService.getUserInfoByToken(
+                token = token,
+                useAccessToken = useAccessToken
+            )
+        )
     }
 
     override fun getGitCIFileContent(
@@ -257,11 +265,13 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String,
         gitCICreateFile: GitCICreateFile
     ): Result<Boolean> {
-        return Result(gitService.gitCodeCreateFile(
-            gitProjectId = gitProjectId,
-            token = token,
-            gitCICreateFile = gitCICreateFile
-        ))
+        return Result(
+            gitService.gitCodeCreateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitCICreateFile = gitCICreateFile
+            )
+        )
     }
 
     override fun getCommitRefs(

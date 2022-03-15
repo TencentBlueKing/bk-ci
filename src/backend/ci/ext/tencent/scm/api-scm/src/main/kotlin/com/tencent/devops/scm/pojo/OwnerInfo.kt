@@ -45,5 +45,6 @@ data class OwnerInfo(
     val avatarUrl: String,
     @JsonProperty("access_level")
     @ApiModelProperty(name = "access_level")
+/*GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50*/
     val accessLevel: Int?
 )

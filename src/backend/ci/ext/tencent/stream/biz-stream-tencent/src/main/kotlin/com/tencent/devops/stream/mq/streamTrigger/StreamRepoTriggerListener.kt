@@ -28,27 +28,40 @@
 package com.tencent.devops.stream.mq.streamTrigger
 
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.common.exception.CommitCheck
-import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
-import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
-import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
-import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
+import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.trigger.GitCITriggerRepoService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
+import org.springframework.amqp.core.ExchangeTypes
+import org.springframework.amqp.rabbit.annotation.Exchange
+import org.springframework.amqp.rabbit.annotation.Queue
+import org.springframework.amqp.rabbit.annotation.QueueBinding
+import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class StreamTriggerListener @Autowired constructor(
-    private val triggerExceptionService: TriggerExceptionService,
-    private val streamYamlTrigger: StreamYamlTrigger
+class StreamRepoTriggerListener @Autowired constructor(
+    private val gitCITriggerRepoService: GitCITriggerRepoService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamTriggerListener::class.java)
+        private val logger = LoggerFactory.getLogger(StreamRepoTriggerListener::class.java)
     }
 
-    fun listenStreamTriggerEvent(event: StreamTriggerEvent) {
+    @RabbitListener(
+        bindings = [(QueueBinding(
+            key = [MQ.ROUTE_STREAM_TRIGGER_REPO_PIPELINE_EVENT],
+            value = Queue(value = MQ.QUEUE_STREAM_TRIGGER_REPO_PIPELINE_EVENT, durable = "true"),
+            exchange = Exchange(
+                value = MQ.EXCHANGE_STREAM_TRIGGER_REPO_PIPELINE_EVENT,
+                durable = "true",
+                delayed = "true",
+                type = ExchangeTypes.DIRECT
+            )
+        ))]
+    )
+    fun listenStreamRepoTriggerEvent(event: StreamRepoTriggerEvent) {
         try {
             val traceId = MDC.get(TraceTag.BIZID)
             if (traceId.isNullOrEmpty()) {
@@ -59,44 +72,22 @@ class StreamTriggerListener @Autowired constructor(
                 }
             }
             run(event)
+        } catch (ignore: Throwable) {
+            logger.error("Fail to start repo trigger (${event.gitRequestEvent.gitProjectName})", ignore)
         } finally {
             MDC.remove(TraceTag.BIZID)
         }
     }
 
-    private fun run(event: StreamTriggerEvent) {
+    private fun run(event: StreamRepoTriggerEvent) {
         val startTime = System.currentTimeMillis()
-        // 针对每个流水线处理异常
-        triggerExceptionService.handle(
-            requestEvent = event.gitRequestEventForHandle,
-            gitEvent = event.event,
-            basicSetting = event.gitCIBasicSetting
-        ) {
-            // ErrorCode都是系统错误，在最外面统一处理,都要发送无锁的commitCheck
-            triggerExceptionService.handleErrorCode(
-                request = event.gitRequestEventForHandle,
-                event = event.event,
-                pipeline = event.gitProjectPipeline,
-                action = {
-                    streamYamlTrigger.triggerBuild(
-                        StreamTriggerContext(
-                            gitEvent = event.event,
-                            gitRequestEventForHandle = event.gitRequestEventForHandle,
-                            streamSetting = event.gitCIBasicSetting,
-                            pipeline = event.gitProjectPipeline,
-                            originYaml = event.originYaml!!,
-                            mrChangeSet = event.changeSet
-                        )
-                    )
-                },
-                commitCheck = CommitCheck(
-                    block = false,
-                    state = GitCICommitCheckState.FAILURE
-                )
-            )
-        }
+        gitCITriggerRepoService.repoTriggerBuild(
+            triggerPipelineList = event.gitRequestEvent.repoTriggerPipelineList,
+            gitRequestEvent = event.gitRequestEvent,
+            event = event.event
+        )
         logger.info(
-            "stream pipeline: ${event.gitProjectPipeline.pipelineId} " +
+            "stream pipeline repo trigger (${event.gitRequestEvent.gitProjectName}) " +
                 "from trigger to build time：${System.currentTimeMillis() - startTime}"
         )
     }

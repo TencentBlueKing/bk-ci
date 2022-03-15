@@ -216,7 +216,11 @@ class GitCIDetailService @Autowired constructor(
         )
 
         // 校验工蜂项目权限
-        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, gitProjectId.toString())
+        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(
+            userId = gitUserId,
+            gitProjectId = gitProjectId.toString(),
+            accessLevel = 30
+        )
         if (!checkAuth.data!!) {
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
         }

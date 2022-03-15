@@ -25,31 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.mq.streamTrigger
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.stream.constant.MQ
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.stream.pojo.GitRequestEventForHandle
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import org.slf4j.MDC
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-@Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
-data class StreamTriggerEvent(
-    // TODO 为了保证消息生产消费兼容，下次发布再去掉event的token字段
-    val gitToken: GitToken,
-    val forkGitToken: GitToken?,
-    val gitRequestEventForHandle: GitRequestEventForHandle,
-    val gitProjectPipeline: GitProjectPipeline,
-    val event: GitEvent,
-    val originYaml: String?,
-    val filePath: String,
-    val gitCIBasicSetting: GitCIBasicSetting,
-    val changeSet: Set<String>? = null,
-    val forkGitProjectId: Long? = null,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreRepositoryHook(
+    val name: String? = null,
+
+    val credentials: Any? = null,
+
+    val events: RepositoryHookEvents? = null
+)
+
+data class RepositoryHook(
+    val name: String? = null,
+
+    val credentialsForTicketId: String? = null,
+
+    val credentialsForUserName: String? = null,
+
+    val credentialsForPassword: String? = null,
+
+    val credentialsForToken: String? = null
+
+)
+
+data class RepositoryHookEvents(
+    val push: Any? = null,
+    val tag: Any? = null,
+    val mr: Any? = null,
+    val schedules: SchedulesRule? = null,
+    val delete: DeleteRule? = null,
+    val issue: IssueRule? = null,
+    val review: ReviewRule? = null,
+    val note: NoteRule? = null
 )
