@@ -97,7 +97,6 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     }
 
     override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
-        logger.info("ServiceGitBasicSettingResourceImpl|userId|$userId|projectId|$projectId")
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(streamBasicSettingService.getGitCIConf(gitProjectId))
