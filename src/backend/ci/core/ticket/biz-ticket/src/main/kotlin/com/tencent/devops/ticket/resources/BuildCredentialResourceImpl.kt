@@ -104,13 +104,20 @@ class BuildCredentialResourceImpl @Autowired constructor(
         vmSeqId: String,
         vmName: String,
         taskId: String?,
+        oldTaskId: String?,
         credentialId: String
     ): Result<Map<String, String>> {
         checkParams(buildId, vmSeqId, vmName)
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
+        // 这里兼容下旧版本sdk的header
+        return Result(credentialService.buildGetDetail(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId ?: oldTaskId,
+            credentialId = credentialId
+        ))
     }
 
     private fun checkParams(buildId: String, vmSeqId: String, vmName: String) {
