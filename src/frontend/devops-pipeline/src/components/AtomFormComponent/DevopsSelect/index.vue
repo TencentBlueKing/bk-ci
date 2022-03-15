@@ -274,7 +274,7 @@
                     if (type === 'name') {
                         val = val.split(',')
                     }
-                    const nameSet = new Set()
+                    const valSet = new Set(val)
                     let opts = this.optionList
                     if (this.hasGroup) {
                         opts = this.optionList.reduce((cur, option) => {
@@ -286,9 +286,8 @@
                         cur[opt.id] = opt
                         return cur
                     }, [])
-                    val.forEach(v => {
+                    valSet.forEach(v => {
                         if (this.isEnvVar(v)) {
-                            nameSet.add(v)
                             this.$set(this.selectedMap, v, v)
                         } else if (typeMap.hasOwnProperty(v)) {
                             const selectOpt = typeMap[v]
