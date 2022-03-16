@@ -210,6 +210,7 @@ class TriggerSvnService(
         if (value != null) {
             val time = JsonUtil.to(value, Long::class.java)
             // 如果 redis 中的时间比间隔小, 说明是别的节点执行不久, 终止本次执行
+            logger.info("get redis time $value and toLong $time")
             logger.info(
                 "[last svn polling timestamp is: $time|" +
                         "now is: $currentTimeMillis|${currentTimeMillis - time}]"
@@ -220,7 +221,7 @@ class TriggerSvnService(
                 return false
             }
         }
-        // 将本次执行时间存入 redis
+        logger.info("set redis ${JsonUtil.toJson(currentTimeMillis)} and ${currentTimeMillis}")
         redisOperation.set(getRedisKey, JsonUtil.toJson(currentTimeMillis))
         return true
     }
