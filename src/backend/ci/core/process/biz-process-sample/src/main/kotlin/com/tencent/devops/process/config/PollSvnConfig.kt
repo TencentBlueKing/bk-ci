@@ -33,9 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.SchedulingConfigurer
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.scheduling.config.ScheduledTaskRegistrar
-import java.util.Calendar
-import java.util.Date
+import java.util.*
 
 @Configuration
 class PollSvnConfig : SchedulingConfigurer {
@@ -50,6 +50,10 @@ class PollSvnConfig : SchedulingConfigurer {
     private var interval: Long = 60
 
     override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar) {
+        val taskScheduler = ThreadPoolTaskScheduler()
+        taskScheduler.poolSize = POOL_SIZE
+        taskScheduler.initialize()
+        taskRegistrar.setTaskScheduler(taskScheduler)
         taskRegistrar.addTriggerTask(
             {
                 if (interval > 0)
@@ -77,16 +81,13 @@ class PollSvnConfig : SchedulingConfigurer {
 
     private fun checkoutInterval(): Long {
         if (interval < MIN_POLL_INTERVAL) return MIN_POLL_INTERVAL
-        else if (interval > MAX_POLL_INTERVAL) return MAX_POLL_INTERVAL
         return interval
     }
 
-
     companion object {
         val MIN_POLL_INTERVAL = 60L
-        val MAX_POLL_INTERVAL = 300L
+        val POOL_SIZE = 10
     }
-
 
     private val logger = LoggerFactory.getLogger(PollSvnConfig::class.qualifiedName)
 }
