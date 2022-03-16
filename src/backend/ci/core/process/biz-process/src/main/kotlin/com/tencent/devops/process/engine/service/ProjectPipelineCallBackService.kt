@@ -33,20 +33,24 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
+import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.CreateCallBackResult
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
+import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.HttpUrl
 import okhttp3.MediaType
@@ -69,7 +73,9 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val projectPipelineCallbackDao: ProjectPipelineCallbackDao,
     private val projectPipelineCallbackHistoryDao: ProjectPipelineCallbackHistoryDao,
     private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
-    private val client: Client
+    private val client: Client,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     companion object {
@@ -359,6 +365,52 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 )
             )
         }
+    }
+
+    fun bindPipelineCallBack(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        callbackInfo: PipelineCallbackEvent
+    ) {
+        // 验证用户是否可以编辑流水线
+        pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
+        if (!validUrl(projectId, callbackInfo.callbackUrl)) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
+        }
+        val callBackUrl = projectPipelineCallBackUrlGenerator.generateCallBackUrl(
+            region = callbackInfo.region,
+            url = callbackInfo.callbackUrl
+        )
+        callbackInfo.callbackUrl = callBackUrl
+        val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: return
+        val newEventMap = mutableMapOf<String, PipelineCallbackEvent>()
+
+        if (model.events?.isEmpty() == true) {
+            newEventMap[callbackInfo.callbackName] = callbackInfo
+        } else {
+            newEventMap.putAll(model.events!!)
+            // 若key存在会覆盖原来的value,否则就是追加新key
+            newEventMap[callbackInfo.callbackName] = callbackInfo
+        }
+        model.events = newEventMap
+        val newModel = mutableListOf<PipelineModelVersion>()
+        newModel.add(
+            PipelineModelVersion(
+            pipelineId = pipelineId,
+            projectId = projectId,
+            model = JsonUtil.toJson(model, formatted = false),
+            creator = model.pipelineCreator ?: userId
+        ))
+        pipelineRepositoryService.batchUpdatePipelineModel(
+            userId = userId,
+            pipelineModelVersionList = newModel
+        )
     }
 
     private fun checkParam(

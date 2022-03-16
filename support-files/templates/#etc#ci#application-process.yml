@@ -45,6 +45,8 @@ pipeline:
     common:
       maxModelSize: 16777215
       maxStageNum: 20
+      maxPipelineNameSize: 255
+      maxPipelineDescSize: 255
       stage:
         maxJobNum: 20
         job:

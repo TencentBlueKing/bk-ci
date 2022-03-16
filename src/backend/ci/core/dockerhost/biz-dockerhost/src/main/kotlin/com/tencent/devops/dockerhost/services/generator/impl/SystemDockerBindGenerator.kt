@@ -36,21 +36,13 @@ import com.tencent.devops.dockerhost.services.generator.DockerBindGenerator
 import com.tencent.devops.dockerhost.services.generator.annotation.BindGenerator
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
 
 @BindGenerator(description = "默认Docker Bind生成器")
 @Component
 class SystemDockerBindGenerator @Autowired constructor(private val dockerHostConfig: DockerHostConfig) :
     DockerBindGenerator {
-
-    private val whiteList = mutableSetOf<String>()
-
-    private val whiteListLocker = ReentrantLock()
-
     override fun generateBinds(handlerContext: ContainerHandlerContext): List<Bind> {
         with(handlerContext) {
-
             val binds = mutableListOf(
                 Bind(getMavenRepoPath(), Volume(dockerHostConfig.volumeMavenRepo)),
                 Bind(getNpmPrefixPath(), Volume(dockerHostConfig.volumeNpmPrefix)),
@@ -71,7 +63,7 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
                 binds.add(Bind(getWorkspace(), Volume(dockerHostConfig.volumeWorkspace)))
             }
 
-            if (enableProjectShare(projectId)) {
+            if (enableProjectShare(specialProjectList, projectId)) {
                 binds.add(Bind(getProjectShareDir(projectId), Volume(dockerHostConfig.volumeProjectShare)))
             }
 
@@ -127,25 +119,22 @@ class SystemDockerBindGenerator @Autowired constructor(private val dockerHostCon
         return "${dockerHostConfig.hostPathProjectShare}/$projectCode/"
     }
 
-    private fun enableProjectShare(projectCode: String): Boolean {
+    private fun enableProjectShare(
+        specialProjectList: String?,
+        projectId: String
+    ): Boolean {
+        if (!specialProjectList.isNullOrBlank()) {
+            return specialProjectList.split(",").map { it.trim() }.contains(projectId)
+        }
 
         if (dockerHostConfig.shareProjectCodeWhiteList.isNullOrBlank()) {
-            return false
+            return dockerHostConfig.shareProjectCodeWhiteList!!
+                .split(",")
+                .map { it.trim() }
+                .contains(projectId)
         }
 
-        if (whiteList.isEmpty()) {
-            try {
-                whiteListLocker.tryLock(TimeUnit.SECONDS.toNanos(1), TimeUnit.NANOSECONDS)
-                if (whiteList.isEmpty()) {
-                    whiteList.addAll(dockerHostConfig.shareProjectCodeWhiteList!!.split(",").map { it.trim() })
-                }
-            } catch (ignored: InterruptedException) {
-            } finally {
-                whiteListLocker.unlock()
-            }
-        }
-
-        return whiteList.contains(projectCode)
+        return false
     }
 
     private fun getTailPath(vmSeqId: Int, poolNo: Int): String {

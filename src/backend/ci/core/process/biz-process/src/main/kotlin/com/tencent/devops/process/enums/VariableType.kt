@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.enums
 
-enum class VariableType(val hasPrefix: Boolean = false) {
+enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "") {
     // 预定义常量列表
     BK_CI_PIPELINE_ID,
     BK_CI_START_TYPE,
@@ -35,9 +35,9 @@ enum class VariableType(val hasPrefix: Boolean = false) {
     BK_CI_PIPELINE_NAME,
     BK_CI_BUILD_ID,
     BK_CI_BUILD_NUM,
-    BK_CI_BUILD_JOB_ID,
+    BK_CI_BUILD_JOB_ID(alisName = "job.id"),
     BK_CI_BUILD_MSG,
-    BK_CI_BUILD_TASK_ID,
+    BK_CI_BUILD_TASK_ID(alisName = "step.id"),
     BK_CI_BUILD_REMARK,
     BK_CI_BUILD_FAIL_TASKS,
     BK_CI_BUILD_FAIL_TASKNAMES,
@@ -57,10 +57,10 @@ enum class VariableType(val hasPrefix: Boolean = false) {
     BK_CI_START_PIPELINE_USER_ID,
     BK_CI_START_WEBHOOK_USER_ID,
     BK_CI_RETRY_COUNT,
-    BK_CI_ATOM_VERSION,
-    BK_CI_ATOM_CODE,
-    BK_CI_TASK_NAME,
-    BK_CI_ATOM_NAME,
+    BK_CI_ATOM_VERSION(alisName = "step.atom_version"),
+    BK_CI_ATOM_CODE(alisName = "step.atom_code"),
+    BK_CI_TASK_NAME(alisName = "step.name"),
+    BK_CI_ATOM_NAME(alisName = "step.atom_name"),
 
     // GIT事件触发公共变量
     BK_CI_REPO_WEBHOOK_REPO_TYPE,
@@ -77,7 +77,7 @@ enum class VariableType(val hasPrefix: Boolean = false) {
     BK_CI_REPO_GIT_WEBHOOK_EXCLUDE_USERS,
     BK_CI_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH,
     BK_CI_GIT_WEBHOOK_FINAL_INCLUDE_PATH,
-    BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_(true), // 尾部可以通配n
+    BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_(hasPrefix = true), // 尾部可以通配n
     BK_CI_HOOK_MESSAGE,
 
     // GIT Commit Push Hook事件触发
@@ -85,9 +85,9 @@ enum class VariableType(val hasPrefix: Boolean = false) {
     BK_CI_REPO_GIT_WEBHOOK_BRANCH,
     BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT,
     BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT,
-    BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_(true), // 尾部可以通配n1和n2
-    BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_(true), // 尾部可以通配n1和n2
-    BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_(true), // 尾部可以通配n1和n2
+    BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_(hasPrefix = true), // 尾部可以通配n1和n2
+    BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_(hasPrefix = true), // 尾部可以通配n1和n2
+    BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_(hasPrefix = true), // 尾部可以通配n1和n2
     BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT,
     BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT,
     BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT,
