@@ -39,7 +39,6 @@ import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -106,7 +105,10 @@ interface ServicePipelineResource {
         pipeline: Model,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否修改最后修改人", required = false)
+        @QueryParam("updateLastModifyUser")
+        updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
@@ -223,7 +225,7 @@ interface ServicePipelineResource {
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
-    ): Result<List<PipelineWithModel>>
+    ): Result<List<Pipeline>>
 
     @ApiOperation("保存流水线设置")
     @PUT
@@ -409,7 +411,10 @@ interface ServicePipelineResource {
     @Path("/buildIds/getBuildNo")
     fun getBuildNoByBuildIds(
         @ApiParam("构建id", required = true)
-        buildIds: Set<String>
+        buildIds: Set<String>,
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null
     ): Result<Map<String/*buildId*/, String/*buildNo*/>>
 
     @ApiOperation("流水线重命名")

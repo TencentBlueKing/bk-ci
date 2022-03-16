@@ -422,7 +422,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val cancelFlag = atomRecord.atomStatus == AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val props = JsonUtil.toJson(propsMap)
+            val props = JsonUtil.toJson(propsMap, formatted = false)
             if (releaseType == ReleaseTypeEnum.NEW ||
                 (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE)) {
                 // 首次创建版本或者取消发布后不变更版本号重新上架，则在该版本的记录上做更新操作
@@ -472,12 +472,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 更新红线标识
             val qualityFlag = getAtomQualityResult.errorCode == "0"
             marketAtomFeatureDao.updateAtomFeature(
-                context,
-                userId,
-                AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
+                dslContext = context,
+                userId = userId,
+                atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
             )
 
-            asyncHandleUpdateAtom(context, atomId, userId)
+            asyncHandleUpdateAtom(context = context, atomId = atomId, userId = userId, branch = branch)
         }
         return Result(atomId)
     }
@@ -497,7 +497,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     abstract fun asyncHandleUpdateAtom(
         context: DSLContext,
         atomId: String,
-        userId: String
+        userId: String,
+        branch: String? = null
     )
 
     private fun updateMarketAtom(

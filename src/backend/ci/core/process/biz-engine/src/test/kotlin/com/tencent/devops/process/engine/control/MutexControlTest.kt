@@ -38,7 +38,7 @@ import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 class MutexControlTest {
 
     private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mock())
@@ -74,6 +74,7 @@ class MutexControlTest {
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
+        pipelineUrlBean = mock(),
         pipelineContainerService = mock()
     )
 
@@ -97,9 +98,7 @@ class MutexControlTest {
             mutexGroup = mutexGroup,
             variables = variables
         )
-        Assert.assertEquals(ContainerMutexStatus.READY,
-            mutexControl.checkContainerMutex(mutexGroup = initMutexGroup, container = container)
-        )
+        Assert.assertEquals(ContainerMutexStatus.READY, mutexControl.acquireMutex(initMutexGroup, container))
     }
 
     @Ignore

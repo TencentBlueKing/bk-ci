@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 data class CompleteTask(
+    val projectId: String,
     val buildId: String,
     val taskId: String,
     val userId: String,

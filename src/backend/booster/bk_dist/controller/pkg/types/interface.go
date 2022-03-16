@@ -93,6 +93,9 @@ type RemoteMgr interface {
 
 	// send files to remote worker
 	SendFiles(req *RemoteTaskSendFileRequest) ([]string, error)
+
+	// get total remote worker slots
+	TotalSlots() int
 }
 
 // LocalMgr describe a manager for handling all actions with local execution for work
@@ -107,10 +110,15 @@ type LocalMgr interface {
 	UnlockSlots(usage dcSDK.JobUsage, weight int32)
 
 	// do task execution
-	ExecuteTask(req *LocalTaskExecuteRequest, globalWork *Work) (*LocalTaskExecuteResult, error)
+	ExecuteTask(req *LocalTaskExecuteRequest,
+		globalWork *Work,
+		withlocalresource bool) (*LocalTaskExecuteResult, error)
 
 	// get caches in pump mode
 	GetPumpCache() (*analyser.FileCache, *analyser.RootCache)
+
+	// get local slots info
+	Slots() (int, int)
 }
 
 // ResourceMgr describe a manager for handling all actions with resource and server for work

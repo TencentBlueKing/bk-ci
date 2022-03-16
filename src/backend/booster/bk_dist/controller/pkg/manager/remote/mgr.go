@@ -160,6 +160,10 @@ func (m *Mgr) Init() {
 
 // ExecuteTask run the task in remote worker and ensure the dependent files
 func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTaskExecuteResult, error) {
+	if m.TotalSlots() <= 0 {
+		return nil, types.ErrNoAvailableWorkFound
+	}
+
 	if req.Sandbox == nil {
 		req.Sandbox = &dcSyscall.Sandbox{}
 	}
@@ -359,6 +363,9 @@ func (m *Mgr) ensureFiles(
 		r = append(r, f.Targetrelativepath)
 
 		for _, s := range fd.Servers {
+			if s == nil {
+				continue
+			}
 			count++
 			go func(err chan<- error, host *dcProtocol.Host, req *dcSDK.BKDistFileSender) {
 				t := time.Now().Local()
@@ -871,6 +878,10 @@ func (m *Mgr) lockSlots(usage dcSDK.JobUsage) *dcProtocol.Host {
 
 func (m *Mgr) unlockSlots(usage dcSDK.JobUsage, host *dcProtocol.Host) {
 	m.resource.Unlock(usage, host)
+}
+
+func (m *Mgr) TotalSlots() int {
+	return m.resource.TotalSlots()
 }
 
 func (m *Mgr) getRemoteFileBaseDir() string {

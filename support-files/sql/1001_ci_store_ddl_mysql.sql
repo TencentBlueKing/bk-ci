@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `T_ATOM` (
   UNIQUE KEY `uni_inx_tpca_code_version` (`ATOM_CODE`,`VERSION`),
   KEY `inx_tpca_service_code` (`SERVICE_SCOPE`(255)),
   KEY `inx_tpca_os` (`OS`),
-  KEY `inx_tpca_atom_code` (`ATOM_CODE`),
+  KEY `inx_tpca_code_version_time` (`ATOM_CODE`,`VERSION`,`CREATE_TIME`),
   KEY `inx_tpca_categroy` (`CATEGROY`),
   KEY `inx_tpca_atom_status` (`ATOM_STATUS`),
   KEY `inx_tpca_latest_flag` (`LATEST_FLAG`),

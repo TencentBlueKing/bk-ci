@@ -88,11 +88,12 @@ class DockerHostDebugService @Autowired constructor(
         dockerIp: String,
         userId: String,
         poolNo: Int,
-        debugStartParam: DebugStartParam
-    ) {
+        debugStartParam: DebugStartParam,
+        startupMessage: String
+    ): String {
         with(debugStartParam) {
             val stopWatch = StopWatch()
-            var imageRepoInfo: ImageRepoInfo? = null
+            /*var imageRepoInfo: ImageRepoInfo? = null
             var finalCredentialId = credentialId
             var credentialProject = projectId
 
@@ -132,7 +133,7 @@ class DockerHostDebugService @Autowired constructor(
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 containerPool = containerPool
-            )
+            )*/
 
             stopWatch.start("get buildEnvs")
             val buildEnvStr = if (null != buildEnv && buildEnv!!.isNotEmpty()) {
@@ -158,6 +159,7 @@ class DockerHostDebugService @Autowired constructor(
             }
             stopWatch.stop()
 
+            val containerPool: Pool = objectMapper.readValue(startupMessage)
             LOG.info("$pipelineId|$vmSeqId| start debug. Container ready to start, buildEnvStr: $buildEnvStr. stopWatch: $stopWatch")
 
             // 根据dockerIp定向调用dockerhost
@@ -167,14 +169,14 @@ class DockerHostDebugService @Autowired constructor(
                 vmSeqId = vmSeqId,
                 poolNo = poolNo,
                 status = PipelineTaskStatus.RUNNING.status,
-                imageName = dockerImage,
+                imageName = containerPool.container!!,
                 containerId = "",
                 address = "",
                 token = cmd ?: "/bin/sh",
                 buildEnv = buildEnvStr,
-                registryUser = userName,
-                registryPwd = password,
-                imageType = newImageType
+                registryUser = containerPool.credential!!.user,
+                registryPwd = containerPool.credential!!.password,
+                imageType = containerPool.imageType
             )
 
             val request = dockerHostProxyService.getDockerHostProxyRequest(
@@ -199,16 +201,16 @@ class DockerHostDebugService @Autowired constructor(
                             poolNo = poolNo,
                             status = PipelineTaskStatus.RUNNING,
                             token = "",
-                            imageName = dockerImage.trim(),
+                            imageName = containerPool.container!!,
                             hostTag = dockerIp,
                             containerId = containerId,
                             buildEnv = buildEnvStr,
-                            registryUser = userName,
-                            registryPwd = password,
-                            imageType = newImageType,
-                            imagePublicFlag = imageRepoInfo?.publicFlag,
-                            imageRDType = imageRepoInfo?.rdType
+                            registryUser = containerPool.credential!!.user,
+                            registryPwd = containerPool.credential!!.password,
+                            imageType = containerPool.imageType
                         )
+
+                        return containerId
                     }
                     response["status"] == 1 -> {
                         // 母机负载过高
@@ -311,6 +313,33 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
+    fun getWsUrl(
+        projectId: String,
+        pipelineId: String,
+        dockerIp: String,
+        containerId: String
+    ): String {
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/api/docker/debug/getWsUrl?" +
+                    "projectId=$projectId&pipelineId=$pipelineId&containerId=$containerId",
+            dockerHostIp = dockerIp
+        ).get().build()
+
+        OkhttpUtils.doHttp(request).use { resp ->
+            val responseBody = resp.body()!!.string()
+            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
+            if (response["status"] == 0) {
+                return response["data"] as String
+            } else {
+                val msg = response["message"] as String
+                LOG.warn("[$projectId|$pipelineId]getWsUrl|$dockerIp|$containerId|failed: $msg")
+                throw DockerServiceException(errorType = ErrorCodeEnum.GET_VM_STATUS_FAIL.errorType,
+                    errorCode = ErrorCodeEnum.GET_VM_STATUS_FAIL.errorCode,
+                    errorMsg = "Get websocketUrl $dockerIp $containerId failed, msg: $msg")
+            }
+        }
+    }
+
     fun getDebugStatus(pipelineId: String, vmSeqId: String): Result<ContainerInfo> {
         val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
         if (null == debugTask) {
@@ -365,6 +394,16 @@ class DockerHostDebugService @Autowired constructor(
                 imageType = debugTask.imageType
             )
         )
+    }
+
+    fun getDebugHistory(pipelineId: String, vmSeqId: String): Pair<String, String>? {
+        val debugTask = pipelineDockerDebugDao.getDebug(dslContext, pipelineId, vmSeqId)
+        if (debugTask != null) {
+            LOG.warn("$pipelineId $vmSeqId debug history: ${debugTask.containerId}")
+            return Pair(debugTask.hostTag, debugTask.containerId)
+        }
+
+        return null
     }
 
     private fun getDebugDockerImage(

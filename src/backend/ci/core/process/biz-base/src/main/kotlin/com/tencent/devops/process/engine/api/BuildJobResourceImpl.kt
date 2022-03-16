@@ -48,6 +48,7 @@ class BuildJobResourceImpl @Autowired constructor(
 ) : BuildJobResource {
 
     override fun jobStarted(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -55,6 +56,7 @@ class BuildJobResourceImpl @Autowired constructor(
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName, retryCount)
         return Result(vMBuildService.buildVMStarted(
+            projectId = projectId,
             buildId = buildId,
             vmSeqId = vmSeqId,
             vmName = vmName,
@@ -62,25 +64,46 @@ class BuildJobResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
+    override fun claimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vMBuildService.buildClaimTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     override fun completeTask(
+        projectId: String,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         result: BuildTaskResult
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        vMBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
+        vMBuildService.buildCompleteTask(
+            projectId = projectId,
+            buildId = buildId,
+            vmSeqId = vmSeqId,
+            vmName = vmName,
+            result = result
+        )
         return Result(true)
     }
 
-    override fun jobEnd(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobEnd(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(
+            vMBuildService.buildEndTask(
+                projectId = projectId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                vmName = vmName
+            )
+        )
     }
 
     override fun jobTimeout(
@@ -119,7 +142,8 @@ class BuildJobResourceImpl @Autowired constructor(
         projectId: String,
         buildId: String,
         vmSeqId: String,
-        vmName: String
+        vmName: String,
+        executeCount: Int?
     ): Result<HeartBeatInfo> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(

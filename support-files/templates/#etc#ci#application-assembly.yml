@@ -36,6 +36,14 @@ spring:
       url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
       username: __BK_CI_MYSQL_USER__
       password: __BK_CI_MYSQL_PASSWORD__
+    misc:
+      pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
+    # 数据源配置（勿随便变更配置项的顺序）
+    dataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 server:
   port: __BK_CI_ASSEMBLY_API_PORT__
@@ -429,4 +437,15 @@ leaf:
     url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
-  name: leaf    
+  name: leaf
+
+sharding:
+  databaseShardingStrategy:
+    algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
+    shardingField: PROJECT_ID
+  projectStrategy:
+    tableConfig: "T_AUDIT_RESOURCE,T_BUILD_STARTUP_PARAM,T_METADATA,T_PIPELINE_BUILD_CONTAINER,T_PIPELINE_BUILD_DETAIL,T_PIPELINE_BUILD_HIS_DATA_CLEAR,T_PIPELINE_BUILD_HISTORY,T_PIPELINE_BUILD_STAGE,T_PIPELINE_BUILD_SUMMARY,T_PIPELINE_BUILD_TASK,T_PIPELINE_BUILD_VAR,T_PIPELINE_DATA_CLEAR,T_PIPELINE_FAILURE_NOTIFY_USER,T_PIPELINE_FAVOR,T_PIPELINE_GROUP,T_PIPELINE_INFO,T_PIPELINE_JOB_MUTEX_GROUP,T_PIPELINE_LABEL,T_PIPELINE_LABEL_PIPELINE,T_PIPELINE_MODEL_TASK,T_PIPELINE_PAUSE_VALUE,T_PIPELINE_RESOURCE,T_PIPELINE_RESOURCE_VERSION,T_PIPELINE_SETTING,T_PIPELINE_SETTING_VERSION,T_PIPELINE_VIEW,T_PIPELINE_VIEW_PROJECT,T_PIPELINE_VIEW_USER_LAST_VIEW,T_PIPELINE_VIEW_USER_SETTINGS,T_PIPELINE_WEBHOOK_BUILD_LOG_DETAIL,T_PIPELINE_WEBHOOK_QUEUE,T_PROJECT_PIPELINE_CALLBACK,T_PROJECT_PIPELINE_CALLBACK_HISTORY,T_REPORT,T_TEMPLATE,T_TEMPLATE_PIPELINE"
+  broadcastStrategy:
+    tableConfig: "T_PIPELINE_RULE,T_PIPELINE_STAGE_TAG,T_PIPELINE_TIMER,T_PIPELINE_REMOTE_AUTH,T_PIPELINE_WEBHOOK,T_TEMPLATE_INSTANCE_BASE,T_TEMPLATE_INSTANCE_ITEM"
+  specifyDataSourceStrategy:
+    tableConfig: "T_PIPELINE_ATOM_REPLACE_BASE,T_PIPELINE_ATOM_REPLACE_ITEM,T_PIPELINE_ATOM_REPLACE_HISTORY"

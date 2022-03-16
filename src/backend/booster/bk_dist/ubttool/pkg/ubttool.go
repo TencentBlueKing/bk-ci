@@ -35,7 +35,7 @@ const (
 
 // NewUBTTool get a new UBTTool
 func NewUBTTool(flagsparam *common.Flags, config dcSDK.ControllerConfig) *UBTTool {
-	blog.Debugf("UBTTool: new helptool with config:%+v", config)
+	blog.Infof("UBTTool: new helptool with config:%+v,flags:%+v", config, *flagsparam)
 
 	return &UBTTool{
 		flags:          flagsparam,
@@ -175,7 +175,7 @@ func (h *UBTTool) executeActions() error {
 		select {
 		case r := <-h.actionchan:
 			blog.Infof("UBTTool: got action result:%+v", r)
-			h.onActionFinished(r.Index)
+			h.onActionFinished(r.Index, r.Exitcode)
 			if h.finished {
 				blog.Infof("UBTTool: all actions finished")
 				return nil
@@ -219,13 +219,22 @@ func (h *UBTTool) selectActionsToExecute() error {
 func (h *UBTTool) selectReadyAction() int {
 	index := -1
 	followers := -1
-	for i := range h.readyactions {
-		// select ready action which is not running and has most followers
-		if !h.readyactions[i].Running {
-			curfollowers := len(h.readyactions[i].FollowIndex)
-			if curfollowers > followers {
+	// select ready action which is not running and has most followers
+	if h.flags.MostDepentFirst {
+		for i := range h.readyactions {
+			if !h.readyactions[i].Running {
+				curfollowers := len(h.readyactions[i].FollowIndex)
+				if curfollowers > followers {
+					index = i
+					followers = curfollowers
+				}
+			}
+		}
+	} else { // select first action which is not running
+		for i := range h.readyactions {
+			if !h.readyactions[i].Running {
 				index = i
-				followers = curfollowers
+				break
 			}
 		}
 	}
@@ -242,7 +251,7 @@ func (h *UBTTool) executeOneAction(action common.Action, actionchan chan common.
 	fullargs := []string{action.Cmd}
 	args, _ := shlex.Split(replaceWithNextExclude(action.Arg, '\\', "\\\\", []byte{'"'}))
 	fullargs = append(fullargs, args...)
-	_, err := h.executor.Run(fullargs, action.Workdir)
+	exitcode, err := h.executor.Run(fullargs, action.Workdir)
 
 	r := common.Actionresult{
 		Index:     action.Index,
@@ -250,6 +259,7 @@ func (h *UBTTool) executeOneAction(action common.Action, actionchan chan common.
 		Succeed:   err == nil,
 		Outputmsg: "",
 		Errormsg:  "",
+		Exitcode:  exitcode,
 	}
 
 	actionchan <- r
@@ -279,8 +289,8 @@ func (h *UBTTool) getReadyActions() error {
 }
 
 // update all actions and ready actions
-func (h *UBTTool) onActionFinished(index string) error {
-	blog.Infof("UBTTool: action %s finished", index)
+func (h *UBTTool) onActionFinished(index string, exitcode int) error {
+	blog.Infof("UBTTool: action %s finished with exitcode %d", index, exitcode)
 
 	h.finishednumberlock.Lock()
 	h.finishednumber++
@@ -309,30 +319,35 @@ func (h *UBTTool) onActionFinished(index string) error {
 		}
 	}
 
-	// update all action array
+	// update status in allactions
 	for i, v := range h.allactions {
 		// update status
 		if v.Index == index {
 			h.allactions[i].Finished = true
-			continue
+			break
 		}
+	}
 
-		if v.Finished {
-			continue
-		}
-
-		// update depend
-		for i1, v1 := range v.Dep {
-			if v1 == index {
-				h.allactions[i].Dep = remove(h.allactions[i].Dep, i1)
-				break
+	// update depend in allactions if current action succeed
+	if exitcode == 0 {
+		for i, v := range h.allactions {
+			if v.Finished {
+				continue
 			}
-		}
 
-		// copy to ready if no depent
-		if !v.Running && !v.Finished && len(h.allactions[i].Dep) == 0 {
-			h.readyactions = append(h.readyactions, v)
-			h.allactions[i].Running = true
+			// update depend
+			for i1, v1 := range v.Dep {
+				if v1 == index {
+					h.allactions[i].Dep = remove(h.allactions[i].Dep, i1)
+					break
+				}
+			}
+
+			// copy to ready if no depent
+			if !v.Running && !v.Finished && len(h.allactions[i].Dep) == 0 {
+				h.readyactions = append(h.readyactions, v)
+				h.allactions[i].Running = true
+			}
 		}
 	}
 

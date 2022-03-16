@@ -89,6 +89,7 @@ import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
+import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -160,7 +161,6 @@ open class MarketAtomTask : ITask() {
         val props = JsonUtil.toMutableMap(atomData.props!!)
 
         // 解析输入参数
-
         val inputTemplate =
             if (props["input"] != null) {
                 props["input"] as Map<String, Map<String, Any>>
@@ -170,6 +170,9 @@ open class MarketAtomTask : ITask() {
 
         val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
 
+        // 解析跨项目模板信息
+        val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId)
+
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
@@ -177,7 +180,7 @@ open class MarketAtomTask : ITask() {
                 var valueStr = JsonUtil.toJson(value)
                 valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
                     override fun getReplacement(key: String): String? {
-                        return CredentialUtils.getCredentialContextValue(key)
+                        return CredentialUtils.getCredentialContextValue(key, acrossInfo?.targetProjectId)
                     }
                 })
                 // 修复插件input环境变量替换问题 #5682
@@ -419,7 +422,9 @@ open class MarketAtomTask : ITask() {
         when (AgentEnv.getOS()) {
             OSType.WINDOWS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\r\n${it}\r\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\r\n"
+                    ) { "\r\n$it" }
                     BatScriptUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
@@ -433,7 +438,9 @@ open class MarketAtomTask : ITask() {
             }
             OSType.LINUX, OSType.MAC_OS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\n${it}\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\n"
+                    ) { "\n$it" }
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
@@ -515,7 +522,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
             BuildType.WORKER -> {
@@ -527,7 +535,8 @@ open class MarketAtomTask : ITask() {
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
                     gateway = AgentEnv.getGateway(),
-                    fileGateway = getFileGateway(buildVariables.containerType)
+                    fileGateway = getFileGateway(buildVariables.containerType),
+                    taskId = buildTask.taskId ?: ""
                 )
             }
         }
@@ -584,7 +593,8 @@ open class MarketAtomTask : ITask() {
         val gateway: String,
         val buildId: String,
         val vmSeqId: String,
-        val fileGateway: String
+        val fileGateway: String,
+        val taskId: String
     )
 
     private fun writeInputFile(
@@ -713,7 +723,11 @@ open class MarketAtomTask : ITask() {
                     it.key to value
                 }?.toMap()
                 if (qualityMap != null) {
-                    qualityGatewayResourceApi.saveScriptHisMetadata(atomCode, qualityMap)
+                    qualityGatewayResourceApi.saveScriptHisMetadata(
+                        atomCode,
+                        buildTask.taskId ?: "",
+                        buildTask.elementName ?: "",
+                        qualityMap)
                 }
             } else {
                 if (atomResult.qualityData != null && atomResult.qualityData.isNotEmpty()) {

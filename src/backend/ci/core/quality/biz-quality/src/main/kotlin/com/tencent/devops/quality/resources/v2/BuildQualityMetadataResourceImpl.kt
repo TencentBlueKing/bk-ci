@@ -42,8 +42,11 @@ class BuildQualityMetadataResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         elementType: String,
+        taskId: String?,
+        taskName: String?,
         data: Map<String, String>
     ): Result<Boolean> {
-        return Result(qualityHisMetadataService.saveHisMetadata(projectId, pipelineId, buildId, elementType, data))
+        return Result(qualityHisMetadataService.saveHisMetadata(projectId, pipelineId, buildId,
+            elementType, taskId, taskName, data))
     }
 }

@@ -67,15 +67,16 @@ class UpdateStateContainerCmdFinally(
             mutexRelease(commandContext = commandContext)
         }
         // 发送回Stage
-        if (commandContext.buildStatus.isFinish() ||
-            commandContext.buildStatus == BuildStatus.UNKNOWN) {
+        if (commandContext.buildStatus.isFinish() || commandContext.buildStatus == BuildStatus.UNKNOWN) {
             val source = commandContext.event.source
             val buildId = commandContext.container.buildId
             val stageId = commandContext.container.stageId
             val containerId = commandContext.container.containerId
             val matrixGroupId = commandContext.container.matrixGroupId
-            LOG.info("ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
-                "matrixGroupId=$matrixGroupId|${commandContext.buildStatus}|${commandContext.latestSummary}")
+            LOG.info(
+                "ENGINE|$buildId|$source|CONTAINER_FIN|$stageId|j($containerId)|" +
+                    "matrixGroupId=$matrixGroupId|${commandContext.buildStatus}|${commandContext.latestSummary}"
+            )
             // #4518 如果该容器不属于某个矩阵时上报stage处理，否则上报发出一个矩阵组事件
             if (matrixGroupId.isNullOrBlank()) {
                 sendBackStage(commandContext = commandContext)
@@ -90,16 +91,6 @@ class UpdateStateContainerCmdFinally(
                     )
                 )
             }
-        } else if (commandContext.container.matrixGroupFlag == true &&
-            commandContext.container.status.isRunning()) {
-            // 如果是构建矩阵的刷新状态且运行中则重放一个事件保证执行
-            pipelineEventDispatcher.dispatch(
-                commandContext.event.copy(
-                    actionType = ActionType.REFRESH,
-                    source = commandContext.latestSummary,
-                    reason = "Matrix(${commandContext.container.containerId}) cannot finish"
-                )
-            )
         }
     }
 
@@ -135,6 +126,7 @@ class UpdateStateContainerCmdFinally(
         }
 
         pipelineContainerService.updateContainerStatus(
+            projectId = event.projectId,
             buildId = event.buildId,
             stageId = event.stageId,
             containerId = event.containerId,
@@ -148,12 +140,17 @@ class UpdateStateContainerCmdFinally(
                 pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
-            containerBuildDetailService.containerSkip(buildId = event.buildId, containerId = event.containerId)
+            containerBuildDetailService.containerSkip(
+                projectId = event.projectId, buildId = event.buildId, containerId = event.containerId
+            )
         } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
             // 刷新Model状态-仅更新container状态
             containerBuildDetailService.updateContainerStatus(
-                buildId = event.buildId, containerId = event.containerId,
-                buildStatus = buildStatus, executeCount = commandContext.executeCount
+                projectId = event.projectId,
+                buildId = event.buildId,
+                containerId = event.containerId,
+                buildStatus = buildStatus,
+                executeCount = commandContext.executeCount
             )
         }
     }

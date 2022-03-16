@@ -15,7 +15,7 @@
             <span @click.stop v-if="showCheckedToatal && canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="containerDisabled"></bk-checkbox>
             </span>
-            <i v-if="isEditPage && container.matrixGroupFlag" class="matrix-flag-icon bk-devops-icon icon-matrix"></i>
+            <i v-if="(isEditPage || isPreview) && container.matrixGroupFlag" class="matrix-flag-icon bk-devops-icon icon-matrix"></i>
             <i v-if="showMatrixStatus" class="fold-atom-icon devops-icon" :class="[container.isOpen ? 'icon-angle-up' : 'icon-angle-down', container.status || 'readonly']" style="display:block" @click.stop="toggleShowAtom"></i>
         </h3>
         <atom-list
@@ -87,7 +87,6 @@
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
-
                 'getAllContainers'
             ]),
             isEditPage () {
@@ -100,7 +99,7 @@
                 if (this.container.jobControlOption && this.container.jobControlOption.enable === false) {
                     return 'DISABLED'
                 }
-                
+
                 return this.container && this.container.status ? this.container.status : ''
             },
             showCheckedToatal () {
