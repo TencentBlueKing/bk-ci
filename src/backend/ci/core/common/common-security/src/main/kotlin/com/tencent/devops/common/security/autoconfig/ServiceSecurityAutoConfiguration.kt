@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.security.autoconfig
 
+import com.tencent.devops.common.security.credentials.CredentialHelper
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import org.springframework.beans.factory.annotation.Value
@@ -54,10 +55,19 @@ class ServiceSecurityAutoConfiguration {
     @Value("\${bkci.security.enable:#{false}}")
     private val enable: Boolean = false
 
+    @Value("\${credential.mixer}")
+    val credentialMixer = "******"
+
+    @Value("\${credential.aes-key}")
+    private val aesKey = "C/R%3{?OS}IeGT21"
+
     @Bean
     fun environmentUtil() = EnvironmentUtil()
 
     @Bean
     @DependsOn("environmentUtil")
     fun jwtManager() = JwtManager(privateKey, publicKey, enable)
+
+    @Bean
+    fun credentialHelper() = CredentialHelper(credentialMixer, aesKey)
 }

@@ -29,23 +29,16 @@ package com.tencent.devops.common.security.credentials
 
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import java.util.Base64
 
-@Suppress("ALL")
-@Component
-class CredentialHelper {
+class CredentialHelper(
+    private val credentialMixer: String,
+    private val aesKey: String
+) {
     companion object {
         private val SSH_PRIVATE_REGEX = Regex("^(-----BEGIN (RSA|OPENSSH) PRIVATE KEY-----)[\\s\\S]*" +
             "(-----END (RSA|OPENSSH) PRIVATE KEY-----)\$")
     }
-
-    @Value("\${credential.mixer}")
-    val credentialMixer = "******"
-
-    @Value("\${credential.aes-key}")
-    private val aesKey = "C/R%3{?OS}IeGT21"
 
     fun isValid(credentialCreate: CredentialCreate): Boolean {
         return isValid(
