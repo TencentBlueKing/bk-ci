@@ -463,15 +463,10 @@ class TriggerSvnService(
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(TriggerSvnService::class.java.name)
-        private const val getRedisKey: String = "web_repository_svn_polling"
+        private const val getRedisKey: String = "repository_svn_polling"
         private const val getRedisLockKey: String = "repository_svn_polling_redis_lock"
         private const val THREE = 3L
     }
-
-    data class CommitMessage(
-        val commitTime: Long,
-        val paths: List<String>
-    )
 
     data class SvnRepoInfo(
         val url: String,
