@@ -130,12 +130,13 @@ class RepoTriggerEventService @Autowired constructor(
             repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
             else -> return false
         }
+        // 工蜂侧需要的是user 数字id 而不是 rtx
         val userId = client.getScm(ServiceGitResource::class)
-            .getUserInfoByToken(token = token, useAccessToken = false).data?.username
-            ?: gitRequestEventForHandle.userId
+            .getUserInfoByToken(token = token, useAccessToken = false).data?.id
+            ?: return false
         return client.getScm(ServiceGitCiResource::class)
             .checkUserGitAuth(
-                userId = userId,
+                userId = userId.toString(),
                 gitProjectId = gitRequestEventForHandle.gitProjectId.toString(),
                 privateToken = token,
                 useAccessToken = false,
