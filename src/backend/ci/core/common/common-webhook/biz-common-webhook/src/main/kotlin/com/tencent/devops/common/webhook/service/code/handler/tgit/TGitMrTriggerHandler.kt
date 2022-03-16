@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
@@ -300,6 +301,7 @@ class TGitMrTriggerHandler(
         }
         startParams[PIPELINE_GIT_MR_PROPOSER] = event.user.username
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
+        startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
         return startParams
     }
