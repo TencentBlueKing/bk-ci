@@ -171,10 +171,9 @@ object LoggerService {
         }
     }
 
-    fun start(sensitiveValues: List<String>? = null) {
+    fun start() {
         logger.info("Start the log service")
         future = executorService.submit(loggerThread)
-        sensitiveValues?.let { addSensitiveValues(it) }
     }
 
     fun flush(): Int {
@@ -395,10 +394,12 @@ object LoggerService {
         }
     }
 
-    fun addSensitiveValues(sensitiveValues: List<String>) {
-        logger.info("Append sensitive string set")
-        sensitiveStringSet.addAll(sensitiveValues)
-        logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
+    fun addSensitiveValues(sensitiveValues: List<String>?) {
+        sensitiveValues?.let {
+            logger.info("Append sensitive string set")
+            sensitiveStringSet.addAll(it)
+            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
+        }
     }
 
     private fun addLog(message: LogMessage) = uploadQueue.put(message)
