@@ -412,7 +412,8 @@ class LogServiceESImpl constructor(
                         val logLine = LogLine(
                             sourceMap["lineNo"].toString().toLong(),
                             sourceMap["timestamp"].toString().toLong(),
-                            sourceMap["message"].toString().removePrefix("\u001b[31m").removePrefix("\u001b[1m").replace(
+                            sourceMap["message"].toString().removePrefix("\u001b[31m")
+                                .removePrefix("\u001b[1m").replace(
                                 "\u001B[m",
                                 ""
                             ).removeSuffix("\u001b[m"),
