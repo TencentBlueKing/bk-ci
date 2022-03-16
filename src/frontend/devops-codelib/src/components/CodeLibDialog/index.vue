@@ -336,15 +336,15 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders['url'][this.codelibConfig.label]
-                    || this.placeholders['url'][this.codelib.authType]
+                    this.placeholders.url[this.codelibConfig.label]
+                    || this.placeholders.url[this.codelib.authType]
                 )
             },
             credentialPlaceholder () {
                 return this.placeholders.cred[this.codelibConfig.label]
             },
             portPlaceholder () {
-                return this.placeholders['port'][this.codelibConfig.label]
+                return this.placeholders.port[this.codelibConfig.label]
             }
         },
 
