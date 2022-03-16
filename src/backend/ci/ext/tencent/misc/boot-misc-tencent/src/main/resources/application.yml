@@ -1,7 +1,7 @@
 # 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
-    name: environment
-    desc: DevOps Environment Service
+    name: misc
+    desc: DevOps Misc Service
     version: 4.0
-    packageName: com.tencent.devops.environment
+    packageName: com.tencent.devops.misc

@@ -1,32 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: engine
     desc: DevOps Engine Service
     version: 4.0.0
     packageName: com.tencent.devops.process
-  cloud:
-    config:
-      name: engine
-
-# 并发配置
-queueConcurrency:
-  buildStart: 8
-  stage: 8
-  container: 8
-  task: 16
-  monitor: 8
-  buildFinish: 8
-  buildCancel: 3
-  pipelineCreate: 3
-  pipelineDelete: 2
-  pipelineUpdate: 5
-  timerTrigger: 8
-  webhook: 2
-  measure: 3
-  market: 1
-  containerStartup: 2
-  heartBeat: 8
-  timerChanger: 3
-
-server:
-  port: 21917

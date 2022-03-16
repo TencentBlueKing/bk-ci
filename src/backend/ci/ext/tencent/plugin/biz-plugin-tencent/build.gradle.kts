@@ -30,7 +30,7 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:api-codecc"))
     api(project(":ext:tencent:plugin:api-plugin-tencent"))
     api(project(":ext:tencent:ticket:api-ticket-tencent"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:external:api-external"))
