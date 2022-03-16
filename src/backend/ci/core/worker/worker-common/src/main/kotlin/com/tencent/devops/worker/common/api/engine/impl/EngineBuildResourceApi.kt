@@ -38,6 +38,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import java.lang.StringBuilder
+import java.net.URLEncoder
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -60,7 +61,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         val path = getRequestUrl(
             path = "api/build/worker/started",
             retryCount = retryCount,
-            publicKey = publicKey
+            publicKey = URLEncoder.encode(publicKey, "UTF-8")
         )
         val request = buildPut(path)
         val errorMessage = "通知服务端启动构建失败"

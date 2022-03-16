@@ -239,8 +239,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
                         containerType = c.getClassType(),
-                        sensitiveInfo = publicKey?.let {
-                            buildVariableService.getEncodedSensitiveValues(projectId, buildId, it)
+                        sensitiveInfo = publicKey?.let { self ->
+                            buildVariableService.getEncodedSensitiveValues(projectId, buildId, self)
                         }
                     )
                 }
