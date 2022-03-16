@@ -36,10 +36,12 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -50,6 +52,7 @@ import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -118,7 +121,22 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, GitRequestEventReq(realEvent), modelDetail)
+        return GitCIModelDetail(
+            pipeline,
+            GitRequestEventReq(realEvent),
+            modelDetail.copy(
+                pipelineName = getPipelineName(modelDetail) ?: pipeline?.displayName ?: modelDetail.pipelineName
+            )
+        )
+    }
+
+    private fun getPipelineName(modelDetail: ModelDetail): String? {
+        modelDetail.model.stages.getOrNull(0)?.containers?.getOrNull(0).takeIf { it is TriggerContainer }.apply {
+            (this as TriggerContainer).params.forEach {
+                return it.takeIf { it.id == CommonVariables.CI_PIPELINE_NAME }?.defaultValue.toString()
+            }
+        }
+        return null
     }
 
     fun batchGetBuildHistory(

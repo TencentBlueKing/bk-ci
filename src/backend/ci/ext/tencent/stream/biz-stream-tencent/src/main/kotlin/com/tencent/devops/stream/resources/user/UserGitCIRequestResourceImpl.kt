@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.api.user.UserGitCIRequestResource
+import com.tencent.devops.stream.pojo.EventTypeConf
 import com.tencent.devops.stream.pojo.GitRequestHistory
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamRequestService
@@ -56,5 +58,21 @@ class UserGitCIRequestResourceImpl @Autowired constructor(
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
+    }
+
+    override fun getEventTypeConf(userId: String): Result<List<EventTypeConf>> {
+        val eventTypeList = mutableListOf<EventTypeConf>()
+        eventTypeList.let { e ->
+            TGitObjectKind.values().forEach {
+                e.add(
+                    EventTypeConf(
+                        id = it.name,
+                        name = it.value.capitalize()
+                    )
+                )
+            }
+        }
+
+        return Result(eventTypeList)
     }
 }

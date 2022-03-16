@@ -102,9 +102,7 @@ data class GitRequestEvent(
 fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
-        sourceGitProjectId != null &&
-        sourceGitProjectId != gitProjectId
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value && sourceGitProjectId != gitProjectId
 }
 
 /**
@@ -113,11 +111,14 @@ fun GitRequestEvent.isFork(): Boolean {
 fun GitRequestEvent.isDeleteBranch(): Boolean {
     return objectKind == TGitObjectKind.PUSH.value &&
         operationKind == TGitPushOperationKind.DELETE.value &&
-        (extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
-            commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT)
+        (
+            extensionAction == TGitPushActionKind.DELETE_BRANCH.value ||
+                commitId == GitRequestEvent.DELETE_BRANCH_COMMITID_FROM_CLIENT
+            )
 }
 
 fun GitRequestEvent.isDeleteTag(): Boolean {
-    return objectKind == TGitObjectKind.TAG_PUSH.value &&
-        operationKind == TGitPushOperationKind.DELETE.value
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+        sourceGitProjectId != null &&
+        sourceGitProjectId != gitProjectId
 }

@@ -25,6 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.parsers.template
+package com.tencent.devops.stream.pojo
 
-class temp
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+
+class StreamBuildLock(redisOperation: RedisOperation, gitProjectId: Long, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:gitProject:$gitProjectId:pipelineId:$pipelineId",
+        expiredTimeInSeconds = 60
+    )

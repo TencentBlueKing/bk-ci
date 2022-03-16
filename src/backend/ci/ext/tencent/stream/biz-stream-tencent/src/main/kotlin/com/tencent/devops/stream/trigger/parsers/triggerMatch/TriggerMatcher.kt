@@ -29,6 +29,12 @@ import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -103,7 +109,7 @@ class TriggerMatcher @Autowired constructor(
         changeSet: Set<String>?,
         pipelineFilePath: String
     ): TriggerResult {
-        val targetBranch = getBranch(context.gitEvent).second
+        val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
 
         val gitRequestEvent = context.requestEvent
 
@@ -122,10 +128,43 @@ class TriggerMatcher @Autowired constructor(
             false
         }
 
-        val (isTrigger, startParams) = matchAndStartParams(
-            context = context,
-            triggerOn = triggerOn
-        )
+        val (isTrigger, startParams) = when (context.gitEvent) {
+            is GitPushEvent -> {
+                val isMatch = isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId, context.gitEvent)
+                val params = getStartParams(context = context, triggerOn = triggerOn)
+                Pair(isMatch, params)
+            }
+            is GitMergeRequestEvent -> {
+                val mrAction = StreamMrEventAction.getActionValue(context.gitEvent) ?: false
+                val isMatch = isMrMatch(
+                    triggerOn = triggerOn,
+                    sourceBranch = sourceBranch,
+                    targetBranch = targetBranch,
+                    changeSet = changeSet,
+                    userId = gitRequestEvent.userId,
+                    mrAction = mrAction
+                )
+                val params = getStartParams(context = context, triggerOn = triggerOn)
+                Pair(isMatch, params)
+            }
+            is GitTagPushEvent -> {
+                val isMatch = isTagPushMatch(
+                    triggerOn,
+                    getTag(context.gitEvent),
+                    gitRequestEvent.userId,
+                    context.gitEvent.create_from
+                )
+                val params = getStartParams(context = context, triggerOn = triggerOn)
+                Pair(isMatch, params)
+            }
+            else -> {
+                matchAndStartParams(
+                    context = context,
+                    triggerOn = triggerOn
+                )
+            }
+        }
+
         return TriggerResult(isTrigger, isTime, startParams, isDelete)
     }
 
@@ -199,6 +238,124 @@ class TriggerMatcher @Autowired constructor(
                 return false
             }
         }
+        return true
+    }
+
+    fun isPushMatch(
+        triggerOn: TriggerOn,
+        eventBranch: String,
+        changeSet: Set<String>?,
+        userId: String,
+        gitPushEvent: GitPushEvent
+    ): Boolean {
+        // 如果没有配置push，默认未匹配
+        if (triggerOn.push == null) {
+            return false
+        }
+
+        val pushRule = triggerOn.push!!
+        // 1、check branchIgnore，满足屏蔽条件直接返回不匹配
+        if (BranchMatchUtils.isIgnoreBranchMatch(pushRule.branchesIgnore, eventBranch)) {
+            return false
+        }
+
+        // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
+        if (PathMatchUtils.isIgnorePathMatch(pushRule.pathsIgnore, changeSet)) {
+            return false
+        }
+
+        // 3、check userIgnore,满足屏蔽条件直接返回不匹配
+        if (UserMatchUtils.isIgnoreUserMatch(pushRule.usersIgnore, userId)) {
+            return false
+        }
+
+        // include
+        if (!BranchMatchUtils.isBranchMatch(pushRule.branches, eventBranch) ||
+            !PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) ||
+            !UserMatchUtils.isUserMatch(pushRule.users, userId)
+        ) {
+            return false
+        }
+        // action
+        if (!checkActionMatch(pushRule.action, gitPushEvent.isCreateBranch())) {
+            return false
+        }
+        logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
+        return true
+    }
+
+    fun isMrMatch(
+        triggerOn: TriggerOn,
+        sourceBranch: String,
+        targetBranch: String,
+        changeSet: Set<String>?,
+        userId: String,
+        mrAction: Any
+    ): Boolean {
+        if (triggerOn.mr == null) {
+            return false
+        }
+
+        val mrRule = triggerOn.mr!!
+        // 1、check sourceBranchIgnore，满足屏蔽条件直接返回不匹配
+        if (BranchMatchUtils.isIgnoreBranchMatch(mrRule.sourceBranchesIgnore, sourceBranch)) {
+            return false
+        }
+
+        // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
+        if (PathMatchUtils.isIgnorePathMatch(mrRule.pathsIgnore, changeSet)) {
+            return false
+        }
+
+        // 3、check userIgnore,满足屏蔽条件直接返回不匹配
+        if (UserMatchUtils.isIgnoreUserMatch(mrRule.usersIgnore, userId)) {
+            return false
+        }
+
+        // include
+        if (!BranchMatchUtils.isBranchMatch(mrRule.targetBranches, targetBranch) ||
+            !PathMatchUtils.isIncludePathMatch(mrRule.paths, changeSet) ||
+            !UserMatchUtils.isUserMatch(mrRule.users, userId) ||
+            !isMrActionMatch(mrRule.action, mrAction)
+        ) {
+            return false
+        }
+        return true
+    }
+
+    fun isTagPushMatch(
+        triggerOn: TriggerOn,
+        eventTag: String,
+        userId: String,
+        fromBranch: String?
+    ): Boolean {
+        if (triggerOn.tag == null) {
+            return false
+        }
+
+        val tagRule = triggerOn.tag!!
+        // ignore
+        if (BranchMatchUtils.isIgnoreBranchMatch(tagRule.tagsIgnore, eventTag)) {
+            return false
+        }
+
+        if (UserMatchUtils.isIgnoreUserMatch(tagRule.usersIgnore, userId)) {
+            return false
+        }
+
+        if (fromBranch != null && !BranchMatchUtils.isBranchMatch(tagRule.fromBranches, fromBranch)) {
+            return false
+        }
+
+        // include
+        if (!BranchMatchUtils.isBranchMatch(tagRule.tags, eventTag) ||
+            !UserMatchUtils.isUserMatch(tagRule.users, userId)
+        ) {
+            return false
+        }
+        logger.info(
+            "Git trigger tags($eventTag) is included and path(${tagRule.tags}) is included,and fromBranch($fromBranch)"
+        )
         return true
     }
 
@@ -319,6 +476,42 @@ class TriggerMatcher @Autowired constructor(
         return changeSet
     }
 
+    private fun checkActionMatch(actionList: List<String>?, isCreateBranch: Boolean): Boolean {
+        if (actionList.isNullOrEmpty()) {
+            return true
+        }
+        actionList.forEach {
+            if (it == TGitPushActionType.NEW_BRANCH.value && isCreateBranch) {
+                return true
+            }
+            if (it == TGitPushActionType.PUSH_FILE.value && !isCreateBranch) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private fun isMrActionMatch(actionList: List<String>?, mrAction: Any): Boolean {
+        val realActionList = if (actionList.isNullOrEmpty()) {
+            // 缺省时使用默认值
+            listOf(
+                StreamMrEventAction.OPEN.value,
+                StreamMrEventAction.REOPEN.value,
+                StreamMrEventAction.PUSH_UPDATE.value
+            )
+        } else {
+            actionList
+        }
+        realActionList.forEach {
+            if (it == mrAction) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     // 返回源分支和目标分支
     private fun getBranch(event: GitEvent): Pair<String, String> {
         return when (event) {
@@ -334,4 +527,6 @@ class TriggerMatcher @Autowired constructor(
             else -> Pair("", "")
         }
     }
+
+    private fun getTag(event: GitTagPushEvent) = event.ref.removePrefix("refs/tags/")
 }

@@ -25,22 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.service
+package com.tencent.devops.stream.pojo
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.plugin.dao.WetestTaskInstResultDao
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class WetestTaskInstResultService @Autowired constructor(
-    private val wetestTaskInstResultDao: WetestTaskInstResultDao,
-    private val objectMapper: ObjectMapper,
-    private val dslContext: DSLContext
-) {
-
-    fun saveResult(testId: String, callback: Map<String, Any>): String {
-        return wetestTaskInstResultDao.insert(dslContext, testId, objectMapper.writeValueAsString(callback)).toString()
-    }
-}
+@ApiModel("工蜂事件类型")
+data class EventTypeConf(
+    @ApiModelProperty("事件ID")
+    val id: String,
+    @ApiModelProperty("事件名称")
+    val name: String
+)

@@ -29,21 +29,20 @@ package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 import com.tencent.devops.common.ci.v2.enums.TemplateType
 
-data class TemplateLibrary(
-    val projectData: TemplateProjectData,
+data class TemplateLibrary<T>(
+    val extraParameters: T,
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
-        param: GetTemplateParam
+        param: GetTemplateParam<T>
     ) -> String,
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
     var templates: MutableMap<String, String> = mutableMapOf()
 )
 
 // 从模板库中获得数据，如果有直接取出，没有则根据保存的库信息从远程仓库拉取，再没有则报错
-fun TemplateLibrary.getTemplate(
+fun <T> TemplateLibrary<T>.getTemplate(
     path: String,
     templateType: TemplateType?,
     nowRepo: Repositories?,
@@ -56,35 +55,21 @@ fun TemplateLibrary.getTemplate(
     val template = if (toRepo == null) {
         getTemplateMethod(
             GetTemplateParam(
-                gitRequestEventId = projectData.gitRequestEventId,
-                token = projectData.triggerToken,
-                forkToken = projectData.forkGitToken,
-                gitProjectId = projectData.triggerProjectId,
-                targetRepo = null,
-                ref = projectData.triggerRef,
-                personalAccessToken = null,
-                fileName = path,
-                changeSet = projectData.changeSet,
-                event = projectData.event,
+                path = path,
                 templateType = templateType,
-                nowRemoteGitProjectId = nowRepo?.repository
+                nowRepoId = nowRepo?.repository,
+                targetRepo = null,
+                extraParameters = extraParameters
             )
         )
     } else {
         getTemplateMethod(
             GetTemplateParam(
-                gitRequestEventId = projectData.gitRequestEventId,
-                token = null,
-                forkToken = null,
-                gitProjectId = projectData.sourceProjectId,
-                targetRepo = toRepo.repository,
-                ref = toRepo.ref,
-                personalAccessToken = toRepo.credentials?.personalAccessToken,
-                fileName = path,
-                changeSet = projectData.changeSet,
-                event = null,
+                path = path,
                 templateType = templateType,
-                nowRemoteGitProjectId = nowRepo?.repository
+                nowRepoId = nowRepo?.repository,
+                targetRepo = toRepo,
+                extraParameters = extraParameters
             )
         )
     }
@@ -92,6 +77,6 @@ fun TemplateLibrary.getTemplate(
     return templates[path]!!
 }
 
-fun TemplateLibrary.setTemplate(path: String, template: String) {
+fun <T> TemplateLibrary<T>.setTemplate(path: String, template: String) {
     templates[path] = template
 }

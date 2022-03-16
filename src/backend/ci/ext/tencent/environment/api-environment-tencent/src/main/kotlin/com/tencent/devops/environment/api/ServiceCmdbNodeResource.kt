@@ -25,33 +25,62 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.api
+package com.tencent.devops.environment.api
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.CmdbNode
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["EXTERNAL_WETEST"], description = "服务-wetest相关")
-@Path("/external/wetest")
+@Api(tags = ["SERVICE_NODE"], description = "服务-节点")
+@Path("/service/node")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ExternalWetestResource {
+interface ServiceCmdbNodeResource {
 
-    @ApiOperation("wetest回调")
+    @ApiOperation("获取用户CMDB节点")
     @POST
-    @Path("/task/callback")
-    fun taskCallback(
-        @ApiParam("测试任务ID", required = true)
-        @QueryParam("testId")
-        testId: String,
-        @ApiParam("回调的详细数据", required = true)
-        callback: Map<String, Any>
-    ): Result<String>
+    @Path("/list_user_cmdb_nodes_new")
+    fun listUserCmdbNodesNew(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("true 时为备份负责人，false 时为主负责人", required = true)
+        @QueryParam("bakOperator")
+        bakOperator: Boolean,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页多少条", required = false, defaultValue = "100")
+        @QueryParam("pageSize")
+        pageSize: Int = 100,
+        @ApiParam("指定IP", required = false)
+        ips: List<String>?
+    ): Result<Page<CmdbNode>>
+
+    @ApiOperation("导入CMDB节点")
+    @POST
+    @Path("/projects/{projectId}/add_cmdb_nodes")
+    fun addCmdbNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "CMDB节点 IP", required = true)
+        nodeIps: List<String>
+    ): Result<Boolean>
 }

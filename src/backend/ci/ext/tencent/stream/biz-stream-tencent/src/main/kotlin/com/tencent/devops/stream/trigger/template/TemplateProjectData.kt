@@ -25,18 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.stream.trigger.template
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.plugin.pojo.tcm.TcmReqParam
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.ServiceTcmResource
-import com.tencent.devops.plugin.service.TcmService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 
-@RestResource
-class ServiceTcmResourceImpl @Autowired constructor(private val tcmService: TcmService) : ServiceTcmResource {
-    override fun startTask(tcmReqParam: TcmReqParam, buildId: String, userId: String): Result<String> {
-        return Result(tcmService.startTask(tcmReqParam, buildId, userId))
-    }
-}
+// 传入template的泛型接口
+data class TemplateProjectData(
+    val gitRequestEventId: Long,
+    // 发起者的库ID,用户名,分支
+    val triggerProjectId: Long,
+    // sourceProjectId，在fork时是源库的ID
+    val sourceProjectId: Long,
+    val triggerUserId: String,
+    val triggerRef: String,
+    val triggerToken: String,
+    val forkGitToken: String?,
+    val changeSet: Set<String>?,
+    val event: GitEvent?
+)
+
+// 获取远程模板需要是用的参数
+data class StreamGetTemplateData(
+    val gitRequestEventId: Long,
+    val token: String?,
+    val forkToken: String?,
+    val gitProjectId: Long,
+    val targetRepo: String?,
+    val ref: String?,
+    val personalAccessToken: String?,
+    val fileName: String,
+    val changeSet: Set<String>?,
+    val event: GitEvent?,
+    // 正在被替换的远程库
+    val nowRemoteGitProjectId: String?,
+    val templateType: TemplateType?
+)

@@ -25,26 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.resources
+package com.tencent.devops.lambda.config
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.plugin.api.UserOperationParamsResource
-import com.tencent.devops.plugin.service.OperationService
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
 
-@RestResource
-class UserOperationParamsResourceImpl @Autowired constructor(
-    private val service: OperationService
-) : UserOperationParamsResource {
-    override fun templateList(id: String, projectId: String, pipelineId: String): Result<Page<Any>> {
-        return service.getList(id, projectId, pipelineId)
-    }
+@Configuration
+class LambdaKafkaTopicConfig {
 
-    override fun operationParams(id: String, projectId: String, pipelineId: String): Result<List<Any>> {
-        if (id.isEmpty())
-            return Result(emptyList())
-        return service.getParam(id, projectId, pipelineId)
-    }
+    @Value("\${spring.kafka.topics.buildHistoryTopic:#{null}}")
+    val buildHistoryTopic: String? = null
+
+    @Value("\${spring.kafka.topics.buildDetailTopic:#{null}}")
+    val buildDetailTopic: String? = null
+
+    @Value("\${spring.kafka.topics.jobDetailTopic:#{null}}")
+    val jobDetailTopic: String? = null
+
+    @Value("\${spring.kafka.topics.taskDetailTopic:#{null}}")
+    val taskDetailTopic: String? = null
+
+    @Value("\${spring.kafka.topics.projectInfoTopic:#{null}}")
+    val projectInfoTopic: String? = null
+
+    @Value("\${spring.kafka.topics.pipelineInfoTopic:#{null}}")
+    val pipelineInfoTopic: String? = null
+
+    @Value("\${spring.kafka.topics.pipelineResourceTopic:#{null}}")
+    val pipelineResourceTopic: String? = null
+
+    @Value("\${spring.kafka.topics.gitTaskTopic:#{null}}")
+    val gitTaskTopic: String? = null
 }
