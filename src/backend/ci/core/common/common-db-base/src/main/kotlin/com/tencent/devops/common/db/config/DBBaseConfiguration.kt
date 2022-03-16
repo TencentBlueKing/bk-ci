@@ -25,7 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-db-base"))
-    api("org.apache.shardingsphere:shardingsphere-jdbc-core:${Versions.ShardingSphere}")
+package com.tencent.devops.common.db.config
+
+import com.tencent.devops.common.db.listener.BkJooqExecuteListener
+import org.jooq.impl.DefaultExecuteListenerProvider
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class DBBaseConfiguration {
+
+    @Bean
+    fun bkJooqExecuteListenerProvider(): DefaultExecuteListenerProvider {
+        return DefaultExecuteListenerProvider(BkJooqExecuteListener())
+    }
 }
