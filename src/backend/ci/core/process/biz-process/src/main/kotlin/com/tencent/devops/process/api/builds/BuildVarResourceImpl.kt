@@ -90,17 +90,6 @@ class BuildVarResourceImpl @Autowired constructor(
         return Result(allContext[varName] ?: allContext[alisName])
     }
 
-    override fun saveSensitiveValues(projectId: String, buildId: String, values: Set<String>): Result<Boolean> {
-        return Result(
-            buildVariableService.batchSetSensitiveValue(
-                projectId = projectId,
-                pipelineId = null,
-                buildId = buildId,
-                values = values
-            )
-        )
-    }
-
     fun checkPermission(projectId: String, pipelineId: String) {
         val userId = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)?.lastModifyUser ?: ""
         if (!pipelinePermissionService.checkPipelinePermission(

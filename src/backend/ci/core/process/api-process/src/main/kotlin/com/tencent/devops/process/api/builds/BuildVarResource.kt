@@ -39,14 +39,11 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Suppress("LongParameterList")
 @Api(tags = ["BUILD_VARIABLE"], description = "构建-构建参数")
 @Path("/build/variable")
 @Produces(MediaType.APPLICATION_JSON)
@@ -93,18 +90,4 @@ interface BuildVarResource {
         @QueryParam("check")
         check: Boolean? = false
     ): Result<String?>
-
-    @ApiOperation("保存构建涉及的敏感信息")
-    @POST
-    @Path("/projects/{projectId}/builds/{buildId}/save_sensitive_value")
-    fun saveSensitiveValues(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("AES加密后的敏感信息集合", required = true)
-        values: Set<String>
-    ): Result<Boolean>
 }

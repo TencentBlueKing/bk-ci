@@ -83,6 +83,8 @@ interface CredentialService {
 
     fun buildGet(projectId: String, buildId: String, credentialId: String, publicKey: String): CredentialInfo?
 
+    fun buildBatchGet(projectId: String, buildId: String, publicKey: String): List<CredentialInfo>
+
     fun buildGetAcrossProject(
         projectId: String,
         targetProjectId: String,

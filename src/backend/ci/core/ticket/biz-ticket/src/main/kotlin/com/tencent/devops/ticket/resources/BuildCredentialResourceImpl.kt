@@ -61,6 +61,20 @@ class BuildCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
     }
 
+    override fun getProjectCredentials(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        publicKey: String
+    ): Result<List<CredentialInfo>> {
+        checkParams(buildId, vmSeqId, vmName)
+        if (publicKey.isBlank()) {
+            throw ParamBlankException("Invalid publicKey")
+        }
+        return Result(credentialService.buildBatchGet(projectId, buildId, publicKey))
+    }
+
     @SensitiveApiPermission("get_credential")
     override fun getAcrossProject(
         projectId: String,

@@ -62,10 +62,4 @@ interface BuildSDKApi : WorkerRestApiSDK {
     fun getBuildAcrossTemplateInfo(
         templateId: String
     ): Result<List<BuildTemplateAcrossInfo>>
-
-    fun saveSensitiveValues(
-        projectId: String,
-        buildId: String,
-        values: Set<String>
-    ): Result<Boolean>
 }
