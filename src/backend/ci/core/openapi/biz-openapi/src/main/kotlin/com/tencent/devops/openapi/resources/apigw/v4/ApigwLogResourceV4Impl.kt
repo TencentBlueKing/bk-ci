@@ -27,6 +27,7 @@
 
 package com.tencent.devops.openapi.resources.apigw.v4
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -39,11 +40,11 @@ import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwLogResourceV4
 import com.tencent.devops.openapi.service.IndexService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @RestResource
 class ApigwLogResourceV4Impl @Autowired constructor(
@@ -172,12 +173,14 @@ class ApigwLogResourceV4Impl @Autowired constructor(
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
-        val response = OkhttpUtils.doLongGet(path.toString(), mapOf(AUTH_HEADER_USER_ID to userId))
+        val response = OkhttpUtils.doLongGet(
+            url = path.toString(),
+            headers = mapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
+        )
         return Response
             .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
-            .header("X-DEVOPS-PROJECT-ID", projectId)
             .build()
     }
 
