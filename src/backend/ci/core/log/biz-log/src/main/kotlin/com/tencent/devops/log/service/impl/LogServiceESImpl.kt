@@ -432,7 +432,7 @@ class LogServiceESImpl constructor(
         val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response
             .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $resultName.log")
+            .header("content-disposition", "attachment; filename = \"$resultName.log\"")
             .header("Cache-Control", "no-cache")
             .build()
     }
