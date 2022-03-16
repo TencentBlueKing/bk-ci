@@ -26,8 +26,5 @@
  */
 
 dependencies {
-    api("org.springframework.boot:spring-boot-starter-jooq")
-    api("com.zaxxer:HikariCP")
-    api("org.jooq:jooq")
-    api("mysql:mysql-connector-java")
+    api(project(":core:common:common-db-base"))
 }
