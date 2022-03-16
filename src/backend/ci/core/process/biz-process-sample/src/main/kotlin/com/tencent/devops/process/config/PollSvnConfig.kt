@@ -53,7 +53,7 @@ class PollSvnConfig : SchedulingConfigurer {
         taskRegistrar.addTriggerTask(
             {
                 if (interval > 0)
-                    triggerSvnService.start(interval)
+                    triggerSvnService.start(checkoutInterval())
             },
             { triggerContext ->
                 val nextExecutionTime: Calendar = Calendar.getInstance()
@@ -74,6 +74,19 @@ class PollSvnConfig : SchedulingConfigurer {
             }
         )
     }
+
+    private fun checkoutInterval() : Long{
+        if(interval < MIN_POLL_INTERVAL) return MIN_POLL_INTERVAL
+        else if (interval > MAX_POLL_INTERVAL) return MAX_POLL_INTERVAL
+        return interval
+    }
+
+
+    companion object{
+        val MIN_POLL_INTERVAL = 60L
+        val MAX_POLL_INTERVAL = 300L
+    }
+
 
     private val logger = LoggerFactory.getLogger(PollSvnConfig::class.qualifiedName)
 }

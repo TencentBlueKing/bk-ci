@@ -78,14 +78,13 @@ class TriggerSvnService(
     private fun pollingSvnRepoTask(interval: Long) {
         logger.info("SVN repositroy pooling, now time: {}", LocalDateTime.now())
         // 使用 redis, 防止多节点同时执行
-        val lock = RedisLock(redisOperation, getRedisLockKey, 30)
+        val lock = RedisLock(redisOperation, getRedisLockKey, 30*60)
         try {
             if (!lock.tryLock()) {
                 logger.info("The other process is processing polling job, ignore")
                 return
             }
             if (!checkLastPollTime(interval)) {
-                logger.info("")
                 return
             }
             // 开始分页查询
