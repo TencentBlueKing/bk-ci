@@ -86,8 +86,8 @@ class PollSvnConfig : SchedulingConfigurer {
     }
 
     companion object {
-        val MIN_POLL_INTERVAL = 60L
-        val POOL_SIZE = 10
+        const val MIN_POLL_INTERVAL = 60L
+        const val POOL_SIZE = 10
     }
 
     private val logger = LoggerFactory.getLogger(PollSvnConfig::class.qualifiedName)
