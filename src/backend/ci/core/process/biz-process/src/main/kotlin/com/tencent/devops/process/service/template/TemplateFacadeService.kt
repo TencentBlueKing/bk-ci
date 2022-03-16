@@ -1024,7 +1024,7 @@ class TemplateFacadeService @Autowired constructor(
         model.labels = labels
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
-        if (!constrainedTemplate.storeFlag && StringUtils.isEmpty(constrainedTemplate.srcTemplateId)) {
+        if (!constrainedTemplate.storeFlag || StringUtils.isEmpty(constrainedTemplate.srcTemplateId)) {
             try {
                 checkTemplate(templateResult, projectId)
             } catch (ignored: ErrorCodeException) {
