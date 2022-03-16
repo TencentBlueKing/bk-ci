@@ -37,11 +37,16 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface EngineBuildSDKApi : WorkerRestApiSDK {
 
-    fun getRequestUrl(path: String, retryCount: Int = 0, executeCount: Int = 1): String
+    fun getRequestUrl(
+        path: String,
+        retryCount: Int = 0,
+        executeCount: Int = 1,
+        publicKey: String? = null
+    ): String
 
     fun setStarted(retryCount: Int, publicKey: String): Result<BuildVariables>
 
-    fun claimTask(retryCount: Int): Result<BuildTask>
+    fun claimTask(retryCount: Int, publicKey: String): Result<BuildTask>
 
     fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
 

@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
+import java.lang.StringBuilder
 import java.net.URLEncoder
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -45,14 +46,22 @@ import okhttp3.RequestBody
 @ApiPriority(priority = 1)
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
-    override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
-        return "/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount"
+    override fun getRequestUrl(
+        path: String,
+        retryCount: Int,
+        executeCount: Int,
+        publicKey: String?
+    ): String {
+        val builder = StringBuilder("/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount")
+        if (!publicKey.isNullOrBlank()) builder.append("&publicKey=$publicKey")
+        return builder.toString()
     }
 
     override fun setStarted(retryCount: Int, publicKey: String): Result<BuildVariables> {
         val path = getRequestUrl(
-            path = "api/build/worker/started?publicKey=${URLEncoder.encode(publicKey, "UTF-8")}",
-            retryCount = retryCount
+            path = "api/build/worker/started",
+            retryCount = retryCount,
+            publicKey = publicKey
         )
         val request = buildPut(path)
         val errorMessage = "通知服务端启动构建失败"
@@ -66,8 +75,12 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun claimTask(retryCount: Int): Result<BuildTask> {
-        val path = getRequestUrl(path = "api/build/worker/claim", retryCount = retryCount)
+    override fun claimTask(retryCount: Int, publicKey: String): Result<BuildTask> {
+        val path = getRequestUrl(
+            path = "api/build/worker/claim",
+            retryCount = retryCount,
+            publicKey = publicKey
+        )
         val request = buildGet(path)
         val errorMessage = "领取构建机任务失败"
         val responseContent = request(
