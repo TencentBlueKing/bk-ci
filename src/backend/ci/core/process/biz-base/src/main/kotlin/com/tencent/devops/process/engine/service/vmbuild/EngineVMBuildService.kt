@@ -254,9 +254,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
             }.toMap())
 
-/*            context.putAll(customBuildEnv.map {
+            context.putAll(customBuildEnv.map {
                 it.key to EnvUtils.parseEnv(it.value, context)
-            }.toMap())*/
+            }.toMap())
         }
 
         if (matrixContext?.isNotEmpty() == true) context.putAll(matrixContext)
