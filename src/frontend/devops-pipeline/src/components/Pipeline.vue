@@ -384,7 +384,7 @@
         }
         &:before {
             position: absolute;
-            top: 44px + $StagepaddingTop;
+            top: 44px;
             content: '';
             height: 0;
             left: 30px;
