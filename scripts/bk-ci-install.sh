@@ -98,18 +98,22 @@ install_ci__ms_common (){
   tip_dir_exist "$BK_CI_SRC_DIR/$MS_NAME" || return 16
   # 检查安装java
   install_java || return $?
+  # 备份配置文件
+  backup_time=$(date +'%Y%m%d%H%M')
+  mkdir -p /tmp/ci/$backup_time
+  find "$BK_CI_HOME" -name "*.env"|xargs -i -n 1 cp -rvnP --parents {} /tmp/ci/$backup_time/ > /dev/null
   # 增量复制.
-  rsync -ra "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
+  rsync -ra --delete "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
   for f in agent-package jars-public jars-private scripts VERSION; do
     [ -e "$BK_CI_SRC_DIR/$f" ] || continue
     echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
-    rsync -ra "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
+    rsync -ra --delete "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
   done
   echo "change mode for agent-package dir."
   find "$BK_CI_HOME/agent-package/" -type d -exec chmod -c a+rx {} \;
   find "$BK_CI_HOME/agent-package/" -type f -exec chmod -c a+r {} \;
   # 保持微服务部分子目录的强一致性.
-  rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
+  rsync -ra --delete "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
 }
 
 install_ci_dockerhost (){
@@ -141,10 +145,10 @@ install_ci_gateway (){
   local proj=$1
   install_openresty || return $?
   rsync -ra "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"  # 不能del, 会删除codecc注入的配置文件.
-  rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
-  rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
+  rsync -ra --delete "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
+  rsync -ra --delete "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
   if [ -d "$BK_CI_SRC_DIR/docs" ]; then
-    rsync -ra --del "$BK_CI_SRC_DIR/docs" "$BK_CI_HOME" || return $?  # 可选docs
+    rsync -ra --delete "$BK_CI_SRC_DIR/docs" "$BK_CI_HOME" || return $?  # 可选docs
   fi
 }
 
