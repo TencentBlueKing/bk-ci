@@ -118,7 +118,7 @@ class StreamYamlTrigger @Autowired constructor(
 
         val changeSet = triggerMatcher.getChangeSet(context)
 
-        if (!isTrigger && !isTiming && !isDelete && repoHookName.isNullOrBlank()) {
+        if (!isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()) {
             logger.warn(
                 "${gitProjectPipeline.pipelineId}|" +
                     "Matcher is false, return, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
@@ -163,7 +163,7 @@ class StreamYamlTrigger @Autowired constructor(
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
         gitBasicSettingService.updateProjectInfo(gitRequestEventForHandle.userId, gitProjectInfo)
 
-        if (isTiming || isDelete || !repoHookName.isNullOrBlank()) {
+        if (isTiming || isDelete || !repoHookName.isNullOrEmpty()) {
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register timer: $isTiming delete: $isDelete" +

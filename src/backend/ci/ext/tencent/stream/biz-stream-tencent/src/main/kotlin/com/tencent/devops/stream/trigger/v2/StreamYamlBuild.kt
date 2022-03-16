@@ -63,7 +63,6 @@ import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.GitCITriggerLock
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
-import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
@@ -136,7 +135,7 @@ class StreamYamlBuild @Autowired constructor(
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
         isDeleteTrigger: Boolean = false,
-        repoHookName: String? = null,
+        repoHookName: List<String>? = null,
         gitProjectInfo: GitCIProjectInfo? = null,
         changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf(),
@@ -261,7 +260,7 @@ class StreamYamlBuild @Autowired constructor(
         gitProjectInfo: GitCIProjectInfo?,
         originYaml: String,
         isDeleteTrigger: Boolean,
-        repoHookName: String?
+        repoHookName: List<String>?
     ) {
         // 如果是定时触发需要注册事件
         if (isTimeTrigger) {
@@ -296,14 +295,11 @@ class StreamYamlBuild @Autowired constructor(
             )
         }
         // 储存远程仓库触发的特殊事件
-        if (!repoHookName.isNullOrEmpty() && repoTriggerEventService.getTargetProjectIdByPipeline(realPipeline.pipelineId) == null) {
+        if (!repoHookName.isNullOrEmpty()) {
             repoTriggerEventService.saveRepoTriggerEvent(
-                StreamRepoHookEvent(
-                    targetGitProjectId = gitRequestEventForHandle.gitProjectId,
-                    sourceGitProjectPath = repoHookName,
-                    pipelineId = realPipeline.pipelineId
-                )
-
+                targetGitProjectId = gitRequestEventForHandle.gitProjectId,
+                sourceGitProjectPath = repoHookName,
+                pipelineId = realPipeline.pipelineId
             )
         }
     }

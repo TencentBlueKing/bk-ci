@@ -5,5 +5,5 @@ data class TriggerResult(
     val timeTrigger: Boolean,
     val startParams: Map<String, String>,
     val deleteTrigger: Boolean,
-    val repoHookName: String? = null
+    val repoHookName: List<String>? = null
 )

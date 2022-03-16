@@ -52,16 +52,38 @@ class RepoTriggerEventService @Autowired constructor(
     }
 
     fun saveRepoTriggerEvent(
-        streamRepoHookEvent: StreamRepoHookEvent
+        pipelineId: String,
+        sourceGitProjectPath: List<String>,
+        targetGitProjectId: Long?
     ) {
-        gitPipelineRepoResourceDao.create(
-            dslContext = dslContext,
-            streamRepoHookEvent = streamRepoHookEvent
-        )
+        val sourceGitProjectPathList = getByPipeline(pipelineId).map { it.sourceGitProjectPath }
+        sourceGitProjectPath.forEach { sourcePath ->
+            // 说明已存在记录
+            if (sourcePath in sourceGitProjectPathList) {
+                return@forEach
+            }
+            gitPipelineRepoResourceDao.create(
+                dslContext = dslContext,
+                streamRepoHookEvent = StreamRepoHookEvent(
+                    sourceGitProjectPath = sourcePath,
+                    targetGitProjectId = targetGitProjectId,
+                    pipelineId = pipelineId
+                )
+            )
+        }
     }
 
-    fun getTargetProjectIdByPipeline(pipelineId: String): Long? {
-        return gitPipelineRepoResourceDao.get(dslContext = dslContext, pipelineId = pipelineId)?.targetGitProjectId
+    fun getByPipeline(pipelineId: String): List<StreamRepoHookEvent> {
+        return gitPipelineRepoResourceDao.getRepoList(
+            dslContext = dslContext,
+            pipelineId = pipelineId
+        ).map {
+            StreamRepoHookEvent(
+                pipelineId = it.pipelineId,
+                sourceGitProjectPath = it.sourceGitProjectPath,
+                targetGitProjectId = it.targetGitProjectId
+            )
+        }
     }
 
     fun getTargetPipelines(

@@ -33,6 +33,7 @@ import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Record3
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -73,11 +74,23 @@ class GitPipelineRepoResourceDao {
         }
     }
 
-    fun get(dslContext: DSLContext, pipelineId: String): TGitPipelineRepoResourceRecord? {
+    fun getRepoList(dslContext: DSLContext, pipelineId: String): Result<TGitPipelineRepoResourceRecord> {
         return with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
-            dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId)).fetchAny()
+            dslContext.selectFrom(this).where(PIPELINE_ID.eq(pipelineId)).fetch()
         }
     }
+
+    fun getRepo(
+        dslContext: DSLContext,
+        pipelineId: String,
+        sourceGitProjectPath: String
+    ): TGitPipelineRepoResourceRecord? {
+        return with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(SOURCE_GIT_PROJECT_PATH.eq(sourceGitProjectPath))).fetchOne()
+        }
+    }
+
 
     /*
     * 需要将sourceGitProjectPath分解成所有能匹配上的字段

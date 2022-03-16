@@ -29,7 +29,6 @@ import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -113,9 +112,7 @@ class TriggerMatcher @Autowired constructor(
                     startParams = it.startParams,
                     deleteTrigger = it.deleteTrigger,
                     repoHookName = checkRepoHook(
-                        preTriggerOn = newYaml.triggerOn,
-                        repoTriggerPipelineList = repoTriggerPipelineList,
-                        pipelineId = context.pipeline.pipelineId
+                        preTriggerOn = newYaml.triggerOn
                     )
                 )
             }
@@ -123,12 +120,11 @@ class TriggerMatcher @Autowired constructor(
     }
 
     private fun checkRepoHook(
-        preTriggerOn: PreTriggerOn?,
-        repoTriggerPipelineList: List<StreamRepoHookEvent>?,
-        pipelineId: String
-    ): String? {
+        preTriggerOn: PreTriggerOn?
+    ): List<String> {
+        logger.info("checkRepoHook|preTriggerOn=$preTriggerOn")
         if (preTriggerOn?.repoHook == null) {
-            return null
+            return emptyList()
         }
         val repositoryHookList = try {
             YamlUtil.getObjectMapper().readValue(
@@ -137,17 +133,19 @@ class TriggerMatcher @Autowired constructor(
             )
         } catch (e: MismatchedInputException) {
             logger.error("Format triggerOn repoHook failed.", e)
-            return null
+            return emptyList()
         }
-        val sourceGitProjectPath = repoTriggerPipelineList?.find { it.pipelineId == pipelineId }?.sourceGitProjectPath
-        repositoryHookList.find { it.name == sourceGitProjectPath }?.name?.let { name ->
-            // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
-            if (name.contains("/") && !name.startsWith("/")) {
-                return name
+        val repoHookList = mutableListOf<String>()
+        repositoryHookList.forEach {
+            it.name?.let { name ->
+                // TODO 可以添加其他条件，做预判断
+                // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
+                if (name.contains("/") && !name.startsWith("/")) {
+                    repoHookList.add(name)
+                }
             }
-
         }
-        return null
+        return repoHookList
     }
 
     private fun triggerResult(
