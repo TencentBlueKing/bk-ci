@@ -87,33 +87,17 @@ object EngineService {
     }
 
     fun claimTask(): BuildTask {
-        val pair = DHUtil.initKey()
-        val encoder = Base64.getEncoder()
-        val decoder = Base64.getDecoder()
         var retryCount = 0
         val result = HttpRetryUtils.retry {
             if (retryCount > 0) {
                 logger.warn("retry|time=$retryCount|claimTask")
             }
-            buildApi.claimTask(retryCount++, encoder.encodeToString(pair.publicKey))
+            buildApi.claimTask(retryCount++)
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to get build task")
         }
-        val buildTask = result.data ?: throw RemoteServiceException("Failed to get build task")
-        val sensitiveValues = buildTask.sensitiveInfo?.let { info ->
-            info.sensitiveValues.map { value ->
-                String(
-                    DHUtil.decrypt(decoder.decode(value),
-                        decoder.decode(info.publicKey), pair.privateKey)
-                )
-            }
-        } ?: emptyList()
-        return buildTask.copy(
-            sensitiveInfo = buildTask.sensitiveInfo?.copy(
-                sensitiveValues = sensitiveValues
-            )
-        )
+        return result.data ?: throw RemoteServiceException("Failed to get build task")
     }
 
     fun completeTask(taskResult: BuildTaskResult) {

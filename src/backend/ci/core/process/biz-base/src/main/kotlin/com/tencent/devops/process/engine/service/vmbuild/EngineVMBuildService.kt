@@ -508,10 +508,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         !it.first.startsWith("@type")
                     }.toMap(),
                     buildVariable = buildVariable,
-                    containerType = task.containerType,
-                    sensitiveInfo = publicKey?.let {
-                        buildVariableService.getEncodedSensitiveValues(task.projectId, buildId, it)
-                    }
+                    containerType = task.containerType
                 )
             }
         }
@@ -842,10 +839,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
                 pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
                 pipelineEventDispatcher.dispatch(
-                        PipelineBuildWebSocketPushEvent(
-                                source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
-                                userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
-                        )
+                    PipelineBuildWebSocketPushEvent(
+                        source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
+                        userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                    )
                 )
             }
         }

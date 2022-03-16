@@ -46,7 +46,7 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun setStarted(retryCount: Int, publicKey: String): Result<BuildVariables>
 
-    fun claimTask(retryCount: Int, publicKey: String): Result<BuildTask>
+    fun claimTask(retryCount: Int): Result<BuildTask>
 
     fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
 

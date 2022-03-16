@@ -38,7 +38,6 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import java.lang.StringBuilder
-import java.net.URLEncoder
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -75,11 +74,10 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun claimTask(retryCount: Int, publicKey: String): Result<BuildTask> {
+    override fun claimTask(retryCount: Int): Result<BuildTask> {
         val path = getRequestUrl(
             path = "api/build/worker/claim",
-            retryCount = retryCount,
-            publicKey = publicKey
+            retryCount = retryCount
         )
         val request = buildGet(path)
         val errorMessage = "领取构建机任务失败"
