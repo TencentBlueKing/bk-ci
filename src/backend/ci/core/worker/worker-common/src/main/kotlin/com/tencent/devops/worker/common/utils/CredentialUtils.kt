@@ -35,11 +35,16 @@ import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.common.security.credentials.CredentialType
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.process.BuildSDKApi
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.slf4j.LoggerFactory
 import java.util.Base64
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
 /**
@@ -49,7 +54,17 @@ import javax.ws.rs.NotFoundException
 @Suppress("ALL")
 object CredentialUtils {
 
-    private val sdkApi = ApiFactory.create(CredentialSDKApi::class)
+    private val credentialApi = ApiFactory.create(CredentialSDKApi::class)
+
+    private val buildApi = ApiFactory.create(BuildSDKApi::class)
+
+    private val sensitiveValueExecutorService = ThreadPoolExecutor(
+        Runtime.getRuntime().availableProcessors(),
+        Runtime.getRuntime().availableProcessors(),
+        0L,
+        TimeUnit.MILLISECONDS,
+        ArrayBlockingQueue(16000)
+    )
 
     fun getCredential(
         buildId: String,
@@ -97,14 +112,14 @@ object CredentialUtils {
         val encoder = Base64.getEncoder()
         logger.info("Start to get the credential($credentialId|$acrossProjectId)")
 
-        val result = sdkApi.get(credentialId, encoder.encodeToString(pair.publicKey))
+        val result = credentialApi.get(credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isOk() && result.data != null) {
             return result
         }
         // 当前项目取不到查看是否有跨项目凭证
         if (!acrossProjectId.isNullOrBlank()) {
             val acrossResult =
-                sdkApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
+                credentialApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
             if (acrossResult.isNotOk() || acrossResult.data == null) {
                 logger.error("Fail to get the across project($acrossProjectId) " +
                     "credential($credentialId) because of ${result.message}")
@@ -291,6 +306,24 @@ object CredentialUtils {
             list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
         }
         return list
+    }
+
+    private fun saveSensitiveValues(
+        projectId: String,
+        buildId: String,
+        sensitiveValues: MutableSet<String>
+    ) {
+        try {
+            sensitiveValueExecutorService.execute {
+                buildApi.saveSensitiveValues(
+                    projectId = projectId,
+                    buildId = buildId,
+                    values = sensitiveValues
+                )
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("TICKET|saveSensitiveValues error|sensitiveValues=$sensitiveValues", ignore)
+        }
     }
 
     private val logger = LoggerFactory.getLogger(CredentialUtils::class.java)

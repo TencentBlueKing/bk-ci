@@ -607,17 +607,6 @@ class ServiceBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun saveSensitiveValues(projectId: String, buildId: String, values: Set<String>): Result<Boolean> {
-        return Result(
-            buildVariableService.batchSetSensitiveValue(
-                projectId = projectId,
-                pipelineId = null,
-                buildId = buildId,
-                values = values
-            )
-        )
-    }
-
     private fun checkParam(projectId: String, pipelineId: String) {
         if (pipelineId.isBlank()) {
             throw ParamBlankException("Invalid pipelineId")

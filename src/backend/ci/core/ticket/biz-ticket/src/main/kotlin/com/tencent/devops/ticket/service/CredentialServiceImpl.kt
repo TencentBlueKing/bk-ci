@@ -58,9 +58,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Base64
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
@@ -73,14 +70,6 @@ class CredentialServiceImpl @Autowired constructor(
     private val client: Client,
     private val credentialDao: CredentialDao
 ) : CredentialService {
-
-    private val sensitiveValueExecutorService = ThreadPoolExecutor(
-        Runtime.getRuntime().availableProcessors(),
-        Runtime.getRuntime().availableProcessors(),
-        0L,
-        TimeUnit.MILLISECONDS,
-        ArrayBlockingQueue(16000)
-    )
 
     override fun serviceEdit(userId: String?, projectId: String, credentialId: String, credential: CredentialUpdate) {
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
@@ -275,7 +264,7 @@ class CredentialServiceImpl @Autowired constructor(
                 AuthPermission.EDIT
             )
         )
-        if (permissionToListMap.isEmpty()) {
+        if (permissionToListMap.isNullOrEmpty()) {
             return SQLPage(0, emptyList())
         }
         val hasListPermissionCredentialIdList = permissionToListMap[AuthPermission.LIST]!!
@@ -469,30 +458,7 @@ class CredentialServiceImpl @Autowired constructor(
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        val credentialRecord = credentialDao.getOrNull(
-            dslContext = dslContext,
-            projectId = buildBasicInfo.projectId,
-            credentialId = credentialId
-        ) ?: return null
-        val sensitiveValues = filterValues(credentialRecord)
-        saveSensitiveValues(projectId, buildId, sensitiveValues)
-        return credentialInfo(publicKey, credentialRecord)
-    }
-
-    override fun buildBatchGet(projectId: String, buildId: String, publicKey: String): List<CredentialInfo> {
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
-        if (buildBasicInfoResult.isNotOk()) {
-            throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        }
-        val buildBasicInfo = buildBasicInfoResult.data
-            ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        val sensitiveValues = mutableSetOf<String>()
-        val credentialList = credentialDao.batchGet(dslContext, buildBasicInfo.projectId).map { credentialRecord ->
-            sensitiveValues.addAll(filterValues(credentialRecord))
-            credentialInfo(publicKey, credentialRecord)
-        }.toList()
-        saveSensitiveValues(projectId, buildId, sensitiveValues)
-        return credentialList
+        return serviceGet(buildBasicInfo.projectId, credentialId, publicKey)
     }
 
     override fun buildGetAcrossProject(
@@ -735,37 +701,6 @@ class CredentialServiceImpl @Autowired constructor(
             it.templateType == TemplateAcrossInfoType.STEP &&
                 it.templateInstancesIds.contains(taskId)
         }
-    }
-
-    private fun saveSensitiveValues(projectId: String, buildId: String, sensitiveValues: MutableSet<String>) {
-        try {
-            sensitiveValueExecutorService.execute {
-                client.get(ServiceBuildResource::class).saveSensitiveValues(
-                    projectId = projectId,
-                    buildId = buildId,
-                    values = sensitiveValues
-                )
-            }
-        } catch (ignore: Throwable) {
-            logger.warn("TICKET|saveSensitiveValues error|sensitiveValues=$sensitiveValues", ignore)
-        }
-    }
-
-    private fun filterValues(credentialRecord: TCredentialRecord): MutableSet<String> {
-        val sensitiveValues = mutableSetOf<String>()
-        credentialRecord.credentialV1?.let {
-            if (it.isNotBlank()) sensitiveValues.add(it)
-        }
-        credentialRecord.credentialV2?.let {
-            if (it.isNotBlank()) sensitiveValues.add(it)
-        }
-        credentialRecord.credentialV3?.let {
-            if (it.isNotBlank()) sensitiveValues.add(it)
-        }
-        credentialRecord.credentialV4?.let {
-            if (it.isNotBlank()) sensitiveValues.add(it)
-        }
-        return sensitiveValues
     }
 
     companion object {

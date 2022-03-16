@@ -193,4 +193,30 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         )
         return objectMapper.readValue(responseContent)
     }
+
+    override fun saveSensitiveValues(
+        projectId: String,
+        buildId: String,
+        values: Set<String>
+    ): Result<Boolean> {
+        val sb = StringBuilder(
+            "/ms/process/api/build/variable/projects/$projectId" +
+                "/builds/$buildId/save_sensitive_value"
+        )
+        val path = sb.toString()
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(values)
+        )
+        val request = buildPost(path, requestBody)
+        val errorMessage = "获取模板跨项目信息失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
+    }
 }
