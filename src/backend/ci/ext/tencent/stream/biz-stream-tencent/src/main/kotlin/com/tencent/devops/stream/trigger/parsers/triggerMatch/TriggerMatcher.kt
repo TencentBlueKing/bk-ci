@@ -184,6 +184,7 @@ class TriggerMatcher @Autowired constructor(
                 repoHook = triggerOn.repoHook
             )
         ) {
+            logger.warn("repo trigger check credentials fail")
             return TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
         }
 
