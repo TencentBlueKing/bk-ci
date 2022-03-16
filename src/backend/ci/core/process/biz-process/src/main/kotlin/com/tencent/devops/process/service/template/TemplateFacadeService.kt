@@ -950,12 +950,14 @@ class TemplateFacadeService @Autowired constructor(
         model.labels = labels
         model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
-        try {
-            checkTemplate(templateResult, projectId)
-        } catch (ignored: ErrorCodeException) {
-            // 兼容历史数据，模板内容有问题给出错误提示
-            val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-            templateResult.tips = message ?: ignored.defaultMessage
+        if (!latestTemplate.storeFlag || latestTemplate.srcTemplateId.isNullOrBlank()) {
+            try {
+                checkTemplate(templateResult, projectId)
+            } catch (ignored: ErrorCodeException) {
+                // 兼容历史数据，模板内容有问题给出错误提示
+                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
+                templateResult.tips = message ?: ignored.defaultMessage
+            }
         }
         val latestVersion = TemplateVersion(
             version = latestTemplate.version,

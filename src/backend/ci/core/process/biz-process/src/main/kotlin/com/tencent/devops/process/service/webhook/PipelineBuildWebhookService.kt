@@ -75,39 +75,38 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
+import org.springframework.context.ApplicationContextAware
 
 @Suppress("ALL")
-abstract class PipelineBuildWebhookService @Autowired constructor() {
+abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
-    @Autowired
-    lateinit var objectMapper: ObjectMapper
+    override fun setApplicationContext(applicationContext: ApplicationContext) {
+        objectMapper = applicationContext.getBean(ObjectMapper::class.java)
+        client = applicationContext.getBean(Client::class.java)
+        pipelineWebhookService = applicationContext.getBean(PipelineWebhookService::class.java)
+        pipelineRepositoryService = applicationContext.getBean(PipelineRepositoryService::class.java)
+        pipelineBuildService = applicationContext.getBean(PipelineBuildService::class.java)
+        scmWebhookMatcherBuilder = applicationContext.getBean(ScmWebhookMatcherBuilder::class.java)
+        gitWebhookUnlockDispatcher = applicationContext.getBean(GitWebhookUnlockDispatcher::class.java)
+        pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
+        buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
+        pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
+    }
 
-    @Autowired
-    lateinit var client: Client
-
-    @Autowired
-    lateinit var pipelineWebhookService: PipelineWebhookService
-
-    @Autowired
-    lateinit var pipelineRepositoryService: PipelineRepositoryService
-
-    @Autowired
-    lateinit var pipelineBuildService: PipelineBuildService
-
-    @Autowired
-    lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
-
-    @Autowired
-    lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
-
-    @Autowired
-    lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
-
-    @Autowired
-    lateinit var buildLogPrinter: BuildLogPrinter
-
-    private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+    companion object {
+        lateinit var objectMapper: ObjectMapper
+        lateinit var client: Client
+        lateinit var pipelineWebhookService: PipelineWebhookService
+        lateinit var pipelineRepositoryService: PipelineRepositoryService
+        lateinit var pipelineBuildService: PipelineBuildService
+        lateinit var scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder
+        lateinit var gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher
+        lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
+        lateinit var buildLogPrinter: BuildLogPrinter
+        lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
+        private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
+    }
 
     fun externalCodeSvnBuild(e: String): Boolean {
         logger.info("Trigger code svn build - $e")
@@ -257,7 +256,7 @@ abstract class PipelineBuildWebhookService @Autowired constructor() {
                         return@outside
                     }
 
-                    if (webhookTriggerPipelineBuild(
+                    if (pipelinebuildWebhookService.webhookTriggerPipelineBuild(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             codeRepositoryType = codeRepositoryType,
@@ -332,7 +331,7 @@ abstract class PipelineBuildWebhookService @Autowired constructor() {
         return canWebhookStartup
     }
 
-    fun webhookTriggerPipelineBuild(
+    open fun webhookTriggerPipelineBuild(
         projectId: String,
         pipelineId: String,
         codeRepositoryType: String,

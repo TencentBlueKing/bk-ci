@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.listener
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.service.PipelineDispatchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -44,6 +45,7 @@ class ThirdPartyAgentListener @Autowired constructor(
     private val pipelineDispatchService: PipelineDispatchService,
     private val client: Client
 ) {
+    @BkTimed
     fun listenAgentStartUpEvent(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
         try {
             if (checkRunning(pipelineAgentStartupEvent)) {
