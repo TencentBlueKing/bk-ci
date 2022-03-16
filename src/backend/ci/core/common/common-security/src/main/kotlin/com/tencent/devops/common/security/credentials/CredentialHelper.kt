@@ -57,6 +57,7 @@ class CredentialHelper(
         )
     }
 
+    @Suppress("ComplexMethod", "ReturnCount")
     private fun isValid(credentialType: CredentialType, v1: String, v2: String?, update: Boolean = false): Boolean {
         return when (credentialType) {
             CredentialType.PASSWORD -> {
@@ -111,27 +112,23 @@ class CredentialHelper(
         if (aesEncryptedCredential.isNullOrBlank()) {
             return null
         }
-        try {
-            val credential = AESUtil.decrypt(aesKey, aesEncryptedCredential!!)
-            val credentialEncryptedContent =
-                DHUtil.encrypt(credential.toByteArray(), publicKeyByteArray, serverPrivateKeyByteArray)
-            return String(Base64.getEncoder().encode(credentialEncryptedContent))
-        } catch (ignored: Throwable) {
-            throw ignored
-        }
+        val credential = AESUtil.decrypt(aesKey, aesEncryptedCredential)
+        val credentialEncryptedContent =
+            DHUtil.encrypt(credential.toByteArray(), publicKeyByteArray, serverPrivateKeyByteArray)
+        return String(Base64.getEncoder().encode(credentialEncryptedContent))
     }
 
     fun decryptCredential(aesCredential: String?): String? {
         if (aesCredential.isNullOrBlank()) {
             return null
         }
-        return AESUtil.decrypt(aesKey, aesCredential!!)
+        return AESUtil.decrypt(aesKey, aesCredential)
     }
 
     fun encryptCredential(credential: String?): String? {
         if (credential.isNullOrBlank() || credential == credentialMixer) {
             return null
         }
-        return AESUtil.encrypt(aesKey, credential!!)
+        return AESUtil.encrypt(aesKey, credential)
     }
 }
