@@ -163,7 +163,6 @@ object Runner {
         loop@ while (true) {
             logger.info("Start to claim the task")
             val buildTask = EngineService.claimTask()
-            LoggerService.addSensitiveValues(buildTask.sensitiveInfo?.sensitiveValues)
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
