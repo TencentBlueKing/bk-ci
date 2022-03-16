@@ -177,7 +177,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             if (lock.tryLock()) {
                 // 判断是否修改变量环境或变量名
                 if (storeEnvVarRequest.scope != maxVersionData.scope || storeEnvVarRequest.varName != maxVersionData.varName) {
-                    if (storeEnvVarDao.updateVariableEnvironment(
+                    storeEnvVarDao.updateVariableEnvironment(
                             dslContext = dslContext,
                             userId = userId,
                             storeType = storeType,
@@ -186,14 +186,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                             scope = storeEnvVarRequest.scope,
                             pastName = maxVersionData.varName,
                             varName = storeEnvVarRequest.varName
-                        ) == 0
-                    ) {
-                        return MessageCodeUtil.generateResponseDataObject(
-                            messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
-                            params = arrayOf(storeEnvVarRequest.varName),
-                            data = false
                         )
-                    }
                 }
                 // 如变量值变更，则添加新记录
                 if (storeEnvVarRequest.varValue != maxVersionData.varValue && storeEnvVarRequest.varValue != "******") {
@@ -206,7 +199,9 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 } else {
                     // 判断变量值是否需要进行加密或解密
                     val value = if (storeEnvVarRequest.encryptFlag != maxVersionData.encryptFlag) {
-                        if (storeEnvVarRequest.encryptFlag) AESUtil.encrypt(aesKey, maxVersionData.varValue) else AESUtil.decrypt(aesKey, maxVersionData.varValue)
+                        if (storeEnvVarRequest.encryptFlag)
+                            AESUtil.encrypt(aesKey, maxVersionData.varValue)
+                        else AESUtil.decrypt(aesKey, maxVersionData.varValue)
                     } else maxVersionData.varValue
                     storeEnvVarDao.updateVariable(
                         dslContext = dslContext,

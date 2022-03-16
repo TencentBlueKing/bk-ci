@@ -118,7 +118,10 @@ class StoreEnvVarDao {
     ) {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
             dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(scope)).and(VAR_NAME.`in`(varNameList)))
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(SCOPE.eq(scope))
+                    .and(VAR_NAME.`in`(varNameList)))
                 .execute()
         }
     }
@@ -161,7 +164,10 @@ class StoreEnvVarDao {
             return dslContext.update(this)
                 .set(this.SCOPE, scope)
                 .set(this.VAR_NAME, varName)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(SCOPE.eq(pastScope)).and(VAR_NAME.eq(pastName)))
+                .where(STORE_CODE.eq(storeCode)
+                    .and(STORE_TYPE.eq(storeType))
+                    .and(SCOPE.eq(pastScope))
+                    .and(VAR_NAME.eq(pastName)))
                 .execute()
         }
     }
@@ -176,7 +182,10 @@ class StoreEnvVarDao {
         encryptFlag: Boolean
     ): Int {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            return dslContext.update(this).set(this.VAR_VALUE, varValue).set(this.VAR_DESC, varDesc).set(this.ENCRYPT_FLAG, encryptFlag)
+            return dslContext.update(this)
+                .set(this.VAR_VALUE, varValue)
+                .set(this.VAR_DESC, varDesc)
+                .set(this.ENCRYPT_FLAG, encryptFlag)
                 .where(STORE_CODE.eq(storeCode)
                     .and(STORE_TYPE.eq(storeType))
                     .and(ID.eq(variableId)))
