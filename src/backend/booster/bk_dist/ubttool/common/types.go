@@ -12,6 +12,7 @@ package common
 // Flags to desc flag of this tool
 type Flags struct {
 	ActionChainFile string
+	MostDepentFirst bool
 }
 
 // Action to desc single ubt action
@@ -38,6 +39,7 @@ type Actionresult struct {
 	Succeed   bool
 	Outputmsg string
 	Errormsg  string
+	Exitcode  int
 }
 
 func uniqueAndCheck(strlist []string, allindex map[string]bool) []string {

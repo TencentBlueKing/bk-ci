@@ -30,33 +30,31 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
+import com.tencent.devops.process.api.builds.BuildSubPipelineResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
+import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import org.springframework.stereotype.Component
 
 @Suppress("UNUSED")
 @Component
 class SubPipelineCallAtom constructor(
+    private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildService: PipelineBuildService,
     private val pipelineRepositoryService: PipelineRepositoryService
 ) : IAtomTask<SubPipelineCallElement> {
 
@@ -79,7 +77,7 @@ class SubPipelineCallAtom constructor(
             )
         } else {
             val subBuildId = task.subBuildId!!
-            val subBuildInfo = pipelineRuntimeService.getBuildInfo(subBuildId)
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(task.subProjectId!!, subBuildId)
             return if (subBuildInfo == null) {
                 buildLogPrinter.addRedLine(
                     buildId = task.buildId,
@@ -155,7 +153,7 @@ class SubPipelineCallAtom constructor(
             )
         }
 
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(task.projectId, subPipelineId!!)
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(task.projectId, subPipelineId)
             ?: throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
@@ -163,26 +161,38 @@ class SubPipelineCallAtom constructor(
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
 
-        val startType = runVariables.getValue(PIPELINE_START_TYPE)
-        val userId = if (startType == StartType.PIPELINE.name) {
-            runVariables.getValue(PIPELINE_START_PIPELINE_USER_ID)
-        } else {
-            runVariables.getValue(PIPELINE_START_USER_ID)
-        }
-        val startParams = mutableMapOf<String, Any>()
+        val startParams = mutableMapOf<String, String>()
         param.parameters?.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
-        val subBuildId = pipelineBuildService.subPipelineStartup(
-            userId = userId,
+
+        val result = client.get(BuildSubPipelineResource::class).callPipelineStartup(
             projectId = task.projectId,
             parentPipelineId = task.pipelineId,
-            parentBuildId = task.buildId,
-            parentTaskId = task.taskId,
-            pipelineId = subPipelineId,
+            callPipelineId = subPipelineId,
+            buildId = task.buildId,
             channelCode = ChannelCode.valueOf(runVariables.getValue(PIPELINE_START_CHANNEL)),
-            parameters = startParams
+            atomCode = task.taskId,
+            taskId = task.taskId,
+            runMode = if (param.asynchronous) {
+                "asyn"
+            } else {
+                "syn"
+            },
+            values = startParams
         )
+
+        if (result.isNotOk()) {
+            buildLogPrinter.addErrorLine(
+                buildId = task.buildId,
+                message = result.message ?: result.status.toString(),
+                tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            )
+            return defaultFailAtomResponse
+        }
+
+        val subBuildId = result.data?.id
+
         buildLogPrinter.addLine(
             buildId = task.buildId,
             message = "<a target='_blank' href='/console/pipeline/${task.projectId}/" +

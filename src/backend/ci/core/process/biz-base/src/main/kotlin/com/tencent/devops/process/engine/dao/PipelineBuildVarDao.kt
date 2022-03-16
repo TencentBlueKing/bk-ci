@@ -32,8 +32,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_VAR
 import com.tencent.devops.model.process.tables.records.TPipelineBuildVarRecord
 import org.jooq.DSLContext
-import org.jooq.InsertOnDuplicateSetMoreStep
-import org.jooq.Query
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,7 +61,6 @@ class PipelineBuildVarDao @Autowired constructor() {
             )
                 .values(projectId, pipelineId, buildId, name, value.toString())
                 .onDuplicateKeyUpdate()
-                .set(PROJECT_ID, projectId)
                 .set(PIPELINE_ID, pipelineId)
                 .set(VALUE, value.toString())
                 .execute()
@@ -72,6 +69,7 @@ class PipelineBuildVarDao @Autowired constructor() {
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         name: String,
         value: Any,
@@ -83,22 +81,28 @@ class PipelineBuildVarDao @Autowired constructor() {
                 baseStep.set(VAR_TYPE, valueType)
             }
             return baseStep.set(VALUE, value.toString())
-                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.notEqual(true)))
+                .where(BUILD_ID.eq(buildId).and(KEY.eq(name)).and(READ_ONLY.notEqual(true))
+                    .and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }
 
-    fun getVars(dslContext: DSLContext, buildId: String, key: String? = null): MutableMap<String, String> {
+    fun getVars(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        key: String? = null
+    ): MutableMap<String, String> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (key != null) {
                 where.and(KEY.eq(key))
             }
             val result = where.fetch()
             val map = mutableMapOf<String, String>()
-            result?.forEach {
+            result.forEach {
                 map[it[KEY]] = it[VALUE]
             }
             return map
@@ -127,11 +131,17 @@ class PipelineBuildVarDao @Autowired constructor() {
         }
     }
 
-    fun getVarsWithType(dslContext: DSLContext, buildId: String, key: String? = null): List<BuildParameters> {
+    fun getVarsWithType(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        key: String? = null
+    ): List<BuildParameters> {
 
         with(T_PIPELINE_BUILD_VAR) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
             if (key != null) {
                 where.and(KEY.eq(key))
             }
@@ -149,9 +159,9 @@ class PipelineBuildVarDao @Autowired constructor() {
     }
 
     @Suppress("UNUSED")
-    fun deleteBuildVar(dslContext: DSLContext, buildId: String, varName: String? = null): Int {
+    fun deleteBuildVar(dslContext: DSLContext, projectId: String, buildId: String, varName: String? = null): Int {
         return with(T_PIPELINE_BUILD_VAR) {
-            val delete = dslContext.delete(this).where(BUILD_ID.eq(buildId))
+            val delete = dslContext.delete(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (!varName.isNullOrBlank()) {
                 delete.and(KEY.eq(varName))
             }
@@ -166,8 +176,6 @@ class PipelineBuildVarDao @Autowired constructor() {
         buildId: String,
         variables: List<BuildParameters>
     ) {
-        val sets =
-            mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>>()
         with(T_PIPELINE_BUILD_VAR) {
             val maxLength = VALUE.dataType.length()
             variables.forEach { v ->
@@ -176,10 +184,8 @@ class PipelineBuildVarDao @Autowired constructor() {
                     LOG.error("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
                     return@forEach
                 }
-
-                val set: InsertOnDuplicateSetMoreStep<TPipelineBuildVarRecord>
                 if (v.valueType != null) {
-                    set = dslContext.insertInto(this)
+                    dslContext.insertInto(this)
                         .set(PROJECT_ID, projectId)
                         .set(PIPELINE_ID, pipelineId)
                         .set(BUILD_ID, buildId)
@@ -190,8 +196,9 @@ class PipelineBuildVarDao @Autowired constructor() {
                         .onDuplicateKeyUpdate()
                         .set(VALUE, v.value.toString())
                         .set(VAR_TYPE, v.valueType!!.name)
+                        .execute()
                 } else {
-                    set = dslContext.insertInto(this)
+                    dslContext.insertInto(this)
                         .set(PROJECT_ID, projectId)
                         .set(PIPELINE_ID, pipelineId)
                         .set(BUILD_ID, buildId)
@@ -200,16 +207,7 @@ class PipelineBuildVarDao @Autowired constructor() {
                         .set(READ_ONLY, v.readOnly)
                         .onDuplicateKeyUpdate()
                         .set(VALUE, v.value.toString())
-                }
-                sets.add(set)
-            }
-        }
-        if (sets.isNotEmpty()) {
-            val count = dslContext.batch(sets).execute()
-            var success = 0
-            count.forEach {
-                if (it == 1) {
-                    success++
+                        .execute()
                 }
             }
         }
@@ -217,10 +215,10 @@ class PipelineBuildVarDao @Autowired constructor() {
 
     fun batchUpdate(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         variables: List<BuildParameters>
     ) {
-        val list = mutableListOf<Query>()
         with(T_PIPELINE_BUILD_VAR) {
             variables.forEach { v ->
                 val baseStep = dslContext.update(this)
@@ -230,11 +228,10 @@ class PipelineBuildVarDao @Autowired constructor() {
                     baseStep.set(VAR_TYPE, valueType.name)
                 }
                 baseStep.set(VALUE, v.value.toString()).where(
-                        BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(READ_ONLY.notEqual(true))
-                )
-                list.add(baseStep)
+                    BUILD_ID.eq(buildId).and(KEY.eq(v.key)).and(READ_ONLY.notEqual(true).and(PROJECT_ID.eq(projectId))
+                    )
+                ).execute()
             }
-            dslContext.batch(list).execute()
         }
     }
 

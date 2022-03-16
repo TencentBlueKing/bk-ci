@@ -198,7 +198,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             body.byteStream().use { bs ->
                 Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
             }
-        } catch (e: SocketTimeoutException) {
+        } catch (e: Exception) {
             logger.warn("Failed to copy download body, try to retry.")
             if (retryCount > 0) {
                 download(response, destPath, retryCount - 1)
@@ -214,7 +214,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val MultipartFormData = MediaType.parse("multipart/form-data")
         private const val EMPTY = ""
         private const val DEFAULT_RETRY_TIME = 5
-        private const val sleepTimeMills = 5000L
+        private const val sleepTimeMills = 500L
         private const val CONNECT_TIMEOUT = 5L
         private const val READ_TIMEOUT = 60L
         private const val WRITE_TIMEOUT = 60L

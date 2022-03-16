@@ -135,7 +135,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1500,
+                pageSize: 2000,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword

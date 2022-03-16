@@ -48,7 +48,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -342,7 +341,6 @@ interface UserPipelineResource {
 
     @ApiOperation("用户获取视图流水线编排列表")
     @GET
-    // @Path("/projects/{projectId}/listViewPipelines")
     @Path("/projects/{projectId}/listViewPipelines")
     fun listViewPipelines(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -376,7 +374,6 @@ interface UserPipelineResource {
 
     @ApiOperation("有权限流水线编排列表")
     @GET
-    // @Path("/projects/{projectId}/authPipelines")
     @Path("/{projectId}/")
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -561,30 +558,6 @@ interface UserPipelineResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
-
-    @ApiOperation("用户获取视图流水线编排列表-红线")
-    @GET
-    @Path("/projects/{projectId}/listQualityViewPipelines")
-    fun listQualityViewPipelines(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线名称关键字", required = false)
-        @QueryParam("keywords")
-        keywords: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("用户视图ID", required = false)
-        @QueryParam("viewId")
-        viewId: String?
-    ): Result<PipelineViewPipelinePage<QualityPipeline>>
 
     @ApiOperation("校验matrix yaml格式")
     @POST

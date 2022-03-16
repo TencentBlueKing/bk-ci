@@ -32,7 +32,12 @@ enum class TGitObjectKind(val value: String) {
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),
     MANUAL("manual"),
-    SCHEDULE("schedule");
+    SCHEDULE("schedule"),
+    DELETE("delete"),
+    OPENAPI("openApi"),
+    ISSUE("issue"),
+    REVIEW("review"),
+    NOTE("note");
 
     // 方便Json初始化使用常量保存，需要同步维护
     companion object {
@@ -41,5 +46,10 @@ enum class TGitObjectKind(val value: String) {
         const val OBJECT_KIND_TAG_PUSH = "tag_push"
         const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
         const val OBJECT_KIND_SCHEDULE = "schedule"
+        const val OBJECT_KIND_DELETE = "delete"
+        const val OBJECT_KIND_OPENAPI = "openApi"
+        const val OBJECT_KIND_ISSUE = "issue"
+        const val OBJECT_KIND_REVIEW = "review"
+        const val OBJECT_KIND_NOTE = "note"
     }
 }

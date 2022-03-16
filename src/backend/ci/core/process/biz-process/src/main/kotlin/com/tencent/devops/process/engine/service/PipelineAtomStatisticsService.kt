@@ -60,12 +60,14 @@ class PipelineAtomStatisticsService @Autowired constructor(
      * 更新插件对应的流水线数量
      */
     fun updateAtomPipelineNum(
+        projectId: String,
         pipelineId: String,
         version: Int? = null,
-        deleteFlag: Boolean = false
+        deleteFlag: Boolean = false,
+        restoreFlag: Boolean = false
     ) {
         val pipelineNumUpdateList = mutableListOf<StoreStatisticPipelineNumUpdate>()
-        val currentVersionModelStr = getVersionModelString(pipelineId, version) ?: return
+        val currentVersionModelStr = getVersionModelString(projectId, pipelineId, version) ?: return
         val currentVersionModel = JsonUtil.to(currentVersionModelStr, Model::class.java)
         // 获取当前流水线版本模型中插件的集合（去掉重复插件）
         val currentVersionAtomSet = getModelAtomSet(currentVersionModel)
@@ -77,8 +79,8 @@ class PipelineAtomStatisticsService @Autowired constructor(
                 if (version == null) {
                     return
                 }
-                if (version > 1) {
-                    val lastVersionModelStr = getVersionModelString(pipelineId, version - 1) ?: return
+                if (version > 1 && !restoreFlag) {
+                    val lastVersionModelStr = getVersionModelString(projectId, pipelineId, version - 1) ?: return
                     val lastVersionModel = JsonUtil.to(lastVersionModelStr, Model::class.java)
                     // 获取上一个流水线版本模型中插件的集合（去掉重复插件）
                     val lastVersionAtomSet = getModelAtomSet(lastVersionModel)
@@ -137,7 +139,7 @@ class PipelineAtomStatisticsService @Autowired constructor(
         return modelAtomSet
     }
 
-    private fun getVersionModelString(pipelineId: String, version: Int?): String? {
-        return pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
+    private fun getVersionModelString(projectId: String, pipelineId: String, version: Int?): String? {
+        return pipelineResVersionDao.getVersionModelString(dslContext, projectId, pipelineId, version)
     }
 }

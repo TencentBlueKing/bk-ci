@@ -81,8 +81,11 @@ class CheckConditionalSkipStageCmd constructor(
         if (controlOption != null) {
             val conditions = controlOption.customVariables ?: emptyList()
             val contextMap = pipelineContextService.buildContext(
+                projectId = stage.projectId,
                 buildId = stage.buildId,
+                stageId = stage.stageId,
                 containerId = null,
+                taskId = null,
                 variables = variables
             )
             skip = ControlUtils.checkStageSkipCondition(

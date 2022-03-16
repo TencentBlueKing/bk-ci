@@ -70,7 +70,9 @@ data class QualityRule(
     @ApiModelProperty("红线状态", required = false)
     val status: RuleInterceptResult?,
     @ApiModelProperty("红线所在stage", required = true)
-    val stageId: String
+    val stageId: String,
+    @ApiModelProperty("红线指定的任务节点名", required = false)
+    val taskSteps: List<RuleTask>?
 ) {
     data class RuleControlPoint(
         val hashId: String,
@@ -93,5 +95,12 @@ data class QualityRule(
         val auditUserList: List<String>?,
         @ApiModelProperty("审核超时时间", required = false)
         val auditTimeoutMinutes: Int?
+    )
+
+    data class RuleTask(
+        @ApiModelProperty("任务节点名", required = false)
+        val taskName: String?,
+        @ApiModelProperty("指标名", required = false)
+        val indicatorEnName: String?
     )
 }

@@ -56,23 +56,23 @@ class PipelineTaskPauseService @Autowired constructor(
         pipelinePauseValueDao.save(dslContext, pipelinePauseValue)
     }
 
-    fun getPauseTask(buildId: String, taskId: String): PipelinePauseValue? {
-        return pipelinePauseValueDao.convert(pipelinePauseValueDao.get(dslContext, buildId, taskId))
+    fun getPauseTask(projectId: String, buildId: String, taskId: String): PipelinePauseValue? {
+        return pipelinePauseValueDao.convert(pipelinePauseValueDao.get(dslContext, projectId, buildId, taskId))
     }
 
     @Suppress("NestedBlockDepth")
-    fun resetElementWhenPauseRetry(buildId: String, model: Model) {
+    fun resetElementWhenPauseRetry(projectId: String, buildId: String, model: Model) {
         model.stages.forEach { stage ->
             stage.containers.forEach { container ->
-                resetElementInContainer(container, buildId)
+                resetElementInContainer(container, projectId, buildId)
                 container.fetchGroupContainers()?.forEach {
-                    resetElementInContainer(it, buildId)
+                    resetElementInContainer(it, projectId, buildId)
                 }
             }
         }
     }
 
-    private fun resetElementInContainer(container: Container, buildId: String) {
+    private fun resetElementInContainer(container: Container, projectId: String, buildId: String) {
         val newElements = ArrayList<Element>(container.elements.size)
         container.elements.forEach nextElement@{ element ->
             if (element.id == null) {
@@ -86,7 +86,7 @@ class PipelineTaskPauseService @Autowired constructor(
             }
 
             if (ControlUtils.pauseFlag(element.additionalOptions)) {
-                val defaultElement = getPauseTask(buildId, element.id!!)
+                val defaultElement = getPauseTask(projectId, buildId, element.id!!)
                 if (defaultElement != null) {
                     logger.info("Refresh element| $buildId|${element.id}")
                     // 恢复detail表model内的对应element为默认值

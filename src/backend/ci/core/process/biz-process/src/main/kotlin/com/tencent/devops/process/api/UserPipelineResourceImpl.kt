@@ -66,9 +66,8 @@ import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
-import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -478,6 +477,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.listViewAndPipelines(userId, projectId, page, pageSize))
     }
 
+    @Timed
     override fun listViewPipelines(
         userId: String,
         projectId: String,
@@ -602,29 +602,6 @@ class UserPipelineResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 page = page,
                 pageSize = pageSize
-            )
-        )
-    }
-
-    override fun listQualityViewPipelines(
-        userId: String,
-        projectId: String,
-        keywords: String?,
-        page: Int?,
-        pageSize: Int?,
-        viewId: String?
-    ): Result<PipelineViewPipelinePage<QualityPipeline>> {
-        return Result(
-            pipelineListFacadeService.listQualityViewPipelines(
-                userId = userId,
-                projectId = projectId,
-                page = page,
-                pageSize = pageSize,
-                sortType = PipelineSortType.CREATE_TIME,
-                channelCode = ChannelCode.BS,
-                viewId = viewId ?: PIPELINE_VIEW_ALL_PIPELINES,
-                checkPermission = true,
-                filterByPipelineName = keywords
             )
         )
     }
