@@ -75,14 +75,14 @@ class PollSvnConfig : SchedulingConfigurer {
         )
     }
 
-    private fun checkoutInterval() : Long{
-        if(interval < MIN_POLL_INTERVAL) return MIN_POLL_INTERVAL
+    private fun checkoutInterval(): Long {
+        if (interval < MIN_POLL_INTERVAL) return MIN_POLL_INTERVAL
         else if (interval > MAX_POLL_INTERVAL) return MAX_POLL_INTERVAL
         return interval
     }
 
 
-    companion object{
+    companion object {
         val MIN_POLL_INTERVAL = 60L
         val MAX_POLL_INTERVAL = 300L
     }
