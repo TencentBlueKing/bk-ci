@@ -215,7 +215,7 @@
             canSkipElement: Boolean,
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {

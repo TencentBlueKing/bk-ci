@@ -19,6 +19,10 @@ export const ATOM_ADD_EVENT_NAME = 'add-atom'
 export const ADD_STAGE = 'add-stage'
 export const STAGE_CHECK = 'stage-check'
 export const STAGE_RETRY = 'stage-retry'
+export const DEBUG_CONTAINER = 'debug-container'
+
+export const DOCKER_BUILD_TYPE = 'DOCKER'
+export const PUBLIC_DEVCLOUD_BUILD_TYPE = 'PUBLIC_DEVCLOUD'
 
 export const STATUS_MAP = {
     WAITING: 'WAITING',

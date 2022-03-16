@@ -72,6 +72,10 @@
                 type: Boolean,
                 default: false
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
             canSkipElement: {
                 type: Boolean,
                 default: false
@@ -92,7 +96,7 @@
             updateCruveConnectHeight: Function,
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {

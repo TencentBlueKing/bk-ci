@@ -35,13 +35,14 @@
             <span v-if="canStageRetry" @click.stop="triggerStageRetry" class="stage-single-retry">
                 {{ t('retry') }}
             </span>
-            <span v-if="!stage.isError && showCopyStage" class="stage-entry-btns">
+            <span v-if="!stage.isError" class="stage-entry-btns">
                 <Logo
+                    v-if="showCopyStage"
                     name="clipboard"
                     size="14"
                     :title="t('copyStage')"
                     @click.stop="copyStage" />
-                <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
+                <i v-if="showDeleteStage" @click.stop="deleteStageHandler" class="add-plus-icon close" />
             </span>
             <stage-check-icon
                 v-if="showStageCheck(stage.checkOut)"
@@ -71,9 +72,11 @@
                 :stage-disabled="stageDisabled"
                 :container-length="computedContainer.length"
                 :container="container"
+                :is-finally-stage="isFinallyStage"
                 :stage="stage"
                 :user-name="userName"
                 :cancel-user-id="cancelUserId"
+                :is-latest-build="isLatestBuild"
                 :match-rules="matchRules"
                 @[COPY_EVENT_NAME]="handleCopyContainer"
                 @[DELETE_EVENT_NAME]="handleDeleteContainer"
@@ -159,6 +162,10 @@
                 type: Boolean,
                 default: false
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -182,7 +189,7 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         emits: [
@@ -216,6 +223,9 @@
             },
             showCopyStage () {
                 return this.isMiddleStage && this.editable
+            },
+            showDeleteStage () {
+                return this.editable && !this.isTriggerStage
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -502,8 +512,10 @@
         padding: 0 0 24px 0;
         background: $stageBGColor;
         margin: 0 $StageMargin 0 0;
+        z-index: 1;
 
         .pipeline-stage-entry {
+            position: relative;
             cursor: pointer;
             display: flex;
             width: 100%;
@@ -565,11 +577,12 @@
 
             .stage-entry-btns {
                 position: absolute;
-                right: -10px;
+                right: 0;
                 top: 16px;
                 display: none;
                 width: $entryBtnWidth;
                 align-items: center;
+                justify-content: flex-end;
                 color: white;
                 fill: white;
                 

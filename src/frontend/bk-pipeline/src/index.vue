@@ -14,6 +14,7 @@
             :user-name="userName"
             :cancel-user-id="cancelUserId"
             :handle-change="updatePipeline"
+            :is-latest-build="isLatestBuild"
             :stage-length="computedStage.length"
             :containers="stage.containers"
             :match-rules="matchRules"
@@ -42,7 +43,8 @@
         ATOM_ADD_EVENT_NAME,
         ADD_STAGE,
         STAGE_CHECK,
-        STAGE_RETRY
+        STAGE_RETRY,
+        DEBUG_CONTAINER
     } from './constants'
 
     const customEvents = [
@@ -55,7 +57,8 @@
         ATOM_ADD_EVENT_NAME,
         ADD_STAGE,
         STAGE_CHECK,
-        STAGE_RETRY
+        STAGE_RETRY,
+        DEBUG_CONTAINER
     ]
     
     export default {
@@ -74,6 +77,10 @@
                 default: false
             },
             isExecDetail: {
+                type: Boolean,
+                default: false
+            },
+            isLatestBuild: {
                 type: Boolean,
                 default: false
             },

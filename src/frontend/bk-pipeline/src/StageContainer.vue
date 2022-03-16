@@ -64,6 +64,14 @@
                 type: Boolean,
                 default: false
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
+            isFinallyStage: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -86,7 +94,7 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {
@@ -102,7 +110,7 @@
                 return this.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
             },
             showLastCruveLine () {
-                return this.stageIndex !== this.stageLength - 1 || !this.isExecDetail
+                return (this.stageIndex !== this.stageLength - 1 || this.editable) && !this.isFinallyStage
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job
