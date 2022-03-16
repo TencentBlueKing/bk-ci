@@ -348,7 +348,7 @@ open class GitApi {
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
-        OkhttpUtils.doHttp(request).use { response ->
+        OkhttpUtils.doRedirectHttp(request).use { response ->
             if (!response.isSuccessful) {
                 handleApiException(operation, response.code(), response.body()?.string() ?: "")
             }
