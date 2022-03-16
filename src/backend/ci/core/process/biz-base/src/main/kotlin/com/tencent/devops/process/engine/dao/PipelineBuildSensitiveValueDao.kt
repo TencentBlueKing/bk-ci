@@ -108,17 +108,17 @@ class PipelineBuildSensitiveValueDao @Autowired constructor() {
         dslContext: DSLContext,
         projectId: String,
         buildId: String
-    ): List<String> {
-
+    ): Set<String> {
         with(T_PIPELINE_BUILD_SENSITIVE_VALUE) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             val result = where.fetch()
-            val list = mutableListOf<String>()
+            // #4273 利用Set集合去除重复内容
+            val set = mutableSetOf<String>()
             result.forEach {
-                list.add(it[VALUE])
+                set.add(it[VALUE])
             }
-            return list
+            return set
         }
     }
 
