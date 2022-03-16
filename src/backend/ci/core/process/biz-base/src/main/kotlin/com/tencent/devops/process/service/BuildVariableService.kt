@@ -286,24 +286,28 @@ class BuildVariableService @Autowired constructor(
         projectId: String,
         buildId: String,
         publicKey: String
-    ): BuildSensitiveInfo {
-        val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
-        val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
-        val serverPublicKeyByteArray = serverDHKeyPair.publicKey
-        val serverPrivateKeyByteArray = serverDHKeyPair.privateKey
-        val serverBase64PublicKey = String(Base64.getEncoder().encode(serverPublicKeyByteArray))
+    ): BuildSensitiveInfo? {
+        try {
+            val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
+            val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
+            val serverPublicKeyByteArray = serverDHKeyPair.publicKey
+            val serverPrivateKeyByteArray = serverDHKeyPair.privateKey
+            val serverBase64PublicKey = String(Base64.getEncoder().encode(serverPublicKeyByteArray))
 
-        val encodeValues = buildSensitiveValueDao.getValues(commonDslContext, projectId, buildId).map {
-            credentialHelper.encryptCredential(
-                aesEncryptedCredential = it,
-                publicKeyByteArray = publicKeyByteArray,
-                serverPrivateKeyByteArray = serverPrivateKeyByteArray
-            ) ?: it
-        }.toList()
-        return BuildSensitiveInfo(
-            publicKey = serverBase64PublicKey,
-            sensitiveValues = encodeValues
-        )
+            val encodeValues = buildSensitiveValueDao.getValues(commonDslContext, projectId, buildId).map {
+                credentialHelper.encryptCredential(
+                    aesEncryptedCredential = it,
+                    publicKeyByteArray = publicKeyByteArray,
+                    serverPrivateKeyByteArray = serverPrivateKeyByteArray
+                ) ?: it
+            }.toList()
+            return BuildSensitiveInfo(
+                publicKey = serverBase64PublicKey,
+                sensitiveValues = encodeValues
+            )
+        } catch (ignore: Throwable) {
+            return null
+        }
     }
 
     private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
