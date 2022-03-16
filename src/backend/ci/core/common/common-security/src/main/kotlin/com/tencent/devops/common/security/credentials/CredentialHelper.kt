@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import java.util.Base64
 
 class CredentialHelper(
-    private val credentialMixer: String,
+    val credentialMixer: String,
     private val aesKey: String
 ) {
     companion object {
