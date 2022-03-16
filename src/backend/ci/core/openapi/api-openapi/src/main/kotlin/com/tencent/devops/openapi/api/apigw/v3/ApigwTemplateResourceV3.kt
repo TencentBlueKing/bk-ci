@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
@@ -76,7 +78,14 @@ interface ApigwTemplateResourceV3 {
         userId: String,
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<OptionalTemplateList>
 
     @ApiOperation("获取流水线模板详情", tags = ["v3_user_template_get", "v3_app_template_get"])
@@ -124,7 +133,14 @@ interface ApigwTemplateResourceV3 {
         templateType: TemplateType?,
         @ApiParam("是否已关联到store", required = false)
         @QueryParam("storeFlag")
-        storeFlag: Boolean?
+        storeFlag: Boolean?,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<TemplateListModel>
 
     @ApiOperation("创建流水线模板", tags = ["v3_user_template_create", "v3_app_template_create"])

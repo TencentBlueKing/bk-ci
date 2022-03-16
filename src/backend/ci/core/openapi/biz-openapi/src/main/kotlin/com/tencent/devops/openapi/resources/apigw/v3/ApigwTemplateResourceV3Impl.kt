@@ -43,20 +43,25 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Client) : ApigwTemplateResourceV3 {
+
     override fun listTemplate(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectId: String,
         templateType: TemplateType?,
-        storeFlag: Boolean?
+        storeFlag: Boolean?,
+        page: Int,
+        pageSize: Int
     ): Result<TemplateListModel> {
         logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
         return client.get(ServicePTemplateResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
             templateType = templateType,
-            storeFlag = storeFlag
+            storeFlag = storeFlag,
+            page = page,
+            pageSize = pageSize
         )
     }
 
@@ -81,13 +86,17 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         appCode: String?,
         apigwType: String?,
         userId: String,
-        projectId: String
+        projectId: String,
+        page: Int,
+        pageSize: Int
     ): Result<OptionalTemplateList> {
         logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
         return client.get(ServicePTemplateResource::class).listAllTemplate(
             userId = userId,
             projectId = projectId,
-            templateType = null
+            templateType = null,
+            page = page,
+            pageSize = pageSize
         )
     }
 
