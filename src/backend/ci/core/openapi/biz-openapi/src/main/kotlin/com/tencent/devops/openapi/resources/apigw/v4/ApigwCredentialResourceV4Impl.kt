@@ -32,8 +32,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwCredentialResourceV4
 import com.tencent.devops.ticket.api.UserCredentialResource
-import com.tencent.devops.ticket.pojo.CredentialCreate
-import com.tencent.devops.ticket.pojo.CredentialUpdate
+import com.tencent.devops.common.security.credentials.CredentialCreate
+import com.tencent.devops.common.security.credentials.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

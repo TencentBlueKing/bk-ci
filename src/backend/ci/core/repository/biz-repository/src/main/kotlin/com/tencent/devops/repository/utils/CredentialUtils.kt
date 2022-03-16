@@ -29,7 +29,7 @@ package com.tencent.devops.repository.utils
 
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import org.slf4j.LoggerFactory
 
 object CredentialUtils {

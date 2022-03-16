@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.OpCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired
 

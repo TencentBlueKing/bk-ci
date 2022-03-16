@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.pojo.enums
+package com.tencent.devops.common.security.credentials
 
 enum class CredentialType {
     PASSWORD, // v1 = password, v2=v3=v4=null

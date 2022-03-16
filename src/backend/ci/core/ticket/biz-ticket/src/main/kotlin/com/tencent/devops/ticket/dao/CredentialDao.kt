@@ -29,7 +29,7 @@ package com.tencent.devops.ticket.dao
 
 import com.tencent.devops.model.ticket.tables.TCredential
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result

@@ -87,7 +87,13 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
-@Suppress("LongMethod", "LongParameterList", "ReturnCount", "TooManyFunctions")
+@Suppress(
+    "LongMethod",
+    "LongParameterList",
+    "ReturnCount",
+    "TooManyFunctions",
+    "LargeClass"
+)
 @Service
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -122,7 +128,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        retryCount: Int
+        retryCount: Int,
+        publicKey: String?
     ): BuildVariables {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
@@ -132,7 +139,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 vmName = vmName,
-                retryCount = retryCount
+                retryCount = retryCount,
+                publicKey = publicKey
             )
         } finally {
             containerIdLock.unlock()
@@ -145,7 +153,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        retryCount: Int
+        retryCount: Int,
+        publicKey: String?
     ): BuildVariables {
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw NotFoundException("Fail to find build: buildId($buildId)")
@@ -230,7 +239,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
                         containerType = c.getClassType(),
-                        sensitiveValues = buildVariableService.getAllSensitiveValues(projectId, buildId)
+                        sensitiveInfo = publicKey?.let {
+                            buildVariableService.getEncodedSensitiveValues(projectId, buildId, it)
+                        }
                     )
                 }
                 vmId++
@@ -358,7 +369,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      * 构建机请求执行任务
      */
-    fun buildClaimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): BuildTask {
+    fun buildClaimTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        publicKey: String?
+    ): BuildTask {
         val containerIdLock = ContainerIdLock(redisOperation, buildId, vmSeqId)
         try {
             containerIdLock.lock()
@@ -388,13 +405,25 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             val task = allTasks.firstOrNull()
                 ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
 
-            return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
+            return claim(
+                task = task,
+                buildId = buildId,
+                userId = task.starter,
+                vmSeqId = vmSeqId,
+                publicKey = publicKey
+            )
         } finally {
             containerIdLock.unlock()
         }
     }
 
-    private fun claim(task: PipelineBuildTask, buildId: String, userId: String, vmSeqId: String): BuildTask {
+    private fun claim(
+        task: PipelineBuildTask,
+        buildId: String,
+        userId: String,
+        vmSeqId: String,
+        publicKey: String?
+    ): BuildTask {
         LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
         return when {
             task.status == BuildStatus.QUEUE -> { // 初始化状态，表明任务还未准备好
@@ -480,7 +509,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     }.toMap(),
                     buildVariable = buildVariable,
                     containerType = task.containerType,
-                    sensitiveValues = buildVariableService.getAllSensitiveValues(task.projectId, buildId)
+                    sensitiveInfo = publicKey?.let {
+                        buildVariableService.getEncodedSensitiveValues(task.projectId, buildId, it)
+                    }
                 )
             }
         }

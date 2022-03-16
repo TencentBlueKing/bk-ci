@@ -25,36 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.pojo
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.security.credentials.CredentialType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("凭据-凭据内容和权限")
-data class CredentialWithPermission(
-    @ApiModelProperty("凭据ID", required = true)
-    val credentialId: String,
-    @ApiModelProperty("凭据名称", required = true)
-    val credentialName: String? = null,
-    @ApiModelProperty("凭据类型", required = true)
-    val credentialType: CredentialType,
-    @ApiModelProperty("凭据描述", required = false)
-    val credentialRemark: String? = null,
-    @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
-    @ApiModelProperty("凭据内容", required = true)
-    val v1: String,
-    @ApiModelProperty("凭据内容", required = true)
-    val v2: String? = null,
-    @ApiModelProperty("凭据内容", required = true)
-    val v3: String? = null,
-    @ApiModelProperty("凭据内容", required = true)
-    val v4: String? = null,
-    @ApiModelProperty("权限", required = true)
-    val permissions: CredentialPermissions,
-    @ApiModelProperty("最后更新者", required = true)
-    val updateUser: String? = null,
-    @ApiModelProperty("当前凭证是否允许跨项目使用", required = false)
-    val allowAcrossProject: Boolean = false
+@ApiModel("流水线模型-构建参数变量")
+data class BuildSensitiveInfo(
+    @ApiModelProperty("Base64编码的加密公钥", required = true)
+    val publicKey: String,
+    @ApiModelProperty("非对称加密的日志敏感信息", required = false)
+    val sensitiveValues: List<String>
 )

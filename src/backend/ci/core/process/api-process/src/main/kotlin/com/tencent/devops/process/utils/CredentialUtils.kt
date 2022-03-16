@@ -30,7 +30,7 @@ package com.tencent.devops.process.utils
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")

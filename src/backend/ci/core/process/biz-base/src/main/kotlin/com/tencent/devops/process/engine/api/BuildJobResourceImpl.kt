@@ -52,7 +52,8 @@ class BuildJobResourceImpl @Autowired constructor(
         buildId: String,
         vmSeqId: String,
         vmName: String,
-        retryCount: String
+        retryCount: String,
+        publicKey: String?
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName, retryCount)
         return Result(vMBuildService.buildVMStarted(
@@ -60,18 +61,26 @@ class BuildJobResourceImpl @Autowired constructor(
             buildId = buildId,
             vmSeqId = vmSeqId,
             vmName = vmName,
-            retryCount = retryCount.toInt()
+            retryCount = retryCount.toInt(),
+            publicKey = publicKey
         ))
     }
 
-    override fun claimTask(projectId: String, buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
+    override fun claimTask(
+        projectId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        publicKey: String?
+    ): Result<BuildTask> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(
             vMBuildService.buildClaimTask(
                 projectId = projectId,
                 buildId = buildId,
                 vmSeqId = vmSeqId,
-                vmName = vmName
+                vmName = vmName,
+                publicKey = publicKey
             )
         )
     }

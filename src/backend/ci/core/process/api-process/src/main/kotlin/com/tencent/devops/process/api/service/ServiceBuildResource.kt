@@ -661,7 +661,7 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("参数", required = true)
+        @ApiParam("AES加密后的敏感信息集合", required = true)
         values: Set<String>
     ): Result<Boolean>
 }

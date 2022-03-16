@@ -25,9 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.pojo
+package com.tencent.devops.common.security.credentials
 
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

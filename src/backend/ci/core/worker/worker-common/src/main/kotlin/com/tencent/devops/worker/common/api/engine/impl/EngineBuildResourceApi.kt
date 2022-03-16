@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
+import java.net.URLEncoder
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -48,8 +49,11 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return "/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount"
     }
 
-    override fun setStarted(retryCount: Int): Result<BuildVariables> {
-        val path = getRequestUrl(path = "api/build/worker/started", retryCount = retryCount)
+    override fun setStarted(retryCount: Int, publicKey: String): Result<BuildVariables> {
+        val path = getRequestUrl(
+            path = "api/build/worker/started?publicKey=${URLEncoder.encode(publicKey, "UTF-8")}",
+            retryCount = retryCount
+        )
         val request = buildPut(path)
         val errorMessage = "通知服务端启动构建失败"
         val responseContent = request(

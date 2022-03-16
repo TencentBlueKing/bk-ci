@@ -66,7 +66,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import org.jooq.DSLContext

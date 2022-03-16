@@ -28,19 +28,23 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.security.credentials.CredentialHelper
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSensitiveValueDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import com.tencent.devops.process.pojo.BuildSensitiveInfo
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.util.Base64
 import javax.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
@@ -48,12 +52,14 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("TooManyFunctions")
 @Service
 class BuildVariableService @Autowired constructor(
     private val commonDslContext: DSLContext,
     private val pipelineBuildVarDao: PipelineBuildVarDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val buildSensitiveValueDao: PipelineBuildSensitiveValueDao,
+    private val credentialHelper: CredentialHelper,
     private val redisOperation: RedisOperation
 ) {
 
@@ -276,8 +282,28 @@ class BuildVariableService @Autowired constructor(
         return true
     }
 
-    fun getAllSensitiveValues(projectId: String, buildId: String): List<String> {
-        return buildSensitiveValueDao.getValues(commonDslContext, projectId, buildId)
+    fun getEncodedSensitiveValues(
+        projectId: String,
+        buildId: String,
+        publicKey: String
+    ): BuildSensitiveInfo {
+        val publicKeyByteArray = Base64.getDecoder().decode(publicKey)
+        val serverDHKeyPair = DHUtil.initKey(publicKeyByteArray)
+        val serverPublicKeyByteArray = serverDHKeyPair.publicKey
+        val serverPrivateKeyByteArray = serverDHKeyPair.privateKey
+        val serverBase64PublicKey = String(Base64.getEncoder().encode(serverPublicKeyByteArray))
+
+        val encodeValues = buildSensitiveValueDao.getValues(commonDslContext, projectId, buildId).map {
+            credentialHelper.encryptCredential(
+                aesEncryptedCredential = it,
+                publicKeyByteArray = publicKeyByteArray,
+                serverPrivateKeyByteArray = serverPrivateKeyByteArray
+            ) ?: it
+        }.toList()
+        return BuildSensitiveInfo(
+            publicKey = serverBase64PublicKey,
+            sensitiveValues = encodeValues
+        )
     }
 
     private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {

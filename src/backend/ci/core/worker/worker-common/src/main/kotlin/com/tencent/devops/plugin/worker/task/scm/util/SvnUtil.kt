@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.ScmException
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory

@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService

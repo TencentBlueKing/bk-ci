@@ -35,10 +35,10 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
-import com.tencent.devops.ticket.pojo.CredentialCreate
+import com.tencent.devops.common.security.credentials.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.ticket.pojo.CredentialUpdate
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialUpdate
+import com.tencent.devops.common.security.credentials.CredentialType
 import com.tencent.devops.ticket.pojo.enums.Permission
 import com.tencent.devops.ticket.service.CredentialService
 import org.springframework.beans.factory.annotation.Autowired

@@ -39,7 +39,7 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun getRequestUrl(path: String, retryCount: Int = 0, executeCount: Int = 1): String
 
-    fun setStarted(retryCount: Int): Result<BuildVariables>
+    fun setStarted(retryCount: Int, publicKey: String): Result<BuildVariables>
 
     fun claimTask(retryCount: Int): Result<BuildTask>
 

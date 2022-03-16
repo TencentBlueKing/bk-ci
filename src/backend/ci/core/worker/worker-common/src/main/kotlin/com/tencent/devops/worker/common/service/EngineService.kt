@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.service
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.ErrorInfo
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -39,6 +40,7 @@ import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.common.util.HttpRetryUtils
+import java.util.Base64
 import org.slf4j.LoggerFactory
 
 object EngineService {
@@ -48,23 +50,40 @@ object EngineService {
     private val buildApi = ApiFactory.create(EngineBuildSDKApi::class)
 
     fun setStarted(): BuildVariables {
+        val pair = DHUtil.initKey()
+        val encoder = Base64.getEncoder()
+        val decoder = Base64.getDecoder()
         var retryCount = 0
         val result = HttpRetryUtils.retry {
             if (retryCount > 0) {
                 logger.warn("retry|time=$retryCount|setStarted")
             }
-            buildApi.setStarted(retryCount++)
+            buildApi.setStarted(retryCount++, encoder.encodeToString(pair.publicKey))
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Report builder startup status failed")
         }
-        val ret = result.data ?: throw RemoteServiceException("Report builder startup status failed")
-
+        // #4273 将收到的加密敏感信息解密
+        val buildVariables = result.data
+            ?: throw RemoteServiceException("Report builder startup status failed")
+        val sensitiveValues = buildVariables.sensitiveInfo?.let { info ->
+            info.sensitiveValues.map { value ->
+                String(
+                    DHUtil.decrypt(decoder.decode(value),
+                        decoder.decode(info.publicKey), pair.privateKey)
+                )
+            }
+        } ?: emptyList()
         // #5277 将Job上下文传入本次agent任务
         val jobContext = buildApi.getJobContext().toMutableMap()
         jobContext[JOB_OS_CONTEXT] = AgentEnv.getOS().name
 
-        return ret.copy(variables = ret.variables.plus(jobContext))
+        return buildVariables.copy(
+            variables = buildVariables.variables.plus(jobContext),
+            sensitiveInfo = buildVariables.sensitiveInfo?.copy(
+                sensitiveValues = sensitiveValues
+            )
+        )
     }
 
     fun claimTask(): BuildTask {

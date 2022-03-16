@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.security.credentials.CredentialHelper
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSensitiveValueDao
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
@@ -52,6 +53,7 @@ class BuildVariableServiceTest {
     private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
     private val pipelineBuildDao: PipelineBuildDao = mock()
     private val buildSensitiveValueDao: PipelineBuildSensitiveValueDao = mock()
+    private val credentialHelper: CredentialHelper = mock()
     private val redisOperation: RedisOperation = RedisOperation(mock())
 
     private val buildVariableService = BuildVariableService(
@@ -59,6 +61,7 @@ class BuildVariableServiceTest {
         pipelineBuildVarDao = pipelineBuildVarDao,
         pipelineBuildDao = pipelineBuildDao,
         buildSensitiveValueDao = buildSensitiveValueDao,
+        credentialHelper = credentialHelper,
         redisOperation = redisOperation
     )
 

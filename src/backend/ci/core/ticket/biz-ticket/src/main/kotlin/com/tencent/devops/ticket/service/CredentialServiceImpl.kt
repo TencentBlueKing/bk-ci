@@ -45,13 +45,14 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.ticket.constant.TicketMessageCode
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
-import com.tencent.devops.ticket.pojo.CredentialCreate
+import com.tencent.devops.common.security.credentials.CredentialCreate
+import com.tencent.devops.common.security.credentials.CredentialHelper
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.CredentialPermissions
 import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
-import com.tencent.devops.ticket.pojo.CredentialUpdate
+import com.tencent.devops.common.security.credentials.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -752,16 +753,16 @@ class CredentialServiceImpl @Autowired constructor(
 
     private fun filterValues(credentialRecord: TCredentialRecord): MutableSet<String> {
         val sensitiveValues = mutableSetOf<String>()
-        credentialHelper.decryptCredential(credentialRecord.credentialV1)?.let {
+        credentialRecord.credentialV1?.let {
             if (it.isNotBlank()) sensitiveValues.add(it)
         }
-        credentialHelper.decryptCredential(credentialRecord.credentialV2)?.let {
+        credentialRecord.credentialV2?.let {
             if (it.isNotBlank()) sensitiveValues.add(it)
         }
-        credentialHelper.decryptCredential(credentialRecord.credentialV3)?.let {
+        credentialRecord.credentialV3?.let {
             if (it.isNotBlank()) sensitiveValues.add(it)
         }
-        credentialHelper.decryptCredential(credentialRecord.credentialV4)?.let {
+        credentialRecord.credentialV4?.let {
             if (it.isNotBlank()) sensitiveValues.add(it)
         }
         return sensitiveValues

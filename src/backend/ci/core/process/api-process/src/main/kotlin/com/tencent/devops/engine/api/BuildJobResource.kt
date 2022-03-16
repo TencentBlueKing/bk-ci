@@ -52,6 +52,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
+@Suppress("LongParameterList")
 @Api(tags = ["ENGINE_BUILD_JOB"], description = "引擎-构建机请求|此接口不接受服务间Feign，只接受构建机处请求")
 @Path("/build/worker")
 @Produces(MediaType.APPLICATION_JSON)
@@ -75,7 +76,10 @@ interface BuildJobResource {
         vmName: String,
         @ApiParam(value = "网络问题导致的重试次数", required = false)
         @QueryParam("retryCount")
-        retryCount: String
+        retryCount: String,
+        @ApiParam(value = "敏感信息加密的公钥", required = false)
+        @QueryParam("publicKey")
+        publicKey: String?
     ): Result<BuildVariables>
 
     @ApiOperation("构建机请求获取任务")
@@ -93,7 +97,10 @@ interface BuildJobResource {
         vmSeqId: String,
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @ApiParam(value = "敏感信息加密的公钥", required = false)
+        @QueryParam("publicKey")
+        publicKey: String?
     ): Result<BuildTask>
 
     @ApiOperation("构建机Job完成任务")

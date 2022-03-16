@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.ticket.pojo.Credential
-import com.tencent.devops.ticket.pojo.CredentialCreate
+import com.tencent.devops.common.security.credentials.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
-import com.tencent.devops.ticket.pojo.CredentialUpdate
+import com.tencent.devops.common.security.credentials.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
 import io.swagger.annotations.Api

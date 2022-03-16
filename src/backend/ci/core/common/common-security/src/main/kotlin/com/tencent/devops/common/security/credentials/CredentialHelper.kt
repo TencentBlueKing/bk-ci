@@ -25,13 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.ticket.service
+package com.tencent.devops.common.security.credentials
 
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.ticket.pojo.CredentialCreate
-import com.tencent.devops.ticket.pojo.CredentialUpdate
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Base64

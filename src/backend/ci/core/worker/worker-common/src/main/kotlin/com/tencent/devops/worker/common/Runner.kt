@@ -129,7 +129,7 @@ object Runner {
         )
 
         // 启动日志服务
-        LoggerService.start(buildVariables.sensitiveValues)
+        LoggerService.start(buildVariables.sensitiveInfo?.sensitiveValues)
         val variables = buildVariables.variablesWithType
         val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
         val executeCount = retryCount.toInt() + 1
@@ -162,6 +162,10 @@ object Runner {
         loop@ while (true) {
             logger.info("Start to claim the task")
             val buildTask = EngineService.claimTask()
+            buildTask.sensitiveInfo?.sensitiveValues?.let {
+                logger.info("Append sensitive value list with size(${it.size})")
+                LoggerService.addSensitiveValues(it)
+            }
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {

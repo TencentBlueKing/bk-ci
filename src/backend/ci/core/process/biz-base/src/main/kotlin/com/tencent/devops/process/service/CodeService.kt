@@ -40,7 +40,7 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

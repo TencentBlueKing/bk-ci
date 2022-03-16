@@ -27,7 +27,7 @@
 
 package com.tencent.devops.ticket.pojo
 
-import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.common.security.credentials.CredentialType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

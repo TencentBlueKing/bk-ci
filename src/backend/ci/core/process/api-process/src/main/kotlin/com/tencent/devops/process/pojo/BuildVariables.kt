@@ -62,6 +62,6 @@ data class BuildVariables(
     var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong()),
     @ApiModelProperty("容器类型", required = false)
     val containerType: String? = null,
-    @ApiModelProperty("日志敏感信息（未加密勿打印）", required = false)
-    val sensitiveValues: List<String>? = null
+    @ApiModelProperty("敏感信息内容", required = false)
+    val sensitiveInfo: BuildSensitiveInfo? = null
 )
