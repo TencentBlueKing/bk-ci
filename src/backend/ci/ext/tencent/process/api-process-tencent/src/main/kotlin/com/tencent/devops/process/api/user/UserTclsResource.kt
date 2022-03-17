@@ -30,8 +30,8 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.process.pojo.third.tcls.TclsEnv
+import com.tencent.devops.process.pojo.third.tcls.TclsType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -44,6 +44,10 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
+/**
+ * 此接口还在 console/store/atomStore/detail/atom/TclsAddVersionNew 表单中调用，需要整改
+ */
+@Suppress("LongParameterList")
 @Api(tags = ["USER_TCLS"], description = "用户-获取 TCLS 环境列表")
 @Path("/user/tcls")
 @Produces(MediaType.APPLICATION_JSON)

@@ -366,6 +366,13 @@ class GitService @Autowired constructor(
                 )
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
+                logger.info("[url=$url]|getToken($projectId) with response=$response")
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
                 val data = response.body()!!.string()
                 return objectMapper.readValue(data, GitToken::class.java)
             }

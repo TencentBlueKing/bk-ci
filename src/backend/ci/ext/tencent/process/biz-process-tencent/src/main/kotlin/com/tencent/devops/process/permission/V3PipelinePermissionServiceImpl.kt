@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -36,9 +37,11 @@ import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 class V3PipelinePermissionServiceImpl @Autowired constructor(
     val authPermissionApi: AuthPermissionApi,
@@ -187,7 +190,11 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
 
     private fun findInstanceId(projectId: String, pipelineId: String): String {
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
-            ?: throw PermissionForbiddenException("流水线$pipelineId 不存在")
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+                defaultMessage = "流水线编排不存在"
+            )
         return pipelineInfo.id.toString()
     }
 }

@@ -216,6 +216,21 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getBuildInLastDays(
+        dslContext: DSLContext,
+        buildDays: Long,
+        offset: Int,
+        limit: Int
+    ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(CREATE_TIME.gt(LocalDateTime.now().minusDays(buildDays)))
+                .and(VERSION.eq("v2.0"))
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
     fun getBranchBuildList(
         dslContext: DSLContext,
         gitProjectId: Long

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.project.pojo.DataBasePiecewiseInfo
 import com.tencent.devops.project.pojo.DataSource
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -46,6 +47,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_DATA_SOURCE"], description = "OP-数据源")
@@ -107,4 +109,19 @@ interface OPDataSourceResource {
         @BkField(patternStyle = BkStyleEnum.ID_STYLE)
         id: String
     ): Result<Boolean>
+
+    @ApiOperation("根据PROJECT_ID获取数据库分片信息")
+    @GET
+    @Path("/piecewise/get")
+    fun getDataBasePiecewiseById(
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("微服务code", required = true)
+        @QueryParam("moduleCode")
+        moduleCode: String,
+        @ApiParam("集群名称", required = true)
+        @QueryParam("clusterName")
+        clusterName: String
+    ): Result<DataBasePiecewiseInfo?>
 }
