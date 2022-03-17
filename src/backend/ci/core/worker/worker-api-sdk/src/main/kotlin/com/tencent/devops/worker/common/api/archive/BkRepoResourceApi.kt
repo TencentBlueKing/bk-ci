@@ -40,11 +40,11 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
@@ -54,9 +54,9 @@ import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.archive.pojo.QueryData
 import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
@@ -150,7 +150,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean = true
     ) {
-        val url = "/generic/temporary/upload/$projectId/$repoName$destFullPath?token=$token"
+
+        val url = "/generic/temporary/upload/$projectId/$repoName/${urlEncode(destFullPath)}?token=$token"
         val request = buildPut(
             url,
             RequestBody.create(MediaType.parse("application/octet-stream"), file),
@@ -175,7 +176,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         destPath: File,
         isVmBuildEnv: Boolean
     ) {
-        val url = "/generic/temporary/download/$projectId/$repoName$fullPath?token=$token"
+        val url = "/generic/temporary/download/$projectId/$repoName/${urlEncode(fullPath)}?token=$token"
         val header = HashMap<String, String>()
         header[BKREPO_UID] = userId
         val request = buildGet(url, header, isVmBuildEnv)
@@ -189,7 +190,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         fullPath: String,
         destPath: File
     ) {
-        val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullPath"
+        val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(fullPath)}"
         val header = HashMap<String, String>()
         header[BKREPO_UID] = user
         val request = buildGet(url, header, true)
@@ -258,7 +259,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         parseAppMetadata: Boolean = false
     ) {
         AbstractBuildResourceApi.logger.info("upload file >>> ${file.name}")
-        val url = "/bkrepo/api/build/generic/$projectId/$repoName$destFullPath"
+        val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(destFullPath)}"
         val request = buildPut(
             path = url,
             requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
@@ -311,7 +312,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         return if (str.isNullOrBlank()) {
             ""
         } else {
-            URLEncoder.encode(str, "UTF-8")
+            URLEncoder.encode(str, "UTF-8").replace("+", "%20")
         }
     }
 
@@ -404,7 +405,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             "page: $page, pageSize: $pageSize")
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
-        var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
+        val ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
             val filePathRule = Rule.NestedRule(
                 filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(),
@@ -425,7 +426,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                     .toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
-        var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
         return query(userId, projectId, rule, page, pageSize)
     }
