@@ -44,8 +44,10 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
@@ -195,6 +197,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
+
+                            // 设置Job环境变量customBuildEnv到variablesWithType中
+                            c.customBuildEnv?.forEach { (t, u) ->
+                                variablesWithType.plus(BuildParameters(
+                                    key = t,
+                                    value = u,
+                                    valueType = BuildFormPropertyType.STRING,
+                                    readOnly = true
+                                ))
+                            }
+
                             Triple(envList, contextMap, timeoutMills)
                         }
                         is NormalContainer -> {
@@ -215,8 +228,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
-
-                    LOG.info("TEST =======>: ${JsonUtil.toJson(context)}")
 
                     return BuildVariables(
                         buildId = buildId,
@@ -254,10 +265,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         customBuildEnv?.let {
             context.putAll(customBuildEnv.map {
                 "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
-            }.toMap())
-
-            context.putAll(customBuildEnv.map {
-                it.key to EnvUtils.parseEnv(it.value, context)
             }.toMap())
         }
 
