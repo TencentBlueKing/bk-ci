@@ -157,6 +157,7 @@ class PipelinePauseBuildFacadeService(
         val newInputData = ParameterUtils.getElementInput(newElement)
 
         if (newInputData.isNullOrEmpty()) {
+            logger.info("newInputData is empty $buildId $taskId $newElement")
             return isDiff
         }
 
