@@ -1,16 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: monitoring
     desc: DevOps Monitoring Service
     version: 4.0
     packageName: com.tencent.devops.monitoring
-  cloud:
-    consul:
-      discovery:
-        tags: local
-
-alert:
-  users: "irwinsun,rdeng,brandonliu,carlyin,ddlin,fayewang,freyzheng,johuang,lockiechen,necrohuang,royalhuang,terlinhe,zanyzhao,jsonwan,stubenhuang"
-
-server:
-  port: 8085

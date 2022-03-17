@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.v2.dao
 
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.model.stream.tables.TGitUserMessage
 import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
@@ -59,7 +60,8 @@ class StreamUserMessageDao {
                 projectId,
                 userId,
                 messageType.name,
-                messageTitle,
+                // todo: 临时截断后续评估如何展示
+                CommonUtils.interceptStringInLength(messageTitle, 250),
                 messageId,
                 haveRead
             ).execute()
@@ -105,21 +107,21 @@ class StreamUserMessageDao {
         haveRead: Boolean?
     ): Int {
         val select = if (userId != null) {
-            selectMessage(
+            selectMessageCount(
                 dslContext = dslContext,
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead
             )
         } else {
-            selectMessage(
+            selectMessageCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 messageType = messageType,
                 haveRead = haveRead
             )
         }
-        return select.count()
+        return select
     }
 
     fun readMessage(
@@ -168,21 +170,21 @@ class StreamUserMessageDao {
         projectId: String
     ): Int {
         val select = if (userId != null) {
-            selectMessage(
+            selectMessageCount(
                 dslContext = dslContext,
                 userId = userId,
                 messageType = null,
                 haveRead = false
             )
         } else {
-            selectMessage(
+            selectMessageCount(
                 dslContext = dslContext,
                 projectId = projectId,
                 messageType = null,
                 haveRead = false
             )
         }
-        return select.count()
+        return select
     }
 
     fun getMessageExist(
@@ -236,6 +238,25 @@ class StreamUserMessageDao {
         }
     }
 
+    private fun selectMessageCount(
+        dslContext: DSLContext,
+        projectId: String,
+        messageType: UserMessageType?,
+        haveRead: Boolean?
+    ): Int {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (messageType != null) {
+                dsl.and(MESSAGE_TYPE.eq(messageType.name))
+            }
+            if (haveRead != null) {
+                dsl.and(HAVE_READ.eq(haveRead))
+            }
+            return dsl.fetchOne(0, Int::class.java)!!
+        }
+    }
+
     private fun selectMessage(
         dslContext: DSLContext,
         userId: String,
@@ -256,6 +277,29 @@ class StreamUserMessageDao {
                 dsl.and(HAVE_READ.eq(haveRead))
             }
             return dsl
+        }
+    }
+
+    private fun selectMessageCount(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String? = null,
+        messageType: UserMessageType?,
+        haveRead: Boolean?
+    ): Int {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(USER_ID.eq(userId))
+            if (!projectId.isNullOrBlank()) {
+                dsl.and(PROJECT_ID.eq(projectId))
+            }
+            if (messageType != null) {
+                dsl.and(MESSAGE_TYPE.eq(messageType.name))
+            }
+            if (haveRead != null) {
+                dsl.and(HAVE_READ.eq(haveRead))
+            }
+            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
 }

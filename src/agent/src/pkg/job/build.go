@@ -48,12 +48,13 @@ import (
 )
 
 const buildIntervalInSeconds = 5
-
+// AgentStartup 通用服务端，构建机启动
 func AgentStartup() (agentStatus string, err error) {
 	result, err := api.AgentStartup()
 	return parseAgentStatusResult(result, err)
 }
 
+// getAgentStatus 获取构建机的状态，判断是否被云端删除
 func getAgentStatus() (agentStatus string, err error) {
 	result, err := api.GetAgentStatus()
 	return parseAgentStatusResult(result, err)
@@ -77,6 +78,7 @@ func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (age
 	return agentStatus, nil
 }
 
+// DoPollAndBuild 循环定时拉取构建任务
 func DoPollAndBuild() {
 	for {
 		time.Sleep(buildIntervalInSeconds * time.Second)
@@ -90,8 +92,10 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		if config.GAgentConfig.ParallelTaskCount != 0 && GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, ParallelTaskCount config: %d, instance count: %d",
+		if config.GAgentConfig.ParallelTaskCount != 0 &&
+			GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
+			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done,"+
+				" ParallelTaskCount config: %d, instance count: %d",
 				config.GAgentConfig.ParallelTaskCount, GBuildManager.GetInstanceCount()))
 			continue
 		}
@@ -103,7 +107,7 @@ func DoPollAndBuild() {
 
 		buildInfo, err := getBuild()
 		if err != nil {
-			logs.Error("get build failed, retry")
+			logs.Error("get build failed, retry", err.Error())
 			continue
 		}
 
@@ -115,7 +119,6 @@ func DoPollAndBuild() {
 		err = runBuild(buildInfo)
 		if err != nil {
 			logs.Error("start build failed: ", err.Error())
-			// TODO 写buildLog
 		}
 	}
 }
@@ -151,7 +154,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	if !fileutil.Exists(agentJarPath) {
 		errorMsg := fmt.Sprintf("missing %s, please check agent installation.", config.WorkAgentFile)
 		logs.Error(errorMsg)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errorMsg})
+		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
 
 	}
 
@@ -179,7 +182,6 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		startCmd := config.GetJava()
 		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 		args := []string{
-			"-Ddevops.slave.agent.role=devops.slave.agent.role.slave",
 			"-Dbuild.type=AGENT",
 			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
 			"-jar",
@@ -189,29 +191,31 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)
-		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
+		logs.Info("build started, runUser: ", runUser, ", pid: ", pid,
+			", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
 		return nil
 	} else {
 		startScriptFile, err := writeStartBuildAgentScript(buildInfo)
 		if err != nil {
 			errMsg := "write worker start script failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
 			return err
 		}
 		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)
-		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
+		logs.Info("build started, runUser: ", runUser, ", pid: ", pid,
+			", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
 	}
 	return nil
 }
@@ -245,8 +249,10 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 	lines := []string{
 		"#!" + getCurrentShell(),
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
-		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -DAGENT_LOG_PREFIX=%s -jar %s %s",
-			config.GetJava(), scriptFile, prepareScriptFile, agentLogPrefix, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
+		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
+			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -jar %s %s",
+			config.GetJava(), scriptFile, prepareScriptFile,
+			agentLogPrefix, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 

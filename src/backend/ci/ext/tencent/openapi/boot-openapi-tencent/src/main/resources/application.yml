@@ -1,26 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: openapi
-    desc: SODA Openapi Service
-    version: 4.0.0
+    desc: DevOps Openapi Service
+    version: 4.0
     packageName: com.tencent.devops.openapi
-  rabbitmq:
-    virtual-host: soda4
-    username: soda
-    password: soda
-    addresses: 10.125.48.80:5672
-  cloud:
-    consul:
-      discovery:
-        tags: local
-
-server:
-  port: 8089
-
-
-api:
-  gateway:
-    pub:
-      file:
-        outer: /data1/work/devops_outer.pub
-        inner: /data1/work/devops_inner.pub

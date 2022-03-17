@@ -29,7 +29,7 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-event"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
 //    api(project(":api:api-measure")
 //    api(project(":api:api-environment")

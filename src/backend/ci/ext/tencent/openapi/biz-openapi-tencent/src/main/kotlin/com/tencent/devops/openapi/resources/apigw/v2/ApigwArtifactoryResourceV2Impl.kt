@@ -27,6 +27,7 @@
 
 package com.tencent.devops.openapi.resources.apigw.v2
 
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -63,16 +64,15 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         var buildId: String? = null
         var subPath = path
         if (artifactoryType == ArtifactoryType.PIPELINE) {
-            val pathList = path.split("/")
+            val normalizePath = PathUtils.normalizeFullPath(path)
+            val pathList = normalizePath.split("/")
             logger.info("getThirdPartyDownloadUrl pathList:$pathList")
-            if (pathList[0].isBlank()) {
-                pipelineId = pathList[1]
-                buildId = pathList[2]
-            } else {
-                pipelineId = pathList[0]
-                buildId = pathList[1]
+            if (pathList.size < 3) {
+                throw IllegalArgumentException("invalid path: $path")
             }
-            subPath = path.replace("/$pipelineId/$buildId", "")
+            pipelineId = pathList[1]
+            buildId = pathList[2]
+            subPath = normalizePath.replace("/$pipelineId/$buildId", "")
         }
 
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")

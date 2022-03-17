@@ -30,44 +30,16 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.openapi.pojo.external.measure.PipelineBuildResponseData
 import com.tencent.devops.openapi.api.apigw.v2.ApigwBuildResourceV2
-import com.tencent.devops.openapi.service.apigw.ApigwBuildService
-import com.tencent.devops.openapi.service.apigw.ApigwBuildServiceV2
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwBuildResourceV2Impl @Autowired constructor(
-    private val client: Client,
-    private val apigwBuildService: ApigwBuildService,
-    private val apigwBuildServiceV2: ApigwBuildServiceV2
+    private val client: Client
 ) : ApigwBuildResourceV2 {
-    override fun getBuildListByBG(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        bgId: String,
-        beginDate: Long?,
-        endDate: Long?,
-        offset: Int?,
-        limit: Int?
-    ): Result<List<PipelineBuildResponseData>?> {
-        return Result(
-            apigwBuildServiceV2.getBuildList(
-                userId = userId,
-                bgId = bgId,
-                beginDate = beginDate,
-                endDate = endDate,
-                offset = offset,
-                limit = limit,
-                interfaceName = "/{apigwType:apigw-user|apigw-app|apigw}/v2/builds/detail/list"
-            )
-        )
-    }
 
     override fun stop(
         appCode: String?,
@@ -95,35 +67,15 @@ class ApigwBuildResourceV2Impl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Result<ModelDetail> {
-        logger.info("get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)")
+        logger.info(
+            "get build detail: the build($buildId) of pipeline($pipelineId) of project($projectId) by user($userId)"
+        )
         return client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             channelCode = ChannelCode.BS
-        )
-    }
-
-    override fun getStatusWithoutPermission(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        organizationType: String,
-        organizationId: Long,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
-    ): Result<BuildHistoryWithVars> {
-        logger.info("Get the build($buildId) status of project($projectId) and pipeline($pipelineId) by user($userId)")
-        return apigwBuildService.getStatusWithoutPermission(
-            userId = userId,
-            organizationType = organizationType,
-            organizationId = organizationId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            interfaceName = "/v2/builds/{projectId}/{pipelineId}/{buildId}/nopermission/status"
         )
     }
 

@@ -51,5 +51,7 @@ data class StreamTriggerBuildReq(
     @ApiModelProperty("模拟代码事件类型,预留字段")
     val eventType: String? = null,
     @ApiModelProperty("触发方式")
-    val objectKind: String = OBJECT_KIND_MANUAL
+    val objectKind: String = OBJECT_KIND_MANUAL,
+    @ApiModelProperty("yaml文件路径")
+    val path: String? = null
 )

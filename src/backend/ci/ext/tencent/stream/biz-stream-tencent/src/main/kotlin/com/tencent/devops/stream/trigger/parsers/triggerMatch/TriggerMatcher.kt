@@ -13,7 +13,6 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
@@ -25,14 +24,17 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
-import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isMr
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
-import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
+import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchMatchUtils
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -126,13 +128,15 @@ class TriggerMatcher @Autowired constructor(
             false
         }
 
-        val isTrigger = when (context.gitEvent) {
+        val (isTrigger, startParams) = when (context.gitEvent) {
             is GitPushEvent -> {
-                isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId)
+                val isMatch = isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId, context.gitEvent)
+                val params = getStartParams(context = context, triggerOn = triggerOn)
+                Pair(isMatch, params)
             }
             is GitMergeRequestEvent -> {
                 val mrAction = StreamMrEventAction.getActionValue(context.gitEvent) ?: false
-                isMrMatch(
+                val isMatch = isMrMatch(
                     triggerOn = triggerOn,
                     sourceBranch = sourceBranch,
                     targetBranch = targetBranch,
@@ -140,25 +144,27 @@ class TriggerMatcher @Autowired constructor(
                     userId = gitRequestEvent.userId,
                     mrAction = mrAction
                 )
+                val params = getStartParams(context = context, triggerOn = triggerOn)
+                Pair(isMatch, params)
             }
             is GitTagPushEvent -> {
-                isTagPushMatch(
+                val isMatch = isTagPushMatch(
                     triggerOn,
                     getTag(context.gitEvent),
                     gitRequestEvent.userId,
                     context.gitEvent.create_from
                 )
+                val params = getStartParams(context = context, triggerOn = triggerOn)
+                Pair(isMatch, params)
             }
             else -> {
-                false
+                matchAndStartParams(
+                    context = context,
+                    triggerOn = triggerOn
+                )
             }
         }
 
-        val startParams = getStartParams(
-            context = context,
-            triggerOn = triggerOn,
-            isTrigger = isTrigger
-        ).map { entry -> entry.key to entry.value.toString() }.toMap()
         return TriggerResult(isTrigger, isTime, startParams, isDelete)
     }
 
@@ -178,9 +184,8 @@ class TriggerMatcher @Autowired constructor(
         return if (objectKind in deleteObjectKinds) {
             val startParams = getStartParams(
                 context = context,
-                triggerOn = triggerOn,
-                isTrigger = true
-            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+                triggerOn = triggerOn
+            )
             TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
             TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
@@ -240,7 +245,8 @@ class TriggerMatcher @Autowired constructor(
         triggerOn: TriggerOn,
         eventBranch: String,
         changeSet: Set<String>?,
-        userId: String
+        userId: String,
+        gitPushEvent: GitPushEvent
     ): Boolean {
         // 如果没有配置push，默认未匹配
         if (triggerOn.push == null) {
@@ -268,6 +274,10 @@ class TriggerMatcher @Autowired constructor(
             !PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) ||
             !UserMatchUtils.isUserMatch(pushRule.users, userId)
         ) {
+            return false
+        }
+        // action
+        if (!checkActionMatch(pushRule.action, gitPushEvent.isCreateBranch())) {
             return false
         }
         logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
@@ -349,36 +359,65 @@ class TriggerMatcher @Autowired constructor(
         return true
     }
 
-    fun getStartParams(
+    fun matchAndStartParams(
         context: StreamTriggerContext,
         triggerOn: TriggerOn?,
-        isTrigger: Boolean
-    ): Map<String, Any> {
-        if (!isTrigger) {
-            return emptyMap()
-        }
+        needMatch: Boolean = true
+    ): Pair<Boolean, Map<String, String>> {
         with(context) {
+            logger.info("match and start params|triggerOn:$triggerOn")
             val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
                 gitEvent = gitEvent,
                 triggerOn = triggerOn
-            ) ?: return emptyMap()
+            ) ?: return Pair(false, emptyMap())
             val webHookParams = WebhookElementParamsRegistrar.getService(element = element).getWebhookElementParams(
                 element = element,
                 variables = mapOf()
-            ) ?: return emptyMap()
-            logger.info("get start params, element:$element, webHookParams:$webHookParams")
+            )!!
+            logger.info("match and start params, element:$element, webHookParams:$webHookParams")
             val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
             val repository = TriggerBuilder.buildCodeGitRepository(streamSetting)
-            return WebhookStartParamsRegistrar.getService(element = element).getStartParams(
-                projectId = streamSetting.projectCode ?: "",
-                element = element,
-                repo = repository,
-                matcher = matcher,
-                variables = mapOf(),
-                params = webHookParams,
-                matchResult = ScmWebhookMatcher.MatchResult(isMatch = isTrigger)
-            )
+            val isMatch = if (needMatch) {
+                matcher.isMatch(
+                    projectId = context.streamSetting.projectCode ?: "",
+                    // 如果是新的流水线,pipelineId还是为空,使用displayName
+                    pipelineId = if (context.pipeline.pipelineId.isEmpty()) {
+                        context.pipeline.displayName
+                    } else {
+                        context.pipeline.pipelineId
+                    },
+                    repository = repository,
+                    webHookParams = webHookParams
+                ).isMatch
+            } else {
+                true
+            }
+            val startParam = if (isMatch) {
+                WebhookStartParamsRegistrar.getService(element = element).getStartParams(
+                    projectId = streamSetting.projectCode ?: "",
+                    element = element,
+                    repo = repository,
+                    matcher = matcher,
+                    variables = mapOf(),
+                    params = webHookParams,
+                    matchResult = ScmWebhookMatcher.MatchResult(isMatch = isMatch)
+                ).map { entry -> entry.key to entry.value.toString() }.toMap()
+            } else {
+                emptyMap()
+            }
+            return Pair(isMatch, startParam)
         }
+    }
+
+    fun getStartParams(
+        context: StreamTriggerContext,
+        triggerOn: TriggerOn?
+    ): Map<String, String> {
+        return matchAndStartParams(
+            context = context,
+            triggerOn = triggerOn,
+            needMatch = false
+        ).second
     }
 
     private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =
@@ -435,6 +474,22 @@ class TriggerMatcher @Autowired constructor(
             changeSet.addAll(commit.removed?.map { it }?.toSet() ?: emptySet())
         }
         return changeSet
+    }
+
+    private fun checkActionMatch(actionList: List<String>?, isCreateBranch: Boolean): Boolean {
+        if (actionList.isNullOrEmpty()) {
+            return true
+        }
+        actionList.forEach {
+            if (it == TGitPushActionType.NEW_BRANCH.value && isCreateBranch) {
+                return true
+            }
+            if (it == TGitPushActionType.PUSH_FILE.value && !isCreateBranch) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun isMrActionMatch(actionList: List<String>?, mrAction: Any): Boolean {
