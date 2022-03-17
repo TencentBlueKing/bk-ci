@@ -1,4 +1,4 @@
-USE devops_repository;
+USE devops_ci_repository;
 SET NAMES utf8mb4;
 
 DROP PROCEDURE IF EXISTS ci_repository_schema_update;
