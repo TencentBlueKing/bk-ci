@@ -29,6 +29,7 @@ package com.tencent.devops.statistics.dao.process
 
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -36,10 +37,19 @@ import org.springframework.stereotype.Repository
 @Repository
 class PipelineSettingDao {
 
-    fun getSettings(dslContext: DSLContext, pipelineIds: Set<String>): Result<TPipelineSettingRecord> {
+    fun getSettings(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        projectId: String? = null
+    ): Result<TPipelineSettingRecord> {
         with(TPipelineSetting.T_PIPELINE_SETTING) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
+                .where(conditions)
                 .fetch()
         }
     }

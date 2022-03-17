@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -43,15 +44,33 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
 
     fun listPipeline(
         dslContext: DSLContext,
+        projectId: String,
         instanceType: String,
-        templateIds: Collection<String>
+        templateIds: Collection<String>,
+        deleteFlag: Boolean? = null
     ): Result<TTemplatePipelineRecord> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = getQueryTemplatePipelineCondition(projectId, templateIds, instanceType, deleteFlag)
             return dslContext.selectFrom(this)
-                .where(TEMPLATE_ID.`in`(templateIds))
-                .and(INSTANCE_TYPE.eq(instanceType))
+                .where(conditions)
                 .fetch()
         }
+    }
+
+    private fun TTemplatePipeline.getQueryTemplatePipelineCondition(
+        projectId: String,
+        templateIds: Collection<String>,
+        instanceType: String,
+        deleteFlag: Boolean?
+    ): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(PROJECT_ID.eq(projectId))
+        conditions.add(TEMPLATE_ID.`in`(templateIds))
+        conditions.add(INSTANCE_TYPE.eq(instanceType))
+        if (deleteFlag != null) {
+            conditions.add(DELETED.eq(deleteFlag))
+        }
+        return conditions
     }
 
     fun countPipelineInstancedByTemplate(
