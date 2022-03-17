@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.service.perm.PermFixService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -39,5 +41,15 @@ class TxPipelineBuildWebhookService : PipelineBuildWebhookService() {
 
     override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
         permFixService.checkPermission(userId, projectId, pipelineId)
+    }
+
+    @BkTimed // 要aop生效必须在子类上拦截
+    override fun webhookTriggerPipelineBuild(
+        projectId: String,
+        pipelineId: String,
+        codeRepositoryType: String,
+        matcher: ScmWebhookMatcher
+    ): Boolean {
+        return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
     }
 }

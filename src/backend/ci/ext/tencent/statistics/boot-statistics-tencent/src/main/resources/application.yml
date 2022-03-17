@@ -1,51 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: statistics
     desc: DevOps Statistics Service
-    version: 4.0
+    version: 4.0.0
     packageName: com.tencent.devops.statistics
-  datasource:
-    process:
-       url: jdbc:mysql://10.125.48.80:3306/devops_process?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-       username: tig4php
-       password: tig4php
-    project:
-      url: jdbc:mysql://10.125.48.80:3306/devops_project?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-      username: tig4php
-      password: tig4php
-    openapi:
-      url: jdbc:mysql://10.125.48.80:3306/devops_openapi?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
-      username: tig4php
-      password: tig4php
-  redis:
-    database: 2
-    host: 10.125.48.80
-    password: itdev@db
-  rabbitmq:
-    core:
-     virtual-host: soda4
-     username: soda
-     password: soda
-     addresses: 9.134.79.35:5672
-    extend:
-      virtual-host: soda4
-      username: soda
-      password: soda
-      addresses: 9.134.79.35:5672
-  cloud:
-    consul:
-      discovery:
-        tags: local
-
-bkrepo:
-  bkrepoApiUrl: http://dev.bkrepo.oa.com/api/generic
-  pkgRepoName: generic-local
-  dockerRepoName: docker-local
-
-server:
-  port: 21960
-
-swagger:
-  append:
-    name: true
-

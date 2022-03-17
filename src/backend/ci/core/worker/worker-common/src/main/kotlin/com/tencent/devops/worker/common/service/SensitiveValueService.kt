@@ -25,18 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm
+package com.tencent.devops.worker.common.service
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
+import org.slf4j.LoggerFactory
 
-/**
- *
- * Powered By Tencent
- */
-@MicroService
-class Application
+object SensitiveValueService {
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
+
+    /**
+     * 每个Job内维护的敏感信息集合
+     */
+    val sensitiveStringSet = mutableSetOf<String>()
+
+    fun addSensitiveValues(sensitiveValues: List<String>?) {
+        sensitiveValues?.let {
+            logger.info("Append sensitive string set")
+            sensitiveStringSet.addAll(it)
+            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
+        }
+    }
+
+    fun matchSensitiveValue(value: String): Boolean {
+        sensitiveStringSet.forEach { sensitive ->
+            if (value.contains(sensitive)) return true
+        }
+        return false
+    }
 }

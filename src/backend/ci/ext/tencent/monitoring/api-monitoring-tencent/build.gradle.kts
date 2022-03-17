@@ -26,7 +26,6 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:monitoring:api-monitoring"))
     api(project(":core:common:common-pipeline"))
 }
 plugins {

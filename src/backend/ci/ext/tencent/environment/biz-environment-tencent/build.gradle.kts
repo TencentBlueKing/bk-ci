@@ -30,7 +30,7 @@ dependencies {
     api(project(":core:environment:biz-environment"))
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":core:auth:api-auth"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
