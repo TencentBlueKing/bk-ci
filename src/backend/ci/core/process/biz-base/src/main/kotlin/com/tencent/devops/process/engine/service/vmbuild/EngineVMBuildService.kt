@@ -200,7 +200,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
                             // 设置Job环境变量customBuildEnv到variablesWithType中
                             c.customBuildEnv?.forEach { (t, u) ->
-                                variablesWithType.plus(BuildParameters(
+                                variablesWithType = variablesWithType.plus(BuildParameters(
                                     key = t,
                                     value = u,
                                     valueType = BuildFormPropertyType.STRING,
