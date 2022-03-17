@@ -1016,6 +1016,7 @@ class TemplateFacadeService @Autowired constructor(
                     )
                 )
             }
+            versionNames.add(versionName)
         }
         return versions
     }
@@ -2010,7 +2011,7 @@ class TemplateFacadeService @Autowired constructor(
         }
         // 判断提交的模板数量是否超过系统规定的阈值
         val versionNameNum = templateDao.countTemplateVersionNum(dslContext, projectId, templateId)
-        if (versionNameNum > maxSaveVersionNum) {
+        if (versionNameNum >= maxSaveVersionNum) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT,
                 params = arrayOf(maxSaveVersionNum.toString())
