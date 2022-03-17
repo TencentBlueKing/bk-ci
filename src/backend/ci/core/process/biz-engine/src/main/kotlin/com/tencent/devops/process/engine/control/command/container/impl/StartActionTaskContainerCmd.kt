@@ -163,7 +163,9 @@ class StartActionTaskContainerCmd(
             pipelineContextService.buildContext(
                 projectId = containerContext.container.projectId,
                 buildId = containerContext.container.buildId,
+                stageId = containerContext.container.stageId,
                 containerId = containerContext.container.containerId,
+                taskId = null,
                 variables = containerContext.variables
             )
         }

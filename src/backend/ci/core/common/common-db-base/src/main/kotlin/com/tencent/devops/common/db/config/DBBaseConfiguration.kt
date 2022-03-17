@@ -25,22 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.common.db.config
 
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.db.listener.BkJooqExecuteListener
+import org.jooq.impl.DefaultExecuteListenerProvider
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 
-class CodeReviewStateFilter(
-    private val pipelineId: String,
-    private val triggerOnState: String,
-    private val includedState: List<String>
-) : WebhookFilter {
+@Configuration
+class DBBaseConfiguration {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(CodeReviewStateFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info("$pipelineId|triggerOnState:$triggerOnState|includedState:$includedState|code review state filter")
-        return includedState.isEmpty() || includedState.contains(triggerOnState)
+    @Bean
+    fun bkJooqExecuteListenerProvider(): DefaultExecuteListenerProvider {
+        return DefaultExecuteListenerProvider(BkJooqExecuteListener())
     }
 }

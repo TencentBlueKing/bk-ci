@@ -105,7 +105,7 @@ class PipelineInfoDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        userId: String,
+        userId: String?,
         updateVersion: Boolean = true,
         pipelineName: String? = null,
         pipelineDesc: String? = null,
@@ -144,8 +144,10 @@ class PipelineInfoDao {
             if (latestVersion > 0) {
                 conditions.add(VERSION.eq(latestVersion))
             }
+            if (userId != null) {
+                update.set(LAST_MODIFY_USER, userId)
+            }
             update.set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_MODIFY_USER, userId)
                 .where(conditions)
                 .execute()
         }
@@ -530,6 +532,23 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(CHANNEL.eq(channelCode.name))
                 .execute()
+        }
+    }
+
+    fun getPipelineVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        channelCode: ChannelCode
+    ): Int {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(this.VERSION)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(CHANNEL.eq(channelCode.name))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

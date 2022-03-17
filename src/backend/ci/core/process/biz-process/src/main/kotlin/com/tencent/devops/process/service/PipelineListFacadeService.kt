@@ -252,7 +252,6 @@ class PipelineListFacadeService @Autowired constructor(
 
         val watcher = Watcher(id = "listPermissionPipeline|$projectId|$userId")
         try {
-
             val hasCreatePermission = if (!checkPermission) {
                 true
             } else {
@@ -264,9 +263,8 @@ class PipelineListFacadeService @Autowired constructor(
                 validateUserResourcePermission
             }
 
-            val pageNotNull = page ?: 0
-            val pageSizeNotNull = pageSize ?: -1
-            var slqLimit: SQLLimit? = null
+            val pageNotNull = if (page == null || page <= 0) 1 else page
+            val pageSizeNotNull = if (pageSize == null || pageSize <= 0) 10 else pageSize
             val hasPermissionList = if (checkPermission) {
                 watcher.start("perm_r_perm")
                 val hasPermissionList = pipelinePermissionService.getResourceByPermission(
@@ -296,18 +294,21 @@ class PipelineListFacadeService @Autowired constructor(
                 projectId = projectId,
                 channelCode = channelCode,
                 pipelineIds = hasPermissionList,
-                // 防止流水线数目过大
-                page = 1,
-                pageSize = 1000
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                sortType = sortType
+            )
+            val buildPipelineCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+                dslContext = dslContext,
+                projectId = projectId,
+                channelCode = channelCode,
+                pipelineIds = hasPermissionList
             )
             watcher.stop()
 
             watcher.start("s_r_fav")
-            if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-            val offset = slqLimit?.offset ?: 0
-            val limit = slqLimit?.limit ?: -1
             // 得到列表和是否有收藏的流水线
-            val (allPipelines, hasFavorPipelines) = if (buildPipelineRecords.isNotEmpty) {
+            val (pagePipelines, hasFavorPipelines) = if (buildPipelineRecords.isNotEmpty) {
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
                 val pipelines = buildPipelines(
                     pipelineInfoRecords = buildPipelineRecords,
@@ -319,22 +320,12 @@ class PipelineListFacadeService @Autowired constructor(
             } else {
                 mutableListOf<Pipeline>() to false
             }
-
-            // 列表排序
-            sortPipelines(allPipelines, sortType)
-
-            // 列表分页
-            val toIndex =
-                if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
-            val pagePipelines =
-                if (offset >= allPipelines.size) listOf() else allPipelines.subList(offset, toIndex)
-
             watcher.stop()
 
             return PipelinePage(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
-                count = allPipelines.size.toLong(),
+                count = buildPipelineCount,
                 records = pagePipelines,
                 hasCreatePermission = hasCreatePermission,
                 hasPipelines = true,
