@@ -158,10 +158,9 @@ class TemplateDao {
         templateId: String
     ): Int {
         with(TTemplate.T_TEMPLATE) {
-            return dslContext.select(DSL.count(VERSION_NAME))
+            return dslContext.select(DSL.countDistinct(VERSION_NAME))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(ID.eq(templateId)))
-                .groupBy(VERSION_NAME)
                 .fetchOne(0, Int::class.java)!!
         }
     }
