@@ -267,7 +267,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerSeqId = jobId
         )
         jobTaskInfos.forEach {
-            if (it.taskId.startsWith(VMUtils.getStopVmLabel()) ) {
+            if (it.taskId.startsWith(VMUtils.getStopVmLabel())) {
                 if (it.status.isFinish()) {
                     logger.info("PauseListener checkStopVm $projectId|$buildId|$jobId| success")
                     return true
