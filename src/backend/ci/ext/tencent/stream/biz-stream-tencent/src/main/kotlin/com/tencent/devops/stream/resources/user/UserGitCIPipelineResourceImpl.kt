@@ -49,7 +49,8 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         projectId: String,
         keyword: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        filePath: String?
     ): Result<Page<GitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
@@ -59,7 +60,19 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 keyword = keyword,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                filePath = filePath
+            )
+        )
+    }
+
+    override fun getPipelineDirList(userId: String, projectId: String): Result<List<String>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        return Result(
+            pipelineV2Service.getPipelineDirList(
+                userId = userId,
+                gitProjectId = gitProjectId
             )
         )
     }

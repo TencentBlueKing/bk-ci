@@ -60,7 +60,8 @@ class GitPipelineResourceDao {
                 LATEST_BUILD_ID,
                 VERSION,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                DIR
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -71,7 +72,8 @@ class GitPipelineResourceDao {
                 null,
                 version,
                 LocalDateTime.now(),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                pipeline.filePath.let { it.substring(0, it.indexOfLast { c -> c == '/' } + 1) }
             ).execute()
         }
     }
@@ -116,7 +118,8 @@ class GitPipelineResourceDao {
         gitProjectId: Long,
         keyword: String?,
         offset: Int,
-        limit: Int
+        limit: Int,
+        filePath: String? = null
     ): List<TGitPipelineResourceRecord> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             val dsl = dslContext.selectFrom(this)
@@ -124,9 +127,23 @@ class GitPipelineResourceDao {
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
+            if (!filePath.isNullOrBlank()) {
+                dsl.and(DIR.eq(filePath))
+            }
             return dsl.orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .limit(limit).offset(offset)
                 .fetch()
+        }
+    }
+
+    fun getDirListByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): List<String> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.select(DIR).from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId)).groupBy(DIR)
+                .fetch(DIR)
         }
     }
 

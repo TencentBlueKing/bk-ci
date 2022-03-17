@@ -67,7 +67,8 @@ class StreamPipelineService @Autowired constructor(
         gitProjectId: Long,
         keyword: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        filePath: String?
     ): Page<GitProjectPipeline> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
@@ -77,7 +78,8 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             keyword = keyword,
             offset = limit.offset,
-            limit = limit.limit
+            limit = limit.limit,
+            filePath = filePath
         )
         if (pipelines.isEmpty()) return Page(
             count = 0L,
@@ -107,6 +109,10 @@ class StreamPipelineService @Autowired constructor(
                 )
             }
         )
+    }
+
+    fun getPipelineDirList(userId: String, gitProjectId: Long): List<String> {
+        return pipelineResourceDao.getDirListByGitProjectId(dslContext, gitProjectId)
     }
 
     fun getPipelineListWithoutHistory(
@@ -182,8 +188,10 @@ class StreamPipelineService @Autowired constructor(
                 .elements.filter { it.getClassType() == "timerTrigger" }
                 .forEach { it.additionalOptions?.enable = enabled }
             val edited = saveModel(processClient, userId, gitProjectId, pipelineId, model)
-            logger.info("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
-                ", edit timerTrigger with $edited")
+            logger.info(
+                "gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
+                        ", edit timerTrigger with $edited"
+            )
             websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
             return pipelineResourceDao.enablePipelineById(
                 dslContext = dslContext,
@@ -284,8 +292,10 @@ class StreamPipelineService @Autowired constructor(
             }
             return response.data
         } catch (e: Exception) {
-            logger.error("get pipeline failed, pipelineId: " +
-                "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}")
+            logger.error(
+                "get pipeline failed, pipelineId: " +
+                        "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
+            )
             return null
         }
     }
@@ -311,8 +321,10 @@ class StreamPipelineService @Autowired constructor(
             }
             return response.data
         } catch (e: Exception) {
-            logger.error("edit pipeline failed, pipelineId: " +
-                "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}")
+            logger.error(
+                "edit pipeline failed, pipelineId: " +
+                        "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
+            )
             return null
         }
     }

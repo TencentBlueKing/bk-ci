@@ -69,8 +69,23 @@ interface UserGitCIPipelineResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("目录", required = false)
+        @QueryParam("filePath")
+        filePath: String?
     ): Result<Page<GitProjectPipeline>>
+
+    @ApiOperation("项目下所有流水线文件路径目录")
+    @GET
+    @Path("/{projectId}/dir_list")
+    fun getPipelineDirList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<String>>
 
     @ApiOperation("获取指定流水线信息")
     @GET

@@ -633,8 +633,10 @@ class GitCITriggerService @Autowired constructor(
     private fun checkStreamYamlFile(gitFileInfo: GitFileInfo): Boolean =
         (gitFileInfo.name.endsWith(ciFileExtensionYml) ||
                 gitFileInfo.name.endsWith(ciFileExtensionYaml)) &&
-                gitFileInfo.type == "blob" &&
-                !gitFileInfo.name.startsWith("templates/")
+                (gitFileInfo.type == "blob") &&
+                !gitFileInfo.name.startsWith("templates/") &&
+                // 加以限制：最多仅限一级子目录
+                (gitFileInfo.name.count { it == '/' } <= 1)
 
     @Throws(TriggerThirdException::class)
     private fun isCIYamlExist(
