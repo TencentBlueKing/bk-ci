@@ -197,7 +197,6 @@ class StoreEnvVarDao {
         dslContext: DSLContext,
         storeType: Byte,
         storeCode: String,
-        scope: String,
         varName: String
     ): Int? {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
@@ -275,7 +274,7 @@ class StoreEnvVarDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
-            if (scopeList != null && scopeList.isNullOrEmpty()) {
+            if (!scopeList.isNullOrEmpty()) {
                 conditions.add(SCOPE.`in`(scopeList))
             }
             if (varName != null) {

@@ -108,7 +108,6 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     storeType = storeType,
                     storeCode = storeCode,
-                    scope = storeEnvVarRequest.scope,
                     varName = storeEnvVarRequest.varName
                 ) ?: 0
                 storeEnvVarDao.create(
