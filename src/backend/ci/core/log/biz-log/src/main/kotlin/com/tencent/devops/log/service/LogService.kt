@@ -35,14 +35,10 @@ import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
-import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 
+@Suppress("LongParameterList", "TooManyFunctions")
 interface LogService {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(LogService::class.java)
-    }
 
     fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent)
 
