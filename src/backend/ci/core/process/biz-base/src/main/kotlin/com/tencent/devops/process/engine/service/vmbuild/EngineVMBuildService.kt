@@ -216,6 +216,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         buildStatus = BuildStatus.SUCCEED
                     )
 
+                    LOG.info("TEST =======>: ${JsonUtil.toJson(context)}")
+
                     return BuildVariables(
                         buildId = buildId,
                         vmSeqId = vmSeqId,

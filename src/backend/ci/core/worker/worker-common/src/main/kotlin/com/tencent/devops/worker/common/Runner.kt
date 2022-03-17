@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -70,6 +71,7 @@ object Runner {
         var workspacePathFile: File? = null
         // 启动成功, 报告process我已经启动了, #1613 如果这都失败了，则也无法向后台上报信息了。将由devopsAgent监控传递
         val buildVariables = EngineService.setStarted()
+        logger.info("TEST =====>: ${JsonUtil.toJson(buildVariables.variables)}")
         var failed = false
         try {
             // 上报agent启动给quota
