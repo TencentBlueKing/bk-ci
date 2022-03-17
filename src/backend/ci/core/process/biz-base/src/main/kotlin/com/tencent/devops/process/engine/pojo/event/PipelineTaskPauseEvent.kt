@@ -43,5 +43,6 @@ data class PipelineTaskPauseEvent(
     val buildId: String,
     val taskId: String,
     val containerId: String,
-    val stageId: String
+    val stageId: String,
+    var retryCount: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
