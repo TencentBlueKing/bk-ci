@@ -1,10 +1,11 @@
 {
   "name": "@tencent/bk-pipeline",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "dist/bk-pipeline.min.js",
   "scripts": {
     "public": "webpack  --mode production",
+    "patch": "npm version patch && tnpm publish",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

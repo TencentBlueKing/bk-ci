@@ -217,9 +217,9 @@
                 }
             },
             showDebugBtn () {
-                const { isLatestBuild, isExecDetail, container: { baseOS } } = this
+                const { isLatestBuild, isExecDetail, container: { baseOS, status } } = this
                 const isDockerOrDevcloud = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE].includes(this.buildResourceType)
-                return baseOS === 'LINUX' && isDockerOrDevcloud && isExecDetail && isLatestBuild
+                return baseOS === 'LINUX' && isDockerOrDevcloud && isExecDetail && isLatestBuild && status === STATUS_MAP.FAILED
             }
         },
         watch: {
