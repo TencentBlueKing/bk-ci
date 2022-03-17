@@ -69,7 +69,6 @@ set_env03 BK_HTTP_SCHEMA=http \
   BK_CI_REPOSITORY_GITLAB_URL=http://\$BK_CI_FQDN \
   BK_CI_APP_CODE=bk_ci \
   BK_CI_APP_TOKEN=$(uuid_v4) \
-  BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
   BK_CI_INFLUXDB_ADDR=$BK_CI_IP0:8086 \
   BK_CI_INFLUXDB_DB=agentMetrix \
   BK_CI_INFLUXDB_HOST=$BK_CI_IP0 \
@@ -84,6 +83,10 @@ set_env03 BK_CI_RABBITMQ_ADDR=$BK_RABBITMQ_IP:5672 BK_CI_RABBITMQ_USER=bk_ci BK_
 set_env03 BK_CI_MYSQL_ADDR=${BK_MYSQL_IP}:3306 BK_CI_MYSQL_USER=bk_ci BK_CI_MYSQL_PASSWORD=$(random_pass)
 # 复用redis, 读取密码, 刷新03env.
 set_env03 BK_CI_REDIS_HOST=$BK_REDIS_IP BK_CI_REDIS_PASSWORD=$BK_PAAS_REDIS_PASSWORD
+
+if grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
+  set_env03 BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP
+fi
 
 echo "合并env."
 ./bin/merge_env.sh ci &>/dev/null || true
