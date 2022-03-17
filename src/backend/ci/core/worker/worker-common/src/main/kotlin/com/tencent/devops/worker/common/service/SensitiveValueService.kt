@@ -47,6 +47,9 @@ object SensitiveValueService {
     }
 
     fun matchSensitiveValue(value: String): Boolean {
-        return sensitiveStringSet.contains(value)
+        sensitiveStringSet.forEach { sensitive ->
+            if (value.contains(sensitive)) return true
+        }
+        return true
     }
 }
