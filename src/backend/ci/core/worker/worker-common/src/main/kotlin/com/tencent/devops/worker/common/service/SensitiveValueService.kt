@@ -25,10 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.enums
+package com.tencent.devops.worker.common.service
 
-enum class CallBackNetWorkRegionType {
-    DEVNET,
-    OSS,
-    IDC
+import org.slf4j.LoggerFactory
+
+object SensitiveValueService {
+
+    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
+
+    /**
+     * 每个Job内维护的敏感信息集合
+     */
+    val sensitiveStringSet = mutableSetOf<String>()
+
+    fun addSensitiveValues(sensitiveValues: List<String>?) {
+        sensitiveValues?.let {
+            logger.info("Append sensitive string set")
+            sensitiveStringSet.addAll(it)
+            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
+        }
+    }
+
+    fun matchSensitiveValue(value: String): Boolean {
+        sensitiveStringSet.forEach { sensitive ->
+            if (value.contains(sensitive)) return true
+        }
+        return false
+    }
 }

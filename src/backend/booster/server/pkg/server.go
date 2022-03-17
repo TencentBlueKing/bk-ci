@@ -95,7 +95,7 @@ func (s *Server) Start() error {
 	}()
 
 	if err := s.waitDBReady(); err != nil {
-		blog.Infof("wait db ready failed: %v")
+		blog.Infof("wait db ready failed: %v", err)
 		return err
 	}
 

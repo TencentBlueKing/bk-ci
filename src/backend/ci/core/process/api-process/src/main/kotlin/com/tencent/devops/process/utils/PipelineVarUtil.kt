@@ -28,16 +28,18 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
@@ -55,12 +57,26 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_STATE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_DESCRIPTION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_OWNER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_STATE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
@@ -148,7 +164,6 @@ object PipelineVarUtil {
     private val contextVarMappingBuildVar = mapOf(
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
-        "ci.pipeline_name" to PIPELINE_NAME,
         "ci.actor" to PIPELINE_START_USER_ID,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
@@ -161,6 +176,7 @@ object PipelineVarUtil {
         "ci.repo_name" to PIPELINE_GIT_REPO_NAME,
         "ci.repo_group" to PIPELINE_GIT_REPO_GROUP,
         "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
+        "ci.event_url" to PIPELINE_GIT_EVENT_URL,
         "ci.sha" to PIPELINE_GIT_SHA,
         "ci.sha_short" to PIPELINE_GIT_SHA_SHORT,
         "ci.before_sha" to PIPELINE_GIT_BEFORE_SHA,
@@ -180,7 +196,22 @@ object PipelineVarUtil {
         "ci.mr_title" to PIPELINE_GIT_MR_TITLE,
         "ci.mr_desc" to PIPELINE_GIT_MR_DESC,
         "ci.mr_proposer" to PIPELINE_GIT_MR_PROPOSER,
-        "ci.mr_action" to PIPELINE_GIT_MR_ACTION
+        "ci.mr_action" to PIPELINE_GIT_MR_ACTION,
+        "ci.issue_title" to PIPELINE_WEBHOOK_ISSUE_TITLE,
+        "ci.issue_id" to PIPELINE_WEBHOOK_ISSUE_ID,
+        "ci.issue_iid" to PIPELINE_WEBHOOK_ISSUE_IID,
+        "ci.issue_description" to PIPELINE_WEBHOOK_ISSUE_DESCRIPTION,
+        "ci.issue_state" to PIPELINE_WEBHOOK_ISSUE_STATE,
+        "ci.issue_owner" to PIPELINE_WEBHOOK_ISSUE_OWNER,
+        "ci.issue_milestone_id" to PIPELINE_WEBHOOK_ISSUE_MILESTONE_ID,
+        "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
+        "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
+        "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
+        "ci.review_state" to BK_REPO_GIT_WEBHOOK_REVIEW_STATE,
+        "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
+        "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
+        "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
+        "ci.action" to PIPELINE_GIT_ACTION
     )
 
     /**

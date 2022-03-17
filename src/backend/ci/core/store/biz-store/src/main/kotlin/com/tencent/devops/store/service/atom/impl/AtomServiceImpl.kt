@@ -103,6 +103,7 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.UnInstallReq
@@ -186,7 +187,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    private val cache = CacheBuilder.newBuilder().maximumSize(1000)
+    private val cache = CacheBuilder.newBuilder().maximumSize(2000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(object : CacheLoader<String, Map<String, String>>() {
             override fun load(projectId: String): Map<String, String> {
@@ -431,14 +432,16 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        queryOfflineFlag: Boolean
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus")
+        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
         val atomResult = getPipelineAtomDetail(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            atomStatus = atomStatus
+            atomStatus = atomStatus,
+            queryOfflineFlag = queryOfflineFlag
         )
         val atom = atomResult.data
         if (null != atom) {
@@ -468,9 +471,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         projectCode: String?,
         atomCode: String,
         version: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        queryOfflineFlag: Boolean
     ): Result<PipelineAtom?> {
-        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus")
+        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus,$queryOfflineFlag")
         val atomStatusList = if (atomStatus != null) {
             mutableListOf(atomStatus)
         } else {
@@ -480,7 +484,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 null
             }
         }
-        if (atomStatus == null && !VersionUtils.isLatestVersion(version)) {
+        if (queryOfflineFlag) {
             atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
         }
         val pipelineAtomRecord = if (projectCode != null) {
@@ -489,6 +493,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 projectCode = projectCode,
                 atomCode = atomCode,
                 version = version,
+                defaultFlag = marketAtomCommonService.isPublicAtom(atomCode),
                 atomStatusList = atomStatusList
             )
         } else {
@@ -581,10 +586,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val versionList = mutableListOf<VersionInfo>()
         // 查询插件版本信息
         val versionRecords = if (projectCode != null) {
+            val defaultFlag = marketAtomCommonService.isPublicAtom(atomCode)
             atomDao.getVersionsByAtomCode(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 atomCode = atomCode,
+                defaultFlag = defaultFlag,
                 atomStatusList = atomStatusList
             )
         } else {
@@ -596,7 +603,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         var tmpVersionPrefix = ""
         versionRecords?.forEach {
-            val atomVersion = it[VERSION] as String
+            val atomVersion = it[KEY_VERSION] as String
             val index = atomVersion.indexOf(".")
             val versionPrefix = atomVersion.substring(0, index + 1)
             var versionName = atomVersion
@@ -1102,4 +1109,23 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         userId: String,
         repositoryHashId: String
     ): Result<Boolean>
+
+    override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {
+        return if (VersionUtils.isLatestVersion(version)) {
+            // 获取插件真实的版本号
+            val atomStatusList = generateAtomStatusList(atomCode, projectCode)
+            atomStatusList.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte())
+            val realVersion = atomDao.getAtomRealVersion(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                defaultFlag = marketAtomCommonService.isPublicAtom(atomCode),
+                atomStatusList = atomStatusList
+            )
+            Result(realVersion)
+        } else {
+            Result(version)
+        }
+    }
 }

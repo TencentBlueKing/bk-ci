@@ -32,10 +32,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.process.pojo.CreateCallBackResult
-import com.tencent.devops.process.pojo.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
-import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -179,5 +180,21 @@ interface ServiceCallBackResource {
         @ApiParam("id", required = true)
         @PathParam("id")
         id: Long
+    ): Result<Boolean>
+
+    @ApiOperation("流水线级别callback")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}")
+    fun createPipelineCallBack(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        callbackInfo: PipelineCallbackEvent
     ): Result<Boolean>
 }

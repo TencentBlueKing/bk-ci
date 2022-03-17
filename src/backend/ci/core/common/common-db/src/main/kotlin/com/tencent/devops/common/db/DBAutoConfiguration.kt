@@ -28,6 +28,7 @@
 package com.tencent.devops.common.db
 
 import com.mysql.cj.jdbc.Driver
+import com.tencent.devops.common.db.config.DBBaseConfiguration
 import com.zaxxer.hikari.HikariDataSource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -36,6 +37,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Import
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
@@ -50,6 +52,7 @@ import javax.sql.DataSource
 @PropertySource("classpath:/common-db.properties")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @AutoConfigureBefore(DataSourceAutoConfiguration::class, JooqAutoConfiguration::class)
+@Import(DBBaseConfiguration::class)
 @EnableTransactionManagement
 class DBAutoConfiguration {
 

@@ -25,54 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.code.git.api
+package com.tencent.devops.dispatch.docker.service
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+interface ExtDebugService {
+    fun startDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String?
 
-/**
- * {
- *   "id": 21382,
- *   "forks_count": 0,
- *   "config_storage": {
- *     "limit_lfs_file_size": 512000,
- *     "limit_size": 512000,
- *     "limit_file_size": 512000,
- *     "limit_lfs_size": 512000
- *   },
- *   "description": "abcdefg",
- *   "public": false,
- *   "archived": false,
- *   "visibility_level": 0,
- *   "name": "devops",
- *   "name_with_namespace": "devops/devops",
- *   "path": "devops",
- *   "path_with_namespace": "devops/devops",
- *   "default_branch": "master",
- *   "ssh_url_to_repo": "git@git.com:devops/devops.git",
- *   "http_url_to_repo": "http://git.com/devops/devops.git",
- *   "web_url": "http://git.com/devops/devops",
- *   "issues_enabled": true,
- *   "merge_requests_enabled": true,
- *   "wiki_enabled": true,
- *   "snippets_enabled": true,
- *   "created_at": "2017-01-13T09:25:27+0000",
- *   "last_activity_at": "2018-01-08T06:53:14+0000",
- *   "creator_id": 8919,
- *   "namespace": {
- *     "created_at": "2016-11-24T07:18:38+0000",
- *     "description": "DEVOPS",
- *     "id": 9456,
- *     "name": "devops",
- *     "owner_id": null,
- *     "path": "devops",
- *     "updated_at": "2016-11-24T07:18:38+0000"
- *   },
- *   "avatar_url": null,
- *   "star_count": 0
- *   }
- */
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitProject(
-    val id: Long,
-    val description: String
-)
+    fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String?
+
+    fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean
+}

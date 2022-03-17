@@ -20,9 +20,11 @@ var (
 	BoosterCL      BoosterType = "cl"
 	BoosterShader  BoosterType = "shader"
 	BoosterUE4     BoosterType = "ue4"
+	BoosterClangCl BoosterType = "clang-cl"
 	BoosterEcho    BoosterType = "echo"
 	BoosterCustom  BoosterType = "custom"
 	BoosterUnknown BoosterType = "unknown"
+
 )
 
 // String return the string of BoosterType
@@ -38,6 +40,7 @@ var (
 		BoosterCL.String():     BoosterCL,
 		BoosterShader.String(): BoosterShader,
 		BoosterUE4.String():    BoosterUE4,
+		BoosterClangCl.String() : BoosterClangCl,
 		BoosterEcho.String():   BoosterEcho,
 		BoosterCustom.String(): BoosterCustom,
 	}

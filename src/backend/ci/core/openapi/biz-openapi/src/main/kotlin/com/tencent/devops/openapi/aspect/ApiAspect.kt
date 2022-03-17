@@ -60,10 +60,10 @@ class ApiAspect(
      */
     @Before(
         "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
@@ -82,6 +82,7 @@ class ApiAspect(
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
                 "projectId" -> projectId = parameterValue[index]?.toString()
+                "gitProjectId" -> projectId = "git_" + parameterValue[index]?.toString()
                 "projectCode" -> projectId = parameterValue[index]?.toString()
                 "appCode" -> appCode = parameterValue[index]?.toString()
                 "apigwType" -> apigwType = parameterValue[index]?.toString()
@@ -127,10 +128,10 @@ class ApiAspect(
      */
     @After(
         "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
-            "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
+                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染

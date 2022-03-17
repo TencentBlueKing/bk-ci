@@ -16,8 +16,8 @@
             <span v-if="canStageRetry" @click.stop="() => showRetryStageDialog = true" class="stage-single-retry">
                 {{ $t('retry') }}
             </span>
-            <span class="stage-entry-btns">
-                <span :title="$t('editPage.copyStage')" v-if="!stage.isError && showCopyStage" class="bk-icon copy-stage" @click.stop="copyStage">
+            <span class="stage-entry-btns" v-if="!stage.isError && showCopyStage">
+                <span :title="$t('editPage.copyStage')" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
                 </span>
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
@@ -437,7 +437,7 @@
                     isAddParallelContainer: isParallel
                 })
             },
-            
+
             toggleAddMenu (isAddMenuShow) {
                 if (!this.editable) return
                 const { stageIndex, setInertStageIndex } = this
@@ -764,7 +764,7 @@
                 padding: 0 15px;
                 font-size: 12px;
                 line-height: 32px;
-                
+
                 &:hover, :hover {
                     color: #3c96ff;
                     background-color: #eaf3ff;

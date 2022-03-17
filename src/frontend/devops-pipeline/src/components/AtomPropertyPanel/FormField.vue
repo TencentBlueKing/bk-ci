@@ -48,7 +48,7 @@
                         { docsLink
                             && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
                         }
-                        { label.trim() && desc.trim() && <bk-popover placement="top" class="form-field-icon">
+                        { label.trim() && desc.trim() && <bk-popover placement="top">
                             <i class="bk-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
                                 <div> {desc} { descLink && <a class="desc-link" target="_blank" href={descLink}>{descLinkText}</a>} </div>
@@ -59,7 +59,7 @@
 
                     <div class='bk-form-content'>
                         {$slots.default}
-                        {isError ? $slots.errorTip || <span class='bk-form-help is-danger'>{errorMsg}</span> : null}
+                        {isError ? $slots.errorTip || <p class='bk-form-help is-danger'>{errorMsg}</p> : null}
                     </div>
                 </div>
             )
@@ -77,12 +77,6 @@
     .form-field.bk-form-item {
         position: relative;
     }
-    .form-field-icon {
-        position: absolute;
-        right:  14px;
-        top: 0;
-        font-size: 0;
-    }
     .bk-form-item,
     .bk-form-inline-item {
         .bk-label {
@@ -93,9 +87,6 @@
         .bk-form-item.is-required .bk-label,
         .bk-form-inline-item.is-required .bk-label {
             margin-right: 10px;
-            .form-field-icon {
-                right:  -4px;
-            }
         }
     }
     .desc-link {
