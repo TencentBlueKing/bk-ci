@@ -50,6 +50,6 @@ object SensitiveValueService {
         sensitiveStringSet.forEach { sensitive ->
             if (value.contains(sensitive)) return true
         }
-        return true
+        return false
     }
 }
