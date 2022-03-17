@@ -52,6 +52,7 @@ import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.common.util.HttpRetryUtils
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -65,7 +66,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("MagicNumber", "TooManyFunctions")
+@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -74,6 +75,7 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -204,6 +206,8 @@ object LoggerService {
     fun addNormalLine(message: String) {
         var subTag: String? = null
         var realMessage = message
+
+        // #2342 处理插件内日志的前缀标签，进行日志分级
         if (message.contains(LOG_SUBTAG_FLAG)) {
             val prefix = message.substringBefore(LOG_SUBTAG_FLAG)
             val list = message.substringAfter(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
@@ -217,13 +221,16 @@ object LoggerService {
             }
             realMessage = prefix + realMessage
         }
-
         val logType = when {
             realMessage.startsWith(LOG_DEBUG_FLAG) -> LogType.DEBUG
             realMessage.startsWith(LOG_ERROR_FLAG) -> LogType.ERROR
             realMessage.startsWith(LOG_WARN_FLAG) -> LogType.WARN
             else -> LogType.LOG
         }
+
+        // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中
+        realMessage = fixSensitiveContent(realMessage)
+
         val logMessage = LogMessage(
             message = realMessage,
             timestamp = System.currentTimeMillis(),
@@ -234,7 +241,8 @@ object LoggerService {
             executeCount = executeCount
         )
         logger.info(logMessage.toString())
-        // 如果已经进入Job执行任务，则可以做日志本地落盘
+
+        // #3772 如果已经进入Job执行任务，则可以做日志本地落盘
         if (elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(logMessage)
         }
@@ -260,6 +268,16 @@ object LoggerService {
         } catch (ignored: InterruptedException) {
             logger.error("写入 $logType 日志行失败：", ignored)
         }
+    }
+
+    private fun fixSensitiveContent(message: String): String {
+        var realMessage = message
+        SensitiveValueService.sensitiveStringSet.forEach { sensitiveStr ->
+            if (realMessage.contains(sensitiveStr)) {
+                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
+            }
+        }
+        return realMessage
     }
 
     fun addWarnLine(message: String) {
