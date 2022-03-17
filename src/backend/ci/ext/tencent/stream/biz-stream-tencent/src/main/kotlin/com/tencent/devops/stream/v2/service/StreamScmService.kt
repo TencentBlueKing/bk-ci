@@ -492,7 +492,8 @@ class StreamScmService @Autowired constructor(
         gitProjectId: Long,
         token: String,
         filePath: String,
-        ref: String?
+        ref: String?,
+        recursive: Boolean?
     ): List<GitFileInfo> {
         return retryFun(
             log = "$gitProjectId get $filePath file tree error",
@@ -502,7 +503,8 @@ class StreamScmService @Autowired constructor(
                     gitProjectId = gitProjectId,
                     path = filePath,
                     token = token,
-                    ref = ref
+                    ref = ref,
+                    recursive = recursive
                 ).data ?: emptyList()
             }
         )
@@ -512,7 +514,8 @@ class StreamScmService @Autowired constructor(
     fun getFileTreeFromGitWithDefaultBranch(
         gitToken: String,
         gitProjectId: Long,
-        filePath: String
+        filePath: String,
+        recursive: Boolean?
     ): List<GitFileInfo> {
         return retryFun(
             log = "$gitProjectId get $filePath file tree error",
@@ -526,7 +529,8 @@ class StreamScmService @Autowired constructor(
                         filePath
                     },
                     token = gitToken,
-                    ref = ""
+                    ref = "",
+                    recursive = recursive
                 ).data ?: emptyList()
             }
         )

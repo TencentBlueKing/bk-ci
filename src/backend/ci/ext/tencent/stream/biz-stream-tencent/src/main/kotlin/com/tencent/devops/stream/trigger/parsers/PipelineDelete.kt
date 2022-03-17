@@ -201,7 +201,8 @@ class PipelineDelete @Autowired constructor(
         val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
             gitToken = gitToken,
             gitProjectId = gitProjectId,
-            filePath = filePath
+            filePath = filePath,
+            recursive = true
         )
 
         fileList.forEach {
