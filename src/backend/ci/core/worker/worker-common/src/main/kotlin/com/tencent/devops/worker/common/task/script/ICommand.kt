@@ -66,13 +66,17 @@ interface ICommand {
         val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
 
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = if (data[key] != null) {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
                 data[key]!!
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-                } catch (ignore: Exception) {
-                    CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                } catch (ignored: Exception) {
+                    CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId) ?: if (doubleCurlyBraces) {
+                        "\${{$key}}"
+                    } else {
+                        "\${$key}"
+                    }
                 }
             }
         }, mapOf(
