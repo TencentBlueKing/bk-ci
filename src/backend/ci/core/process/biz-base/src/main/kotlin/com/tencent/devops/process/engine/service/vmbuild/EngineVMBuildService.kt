@@ -202,7 +202,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             c.customBuildEnv?.forEach { (t, u) ->
                                 variablesWithType = variablesWithType.plus(BuildParameters(
                                     key = t,
-                                    value = u,
+                                    value = EnvUtils.parseEnv(u, contextMap),
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 ))
