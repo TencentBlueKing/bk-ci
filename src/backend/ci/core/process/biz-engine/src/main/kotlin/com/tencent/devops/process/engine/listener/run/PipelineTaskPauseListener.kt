@@ -86,9 +86,9 @@ class PipelineTaskPauseListener @Autowired constructor(
             }
 
             if (event.actionType == ActionType.REFRESH) {
-                taskContinue(taskRecord!!, event.userId)
+                taskContinue(taskRecord, event.userId)
             } else if (event.actionType == ActionType.END) {
-                taskCancel(task = taskRecord!!, userId = event.userId)
+                taskCancel(task = taskRecord, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
         } catch (ignored: Exception) {
@@ -261,15 +261,20 @@ class PipelineTaskPauseListener @Autowired constructor(
         val buildId = task.buildId
         val jobId = task.containerId
         // 查找job所属job对应的关机插件是否完成
-        val stopVmInfo = pipelineTaskService.getBuildTask(
+        val jobTaskInfos = pipelineTaskService.listContainerBuildTasks(
             projectId = projectId,
             buildId = buildId,
-            taskId = VMUtils.genStopVMTaskId(jobId.toInt())
-        ) ?: return false
-        if (stopVmInfo.status.isFinish()) {
-            return true
+            containerSeqId = jobId
+        )
+        jobTaskInfos.forEach {
+            if (it.taskId.startsWith(VMUtils.getStopVmLabel()) ) {
+                if (it.status.isFinish()) {
+                    logger.info("PauseListener checkStopVm $projectId|$buildId|$jobId| success")
+                    return true
+                } else return@forEach
+            }
         }
-        logger.warn("PauseListener checkStopVm $projectId|$buildId|$jobId|${stopVmInfo.status}")
+        logger.warn("PauseListener checkStopVm $projectId|$buildId|$jobId| fail")
         return false
     }
 
