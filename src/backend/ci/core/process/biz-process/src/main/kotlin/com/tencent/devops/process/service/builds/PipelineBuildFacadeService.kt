@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildPropertyType
@@ -618,34 +619,7 @@ class PipelineBuildFacadeService(
 
             val model = getModel(projectId, pipelineId, readyToBuildPipelineInfo.version)
 
-            /**
-             * 验证流水线参数构建启动参数
-             */
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-
-            val startParams = mutableListOf<BuildParameters>()
-            for (it in parameters) {
-                startParams.add(BuildParameters(it.key, it.value))
-            }
-            val paramsKeyList = startParams.map { it.key }
-            triggerContainer.params.forEach {
-                if (paramsKeyList.contains(it.id)) {
-                    return@forEach
-                }
-                startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
-            }
-            // 子流水线的调用不受频率限制
-            val startParamsWithType = mutableListOf<BuildParameters>()
-            startParams.forEach { (key, value, valueType, readOnly) ->
-                startParamsWithType.add(
-                    BuildParameters(
-                        key,
-                        value,
-                        valueType,
-                        readOnly
-                    )
-                )
-            }
+            val startParamsWithType = buildStartParams(model, parameters)
 
             return pipelineBuildService.startPipeline(
                 userId = userId,
@@ -661,6 +635,86 @@ class PipelineBuildFacadeService(
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
         }
+    }
+
+    /**
+     * 定时触发
+     */
+    fun webhookTriggerPipelineBuild(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        parameters: Map<String, Any> = emptyMap(),
+        checkPermission: Boolean = true
+    ): String? {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.EXECUTE,
+                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+            )
+        }
+        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
+            ?: return null
+        val startEpoch = System.currentTimeMillis()
+        try {
+
+            val model = getModel(projectId, pipelineId, readyToBuildPipelineInfo.version)
+
+            val startParamsWithType = buildStartParams(model, parameters)
+
+            return pipelineBuildService.startPipeline(
+                userId = userId,
+                readyToBuildPipelineInfo = readyToBuildPipelineInfo,
+                startType = StartType.WEB_HOOK,
+                startParamsWithType = startParamsWithType,
+                channelCode = readyToBuildPipelineInfo.channelCode,
+                isMobile = false,
+                model = model,
+                signPipelineVersion = null,
+                frequencyLimit = false
+            )
+        } finally {
+            logger.info("Webhook| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
+        }
+    }
+
+    private fun buildStartParams(
+        model: Model,
+        parameters: Map<String, Any>
+    ): MutableList<BuildParameters> {
+        /**
+         * 验证流水线参数构建启动参数
+         */
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+
+        val startParams = mutableListOf<BuildParameters>()
+        for (it in parameters) {
+            startParams.add(BuildParameters(it.key, it.value))
+        }
+        val paramsKeyList = startParams.map { it.key }
+        triggerContainer.params.forEach {
+            if (paramsKeyList.contains(it.id)) {
+                return@forEach
+            }
+            startParams.add(BuildParameters(key = it.id, value = it.defaultValue, readOnly = it.readOnly))
+        }
+
+        val startParamsWithType = mutableListOf<BuildParameters>()
+        startParams.forEach { (key, value, valueType, readOnly) ->
+            startParamsWithType.add(
+                BuildParameters(
+                    key,
+                    value,
+                    valueType,
+                    readOnly
+                )
+            )
+        }
+        return startParamsWithType
     }
 
     fun buildManualShutdown(
