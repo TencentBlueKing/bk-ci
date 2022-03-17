@@ -34,6 +34,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.util.concurrent.Callable
@@ -102,6 +103,10 @@ class TaskDaemon(
                 if (value.length > PARAM_MAX_LENGTH) {
                     LoggerService.addWarnLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
                         "(max=$PARAM_MAX_LENGTH)")
+                    return@forEach
+                }
+                if (SensitiveValueService.matchSensitiveValue(value)) {
+                    LoggerService.addWarnLine("[${buildTask.taskId}]|SENSITIVE_DATA|key=$key")
                     return@forEach
                 }
                 buildResult[key] = value
