@@ -48,9 +48,9 @@ data class VMBuildContainer(
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统运行时间", required = false, hidden = true)
+    @ApiModelProperty("系统耗时（开机时间）", required = false, hidden = true)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件运行时间", required = false, hidden = true)
+    @ApiModelProperty("插件执行耗时", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("VM基础操作系统", required = true)
     val baseOS: VMBaseOS,
@@ -74,7 +74,7 @@ data class VMBuildContainer(
     val thirdPartyWorkspace: String? = null,
     @ApiModelProperty("Docker构建机", required = false)
     val dockerBuildVersion: String? = null,
-    @ApiModelProperty("TStackHashId", required = false)
+    @ApiModelProperty("TStack Hash Id", required = false)
     @Deprecated("do not used")
     val tstackAgentId: String? = null,
     @ApiModelProperty("新的选择构建机环境", required = false)

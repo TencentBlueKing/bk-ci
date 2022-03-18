@@ -47,8 +47,9 @@ data class NormalContainer(
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, hidden = true)
     override var startEpoch: Long? = null,
+    @ApiModelProperty("系统耗时（开机时间）", required = false, hidden = true)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("原子运行时间", required = false, hidden = true)
+    @ApiModelProperty("插件执行耗时", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("允许可跳过", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))

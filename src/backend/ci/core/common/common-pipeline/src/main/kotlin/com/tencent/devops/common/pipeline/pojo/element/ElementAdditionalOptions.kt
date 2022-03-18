@@ -28,25 +28,40 @@
 package com.tencent.devops.common.pipeline.pojo.element
 
 import com.tencent.devops.common.pipeline.NameAndValue
+import io.swagger.annotations.ApiModelProperty
 
 data class ElementAdditionalOptions(
+    @ApiModelProperty("是否启用", required = false)
     var enable: Boolean = true,
+    @ApiModelProperty("是否失败时继续", required = false)
     var continueWhenFailed: Boolean = false, // 失败时继续  continueWhenFailed = true &&  manualSkip != true（自动继续）
+    @ApiModelProperty("是否出现跳过按钮（手动继续）", required = false)
     val manualSkip: Boolean? = null, // (continueWhenFailed = true && manualSkip = true) 出现跳过按钮（手动继续）
+    @ApiModelProperty("是否失败时重试", required = false)
     val retryWhenFailed: Boolean = false,
+    @ApiModelProperty("重试计数", required = false)
     val retryCount: Int = 0,
+    @ApiModelProperty("是否允许手动重试", required = false)
     val manualRetry: Boolean = true, // 自动重试一直失败后，界面出现重试按钮, 默认允许手动重试（为了兼容旧数据使用习惯）
+    @ApiModelProperty("超时分钟", required = false)
     val timeout: Long? = 100, // 超时分钟
+    @ApiModelProperty("执行条件", required = false)
     val runCondition: RunCondition?,
+    @ApiModelProperty("是否配置前置暂停", required = false)
     var pauseBeforeExec: Boolean? = false, // 是否配置前置暂停
+    @ApiModelProperty("订阅暂停通知用户", required = false)
     val subscriptionPauseUser: String? = "", // 订阅暂停通知用户
-
+    @ApiModelProperty("", required = false)
     val otherTask: String? = null,
+    @ApiModelProperty("自定义变量", required = false)
     val customVariables: List<NameAndValue>? = null,
+    @ApiModelProperty("自定义条件", required = false)
     val customCondition: String? = "",
+    @ApiModelProperty("插件post信息", required = false)
     val elementPostInfo: ElementPostInfo? = null,
-
+    @ApiModelProperty("是否设置自定义环境变量", required = false)
     val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
+    @ApiModelProperty("自定义环境变量", required = false)
     val customEnv: List<NameAndValue>? = null
 )
 

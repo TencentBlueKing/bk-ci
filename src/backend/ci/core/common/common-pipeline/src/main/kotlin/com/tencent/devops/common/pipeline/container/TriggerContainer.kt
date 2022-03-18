@@ -43,10 +43,11 @@ data class TriggerContainer(
     override var elements: List<Element> = listOf(),
     @ApiModelProperty("状态", required = true, hidden = true)
     override var status: String? = null,
+    @ApiModelProperty("系统运行时间", required = false)
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统运行时间", required = false, hidden = true)
+    @ApiModelProperty("系统耗时（开机时间）", required = false, hidden = true)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件运行时间", required = false, hidden = true)
+    @ApiModelProperty("插件执行耗时", required = false, hidden = true)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
