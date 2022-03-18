@@ -106,27 +106,33 @@ class ProjectUserRefreshService @Autowired constructor(
         userInfo.forEach {
             try {
                 Thread.sleep(5)
-                val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
-                if (tofDeptInfo == null) {
-                    projectUserDao.delete(dslContext, it.userId)
-                    logger.info("user ${it.userId} is level office, delete t_user info")
-                } else if (tofDeptInfo.centerId.toInt() != it.centerId || tofDeptInfo.deptId.toInt() != it.deptId) {
-                    logger.info("${it.userId} cent id is diff, " +
-                        "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
-                        "local ${it.centerId} ${it.centerName}")
-                    userDao.update(
-                        userId = it.userId,
-                        groupId = tofDeptInfo.groupId.toInt(),
-                        groupName = tofDeptInfo.groupName,
-                        bgId = tofDeptInfo.bgId.toInt(),
-                        bgName = tofDeptInfo.bgName,
-                        centerId = tofDeptInfo.centerId.toInt(),
-                        centerName = tofDeptInfo.centerName,
-                        deptId = tofDeptInfo.deptId.toInt(),
-                        deptName = tofDeptInfo.deptName,
-                        dslContext = dslContext,
-                        name = it.name
-                    )
+                try {
+                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
+                    if (tofDeptInfo == null) {
+                        projectUserDao.delete(dslContext, it.userId)
+                        logger.info("user ${it.userId} is level office, delete t_user info")
+                    } else if (tofDeptInfo.centerId.toInt() != it.centerId || tofDeptInfo.deptId.toInt() != it.deptId) {
+                        logger.info(
+                            "${it.userId} cent id is diff, " +
+                                "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
+                                "local ${it.centerId} ${it.centerName}"
+                        )
+                        userDao.update(
+                            userId = it.userId,
+                            groupId = tofDeptInfo.groupId.toInt(),
+                            groupName = tofDeptInfo.groupName,
+                            bgId = tofDeptInfo.bgId.toInt(),
+                            bgName = tofDeptInfo.bgName,
+                            centerId = tofDeptInfo.centerId.toInt(),
+                            centerName = tofDeptInfo.centerName,
+                            deptId = tofDeptInfo.deptId.toInt(),
+                            deptName = tofDeptInfo.deptName,
+                            dslContext = dslContext,
+                            name = it.name
+                        )
+                    }
+                } catch (oe: OperationException) {
+                    logger.warn("getUserDept fail: ${it.userId}|$oe")
                 }
             } catch (e: Exception) {
                 logger.warn("updateInfoByTof ${it.userId} fail: $e")
