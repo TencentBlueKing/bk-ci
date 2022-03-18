@@ -31,6 +31,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
@@ -105,13 +106,17 @@ class CheckConditionalSkipContainerCmd constructor(
                     buildId = container.buildId,
                     runCondition = jobControlOption.runCondition,
                     customCondition = jobControlOption.customCondition,
-                    buildLogPrinter = buildLogPrinter
+                    buildLogPrinter = buildLogPrinter,
+                    jobId = container.containerHashId ?: "",
+                    taskId = VMUtils.genStartVMTaskId(container.containerId),
+                    executeCount = container.executeCount
                 )
             }
-
             if (needSkip) {
-                LOG.info("ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
-                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption")
+                LOG.info(
+                    "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
+                        "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
+                )
             }
         }
         return needSkip

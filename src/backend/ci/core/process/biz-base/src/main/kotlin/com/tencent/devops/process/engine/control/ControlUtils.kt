@@ -149,7 +149,10 @@ object ControlUtils {
         containerFinalStatus: BuildStatus,
         variables: Map<String, String>,
         hasFailedTaskInSuccessContainer: Boolean,
-        buildLogPrinter: BuildLogPrinter? = null
+        buildLogPrinter: BuildLogPrinter? = null,
+        taskId: String = "",
+        jobId: String? = "",
+        executeCount: Int = 1
     ): Boolean {
         var skip = false
         val runCondition = additionalOptions?.runCondition
@@ -177,7 +180,10 @@ object ControlUtils {
             buildId = buildId,
             additionalOptions = additionalOptions,
             variables = variables,
-            buildLogPrinter = buildLogPrinter
+            buildLogPrinter = buildLogPrinter,
+            taskId = taskId,
+            jobId = jobId,
+            executeCount = executeCount
         ) else skip
     }
 
@@ -185,11 +191,14 @@ object ControlUtils {
         buildId: String,
         additionalOptions: ElementAdditionalOptions?,
         variables: Map<String, String>,
-        buildLogPrinter: BuildLogPrinter? = null
+        buildLogPrinter: BuildLogPrinter? = null,
+        taskId: String = "",
+        jobId: String? = "",
+        executeCount: Int = 1
     ): Boolean {
         if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
             !additionalOptions.customCondition.isNullOrBlank()) {
-            return !evalExpression(additionalOptions.customCondition, buildId, variables, buildLogPrinter)
+            return !evalExpression(additionalOptions.customCondition, buildId, variables, buildLogPrinter, taskId, jobId, executeCount)
         }
 
         return false
@@ -202,13 +211,16 @@ object ControlUtils {
         buildId: String,
         runCondition: JobRunCondition,
         customCondition: String? = null,
-        buildLogPrinter: BuildLogPrinter? = null
+        buildLogPrinter: BuildLogPrinter? = null,
+        taskId: String = "",
+        jobId: String? = "",
+        executeCount: Int = 1
     ): Boolean {
         var skip = when (runCondition) {
             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             JobRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpression(customCondition, buildId, variables, buildLogPrinter)
+                return !evalExpression(customCondition, buildId, variables, buildLogPrinter, taskId, jobId, executeCount)
             }
             else -> return false // 其它类型直接返回不跳过
         }
@@ -233,13 +245,16 @@ object ControlUtils {
         buildId: String,
         runCondition: StageRunCondition,
         customCondition: String? = null,
-        buildLogPrinter: BuildLogPrinter? = null
+        buildLogPrinter: BuildLogPrinter? = null,
+        taskId: String = "",
+        jobId: String? = "",
+        executeCount: Int = 1
     ): Boolean {
         var skip = when (runCondition) {
             StageRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             StageRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
             StageRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
-                return !evalExpression(customCondition, buildId, variables, buildLogPrinter)
+                return !evalExpression(customCondition, buildId, variables, buildLogPrinter, taskId, jobId, executeCount)
             }
             else -> return false // 其它类型直接返回不跳过
         }
@@ -260,20 +275,37 @@ object ControlUtils {
         customCondition: String?,
         buildId: String,
         variables: Map<String, Any>,
-        buildLogPrinter: BuildLogPrinter? = null
+        buildLogPrinter: BuildLogPrinter? = null,
+        taskId: String = "",
+        jobId: String? = "",
+        executeCount: Int = 1
     ): Boolean {
         return if (!customCondition.isNullOrBlank()) {
             try {
-                val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
-                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
-                    "|result=$expressionResult")
+                val variableStr = EvalExpress.eval(buildId, customCondition, variables)
+                val expressionResult = variableStr.isNullOrBlank()
+                logger.info(
+                    "[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                        "|result=$expressionResult"
+                )
                 val logMessage = "Custom condition($customCondition) result is $expressionResult. " +
                     if (!expressionResult) {
                         "will be skipped! "
                     } else {
                         ""
                     }
-                buildLogPrinter?.addLine(buildId, logMessage, "", "", 1)
+                variableStr?.let {
+                    buildLogPrinter?.addLine(
+                        executeCount = executeCount, tag = taskId,
+                        buildId = buildId, message = it,
+                        jobId = jobId
+                    )
+                }
+                buildLogPrinter?.addLine(
+                    executeCount = executeCount, tag = taskId,
+                    buildId = buildId, message = logMessage,
+                    jobId = jobId
+                )
                 expressionResult
             } catch (ignore: Exception) {
                 // 异常，则任务表达式为false
@@ -281,16 +313,25 @@ object ControlUtils {
                     "|result=exception: ${ignore.message}", ignore)
                 val logMessage =
                     "Custom condition($customCondition) parse failed, will be skipped! Detail: ${ignore.message}"
-                buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)
+                buildLogPrinter?.addRedLine(buildId, logMessage, taskId, jobId, 1)
                 return false
             }
         } else {
             // 空表达式也认为是false
             logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression is empty!")
             val logMessage = "Custom condition is empty, will be skipped!"
-            buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)
+            buildLogPrinter?.addRedLine(buildId, logMessage, taskId, jobId, 1)
             false
         }
+    }
+
+    private fun getVariablesLogMessage(variables: Map<String, Any>): String {
+        val sb = StringBuilder("variables : ")
+        variables.forEach {
+            sb.append("${it.key}=${it.value},")
+        }
+        // 去掉最后一个逗号
+        return sb.dropLast(1).toString()
     }
 
     fun checkContainerFailure(c: PipelineBuildContainer) =

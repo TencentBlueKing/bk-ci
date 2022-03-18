@@ -38,7 +38,7 @@ object EvalExpress {
         buildId: String,
         condition: String,
         variables: Map<String, Any>
-    ): Boolean {
+    ): String? {
         logger.info("Enter eval condition: $condition")
         // 去掉花括号
         val baldExpress = condition.replace("\${{", "").replace("}}", "")
@@ -58,9 +58,10 @@ object EvalExpress {
 
         // 替换变量
         val items = mutableListOf<Word>()
+        val variableList = mutableListOf<String>()
         originItems.forEach {
             if (it.symbol == "ident") {
-                items.add(Word(replaceVariable(it.str, variables), it.symbol))
+                items.add(Word(replaceVariable(it.str, variables, variableList), it.symbol))
             } else {
                 items.add(Word(it.str, it.symbol))
             }
@@ -78,7 +79,7 @@ object EvalExpress {
 
         // 分析语义，计算表达式
         return try {
-            SemanticAnalysis(items).analysis()
+            if (!SemanticAnalysis(items).analysis()) variableList.joinToString(",") else null
         } catch (e: Throwable) {
             logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$itemsStr|" +
                 "reason=Semantic analysis failed: ${e.message}")
@@ -86,11 +87,13 @@ object EvalExpress {
         }
     }
 
-    private fun replaceVariable(str: String, variables: Map<String, Any>): String {
+    private fun replaceVariable(str: String, variables: Map<String, Any>, variableStr: MutableList<String>): String {
         // 暂时判断这些前缀，根据需要再加
         contextPrefix.forEach {
             if (str.startsWith(it)) {
-                return variables[str] as String? ?: str
+                val value = variables[str] as String? ?: str
+                variableStr.add("$str = $value")
+                return value
             }
         }
 

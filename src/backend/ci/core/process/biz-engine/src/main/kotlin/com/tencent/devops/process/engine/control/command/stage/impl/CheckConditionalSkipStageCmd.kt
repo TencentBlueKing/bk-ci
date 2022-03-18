@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -70,6 +71,7 @@ class CheckConditionalSkipStageCmd constructor(
         val stage = commandContext.stage
         val controlOption = stage.controlOption?.stageControlOption
         val event = commandContext.event
+        val firstContainer = commandContext.containers.first()
         if (controlOption?.enable == false || commandContext.containers.isEmpty()) { // 无任务
 //            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_SKIP|${event.stageId}|${controlOption?.enable}")
             return true
@@ -94,13 +96,15 @@ class CheckConditionalSkipStageCmd constructor(
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
                 customCondition = controlOption.customCondition,
-                buildLogPrinter = buildLogPrinter
+                buildLogPrinter = buildLogPrinter,
+                jobId = firstContainer.containerHashId ?: "",
+                taskId = VMUtils.genStartVMTaskId(firstContainer.containerId),
+                executeCount = firstContainer.executeCount
             )
         }
         if (skip) {
             LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CONDITION_SKIP|${event.stageId}|$controlOption")
         }
-
         return skip
     }
 
