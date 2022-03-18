@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.stream.env.JvmXms }}
+              value: {{ .Values.stream.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.stream.env.JvmXmx }}
+              value: {{ .Values.stream.env.jvmXmx }}
           workingDir: /data/workspace/stream
           command:
             - "/bin/bash"

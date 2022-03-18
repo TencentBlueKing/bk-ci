@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.dispatchDocker.env.JvmXms }}
+              value: {{ .Values.dispatchDocker.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.dispatchDocker.env.JvmXmx }}
+              value: {{ .Values.dispatchDocker.env.jvmXmx }}
           workingDir: /data/workspace/dispatch-docker
           command:
             - "/bin/bash"
