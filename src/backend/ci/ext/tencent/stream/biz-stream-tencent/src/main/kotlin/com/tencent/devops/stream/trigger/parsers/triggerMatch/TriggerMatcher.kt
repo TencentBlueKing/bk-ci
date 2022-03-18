@@ -37,6 +37,8 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchM
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.RepoTriggerEventService
@@ -210,7 +212,7 @@ class TriggerMatcher @Autowired constructor(
 
         val (isTrigger, startParams) = when (context.gitEvent) {
             is GitPushEvent -> {
-                val isMatch = isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId)
+                val isMatch = isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId, context.gitEvent)
                 val params = getStartParams(context = context, triggerOn = triggerOn)
                 Pair(isMatch, params)
             }
@@ -329,7 +331,8 @@ class TriggerMatcher @Autowired constructor(
         triggerOn: TriggerOn,
         eventBranch: String,
         changeSet: Set<String>?,
-        userId: String
+        userId: String,
+        gitPushEvent: GitPushEvent
     ): Boolean {
         // 如果没有配置push，默认未匹配
         if (triggerOn.push == null) {
@@ -357,6 +360,10 @@ class TriggerMatcher @Autowired constructor(
             !PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) ||
             !UserMatchUtils.isUserMatch(pushRule.users, userId)
         ) {
+            return false
+        }
+        // action
+        if (!checkActionMatch(pushRule.action, gitPushEvent.isCreateBranch())) {
             return false
         }
         logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
@@ -553,6 +560,22 @@ class TriggerMatcher @Autowired constructor(
             changeSet.addAll(commit.removed?.map { it }?.toSet() ?: emptySet())
         }
         return changeSet
+    }
+
+    private fun checkActionMatch(actionList: List<String>?, isCreateBranch: Boolean): Boolean {
+        if (actionList.isNullOrEmpty()) {
+            return true
+        }
+        actionList.forEach {
+            if (it == TGitPushActionType.NEW_BRANCH.value && isCreateBranch) {
+                return true
+            }
+            if (it == TGitPushActionType.PUSH_FILE.value && !isCreateBranch) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun isMrActionMatch(actionList: List<String>?, mrAction: Any): Boolean {

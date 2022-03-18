@@ -103,7 +103,8 @@ class GitCITriggerService @Autowired constructor(
     private val tokenService: StreamGitTokenService,
     private val triggerParameter: TriggerParameter,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val gitCIEventService: GitCIEventService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -147,6 +148,14 @@ class GitCITriggerService @Autowired constructor(
 
         if (eventObject is GitPushEvent && preTrigger.skipStream(eventObject)) {
             logger.info("project: ${gitRequestEvent.gitProjectId} commit: ${gitRequestEvent.commitId} skip ci")
+            gitCIEventService.saveTriggerNotBuildEvent(
+                userId = gitRequestEvent.userId,
+                eventId = gitRequestEvent.id!!,
+                reason = TriggerReason.USER_SKIPED.name,
+                reasonDetail = TriggerReason.USER_SKIPED.detail,
+                gitProjectId = gitRequestEvent.gitProjectId,
+                branch = gitRequestEvent.branch
+            )
             return true
         }
 

@@ -204,7 +204,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
     ): Result<GitCIBasicSetting?> {
         return client.get(ServiceGitBasicSettingResource::class).getGitCIConf(
             userId = userId,
-            projectId = gitProjectId
+            projectId = "git_$gitProjectId"
         )
     }
 
@@ -217,7 +217,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
     ): Result<Boolean> {
         return client.get(ServiceGitBasicSettingResource::class).saveGitCIConf(
             userId = userId,
-            projectId = gitProjectId,
+            projectId = "git_$gitProjectId",
             gitCIUpdateSetting = gitCIUpdateSetting
         )
     }

@@ -38,8 +38,11 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogStatusService
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 /**
  *
@@ -48,8 +51,12 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService,
-    private val logStatusService: LogStatusService
+    private val logStatusService: LogStatusService,
+    private val meterRegistry: MeterRegistry
 ) : BuildLogPrintResource {
+
+    @Value("\${spring.application.name:#{null}}")
+    private val applicationName: String? = null
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
@@ -90,6 +97,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(LogEvent(buildId, logMessages))
+        recordMultiLogCount(logMessages.size)
         return Result(true)
     }
 
@@ -157,6 +165,17 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             propertyList = propertyList
         )
         return Result(true)
+    }
+
+    /**
+     * 记录日志列表函数
+     */
+    private fun recordMultiLogCount(count: Number) {
+        Counter
+            .builder("multi_log_count")
+            .tag("application", applicationName ?: "")
+            .register(meterRegistry)
+            .increment(count.toDouble())
     }
 
     companion object {

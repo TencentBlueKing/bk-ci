@@ -56,7 +56,7 @@ dependencies {
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:project:api-project-op"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
 

@@ -1,23 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: store
-    desc: DevOps Support Service
-    version: 4.0
+    desc: DevOps Store Service
+    version: 0.0.1
     packageName: com.tencent.devops.store
-  cloud:
-    consul:
-      discovery:
-        tags: local
-
-store:
-  templateApproveSwitch: close
-  imageApproveSwitch: close
-
-logo:
-  allowUploadLogoTypes: jpg,png,svg
-  allowUploadLogoWidth: 200
-  allowUploadLogoHeight: 200
-  maxUploadLogoSize: 2097152
-
-server:
-  port: 21933
