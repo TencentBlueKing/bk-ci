@@ -269,7 +269,7 @@ object ControlUtils {
                     "|result=$expressionResult")
                 val logMessage = "Custom condition($customCondition) result is $expressionResult. " +
                     if (!expressionResult) {
-                        " will be skipped! "
+                        "will be skipped! "
                     } else {
                         ""
                     }

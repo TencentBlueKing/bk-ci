@@ -330,7 +330,7 @@ class StartActionTaskContainerCmd(
                 // 打印构建日志
                 buildLogPrinter.addLine(
                     executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
+                    buildId = buildId, message = "Skip Plugin [$taskName]",
                     jobId = containerHashId
                 )
             }
