@@ -138,11 +138,16 @@ class GitPipelineResourceDao {
 
     fun getDirListByGitProjectId(
         dslContext: DSLContext,
-        gitProjectId: Long
+        gitProjectId: Long,
+        pipelineId: String?
     ): List<String> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            return dslContext.select(DIR).from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId)).groupBy(DIR)
+            val dsl = dslContext.select(DIR).from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            return dsl.groupBy(DIR)
                 .fetch(DIR)
         }
     }

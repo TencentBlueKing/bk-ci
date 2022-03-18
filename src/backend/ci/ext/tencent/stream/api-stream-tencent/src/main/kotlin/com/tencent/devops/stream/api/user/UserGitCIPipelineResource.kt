@@ -84,7 +84,10 @@ interface UserGitCIPipelineResource {
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam(value = "蓝盾流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<List<String>>
 
     @ApiOperation("获取指定流水线信息")

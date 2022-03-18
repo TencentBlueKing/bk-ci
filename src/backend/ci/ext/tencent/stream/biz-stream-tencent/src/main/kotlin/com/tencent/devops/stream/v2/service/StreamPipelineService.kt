@@ -111,8 +111,16 @@ class StreamPipelineService @Autowired constructor(
         )
     }
 
-    fun getPipelineDirList(userId: String, gitProjectId: Long): List<String> {
-        return pipelineResourceDao.getDirListByGitProjectId(dslContext, gitProjectId)
+    fun getPipelineDirList(
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String?
+    ): List<String> {
+        return pipelineResourceDao.getDirListByGitProjectId(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId
+        )
     }
 
     fun getPipelineListWithoutHistory(

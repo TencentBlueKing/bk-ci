@@ -66,13 +66,18 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getPipelineDirList(userId: String, projectId: String): Result<List<String>> {
+    override fun getPipelineDirList(
+        userId: String,
+        projectId: String,
+        pipelineId: String?
+    ): Result<List<String>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
             pipelineV2Service.getPipelineDirList(
                 userId = userId,
-                gitProjectId = gitProjectId
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId
             )
         )
     }
