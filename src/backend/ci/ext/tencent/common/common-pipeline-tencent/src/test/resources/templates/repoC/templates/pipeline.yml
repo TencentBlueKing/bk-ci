@@ -13,6 +13,8 @@ parameters:
   - name: receiversEmail
     type: array
     default: [ "${{ci.actor}}" ]
+  - name: username1
+    type: string
 
 variables:
   DEPLOY_TYPE:
@@ -33,7 +35,7 @@ variables:
 stages:
   - name: "root_stage_id_1"
     id: root_stage_id_1
-    if:  envs.BK_CI_EVENT == 'push' || varivable.approve
+    if:  ${{parameters.username}} == world
     check-in:
       reviews:
         flows:
@@ -61,11 +63,11 @@ stages:
             image: mysql:8.0
             with:
               password: 123456
-        if:  variables.DEPLOY_TYPE == 'dev' || cancelled()
+        if:  ${{ parameters.username }} == world
         steps:
           - name: "root_step_1"
             id: root_step_1
-            if: xxx
+            if: parameters.username == world
             uses: UploadArtifactory@1.*
             with:
               path: test.txt
@@ -78,6 +80,7 @@ stages:
           #              username: STEP
           - run: |
               echo "root_step_1"
+            if:  steps.${{ parameters.username1 }}.xxx.outputs == world
         timeout-minutes: 480
         env:
         continue-on-error: false
@@ -93,6 +96,7 @@ stages:
         steps:
           - run: |
               echo "root_stage_id_1, root_job_id_2"
+            if: ${{steps.${{parameters.username1}}.outputs.xxx}} == world
         depend-on:
           - job_id_1
       template:

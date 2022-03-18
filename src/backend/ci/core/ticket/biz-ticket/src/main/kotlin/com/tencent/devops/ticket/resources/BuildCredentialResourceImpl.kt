@@ -104,6 +104,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
         vmSeqId: String,
         vmName: String,
         taskId: String?,
+        oldTaskId: String?,
         credentialId: String
     ): Result<Map<String, String>> {
         if (buildId.isBlank()) {
@@ -118,6 +119,12 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (credentialId.isBlank()) {
             throw ParamBlankException("Invalid credentialId")
         }
-        return Result(credentialService.buildGetDetail(projectId, buildId, taskId, credentialId))
+        // 这里兼容下旧版本sdk的header
+        return Result(credentialService.buildGetDetail(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId ?: oldTaskId,
+            credentialId = credentialId
+        ))
     }
 }

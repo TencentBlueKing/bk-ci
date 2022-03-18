@@ -95,12 +95,14 @@ constructor(
                     gitEvent = checkEvent.event,
                     basicSetting = checkEvent.gitProjectConf
                 ) {
-                    gitCITriggerService.matchAndTriggerPipeline(
-                        gitRequestEvent = checkEvent.gitRequestEvent,
-                        event = checkEvent.event,
-                        path2PipelineExists = checkEvent.path2PipelineExists,
-                        gitProjectConf = checkEvent.gitProjectConf
-                    )
+                    triggerExceptionService.handleErrorCode(request = checkEvent.gitRequestEvent) {
+                        gitCITriggerService.matchAndTriggerPipeline(
+                            gitRequestEvent = checkEvent.gitRequestEvent,
+                            event = checkEvent.event,
+                            path2PipelineExists = checkEvent.path2PipelineExists,
+                            gitProjectConf = checkEvent.gitProjectConf
+                        )
+                    }
                 }
             }
             streamStorageBean.conflictTime(LocalDateTime.now().timestampmilli() - start)

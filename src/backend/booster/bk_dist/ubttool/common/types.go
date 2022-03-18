@@ -12,6 +12,7 @@ package common
 // Flags to desc flag of this tool
 type Flags struct {
 	ActionChainFile string
+	MostDepentFirst bool
 }
 
 // Action to desc single ubt action

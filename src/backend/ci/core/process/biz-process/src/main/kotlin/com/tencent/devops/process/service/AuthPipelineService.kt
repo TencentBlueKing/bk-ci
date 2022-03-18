@@ -33,13 +33,10 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,9 +44,7 @@ import org.springframework.stereotype.Service
 @Service
 class AuthPipelineService @Autowired constructor(
     val authTokenApi: AuthTokenApi,
-    val pipelineListFacadeService: PipelineListFacadeService,
-    val authProjectApi: AuthProjectApi,
-    val pipelineAuthServiceCode: PipelineAuthServiceCode
+    val pipelineListFacadeService: PipelineListFacadeService
 ) {
     fun pipelineInfo(
         callBackInfo: CallbackRequestDTO,
@@ -183,14 +178,6 @@ class AuthPipelineService @Autowired constructor(
 
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineInfos?.map {
-            val projectManager = authProjectApi.getProjectUsers(
-                projectCode = it.projectId,
-                group = BkAuthGroup.MANAGER,
-                serviceCode = pipelineAuthServiceCode
-            )
-            val approve = mutableListOf<String>()
-            approve.addAll(projectManager)
-            it.createUser?.let { it1 -> approve.add(it1) }
             val entityId = if (returnPipelineId) {
                 it.pipelineId
             } else {
@@ -199,7 +186,7 @@ class AuthPipelineService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = entityId
             entity.displayName = it.pipelineName
-            entity.iamApprover = approve
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${pipelineInfos.size.toLong()}")

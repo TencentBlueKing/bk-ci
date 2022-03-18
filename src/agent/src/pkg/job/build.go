@@ -248,7 +248,6 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, err
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 	lines := []string{
 		"#!" + getCurrentShell(),
-		"source /etc/profile",
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
 		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
 			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -jar %s %s",

@@ -52,4 +52,8 @@ class ServiceAtomResourceImpl @Autowired constructor(
     override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
         return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
     }
+
+    override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {
+        return atomService.getAtomRealVersion(projectCode = projectCode, atomCode = atomCode, version = version)
+    }
 }

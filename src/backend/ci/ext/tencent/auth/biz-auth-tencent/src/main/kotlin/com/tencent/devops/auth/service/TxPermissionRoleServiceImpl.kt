@@ -50,17 +50,18 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
     private val groupService: AuthGroupService,
     private val authGroupDao: AuthGroupDao,
     private val dslContext: DSLContext,
-    private val client: Client
+    private val client: Client,
+    private val stagService: StrategyService
 ) : IamPermissionRoleExtService(
-    iamManagerService,
-    permissionGradeService,
-    iamConfiguration,
-    groupService,
-    authGroupDao,
-    dslContext,
-    client
+    iamManagerService = iamManagerService,
+    permissionGradeService = permissionGradeService,
+    iamConfiguration = iamConfiguration,
+    groupService = groupService,
+    groupDao = authGroupDao,
+    dslContext = dslContext,
+    client = client,
+    strategyService = stagService
 ) {
-
     override fun createPermissionRole(
         userId: String,
         projectId: Int,

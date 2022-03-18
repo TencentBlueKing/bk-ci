@@ -35,7 +35,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.common.api.util.ReflectUtil
-import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import com.tencent.devops.common.ci.v2.YAME_META_DATA_JSON_FILTER
 import org.yaml.snakeyaml.Yaml
 
 /**
@@ -45,7 +45,7 @@ object TemplateYamlMapper {
     private val objectMapper = ObjectMapper(
         YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
     ).registerKotlinModule().setFilterProvider(SimpleFilterProvider().addFilter(
-        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAll()
+        YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAll()
     ))
 
     fun getObjectMapper() = objectMapper

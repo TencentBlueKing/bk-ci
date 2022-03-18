@@ -128,6 +128,6 @@ class StreamTriggerService @Autowired constructor(
         gitBuildId: Long
     ): BuildId? {
         logger.info("startBuild build")
-        return yamlBuildV2.startBuild(pipeline, event, gitCIBasicSetting, model, gitBuildId)
+        return yamlBuildV2.startBuild(pipeline, event, gitCIBasicSetting, model, gitBuildId, null, true)
     }
 }

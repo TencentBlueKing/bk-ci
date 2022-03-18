@@ -78,7 +78,8 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileName: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         logger.info("uploadFile, userId: $userId, file: $file, projectId: $projectId, filePath: $filePath, " +
             "fileName: $fileName, fileType: $fileType, props: $props, fileChannelType: $fileChannelType")

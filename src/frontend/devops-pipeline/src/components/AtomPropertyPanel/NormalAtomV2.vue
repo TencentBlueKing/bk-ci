@@ -97,9 +97,6 @@
             showFormUI () {
                 return !this.appIdProps || (this.appIdPropsKey && this.hasAppId)
             },
-            outputNamespaceDesc () {
-                return this.$t('editPage.namespaceTips')
-            },
             inputProps () {
                 try {
                     const { [this.appIdPropsKey]: ccAppId, ...restProps } = this.atomPropsModel.input
@@ -136,23 +133,6 @@
                 })
                 return groupMap
             },
-            outputProps () {
-                try {
-                    return this.atomPropsModel.output
-                } catch (e) {
-                    console.warn('getAtomModalOpt error', e)
-                    return null
-                }
-            },
-            namespace () {
-                try {
-                    const ns = this.element.data.namespace || ''
-                    return ns.trim().replace(/(.+)?\_$/, '$1')
-                } catch (e) {
-                    console.warn('getAtomOutput namespace error', e)
-                    return ''
-                }
-            },
             atomValue () {
                 try {
                     const atomDefaultValue = getAtomDefaultValue(this.atomPropsModel.input)
@@ -185,9 +165,6 @@
 </script>
 
 <style lang="scss">
-    .output-namespace {
-        margin-bottom: 12px;
-    }
     .atom-output-var-list {
         > h4,
         > p {

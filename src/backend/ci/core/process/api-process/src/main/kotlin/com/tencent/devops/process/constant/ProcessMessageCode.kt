@@ -74,7 +74,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_EXISTS = "2101016" // 流水线: 流水线已存在
     const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[${elementId}]不存在
     const val ERROR_QUALITY_REVIEWER_NOT_MATCH = "2101018" // 流水线: 用户({0})不在审核人员名单中
-    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建
+    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建，请过{0}秒后再试
     const val ERROR_START_BUILD_FREQUENT_LIMIT = "2101020" // 流水线: 不能太频繁启动构建
     const val DENY_START_BY_MANUAL = "2101021" // 流水线: 该流水线不能手动启动
     const val DENY_START_BY_REMOTE = "2101022" // 流水线: 该流水线不能远程触发

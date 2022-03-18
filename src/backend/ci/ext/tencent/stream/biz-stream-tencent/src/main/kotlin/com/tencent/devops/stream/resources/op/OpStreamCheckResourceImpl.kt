@@ -28,17 +28,74 @@
 package com.tencent.devops.stream.resources.op
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.stream.api.op.OpStreamCheckResource
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.v2.service.StreamAsyncService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
+@Suppress("ALL")
 class OpStreamCheckResourceImpl @Autowired constructor(
-    private val streamAsyncService: StreamAsyncService
+    private val streamAsyncService: StreamAsyncService,
+    private val dslContext: DSLContext,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) : OpStreamCheckResource {
+
+    private val logger = LoggerFactory.getLogger(OpStreamCheckResource::class.java)
+
     override fun checkBranches(gitProjectId: Long?, pipelineId: String?): Result<Boolean> {
         streamAsyncService.checkPipelineBranch(gitProjectId, pipelineId)
         return Result(true)
+    }
+
+    override fun conflictJobs(buildDays: Long?): Result<String> {
+        val conflictList = mutableListOf<TGitRequestEventBuildRecord>()
+        var offset = 0
+        do {
+            val limit = 100
+            val builds = gitRequestEventBuildDao.getBuildInLastDays(
+                dslContext = dslContext,
+                buildDays = buildDays ?: 1,
+                offset = offset,
+                limit = limit
+            )
+            builds.forEach nextRecord@{ record ->
+                try {
+                    val normalYaml = YamlUtil.getObjectMapper().readValue(
+                        ScriptYmlUtils.formatYaml(record.normalizedYaml),
+                        ScriptBuildYaml::class.java
+                    )
+                    val jobIdSet = mutableSetOf<String>()
+                    normalYaml.stages.forEach { stage ->
+                        stage.jobs.forEach { job ->
+                            job.id?.let {
+                                if (jobIdSet.contains(it)) {
+                                    conflictList.add(record)
+                                    return@nextRecord
+                                } else jobIdSet.add(it)
+                            }
+                        }
+                    }
+                } catch (t: Throwable) {
+                    logger.error("check failed with buildId(${record.buildId}): ", t)
+                }
+            }
+            offset += limit
+        } while (offset < 100000)
+        val sb = StringBuilder("buildId,pipelineId,triggerUser,createTime\n")
+        conflictList.forEach { conflict ->
+            sb.append(
+                "${conflict.buildId},${conflict.pipelineId}," +
+                    "${conflict.triggerUser},${conflict.createTime}\n"
+            )
+        }
+        return Result(sb.toString())
     }
 }

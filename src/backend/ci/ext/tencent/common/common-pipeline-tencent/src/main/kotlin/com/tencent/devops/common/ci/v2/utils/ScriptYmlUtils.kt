@@ -190,8 +190,12 @@ object ScriptYmlUtils {
                 }
             }
         }
-        // 替换if中没有加括号的
-        val resultValue = replaceIfParameters(newValue, settingMap)
+        // 替换if中没有加括号的，只替换string
+        val resultValue = if (paramType == ParametersType.STRING) {
+            replaceIfParameters(newValue, settingMap)
+        } else {
+            newValue
+        }
         return resultValue.toString()
     }
 
@@ -380,9 +384,15 @@ object ScriptYmlUtils {
             } else {
                 runsOn
             }
-        } catch (e: Exception) {
-            return RunsOn(
-                poolName = preRunsOn.toString()
+        } catch (e: MismatchedInputException) {
+            if (preRunsOn is String || preRunsOn is List<*>) {
+                return RunsOn(
+                    poolName = preRunsOn.toString()
+                )
+            }
+            throw YamlFormatException(
+                "runs-on 中 ${e?.path[0]?.fieldName} 格式有误," +
+                    "应为 ${e?.targetType?.name}, error message:${e.message}"
             )
         }
     }

@@ -48,7 +48,7 @@ class StreamOauthService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户$userId 无OAuth权限"
+            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
         )
     }
 
