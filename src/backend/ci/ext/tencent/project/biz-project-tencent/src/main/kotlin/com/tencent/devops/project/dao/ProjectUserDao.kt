@@ -51,7 +51,7 @@ class ProjectUserDao {
         userId: String
     ) {
         return with(TUser.T_USER) {
-            dslContext.delete(this).where(USER_ID.eq(userId))
+            dslContext.delete(this).where(USER_ID.eq(userId)).execute()
         }
     }
 
