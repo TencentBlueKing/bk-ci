@@ -25,30 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.store.dao.atom
 
-import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.model.store.tables.TAtom
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-@ApiModel("流水线-插件基本信息修改请求报文体")
-data class AtomBaseInfoUpdateRequest(
-    @ApiModelProperty("插件名称", required = false)
-    val name: String? = null,
-    @ApiModelProperty("所属分类代码", required = false)
-    val classifyCode: String? = null,
-    @ApiModelProperty("插件简介", required = false)
-    val summary: String? = null,
-    @ApiModelProperty("插件描述", required = false)
-    val description: String? = null,
-    @ApiModelProperty("插件logo", required = false)
-    val logoUrl: String? = null,
-    @ApiModelProperty("发布者", required = false)
-    val publisher: String? = null,
-    @ApiModelProperty("原子标签列表", required = false)
-    val labelIdList: ArrayList<String>? = null,
-    @ApiModelProperty(value = "项目可视范围", required = false)
-    val visibilityLevel: VisibilityLevelEnum? = null,
-    @ApiModelProperty(value = "插件代码库不开源原因", required = false)
-    val privateReason: String? = null
-)
+@Repository
+class AtomPropDao {
+
+    fun getAtomProps(
+        dslContext: DSLContext,
+        atomCodes: Collection<String>
+    ): Result<out Record>? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(
+                ATOM_CODE,
+                LOGO_URL,
+                OS,
+                BUILD_LESS_RUN_FLAG
+            ).from(this)
+                .where(ATOM_CODE.`in`(atomCodes).and(LATEST_FLAG.eq(true)))
+                .fetch()
+        }
+    }
+}
