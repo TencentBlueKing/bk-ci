@@ -61,27 +61,17 @@ spec:
           {{- if .Values.experience.resources }}
           resources: {{- toYaml .Values.experience.resources | nindent 12 }}
           {{- end }}
-          # ports:
-          #   - name: http
-          #     containerPort: 80
-          # env:
-          #   - name: MS_NAME
-          #     value: experience
-          #   - name: NAMESPACE
-          #     value: {{ .Release.Namespace }}
-          #   - name: SERVICE_PREFIX
-          #     value: {{ include "common.names.fullname" . }}
-          #   - name: JVM_XMS
-          #     value: {{ .Values.experience.env.jvmXms }}
-          #   - name: JVM_XMX
-          #     value: {{ .Values.experience.env.jvmXmx }}
-          # workingDir: /data/workspace/experience
-          # command:
-          #   - "/bin/bash"
-          #   - "-c"
-          #   - |
-          #     cp /data/workspace/backend.bkci.sh .;
-          #     /bin/bash backend.bkci.sh;
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: experience
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: SERVICE_PREFIX
+              value: {{ include "common.names.fullname" . }}
+          workingDir: /data/workspace/experience
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
