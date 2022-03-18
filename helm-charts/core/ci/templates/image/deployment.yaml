@@ -76,7 +76,7 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.image.env.JvmXmx }}
           workingDir: /data/workspace/image
-          {{- if .Values.entrypoint.override -}}
+          {{ if .Values.entrypoint.override }}
           command:
             - "/bin/bash"
             - "-c"

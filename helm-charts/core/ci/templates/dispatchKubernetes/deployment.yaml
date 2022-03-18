@@ -77,7 +77,7 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.dispatchKubernetes.env.JvmXmx }}
           workingDir: /data/workspace/dispatch-kubernetes
-          {{- if .Values.entrypoint.override -}}
+          {{ if .Values.entrypoint.override }}
           command:
             - "/bin/bash"
             - "-c"

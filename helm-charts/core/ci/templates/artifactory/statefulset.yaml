@@ -77,7 +77,7 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.artifactory.env.JvmXmx }}
           workingDir: /data/workspace/artifactory
-          {{- if .Values.entrypoint.override -}}
+          {{ if .Values.entrypoint.override }}
           command:
             - "/bin/bash"
             - "-c"
