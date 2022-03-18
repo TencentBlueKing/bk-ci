@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.PipelineAtomRel
+import com.tencent.devops.store.pojo.atom.AtomProp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -48,14 +49,14 @@ import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PIPELINE_ATOM"], description = "用户-流水线-插件")
-@Path("/user/pipeline/atoms")
+@Path("/user/pipeline")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserPipelineAtomResource {
 
     @ApiOperation("获取插件流水线相关信息列表")
     @GET
-    @Path("/{atomCode}/rel/list")
+    @Path("/atoms/{atomCode}/rel/list")
     fun getPipelineAtomRelList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -82,7 +83,7 @@ interface UserPipelineAtomResource {
 
     @ApiOperation("导出插件流水线相关信息csv文件")
     @POST
-    @Path("/{atomCode}/rel/csv/export")
+    @Path("/atoms/{atomCode}/rel/csv/export")
     fun exportPipelineAtomRelCsv(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -102,4 +103,19 @@ interface UserPipelineAtomResource {
         @Context
         response: HttpServletResponse
     )
+
+    @ApiOperation("获取流水线下插件属性列表")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/atom/prop/list")
+    fun getPipelineAtomPropList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Map<String, AtomProp>?>
 }
