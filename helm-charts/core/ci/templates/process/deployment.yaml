@@ -77,11 +77,13 @@ spec:
               value: {{ .Values.process.env.jvmXmx }}
           workingDir: /data/workspace/process
           command:
+          {{- if .Values.entrypoint.override -}}
             - "/bin/bash"
             - "-c"
             - |
               cp /data/workspace/backend.bkci.sh .;
               /bin/bash backend.bkci.sh;
+          {{- end -}}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
