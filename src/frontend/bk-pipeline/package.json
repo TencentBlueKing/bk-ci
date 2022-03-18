@@ -1,5 +1,5 @@
 {
-  "name": "@bkui/pipeline",
+  "name": "bkui-pipeline",
   "version": "0.1.2",
   "description": "devops pipeline",
   "main": "dist/bk-pipeline.min.js",
