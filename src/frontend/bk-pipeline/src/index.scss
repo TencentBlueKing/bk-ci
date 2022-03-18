@@ -435,22 +435,3 @@ span.skip-name {
         }
     }
 }
-
-.DOING {
-    color: $loadingColor;
-}
-.NORMAL {
-    color: $fontWeightColor;
-}
-.WARNING {
-    color: $cancelColor;
-}
-.FAILED {
-    color: $failColor;
-}
-.SUCCESS {
-    color: $successColor;
-}
-.PAUSE {
-    color: $pauseColor;
-}
