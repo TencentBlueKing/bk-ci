@@ -76,12 +76,14 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.notify.env.JvmXmx }}
           workingDir: /data/workspace/notify
+          {{- if .Values.entrypoint.override -}}
           command:
             - "/bin/bash"
             - "-c"
             - |
               cp /data/workspace/backend.bkci.sh .;
               /bin/bash backend.bkci.sh;
+          {{- end -}}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState

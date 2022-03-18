@@ -76,6 +76,7 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.dispatch.env.JvmXmx }}
           workingDir: /data/workspace/dispatch
+          {{- if .Values.entrypoint.override -}}
           command:
             - "/bin/bash"
             - "-c"
@@ -84,6 +85,7 @@ spec:
               mkdir -p {{ .Values.config.bkCiHome }};
               ln -s /data/workspace/agent-package {{ .Values.config.bkCiHome }}/agent-package;
               /bin/bash backend.bkci.sh;
+          {{- end -}}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
