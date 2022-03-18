@@ -42,7 +42,7 @@ class ProjectUserDao {
         offset: Int
     ): Result<TUserRecord>? {
         return with(TUser.T_USER) {
-            dslContext.selectFrom(this).limit(offset, limit).fetch()
+            dslContext.selectFrom(this).where(USER_TYPE.eq(false)).limit(offset, limit).fetch()
         }
     }
 
@@ -51,7 +51,7 @@ class ProjectUserDao {
         userId: String
     ) {
         return with(TUser.T_USER) {
-            dslContext.delete(this).where(USER_ID.eq(userId))
+            dslContext.delete(this).where(USER_ID.eq(userId)).execute()
         }
     }
 
