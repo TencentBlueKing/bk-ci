@@ -83,7 +83,7 @@ spec:
             - |
               cp /data/workspace/backend.bkci.sh .;
               /bin/bash backend.bkci.sh;
-          {{-end -}}
+          {{- end -}}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
