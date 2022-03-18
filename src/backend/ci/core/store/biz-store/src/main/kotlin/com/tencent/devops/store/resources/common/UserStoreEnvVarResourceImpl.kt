@@ -85,14 +85,14 @@ class UserStoreEnvVarResourceImpl @Autowired constructor(
         userId: String,
         storeType: String,
         storeCode: String,
-        scopes: String,
+        scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?> {
         return storeEnvVarService.getEnvVarChangeLogList(
             userId = userId,
             storeType = storeType,
             storeCode = storeCode,
-            scopes = scopes,
+            scope = scope,
             varName = varName
         )
     }

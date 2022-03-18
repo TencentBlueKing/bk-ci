@@ -83,7 +83,7 @@ interface StoreEnvVarService {
         userId: String,
         storeType: String,
         storeCode: String,
-        scopes: String,
+        scope: String,
         varName: String
     ): Result<List<StoreEnvChangeLogInfo>?>
 }
