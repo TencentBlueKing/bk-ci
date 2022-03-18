@@ -86,7 +86,8 @@ export function actionCreator (mutation) {
  */
 export function PipelineEditActionCreator (mutation) {
     return ({ state, commit }, payload = {}) => {
-        if (state.pipeline.editing) {
+        if (!state.pipeline) return
+        if (state.pipeline?.editing) {
             commit(mutation, payload)
             return
         }
