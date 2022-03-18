@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineAtomResource
 import com.tencent.devops.process.pojo.PipelineAtomRel
 import com.tencent.devops.process.service.PipelineAtomService
+import com.tencent.devops.store.pojo.atom.AtomProp
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
 
@@ -77,5 +78,13 @@ class UserPipelineAtomResourceImpl @Autowired constructor(
             endUpdateTime = endUpdateTime,
             response = response
         )
+    }
+
+    override fun getPipelineAtomPropList(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Map<String, AtomProp>?> {
+        return pipelineAtomService.getPipelineAtomPropList(userId, projectId, pipelineId)
     }
 }

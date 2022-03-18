@@ -28,6 +28,7 @@
 package com.tencent.devops.store.api.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import io.swagger.annotations.Api
@@ -35,6 +36,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -91,4 +93,12 @@ interface ServiceAtomResource {
         @PathParam("version")
         version: String
     ): Result<String?>
+
+    @ApiOperation("获取插件属性列表")
+    @POST
+    @Path("/prop/list")
+    fun getAtomProps(
+        @ApiParam("插件标识列表", required = true)
+        atomCodes: Set<String>
+    ): Result<Map<String, AtomProp>?>
 }
