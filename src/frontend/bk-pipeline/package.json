@@ -1,6 +1,6 @@
 {
   "name": "@tencent/bk-pipeline",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "main": "dist/bk-pipeline.min.js",
   "scripts": {
