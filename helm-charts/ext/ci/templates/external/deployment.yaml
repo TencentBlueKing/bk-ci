@@ -76,12 +76,6 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.external.env.jvmXmx }}
           workingDir: /data/workspace/external
-          command:
-            - "/bin/bash"
-            - "-c"
-            - |
-              cp /data/workspace/backend.bkci.sh .;
-              /bin/bash backend.bkci.sh;
           livenessProbe:
             httpGet:
               path: /management/health/livenessState

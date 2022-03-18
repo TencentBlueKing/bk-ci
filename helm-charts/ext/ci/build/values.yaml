@@ -221,6 +221,10 @@ persistence:
   ## Requires persistence.enabled: true
   # existingClaim: my-persistent-volume-claim
 
+# 镜像 ENTRYPOINT 覆盖
+entrypoint:
+  override: false
+
 # Log Deployment
 log:
   enabled: false

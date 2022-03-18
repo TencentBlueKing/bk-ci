@@ -80,12 +80,6 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.lambda.env.jvmXmx }}
           workingDir: /data/workspace/lambda
-          command:
-            - "/bin/bash"
-            - "-c"
-            - |
-              cp /data/workspace/backend.bkci.sh .;
-              /bin/bash backend.bkci.sh;
           volumeMounts:
             - mountPath: /data1/certificate/
               name: secret-volume
