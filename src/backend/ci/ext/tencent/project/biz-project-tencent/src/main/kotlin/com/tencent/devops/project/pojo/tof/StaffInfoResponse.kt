@@ -33,5 +33,6 @@ data class StaffInfoResponse(
     val FullName: String,
     val ChineseName: String,
     val GroupId: String,
-    val GroupName: String
+    val GroupName: String,
+    val StatusId: String
 )

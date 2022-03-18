@@ -53,4 +53,32 @@ class ProjectUserDao {
             dslContext.delete(this).where(USER_ID.eq(userId))
         }
     }
+
+    fun update(
+        dslContext: DSLContext,
+        userId: String,
+        bgId: Int,
+        bgName: String,
+        deptId: Int,
+        deptName: String,
+        centerId: Int,
+        centerName: String,
+        groupId: Int,
+        groupName: String
+    ) {
+        with(TUser.T_USER) {
+            dslContext.update(this)
+                .set(BG_ID, bgId)
+                .set(BG_NAME, bgName)
+                .set(DEPT_ID, deptId)
+                .set(DEPT_NAME, deptName)
+                .set(CENTER_ID, centerId)
+                .set(CENTER_NAME, centerName)
+                .set(GROYP_ID, groupId)
+                .set(GROUP_NAME, groupName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(USER_ID.eq(userId))
+                .execute()
+        }
+    }
 }

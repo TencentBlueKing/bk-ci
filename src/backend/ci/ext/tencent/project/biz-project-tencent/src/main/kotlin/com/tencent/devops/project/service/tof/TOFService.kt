@@ -104,16 +104,15 @@ class TOFService @Autowired constructor(
         var detail = userDeptCache.getIfPresent(userId)
         if (detail == null) {
             detail = getDeftFromCache(userId) ?: getDeptFromTof(operator, userId, bkTicket)
-
-            if (checkUserLeave(detail)) {
-                logger.warn("user $userId is level office")
+            if (detail == null) {
+                logger.info("user $userId is level office")
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
                     defaultMessage = "用户$userId 已离职",
                     params = arrayOf(userId)
                 ))
             }
-            userDeptCache.put(userId, detail!!)
+            userDeptCache.put(userId, detail)
         }
 
         return detail!!
@@ -424,9 +423,10 @@ class TOFService @Autowired constructor(
         userId: String,
         bkTicket: String,
         userCache: Boolean? = true
-    ): UserDeptDetail {
+    ): UserDeptDetail? {
         logger.info("[$operator}|$userId|$bkTicket] Start to get the dept info")
         val staffInfo = getStaffInfo(operator, userId, bkTicket, userCache)
+        if(!checkUserLeave(staffInfo)) return null
         // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
         val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
         var groupId = "0"
@@ -469,9 +469,9 @@ class TOFService @Autowired constructor(
         )
     }
 
-    fun checkUserLeave(userInfo: UserDeptDetail): Boolean {
+    fun checkUserLeave(userInfo: StaffInfoResponse): Boolean {
         // 没有bgId的用户，一律视为离职用户
-        if (userInfo.bgId.toInt() == 0) {
+        if (userInfo.StatusId.toInt() == 2) {
             return true
         }
         return false
