@@ -48,4 +48,10 @@ interface ArchiveStoreFileService {
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean>
+
+    fun deleteFile(
+        repoName: String,
+        fullPath: String,
+        type: String
+    ): Result<Boolean>
 }

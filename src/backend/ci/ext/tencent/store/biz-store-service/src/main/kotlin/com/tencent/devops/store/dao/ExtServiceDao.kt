@@ -47,6 +47,7 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
+import org.jooq.Record1
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -135,6 +136,21 @@ class ExtServiceDao {
         with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.update(this).set(DELETE_FLAG, true).set(MODIFIER, userId).set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(serviceId)).execute()
+        }
+    }
+
+    fun deleteExtServiceData(
+        dslContext: DSLContext,
+        serviceCode: String
+    ) {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            dslContext.deleteFrom(this).where(SERVICE_CODE.eq(serviceCode)).execute()
+        }
+    }
+
+    fun getExtServiceIds(dslContext: DSLContext, serviceCode: String): Record1<String>? {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            return dslContext.select(ID).from(this).where(SERVICE_CODE.eq(serviceCode)).fetchOne()
         }
     }
 

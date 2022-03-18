@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.records.TExtensionServiceVersionLog
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogUpdateInfo
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -142,6 +143,14 @@ class ExtServiceVersionLogDao {
     ): Int {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
             return dslContext.selectCount().from(this).where(SERVICE_ID.eq(serviceId)).fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun deleteByServiceCode(dslContext: DSLContext, extServiceId: String) {
+        with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
+            dslContext.deleteFrom(this)
+                .where(SERVICE_ID.eq(extServiceId))
+                .execute()
         }
     }
 }

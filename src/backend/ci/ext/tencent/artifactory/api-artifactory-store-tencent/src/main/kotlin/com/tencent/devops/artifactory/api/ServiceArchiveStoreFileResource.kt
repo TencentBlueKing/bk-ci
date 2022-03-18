@@ -39,6 +39,7 @@ import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.DELETE
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -82,5 +83,20 @@ interface ServiceArchiveStoreFileResource {
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
+    ): Result<Boolean>
+
+    @ApiOperation("删除文件节点")
+    @DELETE
+    @Path("/repos/{repoName}/{fullPath}/delete")
+    fun deleteFile(
+        @ApiParam("仓库名称", required = true)
+        @PathParam("repoName")
+        repoName: String,
+        @ApiParam("fullPath", required = true)
+        @PathParam("fullPath")
+        fullPath: String,
+        @ApiParam("type", required = true)
+        @QueryParam("type")
+        type: String
     ): Result<Boolean>
 }

@@ -33,6 +33,8 @@ import com.tencent.devops.model.store.tables.records.TExtensionServiceEnvInfoRec
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
 import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -108,6 +110,14 @@ class ExtServiceEnvDao {
             dslContext.selectFrom(this)
                 .where(SERVICE_ID.eq(serviceId))
                 .fetchOne()
+        }
+    }
+
+    fun deleteEnvInfo(dslContext: DSLContext, extServiceId: String) {
+        with(TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO) {
+            dslContext.deleteFrom(this)
+                .where(SERVICE_ID.eq(extServiceId))
+                .execute()
         }
     }
 }
