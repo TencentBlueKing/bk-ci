@@ -39,7 +39,7 @@ import '@icon-cool/bk-icon-devops'
 
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'
-import BkPipeline from '@tencent/bk-pipeline'
+import BkPipeline from '@bkui/pipeline'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')

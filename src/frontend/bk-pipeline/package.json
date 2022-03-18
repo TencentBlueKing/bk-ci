@@ -1,15 +1,15 @@
 {
-  "name": "@tencent/bk-pipeline",
+  "name": "@bkui/pipeline",
   "version": "0.1.2",
-  "description": "",
+  "description": "devops pipeline",
   "main": "dist/bk-pipeline.min.js",
   "scripts": {
     "public": "webpack  --mode production",
-    "patch": "npm version patch && tnpm publish",
+    "patch": "npm version patch && npm publish",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "lockiechen",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.15.8",
     "@babel/eslint-parser": "^7.15.8",
@@ -55,5 +55,17 @@
   "dependencies": {
     "bk-magic-vue": "^2.3.10",
     "vuedraggable": "^2.24.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tencent/bk-ci.git"
+  },
+  "keywords": [
+    "pipeline",
+    "ci"
+  ],
+  "bugs": {
+    "url": "https://github.com/Tencent/bk-ci/issues"
+  },
+  "homepage": "https://github.com/Tencent/bk-ci#readme"
 }
