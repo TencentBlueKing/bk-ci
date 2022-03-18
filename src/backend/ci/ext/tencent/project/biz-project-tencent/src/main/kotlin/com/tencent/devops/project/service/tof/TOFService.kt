@@ -426,7 +426,7 @@ class TOFService @Autowired constructor(
     ): UserDeptDetail? {
         logger.info("[$operator}|$userId|$bkTicket] Start to get the dept info")
         val staffInfo = getStaffInfo(operator, userId, bkTicket, userCache)
-        if(!checkUserLeave(staffInfo)) return null
+        if (!checkUserLeave(staffInfo)) return null
         // 通过用户组查询父部门信息　(由于tof系统接口查询结构是从当前机构往上推查询，如果创建者机构层级大于4就查不完整1到3级的机构，所以查询级数设置为10)
         val deptInfos = getParentDeptInfo(staffInfo.GroupId, 10) // 一共三级，从事业群->部门->中心
         var groupId = "0"

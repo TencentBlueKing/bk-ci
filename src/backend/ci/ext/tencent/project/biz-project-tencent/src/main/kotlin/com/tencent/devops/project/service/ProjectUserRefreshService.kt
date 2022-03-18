@@ -169,7 +169,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 userCache = false
             ) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage("user $userId level office"))
             if (userInfo.groupId != deptInfo.groupId || userInfo.deptId != deptInfo.deptId) {
-                logger.info("user info diff, bk:${userInfo}, tof :${deptInfo}")
+                logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
                 projectUserDao.update(
                     userId = userId,
