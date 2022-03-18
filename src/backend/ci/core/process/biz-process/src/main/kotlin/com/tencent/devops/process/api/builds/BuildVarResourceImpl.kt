@@ -87,7 +87,7 @@ class BuildVarResourceImpl @Autowired constructor(
             taskId = taskId,
             variables = variables
         )
-        return Result(allContext[varName] ?: allContext[alisName])
+        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {
