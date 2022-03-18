@@ -70,8 +70,5 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: "backend-bk-ci"
-          envFrom:
-            - configMapRef:
-                name: {{ include "common.names.fullname" . }}-gateway
           workingDir: /usr/local/openresty/nginx/
 {{- end -}}
