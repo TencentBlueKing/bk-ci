@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.utils
 
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -167,10 +168,10 @@ object GitCommonUtils {
             try {
                 return projectId.removePrefix(projectPrefix).toLong()
             } catch (e: Exception) {
-                throw RuntimeException("蓝盾项目ID不正确")
+                throw OperationException("蓝盾项目ID不正确")
             }
         } else {
-            throw RuntimeException("蓝盾项目ID不正确")
+            throw OperationException("蓝盾项目ID不正确")
         }
     }
 
