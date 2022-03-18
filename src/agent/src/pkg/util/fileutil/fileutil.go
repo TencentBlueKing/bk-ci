@@ -46,8 +46,8 @@ func Exists(file string) bool {
 	return !(err != nil && os.IsNotExist(err))
 }
 
-func TryRemoveFile(file string) {
-	os.Remove(file)
+func TryRemoveFile(file string) error {
+	return os.Remove(file)
 }
 
 func SetExecutable(file string) error {

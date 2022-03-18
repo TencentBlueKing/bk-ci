@@ -294,7 +294,7 @@ class StartActionTaskContainerCmd(
                 LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|${toDoTask?.taskId}")
             }
             needTerminate -> { // 构建环境启动失败或者是启动成功但后续Agent挂掉导致心跳超时
-                LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
+                LOG.warn("ENGINE|$buildId|$source|TERM_NOT_EXEC|$stageId|j($containerId)|$taskId|$status")
                 val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为取消
                     BuildStatus.CANCELED
                 } else {
@@ -304,7 +304,7 @@ class StartActionTaskContainerCmd(
                 // 打印构建日志
                 buildLogPrinter.addLine(
                     executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
+                    buildId = buildId, message = "跳过(Skip Task)[$taskName] cause: ${containerContext.latestSummary}!",
                     jobId = containerHashId
                 )
             }
@@ -443,10 +443,6 @@ class StartActionTaskContainerCmd(
         isContainerFailed: Boolean,
         hasFailedTaskInSuccessContainer: Boolean
     ): PipelineBuildTask? {
-        // 终止情况下，[post action]只适用于stopVM-关机任务
-        if (isTerminate && currentTask.taskId != VMUtils.genStopVMTaskId(currentTask.taskSeq)) {
-            return null
-        }
         // 添加Post action标识打印
         addPostTipLog(currentTask)
 
@@ -484,7 +480,11 @@ class StartActionTaskContainerCmd(
             )
         }
         if (parentTask != null && postExecuteFlag) {
-            waitToDoTask = currentTask
+            // 终止情况下，[post action]只适用于stopVM-关机任务, 其他任务放弃
+            // #5806 防止在构建进程被杀后，因为StopVM-结束又返还导致又领取到不应该领取的任务。
+            if (!isTerminate || currentTask.taskId == VMUtils.genStopVMTaskId(currentTask.taskSeq)) {
+                waitToDoTask = currentTask
+            }
         }
 
         return waitToDoTask

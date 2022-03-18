@@ -734,6 +734,14 @@ class PipelineRuntimeService @Autowired constructor(
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
                 logger.info("[$buildId|EXECUTE|#${stage.id!!}|${stage.status}|NOT_EXECUTE_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
+                if (index == 0) {
+                    stage.containers.forEach {
+                        if (it is TriggerContainer) {
+                            it.status = BuildStatus.RUNNING.name
+                            ContainerUtils.setQueuingWaitName(it)
+                        }
+                    }
+                }
                 return@nextStage
             }
 
@@ -777,6 +785,8 @@ class PipelineRuntimeService @Autowired constructor(
                             buildNoLock?.unlock()
                         }
                     }
+                    container.status = BuildStatus.RUNNING.name
+                    ContainerUtils.setQueuingWaitName(container)
                     container.executeCount = context.executeCount
                     container.elements.forEach { atomElement ->
                         if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {

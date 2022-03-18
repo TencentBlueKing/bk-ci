@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
+import com.tencent.devops.worker.common.ErrorMsgLogUtil
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.process.BkProcessTree
 import com.tencent.process.EnvVars
@@ -69,6 +70,7 @@ object KillBuildProcessTree {
         try {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() {
+                    ErrorMsgLogUtil.flushErrorMsgToFile(buildId)
                     logger.info("start kill process tree")
                     val killedProcessIds = killProcessTree(projectId, buildId, vmSeqId)
                     logger.info("kill process tree done, ${killedProcessIds.size} process(s) killed, " +

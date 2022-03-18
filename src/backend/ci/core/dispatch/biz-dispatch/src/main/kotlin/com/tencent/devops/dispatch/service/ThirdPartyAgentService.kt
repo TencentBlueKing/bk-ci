@@ -175,7 +175,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         .agentTaskStarted(projectId, build.pipelineId, build.buildId, build.vmSeqId, build.agentId)
                 } catch (e: RemoteServiceException) {
                     logger.warn("notify agent task[$projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
-                        " clained failed, cause: ${e.message}")
+                        " claim failed, cause: ${e.message}")
                 }
 
                 return AgentResult(
@@ -272,8 +272,7 @@ class ThirdPartyAgentService @Autowired constructor(
                 finishBuild(it, success)
             }
         } else {
-            val record =
-                thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId!!) ?: return
+            val record = thirdPartyAgentBuildDao.get(dslContext, buildId, vmSeqId) ?: return
             finishBuild(record, success)
         }
     }
@@ -325,7 +324,13 @@ class ThirdPartyAgentService @Autowired constructor(
             logger.warn("Get the null third party agent(${record.agentId})")
             throw RemoteServiceException("Fail to get the third party agent")
         }
-        thirdPartyAgentBuildRedisUtils.deleteThirdPartyBuild(agentResult.data!!.secretKey, record.agentId, record.buildId, record.vmSeqId)
+
+        thirdPartyAgentBuildRedisUtils.deleteThirdPartyBuild(
+            secretKey = agentResult.data!!.secretKey,
+            agentId = record.agentId,
+            buildId = record.buildId,
+            vmSeqId = record.vmSeqId
+        )
         thirdPartyAgentBuildDao.updateStatus(
             dslContext, record.id,
             if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE
@@ -347,13 +352,12 @@ class ThirdPartyAgentService @Autowired constructor(
             throw NotFoundException("Fail to get the agent")
         }
 
-        // FIXME 构建机停止问题因goAgent传pipelineId为空串问题导致接口报错404，
-        // pipelineId是无意义的字段，先解决报错问题。后续需要新增一个没有pipelineId参数的接口
         client.get(ServiceBuildResource::class).workerBuildFinish(
             projectId = projectId,
             pipelineId = if (buildInfo.pipelineId.isNullOrBlank()) "dummyPipelineId" else buildInfo.pipelineId!!,
             buildId = buildInfo.buildId,
             vmSeqId = buildInfo.vmSeqId,
+            nodeHashId = agentResult.data!!.nodeId,
             simpleResult = SimpleResult(success = buildInfo.success, message = buildInfo.message)
         )
     }

@@ -25,30 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.worker.common
 
-import com.tencent.devops.common.api.constant.HTTP_500
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
+import java.io.File
 
-@BkExceptionMapper
-class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(RemoteServiceExceptionMapper::class.java)!!
+/**
+ * 用于极端情况下无法上报给服务端信息时，写到一个特定日志文件中
+ */
+object ErrorMsgLogUtil {
+
+    private val message = StringBuilder(2048)
+
+    private fun getErrorFile(buildId: String): File = File(
+        /* pathname = */ System.getProperty(AGENT_ERROR_MSG_FILE)
+                             ?: "${System.getProperty("java.io.tmpdir")}/${buildId}_build_msg.log"
+    )
+
+    fun resetErrorMsg() = message.clear()
+
+    fun appendErrorMsg(log: String) {
+        message.append(log)
+        message.append("\n")
     }
 
-    override fun toResponse(exception: RemoteServiceException): Response {
-        if (exception.httpStatus >= HTTP_500) {
-            logger.error("Failed with remote service exception: ", exception)
-        } else {
-            logger.warn("remote service exception: ", exception)
-        }
-        return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
+    /**
+     * (覆盖)回写构建过程中的错误信息到文件中
+     */
+    fun flushErrorMsgToFile(buildId: String) {
+        getErrorFile(buildId).writeText(message.toString())
+        resetErrorMsg()
     }
 }
