@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.stream.pojo.GitPipelineDir
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -88,7 +89,7 @@ interface UserGitCIPipelineResource {
         @ApiParam(value = "蓝盾流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?
-    ): Result<List<String>>
+    ): Result<GitPipelineDir>
 
     @ApiOperation("获取指定流水线信息")
     @GET

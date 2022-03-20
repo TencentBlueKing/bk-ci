@@ -38,6 +38,7 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import org.jooq.Record2
 
 @Repository
 class GitPipelineResourceDao {
@@ -140,15 +141,14 @@ class GitPipelineResourceDao {
         dslContext: DSLContext,
         gitProjectId: Long,
         pipelineId: String?
-    ): List<String> {
+    ): Result<Record2<String, String>> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            val dsl = dslContext.select(DIR).from(this)
+            val dsl = dslContext.select(DIR, PIPELINE_ID).from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
             if (!pipelineId.isNullOrBlank()) {
                 dsl.and(PIPELINE_ID.eq(pipelineId))
             }
-            return dsl.groupBy(DIR)
-                .fetch(DIR)
+            return dsl.fetch()
         }
     }
 

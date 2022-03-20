@@ -40,6 +40,7 @@ import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.pojo.GitPipelineDir
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -115,12 +116,17 @@ class StreamPipelineService @Autowired constructor(
         userId: String,
         gitProjectId: Long,
         pipelineId: String?
-    ): List<String> {
-        return pipelineResourceDao.getDirListByGitProjectId(
+    ): GitPipelineDir {
+        val allPipeline = pipelineResourceDao.getDirListByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
-            pipelineId = pipelineId
+            pipelineId = null
         )
+        return GitPipelineDir(
+            currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
+            allPath = allPipeline.map { it.value1() }.distinct()
+        )
+
     }
 
     fun getPipelineListWithoutHistory(

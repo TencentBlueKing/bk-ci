@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCIPipelineResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
+import com.tencent.devops.stream.pojo.GitPipelineDir
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineService
@@ -70,7 +71,7 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String?
-    ): Result<List<String>> {
+    ): Result<GitPipelineDir> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
