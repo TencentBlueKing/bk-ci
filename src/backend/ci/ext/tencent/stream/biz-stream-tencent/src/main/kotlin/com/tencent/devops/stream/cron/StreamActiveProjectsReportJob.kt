@@ -49,7 +49,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
     private val dslContext: DSLContext,
     private val profile: Profile,
     private val redisOperation: RedisOperation,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
     @Value("\${sla.oteam.url:#{null}}")
     private var oteamUrl: String? = null

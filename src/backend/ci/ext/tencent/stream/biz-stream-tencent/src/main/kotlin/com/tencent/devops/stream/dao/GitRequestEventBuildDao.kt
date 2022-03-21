@@ -32,7 +32,6 @@ import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.stream.pojo.BranchBuilds
-import org.apache.commons.lang3.time.DateFormatUtils
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.jooq.Condition
