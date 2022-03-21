@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
@@ -41,6 +42,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Date
 
 /**
  * 三方构建机的业务监控拓展
@@ -98,13 +100,18 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         val heartbeatInfo = agentDetail?.heartbeatInfo
         if (heartbeatInfo != null) {
 
-            logMessage.append("|构建机最近一次心跳（heartbeat Time): ${heartbeatInfo.heartbeatTime}")
-            logMessage.append("|当前正在运行构建数量(Running): ${heartbeatInfo.busyTaskSize}\n")
+            heartbeatInfo.heartbeatTime?.let { self ->
+                logMessage.append("|构建机最近一次心跳（heartbeat Time): ${DateTimeUtil.formatDate(Date(self))}")
+            }
+
+            logMessage.append("|当前正在运行构建数量(Running): ${heartbeatInfo.busyTaskSize} : \n")
 
             heartbeatInfo.taskList.forEach {
                 val r1 = thirdPartyAgentBuildDao.get(dslContext, it.buildId, it.vmSeqId)
                 logMessage.append("<a href='${genBuildDetailUrl(event.projectId, event.pipelineId, event.buildId)}'>")
-                logMessage.append("#${r1?.buildNum ?: "Build Detail"}</a>${r1?.pipelineName}Job(${r1?.taskName})\n")
+                logMessage.append(
+                    "运行中(Running) #${r1?.buildNum ?: "Detail"}</a> (${r1?.pipelineName} ${r1?.taskName})\n"
+                )
             }
 
             log(event, logMessage, tag)

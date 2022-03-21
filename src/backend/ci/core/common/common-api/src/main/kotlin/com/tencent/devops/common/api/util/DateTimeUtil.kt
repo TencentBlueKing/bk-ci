@@ -34,6 +34,7 @@ import java.time.ZoneOffset
 import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -218,5 +219,25 @@ object DateTimeUtil {
         val format = SimpleDateFormat(formatStr)
         val date = format.parse(dateTimeStr)
         return convertDateToLocalDateTime(date)
+    }
+
+    /**
+     * 判断[firstMills]最初时间与 当前时间相减，得出已经过去的耗时，根据[periodSeconds]每个周期秒数为一个循环，
+     * 整个循环中低于[stepSeconds]步长时间，
+     */
+    fun judgeInterval(
+        firstMills: Long,
+        periodSeconds: Int = 60,
+        stepSeconds: Int = 5
+    ): Pair<Boolean/*是否首次*/, Boolean/*是否间隔时间*/> {
+        val timePasses = System.currentTimeMillis() - firstMills
+        val toSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses)
+        val modSeconds = toSeconds % periodSeconds
+        val firstTime = toSeconds / periodSeconds == 0L && modSeconds <= stepSeconds // 在第一周期内(0)的，是首次
+        /*
+            此处说明： 在每30秒的前4秒内会执行一下以下逻辑。每5秒一次的本方法调用，在取5秒是防5秒在不断累计延迟可能会产生的最大限度不精准
+         */
+        val inInterval = modSeconds % (periodSeconds / 2) < stepSeconds // 在1/2周期内的步长(20秒），再决定是否为间隔期
+        return firstTime to inInterval
     }
 }

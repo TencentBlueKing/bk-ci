@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -70,7 +71,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -335,20 +335,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
 
     private fun monitorPrint(task: PipelineBuildTask) {
         // #5806 超过10秒，开始查询调度情况，并Log出来
-        val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
-        val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 60
-
-        var firstTime = false
-        if (TimeUnit.MILLISECONDS.toMinutes(timePasses) == 0L) { // 首次循环，都是在1分钟内。
-            if (modSeconds < 10) {
-                firstTime = true
-            }
-        }
-        /*
-            此处说明： 在每20秒的前9秒内会执行一下以下逻辑。每5秒一次的本方法调用，在取9秒是防5秒在不断累计延迟可能会产生的最大限度不精准
-         */
-        if (firstTime || (modSeconds % 20 < 9)) {
-
+        val (firstTime, inInterval) = DateTimeUtil.judgeInterval((task.startTime?.timestampmilli() ?: 0L))
+        if (firstTime || inInterval) {
             val agentMonitor = AgentStartMonitor(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -356,7 +344,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 vmSeqId = task.containerId,
                 containerHashId = task.containerHashId,
                 userId = task.starter,
-                firstTime = true,
+                firstTime = firstTime,
                 executeCount = task.executeCount
             )
             client.get(ServiceDispatchJobResource::class).monitor(agentStartMonitor = agentMonitor)
