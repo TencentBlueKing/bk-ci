@@ -57,6 +57,8 @@ object ErrorCode {
 
     // 插件执行错误
     const val PLUGIN_DEFAULT_ERROR = 2199001 // 插件异常默认
+    const val PLUGIN_CREATE_QUALITY_INDICATOR_ERROR = 2199002 // 创建 run 红线指标失败
+    const val PLUGIN_SAVE_QUALITY_DATA_ERROR = 2199003 // 保存 run 红线指标失败
 
     // 用户使用错误
     const val USER_INPUT_INVAILD = 2199002 // 用户输入数据有误
