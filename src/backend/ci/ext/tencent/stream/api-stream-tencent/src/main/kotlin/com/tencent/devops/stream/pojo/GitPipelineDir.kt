@@ -34,6 +34,6 @@ import io.swagger.annotations.ApiModelProperty
 data class GitPipelineDir(
     @ApiModelProperty("当前流水线文件子路径", required = true)
     val currentPath: String?,
-    @ApiModelProperty("所以子路径", required = true)
+    @ApiModelProperty("所有子路径", required = true)
     var allPath: List<String>?
 )
