@@ -63,7 +63,7 @@ const (
 	KeyBatchInstall      = "devops.agent.batch.install"
 )
 
-// Agent 配置
+// AgentConfig Agent 配置
 type AgentConfig struct {
 	Gateway           string
 	FileGateway       string
@@ -81,7 +81,7 @@ type AgentConfig struct {
 	BatchInstallKey   string
 }
 
-// Agent 环境配置
+// AgentEnv Agent 环境配置
 type AgentEnv struct {
 	OsName           string
 	AgentIp          string
@@ -131,7 +131,11 @@ func LoadAgentEnv() {
 
 // DetectAgentVersion 检测Agent版本
 func DetectAgentVersion() string {
-	workDir := systemutil.GetWorkDir()
+	return DetectAgentVersionByDir(systemutil.GetWorkDir())
+}
+
+// DetectAgentVersionByDir 检测指定目录下的Agent文件版本
+func DetectAgentVersionByDir(workDir string) string {
 	agentExecutable := workDir + "/" + GetClienAgentFile()
 
 	if systemutil.IsLinux() || systemutil.IsMacos() {
@@ -161,9 +165,15 @@ func DetectAgentVersion() string {
 
 // DetectWorkerVersion 检查worker版本
 func DetectWorkerVersion() string {
+	return DetectWorkerVersionByDir(systemutil.GetWorkDir())
+}
+
+// DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
+func DetectWorkerVersionByDir(workDir string) string {
+	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-Xmx256m", " -cp ", BuildAgentJarPath(), "com.tencent.devops.agent.AgentVersionKt"},
-		systemutil.GetWorkDir(), nil)
+		[]string{"-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
+		workDir, nil)
 
 	if err != nil {
 		logs.Warn("detect worker version failed: ", err.Error())

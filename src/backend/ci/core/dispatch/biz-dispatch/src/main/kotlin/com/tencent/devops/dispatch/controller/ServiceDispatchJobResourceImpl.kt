@@ -25,24 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo.enums
+package com.tencent.devops.dispatch.controller
 
-import javax.ws.rs.NotFoundException
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.dispatch.service.ThirdPartyAgentMonitorService
+import org.springframework.beans.factory.annotation.Autowired
 
-enum class PipelineTaskStatus(val status: Int) {
-    QUEUE(1),
-    RUNNING(2),
-    DONE(3),
-    FAILURE(4);
-
-    companion object {
-        fun toStatus(status: Int): PipelineTaskStatus {
-            PipelineTaskStatus.values().forEach {
-                if (it.status == status) {
-                    return it
-                }
-            }
-            throw NotFoundException("Can't find the pipeline task status($status)")
-        }
+@RestResource
+class ServiceDispatchJobResourceImpl @Autowired constructor(
+    val thirdPartyAgentMonitorService: ThirdPartyAgentMonitorService
+) : ServiceDispatchJobResource {
+    override fun monitor(agentStartMonitor: AgentStartMonitor) {
+        thirdPartyAgentMonitorService.monitor(agentStartMonitor)
     }
 }

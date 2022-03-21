@@ -93,8 +93,7 @@ class CheckConditionalSkipStageCmd constructor(
                 variables = variables.plus(contextMap),
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
-                customCondition = controlOption.customCondition,
-                buildLogPrinter = buildLogPrinter
+                customCondition = controlOption.customCondition
             )
         }
         if (skip) {

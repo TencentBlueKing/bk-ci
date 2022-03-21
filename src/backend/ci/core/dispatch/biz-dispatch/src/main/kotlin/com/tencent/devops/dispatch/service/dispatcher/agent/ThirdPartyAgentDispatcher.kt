@@ -212,77 +212,26 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
     }
 
-    private fun buildByAgentId(
-        event: PipelineAgentStartupEvent,
-        agent: ThirdPartyAgent,
-        workspace: String?
-    ): Boolean {
-        val agentId = agent.agentId
-        val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agentId)
+    private fun buildByAgentId(event: PipelineAgentStartupEvent, agent: ThirdPartyAgent, workspace: String?): Boolean {
+        val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agent.agentId)
         try {
-
             if (redisLock.tryLock()) {
-                if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agentId)) {
-                    logger.warn("The agent($agentId) of project(${event.projectId}) is upgrading")
-                    buildLogPrinter.addYellowLine(
-                        buildId = event.buildId,
-                        message = "构建机升级中，重新调度(Agent is upgrading) - agent($agentId)",
-                        tag = VMUtils.genStartVMTaskId(event.containerId),
-                        jobId = event.containerHashId,
-                        executeCount = event.executeCount ?: 1
-                    )
-
+                if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agent.agentId)) {
+                    logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
+                    log(event, "构建机升级中，重新调度(Agent is upgrading) - ${agent.hostname}/${agent.ip}")
                     return false
                 }
 
-                thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
-                    agent.secretKey,
-                    ThirdPartyRedisBuild(
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        agentId = agentId,
-                        vmSeqId = event.vmSeqId,
-                        vmName = agent.hostname,
-                        channelCode = event.channelCode,
-                        atoms = event.atoms
-                    )
-                )
-                thirdPartyAgentBuildService.queueBuild(
-                    projectId = event.projectId,
-                    agentId = agentId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId,
-                    thirdPartyAgentWorkspace = workspace ?: "",
-                    pipelineName = event.pipelineName,
-                    buildNo = event.buildNo,
-                    taskName = event.taskName
-                )
-                saveAgentInfoToBuildDetail(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId,
-                    agent = agent
-                )
-                logger.info("${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|agent=$agentId")
-                buildLogPrinter.addLine(
-                    buildId = event.buildId,
-                    message = "调度构建机(Scheduling selected agent) - ${agent.hostname}/${agent.ip} [${event.buildId}]",
-                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                    jobId = event.containerHashId,
-                    executeCount = event.executeCount ?: 1
-                )
+                // #5806 入库失败就不再写Redis
+                inQueue(agent = agent, event = event, agentId = agent.agentId, workspace = workspace)
+                // 保存构建详情
+                saveAgentInfoToBuildDetail(event = event, agent = agent)
+
+                logger.info("${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|agent=${agent.agentId}")
+                log(event, "调度构建机(Scheduling selected Agent): ${agent.hostname}/${agent.ip}")
                 return true
             } else {
-                buildLogPrinter.addYellowLine(
-                    buildId = event.buildId,
-                    message = "构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}",
-                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                    jobId = event.containerHashId,
-                    executeCount = event.executeCount ?: 1
-                )
+                log(event, "构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
         } finally {
@@ -290,20 +239,52 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
     }
 
-    private fun saveAgentInfoToBuildDetail(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        agent: ThirdPartyAgent
+    private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
+        buildLogPrinter.addLine(
+            buildId = event.buildId,
+            message = logMessage,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
+        )
+    }
 
-    ) {
+    private fun inQueue(agent: ThirdPartyAgent, event: PipelineAgentStartupEvent, agentId: String, workspace: String?) {
+
+        thirdPartyAgentBuildService.queueBuild(
+            projectId = event.projectId,
+            agentId = agentId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            thirdPartyAgentWorkspace = workspace ?: "",
+            pipelineName = event.pipelineName,
+            buildNo = event.buildNo,
+            taskName = event.taskName
+        )
+
+        thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
+            agent.secretKey,
+            ThirdPartyRedisBuild(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                agentId = agentId,
+                vmSeqId = event.vmSeqId,
+                vmName = agent.hostname,
+                channelCode = event.channelCode,
+                atoms = event.atoms
+            )
+        )
+    }
+
+    private fun saveAgentInfoToBuildDetail(event: PipelineAgentStartupEvent, agent: ThirdPartyAgent) {
         client.get(ServiceBuildResource::class).saveBuildVmInfo(
-            projectId,
-            pipelineId,
-            buildId,
-            vmSeqId,
-            VmInfo(agent.ip, agent.ip)
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            vmInfo = VmInfo(ip = agent.ip, name = agent.ip)
         )
     }
 
@@ -352,8 +333,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.data == null) {
-            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=null agents")
+            logger.warn(
+                "${event.buildId}|START_AGENT_FAILED|j(${event.vmSeqId})|dispatchType=$dispatchType|err=null agents"
+            )
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -366,8 +348,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.data!!.isEmpty()) {
-            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=empty agents")
+            logger.warn(
+                "${event.buildId}|START_AGENT_FAILED|j(${event.vmSeqId})|dispatchType=$dispatchType|err=empty agents"
+            )
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -375,7 +358,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
                 errorMessage = "构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
-                        "构建集群： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
+                    "构建集群： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )
             return
         }
@@ -527,8 +510,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 log(buildLogPrinter, event, message = "构建环境并发保护，稍后重试...(Env busy, wait)")
             }
 
-            logger.info("${event.buildId}|START_AGENT|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|Not Found, Retry!")
+            logger.info(
+                "${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|Not Found, Retry!"
+            )
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -536,7 +520,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${event.buildId}|${event.vmSeqId} " +
-                        " 构建环境无可分配构建机，等待超时（queue-timeout-minutes=${event.queueTimeoutMinutes}）")
+                    " 构建环境无可分配构建机，等待超时（queue-timeout-minutes=${event.queueTimeoutMinutes}）"
+            )
         } finally {
             redisLock.unlock()
         }

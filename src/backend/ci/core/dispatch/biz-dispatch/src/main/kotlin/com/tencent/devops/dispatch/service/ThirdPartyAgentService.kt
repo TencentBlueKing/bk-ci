@@ -113,11 +113,7 @@ class ThirdPartyAgentService @Autowired constructor(
         return thirdPartyAgentBuildDao.getRunningAndQueueBuilds(dslContext, agentId).size
     }
 
-    fun startBuild(
-        projectId: String,
-        agentId: String,
-        secretKey: String
-    ): AgentResult<ThirdPartyBuildInfo?> {
+    fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
         // Get the queue status build by buildId and agentId
         logger.debug("Start the third party agent($agentId) of project($projectId)")
         try {
@@ -160,13 +156,11 @@ class ThirdPartyAgentService @Autowired constructor(
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
-                val buildRecords =
-                    thirdPartyAgentBuildDao.getQueueBuilds(dslContext, agentId)
-                if (buildRecords.isEmpty()) {
+                val build = thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId) ?: run {
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
-                val build = buildRecords[0]
+
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
                 thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
 
@@ -214,12 +208,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishUpgrade(
-        projectId: String,
-        agentId: String,
-        secretKey: String,
-        success: Boolean
-    ): AgentResult<Boolean> {
+    fun finishUpgrade(projectId: String, agentId: String, secretKey: String, success: Boolean): AgentResult<Boolean> {
         logger.info("The agent($agentId) of project($projectId) finish upgrading with result $success")
         try {
             val agentResult = try {
@@ -233,21 +222,13 @@ class ThirdPartyAgentService @Autowired constructor(
                 return AgentResult(AgentStatus.DELETE, false)
             }
 
-            if (agentResult.isNotOk()) {
-                logger.warn("Fail to get the third party agent($agentId) because of ${agentResult.message}")
-                throw NotFoundException("Fail to get the agent")
-            }
-
             if (agentResult.data == null) {
                 logger.warn("Get the null third party agent($agentId)")
                 throw NotFoundException("Fail to get the agent")
             }
 
             if (agentResult.data!!.secretKey != secretKey) {
-                logger.warn(
-                    "The secretKey($secretKey) is not match the expect one(${agentResult.data!!.secretKey} " +
-                        "of project($projectId) and agent($agentId)"
-                )
+                logger.warn("The secretKey($secretKey) is not match of project($projectId) and agent($agentId)")
                 throw NotFoundException("Fail to get the agent")
             }
             thirdPartyAgentBuildRedisUtils.thirdPartyAgentUpgradingDone(projectId, agentId)
@@ -258,11 +239,7 @@ class ThirdPartyAgentService @Autowired constructor(
         }
     }
 
-    fun finishBuild(
-        buildId: String,
-        vmSeqId: String?,
-        success: Boolean
-    ) {
+    fun finishBuild(buildId: String, vmSeqId: String?, success: Boolean) {
         if (vmSeqId.isNullOrBlank()) {
             val records = thirdPartyAgentBuildDao.list(dslContext, buildId)
             if (records.isEmpty()) {
@@ -279,11 +256,10 @@ class ThirdPartyAgentService @Autowired constructor(
 
     fun listAgentBuilds(agentId: String, page: Int?, pageSize: Int?): Page<AgentBuildInfo> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 100
-        val sqlLimit =
-            if (pageSizeNotNull != -1) PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull) else null
-        val offset = sqlLimit?.offset ?: 0
-        val limit = sqlLimit?.limit ?: 100
+        val pageSizeNotNull = pageSize ?: PageUtil.MAX_PAGE_SIZE
+        val sqlLimit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
+        val offset = sqlLimit.offset
+        val limit = sqlLimit.limit
 
         val agentBuildCount = thirdPartyAgentBuildDao.countAgentBuilds(dslContext, agentId)
         val agentBuilds = thirdPartyAgentBuildDao.listAgentBuilds(dslContext, agentId, offset, limit).map {
@@ -305,10 +281,7 @@ class ThirdPartyAgentService @Autowired constructor(
         return Page(pageNotNull, pageSizeNotNull, agentBuildCount, agentBuilds)
     }
 
-    private fun finishBuild(
-        record: TDispatchThirdpartyAgentBuildRecord,
-        success: Boolean
-    ) {
+    private fun finishBuild(record: TDispatchThirdpartyAgentBuildRecord, success: Boolean) {
         logger.info(
             "Finish the third party agent(${record.agentId}) build(${record.buildId}) " +
                 "of seq(${record.vmSeqId}) and status(${record.status})"

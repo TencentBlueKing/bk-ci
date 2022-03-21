@@ -49,16 +49,17 @@ import (
 
 const buildIntervalInSeconds = 5
 
+// AgentStartup 上报构建机启动
 func AgentStartup() (agentStatus string, err error) {
 	result, err := api.AgentStartup()
 	return parseAgentStatusResult(result, err)
 }
-
+// getAgentStatus 获取构建机状态
 func getAgentStatus() (agentStatus string, err error) {
 	result, err := api.GetAgentStatus()
 	return parseAgentStatusResult(result, err)
 }
-
+// parseAgentStatusResult 解析状态信息
 func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (agentStatus string, err error) {
 	if resultErr != nil {
 		logs.Error("parse agent status error: ", resultErr.Error())
@@ -76,7 +77,7 @@ func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (age
 	}
 	return agentStatus, nil
 }
-
+// DoPollAndBuild 获取构建，如果达到最大并发或者是处于升级中，则不执行
 func DoPollAndBuild() {
 	for {
 		time.Sleep(buildIntervalInSeconds * time.Second)
@@ -90,8 +91,10 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		if config.GAgentConfig.ParallelTaskCount != 0 && GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, ParallelTaskCount config: %d, instance count: %d",
+		if config.GAgentConfig.ParallelTaskCount != 0 &&
+			GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
+			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, " +
+				"ParallelTaskCount config: %d, instance count: %d",
 				config.GAgentConfig.ParallelTaskCount, GBuildManager.GetInstanceCount()))
 			continue
 		}
@@ -103,7 +106,7 @@ func DoPollAndBuild() {
 
 		buildInfo, err := getBuild()
 		if err != nil {
-			logs.Error("get build failed, retry")
+			logs.Error("get build failed, retry, err", err.Error())
 			continue
 		}
 
@@ -115,11 +118,10 @@ func DoPollAndBuild() {
 		err = runBuild(buildInfo)
 		if err != nil {
 			logs.Error("start build failed: ", err.Error())
-			// TODO 写buildLog
 		}
 	}
 }
-
+// getBuild 从服务器认领要构建的信息
 func getBuild() (*api.ThirdPartyBuildInfo, error) {
 	logs.Info("get build")
 	result, err := api.GetBuild()
@@ -144,26 +146,37 @@ func getBuild() (*api.ThirdPartyBuildInfo, error) {
 
 	return buildInfo, nil
 }
-
+// runBuild 启动构建
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
+
 	workDir := systemutil.GetWorkDir()
 	agentJarPath := config.BuildAgentJarPath()
 	if !fileutil.Exists(agentJarPath) {
 		// #5806 尝试自愈
 		upgradeWorkerFile := systemutil.GetUpgradeDir() + "/" + config.WorkAgentFile
+
 		if fileutil.Exists(upgradeWorkerFile) {
+
 			_, err := fileutil.CopyFile(upgradeWorkerFile, agentJarPath, true)
 			upgradeWorkerFileVersion := config.DetectWorkerVersion()
-			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") { // #5806 宽松判断合法的版本v开头
-				errorMsg := fmt.Sprintf("\n尝试恢复 [%s] 执行文件失败，请到 [%s] 目录下执行 install.sh 或解压 agent.zip 还原安装目录"+
+			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
+				// #5806 宽松判断合法的版本v开头
+				errorMsg := fmt.Sprintf(
+					"\n尝试恢复 [%s] 执行文件失败，请到 [%s] 目录下执行 install.sh 或解压 agent.zip 还原安装目录" +
 					"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
 					agentJarPath, workDir, agentJarPath, workDir)
 				logs.Error(errorMsg)
 				workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+			} else { // #5806 替换后修正版本号
+				if config.GAgentEnv.SlaveVersion != upgradeWorkerFileVersion {
+					config.GAgentEnv.SlaveVersion = upgradeWorkerFileVersion
+				}
 			}
 		} else {
-			errorMsg := fmt.Sprintf("\n%s执行文件丢失，请到%s目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"+
-				"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.", agentJarPath, workDir, agentJarPath, workDir)
+			errorMsg := fmt.Sprintf(
+				"\n%s执行文件丢失，请到%s目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录" +
+				"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
+				agentJarPath, workDir, agentJarPath, workDir)
 			logs.Error(errorMsg)
 			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
 		}
