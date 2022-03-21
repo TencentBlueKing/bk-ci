@@ -35,19 +35,19 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线模型-构建触发容器")
 data class TriggerContainer(
-    @ApiModelProperty("构建容器序号id", required = false, hidden = true)
+    @ApiModelProperty("构建容器序号id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var id: String? = null,
     @ApiModelProperty("容器名称", required = true)
     override var name: String = "",
     @ApiModelProperty("任务集合", required = true)
     override var elements: List<Element> = listOf(),
-    @ApiModelProperty("状态", required = true, hidden = true)
+    @ApiModelProperty("状态", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false)
     override var startEpoch: Long? = null,
-    @ApiModelProperty("系统耗时（开机时间）", required = false, hidden = true)
+    @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var systemElapsed: Long? = null,
-    @ApiModelProperty("插件执行耗时", required = false, hidden = true)
+    @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var elementElapsed: Long? = null,
     @ApiModelProperty("参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
@@ -55,21 +55,25 @@ data class TriggerContainer(
     val templateParams: List<BuildFormProperty>? = null,
     @ApiModelProperty("构建版本号", required = false)
     val buildNo: BuildNo? = null,
-    @ApiModelProperty("是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储", required = false, hidden = true)
+    @ApiModelProperty(
+        "是否可重试-仅限于构建详情展示重试，目前未作为编排的选项，暂设置为null不存储",
+        required = false,
+        accessMode = ApiModelProperty.AccessMode.READ_ONLY
+    )
     override var canRetry: Boolean? = null,
-    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, hidden = true)
+    @ApiModelProperty("构建容器顺序ID（同id值）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containerId: String? = null,
-    @ApiModelProperty("容器唯一ID", required = false, hidden = true)
+    @ApiModelProperty("容器唯一ID", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containerHashId: String? = null,
-    @ApiModelProperty("构建环境启动状态", required = false, hidden = true)
+    @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startVMStatus: String? = null,
-    @ApiModelProperty("容器运行次数", required = false, hidden = true)
+    @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var executeCount: Int? = 0,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
-    @ApiModelProperty("是否包含post任务标识", required = false, hidden = true)
+    @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containPostTaskFlag: Boolean? = null,
-    @ApiModelProperty("是否为构建矩阵", required = false, hidden = true)
+    @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false
 ) : Container {
     companion object {
