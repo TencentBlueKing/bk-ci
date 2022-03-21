@@ -32,6 +32,7 @@ import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.stream.pojo.BranchBuilds
+import org.apache.commons.lang3.time.DateFormatUtils
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import org.jooq.Condition
@@ -731,6 +732,23 @@ class GitRequestEventBuildDao {
                 .fetch().map {
                     it.getValue(PIPELINE_ID) to it.getValue(ORIGIN_YAML)
                 }.toMap()
+        }
+    }
+
+    // 获取指定日期的日活跃项目数
+    fun getBuildActiveProjectCount(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .and(BUILD_ID.isNotNull)
+                .and(PARSED_YAML.like("%v2.0%"))
+                .groupBy(GIT_PROJECT_ID)
+            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
 }
