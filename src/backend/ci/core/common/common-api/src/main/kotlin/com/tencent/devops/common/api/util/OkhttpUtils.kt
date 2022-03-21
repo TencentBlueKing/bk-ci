@@ -150,7 +150,7 @@ object OkhttpUtils {
         return doHttp(shortOkHttpClient, request)
     }
 
-    fun doRedirectHttp(request: Request): Response {
+    fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R ): R {
         doHttp(redirectOkHttpClient, request).use { response ->
             if (
                 request.method() == "POST" &&
@@ -160,10 +160,10 @@ object OkhttpUtils {
                 val location = response.header("Location")
                 if (location != null) {
                     val newRequest = request.newBuilder().url(location).build()
-                    return doHttp(okHttpClient, newRequest)
+                    return handleResponse(doHttp(okHttpClient, newRequest))
                 }
             }
-            return response
+            return handleResponse(response)
         }
     }
 
