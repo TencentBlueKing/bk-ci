@@ -73,9 +73,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.dispatchKubernetes.env.JvmXms }}
+              value: {{ .Values.dispatchKubernetes.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.dispatchKubernetes.env.JvmXmx }}
+              value: {{ .Values.dispatchKubernetes.env.jvmXmx }}
           workingDir: /data/workspace/dispatch-kubernetes
           {{ if .Values.entrypoint.override }}
           command:

@@ -159,8 +159,8 @@ HPA设置
 
 |参数|描述|默认值 |
 |---|---|---|
-| `env.JvmXms` | JVM初始内存 | `512m` |
-| `env.JvmXmx` | JVM最大内存(不能超过limit) | `1024m` | 
+| `env.jvmXms` | JVM初始内存 | `512m` |
+| `env.jvmXmx` | JVM最大内存(不能超过limit) | `1024m` | 
 
 ## mysql 配置
 默认将部署 mysql ，如果不需要可以关闭。

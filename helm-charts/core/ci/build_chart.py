@@ -41,7 +41,9 @@ default_value_dict = {
     'bkCiInfluxdbDb': 'agentMetrix',
     'bkCiEnvironmentAgentCollectorOn': 'true',
     'bkCiDocsUrl': 'https://docs.bkci.net/',
-    'bkCiArtifactoryRealm': 'local'
+    'bkCiArtifactoryRealm': 'local',
+    'bkRepoHost': 'repo.demo.com',
+    'bkRepoGatewayIp': '127.0.0.1'
 }
 
 if os.path.isfile(default_value_json):
@@ -68,7 +70,8 @@ include_dict = {
     '__BK_CI_INFLUXDB_USER__': '{{ include "bkci.influxdbUsername" . }}',
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
-    '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}'
+    '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}',
+    '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}'
 }
 
 # 读取变量映射

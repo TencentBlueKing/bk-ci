@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.ticket.env.JvmXms }}
+              value: {{ .Values.ticket.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.ticket.env.JvmXmx }}
+              value: {{ .Values.ticket.env.jvmXmx }}
           workingDir: /data/workspace/ticket
           {{ if .Values.entrypoint.override }}
           command:

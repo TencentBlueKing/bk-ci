@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.openapi.env.JvmXms }}
+              value: {{ .Values.openapi.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.openapi.env.JvmXmx }}
+              value: {{ .Values.openapi.env.jvmXmx }}
           workingDir: /data/workspace/openapi
           {{ if .Values.entrypoint.override }}
           command:

@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.store.env.JvmXms }}
+              value: {{ .Values.store.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.store.env.JvmXmx }}
+              value: {{ .Values.store.env.jvmXmx }}
           workingDir: /data/workspace/store
           {{ if .Values.entrypoint.override }}
           command:

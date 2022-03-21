@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.image.env.JvmXms }}
+              value: {{ .Values.image.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.image.env.JvmXmx }}
+              value: {{ .Values.image.env.jvmXmx }}
           workingDir: /data/workspace/image
           {{ if .Values.entrypoint.override }}
           command:

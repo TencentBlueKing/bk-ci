@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.notify.env.JvmXms }}
+              value: {{ .Values.notify.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.notify.env.JvmXmx }}
+              value: {{ .Values.notify.env.jvmXmx }}
           workingDir: /data/workspace/notify
           {{ if .Values.entrypoint.override }}
           command:

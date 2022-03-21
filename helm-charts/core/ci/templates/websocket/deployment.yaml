@@ -72,9 +72,9 @@ spec:
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
             - name: JVM_XMS
-              value: {{ .Values.websocket.env.JvmXms }}
+              value: {{ .Values.websocket.env.jvmXms }}
             - name: JVM_XMX
-              value: {{ .Values.websocket.env.JvmXmx }}
+              value: {{ .Values.websocket.env.jvmXmx }}
           workingDir: /data/workspace/websocket
           {{ if .Values.entrypoint.override }}
           command:
