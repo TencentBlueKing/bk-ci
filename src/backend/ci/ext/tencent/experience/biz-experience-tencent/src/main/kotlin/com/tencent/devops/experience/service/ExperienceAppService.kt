@@ -66,7 +66,7 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
-import java.util.*
+import java.util.TreeSet
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 
@@ -406,12 +406,14 @@ class ExperienceAppService(
         val recordIds = TreeSet<Long>()
 
         // 订阅的需要置顶
-        recordIds.addAll(experiencePublicDao.listSubcribeRecordIds(dslContext, userId, 100))
+        val subcribeRecordIds = experiencePublicDao.listSubcribeRecordIds(dslContext, userId, 100)
+        recordIds.addAll(subcribeRecordIds)
 
-        // 只列举
-        recordIds.addAll(experienceDownloadDetailDao.listIdsForPublic(
+        // 普通的公开体验
+        val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
             dslContext, PlatformEnum.of(platform)?.name, 100
-        ).map { it.value1() })
+        ).map { it.value1() }.filterNot { subcribeRecordIds.contains(it) }
+        recordIds.addAll(normalRecords)
 
         val records = experienceDao.list(dslContext, recordIds)
         return experienceBaseService.toAppExperiences(userId, records)
