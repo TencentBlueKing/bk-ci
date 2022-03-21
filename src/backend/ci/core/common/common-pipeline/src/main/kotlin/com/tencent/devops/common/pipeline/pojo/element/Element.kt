@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.pojo.element
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
@@ -83,10 +82,8 @@ import io.swagger.annotations.ApiModelProperty
     JsonSubTypes.Type(value = QualityGateInElement::class, name = QualityGateInElement.classType),
     JsonSubTypes.Type(value = QualityGateOutElement::class, name = QualityGateOutElement.classType),
     JsonSubTypes.Type(value = CodeTGitWebHookTriggerElement::class, name = CodeTGitWebHookTriggerElement.classType),
-    JsonSubTypes.Type(
-        value = CodeGitGenericWebHookTriggerElement::class,
-        name = CodeGitGenericWebHookTriggerElement.classType
-    ),
+    JsonSubTypes.Type(value = CodeGitGenericWebHookTriggerElement::class,
+        name = CodeGitGenericWebHookTriggerElement.classType),
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
@@ -122,23 +119,19 @@ abstract class Element(
     @ApiModelProperty("错误信息", required = false)
     open var errorMsg: String? = null
 ) {
-    @JsonIgnore
+
     open fun getAtomCode() = getClassType()
 
-    @JsonIgnore
     abstract fun getClassType(): String
 
-    @JsonIgnore
     open fun getTaskAtom(): String = ""
 
-    @JsonIgnore
     open fun genTaskParams(): MutableMap<String, Any> {
         return JsonUtil.toMutableMap(this)
     }
 
     open fun cleanUp() {}
 
-    @JsonIgnore
     open fun isElementEnable(): Boolean {
         if (additionalOptions == null) {
             return true
