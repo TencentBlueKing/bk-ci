@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils
 object KubernetesUtils {
     private val namespace = System.getenv("NAMESPACE")
     private val serviceSuffix = System.getenv("SERVICE_PREFIX")
+    private val innerName = System.getenv("INNER_NAME")
 
     /**
      * 服务是否在容器中
@@ -19,5 +20,11 @@ object KubernetesUtils {
     /**
      * 获取服务发现的名称
      */
-    fun getSvrName(serviceName: String) = "$serviceSuffix-$serviceName"
+    fun getSvrName(serviceName: String): String {
+        return if (innerName.isNullOrEmpty()) {
+            "$serviceSuffix-$serviceName"
+        } else {
+            "$serviceName-$innerName-$serviceName"
+        }
+    }
 }
