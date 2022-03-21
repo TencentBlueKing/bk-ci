@@ -654,15 +654,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 ) -> {
                     BuildStatus.RETRY
                 }
-                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
-                    BuildStatus.EXEC_TIMEOUT
-                }
                 else -> { // 记录错误插件信息
                     pipelineTaskService.createFailTaskVar(
                         buildId = buildId, projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId, taskId = result.taskId
                     )
-                    BuildStatus.FAILED
+                    if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
+                    else BuildStatus.FAILED
                 }
             }
         }
