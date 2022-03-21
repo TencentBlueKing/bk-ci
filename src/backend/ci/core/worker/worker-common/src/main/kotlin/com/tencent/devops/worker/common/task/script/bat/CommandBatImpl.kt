@@ -44,6 +44,7 @@ class CommandBatImpl : ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean,
         errorMessage: String?,
+        jobId: String?,
         stepId: String?,
         charsetType: String?,
         taskId: String?
@@ -55,6 +56,7 @@ class CommandBatImpl : ICommand {
             runtimeVariables = runtimeVariables,
             dir = dir,
             errorMessage = errorMessage,
+            jobId = jobId,
             stepId = stepId,
             charsetType = charsetType
         )

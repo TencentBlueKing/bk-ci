@@ -358,6 +358,7 @@ open class MarketAtomTask : ITask() {
                             dir = atomTmpSpace,
                             workspace = workspace,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -371,6 +372,7 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = environment,
                             systemEnvVariables = systemEnvVariables,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
