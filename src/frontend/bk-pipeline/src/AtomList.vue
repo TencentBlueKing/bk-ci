@@ -123,7 +123,7 @@
         },
         computed: {
             isWaiting () {
-                return this.containerStatus === 'PREPARE_ENV'
+                return this.containerStatus === STATUS_MAP.PREPARE_ENV
             },
             isInstanceEditable () {
                 return !this.editable && this.pipeline && this.pipeline.instanceFromTemplate
@@ -136,7 +136,9 @@
                             const atomReviewer = this.getReviewUser(atom)
                             atom.computedReviewers = atomReviewer
                         }
-
+                        if (!atom.atomCode) {
+                            atom.atomCode = atom['@type']
+                        }
                         return atom
                     })
                 },
