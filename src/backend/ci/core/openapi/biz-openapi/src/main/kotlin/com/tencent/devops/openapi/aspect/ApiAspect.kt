@@ -115,7 +115,7 @@ class ApiAspect(
         if (projectId.isNullOrEmpty()) {
             logger.info("${jp.signature.name} miss projectId")
             val ignoreProjectId = (jp.signature as MethodSignature).method.getAnnotation(IgnoreProjectId::class.java)
-            if (ignoreProjectId == null || ignoreProjectId.ignore == false) {
+            if (ignoreProjectId == null || !ignoreProjectId.ignore) {
                 throw PermissionForbiddenException(
                     message = "interface miss projectId and miss @IgnoreProjectId"
                 )
