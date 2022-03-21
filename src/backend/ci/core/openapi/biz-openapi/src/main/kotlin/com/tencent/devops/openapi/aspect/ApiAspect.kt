@@ -58,19 +58,20 @@ class ApiAspect(
      *
      * @param jp
      */
-    @Before(
-        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
-    ) // 所有controller包下面的所有方法的所有参数
+//    @Before(
+//        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..)) || @annotation(Path)"
+//    ) // 所有controller包下面的所有方法的所有参数
+    @Before("execution(@annotation(Path))")
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
             return
         }
-
+        logger.info("openAPI Before $jp")
         // 参数value
         val parameterValue = jp.args
         // 参数key
