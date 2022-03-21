@@ -126,7 +126,6 @@ class StreamPipelineService @Autowired constructor(
             currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
             allPath = allPipeline.map { it.value1() }.distinct()
         )
-
     }
 
     fun getPipelineListWithoutHistory(
