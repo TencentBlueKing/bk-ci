@@ -69,10 +69,10 @@ class StreamActiveProjectsReportJob @Autowired constructor(
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
-       /* if (profile.isProd() && !profile.isProdGray()) {
+        if (profile.isProd() && !profile.isProdGray()) {
             logger.info("profile is prod , no start")
             return
-        }*/
+        }
         val redisLock = RedisLock(redisOperation, STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY, 60L)
         try {
             logger.info("StreamActiveProjectsReportJob , reportDaily start")
