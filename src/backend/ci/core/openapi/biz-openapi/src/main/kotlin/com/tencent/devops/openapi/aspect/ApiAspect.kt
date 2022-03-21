@@ -36,6 +36,8 @@ import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.After
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
+import org.aspectj.lang.annotation.Pointcut
+
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -53,6 +55,10 @@ class ApiAspect(
         private val logger = LoggerFactory.getLogger(ApiAspect::class.java)
     }
 
+    @Pointcut("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
+    fun myMethod() {
+    }
+
     /**
      * 前置增强：目标方法执行之前执行
      *
@@ -65,7 +71,7 @@ class ApiAspect(
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
 //                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..)) || @annotation(Path)"
 //    ) // 所有controller包下面的所有方法的所有参数
-    @Before("execution(@annotation(Path))")
+    @Before("myMethod()")
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
@@ -127,14 +133,16 @@ class ApiAspect(
      * 后置增强：目标方法执行之前执行
      *
      */
-    @After(
-        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
-                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
-    ) // 所有controller包下面的所有方法的所有参数
+//    @After(
+//        "execution(* com.tencent.devops.openapi.resources.apigw.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v3.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.app.*.*(..))" +
+//                "||execution(* com.tencent.devops.openapi.resources.apigw.v2.user.*.*(..))"
+//    ) // 所有controller包下面的所有方法的所有参数
+    @After("myMethod()")
     fun afterMethod() {
+        logger.info("openAPI after method")
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
         bkTag.removeGatewayTag()
     }
