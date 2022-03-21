@@ -1533,7 +1533,7 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelines.add(templateInstanceUpdate.pipelineName)
                 } catch (t: Throwable) {
                     logger.warn("FailUpdateTemplate|${templateInstanceUpdate.pipelineName}|$projectId|$userId", t)
-                    failurePipelines.add(templateInstanceUpdate.pipelineName)
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】 失败原因: ${t.message}")
                 }
             }
             // 发送执行任务结果通知
