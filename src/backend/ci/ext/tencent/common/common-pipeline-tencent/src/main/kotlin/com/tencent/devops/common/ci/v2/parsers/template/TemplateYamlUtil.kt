@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.parsers.template
 
+import com.tencent.devops.common.ci.v2.Parameters
 import com.tencent.devops.common.ci.v2.ParametersTemplateNull
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.Repositories
@@ -96,17 +97,23 @@ object TemplateYamlUtil {
         throw YamlFormatException(Constants.REPO_NOT_FOUND_ERROR.format(fromPath, repoName))
     }
 
-    // 为模板中的变量赋值
+    /**
+     * 为模板中的变量赋值
+     * @param fromPath 来自哪个文件
+     * @param path 读取的哪个模板文件
+     * @param template 被读取的模板文件内容
+     * @param templateParameters 被读取的模板文件自带的参数
+     * @param parameters 引用模板文件时传入的参数
+     */
     fun parseTemplateParameters(
         fromPath: String,
         path: String,
         template: String,
+        templateParameters: MutableList<Parameters>?,
         parameters: Map<String, Any?>?
     ): String {
-        val newParameters =
-            YamlObjects.getObjectFromYaml<ParametersTemplateNull>(path, template).parameters?.toMutableList()
-        if (!newParameters.isNullOrEmpty()) {
-            newParameters.forEachIndexed { index, param ->
+        if (!templateParameters.isNullOrEmpty()) {
+            templateParameters.forEachIndexed { index, param ->
                 if (parameters != null) {
                     val valueName = param.name
                     val newValue = parameters[param.name]
@@ -121,7 +128,7 @@ object TemplateYamlUtil {
                                 )
                             )
                         } else {
-                            newParameters[index] = param.copy(default = newValue)
+                            templateParameters[index] = param.copy(default = newValue)
                         }
                     }
                 }
@@ -130,16 +137,12 @@ object TemplateYamlUtil {
             return template
         }
         // 模板替换 先替换调用模板传入的参数，再替换模板的默认参数
-        val parametersListMap = newParameters.filter {
+        val parametersListMap = templateParameters.filter {
             it.default != null && it.type == ParametersType.ARRAY.value
         }.associate {
-            "parameters.${it.name}" to if (it.default == null) {
-                null
-            } else {
-                it.default
-            }
+            "parameters.${it.name}" to it.default
         }
-        val parametersStringMap = newParameters.filter { it.default != null }.associate {
+        val parametersStringMap = templateParameters.filter { it.default != null }.associate {
             "parameters.${it.name}" to if (it.default == null) {
                 null
             } else {
