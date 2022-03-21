@@ -1,37 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: lambda
-    desc: Devops Lambda Service
+    desc: DevOps Lambda Service
     version: 4.0
     packageName: com.tencent.devops.lambda
-  redis:
-    database: 2
-    host: 10.125.48.80
-    password: itdev@db
-  rabbitmq:
-    virtual-host: soda4
-    username: soda
-    password: soda
-    addresses: 10.125.48.80:5672
-  cloud:
-    consul:
-      discovery:
-        tags: local
-  kafka:
-    producer:
-      bootstrap-servers: tendata-public.sz.kafka.db.:32276
-      batch-size: 16384
-      retries: 3
-      acks: 1
-    listener:
-      concurrency: 3
-
-server:
-  port: 8001
-
-kafkaJaasConfig:
-  userName: tendata-sawyertest-268
-  password: iBSQLfsOHegEH24Z
-
-elasticsearch:
-  port: 9300

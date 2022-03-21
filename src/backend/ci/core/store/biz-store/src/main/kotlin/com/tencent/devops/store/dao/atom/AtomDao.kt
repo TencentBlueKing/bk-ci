@@ -952,10 +952,6 @@ class AtomDao : AtomBaseDao() {
             if (null != logoUrl) {
                 baseStep.set(LOGO_URL, logoUrl)
             }
-            val iconData = atomBaseInfoUpdateRequest.iconData
-            if (null != iconData) {
-                baseStep.set(ICON, iconData)
-            }
             val publisher = atomBaseInfoUpdateRequest.publisher
             if (null != publisher) {
                 baseStep.set(PUBLISHER, publisher)

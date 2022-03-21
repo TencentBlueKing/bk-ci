@@ -29,7 +29,7 @@ dependencies {
     api(project(":core:repository:biz-repository"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":ext:tencent:external:api-external"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":core:auth:api-auth"))

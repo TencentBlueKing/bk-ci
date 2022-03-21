@@ -32,6 +32,7 @@ import com.tencent.devops.model.project.tables.records.TUserRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class ProjectUserDao {
@@ -41,7 +42,7 @@ class ProjectUserDao {
         offset: Int
     ): Result<TUserRecord>? {
         return with(TUser.T_USER) {
-            dslContext.selectFrom(this).limit(offset, limit).fetch()
+            dslContext.selectFrom(this).where(USER_TYPE.eq(false)).limit(offset, limit).fetch()
         }
     }
 
@@ -50,7 +51,35 @@ class ProjectUserDao {
         userId: String
     ) {
         return with(TUser.T_USER) {
-            dslContext.delete(this).where(USER_ID.eq(userId))
+            dslContext.delete(this).where(USER_ID.eq(userId)).execute()
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        userId: String,
+        bgId: Int,
+        bgName: String,
+        deptId: Int,
+        deptName: String,
+        centerId: Int,
+        centerName: String,
+        groupId: Int,
+        groupName: String
+    ) {
+        with(TUser.T_USER) {
+            dslContext.update(this)
+                .set(BG_ID, bgId)
+                .set(BG_NAME, bgName)
+                .set(DEPT_ID, deptId)
+                .set(DEPT_NAME, deptName)
+                .set(CENTER_ID, centerId)
+                .set(CENTER_NAME, centerName)
+                .set(GROYP_ID, groupId)
+                .set(GROUP_NAME, groupName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(USER_ID.eq(userId))
+                .execute()
         }
     }
 }
