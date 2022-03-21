@@ -89,7 +89,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         } else {
             emptyList()
         }
-        val redPointCount = privateExperiences.count { it.redPointEnabled }
+        val redPointCount = publicExperiences.count { it.redPointEnabled }
         return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
     }
 
