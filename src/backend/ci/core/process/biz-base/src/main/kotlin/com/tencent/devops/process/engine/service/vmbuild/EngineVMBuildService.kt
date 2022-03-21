@@ -49,6 +49,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
@@ -200,12 +201,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
                             // 设置Job环境变量customBuildEnv到variablesWithType中
                             c.customBuildEnv?.forEach { (t, u) ->
-                                variablesWithType = variablesWithType.plus(BuildParameters(
-                                    key = t,
-                                    value = EnvUtils.parseEnv(u, contextMap),
-                                    valueType = BuildFormPropertyType.STRING,
-                                    readOnly = true
-                                ))
+                                variablesWithType = variablesWithType.plus(
+                                    BuildParameters(
+                                        key = t,
+                                        value = EnvUtils.parseEnv(u, contextMap),
+                                        valueType = BuildFormPropertyType.STRING,
+                                        readOnly = true
+                                    )
+                                )
                             }
 
                             Triple(envList, contextMap, timeoutMills)
@@ -628,7 +631,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
         LOG.info(
             "ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
-                "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
+                    "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
         buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
     }
@@ -767,12 +770,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                    when (errorType) {
-                        ErrorType.USER -> "Please check your input or service."
-                        ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
-                        ErrorType.PLUGIN -> "Please contact the plugin developer."
-                        ErrorType.SYSTEM -> "Please contact platform."
-                    }
+                        (errorCode?.let { MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString()) }
+                            ?: "") +
+                        when (errorType) {
+                            ErrorType.USER -> "Please check your input or service."
+                            ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
+                            ErrorType.PLUGIN -> "Please contact the plugin developer."
+                            ErrorType.SYSTEM -> "Please contact platform."
+                        }
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = errMsg,
@@ -821,10 +826,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
                 pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
                 pipelineEventDispatcher.dispatch(
-                        PipelineBuildWebSocketPushEvent(
-                                source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
-                                userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
-                        )
+                    PipelineBuildWebSocketPushEvent(
+                        source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
+                        userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                    )
                 )
             }
         }
