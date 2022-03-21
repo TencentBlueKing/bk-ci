@@ -403,7 +403,7 @@ class ExperienceAppService(
     }
 
     fun publicExperiences(userId: String, platform: Int, offset: Int, limit: Int): List<AppExperience> {
-        val recordIds = TreeSet<Long>()
+        val recordIds = mutableListOf<Long>()
 
         // 订阅的需要置顶
         val subcribeRecordIds = experiencePublicDao.listSubcribeRecordIds(dslContext, userId, 100)
