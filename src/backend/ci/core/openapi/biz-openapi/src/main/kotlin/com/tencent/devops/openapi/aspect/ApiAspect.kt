@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.openapi.IgnoreProjectId
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
@@ -56,8 +57,7 @@ class ApiAspect(
     }
 
     @Pointcut("execution(public * com.tencent.devops.openapi.resources.apigw.*(..))")
-    fun myMethod() {
-    }
+    fun myMethod() {}
 
     /**
      * 前置增强：目标方法执行之前执行
@@ -110,6 +110,16 @@ class ApiAspect(
                 logger.debug("参数值[{}]", it)
             }
             logger.debug("ApiAspect|apigwType[$apigwType],appCode[$appCode],projectId[$projectId]")
+        }
+
+        if (projectId.isNullOrEmpty()) {
+            logger.info("${jp.signature.name} miss projectId")
+            val ignoreProjectId = (jp.signature as MethodSignature).method.getAnnotation(IgnoreProjectId::class.java)
+            if (ignoreProjectId == null || ignoreProjectId.ignore == false) {
+                throw PermissionForbiddenException(
+                    message = "interface miss projectId and miss @IgnoreProjectId"
+                )
+            }
         }
 
         if (projectId != null && appCode != null && (apigwType == "apigw-app")) {
