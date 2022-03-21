@@ -770,7 +770,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                        (errorCode?.let { MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString()) }
+                        (errorCode?.let {
+                            MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString()).let { message ->
+                                "\n$message\n"
+                            }
+                        }
                             ?: "") +
                         when (errorType) {
                             ErrorType.USER -> "Please check your input or service."
