@@ -86,7 +86,7 @@ class YamlTemplateTest {
     }
 
     @Test
-    fun testParametersTemplate(){
+    fun testParametersTemplate() {
         val dir = "parameters"
         check("$sampleDir/$dir/parameters.yml")
     }

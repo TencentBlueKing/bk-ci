@@ -28,7 +28,6 @@
 package com.tencent.devops.common.ci.v2.parsers.template
 
 import com.tencent.devops.common.ci.v2.Parameters
-import com.tencent.devops.common.ci.v2.ParametersTemplateNull
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
