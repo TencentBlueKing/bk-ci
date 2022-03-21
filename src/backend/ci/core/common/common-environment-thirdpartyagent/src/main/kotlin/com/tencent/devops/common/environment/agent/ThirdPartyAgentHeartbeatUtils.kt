@@ -84,7 +84,7 @@ class ThirdPartyAgentHeartbeatUtils constructor(
             key = getHeartbeatKey(projectId = projectId, agentId = agentId),
             value = System.currentTimeMillis().toString(),
             expired = true,
-            expiredInSecond = expiredInSecond,
+            expiredInSecond = expiredInSecond
         )
     }
 

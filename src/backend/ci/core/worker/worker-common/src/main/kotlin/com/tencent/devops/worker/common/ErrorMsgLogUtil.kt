@@ -36,10 +36,8 @@ object ErrorMsgLogUtil {
 
     private val message = StringBuilder(2048)
 
-    private fun getErrorFile(buildId: String): File = File(
-        /* pathname = */ System.getProperty(AGENT_ERROR_MSG_FILE)
-                             ?: "${System.getProperty("java.io.tmpdir")}/${buildId}_build_msg.log"
-    )
+    // 旧版的Agent没有AGENT_ERROR_MSG_FILE参数，所以不默认创建了，否则无法被清理。
+    private fun getErrorFile(): File? = System.getProperty(AGENT_ERROR_MSG_FILE)?.let { filePath -> File(filePath) }
 
     fun resetErrorMsg() = message.clear()
 
@@ -51,8 +49,8 @@ object ErrorMsgLogUtil {
     /**
      * (覆盖)回写构建过程中的错误信息到文件中
      */
-    fun flushErrorMsgToFile(buildId: String) {
-        getErrorFile(buildId).writeText(message.toString())
+    fun flushErrorMsgToFile() {
+        getErrorFile()?.writeText(message.toString())
         resetErrorMsg()
     }
 }

@@ -192,7 +192,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
             currentAgentVersion = upgradeService.getAgentVersion(),
-            currentWorkerVersion = upgradeService.getWorkerVersion(),
+            currentWorkerVersion = upgradeService.getWorkerVersion()
         )
 
         if (needHeartbeatInfo) {

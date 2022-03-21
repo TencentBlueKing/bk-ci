@@ -150,8 +150,9 @@ class CheckConditionalSkipContainerCmd constructor(
             else -> true // finallyStage 下除上述4种条件之外，都是不合法的，要跳过
         } /* need skip */
         if (skip) {
-            message.append("Final stage Job " +
-                               "skip when ${jobControlOption.runCondition} previous stage status is $previousStatus")
+            message.append(
+                "Final stage Job skip when ${jobControlOption.runCondition} previous stage status is $previousStatus"
+            )
         }
         return skip
     }

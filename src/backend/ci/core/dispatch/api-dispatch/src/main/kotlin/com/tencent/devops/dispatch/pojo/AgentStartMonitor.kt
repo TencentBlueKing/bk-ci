@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.dispatch.pojo
+
 /**
  * 监听
  */
@@ -37,5 +38,5 @@ data class AgentStartMonitor(
     val vmSeqId: String,
     val containerHashId: String?,
     var firstTime: Boolean = true,
-    val executeCount: Int?,
+    val executeCount: Int?
 )
