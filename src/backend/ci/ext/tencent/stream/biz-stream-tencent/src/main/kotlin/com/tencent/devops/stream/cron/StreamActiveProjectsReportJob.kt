@@ -61,11 +61,11 @@ class StreamActiveProjectsReportJob @Autowired constructor(
     private var oteamActiveProjectTarget: Int? = null
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamEventHistoryClearJob::class.java)
+        private val logger = LoggerFactory.getLogger(StreamActiveProjectsReportJob::class.java)
         private const val STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY =
             "stream:active:project:sla:report"
     }
-    @Scheduled(cron = "0 30 14 * * ?")
+    @Scheduled(cron = "0 20 15 * * ?")
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
