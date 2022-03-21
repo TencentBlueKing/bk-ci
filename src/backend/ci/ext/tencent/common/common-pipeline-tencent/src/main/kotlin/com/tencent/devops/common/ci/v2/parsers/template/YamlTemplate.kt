@@ -610,14 +610,16 @@ class YamlTemplate<T>(
                 toRepo = repo
             )
         }
-        // 将需要替换的变量填入模板文件
-        newTemplate = parseTemplateParameters(
-            fromPath = fromPath,
-            path = toPath,
-            template = newTemplate,
-            parameters = parameters,
-            deepTree = deepTree
-        )
+        // 将需要替换的变量填入模板文件，参数模板不用替换
+        if (templateType != TemplateType.PARAMETERS) {
+            newTemplate = parseTemplateParameters(
+                fromPath = fromPath,
+                path = toPath,
+                template = newTemplate,
+                parameters = parameters,
+                deepTree = deepTree
+            )
+        }
         // 将模板文件实例化
         return YamlObjects.getObjectFromYaml(toPath, newTemplate)
     }
