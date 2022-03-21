@@ -65,7 +65,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         private const val STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY =
             "stream:active:project:sla:report"
     }
-    @Scheduled(cron = "0 20 15 * * ?")
+    @Scheduled(cron = "0 38 15 * * ?")
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
