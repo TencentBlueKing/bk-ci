@@ -166,7 +166,7 @@ class DateTimeUtilTest {
     }
 
     @Test
-//    @Ignore
+    @Ignore
     fun testJudgeInterval() {
         val now = System.currentTimeMillis() - 5000L
         var loop = 0
