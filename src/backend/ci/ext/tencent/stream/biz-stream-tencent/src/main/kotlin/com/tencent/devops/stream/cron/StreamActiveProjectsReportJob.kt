@@ -65,12 +65,12 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         private const val STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY =
             "stream:active:project:sla:report"
     }
-    @Scheduled(cron = "0 38 15 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
-        if (profile.isProd() && !profile.isProdGray()) {
-            logger.info("profile is prod , no start")
+        if (!profile.isProdGray()) {
+            logger.info("profile is not prod gray , no start")
             return
         }
         val redisLock = RedisLock(redisOperation, STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY, 60L)
