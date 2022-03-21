@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.util.JsonUtil
@@ -60,6 +61,7 @@ interface Container {
     /**
      * 只存储Container相关的配置，elements不会存储。
      */
+    @JsonIgnore
     fun genTaskParams(): MutableMap<String, Any> {
         val configParams = JsonUtil.toMutableMap(this)
         if (elements.isNotEmpty()) {
@@ -68,13 +70,18 @@ interface Container {
         return configParams
     }
 
+    @JsonIgnore
     fun getClassType(): String
 
+    @JsonIgnore
     fun getContainerById(vmSeqId: String): Container?
 
+    @JsonIgnore
     fun retryFreshMatrixOption()
 
+    @JsonIgnore
     fun fetchGroupContainers(): List<Container>?
 
+    @JsonIgnore
     fun fetchMatrixContext(): Map<String, String>?
 }
