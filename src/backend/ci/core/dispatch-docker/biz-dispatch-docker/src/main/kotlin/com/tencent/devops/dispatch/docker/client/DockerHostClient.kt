@@ -319,16 +319,17 @@ class DockerHostClient @Autowired constructor(
         vmSeqId: Int,
         containerId: String,
         dockerIp: String,
+        poolNo: Int,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
-        if (clusterType == DockerHostClusterType.AGENT_LESS && projectId == "test-sawyer2") {
+        if (clusterType == DockerHostClusterType.AGENT_LESS) {
             client.get(ServiceBuildlessResource::class).endBuild(
                 BuildLessEndInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
                     vmSeqId = vmSeqId,
-                    poolNo = 0,
+                    poolNo = poolNo,
                     containerId = containerId
                 )
             )
@@ -346,7 +347,7 @@ class DockerHostClient @Autowired constructor(
             status = 0,
             imageName = "",
             containerId = containerId,
-            poolNo = 0,
+            poolNo = poolNo,
             registryUser = "",
             registryPwd = "",
             imageType = "",

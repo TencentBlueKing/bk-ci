@@ -29,14 +29,17 @@ package com.tencent.devops.store.resources.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.service.atom.AtomPropService
 import com.tencent.devops.store.service.atom.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAtomResourceImpl @Autowired constructor(
-    private val atomService: AtomService
+    private val atomService: AtomService,
+    private val atomPropService: AtomPropService
 ) : ServiceAtomResource {
 
     override fun getInstalledAtoms(
@@ -51,5 +54,13 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
         return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
+    }
+
+    override fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?> {
+        return atomService.getAtomRealVersion(projectCode = projectCode, atomCode = atomCode, version = version)
+    }
+
+    override fun getAtomProps(atomCodes: Set<String>): Result<Map<String, AtomProp>?> {
+        return Result(atomPropService.getAtomProps(atomCodes))
     }
 }

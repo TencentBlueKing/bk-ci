@@ -84,7 +84,8 @@ func (m *Mgr) GetPumpCache() (*analyser.FileCache, *analyser.RootCache) {
 // 只有筹备执行的过程中失败, 才作为execute失败
 func (m *Mgr) ExecuteTask(
 	req *types.LocalTaskExecuteRequest,
-	globalWork *types.Work) (*types.LocalTaskExecuteResult, error) {
+	globalWork *types.Work,
+	withlocalresource bool) (*types.LocalTaskExecuteResult, error) {
 	blog.Infof("local: try to execute task(%s) for work(%s) from pid(%d) in env(%v) dir(%s)",
 		strings.Join(req.Commands, " "), m.work.ID(), req.Pid, req.Environments, req.Dir)
 
@@ -103,14 +104,19 @@ func (m *Mgr) ExecuteTask(
 	// 2. 该executor被置为degraded
 	// 3. 远程无可用资源
 	// 则直接走本地执行
-	if m.work.Basic().Settings().Degraded || e.degrade() || !m.work.Resource().HasAvailableWorkers() ||
-		e.retryAndSuccessTooManyAndDegradeDirectly() {
+	if m.work.Basic().Settings().Degraded ||
+		e.degrade() ||
+		!m.work.Resource().HasAvailableWorkers() ||
+		e.retryAndSuccessTooManyAndDegradeDirectly() ||
+		withlocalresource {
 		blog.Warnf("local: execute pre-task for work(%s) from pid(%d) degrade to local", m.work.ID(), req.Pid)
 		return e.executeLocalTask(), nil
 	}
 
+	m.work.Basic().Info().IncPrepared()
 	c, err := e.executePreTask()
 	if err != nil {
+		m.work.Basic().Info().DecPrepared()
 		blog.Warnf("local: execute pre-task for work(%s) from pid(%d) : %v", m.work.ID(), req.Pid, err)
 		return e.executeLocalTask(), nil
 	}
@@ -138,6 +144,7 @@ func (m *Mgr) ExecuteTask(
 			break
 		}
 	}
+	m.work.Basic().Info().DecPrepared()
 	if err != nil {
 		return e.executeLocalTask(), nil
 	}
@@ -175,4 +182,9 @@ func (m *Mgr) ExecuteTask(
 			Message:  "success to process all steps",
 		},
 	}, nil
+}
+
+// Slots get current total and occupied slots
+func (m *Mgr) Slots() (int, int) {
+	return m.resource.GetStatus()
 }

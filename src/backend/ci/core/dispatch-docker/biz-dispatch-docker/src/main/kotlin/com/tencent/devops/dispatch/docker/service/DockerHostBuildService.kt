@@ -207,7 +207,8 @@ class DockerHostBuildService @Autowired constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId?.toInt() ?: 0,
                     containerId = record.containerId,
-                    dockerIp = record.dockerIp
+                    dockerIp = record.dockerIp,
+                    poolNo = record.poolNo
                 )
             }
 
@@ -305,6 +306,7 @@ class DockerHostBuildService @Autowired constructor(
                         vmSeqId = timeoutBuildList[i].vmSeqId,
                         containerId = timeoutBuildList[i].containerId,
                         dockerIp = timeoutBuildList[i].dockerIp,
+                        poolNo = timeoutBuildList[i].poolNo,
                         clusterType = DockerHostClusterType.valueOf(dockerIpInfo.clusterName)
                     )
 
