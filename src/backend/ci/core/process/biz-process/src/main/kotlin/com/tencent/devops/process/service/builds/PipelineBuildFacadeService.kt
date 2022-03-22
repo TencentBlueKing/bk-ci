@@ -75,9 +75,12 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -92,9 +95,6 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.SecretInfo
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
-import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.engine.service.PipelineRedisService
-import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
@@ -257,7 +257,7 @@ class PipelineBuildFacadeService(
         )
         params.addAll(
             filterParams(
-                userId = if (checkPermission && userId != null) userId else null,
+                userId = if (checkPermission) userId else null,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 params = triggerContainer.params
@@ -1774,7 +1774,7 @@ class PipelineBuildFacadeService(
             // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作(第二次取消直接强制终止流水线构建)
             val cancelActionTime = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toLong() ?: 0
             val intervalTime = System.currentTimeMillis() - cancelActionTime
-            var terminateFlag: Boolean = false // 是否强制终止
+            var terminateFlag = false // 是否强制终止
             if (intervalTime <= cancelIntervalLimitTime * 1000) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
                 val timeTip = cancelIntervalLimitTime - intervalTime / 1000
@@ -1869,9 +1869,18 @@ class PipelineBuildFacadeService(
         pipelineId: String, /* pipelineId在agent请求的数据有值前不可用 */
         buildId: String,
         vmSeqId: String,
+        nodeHashId: String?,
         simpleResult: SimpleResult
     ) {
-        var msg = "Job#$vmSeqId's worker exception: ${simpleResult.message}"
+        var msg = simpleResult.message
+
+        if (!nodeHashId.isNullOrBlank()) {
+            msg = "${
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    params = arrayOf(projectCode, nodeHashId)
+                )} $msg"
+        }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
             val startUpVMTask = pipelineTaskService.getBuildTask(
@@ -1880,9 +1889,18 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
+                msg = msg ?: "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
             } else {
-                logger.info("[$buildId]|Job#$vmSeqId|${simpleResult.success}| worker had been exit.")
+                logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")
+                msg?.let { self ->
+                    buildLogPrinter.addLine(
+                        buildId = buildId,
+                        message = self,
+                        tag = startUpVMTask!!.taskId,
+                        jobId = startUpVMTask.containerHashId,
+                        executeCount = startUpVMTask.executeCount ?: 1
+                    )
+                }
                 return
             }
         }
@@ -1987,7 +2005,10 @@ class PipelineBuildFacadeService(
                     throw ErrorCodeException(
                         statusCode = Response.Status.BAD_REQUEST.statusCode,
                         errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-                        defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
+                        defaultMessage = MessageCodeUtil.getCodeMessage(
+                            messageCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
+                            params = arrayOf(buildId)
+                        ),
                         params = arrayOf(buildId)
                     )
                 }

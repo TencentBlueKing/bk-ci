@@ -39,6 +39,7 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+// DoPollAndUpgradeAgent 循环，每20s一次执行升级
 func DoPollAndUpgradeAgent() {
 	for {
 		time.Sleep(20 * time.Second)
@@ -47,10 +48,21 @@ func DoPollAndUpgradeAgent() {
 		logs.Info("upgrade done")
 	}
 }
-
+// agentUpgrade 升级主逻辑
 func agentUpgrade() {
+	// #5806 #5172 升级失败，保证重置回状态，防止一直处于升级状态
+	ack := false
+	success := false
+	defer func() {
+		if ack {
+			config.GIsAgentUpgrading = false
+			_, _ = api.FinishUpgrade(success)
+			logs.Info("[agentUpgrade]|report upgrade finish: ", success)
+		}
+	}()
 	checkResult, err := api.CheckUpgrade()
 	if err != nil {
+		ack = true
 		logs.Error("[agentUpgrade]|check upgrade err: ", err.Error())
 		return
 	}
@@ -68,7 +80,7 @@ func agentUpgrade() {
 		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
 	}
-
+	ack = true
 	logs.Info("[agentUpgrade]|download upgrade files start")
 	agentChanged, workerChanged, err := downloadUpgradeFiles()
 	if err != nil {
@@ -80,16 +92,19 @@ func agentUpgrade() {
 	err = DoUpgradeOperation(agentChanged, workerChanged)
 	if err != nil {
 		logs.Error("[agentUpgrade]|do upgrade operation failed", err)
+	} else {
+		success = true
 	}
 }
-
+// downloadUpgradeFiles 下载升级文件
 func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error) {
 	workDir := systemutil.GetWorkDir()
 	upgradeDir := systemutil.GetUpgradeDir()
-	os.MkdirAll(upgradeDir, os.ModePerm)
+	_ = os.MkdirAll(upgradeDir, os.ModePerm)
 
 	logs.Info("[agentUpgrade]|download upgrader start")
-	_, err = api.DownloadUpgradeFile("upgrade/"+config.GetServerUpgraderFile(), upgradeDir+"/"+config.GetClientUpgraderFile())
+	_, err = api.DownloadUpgradeFile(
+		"upgrade/"+config.GetServerUpgraderFile(), upgradeDir+"/"+config.GetClientUpgraderFile())
 	if err != nil {
 		logs.Error("[agentUpgrade]|download upgrader failed", err)
 		return false, false, errors.New("download upgrader failed")
@@ -97,7 +112,8 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("[agentUpgrade]|download upgrader done")
 
 	logs.Info("[agentUpgrade]|download daemon start")
-	newDaemonMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerDaemonFile(), upgradeDir+"/"+config.GetClientDaemonFile())
+	newDaemonMd5, err := api.DownloadUpgradeFile(
+		"upgrade/"+config.GetServerDaemonFile(), upgradeDir+"/"+config.GetClientDaemonFile())
 	if err != nil {
 		logs.Error("[agentUpgrade]|download daemon failed", err)
 		return false, false, errors.New("download daemon failed")
@@ -105,7 +121,8 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("[agentUpgrade]|download daemon done")
 
 	logs.Info("[agentUpgrade]|download agent start")
-	newAgentMd5, err := api.DownloadUpgradeFile("upgrade/"+config.GetServerAgentFile(), upgradeDir+"/"+config.GetClienAgentFile())
+	newAgentMd5, err := api.DownloadUpgradeFile(
+		"upgrade/"+config.GetServerAgentFile(), upgradeDir+"/"+config.GetClienAgentFile())
 	if err != nil {
 		logs.Error("[agentUpgrade]|download agent failed", err)
 		return false, false, errors.New("download agent failed")
@@ -139,6 +156,19 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("newDaemonMd5=" + newDaemonMd5 + ",daemonMd5=" + daemonMd5)
 	logs.Info("newAgentMd5=" + newAgentMd5 + ",agentMd5=" + agentMd5)
 	logs.Info("newWorkerMd5=" + newWorkerMd5 + ",workerMd5=" + workerMd5)
+
+	// #5806 增强检测版本，防止下载出错的情况下，意外被替换
+	agentVersion := config.DetectAgentVersionByDir(systemutil.GetUpgradeDir())
+	agentChanged = false
+	if len(agentVersion) > 0 {
+		agentChanged = agentMd5 != newAgentMd5
+	}
+
+	workerVersion := config.DetectWorkerVersionByDir(systemutil.GetUpgradeDir())
+	workAgentChanged = false
+	if len(workerVersion) > 0 {
+		workAgentChanged = workerMd5 != newWorkerMd5
+	}
 	// #4686 devopsDaemon 暂时不考虑单独的替换升级，windows 无法自动升级，仅当devopsAgent有变化时升级。
-	return agentMd5 != newAgentMd5, workerMd5 != newWorkerMd5,nil
+	return agentChanged, workAgentChanged, nil
 }

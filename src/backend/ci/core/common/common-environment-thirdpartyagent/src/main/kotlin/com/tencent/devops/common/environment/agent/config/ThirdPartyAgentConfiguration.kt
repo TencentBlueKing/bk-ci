@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.environment.agent.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.redis.RedisAutoConfiguration
@@ -51,7 +50,6 @@ class ThirdPartyAgentConfiguration {
 
     @Bean
     fun thirdPartyAgentHeartbeatUtils(
-        @Autowired redisOperation: RedisOperation,
-        @Autowired objectMapper: ObjectMapper
-    ) = ThirdPartyAgentHeartbeatUtils(redisOperation, objectMapper)
+        @Autowired redisOperation: RedisOperation
+    ) = ThirdPartyAgentHeartbeatUtils(redisOperation)
 }

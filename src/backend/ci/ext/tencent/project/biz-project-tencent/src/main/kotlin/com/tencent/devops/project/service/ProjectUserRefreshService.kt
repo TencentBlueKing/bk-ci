@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INV
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectFreshDao
 import com.tencent.devops.project.dao.ProjectUserDao
@@ -105,24 +106,33 @@ class ProjectUserRefreshService @Autowired constructor(
         userInfo.forEach {
             try {
                 Thread.sleep(5)
-                val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
-                if (tofDeptInfo.centerId.toInt() != it.centerId || tofDeptInfo.deptId.toInt() != it.deptId) {
-                    logger.info("${it.userId} cent id is diff, " +
-                        "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
-                        "local ${it.centerId} ${it.centerName}")
-                    userDao.update(
-                        userId = it.userId,
-                        groupId = tofDeptInfo.groupId.toInt(),
-                        groupName = tofDeptInfo.groupName,
-                        bgId = tofDeptInfo.bgId.toInt(),
-                        bgName = tofDeptInfo.bgName,
-                        centerId = tofDeptInfo.centerId.toInt(),
-                        centerName = tofDeptInfo.centerName,
-                        deptId = tofDeptInfo.deptId.toInt(),
-                        deptName = tofDeptInfo.deptName,
-                        dslContext = dslContext,
-                        name = it.name
-                    )
+                try {
+                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
+                    if (tofDeptInfo == null) {
+                        projectUserDao.delete(dslContext, it.userId)
+                        logger.info("user ${it.userId} is level office, delete t_user info")
+                    } else if (tofDeptInfo.centerId.toInt() != it.centerId || tofDeptInfo.deptId.toInt() != it.deptId) {
+                        logger.info(
+                            "${it.userId} cent id is diff, " +
+                                "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
+                                "local ${it.centerId} ${it.centerName}"
+                        )
+                        userDao.update(
+                            userId = it.userId,
+                            groupId = tofDeptInfo.groupId.toInt(),
+                            groupName = tofDeptInfo.groupName,
+                            bgId = tofDeptInfo.bgId.toInt(),
+                            bgName = tofDeptInfo.bgName,
+                            centerId = tofDeptInfo.centerId.toInt(),
+                            centerName = tofDeptInfo.centerName,
+                            deptId = tofDeptInfo.deptId.toInt(),
+                            deptName = tofDeptInfo.deptName,
+                            dslContext = dslContext,
+                            name = it.name
+                        )
+                    }
+                } catch (oe: OperationException) {
+                    logger.warn("getUserDept fail: ${it.userId}|$oe")
                 }
             } catch (e: Exception) {
                 logger.warn("updateInfoByTof ${it.userId} fail: $e")
@@ -131,9 +141,13 @@ class ProjectUserRefreshService @Autowired constructor(
     }
 
     // 添加用户
-    fun createUser(userId: String): UserDeptDetail {
+    fun createUser(userId: String): UserDeptDetail? {
         // user表不存在，直接同步 数据源直接获取tof数据
         val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
+        if (tofDeptInfo == null) {
+            logger.warn("creatUser $userId tofInfo is level office. cancel create")
+            return null
+        }
         val staffInfo = tofService.getStaffInfo(userId)
         userDao.create(
             dslContext = dslContext,
@@ -154,33 +168,31 @@ class ProjectUserRefreshService @Autowired constructor(
     // 同步用户信息
     fun synUserInfo(userInfo: UserDeptDetail, userId: String): UserDeptDetail? {
         try {
-            val staffInfo = tofService.getStaffInfo(userId)
-            if (userInfo!!.groupId != staffInfo.GroupId) {
-                logger.info("user info diff, bk:${userInfo.groupId}, tof :${staffInfo.GroupId}")
+            val deptInfo = tofService.getDeptFromTof(
+                operator = null,
+                userId = userId,
+                bkTicket = "",
+                userCache = false
+            ) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage("user $userId level office"))
+            if (userInfo.groupId != deptInfo.groupId || userInfo.deptId != deptInfo.deptId) {
+                logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
-                val tofDeptInfo = tofService.getDeptFromTof(null, userId, "", false)
-                if (tofService.checkUserLeave(tofDeptInfo)) {
-                    logger.warn("user $userId is level office")
-                    // 删除已离职用户
-                    projectUserDao.delete(dslContext, userId)
-                    return null
-                }
-                userDao.update(
+                projectUserDao.update(
                     userId = userId,
-                    groupId = tofDeptInfo.groupId.toInt(),
-                    groupName = tofDeptInfo.groupName,
-                    bgId = tofDeptInfo.bgId.toInt(),
-                    bgName = tofDeptInfo.bgName,
-                    centerId = tofDeptInfo.centerId.toInt(),
-                    centerName = tofDeptInfo.centerName,
-                    deptId = tofDeptInfo.deptId.toInt(),
-                    deptName = tofDeptInfo.deptName,
-                    dslContext = dslContext,
-                    name = staffInfo.ChineseName
+                    groupId = deptInfo.groupId.toInt(),
+                    groupName = deptInfo.groupName,
+                    bgId = deptInfo.bgId.toInt(),
+                    bgName = deptInfo.bgName,
+                    centerId = deptInfo.centerId.toInt(),
+                    centerName = deptInfo.centerName,
+                    deptId = deptInfo.deptId.toInt(),
+                    deptName = deptInfo.deptName,
+                    dslContext = dslContext
                 )
-                return tofDeptInfo
+                return deptInfo
             }
         } catch (e: OperationException) {
+            logger.warn("user $userId is level office")
             // 删除已离职用户
             projectUserDao.delete(dslContext, userId)
         }
