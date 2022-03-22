@@ -30,13 +30,13 @@ package com.tencent.devops.common.webhook.service.code.handler
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.GitCommit
+import org.slf4j.LoggerFactory
 
 @Suppress("TooManyFunctions")
 interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
@@ -78,7 +78,10 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         repository: Repository?,
         page: Int,
         size: Int
-    ) = emptyList<GitCommit>()
+    ): List<GitCommit> {
+        logger.info("defult func")
+        return emptyList()
+    }
 
     /**
      * 匹配事件
@@ -121,4 +124,8 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         projectId: String? = null,
         repository: Repository? = null
     ): Map<String, Any>
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ScmWebhookMatcher::class.java)
+    }
 }
