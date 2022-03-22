@@ -73,7 +73,7 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
     fun preMatch(event: T): ScmWebhookMatcher.MatchResult = ScmWebhookMatcher.MatchResult(isMatch = true)
 
     fun getWebhookCommitList(
-        event: GitMergeRequestEvent,
+        event: T,
         projectId: String?,
         repository: Repository?,
         page: Int,

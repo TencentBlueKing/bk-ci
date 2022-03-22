@@ -113,6 +113,4 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
             return listOf(urlFilter, eventTypeFilter, userFilter, branchFilter)
         }
     }
-
-    fun getWebhookCommitList(event: GitPushEvent) = emptyList<GitCommit>()
 }

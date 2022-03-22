@@ -50,6 +50,7 @@ import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
@@ -212,7 +213,13 @@ class TGitPushTriggerHandler(
         return startParams
     }
 
-    override fun getWebhookCommitList(event: GitPushEvent): List<GitCommit> {
+    override fun getWebhookCommitList(
+        event: GitPushEvent,
+        projectId: String?,
+        repository: Repository?,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
         return event.commits!!.map {
             GitCommit(
                 id = it.id,

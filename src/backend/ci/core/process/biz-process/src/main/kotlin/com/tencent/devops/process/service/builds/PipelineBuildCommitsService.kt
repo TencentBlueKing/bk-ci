@@ -33,6 +33,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                     page = page,
                     size = size
                 )
+                logger.info("git commitList is $gitCommitList")
                 if (gitCommitList.isEmpty()) break
                 pipelineBuildCommits.create(
                     dslContext = dslContext,
