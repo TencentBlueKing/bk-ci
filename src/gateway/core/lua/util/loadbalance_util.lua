@@ -24,6 +24,10 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
     -- 容器环境
     if ngx.var.namespace ~= '' and ngx.var.namespace ~= nil then
+        if ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil then
+            return service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
+                       '.svc.cluster.local'
+        end
         return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
     end
 
