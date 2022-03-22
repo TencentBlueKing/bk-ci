@@ -234,8 +234,14 @@ object ControlUtils {
     ): Boolean {
         message.append("检查Job运行条件/Check Job Run Condition: ")
         var skip = when (runCondition) {
-            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
-            JobRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
+            JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> {
+                message.append("[自定义变量全部满足不运行](Don‘t run it when all the custom variables are matched) ")
+                true
+            } // 条件匹配就跳过
+            JobRunCondition.CUSTOM_VARIABLE_MATCH -> {
+                message.append("[自定义变量全部满足时运行](Run it when all the custom variables are matched) ")
+                false
+            } // 条件全匹配就运行
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
                 return !evalExpression(customCondition, buildId, variables, message)
             }
@@ -247,11 +253,6 @@ object ControlUtils {
             val existValue = variables[key]
             val env = EnvUtils.parseEnv(value, variables)
             if (env != existValue) {
-                if (skip) {
-                    message.append("[自定义变量全部满足不运行](Don‘t run it when all the custom variables are matched) ")
-                } else {
-                    message.append("[自定义变量全部满足时运行](Run it when all the custom variables are matched) ")
-                }
                 message.append("\nkey=$key, expect=$existValue, actual=$value, (expect != actual)=true, skip=$skip")
                 skip = !skip // 不满足则取反
                 logger.info("[$buildId]|JOB_CONDITION|$skip|$runCondition|key=$key|actual=$existValue|expect=$value")

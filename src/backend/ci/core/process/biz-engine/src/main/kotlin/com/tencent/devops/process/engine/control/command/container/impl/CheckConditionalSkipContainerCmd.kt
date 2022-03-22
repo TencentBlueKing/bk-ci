@@ -136,23 +136,25 @@ class CheckConditionalSkipContainerCmd constructor(
         previousStatus: BuildStatus?,
         message: StringBuilder
     ): Boolean {
+        // #6366 增加日志明确展示跳过的原因
         val skip = when (jobControlOption.runCondition) {
             JobRunCondition.PREVIOUS_STAGE_CANCEL -> {
+                message.append("[上游 Stage 取消时](Previous Stage Cancel): ")
                 previousStatus != null && !previousStatus.isCancel() // null will pass
             }
             JobRunCondition.PREVIOUS_STAGE_FAILED -> {
+                message.append("[上游 Stage 失败时](Previous Stage Failed): ")
                 previousStatus != null && !previousStatus.isFailure() // null will pass
             }
             JobRunCondition.PREVIOUS_STAGE_SUCCESS -> { // null will pass
+                message.append("[上游 Stage 成功时](Previous Stage Success): ")
                 previousStatus != null && !previousStatus.isSuccess() && previousStatus != BuildStatus.STAGE_SUCCESS
             }
             JobRunCondition.STAGE_RUNNING -> false // 当前 Finally Stage 开始时， 无视之前的状态，不跳过
             else -> true // finallyStage 下除上述4种条件之外，都是不合法的，要跳过
         } /* need skip */
         if (skip) {
-            message.append(
-                "Final stage Job skip when ${jobControlOption.runCondition} previous stage status is $previousStatus"
-            )
+            message.append("Final stage Job skip when previous stage status is $previousStatus")
         }
         return skip
     }
