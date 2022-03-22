@@ -32,7 +32,6 @@ import com.tencent.devops.model.store.tables.records.TExtensionServiceVersionLog
 import com.tencent.devops.store.pojo.ExtServiceVersionLogCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceVersionLogUpdateInfo
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

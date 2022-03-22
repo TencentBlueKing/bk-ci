@@ -482,7 +482,7 @@ class BkRepoClient constructor(
         val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
         val request = Request.Builder()
             .url(url)
-             .header("Authorization", authorization)
+            .header("Authorization", authorization)
             .header(BK_REPO_UID, userName)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .delete()

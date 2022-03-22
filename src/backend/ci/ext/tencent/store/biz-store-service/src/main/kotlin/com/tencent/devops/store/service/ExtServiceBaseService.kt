@@ -137,7 +137,6 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.util.regex.Pattern
-import com.tencent.devops.common.service.config.CommonConfig
 import okhttp3.Request
 
 @Service
@@ -687,7 +686,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             )
         //  删除仓库镜像
         val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId )
-        if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()) {
+        if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()){
             val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveStoreFileResource::class)
             val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/file/repos/" +
                     "${bkRepoConfig.bkrepoDockerRepoName}/$serviceCode/delete?type=${StoreTypeEnum.SERVICE.name}"

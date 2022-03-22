@@ -132,16 +132,16 @@ class ArchiveStoreFileServiceImpl : ArchiveStoreFileService {
         var projectName: String
         var userName: String
         var password: String
-        when(type) {
+        when (type) {
             StoreTypeEnum.SERVICE.name -> {
-                 projectName = bkRepoStoreConfig.bkrepoExtServiceProjectName
-                 userName = bkRepoStoreConfig.bkrepoExtServiceUserName
-                 password = bkRepoStoreConfig.bkrepoExtServicePassword
+                projectName = bkRepoStoreConfig.bkrepoExtServiceProjectName
+                userName = bkRepoStoreConfig.bkrepoExtServiceUserName
+                password = bkRepoStoreConfig.bkrepoExtServicePassword
             }
             else -> {
-                 projectName = bkRepoStoreConfig.bkrepoStoreProjectName
-                 userName = bkRepoStoreConfig.bkrepoStoreUserName
-                 password = bkRepoStoreConfig.bkrepoStorePassword
+                projectName = bkRepoStoreConfig.bkrepoStoreProjectName
+                userName = bkRepoStoreConfig.bkrepoStoreUserName
+                password = bkRepoStoreConfig.bkrepoStorePassword
             }
         }
         bkRepoClient.deleteNode(

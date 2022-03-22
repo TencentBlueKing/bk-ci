@@ -33,8 +33,6 @@ import com.tencent.devops.model.store.tables.records.TExtensionServiceEnvInfoRec
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
 import com.tencent.devops.store.pojo.dto.UpdateExtServiceEnvInfoDTO
 import org.jooq.DSLContext
-import org.jooq.Record1
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
