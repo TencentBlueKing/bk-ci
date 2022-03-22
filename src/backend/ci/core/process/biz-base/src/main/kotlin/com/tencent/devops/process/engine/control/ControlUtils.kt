@@ -245,7 +245,10 @@ object ControlUtils {
             JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
                 return !evalExpression(customCondition, buildId, variables, message)
             }
-            else -> return false // 其它类型直接返回不跳过
+            else -> {
+                message.append(runCondition)
+                return false
+            } // 其它类型直接返回不跳过
         }
         for (names in conditions) {
             val key = names.key
@@ -253,9 +256,9 @@ object ControlUtils {
             val existValue = variables[key]
             val env = EnvUtils.parseEnv(value, variables)
             if (env != existValue) {
-                message.append("\nkey=$key, expect=$existValue, actual=$value, (expect != actual)=true, skip=$skip")
                 skip = !skip // 不满足则取反
                 logger.info("[$buildId]|JOB_CONDITION|$skip|$runCondition|key=$key|actual=$existValue|expect=$value")
+                message.append("\nkey=$key, expect=$env, actual=$existValue, (expect!=actual)=true, skip=$skip")
                 break
             }
         }
