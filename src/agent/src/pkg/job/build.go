@@ -213,10 +213,11 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		startCmd := config.GetJava()
 		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 		args := []string{
-			"-Xmx2g -Djava.io.tmpdir=" + tmpDir,
+			"-Djava.io.tmpdir=" + tmpDir,
 			"-Ddevops.agent.error.file=" + systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId),
 			"-Dbuild.type=AGENT",
 			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
+			"-Xmx2g", // #5806 兼容性问题，必须独立一行
 			"-jar",
 			config.BuildAgentJarPath(),
 			getEncodedBuildInfo(buildInfo)}
