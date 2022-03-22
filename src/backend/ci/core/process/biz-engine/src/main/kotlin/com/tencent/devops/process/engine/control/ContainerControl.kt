@@ -140,7 +140,8 @@ class ContainerControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                mutexGroup = controlOption?.mutexGroup
+                mutexGroup = controlOption?.mutexGroup,
+                executeCount = executeCount
             )
             return
         }

@@ -25,30 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.dispatch.api
 
-import com.tencent.devops.common.api.constant.HTTP_500
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
 
-@BkExceptionMapper
-class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(RemoteServiceExceptionMapper::class.java)!!
-    }
+@Api(tags = ["SERVICE_AGENT"], description = "服务-Agent")
+@Path("/service/dipsatch/jobs")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDispatchJobResource {
 
-    override fun toResponse(exception: RemoteServiceException): Response {
-        if (exception.httpStatus >= HTTP_500) {
-            logger.error("Failed with remote service exception: ", exception)
-        } else {
-            logger.warn("remote service exception: ", exception)
-        }
-        return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
-    }
+    @ApiOperation("监控")
+    @POST
+    @Path("/monitor")
+    fun monitor(
+        @ApiParam("agent 事件", required = true)
+        agentStartMonitor: AgentStartMonitor
+    )
 }

@@ -25,30 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.handler
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.common.api.constant.HTTP_500
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.ext.ExceptionMapper
-
-@BkExceptionMapper
-class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
-    companion object {
-        val logger = LoggerFactory.getLogger(RemoteServiceExceptionMapper::class.java)!!
-    }
-
-    override fun toResponse(exception: RemoteServiceException): Response {
-        if (exception.httpStatus >= HTTP_500) {
-            logger.error("Failed with remote service exception: ", exception)
-        } else {
-            logger.warn("remote service exception: ", exception)
-        }
-        return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
-            .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
-    }
-}
+/**
+ * 监听
+ */
+data class AgentStartMonitor(
+    val projectId: String,
+    val pipelineId: String,
+    val userId: String,
+    val buildId: String,
+    val vmSeqId: String,
+    val containerHashId: String?,
+    val executeCount: Int?
+)
