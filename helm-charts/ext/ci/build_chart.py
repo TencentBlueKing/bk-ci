@@ -41,7 +41,7 @@ common_tpl.flush()
 common_tpl.close()
 # service config
 for service_name in os.listdir(config_server):
-    service_path = config_server + service_name
+    service_path = config_server + service_name+'/'
     if os.path.isdir(service_path):
         service_tpl = open(configmap_template_parent+'_'+service_name+'.tpl', 'w')
         service_tpl.write('{{- define "bkci.'+service_name+'.yaml" -}}\n')
