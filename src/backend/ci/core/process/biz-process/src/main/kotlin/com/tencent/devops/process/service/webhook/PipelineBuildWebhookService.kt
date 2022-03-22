@@ -93,6 +93,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
         buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
         pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
+        pipelineBuildCommitsService = applicationContext.getBean(PipelineBuildCommitsService::class.java)
     }
 
     companion object {
