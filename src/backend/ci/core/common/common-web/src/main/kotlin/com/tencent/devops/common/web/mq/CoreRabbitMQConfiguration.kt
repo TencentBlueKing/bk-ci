@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.web.mq.property.CoreRabbitMQProperties
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
@@ -124,6 +125,10 @@ class CoreRabbitMQConfiguration {
         }
         if (preFetchCount != null) {
             factory.setPrefetchCount(preFetchCount)
+        }
+        // 容器中不自动监听队列
+        if (KubernetesUtils.inContainer()) {
+            factory.setAutoStartup(false)
         }
         return factory
     }
