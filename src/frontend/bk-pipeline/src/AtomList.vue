@@ -40,7 +40,10 @@
                 @click="editAtom(atomList.length - 1, true)"
             >
                 <i class="add-plus-icon" />
-                <span v-if="atomList.length === 0">{{ t('addAtom') }}</span>
+                <template v-if="atomList.length === 0">
+                    <span class="add-atom-label">{{ t('addAtom') }}</span>
+                    <Logo class="atom-invalid-icon" name="exclamation-triangle-shape" />
+                </template>
             </span>
         </draggable>
     </section>
@@ -50,6 +53,7 @@
     
     import draggable from 'vuedraggable'
     import Atom from './Atom'
+    import Logo from './Logo'
     import { eventBus } from './util'
     import { localeMixins } from './locale'
     import {
@@ -62,6 +66,7 @@
         name: 'atom-list',
         components: {
             draggable,
+            Logo,
             Atom
         },
         mixins: [localeMixins],
@@ -243,10 +248,15 @@
                 transition: all .4s ease-in-out;
                 z-index: 2;
                 position: static;
+                padding-right: 12px;
                 border-style: dashed;
-                color: $borderWeightColor;
-                border-color: $borderWeightColor;
+                color: $dangerColor;
+                border-color: $dangerColor;
                 border-width: 1px;
+                .add-atom-label {
+                    flex: 1;
+                    color: $borderWeightColor;
+                }
                 .add-plus-icon {
                     margin: 12px 13px;
                 }
