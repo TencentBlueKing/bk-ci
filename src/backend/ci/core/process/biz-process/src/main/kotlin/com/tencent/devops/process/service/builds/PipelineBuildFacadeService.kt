@@ -112,6 +112,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
@@ -144,6 +145,10 @@ class PipelineBuildFacadeService(
     private val client: Client,
     private val pipelineRedisService: PipelineRedisService
 ) {
+
+    @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
+    private var cancelIntervalLimitTime: Int = 60 // 取消间隔时间为60秒
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildFacadeService::class.java)
     }
@@ -1311,7 +1316,8 @@ class PipelineBuildFacadeService(
         page: Int?,
         pageSize: Int?,
         channelCode: ChannelCode,
-        checkPermission: Boolean = true
+        checkPermission: Boolean = true,
+        updateTimeDesc: Boolean? = null
     ): BuildHistoryPage<BuildHistory> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 1000
@@ -1341,7 +1347,13 @@ class PipelineBuildFacadeService(
             }
 
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(projectId, pipelineId)
-            val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(projectId, pipelineId, offset, limit)
+            val newHistoryBuilds = pipelineRuntimeService.listPipelineBuildHistory(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                offset = offset,
+                limit = limit,
+                updateTimeDesc = updateTimeDesc
+            )
             val buildHistories = mutableListOf<BuildHistory>()
             buildHistories.addAll(newHistoryBuilds)
             val count = newTotalCount + 0L
@@ -1762,15 +1774,20 @@ class PipelineBuildFacadeService(
                     errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT
                 )
             }
-            // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作
-            val cancelActionFlag = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toBoolean()
-            if (cancelActionFlag == true) {
+            // 兼容post任务的场景，处于”运行中“的构建可以支持多次取消操作(第二次取消直接强制终止流水线构建)
+            val cancelActionTime = redisOperation.get(BuildUtils.getCancelActionBuildKey(buildId))?.toLong() ?: 0
+            val intervalTime = System.currentTimeMillis() - cancelActionTime
+            var terminateFlag: Boolean = false // 是否强制终止
+            if (intervalTime <= cancelIntervalLimitTime * 1000) {
                 logger.warn("The build $buildId of project $projectId already cancel by user $alreadyCancelUser")
+                val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
                     defaultMessage = "流水线已经被${alreadyCancelUser}取消构建",
-                    params = arrayOf(userId)
+                    params = arrayOf(userId, timeTip.toString())
                 )
+            } else if (cancelActionTime > 0) {
+                terminateFlag = true
             }
 
             val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
@@ -1827,7 +1844,8 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
-                    buildStatus = BuildStatus.CANCELED
+                    buildStatus = BuildStatus.CANCELED,
+                    terminateFlag = terminateFlag
                 )
                 buildDetailService.updateBuildCancelUser(
                     projectId = projectId,

@@ -8,7 +8,7 @@
             </div>
             <div class="params-flex-col">
                 <form-field :required="true" :label="$t('buildNum')" :is-error="errors.has('buildNo')" :error-msg="errors.first('buildNo')">
-                    <vuex-input :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled" input-type="number" name="buildNo" placeholder="BuildNo" v-validate.initial="'required|numeric'" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
+                    <vuex-input :disabled="(isPreview && buildNo.buildNoType !== 'CONSISTENT') || disabled" input-type="number" name="buildNo" placeholder="BK_CI_BUILD_NO" v-validate.initial="'required|numeric'" :value="buildNo.buildNo" :handle-change="handleBuildNoChange" />
                 </form-field>
                 <form-field class="flex-colspan-2 build-no-group" :required="true" :is-error="errors.has('buildNoType')" :error-msg="errors.first('buildNoType')">
                     <enum-input :list="buildNoRules" :disabled="disabled || isPreview" name="buildNoType" v-validate.initial="'required|string'" :value="buildNo.buildNoType" :handle-change="handleBuildNoChange" />

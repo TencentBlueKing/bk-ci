@@ -1,6 +1,17 @@
 <template>
     <section @click="toggleAtomSelectorPopup(false)" v-if="element" class="atom-property-panel">
         <div class="atom-main-content" v-bkloading="{ isLoading: fetchingAtmoModal }">
+            <form-field v-if="atom && !isTriggerContainer(container)" :desc="$t('editPage.stepIdDesc')" label="Step ID" :is-error="errors.has('stepId')" :error-msg="errors.first('stepId')">
+                <vuex-input :value="element.stepId" :clearable="false"
+                    :placeholder="$t('editPage.stepIdPlaceholder')"
+                    name="stepId"
+                    :handle-change="handleUpdateAtom"
+                    :disabled="!editable || showPanelType === 'PAUSE'"
+                    style="width: 282px;margin-top: 6px;"
+                    v-validate.initial="`varRule|unique:${allStepId}`"
+                >
+                </vuex-input>
+            </form-field>
             <div class="atom-type-selector bk-form-row bk-form bk-form-vertical">
                 <div :class="{ 'form-field': true, 'bk-form-inline-item': true, 'is-danger': errors.has('@type') }">
                     <label :title="$t('atom')" class="bk-label">
@@ -248,6 +259,15 @@
                 const { container, elementIndex, getElement } = this
                 const element = getElement(container, elementIndex)
                 return element
+            },
+            allStepId () {
+                const stepIdList = []
+                this.container.elements.forEach(ele => {
+                    if (ele.stepId) {
+                        stepIdList.push(ele.stepId)
+                    }
+                })
+                return stepIdList
             },
             isIncludeRule () {
                 return (this.checkAtomIsIncludeRule(this.ruleList) && !this.isTemplatePanel) || (this.isInstanceTemplate && this.checkAtomIsIncludeRule(this.templateRuleList))

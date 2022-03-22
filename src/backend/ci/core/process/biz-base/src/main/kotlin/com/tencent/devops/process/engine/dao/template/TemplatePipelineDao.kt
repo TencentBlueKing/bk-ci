@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -144,6 +145,31 @@ class TemplatePipelineDao {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
             return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetch()
+        }
+    }
+
+    /**
+     * 获取简要信息(避免大字段)
+     *
+     * @return PIPELINE_ID, TEMPLATE_ID
+     */
+    fun listSimpleByPipelines(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>,
+        instanceType: String? = PipelineInstanceTypeEnum.CONSTRAINT.type,
+        projectId: String? = null
+    ): Result<Record2<String, String>> {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            conditions.add(DELETED.eq(false)) // #4012 模板实例列表需要隐藏回收站的流水线
+            conditions.add(INSTANCE_TYPE.eq(instanceType))
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.select(PIPELINE_ID, TEMPLATE_ID).from(this)
                 .where(conditions)
                 .fetch()
         }

@@ -27,5 +27,10 @@ leaf:
     password: __BK_CI_MYSQL_PASSWORD__
   name: leaf
 
+# 多集群下合法集群标识
 system:
   router: __BK_CI_PROJECT_ROUTER_TAG__
+
+# 生产集群tag标识
+tag:
+  prod: __BK_CI_CONSUL_DISCOVERY_TAG__

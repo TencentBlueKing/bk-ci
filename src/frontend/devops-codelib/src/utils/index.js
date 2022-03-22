@@ -28,7 +28,7 @@ import {
 export function parsePathAlias (type, path, authType, svnType) {
     let reg = ''
     let msg = ''
-    let nameMatchIndex = 3
+    let aliasIndex = 3
     const codelibLocaleObj = window.devops.$i18n.t('codelib')
 
     switch (true) {
@@ -45,31 +45,34 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type) && authType === 'HTTP':
-            reg = /^(http|https)?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
+            reg = /^https?\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)\.git$/i
             msg = `${codelibLocaleObj.httpOrHttpsRule}${type}${codelibLocaleObj.address}`
-            nameMatchIndex = 4
             break
         case isGitLab(type) && authType === 'SSH':
             reg = /^(git@)([\-\.a-z0-9A-Z]+)\:(.*).git$/i
             msg = `${codelibLocaleObj.gitlabSshRule}${type}${codelibLocaleObj.address}`
             break
         case (authType === 'T_GIT_OAUTH') || (isTGit(type) && authType === 'HTTPS'):
-            reg = /^https\:\/\/git(\.code)?(\.tencent)\.com[\:|\/](.*)\.git$/
+            reg = /^https\:\/\/([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitHttpRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 2
             break
         case isTGit(type):
-            reg = /^git@git(\.tencent)(\.com)[\:|\/](.*)\.git$/
+            reg = /^git@([\-\.a-z0-9A-Z]+)[\:|\/](.*)\.git$/
             msg = `${codelibLocaleObj.tgitRule}${type}${codelibLocaleObj.address}`
+            aliasIndex = 2
             break
     }
 
     const matchResult = path.match(reg)
-    
-    return matchResult ? {
-        alias: matchResult[nameMatchIndex]
-    } : {
-        msg
-    }
+
+    return matchResult
+        ? {
+            alias: matchResult[aliasIndex]
+        }
+        : {
+            msg
+        }
 }
 
 export function parsePathRegion (path) {

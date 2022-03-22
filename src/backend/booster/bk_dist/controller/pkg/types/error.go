@@ -35,4 +35,5 @@ var (
 	ErrTaskAlreadyReleased          = fmt.Errorf("task already released")
 	ErrSlotsLockFailed              = fmt.Errorf("slots lock failed`")
 	ErrNoWaitingTask                = fmt.Errorf("no waitting task")
+	ErrFileLock                     = fmt.Errorf("lock file failed")
 )

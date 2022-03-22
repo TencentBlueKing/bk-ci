@@ -44,5 +44,7 @@ data class CredentialInfo(
     @ApiModelProperty("加密后经过Base64编码的凭据", required = true)
     val v3: String? = null,
     @ApiModelProperty("加密后经过Base64编码的凭据", required = true)
-    val v4: String? = null
+    val v4: String? = null,
+    @ApiModelProperty("当前凭证是否允许跨项目使用")
+    val allowAcrossProject: Boolean = false
 )

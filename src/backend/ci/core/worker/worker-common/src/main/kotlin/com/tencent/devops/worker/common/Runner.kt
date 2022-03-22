@@ -132,7 +132,8 @@ object Runner {
         LoggerService.start()
         val variables = buildVariables.variablesWithType
         val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
-        LoggerService.executeCount = retryCount.toInt() + 1
+        val executeCount = retryCount.toInt() + 1
+        LoggerService.executeCount = executeCount
         LoggerService.jobId = buildVariables.containerHashId
         LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
         LoggerService.buildVariables = buildVariables
@@ -142,7 +143,7 @@ object Runner {
         showSystemLog()
         showRuntimeEnvs(buildVariables.variablesWithType)
 
-        Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
+        Heartbeat.start(buildVariables.timeoutMills, executeCount) // #2043 添加Job超时监控
 
         val workspaceAndLogPath = workspaceInterface.getWorkspaceAndLogDir(
             variables = buildVariables.variablesWithType.associate { it.key to it.value.toString() },

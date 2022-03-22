@@ -25,30 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.stream
+package com.tencent.devops.common.webhook.enums.code.tgit
 
-import com.tencent.devops.common.auth.api.AuthPermission
-
-interface IStreamPermissionValidateService {
-
-    /**
-     * 是否是开源项目
-     * projectCode: stream侧项目编码
-     */
-    fun isPublicProject(projectCode: String): Boolean
-
-    /**
-     * 是否是项目成员
-     * projectCode: stream侧项目编码
-     * userId: 待校验用户
-     */
-    fun isProjectMember(projectCode: String, userId: String): Pair<Boolean/**是否为项目成员*/, Boolean/**是否为developer以上权限*/>
-
-    /**
-     * 扩展权限(如本地管理员之类的特殊逻辑)
-     *  projectCode: stream侧项目编码
-     * userId: 待校验用户
-     * action: stream内定义的操作类型
-     */
-    fun extPermission(projectCode: String, userId: String, action: AuthPermission, resourceType: String): Boolean
+/**
+ * git review事件event字段
+ * create: 创建
+ * invite: 邀请
+ * require_change: 要求修改
+ * reopen: 重开
+ * approve: 通过
+ * deny: 拒绝
+ * close: 关闭
+ */
+enum class TGitReviewEventKind(val value: String) {
+    CREATE("create"),
+    INVITE("invite"),
+    REQUIRE_CHANGE("require_change"),
+    REOPEN("reopen"),
+    APPROVE("approve"),
+    DENY("deny"),
+    CLOSE("close")
+    ;
 }

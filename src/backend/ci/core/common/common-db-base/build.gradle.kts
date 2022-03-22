@@ -25,41 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.git
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.webhook.pojo.code.github.GithubUser
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitIssue(
-    val user: GithubUser,
-    val repository: GitRepository,
-    @JsonProperty("object_attributes")
-    val objectAttributes: GitIssueAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "issue"
-    }
+dependencies {
+    api("org.springframework.boot:spring-boot-starter-jooq")
+    api("com.zaxxer:HikariCP")
+    api("org.jooq:jooq")
+    api("mysql:mysql-connector-java")
 }
-
-data class GitIssueAttributes(
-    val id: Long,
-    val title: String,
-    @JsonProperty("assignee_id")
-    val assigneeId: String,
-    @JsonProperty("author_id")
-    val authorId: String,
-    @JsonProperty("project_id")
-    val projectId: String,
-    val position: Long,
-    @JsonProperty("branch_name")
-    val branchName: String? = null,
-    val description: String? = null,
-    @JsonProperty("milestone_id")
-    val milestoneId: String? = null,
-    val state: String,
-    val iid: String,
-    val url: String,
-    val action: String
-)

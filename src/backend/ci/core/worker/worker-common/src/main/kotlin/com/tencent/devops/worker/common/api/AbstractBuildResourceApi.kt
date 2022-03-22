@@ -198,7 +198,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             body.byteStream().use { bs ->
                 Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
             }
-        } catch (e: SocketTimeoutException) {
+        } catch (e: Exception) {
             logger.warn("Failed to copy download body, try to retry.")
             if (retryCount > 0) {
                 download(response, destPath, retryCount - 1)

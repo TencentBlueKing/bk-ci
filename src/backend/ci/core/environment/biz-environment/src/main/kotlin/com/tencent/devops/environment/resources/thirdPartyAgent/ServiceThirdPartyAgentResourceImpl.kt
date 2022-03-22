@@ -119,7 +119,7 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        val pipelineRefs = agentPipelineService.listPipelineRef(userId, projectId, nodeHashId)
+        val pipelineRefs = agentPipelineService.listPipelineRef(projectId, nodeHashId)
         return Result(sortPipelineRef(pipelineRefs, sortBy, sortDirection))
     }
 

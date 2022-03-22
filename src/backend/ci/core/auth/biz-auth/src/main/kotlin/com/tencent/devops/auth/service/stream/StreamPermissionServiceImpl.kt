@@ -31,11 +31,8 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.ActionTypeUtils
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
-class StreamPermissionServiceImpl @Autowired constructor(
-    val IStreamPermissionValidateService: IStreamPermissionValidateService
-) : PermissionService {
+abstract class StreamPermissionServiceImpl : PermissionService {
     override fun validateUserActionPermission(
         userId: String,
         action: String
@@ -51,7 +48,7 @@ class StreamPermissionServiceImpl @Autowired constructor(
         resourceType: String?
     ): Boolean {
         // 如果有特殊权限,以特殊权限的校验结果为准
-        val extPermission = IStreamPermissionValidateService.extPermission(
+        val extPermission = extPermission(
             projectCode = projectCode,
             userId = userId,
             action = AuthPermission.get(action),
@@ -60,8 +57,8 @@ class StreamPermissionServiceImpl @Autowired constructor(
         if (extPermission) {
             return extPermission
         }
-        val projectType = IStreamPermissionValidateService.isPublicProject(projectCode)
-        val projectMemberCheck = IStreamPermissionValidateService.isProjectMember(projectCode, userId)
+        val projectType = isPublicProject(projectCode)
+        val projectMemberCheck = isProjectMember(projectCode, userId)
         val actionType = ActionTypeUtils.getActionType(action)
         logger.info("validete $userId|$projectCode|$action|$resourceType|$projectType|$projectMemberCheck")
         if (action == null) {
@@ -92,7 +89,15 @@ class StreamPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
-        // stream场景下不会使用到此场景. 做默认实现
+        // 校验项目权限， 有就返回全部
+        if (validateUserResourcePermission(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType
+        )) {
+            return arrayListOf("*")
+        }
         return emptyList()
     }
 
@@ -102,9 +107,42 @@ class StreamPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
-        // stream场景下不会使用到此场景. 做默认实现
-        return emptyMap()
+        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        actions.forEach {
+            val actionList = getUserResourceByAction(userId, it, projectCode, resourceType)
+            instanceMap[AuthPermission.get(it)] = actionList
+        }
+        return instanceMap
     }
+
+    /**
+     * 是否是开源项目
+     * projectCode: stream侧项目编码
+     */
+    abstract fun isPublicProject(projectCode: String): Boolean
+
+    /**
+     * 是否是项目成员
+     * projectCode: stream侧项目编码
+     * userId: 待校验用户
+     */
+    abstract fun isProjectMember(
+        projectCode: String,
+        userId: String
+    ): Pair<Boolean/**是否为项目成员*/, Boolean/**是否为developer以上权限*/>
+
+    /**
+     * 扩展权限(如本地管理员之类的特殊逻辑)
+     *  projectCode: stream侧项目编码
+     * userId: 待校验用户
+     * action: stream内定义的操作类型
+     */
+    abstract fun extPermission(
+        projectCode: String,
+        userId: String,
+        action: AuthPermission,
+        resourceType: String
+    ): Boolean
 
     companion object {
         val logger = LoggerFactory.getLogger(StreamPermissionServiceImpl::class.java)

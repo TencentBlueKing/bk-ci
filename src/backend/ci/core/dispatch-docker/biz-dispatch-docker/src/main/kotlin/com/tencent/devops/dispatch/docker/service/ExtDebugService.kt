@@ -25,21 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.dispatch.docker.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+interface ExtDebugService {
+    fun startDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String
+    ): String?
 
-@ApiModel("项目的流水线回调配置")
-data class ProjectPipelineCallBack(
-    @ApiModelProperty("流水线id", required = false)
-    val id: Long? = null,
-    @ApiModelProperty("项目id", required = false)
-    val projectId: String,
-    @ApiModelProperty("回调url地址", required = false)
-    val callBackUrl: String,
-    @ApiModelProperty("事件", required = false)
-    val events: String,
-    @ApiModelProperty("密钥", required = false)
-    val secretToken: String?
-)
+    fun getWebsocketUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String?,
+        vmSeqId: String,
+        containerId: String
+    ): String?
+
+    fun stopDebug(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Boolean
+}

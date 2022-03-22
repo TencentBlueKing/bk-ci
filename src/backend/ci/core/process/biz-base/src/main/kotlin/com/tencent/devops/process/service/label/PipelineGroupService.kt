@@ -450,7 +450,7 @@ class PipelineGroupService @Autowired constructor(
     }
 
     fun getPipelinesGroupLabel(
-        pipelineIds: List<String>,
+        pipelineIds: Collection<String>,
         projectId: String
     ): Map<String, List<PipelineGroupLabels>> {
         val pipelineLabelRelRecords = pipelineLabelPipelineDao.listPipelineLabelRels(dslContext, pipelineIds, projectId)

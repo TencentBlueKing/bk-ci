@@ -162,6 +162,37 @@ class PipelineResDao {
         }
     }
 
+    /**
+     * 获取最新的modelString
+     *
+     * @return Map<PIPELINE_ID, MODEL>
+     */
+    fun listModelString(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): Map<String, String> {
+        with(T_PIPELINE_RESOURCE) {
+            val record3s = dslContext.select(PIPELINE_ID, MODEL, VERSION)
+                .from(this)
+                .where(PIPELINE_ID.`in`(pipelineIds).and(PROJECT_ID.eq(projectId)))
+                .fetch()
+            if (record3s.isEmpty()) {
+                return emptyMap()
+            }
+            val result = mutableMapOf<String, String>()
+            val maxVersionMap = mutableMapOf<String, Int>()
+            record3s.forEach {
+                val maxVersion = maxVersionMap[it.get(PIPELINE_ID)]
+                if (maxVersion == null || maxVersion < it.get(VERSION)) {
+                    maxVersionMap[it.get(PIPELINE_ID)] = it.get(VERSION)
+                    result[it.get(PIPELINE_ID)] = it.get(MODEL)
+                }
+            }
+            return result
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineResDao::class.java)
     }

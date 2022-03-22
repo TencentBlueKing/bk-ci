@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -60,8 +61,18 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : ServiceBuildResource {
+    override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
+                ?: throw ParamBlankException("Invalid buildId")
+        )
+    }
 
     override fun setVMStatus(
         projectId: String,
@@ -244,13 +255,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId, projectId, pipelineId,
-            page, pageSize, channelCode, ChannelCode.isNeedAuth(channelCode)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateTimeDesc = updateTimeDesc
         )
         return Result(result)
     }
@@ -577,12 +595,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
     }
 
     override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
-        return Result(pipelineBuildFacadeService.buildRestart(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId
-        ))
+        return Result(
+            pipelineBuildFacadeService.buildRestart(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        )
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

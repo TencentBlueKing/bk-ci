@@ -60,7 +60,8 @@ interface ArchiveFileService {
         fileName: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean? = false
     ): String
 
     /**
@@ -74,7 +75,8 @@ interface ArchiveFileService {
         filePath: String? = null,
         fileType: FileTypeEnum? = null,
         props: Map<String, String?>? = null,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean? = false
     ): String
 
     /**

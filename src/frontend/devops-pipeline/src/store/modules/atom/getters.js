@@ -167,6 +167,12 @@ export default {
             let manualTriggerCount = 0
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
+
+
+            if (pipelineSetting && !pipelineSetting.pipelineName) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
+            }
+           
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }

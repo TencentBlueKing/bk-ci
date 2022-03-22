@@ -46,10 +46,10 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
-import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -157,8 +157,18 @@ class StartActionTaskContainerCmd(
      * 如遇到[BuildStatus.isReadyToRun]待执行任务，则检查是否可以执行，
      *  包括「是否条件跳过」「当前是否构建机启动失败」「Post Action检查」等等，通过方能成为待执行的任务
      */
-    @Suppress("ComplexMethod", "NestedBlockDepth")
+    @Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod")
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
+        val contextMap: Map<String, String> by lazy {
+            pipelineContextService.buildContext(
+                projectId = containerContext.container.projectId,
+                buildId = containerContext.container.buildId,
+                stageId = containerContext.container.stageId,
+                containerId = containerContext.container.containerId,
+                taskId = null,
+                variables = containerContext.variables
+            )
+        }
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
@@ -195,7 +205,8 @@ class StartActionTaskContainerCmd(
                     index = index,
                     hasFailedTaskInSuccessContainer = continueWhenFailure,
                     containerContext = containerContext,
-                    needTerminate = needTerminate
+                    needTerminate = needTerminate,
+                    contextMap = contextMap
                 )
             } else if (t.status == BuildStatus.SKIP && t.endTime == null) { // 手动跳过功能，暂时没有好的解决办法，可改进
                 buildLogPrinter.addRedLine(
@@ -213,9 +224,11 @@ class StartActionTaskContainerCmd(
             }
         }
 
-        LOG.info("ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
-            "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-            "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate")
+        LOG.info(
+            "ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
+                "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
+                "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
+        )
 
         if (!needTerminate && breakFlag) {
             // #3400 暂停场景下，Job超时引起的终止，以及FastKill 等对于要求终止的，未必有后续执行，需要结束而不是中断
@@ -260,17 +273,11 @@ class StartActionTaskContainerCmd(
         index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
         containerContext: ContainerContext,
-        needTerminate: Boolean
+        needTerminate: Boolean,
+        contextMap: Map<String, String>
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val projectId = containerContext.container.projectId
-        val contextMap = pipelineContextService.buildContext(
-            projectId = projectId,
-            buildId = buildId,
-            containerId = containerId,
-            variables = containerContext.variables
-        )
         if (containerContext.event.actionType == ActionType.END) {
             containerContext.buildStatus = BuildStatus.CANCELED
         }
@@ -295,7 +302,8 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
-                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
+                buildLogPrinter.addLine(
+                    executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
                     jobId = containerHashId
                 )
@@ -320,7 +328,8 @@ class StartActionTaskContainerCmd(
                 )
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 // 打印构建日志
-                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
+                buildLogPrinter.addLine(
+                    executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
                     jobId = containerHashId
                 )
@@ -379,8 +388,10 @@ class StartActionTaskContainerCmd(
 
         if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
             toDoTask = pipelineBuildTask
-            LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
+            LOG.info(
+                "ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
+                    "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
+            )
             val endTask = containerContext.containerTasks
                 .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
                 .getOrNull(0)

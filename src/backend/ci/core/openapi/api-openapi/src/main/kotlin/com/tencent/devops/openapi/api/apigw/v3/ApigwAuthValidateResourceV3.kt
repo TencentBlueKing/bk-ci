@@ -25,7 +25,10 @@ import javax.ws.rs.core.MediaType
 interface ApigwAuthValidateResourceV3 {
     @GET
     @Path("/projects/{projectId}/isProjectUsers")
-    @ApiOperation("判断是否某个项目中某个组角色的成员")
+    @ApiOperation(
+        "判断是否某个项目中某个组角色的成员",
+        tags = ["v3_app_permission_project_check", "v3_user_permission_project_check"]
+    )
     fun isProjectUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

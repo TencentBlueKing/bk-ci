@@ -27,6 +27,14 @@ BEGIN
                         AND COLUMN_NAME = 'UPDATE_TIME') THEN
         ALTER table T_TEMPLATE add column `UPDATE_TIME` datetime(3) DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间';
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                        AND COLUMN_NAME = 'UPDATE_TIME') THEN
+        ALTER table T_PIPELINE_BUILD_HISTORY add column `UPDATE_TIME` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+    END IF;
 
     COMMIT;
 END <CI_UBF>

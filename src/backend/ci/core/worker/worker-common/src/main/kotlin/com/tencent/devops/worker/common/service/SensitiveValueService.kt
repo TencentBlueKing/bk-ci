@@ -25,26 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.worker.common.service
 
-import com.tencent.devops.auth.service.stream.IStreamPermissionValidateService
-import com.tencent.devops.common.auth.api.AuthPermission
+import org.slf4j.LoggerFactory
 
-class SimpleIStreamPermissionValidateImpl : IStreamPermissionValidateService {
-    override fun isPublicProject(projectCode: String): Boolean {
-        return true
+object SensitiveValueService {
+
+    private val logger = LoggerFactory.getLogger(SensitiveValueService::class.java)
+
+    /**
+     * 每个Job内维护的敏感信息集合
+     */
+    val sensitiveStringSet = mutableSetOf<String>()
+
+    fun addSensitiveValues(sensitiveValues: List<String>?) {
+        sensitiveValues?.let {
+            logger.info("Append sensitive string set")
+            sensitiveStringSet.addAll(it)
+            logger.info("Sensitive string set size: ${sensitiveStringSet.size}")
+        }
     }
 
-    override fun isProjectMember(projectCode: String, userId: String): Pair<Boolean, Boolean> {
-        return Pair(first = true, second = true)
-    }
-
-    override fun extPermission(
-        projectCode: String,
-        userId: String,
-        action: AuthPermission,
-        resourceType: String
-    ): Boolean {
+    fun matchSensitiveValue(value: String): Boolean {
+        sensitiveStringSet.forEach { sensitive ->
+            if (value.contains(sensitive)) return true
+        }
         return false
     }
 }

@@ -54,6 +54,8 @@ data class CodeGitWebHookTriggerElement(
     val includePaths: String?,
     @ApiModelProperty("excludePaths", required = false)
     val excludePaths: String?,
+    @ApiModelProperty("用户白名单", required = false)
+    val includeUsers: List<String>? = null,
     @ApiModelProperty("excludeUsers", required = false)
     val excludeUsers: List<String>?,
     @ApiModelProperty("eventType", required = false)
@@ -68,6 +70,8 @@ data class CodeGitWebHookTriggerElement(
     val tagName: String? = null,
     @ApiModelProperty("excludeTagName", required = false)
     val excludeTagName: String? = null,
+    @ApiModelProperty("tag从哪条分支创建", required = false)
+    val fromBranches: String? = null,
     @ApiModelProperty("excludeSourceBranchName", required = false)
     val excludeSourceBranchName: String? = null,
     @ApiModelProperty("includeSourceBranchName", required = false)
@@ -76,8 +80,18 @@ data class CodeGitWebHookTriggerElement(
     val webhookQueue: Boolean? = false,
     @ApiModelProperty("code review 状态", required = false)
     val includeCrState: List<String>? = null,
+    @ApiModelProperty("code review 类型", required = false)
+    val includeCrTypes: List<String>? = null,
+    @ApiModelProperty("code note comment", required = false)
+    val includeNoteComment: List<String>? = null,
+    @ApiModelProperty("code note 类型", required = false)
+    val includeNoteTypes: List<String>? = null,
     @ApiModelProperty("是否启用回写")
-    val enableCheck: Boolean? = true
+    val enableCheck: Boolean? = true,
+    @ApiModelProperty("issue事件action")
+    val includeIssueAction: List<String>? = null,
+    @ApiModelProperty("mr事件action")
+    val includeMrAction: List<String>? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitWebHookTrigger"

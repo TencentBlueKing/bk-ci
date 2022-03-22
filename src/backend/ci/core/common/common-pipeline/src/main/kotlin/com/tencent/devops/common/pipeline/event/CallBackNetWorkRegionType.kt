@@ -25,22 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.filter
+package com.tencent.devops.common.pipeline.event
 
-import org.slf4j.LoggerFactory
-
-class CodeReviewStateFilter(
-    private val pipelineId: String,
-    private val triggerOnState: String,
-    private val includedState: List<String>
-) : WebhookFilter {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CodeReviewStateFilter::class.java)
-    }
-
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        logger.info("$pipelineId|triggerOnState:$triggerOnState|includedState:$includedState|code review state filter")
-        return includedState.isEmpty() || includedState.contains(triggerOnState)
-    }
+enum class CallBackNetWorkRegionType {
+    DEVNET,
+    OSS,
+    IDC
 }

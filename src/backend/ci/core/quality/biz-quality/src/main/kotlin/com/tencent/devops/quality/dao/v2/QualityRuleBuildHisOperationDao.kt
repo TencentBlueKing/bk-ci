@@ -11,6 +11,7 @@ import java.time.LocalDateTime
 @Repository
 @Suppress("ALL")
 class QualityRuleBuildHisOperationDao @Autowired constructor (
+    // todo remove
     private val innerDslContext: DSLContext
 ) {
     fun create(
@@ -44,6 +45,7 @@ class QualityRuleBuildHisOperationDao @Autowired constructor (
         }
     }
 
+    // todo remove
     fun listStageRules(dslContext: DSLContext, stageId: String): Result<TQualityRuleBuildHisOperationRecord> {
         return with(TQualityRuleBuildHisOperation.T_QUALITY_RULE_BUILD_HIS_OPERATION) {
             dslContext.selectFrom(this)

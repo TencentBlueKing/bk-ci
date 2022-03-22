@@ -161,6 +161,9 @@ object CommandLineUtils {
             return
         }
         appendVariableToFile(tmpLine, workspace, resultLogFile)
+        if (stepId.isNullOrBlank()) {
+            return
+        }
         appendOutputToFile(tmpLine, workspace, resultLogFile, stepId)
     }
 
@@ -186,14 +189,14 @@ object CommandLineUtils {
         tmpLine: String,
         workspace: File?,
         resultLogFile: String,
-        stepId: String?
+        stepId: String
     ) {
         val pattenOutput = "::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
             val value = tmpLine.removePrefix(prefixOutput)
             val keyValue = value.split("::")
-            val keyPrefix = stepId?.let { "steps.$stepId.outputs." }
+            val keyPrefix = "steps.$stepId.outputs."
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
                     "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"

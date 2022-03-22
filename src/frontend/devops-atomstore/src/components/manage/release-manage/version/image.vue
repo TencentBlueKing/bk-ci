@@ -23,6 +23,7 @@
                     <span>{{ props.row.version || 'init' }}</span>
                 </template>
             </bk-table-column>
+            <bk-table-column :label="$t('store.镜像Tag')" prop="imageTag"></bk-table-column>
             <bk-table-column :label="$t('store.状态')" prop="imageStatus" :formatter="statusFormatter"></bk-table-column>
             <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
             <bk-table-column :label="$t('store.创建时间')" prop="createTime" :formatter="convertTime"></bk-table-column>

@@ -32,6 +32,7 @@ interface PipelineUrlBean {
     /**
      * 生成构建详情访问链接
      */
+    @Suppress("LongParameterList")
     fun genBuildDetailUrl(
         projectCode: String,
         pipelineId: String,

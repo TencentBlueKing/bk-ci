@@ -91,7 +91,7 @@
 <script>
     import StatusIcon from './StatusIcon'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { coverTimer, hashID } from '@/utils/util'
+    import { coverTimer, hashID, randomString } from '@/utils/util'
     import draggable from 'vuedraggable'
     import Logo from '@/components/Logo'
     import CheckAtomDialog from './CheckAtomDialog'
@@ -356,10 +356,11 @@
                     return
                 }
                 try {
-                    const { id, ...element } = this.container.elements[atomIndex]
+                    const { id, stepId, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
                         ...element,
-                        id: `e-${hashID(32)}`
+                        id: `e-${hashID(32)}`,
+                        stepId: stepId ? `step_${randomString(3)}` : ''
                     })))
                     this.setPipelineEditing(true)
                 } catch (e) {

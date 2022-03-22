@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -461,4 +462,49 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<GitProjectGroupInfo>
+
+    @ApiOperation("获取两次提交的差异文件列表")
+    @GET
+    @Path("/getChangeFileList")
+    fun getChangeFileList(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "旧commit")
+        @QueryParam("from")
+        from: String,
+        @ApiParam(value = "新commit")
+        @QueryParam("to")
+        to: String,
+        @ApiParam(value = "true：两个点比较差异，false：三个点比较差异。默认是 false")
+        @QueryParam("straight")
+        straight: Boolean? = false,
+        @ApiParam(value = "页码")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页大小")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<List<ChangeFileInfo>>
+
+    @ApiOperation("获取指定项目详细信息")
+    @GET
+    @Path("/getProjectInfo")
+    fun getProjectInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<GitProjectInfo?>
 }

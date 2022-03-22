@@ -25,10 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.enums
+package com.tencent.devops.common.db.config
 
-enum class CallBackNetWorkRegionType {
-    DEVNET,
-    OSS,
-    IDC
+import com.tencent.devops.common.db.listener.BkJooqExecuteListener
+import org.jooq.impl.DefaultExecuteListenerProvider
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class DBBaseConfiguration {
+
+    @Bean
+    fun bkJooqExecuteListenerProvider(): DefaultExecuteListenerProvider {
+        return DefaultExecuteListenerProvider(BkJooqExecuteListener())
+    }
 }

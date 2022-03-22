@@ -45,6 +45,8 @@ const val JOB_OS_CONTEXT = "job.os"
 
 const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
 
+const val SLAVE_AGENT_PREPARE_START_FILE = "devops.slave.agent.prepare.start.file"
+
 const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
 
 const val JAVA_PATH_ENV = "bk_java_path"
@@ -70,3 +72,5 @@ const val LOG_TASK_LINE_LIMIT = 1000000
 const val LOG_FILE_LENGTH_LIMIT = 1073741824 // 1 GB = 1073741824 Byte
 
 val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
+
+const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"

@@ -43,6 +43,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
@@ -59,6 +60,7 @@ class DispatchService constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val gateway: String?,
     private val client: Client,
+    private val channelUtils: ChannelUtils,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
@@ -200,7 +202,7 @@ class DispatchService constructor(
                     vmSeqId = vmSeqId,
                     actionType = actionType,
                     retryCount = retryTime.toLong(),
-                    channelCode = ChannelCode.BS,
+                    channelCode = channelUtils.getChannelCode(),
                     buildType = routeKeySuffix!!,
                     startTime = startTime,
                     stopTime = stopTime,

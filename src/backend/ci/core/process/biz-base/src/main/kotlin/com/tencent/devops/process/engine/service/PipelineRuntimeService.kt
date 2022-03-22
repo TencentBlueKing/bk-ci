@@ -69,6 +69,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -322,7 +323,13 @@ class PipelineRuntimeService @Autowired constructor(
         return ret
     }
 
-    fun listPipelineBuildHistory(projectId: String, pipelineId: String, offset: Int, limit: Int): List<BuildHistory> {
+    fun listPipelineBuildHistory(
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int,
+        updateTimeDesc: Boolean? = null
+    ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
@@ -330,7 +337,8 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             offset = offset,
-            limit = if (limit < 0) 1000 else limit
+            limit = if (limit < 0) 1000 else limit,
+            updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -511,7 +519,8 @@ class PipelineRuntimeService @Autowired constructor(
                     startType = StartType.toStartType(trigger),
                     channelCode = ChannelCode.valueOf(channel)
                 ),
-                buildNumAlias = buildNumAlias
+                buildNumAlias = buildNumAlias,
+                updateTime = updateTime.timestampmilli()
             )
         }
     }
@@ -625,9 +634,12 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        terminateFlag: Boolean = false
     ): Boolean {
-        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
+        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 发送取消事件
+        val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
@@ -636,14 +648,16 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                status = buildStatus
+                status = buildStatus,
+                actionType = actionType
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                buildId = buildId
+                buildId = buildId,
+                actionType = actionType
             )
         )
         // 给未结束的job发送心跳监控事件
@@ -794,8 +808,7 @@ class PipelineRuntimeService @Autowired constructor(
                             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                             container = container,
                             retryStartTaskId = context.retryStartTaskId
-                        )
-                    ) {
+                        )) {
 
                         logger.info("[$buildId|RETRY_SKIP_JOB|j(${container.id!!})|${container.name}")
                         context.containerSeq++
@@ -910,6 +923,17 @@ class PipelineRuntimeService @Autowired constructor(
                 buildVariables.add(BuildParameters(PIPELINE_BUILD_ID, buildId, BuildFormPropertyType.STRING))
                 buildVariables.add(BuildParameters(PROJECT_NAME, pipelineInfo.projectId, BuildFormPropertyType.STRING))
                 buildVariables.add(BuildParameters(PROJECT_NAME_CHINESE, projectName, BuildFormPropertyType.STRING))
+                val bizId = MDC.get(TraceTag.BIZID)
+                if (!bizId.isNullOrEmpty()) { // 保存链路信息
+                    buildVariables.add(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, bizId))
+                }
+                // 写入BuildNo
+                if (
+                    currentBuildNo != null && buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT &&
+                    context.actionType == ActionType.START
+                ) {
+                    buildVariables.add(BuildParameters(BUILD_NO, currentBuildNo.toString()))
+                }
 
                 buildVariableService.batchSetVariable(
                     dslContext = transactionContext,
@@ -1031,18 +1055,7 @@ class PipelineRuntimeService @Autowired constructor(
                         model = JsonUtil.toJson(fullModel, formatted = false),
                         buildStatus = BuildStatus.QUEUE
                     )
-                    // 写入BuildNo
-                    if (buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT && currentBuildNo != null &&
-                        context.actionType == ActionType.START
-                    ) {
-                        buildVariableService.setVariable(
-                            projectId = pipelineInfo.projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            varName = BUILD_NO,
-                            varValue = currentBuildNo.toString()
-                        )
-                    }
+
                     // 设置流水线每日构建次数
                     pipelineSettingService.setCurrentDayBuildCount(
                         transactionContext = transactionContext,
@@ -1051,37 +1064,25 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
 
-                // 保存链路信息
-                addTraceVar(
-                    transactionContext = transactionContext,
-                    projectId = pipelineInfo.projectId,
-                    pipelineId = pipelineInfo.pipelineId,
-                    buildId = buildId
-                )
-
-                // 上一次存在的需要重试的任务直接Update，否则就插入
-                if (updateTaskExistsRecord.isEmpty()) {
-                    // 保持要执行的任务
-                    logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
-                    pipelineTaskService.batchSave(transactionContext, buildTaskList)
-                } else {
-                    logger.info(
-                        "batch store to pipelineBuildTask, " +
-                            "updateExistsRecord size: ${updateTaskExistsRecord.size}"
-                    )
+                if (updateTaskExistsRecord.isNotEmpty()) {
                     pipelineTaskService.batchUpdate(transactionContext, updateTaskExistsRecord)
                 }
-
-                if (updateContainerExistsRecord.isEmpty()) {
-                    pipelineContainerService.batchSave(transactionContext, buildContainers)
-                } else {
-                    pipelineContainerService.batchUpdate(transactionContext, updateContainerExistsRecord)
+                if (buildTaskList.isNotEmpty()) {
+                    pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 }
 
-                if (updateStageExistsRecord.isEmpty()) {
-                    pipelineStageService.batchSave(transactionContext, buildStages)
-                } else {
+                if (updateContainerExistsRecord.isNotEmpty()) {
+                    pipelineContainerService.batchUpdate(transactionContext, updateContainerExistsRecord)
+                }
+                if (buildContainers.isNotEmpty()) {
+                    pipelineContainerService.batchSave(transactionContext, buildContainers)
+                }
+
+                if (updateStageExistsRecord.isNotEmpty()) {
                     pipelineStageService.batchUpdate(transactionContext, updateStageExistsRecord)
+                }
+                if (buildStages.isNotEmpty()) {
+                    pipelineStageService.batchSave(transactionContext, buildStages)
                 }
                 // 排队计数+1
                 pipelineBuildSummaryDao.updateQueueCount(
@@ -1157,7 +1158,8 @@ class PipelineRuntimeService @Autowired constructor(
                     params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
-                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?,
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?
             ),
             formatted = false
         )
@@ -1636,16 +1638,6 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         ) == 1
-    }
-
-    private fun addTraceVar(transactionContext: DSLContext, projectId: String, pipelineId: String, buildId: String) {
-        buildVariableService.batchSetVariable(
-            dslContext = transactionContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            variables = listOf(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, MDC.get(TraceTag.BIZID)))
-        )
     }
 
     fun updateBuildHistoryStageState(projectId: String, buildId: String, allStageStatus: List<BuildStageStatus>) {
