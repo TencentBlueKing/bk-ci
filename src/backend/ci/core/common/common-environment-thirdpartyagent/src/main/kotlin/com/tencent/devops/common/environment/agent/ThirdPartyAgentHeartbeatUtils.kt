@@ -46,9 +46,8 @@ class ThirdPartyAgentHeartbeatUtils constructor(
 
     fun saveNewHeartbeat(projectId: String, agentId: Long, newHeartbeatInfo: NewHeartbeatInfo) {
         // #5806 设置数量
-        if (newHeartbeatInfo.parallelTaskCount == newHeartbeatInfo.taskList.size) {
-            newHeartbeatInfo.busyTaskSize = newHeartbeatInfo.parallelTaskCount
-        }
+        newHeartbeatInfo.busyTaskSize = newHeartbeatInfo.taskList.size
+
         // #5806 防止被塞爆，数量过大就不支持展示
         if (newHeartbeatInfo.taskList.size > MAX_TASKS) {
             newHeartbeatInfo.taskList = newHeartbeatInfo.taskList.subList(0, MAX_TASKS)
