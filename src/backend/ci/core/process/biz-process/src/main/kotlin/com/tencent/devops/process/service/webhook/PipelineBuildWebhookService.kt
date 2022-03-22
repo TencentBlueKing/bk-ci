@@ -435,7 +435,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             .generateSegmentId("PIPELINE_WEBHOOK_BUILD_LOG_DETAIL").data
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
-                    logger.info("next start save commit")
                     pipelineBuildCommitsService.create(
                         projectId = projectId,
                         pipelineId = pipelineId,

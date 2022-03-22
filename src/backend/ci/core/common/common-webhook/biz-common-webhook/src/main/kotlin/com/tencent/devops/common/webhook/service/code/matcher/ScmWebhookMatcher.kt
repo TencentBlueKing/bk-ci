@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.GitCommit
+import org.slf4j.LoggerFactory
 
 @Suppress("TooManyFunctions")
 interface ScmWebhookMatcher {
@@ -88,5 +89,12 @@ interface ScmWebhookMatcher {
         repository: Repository,
         page: Int,
         size: Int
-    ) = emptyList<GitCommit>()
+    ):List<GitCommit> {
+        logger.info("defult func")
+        return emptyList()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ScmWebhookMatcher::class.java)
+    }
 }
