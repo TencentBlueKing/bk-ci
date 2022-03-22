@@ -33,7 +33,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
@@ -44,8 +44,8 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBkDataResource {
 
-    @ApiOperation("获取构建历史")
-    @GET
+    @ApiOperation("查询数据平台数据")
+    @POST
     @Path("/data/query")
     fun queryData(
         @ApiParam("数据平台查询接口参数", required = true)
