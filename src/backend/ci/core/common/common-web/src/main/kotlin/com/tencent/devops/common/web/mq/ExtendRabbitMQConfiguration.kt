@@ -118,7 +118,7 @@ class ExtendRabbitMQConfiguration {
         if (preFetchCount != null) {
             factory.setPrefetchCount(preFetchCount)
         }
-        // 容器中不自动监听队列
+        // TODO 后面删掉
         if (KubernetesUtils.inContainer()) {
             factory.setAutoStartup(false)
         }

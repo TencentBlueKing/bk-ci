@@ -29,6 +29,7 @@ package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.service.utils.KubernetesUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -55,8 +56,10 @@ object Tools {
         maxConcurrency: Int,
         prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
-        logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
-            "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
+        logger.info(
+            "createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
+                    "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval"
+        )
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
         return createSimpleMessageListenerContainerByAdapter(
@@ -93,6 +96,10 @@ object Tools {
         container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
         container.setPrefetchCount(prefetchCount)
+        // TODO 后面删掉
+        if (KubernetesUtils.inContainer()) {
+            container.isAutoStartup = false
+        }
         return container
     }
 }

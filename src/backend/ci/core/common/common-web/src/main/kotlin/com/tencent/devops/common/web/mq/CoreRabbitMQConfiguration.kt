@@ -55,18 +55,25 @@ class CoreRabbitMQConfiguration {
 
     @Value("\${spring.rabbitmq.core.virtual-host}")
     private val virtualHost: String? = null
+
     @Value("\${spring.rabbitmq.core.username}")
     private val username: String? = null
+
     @Value("\${spring.rabbitmq.core.password}")
     private val password: String? = null
+
     @Value("\${spring.rabbitmq.core.addresses}")
     private val addresses: String? = null
+
     @Value("\${spring.rabbitmq.core.listener.simple.concurrency:#{null}}")
     private var concurrency: Int? = null
+
     @Value("\${spring.rabbitmq.core.listener.simple.max-concurrency:#{null}}")
     private var maxConcurrency: Int? = null
+
     @Value("\${spring.rabbitmq.core.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
+
     @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
     private val preFetchCount: Int? = null
 
@@ -126,7 +133,7 @@ class CoreRabbitMQConfiguration {
         if (preFetchCount != null) {
             factory.setPrefetchCount(preFetchCount)
         }
-        // 容器中不自动监听队列
+        //TODO 后面删掉
         if (KubernetesUtils.inContainer()) {
             factory.setAutoStartup(false)
         }
