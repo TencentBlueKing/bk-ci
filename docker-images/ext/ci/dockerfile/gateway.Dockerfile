@@ -4,6 +4,7 @@ LABEL maintainer="Tencent BlueKing Devops"
 
 ENV INSTALL_PATH="/data/workspace/"
 ENV LANG="en_US.UTF-8"
+ENV INNER_NAME="bk-ci"
 
 COPY ./ci/gateway /data/workspace/gateway
 
