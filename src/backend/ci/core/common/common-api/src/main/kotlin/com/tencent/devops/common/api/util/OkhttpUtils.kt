@@ -150,7 +150,7 @@ object OkhttpUtils {
         return doHttp(shortOkHttpClient, request)
     }
 
-    fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R ): R {
+    fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R): R {
         doHttp(redirectOkHttpClient, request).use { response ->
             if (
                 request.method() == "POST" &&
