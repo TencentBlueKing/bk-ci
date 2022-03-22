@@ -444,7 +444,7 @@ class RepositoryService @Autowired constructor(
     private fun generateFinalTokenType(tokenType: TokenTypeEnum, repoProjectName: String): TokenTypeEnum {
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
-        if (!repoProjectName.startsWith(devopsGroupName)) {
+        if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName.contains("dev-bkdevops-extension-service",true)) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
         return finalTokenType
