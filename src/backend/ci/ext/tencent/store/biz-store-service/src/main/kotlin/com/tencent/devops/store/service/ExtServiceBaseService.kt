@@ -685,8 +685,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 StoreTypeEnum.SERVICE.type.toByte()
             )
         //  删除仓库镜像
-        val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId )
-        if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()){
+        val serviceEnvRecord = extServiceEnvDao.getMarketServiceEnvInfoByServiceId(dslContext, extServiceId)
+        if (serviceEnvRecord != null && serviceEnvRecord.imagePath.isNotEmpty()) {
             val serviceUrlPrefix = client.getServiceUrl(ServiceArchiveStoreFileResource::class)
             val serviceUrl = "$serviceUrlPrefix/service/artifactories/store/file/repos/" +
                     "${bkRepoConfig.bkrepoDockerRepoName}/$serviceCode/delete?type=${StoreTypeEnum.SERVICE.name}"
