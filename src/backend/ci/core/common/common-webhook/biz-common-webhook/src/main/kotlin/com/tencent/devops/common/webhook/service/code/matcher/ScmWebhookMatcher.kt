@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitCommit
 
 @Suppress("TooManyFunctions")
 interface ScmWebhookMatcher {
@@ -80,4 +81,10 @@ interface ScmWebhookMatcher {
         val isMatch: Boolean,
         val extra: Map<String, String> = mapOf()
     )
+
+    fun getWebhookCommitList(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository
+    ) = emptyList<GitCommit>()
 }

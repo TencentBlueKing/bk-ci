@@ -256,6 +256,30 @@ class GitScmService @Autowired constructor(
         }
     }
 
+    fun getWebhookCommitList(
+        projectId: String,
+        repo: Repository,
+        mrId: Long?
+    ): List<GitCommit> {
+        val type = getType(repo) ?: return emptyList()
+        if(mrId == null) return emptyList()
+        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+        val token = getToken(
+            projectId = projectId,
+            credentialId = repo.credentialId,
+            userName = repo.userName,
+            authType = tokenType
+        )
+        val serviceScmResource = client.get(ServiceScmResource::class)
+        return serviceScmResource.getMrCommitList(
+            projectName = repo.projectName,
+            url = repo.url,
+            type = type.second,
+            token = token,
+            mrId = mrId
+        ).data ?: emptyList()
+    }
+
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
         return if (authType == TokenTypeEnum.OAUTH) {
             client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
@@ -276,11 +300,13 @@ class GitScmService @Autowired constructor(
 
             val credential = credentialResult.data!!
 
-            String(DHUtil.decrypt(
-                data = decoder.decode(credential.v1),
-                partBPublicKey = decoder.decode(credential.publicKey),
-                partAPrivateKey = pair.privateKey
-            ))
+            String(
+                DHUtil.decrypt(
+                    data = decoder.decode(credential.v1),
+                    partBPublicKey = decoder.decode(credential.publicKey),
+                    partAPrivateKey = pair.privateKey
+                )
+            )
         }
     }
 

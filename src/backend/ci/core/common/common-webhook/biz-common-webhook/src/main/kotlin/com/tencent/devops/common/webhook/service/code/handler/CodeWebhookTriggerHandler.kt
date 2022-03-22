@@ -30,11 +30,13 @@ package com.tencent.devops.common.webhook.service.code.handler
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitCommit
 
 @Suppress("TooManyFunctions")
 interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
@@ -70,6 +72,11 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
 
     fun preMatch(event: T): ScmWebhookMatcher.MatchResult = ScmWebhookMatcher.MatchResult(isMatch = true)
 
+    fun getWebhookCommitList(
+        event: GitMergeRequestEvent,
+        projectId: String?,
+        repository: Repository?
+    ) = emptyList<GitCommit>()
     /**
      * 匹配事件
      */

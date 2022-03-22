@@ -74,6 +74,7 @@ open class GitApi {
         private const val OPERATION_MR_INFO = "查询项目合并请求"
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
         private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
+        private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
     }
 
     fun listBranches(
@@ -390,7 +391,7 @@ open class GitApi {
     ): List<GitCommit> {
         val request = get(
             host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
-            .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
+                .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
         )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_COMMIT, request))
         logger.info(
@@ -433,6 +434,14 @@ open class GitApi {
         logger.info("get mr info url: $url")
         val request = get(host, token, url, "")
         return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
+    }
+
+    fun getMrCommitLIst(host: String, token: String, url: String, page: String): List<GitCommit> {
+        logger.info("get mr commit list url: $url")
+        val request = get(host, token, url, page)
+        val result: List<GitCommit> =
+            JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_MR_COMMIT_LIST, request))
+        return result
     }
 
     fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {

@@ -43,6 +43,7 @@ interface IScm {
     fun getLatestRevision(): RevisionInfo
     fun getBranches(search: String? = null): List<String>
     fun getTags(search: String? = null): List<String>
+
     // This is to check if the token & private key legal
     fun checkTokenAndPrivateKey()
 
@@ -61,6 +62,7 @@ interface IScm {
         description: String,
         block: Boolean
     )
+
     fun addMRComment(mrId: Long, comment: String)
 
     fun lock(repoName: String, applicant: String, subpath: String)
@@ -74,4 +76,6 @@ interface IScm {
     fun getMrInfo(mrId: Long): GitMrInfo? = null
 
     fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? = null
+
+    fun getMrCommitList(mrId: Long, page: Int, size: Int) = emptyList<GitCommit>()
 }

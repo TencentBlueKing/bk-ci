@@ -103,6 +103,7 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -304,6 +305,28 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
         return startParams
+    }
+
+    override fun getWebhookCommitList(
+        event: GitMergeRequestEvent,
+        projectId: String?,
+        repository: Repository?
+    ): List<GitCommit> {
+        if (projectId == null || repository == null) {
+            return emptyList()
+        }
+        val mrId = if (repository is CodeGitlabRepository) {
+            event.object_attributes.iid
+        } else {
+            event.object_attributes.id
+        }
+
+        return gitScmService.getWebhookCommitList(
+            projectId = projectId,
+            repo = repository,
+            mrId = mrId
+        )
+
     }
 
     @SuppressWarnings("ComplexMethod")

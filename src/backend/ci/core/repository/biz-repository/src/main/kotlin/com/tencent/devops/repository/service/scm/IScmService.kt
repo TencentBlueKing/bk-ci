@@ -203,4 +203,12 @@ interface IScmService {
         token: String?,
         mrId: Long
     ): GitMrReviewInfo?
+
+    fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): List<GitCommit>
 }

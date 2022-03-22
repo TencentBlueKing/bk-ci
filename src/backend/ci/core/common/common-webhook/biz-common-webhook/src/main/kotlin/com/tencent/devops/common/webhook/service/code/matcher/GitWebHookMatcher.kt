@@ -30,9 +30,11 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitCommit
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -65,4 +67,23 @@ open class GitWebHookMatcher(
     }
 
     override fun getCodeType() = CodeType.GIT
+
+    override fun getWebhookCommitList(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository
+    ): List<GitCommit> {
+        if(event !is GitMergeRequestEvent) return emptyList()
+        if (repository !is CodeGitRepository &&
+            repository !is CodeTGitRepository
+        ) {
+            logger.warn("$pipelineId|Is not code repo for git web hook for repo and pipeline: $repository")
+            return emptyList()
+        }
+        return eventHandler.getWebhookCommitList(
+            event = event as GitMergeRequestEvent,
+            projectId = projectId,
+            repository = repository
+        )
+    }
 }

@@ -63,6 +63,7 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -209,5 +210,19 @@ class TGitPushTriggerHandler(
             if (event.isCreateBranch()) TGitPushActionType.NEW_BRANCH.value else TGitPushActionType.PUSH_FILE.value
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
         return startParams
+    }
+
+    override fun getWebhookCommitList(event: GitPushEvent): List<GitCommit> {
+        return event.commits!!.map {
+            GitCommit(
+                id = it.id,
+                short_id = "",
+                message = it.message,
+                author_name = it.author.name,
+                author_email = it.author.email,
+                title = "",
+                committed_date = it.timestamp
+            )
+        }
     }
 }

@@ -537,6 +537,26 @@ class ScmService @Autowired constructor(
             .getMrReviewInfo(mrId = mrId)
     }
 
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): List<GitCommit> {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ) .getMrCommitList(mrId = mrId,page = 1,size = 200)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ScmService::class.java)
     }
