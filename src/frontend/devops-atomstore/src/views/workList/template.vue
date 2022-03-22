@@ -465,6 +465,9 @@
                         projectCode: this.relateTemplateForm.projectCode
                     })
                     this.templateList.splice(0, this.templateList.length, ...res.models || [])
+                    if (!res.models.length) {
+                        this.relateTemplateForm.template = ''
+                    }
                 } catch (err) {
                     this.$bkMessage({
                         message: err.message ? err.message : err,
