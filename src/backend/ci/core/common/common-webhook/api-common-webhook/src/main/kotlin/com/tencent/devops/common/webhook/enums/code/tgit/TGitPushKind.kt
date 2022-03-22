@@ -77,5 +77,6 @@ enum class TGitPushActionKind(val value: String) {
 
 enum class TGitPushActionType(val value: String) {
     NEW_BRANCH("new-branch"),
-    PUSH_FILE("push-file");
+    PUSH_FILE("push-file"),
+    NEW_BRANCH_AND_PUSH_FILE("new-branch-and-push-file");
 }

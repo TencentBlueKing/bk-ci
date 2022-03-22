@@ -52,6 +52,7 @@ import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranchAndPushFile
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -205,8 +206,11 @@ class TGitPushTriggerHandler(
             event.commits?.firstOrNull { it.id == event.after }?.author?.name ?: ""
         startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
         startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
-        startParams[PIPELINE_GIT_ACTION] =
-            if (event.isCreateBranch()) TGitPushActionType.NEW_BRANCH.value else TGitPushActionType.PUSH_FILE.value
+        startParams[PIPELINE_GIT_ACTION] = when {
+            event.isCreateBranchAndPushFile() -> TGitPushActionType.NEW_BRANCH_AND_PUSH_FILE.value
+            event.isCreateBranch() -> TGitPushActionType.NEW_BRANCH.value
+            else -> TGitPushActionType.PUSH_FILE.value
+        }
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
         return startParams
     }

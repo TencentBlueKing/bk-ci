@@ -81,3 +81,14 @@ fun GitPushEvent.isCreateBranch(): Boolean {
     }
     return false
 }
+
+fun GitPushEvent.isCreateBranchAndPushFile(): Boolean {
+    return this.isCreateBranch() &&
+            commits?.let { commits ->
+                commits.firstOrNull { commit ->
+                    !commit.added.isNullOrEmpty() ||
+                            !commit.removed.isNullOrEmpty() ||
+                            !commit.modified.isNullOrEmpty()
+                } != null
+            } ?: false
+}
