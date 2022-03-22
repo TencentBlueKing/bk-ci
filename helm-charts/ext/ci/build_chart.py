@@ -5,9 +5,19 @@ import base64
 output_value_yaml = './values.yaml'
 default_value_yaml = './build/values.yaml'
 config_path = os.environ.get("config_path")
-spring_profile = os.environ.get("spring_profile")
 configmap_template_parent = './templates/configmap/tpl/'
 secret_template_parent = './templates/secret/tpl/'
+spring_profile = os.environ.get("spring_profile")
+
+
+def write_application_tpl(config_path, tpl_path):
+    for file_name in os.listdir(config_path):  # for循环读取application开头的yaml文件
+        file_path = config_path+file_name
+        if os.path.isfile(file_path) and file_name.startswith("application") and file_name.endswith("yaml"):
+            common_yaml = yaml.safe_load(open(file_path, 'r'))
+            yaml.dump(common_yaml, tpl_path)
+            tpl_path.write('---')
+
 
 # 生成value.yaml
 image_gateway_tag = '0.0'
@@ -22,27 +32,19 @@ value_file.close()
 
 config_server = config_path+"/config-server/"
 # 生成 tpl
-common_yaml = yaml.safe_load(open(config_server+'application.yml', 'r'))
-common_yaml.update(yaml.safe_load(open(config_server+'application-'+spring_profile+'.yml', 'r')))
-common_tpl = open(configmap_template_parent+'_common.tpl', 'a+')
+common_tpl = open(configmap_template_parent+'_common.tpl', 'w')
 common_tpl.write('{{- define "bkci.common.yaml" -}}')
-yaml.dump(common_yaml, common_tpl)
+write_application_tpl(config_server, common_tpl)
 common_tpl.write('{{- end -}}')
 common_tpl.flush()
 common_tpl.close()
 # service config
-for c_path in os.listdir(config_server):
-    service_path = config_server+c_path
+for service_name in os.listdir(config_server):
+    service_path = config_server + service_name
     if os.path.isdir(service_path):
-        service_name = c_path
         service_tpl = open(configmap_template_parent+'_'+service_name+'.tpl', 'w')
-        service_yaml = {}
-        if os.path.isfile(service_path+'/application.yml'):
-            service_yaml.update(yaml.safe_load(open(service_path+'/application.yml')))
-        if os.path.isfile(service_path+'/application-'+spring_profile+'.yml'):
-            service_yaml.update(yaml.safe_load(open(service_path+'/application-'+spring_profile+'.yml')))
         service_tpl.write('{{- define "bkci.'+service_name+'.yaml" -}}\n')
-        yaml.dump(service_yaml, service_tpl)
+        write_application_tpl(service_path, service_tpl)
         service_tpl.write('{{- end -}}')
         service_tpl.flush()
         service_tpl.close()
