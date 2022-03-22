@@ -18,12 +18,13 @@
 _M = {}
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
-    if devops_tag == 'kubernetes' then
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    if not in_container and devops_tag == 'kubernetes' then
         return config.kubernetes.domain .. "/ms/" .. service_name
     end
 
     -- 容器环境
-    if ngx.var.namespace ~= '' and ngx.var.namespace ~= nil then
+    if in_container then
         if ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil then
             return service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
                        '.svc.cluster.local'
