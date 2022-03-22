@@ -28,7 +28,6 @@
 package com.tencent.devops.common.api.util
 
 import org.junit.Assert
-import org.junit.Ignore
 import org.junit.Test
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -163,20 +162,5 @@ class DateTimeUtilTest {
         dateStr = "2021-04-29 15:02:01"
         convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm:ss")
         Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02:01")
-    }
-
-    @Test
-    @Ignore
-    fun testJudgeInterval() {
-        val now = System.currentTimeMillis() - 5000L
-        var loop = 0
-        while (true) {
-            val (firstTime, isInterval) = DateTimeUtil.judgeInterval(now)
-            println("loop: $loop firstTime: $firstTime, isInterval:$isInterval")
-            Thread.sleep(5000)
-            if (loop++ == 20) {
-                break
-            }
-        }
     }
 }
