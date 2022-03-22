@@ -23,6 +23,7 @@ class PipelineBuildCommitsService @Autowired constructor(
         repo: Repository
     ) {
         try {
+            logger.info("save commit list start")
             var page = 1
             val size = 200
             while (true) {
