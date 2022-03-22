@@ -520,7 +520,7 @@ class PipelineRuntimeService @Autowired constructor(
                     channelCode = ChannelCode.valueOf(channel)
                 ),
                 buildNumAlias = buildNumAlias,
-                updateTime = updateTime.timestampmilli()
+                updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L // 防止空异常
             )
         }
     }

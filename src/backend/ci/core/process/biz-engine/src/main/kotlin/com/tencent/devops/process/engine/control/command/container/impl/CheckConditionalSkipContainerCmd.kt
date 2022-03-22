@@ -111,7 +111,7 @@ class CheckConditionalSkipContainerCmd constructor(
             }
 
             if (message.isNotBlank()) {
-                // 打印构建日志
+                // #6366 增加日志明确展示跳过的原因
                 buildLogPrinter.addYellowLine(
                     executeCount = containerContext.executeCount,
                     tag = VMUtils.genStartVMTaskId(container.containerId),
