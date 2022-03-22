@@ -436,7 +436,7 @@ open class GitApi {
         return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
     }
 
-    fun getMrCommitLIst(host: String, token: String, url: String, page: String): List<GitCommit> {
+    fun getMrCommitList(host: String, token: String, url: String, page: String): List<GitCommit> {
         logger.info("get mr commit list url: $url")
         val request = get(host, token, url, page)
         val result: List<GitCommit> =

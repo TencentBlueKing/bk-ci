@@ -249,11 +249,12 @@ class CodeTGitScmImpl constructor(
 
     override fun getMrCommitList(mrId: Long, page: Int, size: Int): List<GitCommit> {
         val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/commits"
-        return gitApi.getMrCommitLIst(
+        val searchReq = "page=$page&per_page=$size"
+        return gitApi.getMrCommitList(
             host = apiUrl,
             token = token,
             url = url,
-            page = ""
+            page = searchReq
         )
     }
 

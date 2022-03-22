@@ -310,7 +310,9 @@ class TGitMrTriggerHandler(
     override fun getWebhookCommitList(
         event: GitMergeRequestEvent,
         projectId: String?,
-        repository: Repository?
+        repository: Repository?,
+        page: Int,
+        size: Int
     ): List<GitCommit> {
         if (projectId == null || repository == null) {
             return emptyList()
@@ -324,7 +326,9 @@ class TGitMrTriggerHandler(
         return gitScmService.getWebhookCommitList(
             projectId = projectId,
             repo = repository,
-            mrId = mrId
+            mrId = mrId,
+            page = page,
+            size = size
         )
 
     }

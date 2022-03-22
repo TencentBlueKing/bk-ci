@@ -75,8 +75,11 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
     fun getWebhookCommitList(
         event: GitMergeRequestEvent,
         projectId: String?,
-        repository: Repository?
+        repository: Repository?,
+        page: Int,
+        size: Int
     ) = emptyList<GitCommit>()
+
     /**
      * 匹配事件
      */

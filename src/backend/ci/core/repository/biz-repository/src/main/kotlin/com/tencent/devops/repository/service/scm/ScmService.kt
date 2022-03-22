@@ -542,7 +542,9 @@ class ScmService @Autowired constructor(
         url: String,
         type: ScmType,
         token: String?,
-        mrId: Long
+        mrId: Long,
+        page: Int,
+        size: Int
     ): List<GitCommit> {
         return ScmFactory.getScm(
             projectName = projectName,
@@ -554,7 +556,7 @@ class ScmService @Autowired constructor(
             token = token,
             region = null,
             userName = null
-        ) .getMrCommitList(mrId = mrId,page = 1,size = 200)
+        ).getMrCommitList(mrId = mrId, page = page, size = size)
     }
 
     companion object {

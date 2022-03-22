@@ -22,18 +22,26 @@ class PipelineBuildCommitsService @Autowired constructor(
         matcher: ScmWebhookMatcher,
         repo: Repository
     ) {
-        val gitCommitList = matcher.getWebhookCommitList(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            repository = repo
-        )
-        pipelineBuildCommits.create(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            webhookCommits = gitCommitList,
-            mrId = matcher.getMergeRequestId()?.toString() ?: ""
-        )
+        var page = 1
+        val size = 200
+        while (true) {
+            val gitCommitList = matcher.getWebhookCommitList(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repository = repo,
+                page = page,
+                size = size
+            )
+            if (gitCommitList.isEmpty()) break
+            pipelineBuildCommits.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                webhookCommits = gitCommitList,
+                mrId = matcher.getMergeRequestId()?.toString() ?: ""
+            )
+            page++
+        }
     }
 }

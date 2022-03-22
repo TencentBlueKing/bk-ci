@@ -368,6 +368,12 @@ interface ServiceScmResource {
         token: String?,
         @ApiParam("mrId", required = true)
         @QueryParam("mrId")
-        mrId: Long
+        mrId: Long,
+        @ApiParam("page", required = true)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("size", required = true)
+        @QueryParam("size")
+        size: Int
     ): Result<List<GitCommit>>
 }

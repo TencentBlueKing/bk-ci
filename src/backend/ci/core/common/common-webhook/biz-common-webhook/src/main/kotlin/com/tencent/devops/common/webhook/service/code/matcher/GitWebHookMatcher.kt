@@ -71,9 +71,11 @@ open class GitWebHookMatcher(
     override fun getWebhookCommitList(
         projectId: String,
         pipelineId: String,
-        repository: Repository
+        repository: Repository,
+        page: Int,
+        size: Int
     ): List<GitCommit> {
-        if(event !is GitMergeRequestEvent) return emptyList()
+        if (event !is GitMergeRequestEvent) return emptyList()
         if (repository !is CodeGitRepository &&
             repository !is CodeTGitRepository
         ) {
@@ -83,7 +85,9 @@ open class GitWebHookMatcher(
         return eventHandler.getWebhookCommitList(
             event = event as GitMergeRequestEvent,
             projectId = projectId,
-            repository = repository
+            repository = repository,
+            page = page,
+            size = size
         )
     }
 }

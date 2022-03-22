@@ -54,7 +54,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info("getLatestRevision|$projectName|$url|$type|$branchName|$additionalPath|$region|username=$userName)"
+        logger.info(
+            "getLatestRevision|$projectName|$url|$type|$branchName|$additionalPath|$region|username=$userName)"
         )
         return Result(
             scmService.getLatestRevision(
@@ -288,7 +289,9 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         url: String,
         type: ScmType,
         token: String?,
-        mrId: Long
+        mrId: Long,
+        page: Int,
+        size: Int
     ): Result<List<GitCommit>> {
         return Result(
             scmService.getMrCommitList(
@@ -296,7 +299,9 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 url = url,
                 type = type,
                 token = token,
-                mrId = mrId
+                mrId = mrId,
+                page = page,
+                size = size
             )
         )
     }

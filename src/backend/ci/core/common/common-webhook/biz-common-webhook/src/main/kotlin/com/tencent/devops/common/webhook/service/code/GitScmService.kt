@@ -259,7 +259,9 @@ class GitScmService @Autowired constructor(
     fun getWebhookCommitList(
         projectId: String,
         repo: Repository,
-        mrId: Long?
+        mrId: Long?,
+        page: Int,
+        size: Int
     ): List<GitCommit> {
         val type = getType(repo) ?: return emptyList()
         if(mrId == null) return emptyList()
@@ -276,7 +278,9 @@ class GitScmService @Autowired constructor(
             url = repo.url,
             type = type.second,
             token = token,
-            mrId = mrId
+            mrId = mrId,
+            page = page,
+            size = size
         ).data ?: emptyList()
     }
 

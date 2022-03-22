@@ -209,6 +209,8 @@ interface IScmService {
         url: String,
         type: ScmType,
         token: String?,
-        mrId: Long
+        mrId: Long,
+        page: Int,
+        size: Int
     ): List<GitCommit>
 }
