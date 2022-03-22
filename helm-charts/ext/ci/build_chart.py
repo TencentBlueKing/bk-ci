@@ -13,10 +13,11 @@ spring_profile = os.environ.get("spring_profile")
 def write_application_tpl(config_path, tpl_path):
     for file_name in os.listdir(config_path):  # for循环读取application开头的yaml文件
         file_path = config_path+file_name
-        if os.path.isfile(file_path) and file_name.startswith("application") and file_name.endswith("yaml"):
+        if os.path.isfile(file_path) and file_name.startswith("application"):
+            print("read : "+file_path)
             common_yaml = yaml.safe_load(open(file_path, 'r'))
             yaml.dump(common_yaml, tpl_path)
-            tpl_path.write('---')
+            tpl_path.write('---\n')
 
 
 # 生成value.yaml
