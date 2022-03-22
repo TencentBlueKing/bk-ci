@@ -137,7 +137,7 @@
                 this.debounceGetOptionList = debounce(this.getOptionList)
             } else {
                 if (this.isMultiple) {
-                    this.getMultipleDisplayName(this.value, 'id')
+                    this.getMultipleDisplayName(this.value)
                 } else {
                     this.displayName = this.getDisplayName(this.value)
                 }
@@ -234,9 +234,9 @@
                 
                 if (this.isMultiple) {
                     if (this.displayName) {
-                        this.getMultipleDisplayName(this.displayName, 'name')
+                        this.getMultipleDisplayName(this.displayName)
                     } else {
-                        this.getMultipleDisplayName(this.value, 'id')
+                        this.getMultipleDisplayName(this.value)
                     }
                 } else {
                     if (this.isEnvVar(this.displayName)) {
@@ -267,34 +267,30 @@
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
-            getMultipleDisplayName (val, type = 'name') {
-                if (!this.optionList.length) {
-                    this.displayName = val
-                } else {
-                    if (type === 'name') {
-                        val = val.split(',')
-                    }
-                    const valSet = new Set(val)
-                    let opts = this.optionList
-                    if (this.hasGroup) {
-                        opts = this.optionList.reduce((cur, option) => {
-                            cur = [...cur, ...option.children]
-                            return cur
-                        }, [])
-                    }
-                    const typeMap = opts.reduce((cur, opt) => {
-                        cur[opt.id] = opt
+            getMultipleDisplayName (val) {
+                if (typeof val === 'string') {
+                    val = val.split(',')
+                }
+                const valSet = new Set(val)
+                let opts = this.optionList
+                if (this.hasGroup) {
+                    opts = this.optionList.reduce((cur, option) => {
+                        cur = [...cur, ...option.children]
                         return cur
                     }, [])
-                    valSet.forEach(v => {
-                        if (this.isEnvVar(v)) {
-                            this.$set(this.selectedMap, v, v)
-                        } else if (typeMap.hasOwnProperty(v)) {
-                            const selectOpt = typeMap[v]
-                            this.$set(this.selectedMap, selectOpt.id, selectOpt.name)
-                        }
-                    })
                 }
+                const typeMap = opts.reduce((cur, opt) => {
+                    cur[opt.id] = opt
+                    return cur
+                }, [])
+                valSet.forEach(v => {
+                    if (this.isEnvVar(v)) {
+                        this.$set(this.selectedMap, v, v)
+                    } else if (Object.prototype.hasOwnProperty.call(typeMap, v)) {
+                        const selectOpt = typeMap[v]
+                        this.$set(this.selectedMap, selectOpt.id, selectOpt.name)
+                    }
+                })
             },
             getDisplayName (val) {
                 if (this.isEnvVar(val)) {
@@ -320,7 +316,7 @@
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
                     if (this.value.length) {
                         if (this.isMultiple) {
-                            this.getMultipleDisplayName(this.value, 'id')
+                            this.getMultipleDisplayName(this.value)
                         } else {
                             this.displayName = this.getDisplayName(this.value)
                         }
@@ -341,7 +337,7 @@
                 } finally {
                     if (this.value.length) {
                         if (this.isMultiple) {
-                            this.getMultipleDisplayName(this.value, 'id')
+                            this.getMultipleDisplayName(this.value)
                         } else {
                             this.displayName = this.getDisplayName(this.value)
                         }
