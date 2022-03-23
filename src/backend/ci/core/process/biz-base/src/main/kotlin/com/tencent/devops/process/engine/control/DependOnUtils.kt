@@ -54,7 +54,7 @@ object DependOnUtils {
                 return@container
             }
             if (jobIdSet.contains(jobId)) {
-                val jobName = getContainerName(stage = stage, container = c, jobId = jobId!!)
+                val jobName = getContainerName(stage = stage, container = c, jobId = jobId)
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_JOBID_EXIST,
@@ -62,7 +62,7 @@ object DependOnUtils {
                     defaultMessage = "$jobName 的jobId(${c.jobId})已存在"
                 )
             }
-            jobIdSet.add(jobId!!)
+            jobIdSet.add(jobId)
         }
         removeNonexistentJob(
             stage = stage,
@@ -153,6 +153,23 @@ object DependOnUtils {
             )
         }
     }
+
+    fun enableDependOn(container: Container): Boolean {
+        val jobControlOption = when (container) {
+            is VMBuildContainer -> container.jobControlOption
+            is NormalContainer -> container.jobControlOption
+            else -> null
+        } ?: return false
+        return when (jobControlOption.dependOnType) {
+            DependOnType.ID ->
+                jobControlOption.dependOnId != null && jobControlOption.dependOnId!!.isNotEmpty()
+            DependOnType.NAME ->
+                !jobControlOption.dependOnName.isNullOrBlank()
+            else ->
+                false
+        }
+    }
+
 
     private fun getDependOnJobIds(dependOnConfig: DependOnConfig, params: Map<String, String>): List<String> {
         return when (dependOnConfig.dependOnType) {
