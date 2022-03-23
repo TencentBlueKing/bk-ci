@@ -61,7 +61,7 @@ class StreamPipelineService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
         private val channelCode = ChannelCode.GIT
-        private val CIDir = ".ci/"
+        private const val CIDir = ".ci/"
     }
 
     fun getPipelineList(
