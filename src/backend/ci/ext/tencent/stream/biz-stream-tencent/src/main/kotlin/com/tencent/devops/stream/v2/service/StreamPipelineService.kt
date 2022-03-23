@@ -61,6 +61,7 @@ class StreamPipelineService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
         private val channelCode = ChannelCode.GIT
+        private val CIDir = ".ci/"
     }
 
     fun getPipelineList(
@@ -123,8 +124,8 @@ class StreamPipelineService @Autowired constructor(
             pipelineId = null
         )
         return GitPipelineDir(
-            currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
-            allPath = allPipeline.map { it.value1() }.distinct()
+            currentPath = allPipeline.find { it.value2() == pipelineId }?.value1()?.removePrefix(CIDir),
+            allPath = allPipeline.map { it.value1().removePrefix(CIDir) }.distinct().filterNot { it.isBlank() }
         )
     }
 
@@ -203,7 +204,7 @@ class StreamPipelineService @Autowired constructor(
             val edited = saveModel(processClient, userId, gitProjectId, pipelineId, model)
             logger.info(
                 "gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
-                        ", edit timerTrigger with $edited"
+                    ", edit timerTrigger with $edited"
             )
             websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
             return pipelineResourceDao.enablePipelineById(
@@ -307,7 +308,7 @@ class StreamPipelineService @Autowired constructor(
         } catch (e: Exception) {
             logger.error(
                 "get pipeline failed, pipelineId: " +
-                        "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
+                    "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
             )
             return null
         }
@@ -336,7 +337,7 @@ class StreamPipelineService @Autowired constructor(
         } catch (e: Exception) {
             logger.error(
                 "edit pipeline failed, pipelineId: " +
-                        "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
+                    "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
             )
             return null
         }

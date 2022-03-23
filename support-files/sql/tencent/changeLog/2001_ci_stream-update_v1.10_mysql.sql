@@ -19,6 +19,14 @@ BEGIN
                     AND COLUMN_NAME = 'DIR') THEN
         ALTER TABLE T_GIT_PIPELINE_RESOURCE ADD COLUMN `DIR` varchar(512) NOT NULL DEFAULT '.ci/' COMMENT '文件子路径';
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                FROM information_schema.statistics
+                WHERE TABLE_SCHEMA = db
+                  AND TABLE_NAME = 'T_GIT_PIPELINE_RESOURCE'
+                  AND INDEX_NAME = 'IDX_DIR') THEN
+		ALTER TABLE T_GIT_PIPELINE_RESOURCE ADD INDEX IDX_DIR (`DIR`);
+	END IF;
 
     COMMIT;
 END <CI_UBF>
