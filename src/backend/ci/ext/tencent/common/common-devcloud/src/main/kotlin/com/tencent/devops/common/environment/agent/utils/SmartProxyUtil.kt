@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.environment.agent.utils
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
 
@@ -62,6 +64,8 @@ object SmartProxyUtil {
         headerBuilder["SIGNATURE"] = signature.toUpperCase()
         headerBuilder["X-Project"] = projectId ?: ""
         headerBuilder["X-Pipeline-Id"] = pipelineId ?: ""
+        headerBuilder[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId ?: ""
+        headerBuilder[AUTH_HEADER_DEVOPS_PIPELINE_ID] = pipelineId ?: ""
 
         return headerBuilder
     }
