@@ -148,7 +148,6 @@ class GitCITriggerRepoService @Autowired constructor(
                 path2PipelineExists = mapOf(gitProjectPipeline.filePath to gitProjectPipeline),
                 gitProjectConf = setting
             )
-
         } ?: return false
     }
 
