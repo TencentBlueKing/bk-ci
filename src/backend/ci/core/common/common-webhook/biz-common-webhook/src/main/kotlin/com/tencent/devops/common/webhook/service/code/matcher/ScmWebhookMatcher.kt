@@ -90,7 +90,6 @@ interface ScmWebhookMatcher {
         page: Int,
         size: Int
     ): List<GitCommit> {
-        logger.info("defult func")
         return emptyList()
     }
 
