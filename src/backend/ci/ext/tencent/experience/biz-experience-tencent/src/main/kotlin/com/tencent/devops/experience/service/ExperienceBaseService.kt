@@ -54,7 +54,6 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.apache.commons.lang3.RandomUtils
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result

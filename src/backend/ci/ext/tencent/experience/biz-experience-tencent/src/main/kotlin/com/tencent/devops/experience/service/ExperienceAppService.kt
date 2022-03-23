@@ -66,7 +66,6 @@ import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.net.URI
 import java.time.LocalDateTime
-import java.util.TreeSet
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
 

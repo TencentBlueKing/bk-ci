@@ -60,7 +60,6 @@ class ExperienceDownloadDetailDao {
         }
     }
 
-
     fun listIdsForPublic(dslContext: DSLContext, platform: String?, limit: Int): Result<Record1<Long>> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC.`as`("p")
         val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL.`as`("d")
