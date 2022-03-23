@@ -190,8 +190,12 @@ object ScriptYmlUtils {
                 }
             }
         }
-        // 替换if中没有加括号的
-        val resultValue = replaceIfParameters(newValue, settingMap)
+        // 替换if中没有加括号的，只替换string
+        val resultValue = if (paramType == ParametersType.STRING) {
+            replaceIfParameters(newValue, settingMap)
+        } else {
+            newValue
+        }
         return resultValue.toString()
     }
 

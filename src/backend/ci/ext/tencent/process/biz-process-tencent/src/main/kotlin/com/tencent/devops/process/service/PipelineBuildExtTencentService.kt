@@ -68,8 +68,9 @@ class PipelineBuildExtTencentService @Autowired constructor(
         extMap.putAll(pipelineContextService.buildContext(
             projectId = task.projectId,
             buildId = task.buildId,
-            containerId = task.containerId,
             stageId = task.stageId,
+            containerId = task.containerId,
+            taskId = null,
             variables = variable
         ))
         extMap["ci.build_url"] = getGitCiUrl(variable)

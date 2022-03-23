@@ -35,7 +35,6 @@ import com.tencent.devops.common.ci.v2.MetaData
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
-import com.tencent.devops.common.ci.v2.Repositories
 import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
@@ -45,6 +44,7 @@ import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
 import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateDeepTreeNode
 import com.tencent.devops.common.ci.v2.enums.TemplateType
+import com.tencent.devops.common.ci.v2.utils.GitCIEnvUtils
 
 object YamlObjects {
 
@@ -56,7 +56,7 @@ object YamlObjects {
     }
 
     fun getStep(fromPath: String, step: Map<String, Any>, repo: TemplateInfo?): PreStep {
-        return PreStep(
+        val preStep = PreStep(
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
             ifFiled = step["if"]?.toString(),
@@ -86,6 +86,14 @@ object YamlObjects {
                 getYamlMetaData(fromPath, step["yamlMetaData"]!!)
             }
         )
+
+        if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
+            throw YamlFormatException("$fromPath 中的step必须包含uses或run或checkout!")
+        }
+
+        // 检测step env合法性
+        GitCIEnvUtils.checkEnv(preStep.env, fromPath)
+        return preStep
     }
 
     fun getResourceExclusiveDeclaration(fromPath: String, resource: Any): ResourceExclusiveDeclaration {
@@ -190,19 +198,14 @@ object YamlObjects {
         }
     }
 
-    inline fun <reified T> transValue(file: String, type: String, value: Any?, repo: Repositories? = null): T {
+    inline fun <reified T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
             throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
         }
         return try {
             value as T
         } catch (e: Exception) {
-            val newFile = if (repo == null) {
-                "${Constants.templateDirectory}$file"
-            } else {
-                "${repo.repository}/${Constants.templateDirectory}$file"
-            }
-            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(newFile, type))
+            throw YamlFormatException(Constants.TRANS_AS_ERROR.format(file, type))
         }
     }
 
@@ -235,7 +238,7 @@ object YamlObjects {
     }
 }
 
-fun YamlTemplate.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
+fun <T> YamlTemplate<T>.getStage(fromPath: String, stage: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreStage {
     return PreStage(
         name = stage["name"]?.toString(),
         label = stage["label"],
@@ -284,8 +287,8 @@ fun YamlTemplate.getStage(fromPath: String, stage: Map<String, Any>, deepTree: T
 }
 
 // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造
-fun YamlTemplate.getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
-    return PreJob(
+fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree: TemplateDeepTreeNode): PreJob {
+    val preJob = PreJob(
         name = job["name"]?.toString(),
         runsOn = job["runs-on"],
         resourceExclusiveDeclaration = if (job["resource-exclusive-declaration"] == null) {
@@ -344,4 +347,8 @@ fun YamlTemplate.getJob(fromPath: String, job: Map<String, Any>, deepTree: Templ
             YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!!)
         }
     )
+
+    // 检测job env合法性
+    GitCIEnvUtils.checkEnv(preJob.env, fromPath)
+    return preJob
 }

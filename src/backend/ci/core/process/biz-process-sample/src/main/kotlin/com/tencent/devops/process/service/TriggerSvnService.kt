@@ -78,14 +78,13 @@ class TriggerSvnService(
     private fun pollingSvnRepoTask(interval: Long) {
         logger.info("SVN repositroy pooling, now time: {}", LocalDateTime.now())
         // 使用 redis, 防止多节点同时执行
-        val lock = RedisLock(redisOperation, getRedisLockKey, 30)
+        val lock = RedisLock(redisOperation, getRedisLockKey, 30 * 60)
         try {
             if (!lock.tryLock()) {
                 logger.info("The other process is processing polling job, ignore")
                 return
             }
             if (!checkLastPollTime(interval)) {
-                logger.info("")
                 return
             }
             // 开始分页查询
@@ -221,7 +220,6 @@ class TriggerSvnService(
                 return false
             }
         }
-        // 将本次执行时间存入 redis
         redisOperation.set(getRedisKey, JsonUtil.toJson(currentTimeMillis))
         return true
     }
@@ -463,15 +461,10 @@ class TriggerSvnService(
 
     companion object {
         private val logger: Logger = LoggerFactory.getLogger(TriggerSvnService::class.java.name)
-        private const val getRedisKey: String = "web_repository_svn_polling"
+        private const val getRedisKey: String = "repository_svn_polling"
         private const val getRedisLockKey: String = "repository_svn_polling_redis_lock"
         private const val THREE = 3L
     }
-
-    data class CommitMessage(
-        val commitTime: Long,
-        val paths: List<String>
-    )
 
     data class SvnRepoInfo(
         val url: String,

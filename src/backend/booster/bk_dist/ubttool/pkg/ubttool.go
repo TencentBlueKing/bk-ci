@@ -35,7 +35,7 @@ const (
 
 // NewUBTTool get a new UBTTool
 func NewUBTTool(flagsparam *common.Flags, config dcSDK.ControllerConfig) *UBTTool {
-	blog.Debugf("UBTTool: new helptool with config:%+v", config)
+	blog.Infof("UBTTool: new helptool with config:%+v,flags:%+v", config, *flagsparam)
 
 	return &UBTTool{
 		flags:          flagsparam,
@@ -219,13 +219,22 @@ func (h *UBTTool) selectActionsToExecute() error {
 func (h *UBTTool) selectReadyAction() int {
 	index := -1
 	followers := -1
-	for i := range h.readyactions {
-		// select ready action which is not running and has most followers
-		if !h.readyactions[i].Running {
-			curfollowers := len(h.readyactions[i].FollowIndex)
-			if curfollowers > followers {
+	// select ready action which is not running and has most followers
+	if h.flags.MostDepentFirst {
+		for i := range h.readyactions {
+			if !h.readyactions[i].Running {
+				curfollowers := len(h.readyactions[i].FollowIndex)
+				if curfollowers > followers {
+					index = i
+					followers = curfollowers
+				}
+			}
+		}
+	} else { // select first action which is not running
+		for i := range h.readyactions {
+			if !h.readyactions[i].Running {
 				index = i
-				followers = curfollowers
+				break
 			}
 		}
 	}

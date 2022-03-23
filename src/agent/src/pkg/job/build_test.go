@@ -35,12 +35,12 @@ import (
 )
 
 func Test_writeStartBuildAgentScript_01(t *testing.T) {
-	buildInfo := &api.ThirdPartyBuildInfo{"pid", "bid", "1", "", ""}
-	file, err := writeStartBuildAgentScript(buildInfo)
+	buildInfo := &api.ThirdPartyBuildInfo{ProjectId: "pid", BuildId: "bid", VmSeqId: "1"}
+	dir, _ := os.Getwd()
+	file, err := writeStartBuildAgentScript(buildInfo, dir)
 	if err != nil {
 		t.Error("error: ", err.Error())
 	}
-	dir, _ := os.Getwd()
 	t.Log("workDir: ", dir)
 	t.Log("fileName: ", file)
 }

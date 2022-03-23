@@ -44,8 +44,10 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
@@ -154,7 +156,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(projectId, buildId)
 
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId)
+        var variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId)
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
@@ -195,6 +197,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
+
+                            // 设置Job环境变量customBuildEnv到variablesWithType中
+                            c.customBuildEnv?.forEach { (t, u) ->
+                                variablesWithType = variablesWithType.plus(BuildParameters(
+                                    key = t,
+                                    value = EnvUtils.parseEnv(u, contextMap),
+                                    valueType = BuildFormPropertyType.STRING,
+                                    readOnly = true
+                                ))
+                            }
+
                             Triple(envList, contextMap, timeoutMills)
                         }
                         is NormalContainer -> {
@@ -254,6 +267,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
             }.toMap())
         }
+
         if (matrixContext?.isNotEmpty() == true) context.putAll(matrixContext)
     }
 
@@ -640,15 +654,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 ) -> {
                     BuildStatus.RETRY
                 }
-                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
-                    BuildStatus.EXEC_TIMEOUT
-                }
                 else -> { // 记录错误插件信息
                     pipelineTaskService.createFailTaskVar(
                         buildId = buildId, projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId, taskId = result.taskId
                     )
-                    BuildStatus.FAILED
+                    if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
+                    else BuildStatus.FAILED
                 }
             }
         }

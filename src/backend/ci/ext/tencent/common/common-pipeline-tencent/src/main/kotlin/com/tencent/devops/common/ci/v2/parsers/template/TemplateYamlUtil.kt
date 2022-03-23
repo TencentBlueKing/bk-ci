@@ -69,11 +69,11 @@ object TemplateYamlUtil {
     }
 
     // 校验当前模板的远程库信息，每个文件只可以使用当前文件下引用的远程库
-    fun checkAndGetRepo(
+    fun <T> checkAndGetRepo(
         fromPath: String,
         repoName: String,
         templateType: TemplateType,
-        templateLib: TemplateLibrary,
+        templateLib: TemplateLibrary<T>,
         nowRepo: Repositories?,
         toRepo: Repositories?
     ): Repositories {
@@ -114,8 +114,10 @@ object TemplateYamlUtil {
                         if (!param.values.isNullOrEmpty() && !param.values!!.contains(newValue)) {
                             error(
                                 Constants.VALUE_NOT_IN_ENUM.format(
-                                    fromPath, valueName, newValue,
-                                    param.values!!.joinToString(",")
+                                    fromPath,
+                                    valueName,
+                                    newValue,
+                                    param.values.joinToString(",")
                                 )
                             )
                         } else {

@@ -163,8 +163,9 @@ class StartActionTaskContainerCmd(
             pipelineContextService.buildContext(
                 projectId = containerContext.container.projectId,
                 buildId = containerContext.container.buildId,
-                containerId = containerContext.container.containerId,
                 stageId = containerContext.container.stageId,
+                containerId = containerContext.container.containerId,
+                taskId = null,
                 variables = containerContext.variables
             )
         }
@@ -281,6 +282,7 @@ class StartActionTaskContainerCmd(
             containerContext.buildStatus = BuildStatus.CANCELED
         }
         val containerTasks = containerContext.containerTasks
+        val message = StringBuilder()
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(
@@ -293,7 +295,7 @@ class StartActionTaskContainerCmd(
                 LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|${toDoTask?.taskId}")
             }
             needTerminate -> { // 构建环境启动失败或者是启动成功但后续Agent挂掉导致心跳超时
-                LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
+                LOG.warn("ENGINE|$buildId|$source|TERM_NOT_EXEC|$stageId|j($containerId)|$taskId|$status")
                 val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为取消
                     BuildStatus.CANCELED
                 } else {
@@ -301,11 +303,7 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
-                buildLogPrinter.addLine(
-                    executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
-                    jobId = containerHashId
-                )
+                message.append("终止构建，跳过(UnExecute Task)[$taskName] cause: ${containerContext.latestSummary}!")
             }
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
@@ -313,7 +311,7 @@ class StartActionTaskContainerCmd(
                 containerFinalStatus = containerContext.buildStatus,
                 variables = containerContext.variables.plus(contextMap),
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                buildLogPrinter = buildLogPrinter
+                message = message
             ) -> { // 检查条件跳过
                 val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
@@ -326,16 +324,20 @@ class StartActionTaskContainerCmd(
                     buildStatus = taskStatus
                 )
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
-                // 打印构建日志
-                buildLogPrinter.addLine(
-                    executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
-                    jobId = containerHashId
-                )
+                message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             else -> {
                 toDoTask = this // 当前排队的任务晋级为下一个执行任务
             }
+        }
+
+        if (message.isNotBlank()) {
+            // #6366 增加日志明确展示跳过的原因 
+            // 打印构建日志--DEBUG级别日志，平时隐藏
+            buildLogPrinter.addDebugLine(
+                executeCount = containerContext.executeCount, tag = taskId, buildId = buildId, jobId = containerHashId,
+                message = "$message"
+            )
         }
 
         if (toDoTask != null) {
@@ -422,15 +424,6 @@ class StartActionTaskContainerCmd(
                 containerContext.event.actionType = ActionType.REFRESH
             }
         }
-//        else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
-//            containerContext.buildStatus = BuildStatus.PAUSE
-//        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
-//            containerContext.buildStatus = BuildStatus.RUNNING
-//            if (containerContext.event.actionType.isEnd()) {
-//                // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
-//                containerContext.event.actionType = ActionType.REFRESH
-//            }
-//        }
 
         return toDoTask
     }
@@ -442,12 +435,21 @@ class StartActionTaskContainerCmd(
         isContainerFailed: Boolean,
         hasFailedTaskInSuccessContainer: Boolean
     ): PipelineBuildTask? {
-        // 终止情况下，[post action]只适用于stopVM-关机任务
-        if (isTerminate && currentTask.taskId != VMUtils.genStopVMTaskId(currentTask.taskSeq)) {
-            return null
-        }
         // 添加Post action标识打印
         addPostTipLog(currentTask)
+        // 终止情况下，[post action]只适用于stopVM-关机任务, 其他的设置为未执行,并打印日志
+        // #5806 解决构建worker进程异常结束退出时，可能PostAction还会被startVM-xxxx任务捡起来，因此需要对其状态进行设置
+        if (isTerminate && currentTask.taskId != VMUtils.genStopVMTaskId(currentTask.taskSeq)) {
+            pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, BuildStatus.UNEXEC)
+            buildLogPrinter.addYellowLine(
+                buildId = currentTask.buildId,
+                message = "[SystemLog]收到终止指令(UnExecute PostAction Task) [${currentTask.taskName}]",
+                tag = currentTask.taskId,
+                jobId = currentTask.containerHashId,
+                executeCount = currentTask.executeCount ?: 1
+            )
+            return null
+        }
 
         // 查询父任务及是否允许当前的post action 任务执行标识
         val (parentTask, postExecuteFlag) = TaskUtils.getPostTaskAndExecuteFlag(

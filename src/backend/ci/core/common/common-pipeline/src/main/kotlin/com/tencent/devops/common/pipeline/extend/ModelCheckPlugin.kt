@@ -56,7 +56,6 @@ interface ModelCheckPlugin {
      * 对比sourceModel，并清理model中与之不同的Element
      * @param existModel 目标Model（要清理的Model)
      * @param sourceModel 源要比较的Model
-     * @param pipelineId 流水线id
      */
     fun beforeDeleteElementInExistsModel(
         existModel: Model,
