@@ -27,21 +27,27 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.project.service.impl.AbsProjectDataSourceAssignServiceImpl
+import org.jooq.DSLContext
+import org.springframework.stereotype.Service
 
-interface ProjectDataSourceAssignService {
+@Service
+class SampleProjectDataSourceAssignServiceImpl(
+    dslContext: DSLContext,
+    dataSourceDao: DataSourceDao,
+    shardingRoutingRuleService: ShardingRoutingRuleService
+) : AbsProjectDataSourceAssignServiceImpl(dslContext, dataSourceDao, shardingRoutingRuleService) {
 
     /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
+     * 获取可用数据源名称
+     * @param dataSourceNames 数据源名称集合
+     * @return 可用数据源名称
      */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
+    override fun getValidDataSourceName(dataSourceNames: List<String>): String {
+        // 从可用的数据源中随机选择一个分配给该项目
+        val maxSizeIndex = dataSourceNames.size - 1
+        val randomIndex = (0..maxSizeIndex).random()
+        return dataSourceNames[randomIndex]
+    }
 }
