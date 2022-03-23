@@ -101,7 +101,7 @@
             <span v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleAddMenu(!lastAddMenuShow, true)" class="append-stage pointer">
                 <span class="add-plus-connector"></span>
                 <i class="add-plus-icon" />
-                <insert-stage-menu v-if="lastAddMenuShow" :disabled="disableFinally" :is-last="true" :edit-stage="editStage"></insert-stage-menu>
+                <insert-stage-menu v-if="lastAddMenuShow" :disable-finally="disableFinally" :is-last="true" :edit-stage="editStage"></insert-stage-menu>
             </span>
         </template>
     </div>
