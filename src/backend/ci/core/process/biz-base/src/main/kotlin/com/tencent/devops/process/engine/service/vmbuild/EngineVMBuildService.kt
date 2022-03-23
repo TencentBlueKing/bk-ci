@@ -200,16 +200,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType中
-                            c.customBuildEnv?.forEach { (t, u) ->
-                                variablesWithType = variablesWithType.plus(
-                                    BuildParameters(
-                                        key = t,
-                                        value = EnvUtils.parseEnv(u, contextMap),
-                                        valueType = BuildFormPropertyType.STRING,
-                                        readOnly = true
-                                    )
+                            c.customBuildEnv?.map { (t, u) ->
+                                BuildParameters(
+                                    key = t,
+                                    value = EnvUtils.parseEnv(u, contextMap),
+                                    valueType = BuildFormPropertyType.STRING,
+                                    readOnly = true
                                 )
-                            }
+                            }.let { customBuildEnvs -> variablesWithType.plus(customBuildEnvs) }
 
                             Triple(envList, contextMap, timeoutMills)
                         }
@@ -631,7 +629,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
         LOG.info(
             "ENGINE|$buildId|Agent|END_TASK|j($vmSeqId)|${result.taskId}|$buildStatus|" +
-                    "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
+                "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
         buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
     }
@@ -770,18 +768,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                        (errorCode?.let {
-                            MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString()).let { message ->
-                                "\n$message\n"
-                            }
-                        }
-                            ?: "") +
-                        when (errorType) {
-                            ErrorType.USER -> "Please check your input or service."
-                            ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
-                            ErrorType.PLUGIN -> "Please contact the plugin developer."
-                            ErrorType.SYSTEM -> "Please contact platform."
-                        }
+                    (errorCode?.let {
+                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
+                    }
+                        ?: "") +
+                    when (errorType) {
+                        ErrorType.USER -> "Please check your input or service."
+                        ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
+                        ErrorType.PLUGIN -> "Please contact the plugin developer."
+                        ErrorType.SYSTEM -> "Please contact platform."
+                    }
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = errMsg,
