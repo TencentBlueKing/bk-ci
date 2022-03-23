@@ -145,7 +145,7 @@ class RepoTriggerEventService @Autowired constructor(
         return client.getScm(ServiceGitCiResource::class)
             .checkUserGitAuth(
                 userId = userId.toString(),
-                gitProjectId = gitRequestEventForHandle.gitProjectId.toString(),
+                gitProjectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId.toString(),
                 privateToken = token,
                 useAccessToken = false,
                 accessLevel = 40
