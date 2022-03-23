@@ -58,6 +58,7 @@ class ContainerRunHandler(
                     .withBinds(DockerBindLoader.loadBinds(this))
                     .withMounts(DockerMountLoader.loadMounts(this))
                     .withNetworkMode("bridge")
+                    .withInit(true)
 
                 if (dockerResource != null) {
                     hostConfig
