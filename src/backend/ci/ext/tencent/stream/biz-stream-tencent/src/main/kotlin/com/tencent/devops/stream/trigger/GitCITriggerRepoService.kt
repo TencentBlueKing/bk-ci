@@ -61,7 +61,7 @@ class GitCITriggerRepoService @Autowired constructor(
     private val mergeConflictCheck: MergeConflictCheck,
     private val triggerExceptionService: TriggerExceptionService,
     private val tokenService: StreamGitTokenService,
-    private val gitCITriggerService: GitCITriggerService,
+    private val gitCITriggerService: GitCITriggerService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerRepoService::class.java)

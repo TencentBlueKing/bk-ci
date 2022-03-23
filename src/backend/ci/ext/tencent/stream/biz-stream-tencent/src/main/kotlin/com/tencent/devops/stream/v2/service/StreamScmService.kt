@@ -56,7 +56,6 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.stream.utils.RetryUtils

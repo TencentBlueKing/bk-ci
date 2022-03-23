@@ -395,7 +395,7 @@ object ScriptYmlUtils {
             }
             throw YamlFormatException(
                 "runs-on 中 ${e?.path[0]?.fieldName} 格式有误," +
-                        "应为 ${e?.targetType?.name}, error message:${e.message}"
+                    "应为 ${e?.targetType?.name}, error message:${e.message}"
             )
         }
     }
@@ -626,7 +626,6 @@ object ScriptYmlUtils {
         logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
         return null
     }
-
 
     fun formatTriggerOn(preTriggerOn: PreTriggerOn?): TriggerOn {
 

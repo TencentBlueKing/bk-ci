@@ -91,7 +91,6 @@ class GitPipelineRepoResourceDao {
         }
     }
 
-
     /*
     * 需要将sourceGitProjectPath分解成所有能匹配上的字段
     */

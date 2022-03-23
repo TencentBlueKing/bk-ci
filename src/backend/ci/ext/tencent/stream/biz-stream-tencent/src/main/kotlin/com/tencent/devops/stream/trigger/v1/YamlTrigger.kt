@@ -84,7 +84,7 @@ class YamlTrigger @Autowired constructor(
         logger.info("normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-        if (!gitRequestEventForHandle.checkRepoTrigger){
+        if (!gitRequestEventForHandle.checkRepoTrigger) {
             gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
                 yamlObject.name!!
             } else {
@@ -95,8 +95,10 @@ class YamlTrigger @Autowired constructor(
         }
 
         if (isMatch(event, gitRequestEventForHandle, yamlObject).first) {
-            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
-                "eventId: ${gitRequestEventForHandle.id}, dispatched pipeline: $gitProjectPipeline")
+            logger.info(
+                "Matcher is true, display the event, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                    "eventId: ${gitRequestEventForHandle.id}, dispatched pipeline: $gitProjectPipeline"
+            )
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEventForHandle.id!!,
@@ -122,12 +124,14 @@ class YamlTrigger @Autowired constructor(
             } catch (e: Throwable) {
                 logger.error("Fail to start the git ci build($gitRequestEventForHandle)", e)
             }
-            if (!gitRequestEventForHandle.checkRepoTrigger){
+            if (!gitRequestEventForHandle.checkRepoTrigger) {
                 repositoryConfService.updateGitCISetting(gitRequestEventForHandle.gitProjectId)
             }
         } else {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
-                "eventId: ${gitRequestEventForHandle.id}")
+            logger.warn(
+                "Matcher is false, return, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                    "eventId: ${gitRequestEventForHandle.id}"
+            )
             gitCIEventSaveService.saveBuildNotBuildEvent(
                 userId = gitRequestEventForHandle.userId,
                 eventId = gitRequestEventForHandle.id!!,
@@ -215,8 +219,10 @@ class YamlTrigger @Autowired constructor(
                 // 判断镜像格式是否合法
                 val (imageName, imageTag) = it.parseImage()
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-                    ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-                        "Git CI没有此镜像版本记录. ${it.image}")
+                    ?: throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        "Git CI没有此镜像版本记录. ${it.image}"
+                    )
                 if (!record.enable) {
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
                 }
