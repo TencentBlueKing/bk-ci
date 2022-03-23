@@ -115,4 +115,16 @@ class GitPipelineRepoResourceDao {
                 .execute()
         }
     }
+
+    fun deleteByPipelineIdAndSourcePath(
+        dslContext: DSLContext,
+        pipelineId: String,
+        sourceGitProjectPath: String
+    ): Int {
+        with(TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(SOURCE_GIT_PROJECT_PATH.eq(sourceGitProjectPath)))
+                .execute()
+        }
+    }
 }

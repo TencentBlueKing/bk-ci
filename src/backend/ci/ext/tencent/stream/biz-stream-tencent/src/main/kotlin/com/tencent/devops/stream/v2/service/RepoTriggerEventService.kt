@@ -57,6 +57,14 @@ class RepoTriggerEventService @Autowired constructor(
         targetGitProjectId: Long?
     ) {
         val sourceGitProjectPathList = getByPipeline(pipelineId).map { it.sourceGitProjectPath }
+        // 考虑流水线更新时删除已不存在的远程仓库配置
+        sourceGitProjectPathList.filterNot { it in sourceGitProjectPath }.forEach { path ->
+            gitPipelineRepoResourceDao.deleteByPipelineIdAndSourcePath(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                sourceGitProjectPath = path
+            )
+        }
         sourceGitProjectPath.forEach { sourcePath ->
             // 说明已存在记录
             if (sourcePath in sourceGitProjectPathList) {
