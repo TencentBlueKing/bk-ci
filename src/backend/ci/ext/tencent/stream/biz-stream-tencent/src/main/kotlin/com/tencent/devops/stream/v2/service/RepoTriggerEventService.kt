@@ -123,9 +123,9 @@ class RepoTriggerEventService @Autowired constructor(
     fun checkRepoTriggerCredentials(
         gitRequestEventForHandle: GitRequestEventForHandle,
         repoHook: RepositoryHook?
-    ): Boolean {
+    ): Pair<Boolean, String?> {
         if (repoHook == null) {
-            return true
+            return Pair(true, null)
         }
         val token = when {
             repoHook.credentialsForTicketId != null ->
@@ -134,22 +134,23 @@ class RepoTriggerEventService @Autowired constructor(
                     projectId = "git_${gitRequestEventForHandle.gitProjectId}",
                     credentialId = repoHook.credentialsForTicketId!!,
                     type = CredentialType.ACCESSTOKEN
-                )["v1"] ?: return false
+                )["v1"] ?: return Pair(false, null)
             repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
-            else -> return false
+            else -> return Pair(false, null)
         }
         // 工蜂侧需要的是user 数字id 而不是 rtx
-        val userId = client.getScm(ServiceGitResource::class)
-            .getUserInfoByToken(token = token, useAccessToken = false).data?.id
-            ?: return false
-        return client.getScm(ServiceGitCiResource::class)
+        val userInfo = client.getScm(ServiceGitResource::class)
+            .getUserInfoByToken(token = token, useAccessToken = false).data
+            ?: return Pair(false, null)
+        val check = client.getScm(ServiceGitCiResource::class)
             .checkUserGitAuth(
-                userId = userId.toString(),
+                userId = userInfo.id.toString(),
                 gitProjectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId.toString(),
                 privateToken = token,
                 useAccessToken = false,
                 accessLevel = 40
             ).data ?: false
+        return Pair(check, userInfo.username)
     }
 
     fun deleteRepoTriggerEvent(

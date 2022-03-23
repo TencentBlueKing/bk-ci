@@ -39,9 +39,14 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMat
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
 import com.tencent.devops.stream.v2.service.RepoTriggerEventService
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,7 +58,9 @@ class TriggerMatcher @Autowired constructor(
     private val repoTriggerEventService: RepoTriggerEventService,
     private val streamScmService: StreamScmService,
     private val streamTimerService: StreamTimerService,
-    private val streamDeleteEventService: DeleteEventService
+    private val streamDeleteEventService: DeleteEventService,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitTokenService: StreamGitTokenService
 ) {
 
     companion object {
@@ -181,11 +188,11 @@ class TriggerMatcher @Autowired constructor(
 
         val gitRequestEvent = context.gitRequestEventForHandle.gitRequestEvent
 
-        if (!repoTriggerEventService.checkRepoTriggerCredentials(
-                gitRequestEventForHandle = context.gitRequestEventForHandle,
-                repoHook = triggerOn.repoHook
-            )
-        ) {
+        val (repoTriggerCredentialsCheck, repoTriggerUserId) = repoTriggerEventService.checkRepoTriggerCredentials(
+            gitRequestEventForHandle = context.gitRequestEventForHandle,
+            repoHook = triggerOn.repoHook
+        )
+        if (!repoTriggerCredentialsCheck) {
             logger.warn("repo trigger check credentials fail")
             return TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
         }
@@ -205,7 +212,7 @@ class TriggerMatcher @Autowired constructor(
         val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
             // 只有更改了delete相关流水线才做更新
             PathMatchUtils.isIncludePathMatch(listOf(pipelineFilePath), changeSet) &&
-                    isDeleteMatch(triggerOn.delete, gitRequestEvent, context.pipeline)
+                isDeleteMatch(triggerOn.delete, gitRequestEvent, context.pipeline)
         } else {
             false
         }
@@ -213,7 +220,11 @@ class TriggerMatcher @Autowired constructor(
         val (isTrigger, startParams) = when (context.gitEvent) {
             is GitPushEvent -> {
                 val isMatch = isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId, context.gitEvent)
-                val params = getStartParams(context = context, triggerOn = triggerOn)
+                val params = getStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
                 Pair(isMatch, params)
             }
             is GitMergeRequestEvent -> {
@@ -226,7 +237,11 @@ class TriggerMatcher @Autowired constructor(
                     userId = gitRequestEvent.userId,
                     mrAction = mrAction
                 )
-                val params = getStartParams(context = context, triggerOn = triggerOn)
+                val params = getStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
                 Pair(isMatch, params)
             }
             is GitTagPushEvent -> {
@@ -236,13 +251,18 @@ class TriggerMatcher @Autowired constructor(
                     gitRequestEvent.userId,
                     context.gitEvent.create_from
                 )
-                val params = getStartParams(context = context, triggerOn = triggerOn)
+                val params = getStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
                 Pair(isMatch, params)
             }
             else -> {
                 matchAndStartParams(
                     context = context,
-                    triggerOn = triggerOn
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
                 )
             }
         }
@@ -448,7 +468,8 @@ class TriggerMatcher @Autowired constructor(
     fun matchAndStartParams(
         context: StreamTriggerContext,
         triggerOn: TriggerOn?,
-        needMatch: Boolean = true
+        needMatch: Boolean = true,
+        userId: String? = null
     ): Pair<Boolean, Map<String, String>> {
         with(context) {
             logger.info("match and start params|triggerOn:$triggerOn")
@@ -462,7 +483,28 @@ class TriggerMatcher @Autowired constructor(
             )!!
             logger.info("match and start params, element:$element, webHookParams:$webHookParams")
             val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
-            val repository = TriggerBuilder.buildCodeGitRepository(streamSetting)
+            val repository =
+                if (gitRequestEventForHandle.checkRepoTrigger) {
+                    streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                        gitRequestEventId = gitRequestEventForHandle.id!!,
+                        gitProjectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId.toString(),
+                        token = streamGitTokenService.getToken(gitRequestEventForHandle.gitRequestEvent.gitProjectId),
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    ).let { info ->
+                        val projectName = GitUtils.getProjectName(info.gitHttpUrl)
+                        CodeGitRepository(
+                            aliasName = projectName,
+                            url = info.gitHttpUrl,
+                            credentialId = "",
+                            projectName = projectName,
+                            userName = userId ?: gitRequestEventForHandle.gitRequestEvent.userId,
+                            authType = RepoAuthType.OAUTH,
+                            projectId = "git_" + info.gitProjectId,
+                            repoHashId = null
+                        )
+                    }
+                } else TriggerBuilder.buildCodeGitRepository(streamSetting)
             val isMatch = if (needMatch) {
                 matcher.isMatch(
                     projectId = context.streamSetting.projectCode ?: "",
@@ -497,12 +539,14 @@ class TriggerMatcher @Autowired constructor(
 
     fun getStartParams(
         context: StreamTriggerContext,
-        triggerOn: TriggerOn?
+        triggerOn: TriggerOn?,
+        userId: String? = null
     ): Map<String, String> {
         return matchAndStartParams(
             context = context,
             triggerOn = triggerOn,
-            needMatch = false
+            needMatch = false,
+            userId = userId
         ).second
     }
 
