@@ -67,6 +67,7 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_BUILD_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
@@ -83,6 +84,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
@@ -185,7 +187,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
     private val projectCacheService: ProjectCacheService,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -708,7 +711,14 @@ class PipelineRuntimeService @Autowired constructor(
         val buildId = startParamMap[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
         val projectName = projectCacheService.getProjectName(projectId) ?: ""
         val context = StartBuildContext.init(startParamMap)
-
+        val ciBuildUrl = pipelineUrlBean.genBuildDetailUrl(
+            projectCode = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            position = null,
+            stageId = null,
+            needShortUrl = false
+        )
         val updateTaskExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
         val lastTimeBuildTaskRecords = pipelineTaskService.listByBuildId(projectId, buildId)
@@ -933,6 +943,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildVariables.add(BuildParameters(PIPELINE_BUILD_ID, buildId, BuildFormPropertyType.STRING))
                 buildVariables.add(BuildParameters(PROJECT_NAME, pipelineInfo.projectId, BuildFormPropertyType.STRING))
                 buildVariables.add(BuildParameters(PROJECT_NAME_CHINESE, projectName, BuildFormPropertyType.STRING))
+                buildVariables.add(BuildParameters(BK_CI_BUILD_URL, ciBuildUrl, BuildFormPropertyType.STRING))
                 val bizId = MDC.get(TraceTag.BIZID)
                 if (!bizId.isNullOrEmpty()) { // 保存链路信息
                     buildVariables.add(BuildParameters(TraceTag.TRACE_HEADER_DEVOPS_BIZID, bizId))

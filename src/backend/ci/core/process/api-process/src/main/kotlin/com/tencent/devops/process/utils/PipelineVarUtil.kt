@@ -57,6 +57,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.webhook.pojo.code.BK_CI_BUILD_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
@@ -207,6 +208,7 @@ object PipelineVarUtil {
         "ci.review_id" to BK_REPO_GIT_WEBHOOK_REVIEW_ID,
         "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
         "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
+        "ci.build_url" to BK_CI_BUILD_URL,
         "ci.review_state" to BK_REPO_GIT_WEBHOOK_REVIEW_STATE,
         "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
