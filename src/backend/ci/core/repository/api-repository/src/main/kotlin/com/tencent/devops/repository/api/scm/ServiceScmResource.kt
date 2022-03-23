@@ -350,7 +350,7 @@ interface ServiceScmResource {
         mrId: Long
     ): Result<GitMrReviewInfo?>
 
-    @ApiOperation("查询合并请求的代码变更")
+    @ApiOperation("查询合并请求的commit记录")
     @GET
     @Path("getMrCommitList")
     fun getMrCommitList(
