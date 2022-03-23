@@ -1,11 +1,14 @@
 package com.tencent.devops.process.dao
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildCommits
 import com.tencent.devops.scm.pojo.GitCommit
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -24,10 +27,8 @@ class PipelineBuildCommitsDao {
     ) {
         with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
             webhookCommits.map {
-                val commitTime =  LocalDateTime.ofInstant(
-                    Date(TimeUnit.SECONDS.toMillis(it.committed_date.toLong())).toInstant(),
-                    ZoneId.systemDefault()
-                )
+                val commitTime =
+                    DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date)))
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
