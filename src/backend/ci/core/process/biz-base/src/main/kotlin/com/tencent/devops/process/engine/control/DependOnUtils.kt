@@ -170,7 +170,6 @@ object DependOnUtils {
         }
     }
 
-
     private fun getDependOnJobIds(dependOnConfig: DependOnConfig, params: Map<String, String>): List<String> {
         return when (dependOnConfig.dependOnType) {
             DependOnType.ID -> {
