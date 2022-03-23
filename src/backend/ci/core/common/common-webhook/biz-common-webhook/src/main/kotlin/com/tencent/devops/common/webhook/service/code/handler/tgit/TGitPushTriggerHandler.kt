@@ -220,6 +220,7 @@ class TGitPushTriggerHandler(
         page: Int,
         size: Int
     ): List<GitCommit> {
+        logger.info("push event $event")
         return event.commits!!.map {
             GitCommit(
                 id = it.id,
