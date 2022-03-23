@@ -10,6 +10,7 @@
             autocomplete="off"
             @focus="handleFocus"
             @keypress.enter.prevent="handleEnterOption"
+            @keypress="handleKeyPress"
             @keydown.up.prevent="handleKeyup"
             @keydown.down.prevent="handleKeydown"
             @keydown.tab.prevent="handleBlur" />
@@ -51,7 +52,7 @@
                         @mouseover="setSelectPointer(index)"
                     >
                         {{ item.name }}
-                        <i v-if="isMultiple && value.includes(item.id)" class="devops-icon icon-check-1"></i>
+                        <i v-if="isMultiple && item.active" class="devops-icon icon-check-1"></i>
                     </li>
                 </template>
             </ul>
@@ -69,7 +70,8 @@
         name: 'devops-select',
         mixins: [mixins, scrollMixins, selectorMixins],
         props: {
-            isLoading: Boolean
+            isLoading: Boolean,
+            label: String
         },
         data () {
             return {
@@ -77,8 +79,8 @@
                 optionListVisible: false,
                 isFocused: false,
                 loading: this.isLoading,
-                selectedPointer: 0,
-                selectedGroupPointer: 0,
+                selectedPointer: -1,
+                selectedGroupPointer: -1,
                 displayName: '',
                 selectedMap: {}
             }
@@ -184,7 +186,7 @@
                             id: item[paramId],
                             name: item[paramName],
                             active: !this.isMultiple ? item.id === this.value : this.value.includes(item.id),
-                            selected: this.selectedPointer === index && !this.isMultiple
+                            selected: this.selectedPointer === index
                         }
                     }
 
@@ -226,8 +228,7 @@
 
             handleBlur () {
                 this.optionListVisible = false
-                this.selectedPointer = 0
-                this.selectedGroupPointer = 0
+                this.resetSelectPointer()
                 this.isFocused = false
                 this.$refs.inputArea && this.$refs.inputArea.blur()
                 this.$emit('blur', null)
@@ -256,20 +257,33 @@
                     this.$emit('focus', e)
                 }
             },
+            
+            handleKeyPress (e) {
+                if (e.key === ',') {
+                    this.resetSelectPointer()
+                }
+            },
+
+            resetSelectPointer () {
+                this.selectedPointer = -1
+                this.selectedGroupPointer = -1
+            },
 
             setSelectPointer (index) {
+                this.$refs.inputArea.focus()
                 this.selectedPointer = index
                 this.adjustViewPort()
             },
 
             setSelectGroupPointer (index, childIndex) {
+                this.$refs.inputArea.focus()
                 this.selectedGroupPointer = index
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
             getMultipleDisplayName (val) {
                 if (typeof val === 'string') {
-                    val = val.split(',')
+                    val = val === '' ? [] : val.split(',')
                 }
                 const valSet = new Set(val)
                 let opts = this.optionList
@@ -282,15 +296,23 @@
                 const typeMap = opts.reduce((cur, opt) => {
                     cur[opt.id] = opt
                     return cur
-                }, [])
+                }, {})
+                const resultMap = {}
+                const invalidVal = []
                 valSet.forEach(v => {
                     if (this.isEnvVar(v)) {
-                        this.$set(this.selectedMap, v, v)
+                        resultMap[v] = v
                     } else if (Object.prototype.hasOwnProperty.call(typeMap, v)) {
                         const selectOpt = typeMap[v]
-                        this.$set(this.selectedMap, selectOpt.id, selectOpt.name)
+                        resultMap[selectOpt.id] = selectOpt.name
+                    } else {
+                        invalidVal.push(v)
                     }
                 })
+                this.selectedMap = resultMap
+                if (invalidVal.length > 0) {
+                    this.showValValidTips(invalidVal.join(','))
+                }
             },
             getDisplayName (val) {
                 if (this.isEnvVar(val)) {
@@ -310,7 +332,14 @@
                         return option.name
                     }
                 }
+                val && this.showValValidTips(val)
                 return ''
+            },
+            showValValidTips (val) {
+                this.$bkMessage({
+                    theme: 'error',
+                    message: `${this.$t('editPage.invalidValue', [this.label])}: ${val}`
+                })
             },
             async getOptionList () {
                 if (this.isLackParam) { // 缺少参数时，选择列表置空
@@ -343,6 +372,21 @@
                         }
                     }
                     this.loading = false
+                }
+            },
+            handleEnterOption () {
+                let option
+                
+                if (this.hasGroup && this.selectedGroupPointer >= 0 && this.selectedPointer >= 0) {
+                    option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
+                } else if (this.selectedPointer >= 0) {
+                    option = this.filteredList[this.selectedPointer]
+                }
+                
+                if (option) {
+                    this.selectOption(option)
+                } else {
+                    this.handleBlur()
                 }
             }
         }
@@ -425,11 +469,16 @@
                     white-space: nowrap;
                     cursor: pointer;
                     font-size: 12px;
+                    border: 1px solid transparent;
                     &.selected,
                     &.active,
                     &:hover {
                         background-color: $primaryLightColor;
                         color: $primaryColor;
+                    }
+
+                    &.selected {
+                       border-color : $primaryColor;
                     }
 
                     &[disabled] {

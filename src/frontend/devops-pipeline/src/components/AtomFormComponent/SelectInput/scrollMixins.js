@@ -123,23 +123,15 @@ export default {
             }
         },
         handleEnterOption () {
-            if (this.isMultiple) {
-                this.optionListVisible = false
-                this.isFocused = false
-                this.$refs.inputArea && this.$refs.inputArea.blur()
-                this.$emit('blur', null)
-                this.getMultipleDisplayName && this.getMultipleDisplayName(this.displayName, 'name')
+            let option = {}
+            if (this.hasGroup) {
+                option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
             } else {
-                let option = {}
-                if (this.hasGroup) {
-                    option = this.filteredList[this.selectedGroupPointer].children[this.selectedPointer]
-                } else {
-                    option = this.filteredList[this.selectedPointer]
-                }
-                if (option && !option.disabled) {
-                    this.handleChange(this.name, option.id)
-                    this.handleBlur()
-                }
+                option = this.filteredList[this.selectedPointer]
+            }
+            if (option && !option.disabled) {
+                this.handleChange(this.name, option.id)
+                this.handleBlur()
             }
         }
     }
