@@ -124,8 +124,8 @@ class StreamPipelineService @Autowired constructor(
             pipelineId = null
         )
         return GitPipelineDir(
-            currentPath = allPipeline.find { it.value2() == pipelineId }?.value1()?.removePrefix(CIDir),
-            allPath = allPipeline.map { it.value1().removePrefix(CIDir) }.distinct().filterNot { it.isBlank() }
+            currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
+            allPath = allPipeline.map { it.value1() }.distinct().filterNot { it == CIDir }
         )
     }
 
