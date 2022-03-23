@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -121,4 +122,14 @@ interface IScmOauthService {
         token: String?,
         mrId: Long
     ): GitMrReviewInfo?
+
+    fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit>
 }

@@ -264,7 +264,7 @@ class GitScmService @Autowired constructor(
         size: Int
     ): List<GitCommit> {
         val type = getType(repo) ?: return emptyList()
-        if(mrId == null) return emptyList()
+        if (mrId == null) return emptyList()
         val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
         val token = getToken(
             projectId = projectId,
@@ -272,16 +272,27 @@ class GitScmService @Autowired constructor(
             userName = repo.userName,
             authType = tokenType
         )
-        val serviceScmResource = client.get(ServiceScmResource::class)
-        return serviceScmResource.getMrCommitList(
-            projectName = repo.projectName,
-            url = repo.url,
-            type = type.second,
-            token = token,
-            mrId = mrId,
-            page = page,
-            size = size
-        ).data ?: emptyList()
+        if (type.first == RepoAuthType.OAUTH) {
+            return client.get(ServiceScmOauthResource::class).getMrCommitList(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = type.second,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
+            ).data ?: emptyList()
+        } else {
+            return client.get(ServiceScmResource::class).getMrCommitList(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = type.second,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
+            ).data ?: emptyList()
+        }
     }
 
     private fun getToken(projectId: String, credentialId: String, userName: String, authType: TokenTypeEnum): String {
