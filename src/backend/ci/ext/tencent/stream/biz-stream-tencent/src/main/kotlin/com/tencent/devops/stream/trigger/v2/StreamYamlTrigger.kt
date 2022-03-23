@@ -51,6 +51,7 @@ import com.tencent.devops.stream.common.exception.YamlBlankException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -95,6 +96,7 @@ class StreamYamlTrigger @Autowired constructor(
         private const val STREAM_TEMPLATE_ROOT_FILE = "STREAM_TEMPLATE_ROOT_FILE"
     }
 
+    @Suppress("ComplexMethod")
     override fun triggerBuild(
         context: StreamTriggerContext
     ): Boolean {
@@ -113,12 +115,14 @@ class StreamYamlTrigger @Autowired constructor(
             context = context,
             defaultBranch = gitProjectInfo.defaultBranch
         )
-        logger.info("${gitProjectPipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
-                "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName")
+        logger.info(
+            "${gitProjectPipeline.pipelineId}|Match return|isTrigger=$isTrigger|" +
+                "isTiming=$isTiming|isDelete=$isDelete|repoHookName=$repoHookName"
+        )
 
         val changeSet = triggerMatcher.getChangeSet(context)
-
-        if (!isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()) {
+        val needNotTrigger = !isTrigger && !isTiming && !isDelete && repoHookName.isNullOrEmpty()
+        if (needNotTrigger) {
             logger.warn(
                 "${gitProjectPipeline.pipelineId}|" +
                     "Matcher is false, return, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
@@ -150,11 +154,7 @@ class StreamYamlTrigger @Autowired constructor(
         logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
 
         // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
-        if (gitProjectPipeline.pipelineId.isBlank() ||
-            (!changeSet.isNullOrEmpty() &&
-                changeSet.contains(gitProjectPipeline.filePath) &&
-                !gitRequestEventForHandle.checkRepoTrigger)
-        ) {
+        if (needChangePipelineDisplayName(gitProjectPipeline, changeSet, gitRequestEventForHandle)) {
             gitProjectPipeline.displayName = yamlObject.name?.ifBlank {
                 gitProjectPipeline.filePath
             } ?: gitProjectPipeline.filePath
@@ -232,6 +232,15 @@ class StreamYamlTrigger @Autowired constructor(
         }
         return true
     }
+
+    private fun needChangePipelineDisplayName(
+        gitProjectPipeline: GitProjectPipeline,
+        changeSet: Set<String>?,
+        gitRequestEventForHandle: GitRequestEventForHandle
+    ) = gitProjectPipeline.pipelineId.isBlank() ||
+        (!changeSet.isNullOrEmpty() &&
+            changeSet.contains(gitProjectPipeline.filePath) &&
+            !gitRequestEventForHandle.checkRepoTrigger)
 
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     fun prepareCIBuildYaml(

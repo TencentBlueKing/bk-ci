@@ -325,6 +325,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     private fun afterStartBuild(
         pipeline: GitProjectPipeline,
         buildId: String,
@@ -339,10 +340,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId, ymlVersion)
             // 成功构建的添加 流水线-分支 记录
             with(gitRequestEventForHandle) {
-                if (!gitRequestEvent.isFork() &&
-                    (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value || gitRequestEvent.isMr()) &&
-                    !checkRepoTrigger
-                ) {
+                if (needSaveOrUpdateBranch()) {
                     streamPipelineBranchService.saveOrUpdate(
                         gitProjectId = gitCIBasicSetting.gitProjectId,
                         pipelineId = pipeline.pipelineId,
@@ -377,7 +375,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                             pipelineId = pipeline.pipelineId,
                             buildId = buildId
                         ),
-                        block = (gitRequestEvent.objectKind == TGitObjectKind.MERGE_REQUEST.value && gitCIBasicSetting.enableMrBlock),
+                        block = gitRequestEvent.objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+                            gitCIBasicSetting.enableMrBlock,
                         pipelineId = pipeline.pipelineId
                     )
                 }
@@ -400,6 +399,11 @@ class StreamYamlBaseBuild @Autowired constructor(
             )
         }
     }
+
+    private fun GitRequestEventForHandle.needSaveOrUpdateBranch() =
+        !gitRequestEvent.isFork() &&
+            (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value || gitRequestEvent.isMr()) &&
+            !checkRepoTrigger
 
     private fun YamlTransferData.getTemplateAcrossInfo(
         gitRequestEventId: Long,
