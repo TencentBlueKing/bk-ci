@@ -80,8 +80,8 @@ class PipelineRetryFacadeService @Autowired constructor(
         val containerInfo = pipelineContainerService.getContainer(
             projectId = projectId,
             buildId = pipelineId,
-            stageId = taskInfo!!.stageId,
-            containerId = taskInfo.containerId
+            containerId = taskInfo.containerId,
+            stageId = null
         )
 
         var jobFinish = true
