@@ -80,9 +80,6 @@ open class GitWebHookMatcher(
             logger.info("git event is not merge request event or push event")
             return emptyList()
         }
-        if(event is GitPushEvent && page != 1){
-            return emptyList()
-        }
         if (repository !is CodeGitRepository &&
             repository !is CodeTGitRepository
         ) {

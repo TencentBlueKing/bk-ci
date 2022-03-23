@@ -220,7 +220,10 @@ class TGitPushTriggerHandler(
         page: Int,
         size: Int
     ): List<GitCommit> {
-        logger.info("push event $event")
+        if(page != 1){
+            // push 请求事件会在第一次请求时将所有的commit记录全部返回，所以如果分页参数不为1，则直接返回空列表
+            return emptyList()
+        }
         return event.commits!!.map {
             GitCommit(
                 id = it.id,

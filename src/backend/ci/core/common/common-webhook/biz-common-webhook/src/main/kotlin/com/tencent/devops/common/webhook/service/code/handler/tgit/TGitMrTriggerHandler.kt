@@ -314,6 +314,7 @@ class TGitMrTriggerHandler(
         page: Int,
         size: Int
     ): List<GitCommit> {
+        logger.info("merge request event is $event")
         if (projectId == null || repository == null) {
             return emptyList()
         }
@@ -322,7 +323,6 @@ class TGitMrTriggerHandler(
         } else {
             event.object_attributes.id
         }
-
         return gitScmService.getWebhookCommitList(
             projectId = projectId,
             repo = repository,
