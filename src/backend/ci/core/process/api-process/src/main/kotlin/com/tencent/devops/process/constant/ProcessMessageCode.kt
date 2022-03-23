@@ -232,6 +232,11 @@ object ProcessMessageCode {
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
 
+    // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
+    const val BUILD_WORKER_DEAD_ERROR = "2101318"
+    // 构建机Agent详情链接
+    const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
+
     // 人工审核插件编辑时输入参数错误
     const val ERROR_PARAM_MANUALREVIEW = "2101105"
 

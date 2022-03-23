@@ -156,7 +156,11 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
+        return Result(thirdPartyAgentService.getAgentDetail(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId
+        ))
     }
 
     override fun listAgentBuilds(

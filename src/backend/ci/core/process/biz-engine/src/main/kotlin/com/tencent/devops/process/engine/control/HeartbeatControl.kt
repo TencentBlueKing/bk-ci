@@ -34,6 +34,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_WORKER_DEAD_ERROR
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
@@ -113,6 +115,15 @@ class HeartbeatControl @Autowired constructor(
             return
         }
         var found = false
+
+        // # 5806 完善构建进程超时提示信息
+        val tipMessage = "构建进程心跳超时/builder's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)" +
+            "\n 可能原因(Maybe):" +
+            "\n 1. 构建机网络不通，检查构建机网络代理、或所在企业安全鉴权会话是否过期。(Network or proxy not working properly.)" +
+            "\n 2. 业务构建进程进程被操作系统或其他程序杀掉，需自查并降低负载后重试。(Builder process was killed.)" +
+            "\n 3. 其他参考链接[Link] ${MessageCodeUtil.getCodeLanMessage(BUILD_WORKER_DEAD_ERROR)}" +
+            "\n 4. 平台级故障导致大面积超时。(System error, please wait)"
+
         // #2365 在运行中的插件中记录心跳超时信息
         val runningTask = pipelineTaskService.getRunningTask(container.projectId, container.buildId)
         runningTask.forEach { taskMap ->
@@ -121,19 +132,19 @@ class HeartbeatControl @Autowired constructor(
                 val executeCount = taskMap["executeCount"]?.toString()?.toInt() ?: 1
                 buildLogPrinter.addRedLine(
                     buildId = container.buildId,
-                    message =
-                    "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
+                    message = tipMessage,
                     tag = taskMap["taskId"].toString(),
                     jobId = container.containerHashId,
                     executeCount = executeCount
                 )
             }
         }
+
         if (!found) {
             // #2365 在Set Up Job位置记录心跳超时信息
             buildLogPrinter.addRedLine(
                 buildId = container.buildId,
-                message = "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
+                message = tipMessage,
                 tag = VMUtils.genStartVMTaskId(container.containerId),
                 jobId = container.containerHashId,
                 executeCount = container.executeCount
@@ -152,7 +163,7 @@ class HeartbeatControl @Autowired constructor(
                 containerHashId = container.containerHashId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
-                reason = "Agent心跳超时/Agent Dead，请检查构建机状态",
+                reason = tipMessage,
                 errorTypeName = ErrorType.THIRD_PARTY.name,
                 errorCode = ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR
             )
