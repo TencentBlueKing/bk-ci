@@ -1304,6 +1304,21 @@ class RepositoryService @Autowired constructor(
         return result
     }
 
+    fun getRepositoryByHashIds(hashIds: List<String>): List<Repository> {
+        val repositoryIds = hashIds.map { HashUtil.decodeOtherIdToLong(it) }
+        val repositoryInfos = repositoryDao.getRepoByIds(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds,
+            checkDelete = true
+        )
+        val result = mutableListOf<Repository>()
+        repositoryInfos?.map {
+            val repository = compose(it)
+            result.add(repository)
+        }
+        return result
+    }
+
     fun getInfoByIds(ids: List<Long>): List<RepositoryInfo> {
         val repositoryInfos = repositoryDao.getRepoByIds(
             dslContext = dslContext,
