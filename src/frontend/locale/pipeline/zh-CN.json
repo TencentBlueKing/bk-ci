@@ -633,6 +633,7 @@
         }
     },
     "editPage": {
+        "invalidValue": "插件表单参数{0}非法 ",
         "tipError": "Tip组件返回值需要是字符串",
         "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
@@ -897,6 +898,7 @@
         "jobLimit": "单个stage下的job数量不能大于",
         "atomLimit": "单个job下的插件数量不能大于",
         "correctPipeline": "请输入正确的流水线",
+        "PleaseSelectAtom": "请先选择插件",
         "oneCodecc": "只允许一个代码扫描插件",
         "oneManualTrigger": "流水线不允许超过一个手动触发插件",
         "oneTimerTrigger": "流水线不允许超过一个定时触发插件",

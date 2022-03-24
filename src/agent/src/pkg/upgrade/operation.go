@@ -31,14 +31,13 @@ import (
 	"errors"
 	"os"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"github.com/astaxie/beego/logs"
 )
-
+// UninstallAgent 卸载
 func UninstallAgent() {
 	logs.Info("start uninstall agent")
 
@@ -50,7 +49,7 @@ func UninstallAgent() {
 	logs.Warning("agent process exiting")
 	systemutil.ExitProcess(0)
 }
-
+// runUpgrader 执行升级器
 func runUpgrader(action string) error {
 	logs.Info("[agentUpgrade]|start upgrader process")
 
@@ -80,14 +79,10 @@ func runUpgrader(action string) error {
 	systemutil.ExitProcess(0)
 	return nil
 }
-
+// DoUpgradeOperation 调用升级程序
 func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
 	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged)
 	config.GIsAgentUpgrading = true
-	defer func() {
-		config.GIsAgentUpgrading = false
-		api.FinishUpgrade(true)
-	}()
 
 	if !agentChanged && !workAgentChanged {
 		logs.Info("[agentUpgrade]|no change to upgrade, skip")
@@ -104,7 +99,7 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool) error {
 			logs.Error("[agentUpgrade]|replace work agent file failed: ", err.Error())
 			return errors.New("replace work agent file failed")
 		}
-		logs.Info("[agentUpgrade]|relace agent file done")
+		logs.Info("[agentUpgrade]|replace agent file done")
 
 		config.GAgentEnv.SlaveVersion = config.DetectWorkerVersion()
 	}

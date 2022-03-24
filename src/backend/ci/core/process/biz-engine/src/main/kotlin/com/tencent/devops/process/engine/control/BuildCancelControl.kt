@@ -364,7 +364,8 @@ class BuildCancelControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,
-                mutexGroup = mutexGroup
+                mutexGroup = mutexGroup,
+                executeCount = container.executeCount
             )
         }
     }

@@ -44,7 +44,6 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
-import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -396,9 +395,8 @@ class AtomDao : AtomBaseDao() {
     ): Result<out Record>? {
         with(TAtom.T_ATOM) {
             return dslContext.select(
-                VERSION.`as`("version"),
-                CREATE_TIME.`as`("createTime"),
-                ATOM_STATUS.`as`("atomStatus")
+                VERSION.`as`(KEY_VERSION),
+                ATOM_STATUS.`as`(KEY_ATOM_STATUS)
             ).from(this)
                 .where(
                     generateGetPipelineAtomCondition(
@@ -423,7 +421,6 @@ class AtomDao : AtomBaseDao() {
         val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL
         val baseStep = dslContext.select(
             tAtom.VERSION.`as`(KEY_VERSION),
-            tAtom.CREATE_TIME.`as`(KEY_CREATE_TIME),
             tAtom.ATOM_STATUS.`as`(KEY_ATOM_STATUS)
         ).from(tAtom)
         val t = if (defaultFlag) {
@@ -443,7 +440,9 @@ class AtomDao : AtomBaseDao() {
             )
             conditions.add(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
             conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            baseStep.join(tStoreProjectRel).on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE)).where(conditions)
+            baseStep.join(tStoreProjectRel).on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
+                .where(conditions)
+                .groupBy(tAtom.ATOM_CODE, tAtom.ATOM_STATUS)
         }
         val firstVersion = JooqUtils.subStr(
             str = t.field(KEY_VERSION) as Field<String>,
@@ -466,7 +465,6 @@ class AtomDao : AtomBaseDao() {
         )
         return dslContext.select(
             t.field(KEY_VERSION),
-            t.field(KEY_CREATE_TIME),
             t.field(KEY_ATOM_STATUS),
             firstVersion,
             secondVersion,
