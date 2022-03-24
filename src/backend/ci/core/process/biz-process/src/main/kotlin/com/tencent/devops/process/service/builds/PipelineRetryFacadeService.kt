@@ -34,6 +34,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
@@ -85,8 +86,41 @@ class PipelineRetryFacadeService @Autowired constructor(
             stageId = null
         )
 
+        // 校验当前job的关机事件是否有完成
+        checkStopTask(projectId, buildId, containerInfo!!)
+        // 刷新当前job的开关机以及job状态， container状态， detail数据
+        refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo)
+        // 发送container Refreash事件，重新开始task对应的调度
+        sendContainerEvent(taskInfo, userId)
+        return true
+    }
+
+    // 发送container刷新事件，将重置后的job重新丢入引擎中调度
+    private fun sendContainerEvent(taskInfo: PipelineBuildTask, userId: String) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildContainerEvent(
+                source = "runningBuildRetry${taskInfo.buildId}|${taskInfo.taskId}",
+                containerId = taskInfo.containerId,
+                containerHashId = taskInfo.containerHashId,
+                stageId = taskInfo.stageId,
+                pipelineId = taskInfo.pipelineId,
+                buildId = taskInfo.buildId,
+                userId = userId,
+                projectId = taskInfo.projectId,
+                actionType = ActionType.REFRESH,
+                containerType = ""
+            )
+        )
+    }
+
+    // 若当前job的关机任务还未完成，报错让用户稍后再重试。否则会因为开机比关机早到引发引擎调度问题
+    private fun checkStopTask(
+        projectId: String,
+        buildId: String,
+        containerInfo: PipelineBuildContainer
+    ) {
         var jobFinish = true
-        if (!containerInfo!!.status.isFinish()) {
+        if (!containerInfo.status.isFinish()) {
             val runningTasks = pipelineTaskService.listContainerBuildTasks(
                 projectId = projectId,
                 buildId = buildId,
@@ -108,7 +142,16 @@ class PipelineRetryFacadeService @Autowired constructor(
                 defaultMessage = "$buildId｜${containerInfo.containerId} stopVm未完成,请稍后重试"
             )
         }
+    }
 
+    // 刷新要重试task所属job的开关机状态，task状态。 container状态，detail相关信息
+    private fun refreshTaskAndJob(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        taskId: String,
+        containerInfo: PipelineBuildContainer
+    ) {
         val taskRecords = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerInfo.containerId)
         // 待重试task所属job对应的startVm，stopVm，endTask，对应task状态重置为Queue
         val startAndEndTask = mutableListOf<PipelineBuildTask>()
@@ -131,32 +174,6 @@ class PipelineRetryFacadeService @Autowired constructor(
         }
 
         taskBuildDetailService.taskStart(projectId, buildId, taskId)
-
-        // 修改容器状态位运行
-        pipelineContainerService.updateContainerStatus(
-            projectId = containerInfo.projectId,
-            buildId = containerInfo.buildId,
-            stageId = containerInfo.stageId,
-            containerId = containerInfo.containerId,
-            buildStatus = BuildStatus.QUEUE
-        )
-
-        // 发送container Refreash事件，重新开始task对应的调度
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildContainerEvent(
-                source = "runningBuildRetry$buildId|$taskId",
-                containerId = taskInfo.containerId,
-                containerHashId = taskInfo.containerHashId,
-                stageId = taskInfo.stageId,
-                pipelineId = taskInfo.pipelineId,
-                buildId = taskInfo.buildId,
-                userId = userId,
-                projectId = taskInfo.projectId,
-                actionType = ActionType.REFRESH,
-                containerType = ""
-            )
-        )
-        return true
     }
 
     companion object {
