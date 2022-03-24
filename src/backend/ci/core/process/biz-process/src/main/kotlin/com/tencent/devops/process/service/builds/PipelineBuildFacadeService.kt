@@ -108,6 +108,7 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
+import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -436,6 +437,10 @@ class PipelineBuildFacadeService(
                             }
                         )
                     }
+                    // #2821 完整构建重试,传递触发插件ID，否则当有多个事件触发插件时,rebuild后触发器的标记不对
+                    startParamsWithType.plus(
+                        BuildParameters(key = PIPELINE_START_TASK_ID, value = originVars[PIPELINE_START_TASK_ID] ?: "")
+                    )
                 } catch (ignored: Exception) {
                     logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
