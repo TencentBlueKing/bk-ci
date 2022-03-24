@@ -330,7 +330,7 @@ class ScmOauthService @Autowired constructor(
         page: Int,
         size: Int
     ): List<GitCommit> {
-        return ScmFactory.getScm(
+        return ScmOauthFactory.getScm(
             projectName = projectName,
             url = url,
             type = type,
@@ -339,7 +339,8 @@ class ScmOauthService @Autowired constructor(
             passPhrase = null,
             token = token,
             region = null,
-            userName = null
+            userName = null,
+            event = null
         ).getMrCommitList(mrId = mrId, page = page, size = size)
     }
 
