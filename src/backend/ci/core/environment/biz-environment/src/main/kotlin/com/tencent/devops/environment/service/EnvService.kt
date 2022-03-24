@@ -700,7 +700,7 @@ class EnvService @Autowired constructor(
     ): List<String> {
         val projectList = client.get(ServiceProjectResource::class).list(
             userId = userId
-        ).data?.map { it.projectId } ?: emptyList()
+        ).data?.map { it.englishName } ?: emptyList()
         val envId = HashUtil.decodeIdToLong(envHashId)
         val count = envShareProjectDao.count(
             dslContext = dslContext,
