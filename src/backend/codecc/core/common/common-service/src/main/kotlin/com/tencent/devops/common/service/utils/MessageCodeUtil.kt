@@ -98,7 +98,7 @@ class MessageCodeUtil @Autowired constructor() {
             try {
                 val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(
                     RedisTemplate::class.java,
-                    "redisTemplate"
+                    "stringRedisTemplate"
                 ) as RedisTemplate<String, String>
                 // 根据状态码从redis中获取该状态码对应的信息
                 val messageCodeDetailStr = redisTemplate.opsForValue().get(messageCode)

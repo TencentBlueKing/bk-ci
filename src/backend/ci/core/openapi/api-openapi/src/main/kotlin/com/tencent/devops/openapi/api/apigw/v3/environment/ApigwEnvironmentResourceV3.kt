@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithPermission
+import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
@@ -41,6 +43,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -74,6 +77,113 @@ interface ApigwEnvironmentResourceV3 {
         @PathParam("projectId")
         projectId: String
     ): Result<List<NodeWithPermission>>
+
+    @ApiOperation("创建环境", tags = ["v3_app_env_create", "v3_user_env_create"])
+    @POST
+    @Path("/projects/{projectId}/envs")
+    fun createEnv(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "环境信息", required = true)
+        environment: EnvCreateInfo
+    ): Result<EnvironmentId>
+
+    @ApiOperation("删除环境", tags = ["v3_app_env_delete", "v3_user_env_delete"])
+    @DELETE
+    @Path("/projects/{projectId}/envs/{envHashId}")
+    fun deleteEnv(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<Boolean>
+
+    @ApiOperation("删除节点", tags = ["v3_app_node_delete", "v3_user_node_delete"])
+    @POST
+    @Path("/projects/{projectId}/nodes/deleteNodes")
+    fun deleteNodes(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "节点列表", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("添加节点到环境", tags = ["v3_app_env_add_node", "v3_user_env_add_node"])
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/addNodes")
+    fun envAddNodes(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("从环境删除节点", tags = ["v3_app_env_delete_node", "v3_user_env_delete_node"])
+    @POST
+    @Path("/projects/{projectId}/envs/{envHashId}/deleteNodes")
+    fun envDeleteNodes(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String,
+        @ApiParam("节点 HashId", required = true)
+        nodeHashIds: List<String>
+    ): Result<Boolean>
 
     @ApiOperation("获取用户有权限使用的环境列表", tags = ["v3_app_env_list_usable_envs", "v3_user_env_list_usable_envs"])
     @GET

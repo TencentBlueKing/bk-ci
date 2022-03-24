@@ -39,6 +39,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
@@ -73,6 +74,7 @@ interface BuildListener {
 
     fun onShutdown(event: PipelineAgentShutdownEvent)
 
+    @BkTimed
     fun handleStartMessage(event: PipelineAgentStartupEvent) {
         handleStartCommon(event) { doStartHandler() }
     }

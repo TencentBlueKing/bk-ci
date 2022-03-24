@@ -28,9 +28,11 @@
 package com.tencent.devops.agent.runner
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
+import com.tencent.devops.worker.common.ErrorMsgLogUtil
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_PREPARE_START_FILE
@@ -93,9 +95,12 @@ object WorkRunner {
         } catch (e: PropertyNotExistException) {
             logger.warn("The property(${e.key}) is not exist")
             exitProcess(-1)
+        } catch (re: RemoteServiceException) {
+            ErrorMsgLogUtil.appendErrorMsg(re.responseContent ?: re.message!!)
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
             LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)
+            ErrorMsgLogUtil.appendErrorMsg(ignore.message!!)
             exitProcess(-1)
         }
     }

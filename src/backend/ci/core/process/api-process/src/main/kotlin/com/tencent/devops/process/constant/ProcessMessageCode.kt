@@ -74,7 +74,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_EXISTS = "2101016" // 流水线: 流水线已存在
     const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[${elementId}]不存在
     const val ERROR_QUALITY_REVIEWER_NOT_MATCH = "2101018" // 流水线: 用户({0})不在审核人员名单中
-    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建
+    const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建，请过{0}秒后再试
     const val ERROR_START_BUILD_FREQUENT_LIMIT = "2101020" // 流水线: 不能太频繁启动构建
     const val DENY_START_BY_MANUAL = "2101021" // 流水线: 该流水线不能手动启动
     const val DENY_START_BY_REMOTE = "2101022" // 流水线: 该流水线不能远程触发
@@ -231,6 +231,11 @@ object ProcessMessageCode {
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
+
+    // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
+    const val BUILD_WORKER_DEAD_ERROR = "2101318"
+    // 构建机Agent详情链接
+    const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
 
     // 人工审核插件编辑时输入参数错误
     const val ERROR_PARAM_MANUALREVIEW = "2101105"

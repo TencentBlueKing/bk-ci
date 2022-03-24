@@ -49,16 +49,17 @@ import (
 
 const buildIntervalInSeconds = 5
 
+// AgentStartup 上报构建机启动
 func AgentStartup() (agentStatus string, err error) {
 	result, err := api.AgentStartup()
 	return parseAgentStatusResult(result, err)
 }
-
+// getAgentStatus 获取构建机状态
 func getAgentStatus() (agentStatus string, err error) {
 	result, err := api.GetAgentStatus()
 	return parseAgentStatusResult(result, err)
 }
-
+// parseAgentStatusResult 解析状态信息
 func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (agentStatus string, err error) {
 	if resultErr != nil {
 		logs.Error("parse agent status error: ", resultErr.Error())
@@ -76,7 +77,7 @@ func parseAgentStatusResult(result *httputil.DevopsResult, resultErr error) (age
 	}
 	return agentStatus, nil
 }
-
+// DoPollAndBuild 获取构建，如果达到最大并发或者是处于升级中，则不执行
 func DoPollAndBuild() {
 	for {
 		time.Sleep(buildIntervalInSeconds * time.Second)
@@ -90,8 +91,10 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		if config.GAgentConfig.ParallelTaskCount != 0 && GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, ParallelTaskCount config: %d, instance count: %d",
+		if config.GAgentConfig.ParallelTaskCount != 0 &&
+			GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
+			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, " +
+				"ParallelTaskCount config: %d, instance count: %d",
 				config.GAgentConfig.ParallelTaskCount, GBuildManager.GetInstanceCount()))
 			continue
 		}
@@ -103,7 +106,7 @@ func DoPollAndBuild() {
 
 		buildInfo, err := getBuild()
 		if err != nil {
-			logs.Error("get build failed, retry")
+			logs.Error("get build failed, retry, err", err.Error())
 			continue
 		}
 
@@ -115,11 +118,10 @@ func DoPollAndBuild() {
 		err = runBuild(buildInfo)
 		if err != nil {
 			logs.Error("start build failed: ", err.Error())
-			// TODO 写buildLog
 		}
 	}
 }
-
+// getBuild 从服务器认领要构建的信息
 func getBuild() (*api.ThirdPartyBuildInfo, error) {
 	logs.Info("get build")
 	result, err := api.GetBuild()
@@ -144,15 +146,40 @@ func getBuild() (*api.ThirdPartyBuildInfo, error) {
 
 	return buildInfo, nil
 }
-
+// runBuild 启动构建
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
+
 	workDir := systemutil.GetWorkDir()
 	agentJarPath := config.BuildAgentJarPath()
 	if !fileutil.Exists(agentJarPath) {
-		errorMsg := fmt.Sprintf("missing %s, please check agent installation.", config.WorkAgentFile)
-		logs.Error(errorMsg)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errorMsg})
+		// #5806 尝试自愈
+		upgradeWorkerFile := systemutil.GetUpgradeDir() + "/" + config.WorkAgentFile
 
+		if fileutil.Exists(upgradeWorkerFile) {
+
+			_, err := fileutil.CopyFile(upgradeWorkerFile, agentJarPath, true)
+			upgradeWorkerFileVersion := config.DetectWorkerVersion()
+			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
+				// #5806 宽松判断合法的版本v开头
+				errorMsg := fmt.Sprintf(
+					"\n尝试恢复 [%s] 执行文件失败，请到 [%s] 目录下执行 install.sh 或解压 agent.zip 还原安装目录" +
+					"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
+					agentJarPath, workDir, agentJarPath, workDir)
+				logs.Error(errorMsg)
+				workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+			} else { // #5806 替换后修正版本号
+				if config.GAgentEnv.SlaveVersion != upgradeWorkerFileVersion {
+					config.GAgentEnv.SlaveVersion = upgradeWorkerFileVersion
+				}
+			}
+		} else {
+			errorMsg := fmt.Sprintf(
+				"\n%s执行文件丢失，请到%s目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录" +
+				"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
+				agentJarPath, workDir, agentJarPath, workDir)
+			logs.Error(errorMsg)
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+		}
 	}
 
 	runUser := config.GAgentConfig.SlaveUser
@@ -174,14 +201,23 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			goEnv[k] = v
 		}
 	}
-
+	// #5806 定义临时目录
+	tmpDir, tmpMkErr := systemutil.GetBuildTmpDir()
+	if tmpMkErr != nil {
+		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
+		logs.Error(errMsg)
+		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+		return tmpMkErr
+	}
 	if systemutil.IsWindows() {
 		startCmd := config.GetJava()
 		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 		args := []string{
-			"-Ddevops.slave.agent.role=devops.slave.agent.role.slave",
+			"-Djava.io.tmpdir=" + tmpDir,
+			"-Ddevops.agent.error.file=" + systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId),
 			"-Dbuild.type=AGENT",
 			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
+			"-Xmx2g", // #5806 兼容性问题，必须独立一行
 			"-jar",
 			config.BuildAgentJarPath(),
 			getEncodedBuildInfo(buildInfo)}
@@ -189,29 +225,29 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)
-		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
+		logs.Info(fmt.Sprintf("[%s]|Job#_%s|Build started, pid:%d ", buildInfo.BuildId, buildInfo.VmSeqId, pid))
 		return nil
 	} else {
-		startScriptFile, err := writeStartBuildAgentScript(buildInfo)
+		startScriptFile, err := writeStartBuildAgentScript(buildInfo, tmpDir)
 		if err != nil {
-			errMsg := "write worker start script failed: " + err.Error()
+			errMsg := "准备构建脚本生成失败(create start script failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
 			return err
 		}
 		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
 		if err != nil {
-			errMsg := "start worker process failed: " + err.Error()
+			errMsg := "启动构建进程失败(start worker process failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{*buildInfo, false, errMsg})
+			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)
-		logs.Info("build started, runUser: ", runUser, ", pid: ", pid, ", buildId: ", buildInfo.BuildId, ", vmSetId: ", buildInfo.VmSeqId)
+		logs.Info(fmt.Sprintf("[%s]|Job#_%s|Build started, pid:%d ", buildInfo.BuildId, buildInfo.VmSeqId, pid))
 	}
 	return nil
 }
@@ -224,30 +260,30 @@ func getEncodedBuildInfo(buildInfo *api.ThirdPartyBuildInfo) string {
 	return codedBuildInfo
 }
 
-func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo) (string, error) {
+func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir string) (string, error) {
 	logs.Info("write start build agent script to file")
 	// 套娃，多加一层脚本，使用exec新起进程，这样才会读取 .bash_profile
 	prepareScriptFile := fmt.Sprintf(
 		"%s/devops_agent_prepare_start_%s_%s_%s.sh",
-		systemutil.GetWorkDir(),
-		buildInfo.ProjectId,
-		buildInfo.BuildId,
-		buildInfo.VmSeqId)
+		systemutil.GetWorkDir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
 	scriptFile := fmt.Sprintf(
 		"%s/devops_agent_start_%s_%s_%s.sh",
-		systemutil.GetWorkDir(),
-		buildInfo.ProjectId,
-		buildInfo.BuildId,
-		buildInfo.VmSeqId)
+		systemutil.GetWorkDir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
+
+	buildInfo.ToDelTmpFiles = []string{
+		scriptFile, prepareScriptFile, systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId)}
 
 	logs.Info("start agent script: ", scriptFile)
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
 	lines := []string{
 		"#!" + getCurrentShell(),
-		"source /etc/profile",
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
-		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s -Dbuild.type=AGENT -Ddevops.slave.agent.role=devops.slave.agent.role.slave -DAGENT_LOG_PREFIX=%s -jar %s %s",
-			config.GetJava(), scriptFile, prepareScriptFile, agentLogPrefix, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
+		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
+			"-Ddevops.agent.error.file=%s "+
+			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
+			config.GetJava(), scriptFile, prepareScriptFile,
+			systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId),
+			agentLogPrefix, tmpDir, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 
@@ -273,6 +309,14 @@ func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	if buildInfo == nil {
 		logs.Warn("buildInfo not exist")
 		return
+	}
+
+	// #5806 防止意外情况没有清理生成的脚本
+	if buildInfo.ToDelTmpFiles != nil {
+		for _, filePath := range buildInfo.ToDelTmpFiles {
+			e := fileutil.TryRemoveFile(filePath)
+			logs.Info(fmt.Sprintf("build[%s] finish, delete:%s, err:%s", buildInfo.BuildId, filePath, e))
+		}
 	}
 
 	if buildInfo.Success {

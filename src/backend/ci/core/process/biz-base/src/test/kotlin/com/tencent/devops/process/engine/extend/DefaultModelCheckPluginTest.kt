@@ -154,6 +154,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         )
         whenever(pipelineCommonSettingConfig.maxModelSize).thenReturn(16777215)
         whenever(pipelineCommonSettingConfig.maxStageNum).thenReturn(20)
+        whenever(pipelineCommonSettingConfig.maxPipelineNameSize).thenReturn(255)
+        whenever(pipelineCommonSettingConfig.maxPipelineDescSize).thenReturn(255)
         whenever(stageCommonSettingConfig.maxJobNum).thenReturn(20)
         whenever(jobCommonSettingConfig.maxTaskNum).thenReturn(20)
         whenever(taskCommonSettingConfig.maxInputNum).thenReturn(50)
