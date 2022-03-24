@@ -603,6 +603,48 @@ dispatchStream:
     targetCPU: 80
     targetMemory: 80
 
+# dispatchPcg Deployment
+dispatchPcg:
+  enabled: false
+  env:
+    jvmXms: 512m
+    # JVM的-xmx , 不能大于 limits.memory
+    jvmXmx: 1024m
+  replicas: 1
+  podLabels: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podAnnotations: {}
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80
+
 # dispatchKubernetes Deployment
 dispatchKubernetes:
   enabled: false
