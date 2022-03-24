@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
@@ -52,7 +53,8 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineEventDispatcher: PipelineEventDispatcher,
     val pipelineTaskService: PipelineTaskService,
     val pipelineContainerService: PipelineContainerService,
-    val taskBuildDetailService: TaskBuildDetailService
+    val taskBuildDetailService: TaskBuildDetailService,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
     fun runningBuildTaskRetry(
         userId: String,
@@ -92,6 +94,13 @@ class PipelineRetryFacadeService @Autowired constructor(
         refreshTaskAndJob(userId, projectId, buildId, taskId, containerInfo)
         // 发送container Refreash事件，重新开始task对应的调度
         sendContainerEvent(taskInfo, userId)
+        buildLogPrinter.addYellowLine(
+            buildId = buildId,
+            message = "$userId retry fail task ${taskInfo.taskName} when running",
+            tag = taskId,
+            jobId = containerInfo.containerId,
+            executeCount = taskInfo.executeCount ?: 1
+        )
         return true
     }
 
