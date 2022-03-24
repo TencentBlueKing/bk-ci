@@ -122,7 +122,6 @@ fun GitRequestEvent.isDeleteBranch(): Boolean {
 }
 
 fun GitRequestEvent.isDeleteTag(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
-        sourceGitProjectId != null &&
-        sourceGitProjectId != gitProjectId
+    return objectKind == TGitObjectKind.TAG_PUSH.value &&
+        operationKind == TGitPushOperationKind.DELETE.value
 }
