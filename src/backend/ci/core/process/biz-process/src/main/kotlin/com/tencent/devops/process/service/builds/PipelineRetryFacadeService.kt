@@ -60,6 +60,7 @@ class PipelineRetryFacadeService @Autowired constructor(
         buildId: String,
         taskId: String? = null
     ): Boolean {
+        logger.info("runningBuildTaskRetry $userId|$projectId|$pipelineId|$buildId|$taskId}")
         if (taskId.isNullOrEmpty()) {
             // 抛异常
             throw ParamBlankException("Invalid taskId")
@@ -79,7 +80,7 @@ class PipelineRetryFacadeService @Autowired constructor(
         // 此处请求可能早于关机到达。 若还未关机就点击重试，提示用户稍后再试
         val containerInfo = pipelineContainerService.getContainer(
             projectId = projectId,
-            buildId = pipelineId,
+            buildId = buildId,
             containerId = taskInfo.containerId,
             stageId = null
         )
