@@ -969,6 +969,21 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO`  (
   KEY `PROJECT_PIPELINE_IDX` (`PROJECT_ID`,`PIPELINE_ID`,`BUILD_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线模板跨项目访问表';
 
+
+-- ----------------------------
+-- Table structure for T_PIPELINE_WEBHOOK_REVISION
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_PIPELINE_WEBHOOK_REVISION` (
+  `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `PROJECT_NAME` varchar(255) DEFAULT NULL,
+  `REVISION` varchar(64) DEFAULT NULL,
+  `CREATE_TIME` datetime DEFAULT NULL,
+  `UPDATE_TIME` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNIQ_PROJECT_NAME` (`PROJECT_NAME`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4;
+
 -- ----------------------------
 -- Table structure for T_PIPELINE_BUILD_COMMITS
 -- ----------------------------
