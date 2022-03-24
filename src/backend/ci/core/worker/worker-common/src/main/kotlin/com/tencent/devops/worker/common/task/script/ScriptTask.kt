@@ -98,6 +98,7 @@ open class ScriptTask : ITask() {
         try {
             command.execute(
                 buildId = buildId,
+                jobId = buildVariables.jobId,
                 stepId = buildTask.stepId,
                 script = script,
                 taskParam = taskParams,
@@ -146,16 +147,16 @@ open class ScriptTask : ITask() {
         } finally {
             // 成功失败都写入全局变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
-            // 上下文返回给全局时追加jobs前缀
-            val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
-            addEnv(mapOf("$jobPrefix.os" to AgentEnv.getOS().name))
-            addEnv(ScriptEnvUtils.getContext(buildId, workspace).map { context ->
-                "$jobPrefix.${context.key}" to context.value
-            }.toMap())
-            ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
+            addEnv(ScriptEnvUtils.getContext(buildId, workspace))
+
+            // 增加操作系统类型的输出
+            buildVariables.jobId?.let { addEnv(mapOf("jobs.$it.os" to AgentEnv.getOS().name)) }
 
             // 设置质量红线指标信息
             setGatewayValue(workspace, buildTask.taskId ?: "", buildTask.elementName ?: "")
+
+            // 清理所有执行的中间输出文件
+            ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
         }
     }
 

@@ -365,6 +365,7 @@ open class MarketAtomTask : ITask() {
                             dir = atomTmpSpace,
                             workspace = workspace,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -378,6 +379,7 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = environment,
                             systemEnvVariables = systemEnvVariables,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -687,10 +689,13 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                // 如果定义了插件上下文标识ID，才做outputs输出，即使没有jobId也以containerId前缀输出
+                // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
+                // 即使没有jobId也以containerId前缀输出
+                // #6372 上下文输出后，取消原变量名输出，防止冲突
                 buildTask.stepId?.let {
                     val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
                     env["$jobPrefix.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
+                    env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
