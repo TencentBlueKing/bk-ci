@@ -44,6 +44,7 @@ class CommandPowerShellImpl : ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean,
         errorMessage: String?,
+        jobId: String?,
         stepId: String?,
         charsetType: String?,
         taskId: String?

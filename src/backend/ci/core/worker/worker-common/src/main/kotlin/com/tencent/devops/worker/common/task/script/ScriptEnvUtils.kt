@@ -31,6 +31,7 @@ import com.tencent.devops.worker.common.utils.ExecutorUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 
+@Suppress("TooManyFunctions")
 object ScriptEnvUtils {
     private const val ENV_FILE = "result.log"
     private const val CONTEXT_FILE = "context.log"
