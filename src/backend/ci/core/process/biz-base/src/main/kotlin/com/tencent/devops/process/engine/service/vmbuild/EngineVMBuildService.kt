@@ -207,7 +207,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 )
-                            }.let { customBuildEnvs -> variablesWithType.plus(customBuildEnvs) }
+                            }?.let { self -> variablesWithType.addAll(self) }
 
                             Triple(envList, contextMap, timeoutMills)
                         }
