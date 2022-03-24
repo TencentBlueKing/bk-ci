@@ -63,7 +63,7 @@ class StreamGitProjectInfoCache @Autowired constructor(
             useAccessToken: Boolean
         ) -> GitCIProjectInfo
     ): GitProjectCache {
-        val cache = getRequestGitProjectInfo( gitProjectName = gitProjectId.toString())
+        val cache = getRequestGitProjectInfo(gitProjectName = gitProjectId.toString())
         if (cache != null) {
             return cache
         }
