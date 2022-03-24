@@ -40,6 +40,7 @@ import com.tencent.devops.stream.pojo.GitCIBuildBranch
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.v2.GitCIBuildHistorySearch
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
@@ -55,7 +56,9 @@ class StreamHistoryService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val eventMessageUtil: StreamTriggerMessageUtils
+    private val eventMessageUtil: StreamTriggerMessageUtils,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamHistoryService::class.java)
@@ -136,7 +139,12 @@ class StreamHistoryService @Autowired constructor(
                     GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
                 } else {
                     // 当gitProjectId与event的不同时，说明是远程仓库触发的
-                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, client)
+                    val gitProjectInfoCache = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = gitRequestEvent.gitProjectId,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, gitProjectInfoCache)
                 }
             val pipeline =
                 pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach

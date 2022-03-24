@@ -32,88 +32,85 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.trigger.pojo.GitProjectCache
 import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class StreamTriggerCache @Autowired constructor(
+class StreamGitProjectInfoCache @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val streamGitTokenService: StreamGitTokenService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamTriggerCache::class.java)
+        private val logger = LoggerFactory.getLogger(StreamGitProjectCache::class.java)
 
         //  过期时间目前设为1小时
-        private const val STREAM_CACHE_EXPIRE_TIME = 10 * 60L
-        private const val STREAM_REQUEST_KEY_PREFIX = "stream:request"
+        private const val STREAM_CACHE_EXPIRE_TIME = 60 * 60L
+        private const val STREAM_GIT_PROJECT_KEY_PREFIX = "stream:gitProjectInfo"
     }
 
-    fun getAndSaveRequestGitProjectInfo(
-        gitRequestEventId: Long,
-        gitProjectId: String,
-        token: String,
+    fun getAndSaveGitProjectInfo(
+        gitProjectId: Long,
         useAccessToken: Boolean,
         getProjectInfo: (
             token: String,
             gitProjectId: String,
             useAccessToken: Boolean
         ) -> GitCIProjectInfo
-    ): StreamGitProjectCache {
-        val cache = getRequestGitProjectInfo(gitRequestEventId = gitRequestEventId, gitProjectName = gitProjectId)
+    ): GitProjectCache {
+        val cache = getRequestGitProjectInfo( gitProjectName = gitProjectId.toString())
         if (cache != null) {
             return cache
         }
         val gitProjectInfo = getProjectInfo(
-            token,
-            gitProjectId,
+            streamGitTokenService.getToken(gitProjectId),
+            gitProjectId.toString(),
             useAccessToken
         )
-        val cacheData = StreamGitProjectCache(
-            gitProjectName = gitProjectId,
+        val cacheData = GitProjectCache(
             gitProjectId = gitProjectInfo.gitProjectId,
-            defaultBranch = gitProjectInfo.defaultBranch,
             gitHttpUrl = gitProjectInfo.gitHttpUrl,
-            name = gitProjectInfo.name
+            homepage = gitProjectInfo.homepage,
+            pathWithNamespace = gitProjectInfo.pathWithNamespace
         )
         saveRequestGitProjectInfo(
-            gitRequestEventId = gitRequestEventId,
-            gitProjectName = gitProjectId,
+            gitProjectName = gitProjectId.toString(),
             cache = cacheData
         )
         return cacheData
     }
 
     /**
-     * 保存某一次request触发时获取的各个工蜂项目名称和信息的KEY-VALUE，便于多条流水线时直接拿取降低网络IO
-     * projectName: 可以是 gitProjectId.toString() 也可为 gitProject.pathWithPathSpace
+     * 保存工蜂项目基本不变信息，降低网络IO时延
      */
     fun saveRequestGitProjectInfo(
-        gitRequestEventId: Long,
         gitProjectName: String,
-        cache: StreamGitProjectCache
+        cache: GitProjectCache
     ) {
         redisOperation.set(
-            key = "$STREAM_REQUEST_KEY_PREFIX:$gitRequestEventId:gitProjectInfo:$gitProjectName",
+            key = "$STREAM_GIT_PROJECT_KEY_PREFIX:$gitProjectName",
             value = JsonUtil.toJson(cache),
             expiredInSecond = STREAM_CACHE_EXPIRE_TIME
         )
     }
 
-    fun getRequestGitProjectInfo(gitRequestEventId: Long, gitProjectName: String): StreamGitProjectCache? {
+    fun getRequestGitProjectInfo(gitProjectName: String): GitProjectCache? {
         return try {
             val result = redisOperation.get(
-                "$STREAM_REQUEST_KEY_PREFIX:$gitRequestEventId:gitProjectInfo:$gitProjectName"
+                "$STREAM_GIT_PROJECT_KEY_PREFIX:$gitProjectName"
             )
             if (result != null) {
-                objectMapper.readValue<StreamGitProjectCache>(result)
+                objectMapper.readValue<GitProjectCache>(result)
             } else {
                 null
             }
         } catch (ignore: Exception) {
-            logger.warn("stream request gitProjectInfo cache get $gitRequestEventId|$gitProjectName error", ignore)
+            logger.warn("stream request gitProjectInfo cache get$gitProjectName error", ignore)
             null
         }
     }

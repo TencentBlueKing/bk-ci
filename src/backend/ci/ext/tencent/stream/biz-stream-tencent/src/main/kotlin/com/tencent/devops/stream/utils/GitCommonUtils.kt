@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.stream.trigger.pojo.GitProjectCache
 import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth", "DuplicateCaseInWhenExpression")
@@ -134,28 +135,19 @@ object GitCommonUtils {
     }
 
     // 判断是否为远程库的请求并返回带远程库信息的event
-    fun checkAndGetRepoBranch(gitRequestEvent: GitRequestEvent, client: Client): GitRequestEvent {
+    fun checkAndGetRepoBranch(gitRequestEvent: GitRequestEvent, gitProjectCache: GitProjectCache): GitRequestEvent {
         var realEvent = gitRequestEvent
         try {
-            val gitToken = client.getScm(ServiceGitResource::class)
-                .getToken(gitRequestEvent.gitProjectId).data!!
-            logger.info(
-                "get token for gitProjectId[${gitRequestEvent.gitProjectId}] form scm, " +
-                    "token: $gitToken"
-            )
-            val sourceRepositoryConf = client.getScm(ServiceGitResource::class)
-                .getProjectInfo(gitToken.accessToken, gitRequestEvent.gitProjectId).data
             realEvent = gitRequestEvent.copy(
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace/project_name:branch
-                branch = if (sourceRepositoryConf != null) {
-                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
-                    "$path:${gitRequestEvent.branch}"
+                branch = if (gitProjectCache.pathWithNamespace != null) {
+                    "${gitProjectCache.pathWithNamespace}:${gitRequestEvent.branch}"
                 } else {
                     gitRequestEvent.branch
                 }
             )
         } catch (e: Exception) {
-            logger.error("Cannot get source GitProjectInfo: ", e)
+            logger.error("Cannot get repo GitProjectInfo: ", e)
         }
         return realEvent
     }
