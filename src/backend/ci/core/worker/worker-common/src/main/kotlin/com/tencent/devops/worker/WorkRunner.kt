@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent.runner
+package com.tencent.devops.worker
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -56,6 +56,8 @@ object WorkRunner {
     fun execute(args: Array<String>) {
         try {
             val buildInfo = getBuildInfo(args)!!
+
+            addErrorMsgWriteToFileHook()
 
             logger.info("[${buildInfo.buildId}]|Start worker for build| projectId=${buildInfo.projectId}")
 
@@ -141,6 +143,18 @@ object WorkRunner {
         } catch (ignore: Throwable) {
             logger.warn("Fail to read the build Info", ignore)
             exitProcess(1)
+        }
+    }
+
+    private fun addErrorMsgWriteToFileHook() {
+        try {
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() {
+                    ErrorMsgLogUtil.flushErrorMsgToFile()
+                }
+            })
+        } catch (t: Throwable) {
+            logger.warn("Fail to add shutdown hook", t)
         }
     }
 
