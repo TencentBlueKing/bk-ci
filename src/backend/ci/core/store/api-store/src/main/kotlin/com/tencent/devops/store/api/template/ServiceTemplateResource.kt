@@ -29,11 +29,13 @@ package com.tencent.devops.store.api.template
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -82,6 +84,21 @@ interface ServiceTemplateResource {
         templateCode: String,
         @ApiParam("项目", required = true)
         @QueryParam("projectCode")
+        projectCode: String
+    ): Result<Boolean>
+
+    @ApiOperation("校验流水线模型内组件可见范围")
+    @POST
+    @Path("/{projectCode}/verification")
+    fun validateModelComponentVisibleDept(
+        @ApiParam("用户", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("流水线模型", required = true)
+        @Valid
+        model: Model,
+        @ApiParam("项目", required = true)
+        @PathParam("projectCode")
         projectCode: String
     ): Result<Boolean>
 }

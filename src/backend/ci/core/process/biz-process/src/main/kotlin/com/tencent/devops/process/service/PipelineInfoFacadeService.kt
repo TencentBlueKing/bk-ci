@@ -145,7 +145,17 @@ class PipelineInfoFacadeService @Autowired constructor(
         }
         val model = pipelineModelAndSetting.model
         modelCheckPlugin.clearUpModel(model)
-
+        if (model.srcTemplateId.isNullOrBlank()) {
+            val validateRet = client.get(ServiceTemplateResource::class)
+                .validateModelComponentVisibleDept(
+                    userId = userId,
+                    model = model,
+                    projectCode = projectId
+                )
+            if (validateRet.isNotOk()) {
+                throw OperationException(validateRet.message ?: "模版下存在无权限的组件")
+            }
+        }
         val newPipelineId = createPipeline(
             userId = userId,
             projectId = projectId,
