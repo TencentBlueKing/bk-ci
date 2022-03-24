@@ -164,7 +164,7 @@ object DependOnUtils {
             DependOnType.ID ->
                 jobControlOption.dependOnId != null && jobControlOption.dependOnId!!.isNotEmpty()
             DependOnType.NAME ->
-                !jobControlOption.dependOnName.isNullOrBlank()
+                jobControlOption.dependOnName?.isNotEmpty() ?: false
             else ->
                 false
         }
