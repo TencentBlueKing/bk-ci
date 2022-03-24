@@ -23,7 +23,6 @@ class PipelineBuildCommitsService @Autowired constructor(
         repo: Repository
     ) {
         try {
-            logger.info("save commit list start")
             var page = 1
             val size = 200
             while (true) {
@@ -34,8 +33,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                     page = page,
                     size = size
                 )
-                logger.info("git commitList is $gitCommitList")
-                if (gitCommitList.isEmpty()) break
+                if (gitCommitList.size < size) break
                 pipelineBuildCommits.create(
                     dslContext = dslContext,
                     projectId = projectId,
@@ -46,8 +44,8 @@ class PipelineBuildCommitsService @Autowired constructor(
                 )
                 page++
             }
-        } catch (err: Throwable) {
-            logger.info("save build info err | err is $err")
+        } catch (ignore: Throwable) {
+            logger.info("save build info err | err is $ignore")
         }
     }
 
