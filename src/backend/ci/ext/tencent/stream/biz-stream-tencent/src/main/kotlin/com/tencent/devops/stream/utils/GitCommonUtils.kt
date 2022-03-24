@@ -144,7 +144,7 @@ object GitCommonUtils {
                     "token: $gitToken"
             )
             val sourceRepositoryConf = client.getScm(ServiceGitResource::class)
-                .getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                .getProjectInfo(gitToken.accessToken, gitRequestEvent.gitProjectId).data
             realEvent = gitRequestEvent.copy(
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace/project_name:branch
                 branch = if (sourceRepositoryConf != null) {
