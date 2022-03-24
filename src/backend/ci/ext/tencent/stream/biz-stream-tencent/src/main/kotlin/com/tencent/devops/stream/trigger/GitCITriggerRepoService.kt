@@ -131,7 +131,7 @@ class GitCITriggerRepoService @Autowired constructor(
             if (event is GitMergeRequestEvent &&
                 event.object_attributes.action != TGitMergeActionKind.MERGE.value &&
                 !mergeConflictCheck.checkMrConflict(
-                    projectId = gitProjectPipeline.gitProjectId,
+                    projectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId,
                     gitRequestEventForHandle = gitRequestEventForHandle,
                     event = event,
                     path2PipelineExists = mapOf(gitProjectPipeline.filePath to gitProjectPipeline),
@@ -190,7 +190,7 @@ class GitCITriggerRepoService @Autowired constructor(
             ) {
                 gitRequestEvent.sourceGitProjectId!!
             } else {
-                gitProjectId
+                gitRequestEvent.gitProjectId
             }
         }
     }

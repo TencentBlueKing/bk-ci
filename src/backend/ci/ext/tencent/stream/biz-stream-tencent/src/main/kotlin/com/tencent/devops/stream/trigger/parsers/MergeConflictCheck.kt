@@ -144,7 +144,7 @@ class MergeConflictCheck @Autowired constructor(
     ): Pair<Boolean, Boolean> {
         var isFinish: Boolean
         var isTrigger: Boolean
-        val projectId = gitRequestEventForHandle.gitProjectId
+        val projectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId
         val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
         val mrInfo = try {
             streamScmService.getMergeInfo(
