@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_2_DEPLOY_DENY
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_BUILD_CAN_NOT_ADD_SVR
@@ -75,12 +76,15 @@ import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class EnvService @Autowired constructor(
     private val dslContext: DSLContext,
     private val envDao: EnvDao,
@@ -89,7 +93,8 @@ class EnvService @Autowired constructor(
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val envShareProjectDao: EnvShareProjectDao
+    private val envShareProjectDao: EnvShareProjectDao,
+    private val client: Client
 ) : IEnvService {
 
     override fun checkName(projectId: String, envId: Long?, envName: String) {
@@ -104,7 +109,8 @@ class EnvService @Autowired constructor(
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_CREATE_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_CREATE_PERMISSSION)
+            )
         }
 
         checkName(projectId, null, envCreateInfo.name)
@@ -119,7 +125,8 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
         }
         checkName(projectId, envId, envUpdateInfo.name)
 
@@ -335,7 +342,8 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_VIEW_PERMISSSION)
+            )
         }
         val env = envDao.get(dslContext, projectId, envId)
         val nodeCount = envNodeDao.count(dslContext, projectId, envId)
@@ -373,7 +381,7 @@ class EnvService @Autowired constructor(
 
     override fun listRawEnvByHashIdsAllType(envHashIds: List<String>): List<EnvWithPermission> {
         val envRecords =
-                envDao.listServerEnvByIdsAllType(dslContext, envHashIds.map { HashUtil.decodeIdToLong(it) })
+            envDao.listServerEnvByIdsAllType(dslContext, envHashIds.map { HashUtil.decodeIdToLong(it) })
         return format(envRecords)
     }
 
@@ -409,7 +417,8 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
+            )
         }
 
         dslContext.transaction { configuration ->
@@ -492,7 +501,8 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
         }
 
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
@@ -550,7 +560,8 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
         }
 
         envNodeDao.batchDeleteEnvNode(
@@ -594,43 +605,15 @@ class EnvService @Autowired constructor(
     override fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission> {
         val envList = mutableListOf<EnvWithPermission>()
         val envRecords = envDao.searchByName(
-                dslContext = dslContext,
-                offset = offset,
-                limit = limit,
-                projectId = projectId,
-                envName = envName
+            dslContext = dslContext,
+            offset = offset,
+            limit = limit,
+            projectId = projectId,
+            envName = envName
         )
         envRecords.map {
             envList.add(
-                    EnvWithPermission(
-                            envHashId = HashUtil.encodeLongId(it.envId),
-                            name = it.envName,
-                            desc = it.envDesc,
-                            envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
-                            nodeCount = null,
-                            envVars = jacksonObjectMapper().readValue(it.envVars),
-                            createdUser = it.createdUser,
-                            createdTime = it.createdTime.timestamp(),
-                            updatedUser = it.updatedUser,
-                            updatedTime = it.updatedTime.timestamp(),
-                            canEdit = null,
-                            canDelete = null,
-                            canUse = null
-                    )
-            )
-        }
-        val count = envDao.countByName(dslContext, projectId, envName)
-        return Page(
-                count = count.toLong(),
-                records = envList,
-                pageSize = offset,
-                page = limit
-        )
-    }
-
-    private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {
-        return records.map {
-            EnvWithPermission(
+                EnvWithPermission(
                     envHashId = HashUtil.encodeLongId(it.envId),
                     name = it.envName,
                     desc = it.envDesc,
@@ -644,6 +627,34 @@ class EnvService @Autowired constructor(
                     canEdit = null,
                     canDelete = null,
                     canUse = null
+                )
+            )
+        }
+        val count = envDao.countByName(dslContext, projectId, envName)
+        return Page(
+            count = count.toLong(),
+            records = envList,
+            pageSize = offset,
+            page = limit
+        )
+    }
+
+    private fun format(records: List<TEnvRecord>): List<EnvWithPermission> {
+        return records.map {
+            EnvWithPermission(
+                envHashId = HashUtil.encodeLongId(it.envId),
+                name = it.envName,
+                desc = it.envDesc,
+                envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                nodeCount = null,
+                envVars = jacksonObjectMapper().readValue(it.envVars),
+                createdUser = it.createdUser,
+                createdTime = it.createdTime.timestamp(),
+                updatedUser = it.updatedUser,
+                updatedTime = it.updatedTime.timestamp(),
+                canEdit = null,
+                canDelete = null,
+                canUse = null
             )
         }
     }
@@ -652,7 +663,8 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
+            )
         }
 
         val existEnv = envDao.get(dslContext, projectId, envId)
@@ -674,10 +686,37 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
+            )
         }
 
         envShareProjectDao.deleteByEnvAndMainProj(dslContext, envId, projectId)
+    }
+
+    fun listUserShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): List<String> {
+        val projectList = client.get(ServiceProjectResource::class).list(
+            userId = userId
+        ).data?.map { it.projectId } ?: emptyList()
+        val envId = HashUtil.decodeIdToLong(envHashId)
+        val count = envShareProjectDao.count(
+            dslContext = dslContext,
+            projectId = projectId,
+            envId = envId,
+            name = null
+        )
+        val records = envShareProjectDao.listPage(
+            dslContext = dslContext,
+            projectId = projectId,
+            envId = envId,
+            name = null,
+            offset = 0,
+            limit = count + 1
+        ).map { it.sharedProjectId }
+        return projectList.filterNot { it in records }
     }
 
     fun listShareEnv(
@@ -689,7 +728,11 @@ class EnvService @Autowired constructor(
         limit: Int = 20
     ): Page<SharedProjectInfo> {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        val limitTmp = if (limit >= 1000) { 1000 } else { limit }
+        val limitTmp = if (limit >= 1000) {
+            1000
+        } else {
+            limit
+        }
         val sharedProjectInfos = mutableListOf<SharedProjectInfo>()
         val records = envShareProjectDao.listPage(dslContext, projectId, envId, name, offset, limitTmp)
         records.map {
@@ -723,7 +766,8 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_DEL_PERMISSSION)
+            )
         }
 
         envShareProjectDao.deleteBySharedProj(dslContext, envId, projectId, sharedProjectId)
