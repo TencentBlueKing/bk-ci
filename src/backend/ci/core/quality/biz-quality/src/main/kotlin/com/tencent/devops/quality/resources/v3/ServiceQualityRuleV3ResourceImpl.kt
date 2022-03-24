@@ -81,7 +81,7 @@ class ServiceQualityRuleV3ResourceImpl @Autowired constructor(
         }
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val limit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val result = historyService.listQualityRuleBuildHisIntercept(
             userId = userId,
             projectId = projectId,

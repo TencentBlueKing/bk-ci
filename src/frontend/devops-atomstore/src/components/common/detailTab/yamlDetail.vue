@@ -22,6 +22,7 @@
 <script>
     import codeSection from './codeSection'
     import api from '@/api'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -44,26 +45,45 @@
             code: {
                 type: String,
                 require: true
+            },
+            name: String,
+            currentTab: String,
+            qualityData: Array,
+            getDataFunc: {
+                type: Function,
+                default: null
             }
         },
 
         data () {
             return {
-                qualityData: [],
                 isLoading: false
             }
         },
 
-        created () {
-            this.initQualityData()
+        watch: {
+            currentTab: {
+                handler (currentVal) {
+                    if (currentVal && currentVal === this.name && !this.qualityData) {
+                        this.initQualityData()
+                    }
+                },
+                immediate: true
+            }
         },
 
         methods: {
+            ...mapActions('store', [
+                'setDetail'
+            ]),
+            
             initQualityData () {
                 const code = this.$route.params.code
                 this.isLoading = true
                 return api.requestAtomQuality(code).then((res) => {
                     this.qualityData = res
+                    this.$emit('update:qualityData', res)
+                    this.setDetail({ qualityData: res })
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {

@@ -90,7 +90,13 @@ class DispatchTypeParserImpl @Autowired constructor(
         }
     }
 
-    override fun parseInfo(customInfo: DispatchInfo, context: Map<String, String>): SampleDispatchInfo? {
+    override fun parseInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        customInfo: DispatchInfo,
+        context: Map<String, String>
+    ): SampleDispatchInfo? {
         return null
     }
 }

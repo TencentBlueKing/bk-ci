@@ -44,6 +44,7 @@ type WorkerConfig struct {
 	DefaultWorkDir string `json:"default_work_dir" value:"./default_work_dir" usage:"default work dir to execute scmd"`
 	// CommonFileTypes []string `json:"need_clean_files" value:".pch,.gch" usage:"file types which need to save as common files"`
 	CmdReplaceRules []dcConfig.CmdReplaceRule `json:"cmd_replace_rules" value:"" usage:"rules to replace input cmd"`
+	CleanTempFiles  bool                      `json:"clean_temp_files" value:"true" usage:"enable temp files clean when task finished"`
 }
 
 // NewConfig : return config of server

@@ -59,13 +59,14 @@ class StageBuildDetailService(
 ) {
 
     fun updateStageStatus(
+        projectId: String,
         buildId: String,
         stageId: String,
         buildStatus: BuildStatus
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
         var allStageStatus: List<BuildStageStatus>? = null
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
@@ -90,10 +91,10 @@ class StageBuildDetailService(
         return allStageStatus ?: emptyList()
     }
 
-    fun stageSkip(buildId: String, stageId: String): List<BuildStageStatus> {
+    fun stageSkip(projectId: String, buildId: String, stageId: String): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_skip|stageId=$stageId")
         var allStageStatus: List<BuildStageStatus>? = null
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
@@ -117,6 +118,7 @@ class StageBuildDetailService(
     }
 
     fun stagePause(
+        projectId: String,
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
@@ -125,7 +127,7 @@ class StageBuildDetailService(
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_pause|stageId=$stageId")
         var allStageStatus: List<BuildStageStatus>? = null
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
@@ -150,6 +152,7 @@ class StageBuildDetailService(
     }
 
     fun stageCancel(
+        projectId: String,
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
@@ -157,7 +160,7 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ) {
         logger.info("[$buildId]|stage_cancel|stageId=$stageId")
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
@@ -179,6 +182,7 @@ class StageBuildDetailService(
     }
 
     fun stageCheckQuality(
+        projectId: String,
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
@@ -187,7 +191,7 @@ class StageBuildDetailService(
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
         var allStageStatus: List<BuildStageStatus>? = null
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
@@ -210,6 +214,7 @@ class StageBuildDetailService(
     }
 
     fun stageReview(
+        projectId: String,
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
@@ -217,7 +222,7 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ) {
         logger.info("[$buildId]|stage_review|stageId=$stageId")
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
@@ -238,6 +243,7 @@ class StageBuildDetailService(
     }
 
     fun stageStart(
+        projectId: String,
         buildId: String,
         stageId: String,
         controlOption: PipelineBuildStageControlOption,
@@ -246,7 +252,7 @@ class StageBuildDetailService(
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_start|stageId=$stageId")
         var allStageStatus: List<BuildStageStatus>? = null
-        update(buildId, object : ModelInterface {
+        update(projectId, buildId, object : ModelInterface {
             var update = false
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {

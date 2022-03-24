@@ -35,6 +35,8 @@ data class QualityHisMetadata(
     val detail: String,
     val type: QualityDataType,
     val elementType: String,
+    val taskId: String,
+    val taskName: String,
     val msg: String,
     val value: String,
     val extra: String?

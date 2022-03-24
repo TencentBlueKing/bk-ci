@@ -28,6 +28,7 @@
 package com.tencent.devops.ticket.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -50,11 +51,16 @@ import javax.ws.rs.core.MediaType
 @Path("/build/certs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("LongParameterList")
 interface BuildCertResource {
+
     @ApiOperation("按证书ID获取ios加密的证书内容")
     @Path("/ios/{certId}/")
     @GET
     fun queryIos(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -76,6 +82,9 @@ interface BuildCertResource {
     @Path("/enterprise/{certId}/")
     @GET
     fun queryEnterprise(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -97,6 +106,9 @@ interface BuildCertResource {
     @Path("/android/{certId}/")
     @GET
     fun queryAndroid(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,

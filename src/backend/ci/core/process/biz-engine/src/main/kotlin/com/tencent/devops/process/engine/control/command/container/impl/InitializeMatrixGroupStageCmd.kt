@@ -147,6 +147,7 @@ class InitializeMatrixGroupStageCmd(
         val event = commandContext.event
         val variables = commandContext.variables
         val modelStage = containerBuildDetailService.getBuildModel(
+            projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
         )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
             "stage(${parentContainer.stageId}) cannot be found in model"
@@ -207,7 +208,13 @@ class InitializeMatrixGroupStageCmd(
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
                     val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
-                        dispatchTypeParser.parseInfo(self, allContext)
+                        dispatchTypeParser.parseInfo(
+                            projectId = parentContainer.projectId,
+                            pipelineId = parentContainer.pipelineId,
+                            buildId = parentContainer.buildId,
+                            customInfo = self,
+                            context = allContext
+                        )
                     }
                     val customDispatchType = parsedInfo?.dispatchType
                     val customBaseOS = parsedInfo?.baseOS
@@ -438,6 +445,7 @@ class InitializeMatrixGroupStageCmd(
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
+                stepId = e.stepId,
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
                 interceptTask = interceptTask,

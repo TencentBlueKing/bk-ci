@@ -63,6 +63,8 @@ data class ModelDetail(
     val latestVersion: Int,
     @ApiModelProperty("最新一次的构建buildNo", required = true)
     val latestBuildNum: Int,
+    @ApiModelProperty("最近修改人", required = true)
+    val lastModifyUser: String?,
     @ApiModelProperty("执行耗时（排除系统耗时）", required = true)
     val executeTime: Long = 0
 )

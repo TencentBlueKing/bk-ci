@@ -447,7 +447,6 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(CLASS_TYPE, classType)
                 .set(PROPS, props)
                 .set(LOGO_URL, marketAtomUpdateRequest.logoUrl)
-                .set(ICON, marketAtomUpdateRequest.iconData)
                 .set(HTML_TEMPLATE_VERSION, marketAtomUpdateRequest.frontendType.typeVersion)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
@@ -489,7 +488,6 @@ class MarketAtomDao : AtomBaseDao() {
                 DESCRIPTION,
                 CATEGROY,
                 VERSION,
-                ICON,
                 DEFAULT_FLAG,
                 LATEST_FLAG,
                 REPOSITORY_HASH_ID,
@@ -523,7 +521,6 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRequest.description,
                     atomRequest.category.category.toByte(),
                     atomRequest.version,
-                    atomRequest.iconData,
                     atomRecord.defaultFlag,
                     false,
                     atomRecord.repositoryHashId,
@@ -780,7 +777,6 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
                 .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
                 .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(approveReq.serviceScope))
-                .set(LATEST_FLAG, latestFlag)
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
             val weight = approveReq.weight

@@ -35,6 +35,7 @@ interface DockerHostProxyService {
         dockerHostUri: String,
         dockerHostIp: String,
         dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
+        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON,
+        urlPrefix: String = "http://"
     ): Request.Builder
 }

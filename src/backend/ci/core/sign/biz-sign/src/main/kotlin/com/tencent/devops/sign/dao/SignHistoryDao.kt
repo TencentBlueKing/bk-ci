@@ -76,6 +76,7 @@ class SignHistoryDao {
                 ARCHIVE_PATH,
                 FILE_MD5,
                 STATUS,
+                CREATE_TIME,
                 RESULT_FILE_MD5,
                 UPLOAD_FINISH_TIME,
                 UNZIP_FINISH_TIME,
@@ -94,6 +95,7 @@ class SignHistoryDao {
                 archivePath,
                 md5,
                 EnumResignStatus.RUNNING.getValue(),
+                LocalDateTime.now(),
                 null,
                 null,
                 null,
@@ -237,8 +239,8 @@ class SignHistoryDao {
         }
     }
 
-    fun convert(tTPipelineBuildContainerRecord: TSignHistoryRecord): SignHistory {
-        return with(tTPipelineBuildContainerRecord) {
+    fun convert(tSignHistoryRecord: TSignHistoryRecord): SignHistory {
+        return with(tSignHistoryRecord) {
             SignHistory(
                 resignId = resignId,
                 projectId = projectId,
@@ -252,14 +254,15 @@ class SignHistoryDao {
                 archiveType = archiveType,
                 archivePath = archivePath,
                 status = status,
-                createTime = createTime.timestampmilli(),
-                endTime = endTime.timestampmilli(),
-                uploadFinishTime = uploadFinishTime.timestampmilli(),
-                unzipFinishTime = unzipFinishTime.timestampmilli(),
-                resignFinishTime = resignFinishTime.timestampmilli(),
-                zipFinishTime = zipFinishTime.timestampmilli(),
-                archiveFinishTime = archiveFinishTime.timestampmilli(),
-                errorMessage = errorMessage
+                createTime = createTime?.timestampmilli(),
+                endTime = endTime?.timestampmilli(),
+                uploadFinishTime = uploadFinishTime?.timestampmilli(),
+                unzipFinishTime = unzipFinishTime?.timestampmilli(),
+                resignFinishTime = resignFinishTime?.timestampmilli(),
+                zipFinishTime = zipFinishTime?.timestampmilli(),
+                archiveFinishTime = archiveFinishTime?.timestampmilli(),
+                errorMessage = errorMessage,
+                ipaSignInfoStr = null
             )
         }
     }

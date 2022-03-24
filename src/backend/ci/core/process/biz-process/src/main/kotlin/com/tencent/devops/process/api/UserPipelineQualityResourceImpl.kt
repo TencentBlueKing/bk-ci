@@ -35,7 +35,11 @@ import com.tencent.devops.process.api.user.UserPipelineQualityResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
+import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -65,6 +69,29 @@ class UserPipelineQualityResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineIdList = request?.pipelineId,
                 templateIdList = request?.templateId
+            )
+        )
+    }
+
+    override fun listQualityViewPipelines(
+        userId: String,
+        projectId: String,
+        keywords: String?,
+        page: Int?,
+        pageSize: Int?,
+        viewId: String?
+    ): Result<PipelineViewPipelinePage<QualityPipeline>> {
+        return Result(
+            pipelineListFacadeService.listQualityViewPipelines(
+                userId = userId,
+                projectId = projectId,
+                page = page,
+                pageSize = pageSize,
+                sortType = PipelineSortType.CREATE_TIME,
+                channelCode = ChannelCode.BS,
+                viewId = viewId ?: PIPELINE_VIEW_ALL_PIPELINES,
+                checkPermission = true,
+                filterByPipelineName = keywords
             )
         )
     }

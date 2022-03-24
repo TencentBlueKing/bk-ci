@@ -29,12 +29,15 @@ package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogStatus
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.log.service.BuildLogQueryService
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.Response
 
 /**
@@ -43,8 +46,12 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class UserLogResourceImpl @Autowired constructor(
-    private val buildLogQueryService: BuildLogQueryService
+    private val buildLogQueryService: BuildLogQueryService,
+    private val meterRegistry: MeterRegistry
 ) : UserLogResource {
+
+    @Value("\${spring.application.name:#{null}}")
+    private val applicationName: String? = null
 
     override fun getInitLogs(
         userId: String,
@@ -58,7 +65,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return buildLogQueryService.getInitLogs(
+        val initLogs = buildLogQueryService.getInitLogs(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -70,6 +77,8 @@ class UserLogResourceImpl @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount
         )
+        recordListLogCount(initLogs.data?.logs?.size ?: 0)
+        return initLogs
     }
 
     override fun getMoreLogs(
@@ -119,7 +128,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        return buildLogQueryService.getAfterLogs(
+        val afterLogs = buildLogQueryService.getAfterLogs(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -132,6 +141,9 @@ class UserLogResourceImpl @Autowired constructor(
             jobId = jobId,
             executeCount = executeCount
         )
+        recordListLogCount(afterLogs.data?.logs?.size ?: 0)
+
+        return afterLogs
     }
 
     override fun downloadLogs(
@@ -174,5 +186,16 @@ class UserLogResourceImpl @Autowired constructor(
             tag = tag,
             executeCount = executeCount
         )
+    }
+
+    /**
+     * 记录日志列表函数
+     */
+    private fun recordListLogCount(count: Number) {
+        Counter
+            .builder("list_log_count")
+            .tag("application", applicationName ?: "")
+            .register(meterRegistry)
+            .increment(count.toDouble())
     }
 }

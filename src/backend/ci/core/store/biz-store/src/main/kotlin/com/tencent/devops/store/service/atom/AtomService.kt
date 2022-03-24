@@ -87,7 +87,8 @@ interface AtomService {
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        queryOfflineFlag: Boolean = false
     ): Result<PipelineAtom?>
 
     /**
@@ -98,7 +99,8 @@ interface AtomService {
         projectCode: String? = null,
         atomCode: String,
         version: String,
-        atomStatus: Byte? = null
+        atomStatus: Byte? = null,
+        queryOfflineFlag: Boolean = false
     ): Result<PipelineAtom?>
 
     /**
@@ -177,4 +179,13 @@ interface AtomService {
     fun findUnDefaultAtom(
         atomList: List<String>
     ): Result<List<String>>
+
+    /**
+     * 获取插件真实版本号
+     * @param projectCode 项目代码
+     * @param atomCode 插件代码
+     * @param version 插件版本号
+     * @return 插件真实版本号
+     */
+    fun getAtomRealVersion(projectCode: String, atomCode: String, version: String): Result<String?>
 }

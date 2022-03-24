@@ -45,7 +45,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("")
 data class PipelineSetting(
     @ApiModelProperty("项目id", required = false)
-    val projectId: String = "",
+    var projectId: String = "",
     @ApiModelProperty("流水线id", required = false)
     var pipelineId: String = "",
     @ApiModelProperty("流水线名称", required = false)

@@ -100,9 +100,9 @@ class TaskControl @Autowired constructor(
     @Suppress("LongMethod")
     private fun PipelineBuildAtomTaskEvent.execute() {
 
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
 
-        val buildTask = pipelineTaskService.getBuildTask(buildId, taskId)
+        val buildTask = pipelineTaskService.getBuildTask(projectId, buildId, taskId)
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
@@ -238,7 +238,7 @@ class TaskControl @Autowired constructor(
         }
         if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
-            if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
+            if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
                 pipelineTaskService.updateTaskStatus(
                     task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
@@ -267,6 +267,7 @@ class TaskControl @Autowired constructor(
         if (errorTypeName != null && ErrorType.getErrorType(errorTypeName!!) != null) {
             pipelineTaskService.setTaskErrorInfo(
                 transactionContext = null,
+                projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
                 errorCode = errorCode,
@@ -304,11 +305,11 @@ class TaskControl @Autowired constructor(
             return
         }
 
-        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subBuildId!!)
+        val subBuildInfo = pipelineRuntimeService.getBuildInfo(buildTask.subProjectId!!, buildTask.subBuildId!!)
 
         if (subBuildInfo?.status?.isFinish() == false) { // 子流水线状态为未构建结束的，开始下发退出命令
             try {
-                val tasks = pipelineTaskService.getRunningTask(subBuildInfo.buildId)
+                val tasks = pipelineTaskService.getRunningTask(subBuildInfo.projectId, subBuildInfo.buildId)
                 tasks.forEach { task ->
                     val taskId = task["taskId"] ?: ""
                     val containerId = task["containerId"] ?: ""

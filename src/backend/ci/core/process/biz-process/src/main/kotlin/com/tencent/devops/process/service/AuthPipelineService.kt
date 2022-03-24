@@ -91,9 +91,6 @@ class AuthPipelineService @Autowired constructor(
         returnPipelineId: Boolean
     ): SearchInstanceInfo {
         authTokenApi.checkToken(token)
-//        val pipelineInfos =
-//            client.get(ServiceAuthPipelineResource::class)
-//                .searchPipelineInstances(projectId, offset, limit, keyword).data
         val pipelineInfos = pipelineListFacadeService.searchByPipelineName(
             projectId = projectId,
             pipelineName = keyword,
@@ -129,9 +126,6 @@ class AuthPipelineService @Autowired constructor(
         returnPipelineId: Boolean
     ): ListInstanceResponseDTO? {
         authTokenApi.checkToken(token)
-//        val pipelineInfos =
-//            client.get(ServiceAuthPipelineResource::class)
-//                .pipelineList(projectId, offset, limit).data
         val pipelineInfos = pipelineListFacadeService.getPipelinePage(
             projectId = projectId,
             limit = limit,
@@ -181,6 +175,7 @@ class AuthPipelineService @Autowired constructor(
             logger.info("$ids 未匹配到启用流水线")
             return result.buildFetchInstanceFailResult()
         }
+
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineInfos?.map {
             val entityId = if (returnPipelineId) {

@@ -27,15 +27,12 @@
 
 package com.tencent.devops.process.template.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.dao.template.TemplateDao
-import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,59 +43,8 @@ import org.springframework.util.StringUtils
 @Service
 class PipelineTemplateService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineTemplateDao: PipelineTemplateDao,
-    private val templateDao: TemplateDao,
-    private val objectMapper: ObjectMapper
+    private val templateDao: TemplateDao
 ) {
-    @Suppress("UNCHECKED_CAST")
-    fun listTemplate(projectCode: String): Map<String, PipelineTemplate> {
-        val map = HashMap<String, PipelineTemplate>()
-
-        val templates = pipelineTemplateDao.listTemplates(dslContext, projectCode)
-
-        val srcTemplateIdList = mutableListOf<String>()
-        templates.forEach {
-            if (!it.srcTemplateId.isNullOrEmpty()) {
-                srcTemplateIdList.add(it.srcTemplateId)
-            }
-        }
-        val srcTemplates = mutableMapOf<String, String>()
-        templateDao.listLatestTemplateByIds(dslContext, srcTemplateIdList).forEach {
-            srcTemplates[it["ID"] as String] = it["TEMPLATE"] as String
-        }
-
-        templates.forEach {
-            val flag = !it.srcTemplateId.isNullOrEmpty()
-
-            val model = if (flag) {
-                objectMapper.readValue(srcTemplates[it.srcTemplateId], Model::class.java)
-            } else {
-                objectMapper.readValue(it.template, Model::class.java)
-            }
-            if (flag) {
-                model.srcTemplateId = it.srcTemplateId
-            }
-
-            val key = if (flag) it.srcTemplateId else it.id.toString()
-            map[key] = PipelineTemplate(
-                name = if (flag) it.templateName else model.name,
-                desc = model.desc,
-                category = if (!it.category.isNullOrBlank()) JsonUtil.getObjectMapper().readValue(
-                    it.category,
-                    List::class.java
-                ) as List<String> else listOf(),
-                icon = it.icon,
-                logoUrl = it.logoUrl,
-                author = it.author,
-                atomNum = it.atomnum,
-                publicFlag = it.publicFlag,
-                srcTemplateId = it.srcTemplateId,
-                stages = model.stages
-            )
-        }
-
-        return map
-    }
 
     fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
         logger.info("getTemplateDetailInfo templateCode is:$templateCode")

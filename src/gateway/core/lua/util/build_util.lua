@@ -51,94 +51,102 @@ function _M:auth_agent()
     local reqBuildId = ngx.var.http_x_devops_build_id
     local reqVmSid = ngx.var.http_x_devops_vm_sid
 
-    local red = redisUtil:new()
-    if not red then
-        ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(500)
-        return
-    else
-        --- 获取对应的buildId
-        local redRes, err = red:get("third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId ..
-                                        "_" .. reqVmSid)
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not redRes then
-            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+    local auth_cache = ngx.shared.auth_build_agent
+    local cache_key = "third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId .. "_" .. reqVmSid
+    local cache_value = auth_cache:get(cache_key)
+
+    -- 如果没有缓存 , 则从redis里面拿
+    if cache_value == nil then
+        local red = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "failed to new redis ", err)
             ngx.exit(500)
             return
         else
-            if redRes == ngx.null then
-                ngx.log(ngx.ERR, "redis result is null")
-                ngx.exit(401)
+            --- 获取对应的buildId
+            local redRes, err = red:get(cache_key)
+            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+            if not redRes then
+                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                ngx.exit(500)
                 return
             else
-                local obj = cjson.decode(redRes)
-
-                -- parameter check
-                if obj.projectId == nil then
-                    ngx.log(ngx.ERR, "projectId is null: ")
+                if redRes == ngx.null then
+                    ngx.log(ngx.ERR, "redis result is null")
                     ngx.exit(401)
                     return
+                else
+                    auth_cache:set(cache_key, redRes, 60)
+                    cache_value = redRes
                 end
-
-                -- atom替换projectId
-                if ngx.var.service_code == "atom" then
-                    if obj.atoms ~= nil then
-                        local atom_projectid = obj.atoms[ngx.var.atom_code]
-                        if atom_projectid ~= nil then
-                            obj.projectId = atom_projectid
-                        end
-                    end
-                end
-
-                if obj.pipelineId == nil then
-                    ngx.log(ngx.ERR, "pipelineId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.buildId == nil then
-                    ngx.log(ngx.ERR, "buildId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.vmSeqId == nil then
-                    ngx.log(ngx.ERR, "vmSeqId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.agentId == nil then
-                    ngx.log(ngx.ERR, "agentId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.agentId ~= reqAgentId then
-                    ngx.log(ngx.ERR, "agentId not match")
-                    ngx.exit(401)
-                    return
-                end
-
-                ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
-                ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
-                ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
-                ngx.header["X-DEVOPS-AGENT-ID"] = obj.agentId
-                ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
-                ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
-                ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
-                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
-                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
-                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
-
-                -- 重写project_id变量
-                ngx.var.project_id = obj.projectId
-
-                ngx.exit(200)
-                return
             end
         end
     end
+
+    local obj = cjson.decode(cache_value)
+
+    -- parameter check
+    if obj.projectId == nil then
+        ngx.log(ngx.ERR, "projectId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    -- atom替换projectId
+    if ngx.var.service_code == "atom" then
+        if obj.atoms ~= nil then
+            local atom_projectid = obj.atoms[ngx.var.atom_code]
+            if atom_projectid ~= nil then
+                obj.projectId = atom_projectid
+            end
+        end
+    end
+
+    if obj.pipelineId == nil then
+        ngx.log(ngx.ERR, "pipelineId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.buildId == nil then
+        ngx.log(ngx.ERR, "buildId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.vmSeqId == nil then
+        ngx.log(ngx.ERR, "vmSeqId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.agentId == nil then
+        ngx.log(ngx.ERR, "agentId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.agentId ~= reqAgentId then
+        ngx.log(ngx.ERR, "agentId not match")
+        ngx.exit(401)
+        return
+    end
+
+    ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
+    ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
+    ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
+    ngx.header["X-DEVOPS-AGENT-ID"] = obj.agentId
+    ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
+    ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
+    ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+    ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+    ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+    ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+    -- 重写project_id变量
+    ngx.var.project_id = obj.projectId
+
+    ngx.exit(200)
 end
 -- Docker构建机
 --[[
@@ -166,86 +174,94 @@ function _M:auth_docker()
     local reqSecretKey = ngx.var.http_x_devops_agent_secret_key
     local reqAgentId = ngx.var.http_x_devops_agent_id
 
-    local red = redisUtil:new()
-    if not red then
-        ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(500)
-        return
-    else
-        local redRes, err = red:get("docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey)
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not redRes then
-            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+    local auth_cache = ngx.shared.auth_build_docker
+    local cache_key = "docker_build_key_" .. reqAgentId .. "_" .. reqSecretKey
+    local cache_value = auth_cache:get(cache_key)
+
+    -- 如果没有缓存 , 则从redis里面拿
+    if cache_value == nil then
+        local red = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "failed to new redis ", err)
             ngx.exit(500)
             return
         else
-            if redRes == ngx.null then
-                ngx.log(ngx.ERR, "redis result is null")
-                ngx.exit(401)
+            local redRes, err = red:get(cache_key)
+            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+            if not redRes then
+                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                ngx.exit(500)
                 return
             else
-                local obj = cjson.decode(redRes)
-
-                -- parameter check
-                if obj.projectId == nil then
-                    ngx.log(ngx.ERR, "projectId is null: ")
+                if redRes == ngx.null then
+                    ngx.log(ngx.ERR, "redis result is null")
                     ngx.exit(401)
                     return
+                else
+                    auth_cache:set(cache_key, redRes, 60)
+                    cache_value = redRes
                 end
-
-                if obj.pipelineId == nil then
-                    ngx.log(ngx.ERR, "pipelineId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                -- atom替换projectId
-                if ngx.var.service_code == "atom" then
-                    if obj.atoms ~= nil then
-                        local atom_projectid = obj.atoms[ngx.var.atom_code]
-                        if atom_projectid ~= nil then
-                            obj.projectId = atom_projectid
-                        end
-                    end
-                end
-
-                if obj.buildId == nil then
-                    ngx.log(ngx.ERR, "buildId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.vmName == nil then
-                    ngx.log(ngx.ERR, "vmName is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.vmSeqId == nil then
-                    ngx.log(ngx.ERR, "vmSeqId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
-                ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
-                ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
-                ngx.header["X-DEVOPS-AGENT-ID"] = reqAgentId
-                ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
-                ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
-                ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
-                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
-                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
-                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
-
-                -- 重写project_id变量
-                ngx.var.project_id = obj.projectId
-
-                ngx.exit(200)
-                return
             end
         end
     end
+
+    local obj = cjson.decode(cache_value)
+    -- parameter check
+    if obj.projectId == nil then
+        ngx.log(ngx.ERR, "projectId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.pipelineId == nil then
+        ngx.log(ngx.ERR, "pipelineId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    -- atom替换projectId
+    if ngx.var.service_code == "atom" then
+        if obj.atoms ~= nil then
+            local atom_projectid = obj.atoms[ngx.var.atom_code]
+            if atom_projectid ~= nil then
+                obj.projectId = atom_projectid
+            end
+        end
+    end
+
+    if obj.buildId == nil then
+        ngx.log(ngx.ERR, "buildId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.vmName == nil then
+        ngx.log(ngx.ERR, "vmName is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.vmSeqId == nil then
+        ngx.log(ngx.ERR, "vmSeqId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
+    ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
+    ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
+    ngx.header["X-DEVOPS-AGENT-ID"] = reqAgentId
+    ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
+    ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
+    ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+    ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+    ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+    ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+    -- 重写project_id变量
+    ngx.var.project_id = obj.projectId
+
+    ngx.exit(200)
 end
 
 -- 校验插件构建机
@@ -274,86 +290,94 @@ function _M:auth_plugin_agent()
     local reqSecretKey = ngx.var.http_x_devops_agent_secret_key
     local reqAgentId = ngx.var.http_x_devops_agent_id
 
-    local red = redisUtil:new()
-    if not red then
-        ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(500)
-        return
-    else
-        local redRes, err = red:get("plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey)
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        if not redRes then
-            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+    local auth_cache = ngx.shared.auth_build_plugin
+    local cache_key = "plugin_agent_" .. reqAgentId .. "_" .. reqSecretKey
+    local cache_value = auth_cache:get(cache_key)
+
+    if cache_value == nil then
+        local red = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "failed to new redis ", err)
             ngx.exit(500)
             return
         else
-            if redRes == ngx.null then
-                ngx.log(ngx.ERR, "redis result is null")
-                ngx.exit(401)
+            local redRes, err = red:get(cache_key)
+            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+            if not redRes then
+                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                ngx.exit(500)
                 return
             else
-                local obj = cjson.decode(redRes)
-
-                -- parameter check
-                if obj.projectId == nil then
-                    ngx.log(ngx.ERR, "projectId is null: ")
+                if redRes == ngx.null then
+                    ngx.log(ngx.ERR, "redis result is null")
                     ngx.exit(401)
                     return
+                else
+                    auth_cache:set(cache_key, redRes, 60)
+                    cache_value = redRes
                 end
-
-                -- atom替换projectId
-                if ngx.var.service_code == "atom" then
-                    if obj.atoms ~= nil then
-                        local atom_projectid = obj.atoms[ngx.var.atom_code]
-                        if atom_projectid ~= nil then
-                            obj.projectId = atom_projectid
-                        end
-                    end
-                end
-
-                if obj.pipelineId == nil then
-                    ngx.log(ngx.ERR, "pipelineId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.buildId == nil then
-                    ngx.log(ngx.ERR, "buildId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.vmName == nil then
-                    ngx.log(ngx.ERR, "vmName is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                if obj.vmSeqId == nil then
-                    ngx.log(ngx.ERR, "vmSeqId is null: ")
-                    ngx.exit(401)
-                    return
-                end
-
-                ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
-                ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
-                ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
-                ngx.header["X-DEVOPS-AGENT-ID"] = reqAgentId
-                ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
-                ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
-                ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
-                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
-                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
-                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
-
-                -- 重写project_id变量
-                ngx.var.project_id = obj.projectId
-
-                ngx.exit(200)
-                return
             end
         end
     end
+
+    local obj = cjson.decode(cache_value)
+
+    -- parameter check
+    if obj.projectId == nil then
+        ngx.log(ngx.ERR, "projectId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    -- atom替换projectId
+    if ngx.var.service_code == "atom" then
+        if obj.atoms ~= nil then
+            local atom_projectid = obj.atoms[ngx.var.atom_code]
+            if atom_projectid ~= nil then
+                obj.projectId = atom_projectid
+            end
+        end
+    end
+
+    if obj.pipelineId == nil then
+        ngx.log(ngx.ERR, "pipelineId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.buildId == nil then
+        ngx.log(ngx.ERR, "buildId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.vmName == nil then
+        ngx.log(ngx.ERR, "vmName is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    if obj.vmSeqId == nil then
+        ngx.log(ngx.ERR, "vmSeqId is null: ")
+        ngx.exit(401)
+        return
+    end
+
+    ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
+    ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
+    ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
+    ngx.header["X-DEVOPS-AGENT-ID"] = reqAgentId
+    ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
+    ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
+    ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+    ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
+    ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+    ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+    -- 重写project_id变量
+    ngx.var.project_id = obj.projectId
+
+    ngx.exit(200)
 end
 
 -- 校验MACOS公共构建机
@@ -364,102 +388,110 @@ function _M:auth_macos(checkVersion)
         ngx.exit(401)
         return
     end
-    --- redis获取IP对应的buildID
-    local red = redisUtil:new()
-    if not red then
-        ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(500)
-        return
+
+    local auth_cache = ngx.shared.auth_build_macos
+    local cache_key = nil
+    if checkVersion == true then
+        cache_key = "dispatcher:devops_macos_" .. client_ip
     else
-        --- 获取对应的buildId
-        local redKey = nil
-        if checkVersion == true then
-            redKey = "dispatcher:devops_macos_" .. client_ip
-        else
-            redKey = "devops_macos_" .. client_ip
-        end
-        local redRes, err = red:get(redKey)
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        --- 处理获取到的buildID
-        if not redRes then
-            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+        cache_key = "devops_macos_" .. client_ip
+    end
+    local cache_value = auth_cache:get(cache_key)
+
+    if cache_value == nil then
+        --- redis获取IP对应的buildID
+        local red = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "failed to new redis ", err)
             ngx.exit(500)
             return
         else
-            if redRes == ngx.null then
-                ngx.log(ngx.WARN, "client ip: ", client_ip, " , redis result is null")
-                ngx.exit(401)
+            --- 获取对应的buildId
+            local redRes, err = red:get(cache_key)
+            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+            --- 处理获取到的buildID
+            if not redRes then
+                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                ngx.exit(500)
                 return
             else
-                local obj = cjson.decode(redRes)
-                -- parameter check
-                if obj.projectId == nil then
-                    ngx.log(ngx.ERR, "projectId is null: ")
+                if redRes == ngx.null then
+                    ngx.log(ngx.WARN, "client ip: ", client_ip, " , redis result is null")
+                    ngx.exit(401)
+                    return
+                else
+                    auth_cache:set(cache_key, redRes, 60)
+                    cache_value = redRes
                 end
-
-                -- atom替换projectId
-                if ngx.var.service_code == "atom" then
-                    if obj.atoms ~= nil then
-                        local atom_projectid = obj.atoms[ngx.var.atom_code]
-                        if atom_projectid ~= nil then
-                            obj.projectId = atom_projectid
-                        end
-                    end
-                end
-
-                if obj.pipelineId == nil then
-                    ngx.log(ngx.ERR, "pipelineId is null: ")
-                end
-
-                if obj.buildId == nil then
-                    ngx.log(ngx.ERR, "buildId is null: ")
-                end
-
-                if obj.vmSeqId == nil then
-                    ngx.log(ngx.ERR, "vmSeqId is null: ")
-                end
-
-                if obj.secretKey == nil then
-                    ngx.log(ngx.ERR, "secretKey is null: ")
-                end
-
-                if obj.id == nil then
-                    ngx.log(ngx.ERR, "id is null: ")
-                end
-
-                local systemVersion = ""
-                local xcodeVersion = ""
-                if checkVersion == true then
-                    if obj.systemVersion == nil then
-                        ngx.log(ngx.ERR, "systemVersion is null: ")
-                    end
-
-                    if obj.xcodeVersion == nil then
-                        ngx.log(ngx.ERR, "xcodeVersion is null: ")
-                    end
-                    systemVersion = obj.systemVersion
-                    xcodeVersion = obj.xcodeVersion
-                end
-
-                ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
-                ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
-                ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
-                ngx.header["X-DEVOPS-AGENT-ID"] = obj.id
-                ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
-                ngx.header["X-DEVOPS-VM-NAME"] = obj.id
-                ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
-                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
-                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = systemVersion
-                ngx.header["X-DEVOPS-XCODE-VERSION"] = xcodeVersion
-
-                -- 重写project_id变量
-                ngx.var.project_id = obj.projectId
-
-                ngx.exit(200)
-                return
             end
         end
     end
+
+    local obj = cjson.decode(cache_value)
+    -- parameter check
+    if obj.projectId == nil then
+        ngx.log(ngx.ERR, "projectId is null: ")
+    end
+
+    -- atom替换projectId
+    if ngx.var.service_code == "atom" then
+        if obj.atoms ~= nil then
+            local atom_projectid = obj.atoms[ngx.var.atom_code]
+            if atom_projectid ~= nil then
+                obj.projectId = atom_projectid
+            end
+        end
+    end
+
+    if obj.pipelineId == nil then
+        ngx.log(ngx.ERR, "pipelineId is null: ")
+    end
+
+    if obj.buildId == nil then
+        ngx.log(ngx.ERR, "buildId is null: ")
+    end
+
+    if obj.vmSeqId == nil then
+        ngx.log(ngx.ERR, "vmSeqId is null: ")
+    end
+
+    if obj.secretKey == nil then
+        ngx.log(ngx.ERR, "secretKey is null: ")
+    end
+
+    if obj.id == nil then
+        ngx.log(ngx.ERR, "id is null: ")
+    end
+
+    local systemVersion = ""
+    local xcodeVersion = ""
+    if checkVersion == true then
+        if obj.systemVersion == nil then
+            ngx.log(ngx.ERR, "systemVersion is null: ")
+        end
+
+        if obj.xcodeVersion == nil then
+            ngx.log(ngx.ERR, "xcodeVersion is null: ")
+        end
+        systemVersion = obj.systemVersion
+        xcodeVersion = obj.xcodeVersion
+    end
+
+    ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
+    ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
+    ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
+    ngx.header["X-DEVOPS-AGENT-ID"] = obj.id
+    ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
+    ngx.header["X-DEVOPS-VM-NAME"] = obj.id
+    ngx.header["X-DEVOPS-CHANNEL-CODE"] = ""
+    ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
+    ngx.header["X-DEVOPS-SYSTEM-VERSION"] = systemVersion
+    ngx.header["X-DEVOPS-XCODE-VERSION"] = xcodeVersion
+
+    -- 重写project_id变量
+    ngx.var.project_id = obj.projectId
+
+    ngx.exit(200)
 end
 
 -- 校验其他构建机
@@ -480,80 +512,89 @@ function _M:auth_other()
         ngx.exit(401)
         return
     end
-    --- redis获取IP对应的buildID
-    local red = redisUtil:new()
-    if not red then
-        ngx.log(ngx.ERR, "failed to new redis ", err)
-        ngx.exit(500)
-        return
-    else
-        --- 获取对应的buildId
-        local redRes, err = red:get(client_ip)
-        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
-        --- 处理获取到的buildID
-        if not redRes then
-            ngx.log(ngx.ERR, "failed to get redis result: ", err)
+    local auth_cache = ngx.shared.auth_build_other
+    local cache_key = client_ip
+    local cache_value = auth_cache:get(cache_key)
+
+    if cache_value == nil then
+        --- redis获取IP对应的buildID
+        local red = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "failed to new redis ", err)
             ngx.exit(500)
             return
         else
-            if redRes == ngx.null then
-                ngx.log(ngx.ERR, "client ip: ", client_ip)
-                ngx.log(ngx.ERR, "redis result is null: ")
-                ngx.exit(401)
+            --- 获取对应的buildId
+            local redRes, err = red:get(cache_key)
+            red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+            --- 处理获取到的buildID
+            if not redRes then
+                ngx.log(ngx.ERR, "failed to get redis result: ", err)
+                ngx.exit(500)
                 return
             else
-                local obj = cjson.decode(redRes)
-
-                -- parameter check
-                if obj.projectId == nil then
-                    ngx.log(ngx.ERR, "projectId is null: ")
+                if redRes == ngx.null then
+                    ngx.log(ngx.ERR, "client ip: ", client_ip)
+                    ngx.log(ngx.ERR, "redis result is null: ")
+                    ngx.exit(401)
+                    return
+                else
+                    auth_cache:set(cache_key, redRes, 60)
+                    cache_value = redRes
                 end
-
-                -- atom替换projectId
-                if ngx.var.service_code == "atom" then
-                    if obj.atoms ~= nil then
-                        local atom_projectid = obj.atoms[ngx.var.atom_code]
-                        if atom_projectid ~= nil then
-                            obj.projectId = atom_projectid
-                        end
-                    end
-                end
-
-                if obj.pipelineId == nil then
-                    ngx.log(ngx.ERR, "pipelineId is null: ")
-                end
-
-                if obj.buildId == nil then
-                    ngx.log(ngx.ERR, "buildId is null: ")
-                end
-
-                if obj.vmName == nil then
-                    ngx.log(ngx.ERR, "vmName is null: ")
-                end
-
-                if obj.vmSeqId == nil then
-                    ngx.log(ngx.ERR, "vmSeqId is null: ")
-                end
-
-                ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
-                ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
-                ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
-                ngx.header["X-DEVOPS-AGENT-ID"] = ""
-                ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
-                ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
-                ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
-                ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = ""
-                ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
-                ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
-
-                -- 重写project_id变量
-                ngx.var.project_id = obj.projectId
-
-                ngx.exit(200)
-                return
             end
         end
     end
+
+    local obj = cjson.decode(cache_value)
+
+    -- parameter check
+    if obj.projectId == nil then
+        ngx.log(ngx.ERR, "projectId is null: ")
+    end
+
+    -- atom替换projectId
+    if ngx.var.service_code == "atom" then
+        if obj.atoms ~= nil then
+            local atom_projectid = obj.atoms[ngx.var.atom_code]
+            if atom_projectid ~= nil then
+                obj.projectId = atom_projectid
+            end
+        end
+    end
+
+    if obj.pipelineId == nil then
+        ngx.log(ngx.ERR, "pipelineId is null: ")
+    end
+
+    if obj.buildId == nil then
+        ngx.log(ngx.ERR, "buildId is null: ")
+    end
+
+    if obj.vmName == nil then
+        ngx.log(ngx.ERR, "vmName is null: ")
+    end
+
+    if obj.vmSeqId == nil then
+        ngx.log(ngx.ERR, "vmSeqId is null: ")
+    end
+
+    ngx.header["X-DEVOPS-PROJECT-ID"] = obj.projectId
+    ngx.header["X-DEVOPS-PIPELINE-ID"] = obj.pipelineId
+    ngx.header["X-DEVOPS-BUILD-ID"] = obj.buildId
+    ngx.header["X-DEVOPS-AGENT-ID"] = ""
+    ngx.header["X-DEVOPS-VM-SID"] = obj.vmSeqId
+    ngx.header["X-DEVOPS-VM-NAME"] = obj.vmName
+    ngx.header["X-DEVOPS-CHANNEL-CODE"] = obj.channelCode
+    ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = ""
+    ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
+    ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+    -- 重写project_id变量
+    ngx.var.project_id = obj.projectId
+
+    ngx.exit(200)
+    return
 end
 
 return _M

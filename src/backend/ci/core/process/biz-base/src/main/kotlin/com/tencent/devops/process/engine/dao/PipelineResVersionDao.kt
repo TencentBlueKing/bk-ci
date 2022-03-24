@@ -93,6 +93,7 @@ class PipelineResVersionDao {
 
     fun getVersionModelString(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         version: Int?
     ): String? {
@@ -100,7 +101,7 @@ class PipelineResVersionDao {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             val where = dslContext.select(MODEL)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
             if (version != null) {
                 where.and(VERSION.eq(version))
             } else {
@@ -112,29 +113,32 @@ class PipelineResVersionDao {
 
     fun deleteEarlyVersion(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         currentVersion: Int,
         maxPipelineResNum: Int
     ): Int {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .and(VERSION.le(currentVersion - maxPipelineResNum))
                 .execute()
         }
     }
 
-    fun deleteByVer(dslContext: DSLContext, pipelineId: String, version: Int) {
+    fun deleteByVer(dslContext: DSLContext, projectId: String, pipelineId: String, version: Int) {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
+                .and(PROJECT_ID.eq(projectId))
                 .execute()
         }
     }
 
     fun listPipelineVersion(
         dslContext: DSLContext,
+        projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int
@@ -143,7 +147,7 @@ class PipelineResVersionDao {
         with(T_PIPELINE_RESOURCE_VERSION) {
             val result = dslContext.select(CREATE_TIME, CREATOR, VERSION_NAME, VERSION)
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .orderBy(VERSION.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -161,19 +165,19 @@ class PipelineResVersionDao {
         return list
     }
 
-    fun count(dslContext: DSLContext, pipelineId: String): Int {
+    fun count(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         with(T_PIPELINE_RESOURCE_VERSION) {
             return dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun deleteAllVersion(dslContext: DSLContext, pipelineId: String) {
+    fun deleteAllVersion(dslContext: DSLContext, projectId: String, pipelineId: String) {
         return with(T_PIPELINE_RESOURCE_VERSION) {
             dslContext.deleteFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
     }

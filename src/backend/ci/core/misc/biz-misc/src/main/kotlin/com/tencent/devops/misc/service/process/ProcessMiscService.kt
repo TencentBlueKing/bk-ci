@@ -27,10 +27,7 @@
 
 package com.tencent.devops.misc.service.process
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.misc.dao.process.ProcessDao
-import com.tencent.devops.misc.pojo.process.PipelineBuildDetail
-import com.tencent.devops.misc.pojo.process.PipelineModel
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -46,6 +43,7 @@ class ProcessMiscService @Autowired constructor(
 ) {
 
     fun getHistoryBuildIdList(
+        projectId: String,
         pipelineId: String,
         totalHandleNum: Int,
         handlePageSize: Int,
@@ -56,6 +54,7 @@ class ProcessMiscService @Autowired constructor(
     ): List<String>? {
         val historyBuildIdRecords = processDao.getHistoryBuildIdList(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             totalHandleNum = totalHandleNum,
             handlePageSize = handlePageSize,
@@ -107,12 +106,12 @@ class ProcessMiscService @Autowired constructor(
         }
     }
 
-    fun getMinPipelineInfoIdListByProjectId(projectId: String): Long {
-        return processDao.getMinPipelineInfoIdListByProjectId(dslContext, projectId)
+    fun getMinPipelineInfoIdByProjectId(projectId: String): Long {
+        return processDao.getMinPipelineInfoIdByProjectId(dslContext, projectId)
     }
 
-    fun getPipelineInfoIdListByPipelineId(pipelineId: String): Long {
-        return processDao.getPipelineInfoByPipelineId(dslContext, pipelineId)?.id ?: 0L
+    fun getPipelineInfoIdByPipelineId(projectId: String, pipelineId: String): Long {
+        return processDao.getPipelineInfoByPipelineId(dslContext, projectId, pipelineId)?.id ?: 0L
     }
 
     fun getMaxPipelineBuildNum(
@@ -122,7 +121,15 @@ class ProcessMiscService @Autowired constructor(
         return processDao.getMaxPipelineBuildNum(dslContext, projectId, pipelineId)
     }
 
+    fun getMinPipelineBuildNum(
+        projectId: String,
+        pipelineId: String
+    ): Long {
+        return processDao.getMinPipelineBuildNum(dslContext, projectId, pipelineId)
+    }
+
     fun getTotalBuildCount(
+        projectId: String,
         pipelineId: String,
         maxBuildNum: Int? = null,
         maxStartTime: LocalDateTime? = null,
@@ -130,115 +137,11 @@ class ProcessMiscService @Autowired constructor(
     ): Long {
         return processDao.getTotalBuildCount(
             dslContext = dslContext,
+            projectId = projectId,
             pipelineId = pipelineId,
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime,
             geTimeFlag = geTimeFlag
-        )
-    }
-
-    fun getPipelineBuildDetailList(
-        buildIdList: List<String>
-    ): List<PipelineBuildDetail>? {
-        var buildDetailList: List<PipelineBuildDetail>? = null
-        val buildDetailRecords = processDao.getPipelineBuildDetailList(dslContext, buildIdList)
-        if (!buildDetailRecords.isNullOrEmpty()) {
-            buildDetailList = mutableListOf()
-            buildDetailRecords.forEach { buildDetailRecord ->
-                buildDetailList.add(
-                    PipelineBuildDetail(buildDetailRecord.buildId, JsonUtil.toMap(buildDetailRecord.model))
-                )
-            }
-        }
-        return buildDetailList
-    }
-
-    fun updatePipelineBuildDetailProject(
-        buildId: String,
-        projectId: String,
-        model: String? = null
-    ) {
-        processDao.updatePipelineBuildDetailProject(dslContext, buildId, projectId, model)
-    }
-
-    fun getPipelineResourceList(
-        pipelineId: String
-    ): List<PipelineModel>? {
-        var pipelineResourceList: List<PipelineModel>? = null
-        val pipelineResourceRecords = processDao.getPipelineResourceList(dslContext, pipelineId)
-        if (!pipelineResourceRecords.isNullOrEmpty()) {
-            pipelineResourceList = mutableListOf()
-            pipelineResourceRecords.forEach { pipelineResourceRecord ->
-                pipelineResourceList.add(
-                    PipelineModel(
-                        pipelineId = pipelineId,
-                        version = pipelineResourceRecord.version,
-                        modelInfo = JsonUtil.toMap(pipelineResourceRecord.model)
-                    )
-                )
-            }
-        }
-        return pipelineResourceList
-    }
-
-    fun updatePipelineResourceProject(
-        pipelineId: String,
-        version: Int,
-        projectId: String,
-        model: String? = null
-    ) {
-        processDao.updatePipelineResourceProject(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            version = version,
-            projectId = projectId,
-            model = model
-        )
-    }
-
-    fun getPipelineResourceVersionList(
-        pipelineId: String
-    ): List<PipelineModel>? {
-        var pipelineResourceVersionList: List<PipelineModel>? = null
-        val pipelineResourceVersionRecords = processDao.getPipelineResourceVersionList(dslContext, pipelineId)
-        if (!pipelineResourceVersionRecords.isNullOrEmpty()) {
-            pipelineResourceVersionList = mutableListOf()
-            pipelineResourceVersionRecords.forEach { pipelineResourceVersionRecord ->
-                pipelineResourceVersionList.add(
-                    PipelineModel(
-                        pipelineId = pipelineId,
-                        version = pipelineResourceVersionRecord.version,
-                        modelInfo = JsonUtil.toMap(pipelineResourceVersionRecord.model)
-                    )
-                )
-            }
-        }
-        return pipelineResourceVersionList
-    }
-
-    fun updatePipelineResourceVersionProject(
-        pipelineId: String,
-        version: Int,
-        projectId: String,
-        model: String? = null
-    ) {
-        processDao.updatePipelineResourceVersionProject(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            version = version,
-            projectId = projectId,
-            model = model
-        )
-    }
-
-    fun updateTemplatePipelineProject(
-        pipelineId: String,
-        projectId: String
-    ) {
-        processDao.updateTemplatePipelineProject(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            projectId = projectId
         )
     }
 }

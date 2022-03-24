@@ -48,27 +48,46 @@ class BuildVarResourceImpl @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineContextService: PipelineContextService
 ) : BuildVarResource {
+
     override fun getBuildVar(buildId: String, projectId: String, pipelineId: String): Result<Map<String, String>> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
         checkPermission(projectId = projectId, pipelineId = pipelineId)
-        return Result(buildVariableService.getAllVariable(buildId))
+        return Result(buildVariableService.getAllVariable(projectId, buildId))
     }
 
     override fun getContextVariableByName(
         buildId: String,
         projectId: String,
         pipelineId: String,
+        containerId: String,
+        taskId: String?,
         contextName: String,
-        check: Boolean
+        check: Boolean?
     ): Result<String?> {
         checkParam(buildId = buildId, projectId = projectId, pipelineId = pipelineId)
-        if (check) {
-            checkVariable(variableName = contextName)
-        }
         checkPermission(projectId = projectId, pipelineId = pipelineId)
+        val alisName = if (check == true) {
+            checkVariable(variableName = contextName)
+            if (taskId.isNullOrBlank() && VariableType.valueOf(contextName).alisName.isNotBlank()) {
+                throw ParamBlankException("Plugin SDK needs to be upgraded")
+            }
+            if (VariableType.valueOf(contextName) == VariableType.BK_CI_BUILD_TASK_ID) {
+                return Result(taskId)
+            }
+            VariableType.valueOf(contextName).alisName
+        } else ""
         // 如果无法替换上下文预置变量则保持原变量名去查取
         val varName = pipelineContextService.getBuildVarName(contextName) ?: contextName
-        return Result(buildVariableService.getVariable(buildId, varName))
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val allContext = pipelineContextService.buildContext(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = null,
+            containerId = containerId,
+            taskId = taskId,
+            variables = variables
+        )
+        return Result(variables[varName] ?: allContext[varName] ?: allContext[alisName])
     }
 
     fun checkPermission(projectId: String, pipelineId: String) {

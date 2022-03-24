@@ -1002,8 +1002,8 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun queryIos(buildId: String, certId: String, publicKey: String): CertIOS {
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+    override fun queryIos(projectId: String, buildId: String, certId: String, publicKey: String): CertIOS {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
@@ -1030,8 +1030,13 @@ class CertServiceImpl @Autowired constructor(
         return CertIOS(serverBase64PublicKey, p12FileName, p12Base64Content, mpFileName, mpBase64Content, credentialId)
     }
 
-    override fun queryEnterprise(buildId: String, certId: String, publicKey: String): CertEnterprise {
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+    override fun queryEnterprise(
+        projectId: String,
+        buildId: String,
+        certId: String,
+        publicKey: String
+    ): CertEnterprise {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
@@ -1073,8 +1078,8 @@ class CertServiceImpl @Autowired constructor(
         return CertEnterprise(serverBase64PublicKey, mpFileName, mpBase64Content, mpFileSha1)
     }
 
-    override fun queryAndroid(buildId: String, certId: String, publicKey: String): CertAndroid {
-        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(buildId)
+    override fun queryAndroid(projectId: String, buildId: String, certId: String, publicKey: String): CertAndroid {
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }

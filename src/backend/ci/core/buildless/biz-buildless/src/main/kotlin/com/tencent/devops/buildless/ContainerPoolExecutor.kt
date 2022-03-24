@@ -12,7 +12,6 @@ import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.RedisUtils
-import com.tencent.devops.buildless.utils.ThreadPoolUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -101,9 +100,7 @@ class ContainerPoolExecutor @Autowired constructor(
 
     private fun createBuildLessPoolContainer(index: Int = 1) {
         for (i in 1..index) {
-            ThreadPoolUtils.getInstance().run {
-                buildLessContainerService.createContainer()
-            }
+            buildLessContainerService.createContainer()
         }
     }
 

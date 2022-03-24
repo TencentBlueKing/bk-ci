@@ -74,8 +74,14 @@ open class DefaultModelCheckPlugin constructor(
 
     override fun checkModelIntegrity(model: Model, projectId: String?) {
         // 检查流水线名称
-        PipelineUtils.checkPipelineName(model.name)
-        PipelineUtils.checkPipelineDescLength(model.desc)
+        PipelineUtils.checkPipelineName(
+            name = model.name,
+            maxPipelineNameSize = pipelineCommonSettingConfig.maxPipelineNameSize
+        )
+        PipelineUtils.checkPipelineDescLength(
+            desc = model.desc,
+            maxPipelineNameSize = pipelineCommonSettingConfig.maxPipelineDescSize
+        )
         // 检查流水线model是否过大
         val modelSize = JsonUtil.toJson(model).length
         if (modelSize > pipelineCommonSettingConfig.maxModelSize.toLong()) {

@@ -64,7 +64,7 @@ class PipelineTimerChangerListener @Autowired constructor(
         try {
             crontabExpressions.forEach { crontab ->
                 val md5 = DigestUtils.md5Hex(crontab)
-                val comboKey = "${pipelineId}_$md5"
+                val comboKey = "${pipelineId}_${md5}_${event.projectId}"
                 if (schedulerManager.checkExists(comboKey)) {
                     schedulerManager.deleteJob(comboKey)
                 }
