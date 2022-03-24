@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common
 
+import org.slf4j.LoggerFactory
 import java.io.File
 
 /**
@@ -34,23 +35,32 @@ import java.io.File
  */
 object ErrorMsgLogUtil {
 
+    private val logger = LoggerFactory.getLogger(ErrorMsgLogUtil::class.java)
+
     private val message = StringBuilder(2048)
 
     // 旧版的Agent没有AGENT_ERROR_MSG_FILE参数，所以不默认创建了，否则无法被清理。
     private fun getErrorFile(): File? = System.getProperty(AGENT_ERROR_MSG_FILE)?.let { filePath -> File(filePath) }
 
-    fun resetErrorMsg() = message.clear()
+    fun resetErrorMsg() {
+        logger.info("resetErrorMsg| $message")
+        message.clear()
+    }
 
     fun appendErrorMsg(log: String) {
         message.append(log)
         message.append("\n")
+        logger.info("appendErrorMsg| $log")
     }
 
     /**
      * (覆盖)回写构建过程中的错误信息到文件中
      */
     fun flushErrorMsgToFile() {
-        getErrorFile()?.writeText(message.toString())
-        resetErrorMsg()
+        logger.info("flushErrorMsgToFile| $message")
+        if (message.isNotBlank()) {
+            getErrorFile()?.writeText(message.toString())
+            resetErrorMsg()
+        }
     }
 }

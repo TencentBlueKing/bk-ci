@@ -1884,7 +1884,8 @@ class PipelineBuildFacadeService(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
                     params = arrayOf(projectCode, nodeHashId)
-                )} $msg"
+                )
+            } $msg"
         }
         // #5046 worker-agent.jar进程意外退出，经由devopsAgent转达
         if (simpleResult.success) {
@@ -1894,7 +1895,7 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = msg ?: "worker-agent.jar进程因未知原因意外退出，请检查构建机环境负载和agent目录是否完整"
+                msg = "$msg| ${MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
             } else {
                 logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")
                 msg?.let { self ->
@@ -1908,6 +1909,8 @@ class PipelineBuildFacadeService(
                 }
                 return
             }
+        } else {
+            msg = "$msg| ${MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
         }
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectCode, buildId)
