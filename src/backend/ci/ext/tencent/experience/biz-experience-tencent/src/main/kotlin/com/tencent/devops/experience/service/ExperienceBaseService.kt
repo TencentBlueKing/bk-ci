@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -76,7 +77,8 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceBaseService::class.java)
@@ -120,8 +122,26 @@ class ExperienceBaseService @Autowired constructor(
         // 同步图片
         syncIcon(records)
 
+        val result = toAppExperiences(userId, records)
+
+        val hasNext = if (result.size < limit) {
+            false
+        } else {
+            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
+        }
+
+        return Pagination(hasNext, result)
+    }
+
+    fun toAppExperiences(
+        userId: String,
+        records: Result<TExperienceRecord>
+    ): MutableList<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
+        val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
+        val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
+            .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
 
         val result = records.map {
             AppExperience(
@@ -141,17 +161,12 @@ class ExperienceBaseService @Autowired constructor(
                 appScheme = it.scheme,
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-                expired = now.isAfter(it.endDate)
+                expired = now.isAfter(it.endDate),
+                subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}"),
+                redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
-
-        val hasNext = if (result.size < limit) {
-            false
-        } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
-        }
-
-        return Pagination(hasNext, result)
+        return result
     }
 
     /**

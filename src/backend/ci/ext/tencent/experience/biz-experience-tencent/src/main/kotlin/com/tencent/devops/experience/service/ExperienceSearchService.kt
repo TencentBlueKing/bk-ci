@@ -120,7 +120,8 @@ class ExperienceSearchService @Autowired constructor(
                 bundleIdentifier = it.bundleIdentifier,
                 appScheme = it.scheme,
                 type = it.type,
-                externalUrl = it.externalLink
+                externalUrl = it.externalLink,
+                version = it.version
             )
         }.toList()
     }
