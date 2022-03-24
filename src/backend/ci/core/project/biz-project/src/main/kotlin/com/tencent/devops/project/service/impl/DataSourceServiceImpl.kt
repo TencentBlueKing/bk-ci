@@ -116,13 +116,13 @@ class DataSourceServiceImpl @Autowired constructor(
         moduleCode: String,
         clusterName: String
     ): DataBasePiecewiseInfo? {
-        val routingRule = dataSourceDao.getRoutingRule(dslContext, projectId)?.get(0) as String
+        val routingRule = dataSourceDao.getRoutingRule(dslContext, projectId)?.get(0)
         if (!StringUtils.isEmpty(routingRule)) {
             val dataSource = dataSourceDao.getDataBasePiecewiseById(
                 dslContext = dslContext,
                 moduleCode = moduleCode,
                 clusterName = clusterName,
-                routingRule = routingRule
+                routingRule = routingRule as String
             ) ?: return null
             return DataBasePiecewiseInfo(
                 projectId = projectId,
