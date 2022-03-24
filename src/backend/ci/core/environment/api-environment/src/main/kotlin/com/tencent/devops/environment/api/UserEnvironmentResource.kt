@@ -236,6 +236,21 @@ interface UserEnvironmentResource {
         projectId: String
     ): Result<List<EnvWithPermission>>
 
+    @ApiOperation("获取用户有权限且没添加进环境共享列表的ProjectId")
+    @GET
+    @Path("/{projectId}/{envHashId}/list_user_project")
+    fun listUserShareEnv(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("环境 hashId", required = true)
+        @PathParam("envHashId")
+        envHashId: String
+    ): Result<List<String>>
+
     @ApiOperation("分页获取环境共享列表")
     @GET
     @Path("/{projectId}/{envHashId}/list")

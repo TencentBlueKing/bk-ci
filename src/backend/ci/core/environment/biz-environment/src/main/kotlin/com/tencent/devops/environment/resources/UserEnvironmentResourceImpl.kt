@@ -46,6 +46,7 @@ import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.service.EnvService
+import com.tencent.devops.project.pojo.ProjectVO
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -164,6 +165,23 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun listUserShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String
+    ): Result<List<String>> {
+        if (projectId.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
+        }
+        return Result(
+            envService.listUserShareEnv(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId
+            )
+        )
+    }
+
     override fun listShareEnv(
         userId: String,
         projectId: String,
@@ -173,14 +191,16 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         limit: Int?
     ): Result<Page<SharedProjectInfo>> {
         checkParam(userId, projectId, envHashId)
-        return Result(envService.listShareEnv(
-            userId,
-            projectId,
-            envHashId,
-            name,
-            offset ?: 0,
-            limit ?: 20
-        ))
+        return Result(
+            envService.listShareEnv(
+                userId,
+                projectId,
+                envHashId,
+                name,
+                offset ?: 0,
+                limit ?: 20
+            )
+        )
     }
 
     override fun setShareEnv(
