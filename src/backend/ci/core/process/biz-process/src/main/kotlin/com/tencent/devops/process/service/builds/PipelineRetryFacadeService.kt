@@ -54,7 +54,7 @@ class PipelineRetryFacadeService @Autowired constructor(
     val pipelineContainerService: PipelineContainerService,
     val taskBuildDetailService: TaskBuildDetailService
 ) {
-    fun runningBuildTaskRetry (
+    fun runningBuildTaskRetry(
         userId: String,
         projectId: String,
         pipelineId: String,
