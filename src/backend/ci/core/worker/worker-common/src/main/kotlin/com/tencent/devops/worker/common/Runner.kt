@@ -297,7 +297,7 @@ object Runner {
      * 发送构建初始化日志
      */
     private fun showBuildStartupLog(buildId: String, vmSeqId: String) {
-        LoggerService.addNormalLine("The build $buildId environment #$vmSeqId is ready")
+        LoggerService.addNormalLine("构建机已收到请求，准备构建(Build[$buildId] Job#$vmSeqId is ready）")
     }
 
     /**

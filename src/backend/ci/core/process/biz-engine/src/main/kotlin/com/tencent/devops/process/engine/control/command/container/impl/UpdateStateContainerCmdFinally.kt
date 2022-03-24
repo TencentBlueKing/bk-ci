@@ -104,7 +104,8 @@ class UpdateStateContainerCmdFinally(
             buildId = commandContext.event.buildId,
             stageId = commandContext.event.stageId,
             containerId = commandContext.event.containerId,
-            mutexGroup = commandContext.mutexGroup
+            mutexGroup = commandContext.mutexGroup,
+            executeCount = commandContext.container.executeCount
         )
     }
 

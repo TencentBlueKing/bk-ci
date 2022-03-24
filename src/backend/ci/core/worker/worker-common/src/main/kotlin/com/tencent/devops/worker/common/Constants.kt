@@ -47,6 +47,8 @@ const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
 
 const val SLAVE_AGENT_PREPARE_START_FILE = "devops.slave.agent.prepare.start.file"
 
+const val AGENT_ERROR_MSG_FILE = "devops.agent.error.file"
+
 const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
 
 const val JAVA_PATH_ENV = "bk_java_path"
