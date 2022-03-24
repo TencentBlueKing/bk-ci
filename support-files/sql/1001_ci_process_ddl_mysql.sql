@@ -970,7 +970,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO`  (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线模板跨项目访问表';
 
 -- ----------------------------
--- Table structure for T_AUDIT_RESOURCE
+-- Table structure for T_PIPELINE_BUILD_COMMITS
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_COMMITS` (
   `ID` bigint(20) NOT NULL AUTO_INCREMENT,
