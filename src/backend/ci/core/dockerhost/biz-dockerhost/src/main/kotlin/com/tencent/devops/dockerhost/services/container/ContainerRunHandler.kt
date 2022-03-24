@@ -60,6 +60,11 @@ class ContainerRunHandler(
                     .withNetworkMode("bridge")
                     .withInit(true)
 
+                // 对开启代码加速白名单项目增加--init启动参数，用于容器销毁时回收进程
+                if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+                    hostConfig.withInit(true)
+                }
+
                 if (dockerResource != null) {
                     hostConfig
                         .withMemory(dockerResource.memoryLimitBytes)
