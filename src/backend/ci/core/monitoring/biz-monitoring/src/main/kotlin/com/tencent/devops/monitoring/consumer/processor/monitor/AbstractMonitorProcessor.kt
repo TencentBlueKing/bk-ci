@@ -63,6 +63,7 @@ abstract class AbstractMonitorProcessor {
         val monitorDatas = ArrayList<MonitorData>()
         process(extData, monitorDatas)
 
+        // 写入
         monitorDatas.asSequence().onEach {
             it.fields["projectId"] = atomMonitorData.projectId
             it.fields["pipelineId"] = atomMonitorData.pipelineId

@@ -112,7 +112,7 @@ interface UserPTemplateResource {
 
     @ApiOperation("删除流水线模板")
     @DELETE
-    @Path("/projects/{projectId}/templates/{templateId}/versionNames/{versionName}")
+    @Path("/projects/{projectId}/templates/{templateId}/deletetemplate")
     fun deleteTemplate(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -126,7 +126,7 @@ interface UserPTemplateResource {
         @BkField(minLength = 1, maxLength = 32)
         templateId: String,
         @ApiParam("版本号", required = true)
-        @PathParam("versionName")
+        @QueryParam("versionName")
         @BkField(minLength = 1, maxLength = 64)
         versionName: String
     ): Result<Boolean>

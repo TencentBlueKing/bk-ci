@@ -9,6 +9,7 @@ extends:
       - ruotiantang
     receiversChat:
       - "${{ci.actor}}"
+    username1: world1
 
 resources:
   repositories:

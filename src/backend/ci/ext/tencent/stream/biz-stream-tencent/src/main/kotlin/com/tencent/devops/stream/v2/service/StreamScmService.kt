@@ -489,21 +489,19 @@ class StreamScmService @Autowired constructor(
     }
 
     fun getFileTreeFromGit(
-        gitToken: String,
-        gitRequestEvent: GitRequestEvent,
+        gitProjectId: Long,
+        token: String,
         filePath: String,
-        isMrEvent: Boolean = false,
         ref: String?
     ): List<GitFileInfo> {
-        val gitProjectId = getProjectId(isMrEvent, gitRequestEvent)
         return retryFun(
             log = "$gitProjectId get $filePath file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
             action = {
                 client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                    gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                    gitProjectId = gitProjectId,
                     path = filePath,
-                    token = gitToken,
+                    token = token,
                     ref = ref
                 ).data ?: emptyList()
             }
@@ -526,7 +524,7 @@ class StreamScmService @Autowired constructor(
                         filePath.substring(0, filePath.lastIndexOf("/"))
                     } else {
                         filePath
-                        },
+                    },
                     token = gitToken,
                     ref = ""
                 ).data ?: emptyList()

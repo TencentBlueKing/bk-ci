@@ -40,7 +40,6 @@ import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
-import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
@@ -99,32 +98,27 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 else ->
                     throw OperationException("不是Git 代码仓库")
             }
-            // 红线评论分开发送
-            val interceptHistory = client.get(ServiceQualityInterceptResource::class)
-                .listHistory(projectId, pipelineId, buildId).data
-            interceptHistory?.forEach { ruleIntercept ->
-                val request = CommitCheckRequest(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    type = type,
-                    privateKey = null,
-                    passPhrase = null,
-                    token = token,
-                    region = null,
-                    commitId = commitId,
-                    state = state,
-                    targetUrl = targetUrl,
-                    context = context,
-                    description = description,
-                    block = block,
-                    mrRequestId = event.mergeRequestId,
-                    reportData = QualityUtils.getQualityGitMrResult(client, event, ruleIntercept)
-                )
-                if (isOauth) {
-                    client.get(ServiceScmOauthResource::class).addCommitCheck(request)
-                } else {
-                    client.get(ServiceScmResource::class).addCommitCheck(request)
-                }
+            val request = CommitCheckRequest(
+                projectName = repo.projectName,
+                url = repo.url,
+                type = type,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                commitId = commitId,
+                state = state,
+                targetUrl = targetUrl,
+                context = context,
+                description = description,
+                block = block,
+                mrRequestId = event.mergeRequestId,
+                reportData = QualityUtils.getQualityGitMrResult(client, event)
+            )
+            if (isOauth) {
+                client.get(ServiceScmOauthResource::class).addCommitCheck(request)
+            } else {
+                client.get(ServiceScmResource::class).addCommitCheck(request)
             }
             return repo.projectName
         }

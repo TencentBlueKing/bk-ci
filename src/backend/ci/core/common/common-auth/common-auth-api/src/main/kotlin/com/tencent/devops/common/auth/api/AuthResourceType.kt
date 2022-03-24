@@ -59,6 +59,7 @@ enum class AuthResourceType(val value: String) {
 
     PROJECT("project"), // 项目管理
 
+    TURBO("turbo"), // 编译加速
     CODECC_TASK("codecc_task"); // codecc任务
 
     companion object {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.v2.dao
 
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.model.stream.tables.TGitUserMessage
 import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
@@ -59,7 +60,8 @@ class StreamUserMessageDao {
                 projectId,
                 userId,
                 messageType.name,
-                messageTitle,
+                // todo: 临时截断后续评估如何展示
+                CommonUtils.interceptStringInLength(messageTitle, 250),
                 messageId,
                 haveRead
             ).execute()

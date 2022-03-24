@@ -10,6 +10,11 @@
 package pkg
 
 import (
+	"os"
+	"path/filepath"
+
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/flock"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/config"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/api"
 
@@ -22,6 +27,42 @@ import (
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/http/httpserver"
 )
+
+var (
+	lockfile = "bk-dist-controller.lock"
+)
+
+func getLockFile() (string, error) {
+	dir := util.GetGlobalDir()
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, lockfile), nil
+}
+
+func lock() bool {
+	f, err := getLockFile()
+	if err != nil {
+		blog.Errorf("[controller]: failed to start with error:%v\n", err)
+		return false
+	}
+	blog.Infof("[controller]: ready lock file: %s\n", f)
+	flag, err := flock.TryLock(f)
+	if err != nil {
+		blog.Errorf("[controller]: failed to start with error:%v\n", err)
+		return false
+	}
+	if !flag {
+		blog.Infof("[controller]: program is maybe running for lock file has been locked \n")
+		return false
+	}
+
+	return true
+}
+
+func unlock() {
+	flock.Unlock()
+}
 
 // Server local server
 type Server struct {
@@ -70,6 +111,13 @@ func (server *Server) Start() error {
 
 // Run brings up the server
 func Run(conf *config.ServerConfig) error {
+	if !conf.DisableFileLock {
+		if !lock() {
+			return types.ErrFileLock
+		}
+		defer unlock()
+	}
+
 	if err := common.SavePid(conf.ProcessConfig); err != nil {
 		blog.Errorf("save pid failed: %v", err)
 		return err

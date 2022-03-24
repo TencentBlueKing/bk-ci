@@ -161,7 +161,7 @@
             },
 
             isEnvVar (str) {
-                return /^\$(\{[^\}\s]+\}|\w+)$/.test(str)
+                return typeof str === 'string' && str.isBkVar()
             },
 
             handleBlur () {

@@ -47,11 +47,10 @@ import com.tencent.devops.common.ci.v2.enums.TemplateType
 import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateDeepTreeNode
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 
 @Suppress("ALL")
-class YamlTemplate(
-    val projectData: TemplateProjectData,
+class YamlTemplate<T>(
+    val extraParameters: T,
 
     // 当前文件
     var filePath: String,
@@ -77,11 +76,11 @@ class YamlTemplate(
 
     // 获取模板文件函数，将模板替换过程与获取文件解耦，方便测试或链接其他代码库
     val getTemplateMethod: (
-        param: GetTemplateParam
+        param: GetTemplateParam<T>
     ) -> String
 ) {
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
-    private val templateLib = TemplateLibrary(projectData, getTemplateMethod)
+    private val templateLib = TemplateLibrary(extraParameters, getTemplateMethod)
 
     // 添加图防止模版的循环嵌套
     private val templateGraph = TemplateGraph()
@@ -127,19 +126,19 @@ class YamlTemplate(
         }
 
         if (newYamlObject.extends != null) {
-            replaceExtends(newYamlObject.extends!!, preYamlObject, rootDeepTree)
+            replaceExtends(newYamlObject.extends, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.variables != null) {
-            replaceVariables(newYamlObject.variables!!, preYamlObject, rootDeepTree)
+            replaceVariables(newYamlObject.variables, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.stages != null) {
-            replaceStages(newYamlObject.stages!!, preYamlObject, rootDeepTree)
+            replaceStages(newYamlObject.stages, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.jobs != null) {
-            replaceJobs(newYamlObject.jobs!!, preYamlObject, rootDeepTree)
+            replaceJobs(newYamlObject.jobs, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.steps != null) {
-            replaceSteps(newYamlObject.steps!!, preYamlObject, rootDeepTree)
+            replaceSteps(newYamlObject.steps, preYamlObject, rootDeepTree)
         }
         if (newYamlObject.finally != null) {
             replaceFinally(newYamlObject.finally!!, preYamlObject, rootDeepTree)
@@ -441,6 +440,10 @@ class YamlTemplate(
                     jobMap.putAll(newJob)
                 }
             } else {
+                // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
+                if (key.length > 64) {
+                    throw YamlFormatException("$fromPath job.id 超过长度限制64 $key")
+                }
                 jobMap[key] = getJob(fromPath, YamlObjects.transValue(fromPath, TemplateType.JOB.text, value), deepTree)
             }
         }
@@ -629,7 +632,7 @@ class YamlTemplate(
             yamlObject = null,
             fileFromPath = filePath,
             filePath = toPath.split(Constants.FILE_REPO_SPLIT)[0],
-            projectData = projectData,
+            extraParameters = extraParameters,
             nowRepo = repo,
             repo = toRepo,
             rootDeepTree = deepTree,

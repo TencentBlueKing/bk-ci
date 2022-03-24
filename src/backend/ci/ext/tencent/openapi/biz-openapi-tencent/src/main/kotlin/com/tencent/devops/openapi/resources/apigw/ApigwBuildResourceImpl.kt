@@ -29,14 +29,10 @@ package com.tencent.devops.openapi.resources.apigw
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.ApigwBuildResource
-import com.tencent.devops.process.api.codecc.ServiceCodeccTransferResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -135,27 +131,6 @@ class ApigwBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             channelCode = ChannelCode.BS
-        )
-    }
-
-    override fun getHistoryBuildScan(status: List<BuildStatus>?, trigger: List<StartType>?, queueTimeStartTime: Long?, queueTimeEndTime: Long?, startTimeStartTime: Long?, startTimeEndTime: Long?, endTimeStartTime: Long?, endTimeEndTime: Long?): Result<List<BuildBasicInfo>> {
-        logger.info("Get the build by status(${status?.joinToString(",")}) " +
-            "and trigger(${trigger?.joinToString(",")}) " +
-            "and queueTimeStartTime($queueTimeStartTime)" +
-            "and queueTimeEndTime($queueTimeEndTime)" +
-            "and startTimeStartTime($startTimeStartTime)" +
-            "and startTimeEndTime($startTimeEndTime)" +
-            "and endTimeStartTime($endTimeStartTime)" +
-            "and endTimeEndTime($endTimeEndTime")
-        return client.get(ServiceCodeccTransferResource::class).getHistoryBuildScan(
-            status = status,
-            trigger = trigger,
-            queueTimeStartTime = queueTimeStartTime,
-            queueTimeEndTime = queueTimeEndTime,
-            startTimeStartTime = startTimeStartTime,
-            startTimeEndTime = startTimeEndTime,
-            endTimeStartTime = endTimeStartTime,
-            endTimeEndTime = endTimeEndTime
         )
     }
 

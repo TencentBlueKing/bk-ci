@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 /**
  * 为了方便产生中间变量的过度类和Step一模一样
  */
-@JsonFilter(YamlMetaDataJsonFilter)
+@JsonFilter(YAME_META_DATA_JSON_FILTER)
 data class PreStep(
     val name: String?,
     val id: String?,

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackUrlGenerator
-import com.tencent.devops.process.pojo.pipeline.enums.CallBackNetWorkRegionType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -55,6 +55,7 @@ class TxProjectPipelineCallBackUrlGeneratorImpl : ProjectPipelineCallBackUrlGene
                     url
                 }
             }
+            else -> ""
         }
     }
 

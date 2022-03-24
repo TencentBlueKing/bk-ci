@@ -47,7 +47,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Strategy
-import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import com.tencent.devops.common.ci.v2.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
@@ -125,7 +125,7 @@ class TXPipelineExportService @Autowired constructor(
             .apply {
                 registerKotlinModule().setFilterProvider(
                     SimpleFilterProvider().addFilter(
-                        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+                        YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
                     )
                 )
             }

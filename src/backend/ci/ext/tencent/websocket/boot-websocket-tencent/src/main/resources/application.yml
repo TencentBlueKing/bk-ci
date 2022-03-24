@@ -1,21 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
   application:
     name: websocket
     desc: DevOps Websocket Service
     version: 4.0.0
     packageName: com.tencent.devops.websocket
-  redis:
-    database: 2
-    host: 10.125.48.80
-    password: itdev@db
-  rabbitmq:
-    virtual-host: soda4
-    username: soda
-    password: soda
-    addresses: 10.125.48.80:5672
-
-server:
-  port: 80
-
-thread:
-  min: 8

@@ -216,6 +216,21 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getBuildInLastDays(
+        dslContext: DSLContext,
+        buildDays: Long,
+        offset: Int,
+        limit: Int
+    ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(CREATE_TIME.gt(LocalDateTime.now().minusDays(buildDays)))
+                .and(VERSION.eq("v2.0"))
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
     fun getBranchBuildList(
         dslContext: DSLContext,
         gitProjectId: Long
@@ -716,6 +731,22 @@ class GitRequestEventBuildDao {
                 .fetch().map {
                     it.getValue(PIPELINE_ID) to it.getValue(ORIGIN_YAML)
                 }.toMap()
+        }
+    }
+
+    // 获取指定日期的日活跃项目数
+    fun getBuildActiveProjectCount(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectDistinct(GIT_PROJECT_ID).from(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .and(BUILD_ID.isNotNull)
+                .and(PARSED_YAML.like("%v2.0%"))
+            return dsl.fetch().size
         }
     }
 }

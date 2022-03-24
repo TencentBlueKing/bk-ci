@@ -89,4 +89,10 @@ class StrategyDao {
             return dslContext.selectFrom(this).where((IS_DELETE.eq(0))).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
+
+    fun getByName(dslContext: DSLContext, strategyName: String): TAuthStrategyRecord? {
+        with(TAuthStrategy.T_AUTH_STRATEGY) {
+            return dslContext.selectFrom(this).where(STRATEGY_NAME.eq(strategyName).and(IS_DELETE.eq(0))).fetchOne()
+        }
+    }
 }

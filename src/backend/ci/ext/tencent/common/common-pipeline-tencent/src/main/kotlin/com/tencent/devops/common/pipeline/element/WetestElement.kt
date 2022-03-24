@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("作废，由其他团队负责")
 @ApiModel("wetest原子", description = WetestElement.classType)
 data class WetestElement(
     @ApiModelProperty("任务名称", required = true)
@@ -41,7 +42,9 @@ data class WetestElement(
     override var status: String? = null,
     @ApiModelProperty("任务id", required = true)
     val taskId: Int,
-    @ApiModelProperty("测试类型(install（快速兼容测试）、unity（Unity兼容测试）、app（app功能测试）、ios(ios测试)、othermonkey(第三方脚本测试))", required = true)
+    @ApiModelProperty(
+        "测试类型(install（快速兼容测试）、unity（Unity兼容测试）、app（app功能测试）、ios(ios测试)、othermonkey(第三方脚本测试))", required = true
+    )
     val testType: String,
     @ApiModelProperty("源文件(PIPELINE-流水线仓库, CUSTOMIZE-自定义仓库)", required = true)
     val sourceType: String,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -62,6 +63,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -196,24 +198,9 @@ class BkRepoService @Autowired constructor(
         val lastModifyUser = client.get(ServicePipelineResource::class)
             .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
         if (!crossProjectId.isNullOrBlank()) {
-            targetProjectId = crossProjectId!!
-            if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
-                    lastModifyUser,
-                    targetProjectId
-                )
-            ) {
-                throw PermissionForbiddenException("用户（$lastModifyUser) 没有项目（$targetProjectId）下载权限)")
-            }
+            targetProjectId = crossProjectId
             if (artifactoryType == ArtifactoryType.PIPELINE) {
                 targetPipelineId = crossPipineId ?: throw BadRequestException("Invalid Parameter pipelineId")
-                pipelineService.validatePermission(
-                    userId = lastModifyUser,
-                    projectId = targetProjectId,
-                    pipelineId = targetPipelineId,
-                    permission = AuthPermission.DOWNLOAD,
-                    message = "用户($lastModifyUser)在项目($crossProjectId)下没有流水线($crossPipineId)下载构建权限"
-                )
-
                 val targetBuild = client.get(ServiceBuildResource::class).getSingleHistoryBuild(
                     projectId = targetProjectId,
                     pipelineId = targetPipelineId,
@@ -224,6 +211,31 @@ class BkRepoService @Autowired constructor(
             }
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+
+        if (artifactoryType == ArtifactoryType.CUSTOM_DIR && !pipelineService.hasPermission(
+                lastModifyUser,
+                targetProjectId
+            )
+        ) {
+            throw PermissionForbiddenException(
+                MessageCodeUtil.getCodeMessage(
+                    ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    arrayOf(lastModifyUser, projectId)
+                )
+            )
+        }
+        if (artifactoryType == ArtifactoryType.PIPELINE) {
+            pipelineService.validatePermission(
+                userId = lastModifyUser,
+                projectId = targetProjectId,
+                pipelineId = targetPipelineId,
+                permission = AuthPermission.DOWNLOAD,
+                message = MessageCodeUtil.getCodeMessage(
+                    ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    arrayOf(lastModifyUser, projectId, targetPipelineId)
+                )
+            )
+        }
 
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
@@ -242,7 +254,7 @@ class BkRepoService @Autowired constructor(
 
             bkRepoClient.queryByPathEqOrNameMatchOrMetadataEqAnd(
                 userId = lastModifyUser,
-                projectId = projectId,
+                projectId = targetProjectId,
                 repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),
                 filePaths = listOf(filePath),
                 fileNames = listOf(fileName),
@@ -280,7 +292,10 @@ class BkRepoService @Autowired constructor(
             projectId,
             pipelineId,
             AuthPermission.DOWNLOAD,
-            "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
+            MessageCodeUtil.getCodeMessage(
+                ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                arrayOf(userId, projectId, pipelineId)
+            )
         )
 
         val startTimestamp = System.currentTimeMillis()
@@ -391,7 +406,7 @@ class BkRepoService @Autowired constructor(
         val metadataMap =
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-            throw RuntimeException("元数据(pipelineId)不存在")
+            throw BadRequestException("元数据(pipelineId)不存在")
         }
         val pipelineId = metadataMap[ARCHIVE_PROPS_PIPELINE_ID]
         val pipelineName = pipelineService.getPipelineName(projectId, metadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
@@ -530,7 +545,7 @@ class BkRepoService @Autowired constructor(
         condition: CustomFileSearchCondition
     ): List<String> {
         logger.info("listCustomFiles, userId: $userId, projectId: $projectId, condition: $condition")
-        var pathNamePairs = mutableListOf<Pair<String, String>>()
+        val pathNamePairs = mutableListOf<Pair<String, String>>()
         if (!condition.glob.isNullOrEmpty()) {
             condition.glob!!.split(",").map { globItem ->
                 val absPath = "/${JFrogUtil.normalize(globItem).removePrefix("/")}"
@@ -608,7 +623,7 @@ class BkRepoService @Autowired constructor(
             val filePath = absPath.removeSuffix(fileName)
             Pair(filePath, fileName)
         }
-        var srcFiles = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
+        val srcFiles = bkRepoClient.queryByPathNamePairOrMetadataEqAnd(
             userId = userId,
             projectId = projectId,
             repoNames = listOf(RepoUtils.getRepoByType(artifactoryType)),

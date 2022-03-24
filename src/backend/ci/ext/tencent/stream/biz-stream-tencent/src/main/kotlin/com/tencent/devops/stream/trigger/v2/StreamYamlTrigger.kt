@@ -64,7 +64,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
+import com.tencent.devops.stream.trigger.template.TemplateProjectData
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
@@ -119,8 +119,8 @@ class StreamYamlTrigger @Autowired constructor(
         if (!isTrigger && !isTiming && !isDelete) {
             logger.warn(
                 "${gitProjectPipeline.pipelineId}|" +
-                    "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                    "eventId: ${gitRequestEvent.id}"
+                        "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                        "eventId: ${gitRequestEvent.id}"
             )
             triggerError(
                 request = gitRequestEvent,
@@ -148,11 +148,13 @@ class StreamYamlTrigger @Autowired constructor(
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml normalize yaml: $normalizedYaml")
 
-        // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-        gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
-            yamlObject.name!!
-        } else {
-            gitProjectPipeline.filePath
+        // 除了新建的流水线，若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称，只在当前yml文件变更时进行
+        if (gitProjectPipeline.pipelineId.isBlank() ||
+            (!changeSet.isNullOrEmpty() && changeSet.contains(gitProjectPipeline.filePath))
+        ) {
+            gitProjectPipeline.displayName = yamlObject.name?.ifBlank {
+                gitProjectPipeline.filePath
+            } ?: gitProjectPipeline.filePath
         }
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态，只有url或者名称不对才更新
@@ -162,7 +164,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 有特殊任务的注册事件
             logger.warn(
                 "special job register timer: $isTiming delete: $isDelete" +
-                    "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
             )
             yamlBuildV2.gitStartBuild(
                 pipeline = gitProjectPipeline,
@@ -189,7 +191,7 @@ class StreamYamlTrigger @Autowired constructor(
             // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                    "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
             // TODO：后续将这个先存储再修改的操作全部重构，打平过度设计的抽象BaseBuild类，将构建分为准备段和构建段
             val gitBuildId = gitRequestEventBuildDao.save(
@@ -289,7 +291,7 @@ class StreamYamlTrigger @Autowired constructor(
             val preYamlObject = YamlTemplate(
                 yamlObject = preTemplateYamlObject,
                 filePath = filePath,
-                projectData = TemplateProjectData(
+                extraParameters = TemplateProjectData(
                     gitRequestEventId = gitRequestEvent.id!!,
                     triggerProjectId = streamScmService.getProjectId(isFork, gitRequestEvent),
                     triggerUserId = gitRequestEvent.userId,

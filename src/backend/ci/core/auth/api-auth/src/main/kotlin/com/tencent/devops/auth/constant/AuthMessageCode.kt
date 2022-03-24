@@ -54,6 +54,8 @@ object AuthMessageCode {
     const val UN_DEFAULT_GROUP_ERROR = "2121009" // 权限系统：非默认分组与默认分组重名
     const val DEFAULT_GROUP_UPDATE_NAME_ERROR = "2121010" // 权限系统：该分组为默认分组,不允许重命名
     const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
+    const val IAM_SYSTEM_ERROR = "2121012" // 权限系统：Iam权限中心异常。异常信息{0}
+    const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
@@ -71,4 +73,6 @@ object AuthMessageCode {
     const val MANAGER_USER_EXIST = "2121205" // 权限系统： 用户已有该授权
     const val MANAGER_WHITE_USER_EXIST = "2121206" // 权限系统： 白名单用户{0}已存在
     const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
+    const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
+    const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
 }

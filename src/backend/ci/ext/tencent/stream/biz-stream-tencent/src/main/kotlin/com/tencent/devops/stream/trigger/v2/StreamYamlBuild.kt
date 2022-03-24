@@ -70,7 +70,7 @@ import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.PipelineInfo
 import com.devops.process.yaml.modelCreate.inner.StreamData
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelCreateInnerImpl
+import com.tencent.devops.stream.trigger.parsers.modelCreate.InnerModelCreatorImpl
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
@@ -91,7 +91,7 @@ class StreamYamlBuild @Autowired constructor(
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineService: GitCIPipelineService,
     private val redisOperation: RedisOperation,
-    private val modelCreateInnerImpl: ModelCreateInnerImpl,
+    private val modelCreateInnerImpl: InnerModelCreatorImpl,
     private val streamStorageBean: StreamStorageBean,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService
@@ -154,7 +154,8 @@ class StreamYamlBuild @Autowired constructor(
                         pipeline = realPipeline,
                         event = event,
                         gitCIBasicSetting = gitBasicSetting,
-                        model = createTriggerModel(gitBasicSetting)
+                        model = createTriggerModel(gitBasicSetting),
+                        updateLastModifyUser = true
                     )
                 }
             } finally {
@@ -338,14 +339,17 @@ class StreamYamlBuild @Autowired constructor(
         )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
-        streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
+        // 判断是否更新最后修改人
+        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
+
         return streamYamlBaseBuild.startBuild(
             pipeline = pipeline,
             event = event,
             gitCIBasicSetting = gitBasicSetting,
             model = model,
             gitBuildId = gitBuildId,
-            yamlTransferData = yamlTransferData
+            yamlTransferData = yamlTransferData,
+            updateLastModifyUser = updateLastModifyUser
         )
     }
 
@@ -373,7 +377,11 @@ class StreamYamlBuild @Autowired constructor(
             pipelineParams = modelParams
         )
         logger.info("savePipeline pipeline:$pipeline, model: $model")
-        streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model)
+
+        // 判断是否更新最后修改人
+        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
+
+        streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model, updateLastModifyUser)
     }
 
     private fun getModelCreateEventAndParams(
