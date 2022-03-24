@@ -91,6 +91,7 @@ object ShellUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
+        jobId: String? = null,
         stepId: String? = null
     ): String {
         return executeUnixCommand(
@@ -109,6 +110,7 @@ object ShellUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
+            jobId = jobId,
             buildId = buildId,
             stepId = stepId
         )
@@ -208,6 +210,7 @@ object ShellUtil {
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String? = null,
+        jobId: String? = null,
         stepId: String? = null
     ): String {
         try {
@@ -218,6 +221,7 @@ object ShellUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
+                jobId = jobId,
                 stepId = stepId
             )
         } catch (ignored: Throwable) {
