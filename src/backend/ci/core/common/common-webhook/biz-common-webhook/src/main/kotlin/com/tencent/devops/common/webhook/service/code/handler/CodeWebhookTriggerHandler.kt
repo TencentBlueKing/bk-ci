@@ -35,7 +35,7 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 
 @Suppress("TooManyFunctions")
@@ -78,7 +78,7 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         repository: Repository?,
         page: Int,
         size: Int
-    ): List<GitCommit> {
+    ): List<WebhookCommit> {
         return emptyList()
     }
 

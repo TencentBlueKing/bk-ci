@@ -35,7 +35,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -75,7 +75,7 @@ open class GitWebHookMatcher(
         repository: Repository,
         page: Int,
         size: Int
-    ): List<GitCommit> {
+    ): List<WebhookCommit> {
         if (event !is GitMergeRequestEvent && event !is GitPushEvent) {
             logger.info("git event is not merge request event or push event")
             return emptyList()

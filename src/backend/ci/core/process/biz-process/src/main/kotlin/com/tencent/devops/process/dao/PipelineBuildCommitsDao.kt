@@ -1,16 +1,10 @@
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.process.tables.TPipelineBuildCommits
-import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.*
-import java.util.concurrent.TimeUnit
 
 
 @Suppress("ALL")
@@ -22,13 +16,11 @@ class PipelineBuildCommitsDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        webhookCommits: List<GitCommit>,
+        webhookCommits: List<WebhookCommit>,
         mrId: String
     ) {
         with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
             webhookCommits.map {
-                val commitTime =
-                    DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date)))
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
@@ -38,6 +30,7 @@ class PipelineBuildCommitsDao {
                     MESSAGE,
                     AUTHOR_NAME,
                     MERGE_REQUEST_ID,
+                    REPOSITORY_TYPE,
                     COMMIT_TIME,
                     CREATE_TIME
                 )
@@ -45,11 +38,12 @@ class PipelineBuildCommitsDao {
                         projectId,
                         pipelineId,
                         buildId,
-                        it.id,
+                        it.commitId,
                         it.message,
-                        it.author_name,
+                        it.authorName,
                         mrId,
-                        commitTime,
+                        it.repoType,
+                        it.commitTime,
                         LocalDateTime.now()
                     ).execute()
             }

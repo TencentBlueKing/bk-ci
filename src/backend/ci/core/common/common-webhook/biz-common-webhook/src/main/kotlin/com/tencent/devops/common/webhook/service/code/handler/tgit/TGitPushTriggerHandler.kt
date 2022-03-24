@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
@@ -65,8 +67,10 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -219,20 +223,20 @@ class TGitPushTriggerHandler(
         repository: Repository?,
         page: Int,
         size: Int
-    ): List<GitCommit> {
+    ): List<WebhookCommit> {
         if(page != 1){
             // push 请求事件会在第一次请求时将所有的commit记录全部返回，所以如果分页参数不为1，则直接返回空列表
             return emptyList()
         }
         return event.commits!!.map {
-            GitCommit(
-                id = it.id,
-                short_id = "",
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.timestamp)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author.name,
                 message = it.message,
-                author_name = it.author.name,
-                author_email = it.author.email,
-                title = "",
-                committed_date = it.timestamp
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime
             )
         }
     }

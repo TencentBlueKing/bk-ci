@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.WebhookCommit
 import org.slf4j.LoggerFactory
 
 @Suppress("TooManyFunctions")
@@ -89,7 +89,7 @@ interface ScmWebhookMatcher {
         repository: Repository,
         page: Int,
         size: Int
-    ): List<GitCommit> {
+    ): List<WebhookCommit> {
         return emptyList()
     }
 

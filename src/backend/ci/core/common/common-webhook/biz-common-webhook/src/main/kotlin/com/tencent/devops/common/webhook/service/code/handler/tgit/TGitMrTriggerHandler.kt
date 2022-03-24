@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
@@ -104,8 +105,10 @@ import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -313,7 +316,7 @@ class TGitMrTriggerHandler(
         repository: Repository?,
         page: Int,
         size: Int
-    ): List<GitCommit> {
+    ): List<WebhookCommit> {
         logger.info("merge request event is $event")
         if (projectId == null || repository == null) {
             return emptyList()
@@ -329,7 +332,17 @@ class TGitMrTriggerHandler(
             mrId = mrId,
             page = page,
             size = size
-        )
+        ).map {
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.committed_date)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author_name,
+                message = it.message,
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime
+            )
+        }
 
     }
 
