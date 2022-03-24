@@ -113,7 +113,7 @@ object GitCommonUtils {
                     .getToken(gitRequestEvent.sourceGitProjectId!!).data!!
                 logger.info(
                     "get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, " +
-                            "token: $gitToken"
+                        "token: $gitToken"
                 )
                 val sourceRepositoryConf = client.getScm(ServiceGitResource::class)
                     .getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
@@ -129,6 +129,33 @@ object GitCommonUtils {
             } catch (e: Exception) {
                 logger.error("Cannot get source GitProjectInfo: ", e)
             }
+        }
+        return realEvent
+    }
+
+    // 判断是否为远程库的请求并返回带远程库信息的event
+    fun checkAndGetRepoBranch(gitRequestEvent: GitRequestEvent, client: Client): GitRequestEvent {
+        var realEvent = gitRequestEvent
+        try {
+            val gitToken = client.getScm(ServiceGitResource::class)
+                .getToken(gitRequestEvent.gitProjectId).data!!
+            logger.info(
+                "get token for gitProjectId[${gitRequestEvent.gitProjectId}] form scm, " +
+                    "token: $gitToken"
+            )
+            val sourceRepositoryConf = client.getScm(ServiceGitResource::class)
+                .getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
+            realEvent = gitRequestEvent.copy(
+                // name_with_namespace: git_namespace/project_name , 要的是  git_namespace/project_name:branch
+                branch = if (sourceRepositoryConf != null) {
+                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
+                    "$path:${gitRequestEvent.branch}"
+                } else {
+                    gitRequestEvent.branch
+                }
+            )
+        } catch (e: Exception) {
+            logger.error("Cannot get source GitProjectInfo: ", e)
         }
         return realEvent
     }

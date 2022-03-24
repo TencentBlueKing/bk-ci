@@ -28,7 +28,13 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -83,7 +89,7 @@ data class GitRequestEventReq(
     @ApiModelProperty("评论Id")
     var noteId: Long?,
     @ApiModelProperty("评论连接")
-    var noteUrl: String?
+    var jumpUrl: String?
 ) {
     constructor(gitRequestEvent: GitRequestEvent) : this(
         id = gitRequestEvent.id,
@@ -107,13 +113,33 @@ data class GitRequestEventReq(
         deleteBranch = gitRequestEvent.isDeleteBranch(),
         deleteTag = gitRequestEvent.isDeleteTag(),
         noteId = null,
-        noteUrl = null
+        jumpUrl = null
     ) {
         when (gitRequestEvent.gitEvent) {
             is GitNoteEvent -> {
-                val gitNoteEvent = gitRequestEvent.gitEvent as GitNoteEvent
-                noteId = gitNoteEvent.objectAttributes.id
-                noteUrl = gitNoteEvent.objectAttributes.url
+                val event = gitRequestEvent.gitEvent as GitNoteEvent
+                noteId = event.objectAttributes.id
+                jumpUrl = event.objectAttributes.url
+            }
+            is GitPushEvent -> {
+                val event = gitRequestEvent.gitEvent as GitPushEvent
+                jumpUrl = event.repository.homepage + "/commit/" + gitRequestEvent.commitId
+            }
+            is GitTagPushEvent -> {
+                val event = gitRequestEvent.gitEvent as GitTagPushEvent
+                jumpUrl = event.repository.homepage + "/-/tags/" + gitRequestEvent.branch
+            }
+            is GitMergeRequestEvent -> {
+                val event = gitRequestEvent.gitEvent as GitMergeRequestEvent
+                jumpUrl = event.object_attributes.target.web_url + "/merge_requests/" + gitRequestEvent.mergeRequestId
+            }
+            is GitIssueEvent -> {
+                val event = gitRequestEvent.gitEvent as GitIssueEvent
+                jumpUrl = event.repository.homepage + "/issues/" + gitRequestEvent.mergeRequestId
+            }
+            is GitReviewEvent -> {
+                val event = gitRequestEvent.gitEvent as GitReviewEvent
+                jumpUrl = event.repository.homepage + "/reviews/" + gitRequestEvent.mergeRequestId
             }
             else -> {}
         }

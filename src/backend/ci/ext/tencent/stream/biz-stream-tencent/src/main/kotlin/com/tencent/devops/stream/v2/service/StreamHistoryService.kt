@@ -131,7 +131,13 @@ class StreamHistoryService @Autowired constructor(
                 id = it.eventId
             ) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
+            val realEvent =
+                if (gitProjectId == gitRequestEvent.gitProjectId) {
+                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
+                } else {
+                    // 当gitProjectId与event的不同时，说明是远程仓库触发的
+                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, client)
+                }
             val pipeline =
                 pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(
