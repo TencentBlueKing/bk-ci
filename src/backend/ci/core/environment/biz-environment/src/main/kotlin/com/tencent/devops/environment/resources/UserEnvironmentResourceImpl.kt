@@ -168,8 +168,10 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     override fun listUserShareEnv(
         userId: String,
         projectId: String,
-        envHashId: String
-    ): Result<List<String>> {
+        envHashId: String,
+        offset: Int?,
+        limit: Int?
+    ): Result<Page<SharedProjectInfo>> {
         if (projectId.isEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
         }
@@ -177,7 +179,9 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             envService.listUserShareEnv(
                 userId = userId,
                 projectId = projectId,
-                envHashId = envHashId
+                envHashId = envHashId,
+                offset = offset ?: 0,
+                limit = limit ?: 20
             )
         )
     }
