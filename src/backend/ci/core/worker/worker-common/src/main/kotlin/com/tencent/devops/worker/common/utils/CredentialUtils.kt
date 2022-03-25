@@ -39,12 +39,9 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
-import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import java.util.Base64
-import java.util.Collections
 import javax.ws.rs.NotFoundException
-
 
 /**
  * This util is to get the credential from core
