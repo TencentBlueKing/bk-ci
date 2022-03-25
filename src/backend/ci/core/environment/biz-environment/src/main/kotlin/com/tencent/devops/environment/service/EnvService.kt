@@ -736,10 +736,10 @@ class EnvService @Autowired constructor(
         val fromIndex = if (offset * limit > records.size) records.size else offset * limit
         val toIndex = if ((offset + 1) * limit > records.size) records.size else (offset + 1) * limit
         return Page(
-            count = count.toLong(),
+            count = records.size.toLong(),
             records = records.subList(fromIndex, toIndex),
-            pageSize = offset,
-            page = limit
+            pageSize = limit,
+            page = offset
         )
     }
 
@@ -780,8 +780,8 @@ class EnvService @Autowired constructor(
         return Page(
             count = count.toLong(),
             records = sharedProjectInfos,
-            pageSize = offset,
-            page = limit
+            pageSize = limit,
+            page = offset
         )
     }
 
