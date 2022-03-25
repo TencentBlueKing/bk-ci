@@ -165,17 +165,21 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         readTimeoutInSec: Long? = null,
         writeTimeoutInSec: Long? = null
     ) {
-        requestForResponse(
-            request = request,
-            connectTimeoutInSec = connectTimeoutInSec,
-            readTimeoutInSec = readTimeoutInSec,
-            writeTimeoutInSec = writeTimeoutInSec
-        ).use { response ->
-            download(response, destPath)
-        }
+        var retryCount = DEFAULT_RETRY_TIME
+        do {
+            requestForResponse(
+                request = request,
+                connectTimeoutInSec = connectTimeoutInSec,
+                readTimeoutInSec = readTimeoutInSec,
+                writeTimeoutInSec = writeTimeoutInSec
+            ).use { response ->
+                retryCount = download(response, destPath, retryCount)
+            }
+        } while (retryCount >= 0)
+
     }
 
-    private fun download(response: Response, destPath: File, retryCount: Int = DEFAULT_RETRY_TIME) {
+    private fun download(response: Response, destPath: File, retryCount: Int): Int {
         if (response.code() == StatusCodes.NOT_FOUND) {
             throw RemoteServiceException("文件不存在")
         }
@@ -186,7 +190,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val dest = destPath.toPath()
         if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
         LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
-        val body = response.body() ?: return
+        val body = response.body() ?: return -1
         val contentLength = body.contentLength()
         if (contentLength != -1L) {
             LoggerService.addNormalLine("download ${dest.fileName} " +
@@ -201,11 +205,12 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } catch (e: Exception) {
             logger.warn("Failed to copy download body, try to retry.")
             if (retryCount > 0) {
-                download(response, destPath, retryCount - 1)
+                return retryCount - 1
             } else {
                 throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
             }
         }
+        return -1
     }
 
     companion object {
