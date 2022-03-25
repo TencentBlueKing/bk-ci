@@ -135,7 +135,6 @@ data class GitRequestEventReq(
                 val event = gitRequestEvent.gitEvent as GitPushEvent
                 if (deleteBranch) {
                     buildTitle = "Branch $branch deleted by $userId"
-                    buildSource = "--"
                 } else {
                     jumpUrl = event.repository.homepage + "/commit/" + gitRequestEvent.commitId
                     buildTitle = commitMsg
@@ -146,7 +145,6 @@ data class GitRequestEventReq(
                 val event = gitRequestEvent.gitEvent as GitTagPushEvent
                 if (deleteTag) {
                     buildTitle = "Tag $branch deleted by $userId"
-                    buildSource = "--"
                 } else {
                     jumpUrl = event.repository.homepage + "/-/tags/" + gitRequestEvent.branch
                     buildTitle = commitMsg
@@ -175,9 +173,6 @@ data class GitRequestEventReq(
                 when (objectKind) {
                     TGitObjectKind.SCHEDULE.value -> {
                         buildSource = commitId.take(9)
-                    }
-                    TGitObjectKind.MANUAL.value -> {
-                        buildSource = "--"
                     }
                     else -> {}
                 }
