@@ -82,6 +82,8 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.ParsePosition
+import java.text.SimpleDateFormat
 
 @Service
 @Suppress("ALL")
@@ -696,11 +698,23 @@ class EnvService @Autowired constructor(
     fun listUserShareEnv(
         userId: String,
         projectId: String,
-        envHashId: String
-    ): List<String> {
+        envHashId: String,
+        offset: Int = 0,
+        limit: Int = 20
+    ): Page<SharedProjectInfo> {
         val projectList = client.get(ServiceProjectResource::class).list(
             userId = userId
-        ).data?.map { it.englishName } ?: emptyList()
+        ).data?.map {
+            SharedProjectInfo(
+                projectId = it.englishName,
+                gitProjectId = null,
+                name = it.projectName,
+                creator = it.creator,
+                type = SharedEnvType.PROJECT,
+                createTime = SimpleDateFormat("YY-MM-DD hh:mm:ss").parse(it.createdAt).time,
+                updateTime = SimpleDateFormat("YY-MM-DD hh:mm:ss").parse(it.updatedAt ?: it.createdAt).time
+            )
+        } ?: emptyList()
         val envId = HashUtil.decodeIdToLong(envHashId)
         val count = envShareProjectDao.count(
             dslContext = dslContext,
@@ -708,7 +722,7 @@ class EnvService @Autowired constructor(
             envId = envId,
             name = null
         )
-        val records = envShareProjectDao.listPage(
+        val sharedProjects = envShareProjectDao.listPage(
             dslContext = dslContext,
             projectId = projectId,
             envId = envId,
@@ -716,7 +730,15 @@ class EnvService @Autowired constructor(
             offset = 0,
             limit = count + 1
         ).map { it.sharedProjectId }
-        return projectList.filterNot { it in records }
+        val records = projectList.filterNot { it.projectId in sharedProjects }
+        val fromIndex = if (offset * limit > records.size) records.size else offset * limit
+        val toIndex = if ((offset + 1) * limit > records.size) records.size else (offset + 1) * limit
+        return Page(
+            count = count.toLong(),
+            records = records.subList(fromIndex, toIndex),
+            pageSize = offset,
+            page = limit
+        )
     }
 
     fun listShareEnv(

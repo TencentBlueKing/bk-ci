@@ -248,8 +248,14 @@ interface UserEnvironmentResource {
         projectId: String,
         @ApiParam("环境 hashId", required = true)
         @PathParam("envHashId")
-        envHashId: String
-    ): Result<List<String>>
+        envHashId: String,
+        @ApiParam("起始位置", required = false)
+        @QueryParam("offset")
+        offset: Int? = null,
+        @ApiParam("步长", required = false)
+        @QueryParam("limit")
+        limit: Int? = null
+    ): Result<Page<SharedProjectInfo>>
 
     @ApiOperation("分页获取环境共享列表")
     @GET
