@@ -22,7 +22,7 @@ class PipelineBuildCommitsDao {
         mrId: String
     ) {
         with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
-            val num = webhookCommits.map {
+            webhookCommits.map {
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
@@ -49,11 +49,6 @@ class PipelineBuildCommitsDao {
                         LocalDateTime.now()
                     ).execute()
             }
-            logger.info("save commit success | $num")
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineBuildCommitsDao::class.java)
     }
 }

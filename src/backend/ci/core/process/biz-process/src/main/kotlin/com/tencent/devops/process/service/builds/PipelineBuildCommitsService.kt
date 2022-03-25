@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineBuildCommitsService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineBuildCommits: PipelineBuildCommitsDao
+    private val pipelineBuildCommitsDao: PipelineBuildCommitsDao
 ) {
 
     fun create(
@@ -35,7 +35,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                 )
                 logger.info("commit list is $webhookCommitList")
                 if (webhookCommitList.size < size) break
-                pipelineBuildCommits.create(
+                val result = pipelineBuildCommitsDao.create(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -43,6 +43,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                     webhookCommits = webhookCommitList,
                     mrId = matcher.getMergeRequestId()?.toString() ?: ""
                 )
+                logger.info("commit save result is $result")
                 page++
             }
         } catch (ignore: Throwable) {
