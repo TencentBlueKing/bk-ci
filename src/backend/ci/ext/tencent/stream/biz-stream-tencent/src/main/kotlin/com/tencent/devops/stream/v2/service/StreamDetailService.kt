@@ -82,12 +82,14 @@ class StreamDetailService @Autowired constructor(
             gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val gitProjectInfoCache = lazy {
-            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                gitProjectId = eventRecord.gitProjectId,
-                useAccessToken = true,
-                getProjectInfo = streamScmService::getProjectInfoRetry
-            )
+        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
         }
         val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
@@ -106,12 +108,14 @@ class StreamDetailService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val gitProjectInfoCache = lazy {
-            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                gitProjectId = eventRecord.gitProjectId,
-                useAccessToken = true,
-                getProjectInfo = streamScmService::getProjectInfoRetry
-            )
+        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
         }
         val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(

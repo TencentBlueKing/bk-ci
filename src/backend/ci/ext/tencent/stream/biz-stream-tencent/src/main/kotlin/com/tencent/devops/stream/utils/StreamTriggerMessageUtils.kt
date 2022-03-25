@@ -30,12 +30,6 @@ class StreamTriggerMessageUtils @Autowired constructor(
     fun getEventMessageTitle(event: GitRequestEvent, gitProjectId: Long): String {
         val messageTitle = when (event.objectKind) {
             TGitObjectKind.MERGE_REQUEST.value -> {
-                val branch = GitCommonUtils.checkAndGetForkBranchName(
-                    gitProjectId = gitProjectId,
-                    sourceGitProjectId = event.sourceGitProjectId,
-                    branch = event.branch,
-                    client = client
-                )
                 "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
             TGitObjectKind.MANUAL.value -> {

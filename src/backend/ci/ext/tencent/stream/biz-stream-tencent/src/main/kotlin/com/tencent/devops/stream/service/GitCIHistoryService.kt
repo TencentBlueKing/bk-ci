@@ -163,12 +163,14 @@ class GitCIHistoryService @Autowired constructor(
             ) ?: return@forEach
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId, commitMsg) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val gitProjectInfoCache = lazy {
-                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                    gitProjectId = gitRequestEvent.gitProjectId,
-                    useAccessToken = true,
-                    getProjectInfo = streamScmService::getProjectInfoRetry
-                )
+            val gitProjectInfoCache = gitRequestEvent.sourceGitProjectId?.let {
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = it,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
             }
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitProjectInfoCache)
             val pipeline =
@@ -229,12 +231,21 @@ class GitCIHistoryService @Autowired constructor(
         }
         // 如果是来自fork库的分支，单独标识
         val records = buildBranchList.subList(firstIndex, lastIndex).map {
+            val gitProjectInfoCache = it.sourceGitProjectId?.let { id ->
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = id,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
             GitCIBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
                     sourceGitProjectId = it.sourceGitProjectId,
                     branch = it.branch,
-                    client = client
+                    gitProjectCache = gitProjectInfoCache
                 ),
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId

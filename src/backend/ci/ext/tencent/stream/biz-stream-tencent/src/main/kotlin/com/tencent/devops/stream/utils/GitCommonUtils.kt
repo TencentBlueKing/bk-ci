@@ -106,18 +106,16 @@ object GitCommonUtils {
     // 判断是否为fork库的mr请求并返回带fork库信息的event
     fun checkAndGetForkBranch(
         gitRequestEvent: GitRequestEvent,
-        gitProjectCache: Lazy<GitProjectCache>
+        gitProjectCache: Lazy<GitProjectCache>?
     ): GitRequestEvent {
         var realEvent = gitRequestEvent
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
         if (gitRequestEvent.isFork()) {
-            val sourceRepositoryConf = gitProjectCache.value
             realEvent = gitRequestEvent.copy(
                 // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
-                branch = run {
-                    val path = sourceRepositoryConf.pathWithNamespace
-                    "${path?.split("/")?.get(0)}:${gitRequestEvent.branch}"
-                }
+                branch = gitProjectCache?.value?.pathWithNamespace?.let {
+                    "${it.split("/")[0]}:${gitRequestEvent.branch}"
+                } ?: gitRequestEvent.branch
             )
         }
         return realEvent
@@ -140,27 +138,14 @@ object GitCommonUtils {
         gitProjectId: Long,
         sourceGitProjectId: Long?,
         branch: String,
-        client: Client
+        gitProjectCache: Lazy<GitProjectCache>?
     ): String {
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
         if (sourceGitProjectId != null && gitProjectId != sourceGitProjectId) {
-            try {
-                val gitToken = client.getScm(ServiceGitResource::class).getToken(sourceGitProjectId).data!!
-                logger.info("get token for gitProjectId[$sourceGitProjectId] form scm, token: $gitToken")
-                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(
-                    gitToken
-                        .accessToken, sourceGitProjectId
-                ).data
-                // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
-                return if (sourceRepositoryConf != null) {
-                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
-                    "${path.split("/")[0]}:$branch"
-                } else {
-                    branch
-                }
-            } catch (e: Exception) {
-                logger.error("Cannot get source GitProjectInfo: ", e)
-            }
+            // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
+            return gitProjectCache?.value?.pathWithNamespace?.let {
+                "${it.split("/")[0]}:$branch"
+            } ?: branch
         }
         return branch
     }

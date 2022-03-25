@@ -134,18 +134,27 @@ class StreamHistoryService @Autowired constructor(
                 id = it.eventId
             ) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val gitProjectInfoCache = lazy {
-                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                    gitProjectId = gitRequestEvent.gitProjectId,
-                    useAccessToken = true,
-                    getProjectInfo = streamScmService::getProjectInfoRetry
-                )
-            }
             val realEvent =
                 if (gitProjectId == gitRequestEvent.gitProjectId) {
-                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitProjectInfoCache)
+                    val gitMrProjectInfoCache = gitRequestEvent.sourceGitProjectId?.let {
+                        lazy {
+                            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                                gitProjectId = it,
+                                useAccessToken = true,
+                                getProjectInfo = streamScmService::getProjectInfoRetry
+                            )
+                        }
+                    }
+                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitMrProjectInfoCache)
                 } else {
                     // 当gitProjectId与event的不同时，说明是远程仓库触发的
+                    val gitProjectInfoCache = lazy {
+                        streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                            gitProjectId = gitRequestEvent.gitProjectId,
+                            useAccessToken = true,
+                            getProjectInfo = streamScmService::getProjectInfoRetry
+                        )
+                    }
                     GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, gitProjectInfoCache.value)
                 }
             val pipeline =
@@ -205,18 +214,27 @@ class StreamHistoryService @Autowired constructor(
         val recordsMap = mutableMapOf<String, GitCIBuildBranch>()
         // 如果是来自fork库的分支，单独标识
         buildBranchList.subList(firstIndex, lastIndex).forEach {
+            val gitProjectInfoCache = it.sourceGitProjectId?.let { id ->
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = id,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
             val branchName = GitCommonUtils.checkAndGetForkBranchName(
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId,
                 branch = it.branch,
-                client = client
+                gitProjectCache = gitProjectInfoCache
             )
             recordsMap[branchName] = GitCIBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
                     sourceGitProjectId = it.sourceGitProjectId,
                     branch = it.branch,
-                    client = client
+                    gitProjectCache = gitProjectInfoCache
                 ),
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId

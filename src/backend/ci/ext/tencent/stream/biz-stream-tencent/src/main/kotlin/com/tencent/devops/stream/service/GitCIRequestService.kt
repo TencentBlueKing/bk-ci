@@ -96,12 +96,14 @@ class GitCIRequestService @Autowired constructor(
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
             // 如果是来自fork库的分支，单独标识
-            val gitProjectInfoCache = lazy {
-                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                    gitProjectId = event.gitProjectId,
-                    useAccessToken = true,
-                    getProjectInfo = streamScmService::getProjectInfoRetry
-                )
+            val gitProjectInfoCache = event.sourceGitProjectId?.let {
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = it,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
             }
             val realEvent = GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
 
