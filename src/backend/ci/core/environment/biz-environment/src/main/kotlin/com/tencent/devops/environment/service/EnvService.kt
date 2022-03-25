@@ -699,9 +699,14 @@ class EnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        offset: Int = 0,
-        limit: Int = 20
+        page: Int = 1,
+        pageSize: Int = 20
     ): Page<SharedProjectInfo> {
+        val limitTmp = if (pageSize >= 1000) {
+            1000
+        } else {
+            pageSize
+        }
         val projectList = client.get(ServiceProjectResource::class).list(
             userId = userId
         ).data?.map {
@@ -733,13 +738,13 @@ class EnvService @Autowired constructor(
             limit = count + 1
         ).map { it.sharedProjectId }
         val records = projectList.filterNot { it.projectId in sharedProjects }
-        val fromIndex = if (offset * limit > records.size) records.size else offset * limit
-        val toIndex = if ((offset + 1) * limit > records.size) records.size else (offset + 1) * limit
+        val fromIndex = if ((page - 1) * limitTmp > records.size) records.size else (page - 1) * limitTmp
+        val toIndex = if (page * limitTmp > records.size) records.size else page * limitTmp
         return Page(
             count = records.size.toLong(),
             records = records.subList(fromIndex, toIndex),
-            pageSize = limit,
-            page = offset
+            pageSize = limitTmp,
+            page = page
         )
     }
 
@@ -748,17 +753,18 @@ class EnvService @Autowired constructor(
         projectId: String,
         envHashId: String,
         name: String?,
-        offset: Int = 0,
-        limit: Int = 20
+        page: Int = 1,
+        pageSize: Int = 20
     ): Page<SharedProjectInfo> {
         val envId = HashUtil.decodeIdToLong(envHashId)
-        val limitTmp = if (limit >= 1000) {
+        val limitTmp = if (pageSize >= 1000) {
             1000
         } else {
-            limit
+            pageSize
         }
+        val offset = limitTmp * (page - 1)
         val sharedProjectInfos = mutableListOf<SharedProjectInfo>()
-        val records = envShareProjectDao.listPage(dslContext, projectId, envId, name, offset, limitTmp)
+        val records = envShareProjectDao.listPage(dslContext, projectId, envId, name, offset, limitTmp + 1)
         records.map {
             sharedProjectInfos.add(
                 SharedProjectInfo(
@@ -780,8 +786,8 @@ class EnvService @Autowired constructor(
         return Page(
             count = count.toLong(),
             records = sharedProjectInfos,
-            pageSize = limit,
-            page = offset
+            pageSize = limitTmp,
+            page = page
         )
     }
 

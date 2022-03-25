@@ -169,8 +169,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
-        offset: Int?,
-        limit: Int?
+        page: Int?,
+        pageSize: Int?
     ): Result<Page<SharedProjectInfo>> {
         if (projectId.isEmpty()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
@@ -180,8 +180,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 envHashId = envHashId,
-                offset = offset ?: 0,
-                limit = limit ?: 20
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
             )
         )
     }
@@ -191,8 +191,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         projectId: String,
         envHashId: String,
         name: String?,
-        offset: Int?,
-        limit: Int?
+        page: Int?,
+        pageSize: Int?
     ): Result<Page<SharedProjectInfo>> {
         checkParam(userId, projectId, envHashId)
         return Result(
@@ -201,8 +201,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 projectId,
                 envHashId,
                 name,
-                offset ?: 0,
-                limit ?: 20
+                page ?: 1,
+                pageSize ?: 20
             )
         )
     }
