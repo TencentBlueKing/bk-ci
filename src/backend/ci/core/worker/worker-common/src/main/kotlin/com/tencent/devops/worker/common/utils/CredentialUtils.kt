@@ -77,7 +77,7 @@ object CredentialUtils {
             val pair = DHUtil.initKey()
             val result = requestCredential(credentialId, pair, acrossProjectId)
             val credential = result.data!!
-            val decodeCredentialList = getDecodedCredentialList(credential, pair)
+            val decodeCredentialList = getDecodedSensitiveList(credential, pair)
             // #4732 日志脱敏，被请求过的凭据统一过滤
             SensitiveValueService.addSensitiveValues(decodeCredentialList)
             return Pair(decodeCredentialList, credential.credentialType)
@@ -276,20 +276,27 @@ object CredentialUtils {
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
     }
 
-    private fun getDecodedCredentialList(
+    private fun getDecodedSensitiveList(
         credential: CredentialInfo,
         pair: DHKeyPair
     ): List<String> {
         val list = ArrayList<String>()
-        list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-        if (!credential.v2.isNullOrEmpty()) {
-            list.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))
-        }
-        if (!credential.v3.isNullOrEmpty()) {
-            list.add(decode(credential.v3!!, credential.publicKey, pair.privateKey))
-        }
-        if (!credential.v4.isNullOrEmpty()) {
-            list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
+        when (credential.credentialType) {
+            CredentialType.USERNAME_PASSWORD -> {
+                // 只获取密码，不获取v1用户名
+                credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
+            CredentialType.TOKEN_USERNAME_PASSWORD -> {
+                // 只获取密码和token，不获取v2用户名
+                list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+                credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
+            else -> {
+                list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+                credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+                credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+                credential.v4?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
         }
         return list
     }
