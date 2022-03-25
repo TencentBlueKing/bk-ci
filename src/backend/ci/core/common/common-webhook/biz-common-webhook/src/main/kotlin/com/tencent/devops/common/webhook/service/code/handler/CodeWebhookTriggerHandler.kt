@@ -35,6 +35,8 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
+import org.slf4j.LoggerFactory
 
 @Suppress("TooManyFunctions")
 interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
@@ -69,6 +71,16 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
     fun getMessage(event: T): String?
 
     fun preMatch(event: T): ScmWebhookMatcher.MatchResult = ScmWebhookMatcher.MatchResult(isMatch = true)
+
+    fun getWebhookCommitList(
+        event: T,
+        projectId: String?,
+        repository: Repository?,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        return emptyList()
+    }
 
     /**
      * 匹配事件
@@ -111,4 +123,8 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         projectId: String? = null,
         repository: Repository? = null
     ): Map<String, Any>
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ScmWebhookMatcher::class.java)
+    }
 }

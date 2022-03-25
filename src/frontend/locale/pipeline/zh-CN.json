@@ -633,6 +633,7 @@
         }
     },
     "editPage": {
+        "invalidValue": "插件表单参数{0}非法 ",
         "tipError": "Tip组件返回值需要是字符串",
         "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
