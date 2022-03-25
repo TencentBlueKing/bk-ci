@@ -194,7 +194,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val contentLength = body.contentLength()
         if (contentLength != -1L) {
             LoggerService.addNormalLine("download ${dest.fileName} " +
-                ArchiveUtils.humanReadableByteCountBin(contentLength))
+                    ArchiveUtils.humanReadableByteCountBin(contentLength))
         }
         // body copy时可能会出现readTimeout，即便http请求已正常响应
         try {
