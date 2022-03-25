@@ -196,7 +196,6 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             LoggerService.addNormalLine("download ${dest.fileName} " +
                 ArchiveUtils.humanReadableByteCountBin(contentLength))
         }
-
         // body copy时可能会出现readTimeout，即便http请求已正常响应
         try {
             body.byteStream().use { bs ->
