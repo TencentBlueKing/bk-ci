@@ -106,7 +106,9 @@ data class GitRequestEvent(
 fun GitRequestEvent.isMr() = objectKind == TGitObjectKind.MERGE_REQUEST.value
 
 fun GitRequestEvent.isFork(): Boolean {
-    return objectKind == TGitObjectKind.MERGE_REQUEST.value && sourceGitProjectId != gitProjectId
+    return objectKind == TGitObjectKind.MERGE_REQUEST.value &&
+        sourceGitProjectId != null &&
+        sourceGitProjectId != gitProjectId
 }
 
 /**

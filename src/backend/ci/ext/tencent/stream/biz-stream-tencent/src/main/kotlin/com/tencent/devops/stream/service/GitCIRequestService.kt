@@ -41,8 +41,10 @@ import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.GitRequestHistory
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,7 +60,9 @@ class GitCIRequestService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIRequestService::class.java)
@@ -92,7 +96,14 @@ class GitCIRequestService @Autowired constructor(
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
+            val gitProjectInfoCache = lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = event.gitProjectId,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
 
             val requestHistory = GitRequestHistory(
                 id = realEvent.id ?: return@forEach,
@@ -129,17 +140,21 @@ class GitCIRequestService @Autowired constructor(
                         val history = getBuildHistory(buildList, it.buildId ?: return@nextBuild)
                         val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId)
                             ?: return@nextBuild
-                        records.add(GitCIBuildHistory(
-                            displayName = pipeline.displayName,
-                            pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = GitRequestEventReq(realEvent),
-                            buildHistory = history,
-                            reason = TriggerReason.TRIGGER_SUCCESS.name,
-                            reasonDetail = null
-                        ))
+                        records.add(
+                            GitCIBuildHistory(
+                                displayName = pipeline.displayName,
+                                pipelineId = pipeline.pipelineId,
+                                gitRequestEvent = GitRequestEventReq(realEvent),
+                                buildHistory = history,
+                                reason = TriggerReason.TRIGGER_SUCCESS.name,
+                                reasonDetail = null
+                            )
+                        )
                     } catch (e: Exception) {
-                        logger.error("Load gitProjectId: ${it.gitProjectId}, " +
-                            "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
+                        logger.error(
+                            "Load gitProjectId: ${it.gitProjectId}, " +
+                                "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e
+                        )
                         return@nextBuild
                     }
                 }
@@ -164,14 +179,16 @@ class GitCIRequestService @Autowired constructor(
 
             noBuildList.forEach nextBuild@{
                 val pipeline = if (it.pipelineId.isNullOrBlank()) null else pipelineMap[it.pipelineId]
-                records.add(GitCIBuildHistory(
-                    displayName = pipeline?.displayName,
-                    pipelineId = pipeline?.pipelineId,
-                    gitRequestEvent = GitRequestEventReq(event),
-                    buildHistory = null,
-                    reason = it.reason,
-                    reasonDetail = it.reasonDetail
-                ))
+                records.add(
+                    GitCIBuildHistory(
+                        displayName = pipeline?.displayName,
+                        pipelineId = pipeline?.pipelineId,
+                        gitRequestEvent = GitRequestEventReq(event),
+                        buildHistory = null,
+                        reason = it.reason,
+                        reasonDetail = it.reasonDetail
+                    )
+                )
             }
             requestHistory.buildRecords.addAll(records)
             // -------

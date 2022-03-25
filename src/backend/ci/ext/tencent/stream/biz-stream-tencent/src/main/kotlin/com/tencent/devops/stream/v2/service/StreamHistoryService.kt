@@ -134,17 +134,19 @@ class StreamHistoryService @Autowired constructor(
                 id = it.eventId
             ) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
+            val gitProjectInfoCache = lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
             val realEvent =
                 if (gitProjectId == gitRequestEvent.gitProjectId) {
-                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
+                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitProjectInfoCache)
                 } else {
                     // 当gitProjectId与event的不同时，说明是远程仓库触发的
-                    val gitProjectInfoCache = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                        gitProjectId = gitRequestEvent.gitProjectId,
-                        useAccessToken = true,
-                        getProjectInfo = streamScmService::getProjectInfoRetry
-                    )
-                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, gitProjectInfoCache)
+                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, gitProjectInfoCache.value)
                 }
             val pipeline =
                 pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach

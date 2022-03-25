@@ -51,9 +51,11 @@ import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEventReq
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +71,9 @@ class GitCIDetailService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val repositoryConfService: GitRepositoryConfService,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIDetailService::class.java)
@@ -92,7 +96,14 @@ class GitCIDetailService @Autowired constructor(
         ) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+        val gitProjectInfoCache = lazy {
+            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                gitProjectId = eventRecord.gitProjectId,
+                useAccessToken = true,
+                getProjectInfo = streamScmService::getProjectInfoRetry
+            )
+        }
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -112,7 +123,14 @@ class GitCIDetailService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+        val gitProjectInfoCache = lazy {
+            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                gitProjectId = eventRecord.gitProjectId,
+                useAccessToken = true,
+                getProjectInfo = streamScmService::getProjectInfoRetry
+            )
+        }
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -158,7 +176,14 @@ class GitCIDetailService @Autowired constructor(
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+            val gitProjectInfoCache = lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = eventRecord.gitProjectId,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
             val pipeline = pipelineResourceDao.getPipelineById(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,

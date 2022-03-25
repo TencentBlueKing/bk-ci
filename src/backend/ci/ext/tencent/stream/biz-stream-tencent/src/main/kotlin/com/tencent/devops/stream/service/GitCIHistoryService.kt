@@ -45,8 +45,10 @@ import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitCIBuildBranch
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +63,9 @@ class GitCIHistoryService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val repositoryConfService: GitRepositoryConfService,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIHistoryService::class.java)
@@ -159,7 +163,14 @@ class GitCIHistoryService @Autowired constructor(
             ) ?: return@forEach
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId, commitMsg) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
+            val gitProjectInfoCache = lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = gitRequestEvent.gitProjectId,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitProjectInfoCache)
             val pipeline =
                 pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(
