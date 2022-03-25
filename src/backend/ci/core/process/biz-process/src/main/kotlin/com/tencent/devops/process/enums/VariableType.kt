@@ -35,6 +35,7 @@ enum class VariableType(val hasPrefix: Boolean = false, val alisName: String = "
     BK_CI_PIPELINE_NAME,
     BK_CI_BUILD_ID,
     BK_CI_BUILD_NUM,
+    BK_CI_BUILD_URL,
     BK_CI_BUILD_JOB_ID(alisName = "job.id"),
     BK_CI_BUILD_MSG,
     BK_CI_BUILD_TASK_ID(alisName = "step.id"),
