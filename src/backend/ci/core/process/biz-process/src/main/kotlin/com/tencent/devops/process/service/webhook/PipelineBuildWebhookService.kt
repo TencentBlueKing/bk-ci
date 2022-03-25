@@ -442,7 +442,6 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         matcher = matcher,
                         repo = repo
                     )
-
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                 }
