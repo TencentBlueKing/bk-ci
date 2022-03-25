@@ -249,12 +249,12 @@ interface UserEnvironmentResource {
         @ApiParam("环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
-        @ApiParam("起始位置", required = false)
-        @QueryParam("offset")
-        offset: Int? = null,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int? = null,
         @ApiParam("步长", required = false)
-        @QueryParam("limit")
-        limit: Int? = null
+        @QueryParam("pageSize")
+        pageSize: Int? = null
     ): Result<Page<SharedProjectInfo>>
 
     @ApiOperation("分页获取环境共享列表")
@@ -273,12 +273,12 @@ interface UserEnvironmentResource {
         @ApiParam("项目名称", required = false)
         @QueryParam("name")
         name: String? = null,
-        @ApiParam("起始位置", required = false)
-        @QueryParam("offset")
-        offset: Int? = null,
+        @ApiParam("页码", required = false)
+        @QueryParam("page")
+        page: Int? = null,
         @ApiParam("步长", required = false)
-        @QueryParam("limit")
-        limit: Int? = null
+        @QueryParam("pageSize")
+        pageSize: Int? = null
     ): Result<Page<SharedProjectInfo>>
 
     @ApiOperation("设置环境共享")
