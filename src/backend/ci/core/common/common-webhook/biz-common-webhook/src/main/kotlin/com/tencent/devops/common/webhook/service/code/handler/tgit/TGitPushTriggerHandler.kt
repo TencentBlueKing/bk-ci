@@ -52,7 +52,6 @@ import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
@@ -66,7 +65,6 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
@@ -224,7 +222,7 @@ class TGitPushTriggerHandler(
         page: Int,
         size: Int
     ): List<WebhookCommit> {
-        if(page != 1){
+        if (page != 1) {
             // push 请求事件会在第一次请求时将所有的commit记录全部返回，所以如果分页参数不为1，则直接返回空列表
             return emptyList()
         }

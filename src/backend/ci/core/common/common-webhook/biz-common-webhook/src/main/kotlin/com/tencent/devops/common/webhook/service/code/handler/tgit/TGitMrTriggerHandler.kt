@@ -104,7 +104,6 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
@@ -178,7 +177,7 @@ class TGitMrTriggerHandler(
     override fun preMatch(event: GitMergeRequestEvent): ScmWebhookMatcher.MatchResult {
         if (event.object_attributes.action == "close" ||
             (event.object_attributes.action == "update" &&
-                event.object_attributes.extension_action != "push-update")
+                    event.object_attributes.extension_action != "push-update")
         ) {
             logger.info("Git web hook is ${event.object_attributes.action} merge request")
             return ScmWebhookMatcher.MatchResult(false)
@@ -343,7 +342,6 @@ class TGitMrTriggerHandler(
                 commitTime = commitTime
             )
         }
-
     }
 
     @SuppressWarnings("ComplexMethod")

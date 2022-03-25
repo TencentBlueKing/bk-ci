@@ -439,7 +439,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId!!,
-                        matcher =  matcher,
+                        matcher = matcher,
                         repo = repo
                     )
 

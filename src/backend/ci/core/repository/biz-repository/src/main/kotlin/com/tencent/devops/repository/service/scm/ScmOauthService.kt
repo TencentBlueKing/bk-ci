@@ -30,7 +30,6 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.utils.scm.QualityUtils
-import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
