@@ -34,8 +34,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                     size = size
                 )
                 logger.info("commit list is $webhookCommitList")
-                if (webhookCommitList.size < size) break
-                val result = pipelineBuildCommitsDao.create(
+                pipelineBuildCommitsDao.create(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -43,7 +42,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                     webhookCommits = webhookCommitList,
                     mrId = matcher.getMergeRequestId()?.toString() ?: ""
                 )
-                logger.info("commit save result is $result")
+                if (webhookCommitList.size < size) break
                 page++
             }
         } catch (ignore: Throwable) {
