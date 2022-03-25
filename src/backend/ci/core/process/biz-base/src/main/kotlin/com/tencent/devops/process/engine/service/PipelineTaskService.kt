@@ -45,7 +45,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.engine.common.Timeout.CONTAINER_MAX_MILLS
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
@@ -65,16 +65,16 @@ import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.store.pojo.common.KEY_VERSION
-import java.time.Duration
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import org.jooq.impl.DSL
 
 @Suppress(
     "TooManyFunctions",
@@ -379,7 +379,8 @@ class PipelineTaskService @Autowired constructor(
                 buildId = buildId,
                 taskId = taskId,
                 additionalOptions = additionalOptions,
-                executeCount = executeCount)
+                executeCount = executeCount
+            )
         ) {
             // 如果是自动重试则不重置task的时间
             startTime = LocalDateTime.now()
@@ -631,7 +632,7 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.set(
             key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
             value = "true",
-            expiredInSecond = CONTAINER_MAX_MILLS
+            expiredInSecond = Timeout.transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
         )
     }
 
