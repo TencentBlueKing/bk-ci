@@ -1,10 +1,8 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.tables.TPipelineBuildCommits
-import com.tencent.devops.process.service.builds.PipelineBuildCommitsService
 import com.tencent.devops.scm.pojo.WebhookCommit
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
