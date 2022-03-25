@@ -28,9 +28,7 @@
 package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.trigger.pojo.GitProjectCache
 import org.slf4j.LoggerFactory
