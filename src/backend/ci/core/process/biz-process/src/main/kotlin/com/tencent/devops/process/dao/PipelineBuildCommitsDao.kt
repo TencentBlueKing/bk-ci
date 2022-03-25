@@ -1,8 +1,10 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.model.process.tables.TPipelineBuildCommits
+import com.tencent.devops.process.service.builds.PipelineBuildCommitsService
 import com.tencent.devops.scm.pojo.WebhookCommit
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -20,7 +22,7 @@ class PipelineBuildCommitsDao {
         mrId: String
     ) {
         with(TPipelineBuildCommits.T_PIPELINE_BUILD_COMMITS) {
-            webhookCommits.map {
+            val num = webhookCommits.map {
                 dslContext.insertInto(
                     this,
                     PROJECT_ID,
@@ -46,7 +48,12 @@ class PipelineBuildCommitsDao {
                         it.commitTime,
                         LocalDateTime.now()
                     ).execute()
-            }
+            }.size
+            logger.info("save commit success | save $num commitss")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineBuildCommitsDao::class.java)
     }
 }
