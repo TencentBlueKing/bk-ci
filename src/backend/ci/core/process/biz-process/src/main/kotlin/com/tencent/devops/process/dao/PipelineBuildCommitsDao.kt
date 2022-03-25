@@ -48,8 +48,8 @@ class PipelineBuildCommitsDao {
                         it.commitTime,
                         LocalDateTime.now()
                     ).execute()
-            }.size
-            logger.info("save commit success | save $num commitss")
+            }
+            logger.info("save commit success | $num")
         }
     }
 
