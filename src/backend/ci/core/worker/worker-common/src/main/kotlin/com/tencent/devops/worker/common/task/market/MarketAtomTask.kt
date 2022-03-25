@@ -637,7 +637,7 @@ open class MarketAtomTask : ITask() {
             LoggerService.addFoldStartLine("[Output]")
             outputData?.forEach { (varKey, output) ->
                 val type = output[TYPE]
-                var key = if (!namespace.isNullOrBlank()) {
+                val key = if (!namespace.isNullOrBlank()) {
                     "${namespace}_$varKey" // 用户前缀_插件输出变量名
                 } else {
                     varKey
@@ -688,8 +688,7 @@ open class MarketAtomTask : ITask() {
                 if (!buildTask.stepId.isNullOrBlank() && !buildVariables.jobId.isNullOrBlank()) {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
-                    key = contextKey
-                    // TODO 待定：是否进行原变量名输出
+                    // TODO 待定：是否进行原变量名输出，暂时保留
                     // env.remove(key)
                 }
 
