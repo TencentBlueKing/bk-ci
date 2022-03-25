@@ -177,7 +177,7 @@ data class GitRequestEventReq(
                     else -> {}
                 }
                 // 兼容给list接口有title数据。list接口并没有生成大对象，减少负担
-                when(operationKind){
+                when (operationKind) {
                     TGitPushOperationKind.DELETE.value -> {
                         if (objectKind == TGitObjectKind.PUSH.value) {
                             buildTitle = "Branch $branch deleted by $userId"
