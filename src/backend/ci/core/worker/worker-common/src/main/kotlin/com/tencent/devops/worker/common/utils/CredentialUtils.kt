@@ -39,9 +39,12 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
+import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import java.util.Base64
+import java.util.Collections
 import javax.ws.rs.NotFoundException
+
 
 /**
  * This util is to get the credential from core
@@ -77,10 +80,7 @@ object CredentialUtils {
             val pair = DHUtil.initKey()
             val result = requestCredential(credentialId, pair, acrossProjectId)
             val credential = result.data!!
-            val decodeCredentialList = getDecodedSensitiveList(credential, pair)
-            // #4732 日志脱敏，被请求过的凭据统一过滤
-            SensitiveValueService.addSensitiveValues(decodeCredentialList)
-            return Pair(decodeCredentialList, credential.credentialType)
+            return Pair(getDecodedCredentialList(credential, pair), credential.credentialType)
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
@@ -276,28 +276,34 @@ object CredentialUtils {
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
     }
 
-    private fun getDecodedSensitiveList(
+    private fun getDecodedCredentialList(
         credential: CredentialInfo,
         pair: DHKeyPair
     ): List<String> {
-        val list = ArrayList<String>()
+        val list = mutableListOf<String>()
+
+        list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+        credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+        credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+        credential.v4?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+
+        // #4732 日志脱敏，被请求过的凭据除用户名外统一过滤
+        val sensitiveList = mutableListOf<String>()
         when (credential.credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
                 // 只获取密码，不获取v1用户名
-                credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+                credential.v2?.let { sensitiveList.add(decode(it, credential.publicKey, pair.privateKey)) }
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
                 // 只获取密码和token，不获取v2用户名
-                list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-                credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+                sensitiveList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+                credential.v3?.let { sensitiveList.add(decode(it, credential.publicKey, pair.privateKey)) }
             }
             else -> {
-                list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-                credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
-                credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
-                credential.v4?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+                sensitiveList.addAll(list)
             }
         }
+        SensitiveValueService.addSensitiveValues(sensitiveList)
         return list
     }
 
