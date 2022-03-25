@@ -24,7 +24,7 @@ class PipelineBuildCommitsService @Autowired constructor(
     ) {
         try {
             var page = 1
-            val size = 5
+            val size = 200
             while (true) {
                 val webhookCommitList = matcher.getWebhookCommitList(
                     projectId = projectId,
