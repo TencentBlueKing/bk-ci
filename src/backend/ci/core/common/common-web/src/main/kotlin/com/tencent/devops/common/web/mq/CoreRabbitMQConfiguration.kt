@@ -85,7 +85,7 @@ class CoreRabbitMQConfiguration {
         connectionFactory.port = config.port
         connectionFactory.username = username!!
         connectionFactory.setPassword(password!!)
-        connectionFactory.virtualHost = virtualHost!!
+        connectionFactory.virtualHost = virtualHost!! + vhostTail()
         connectionFactory.setAddresses(addresses!!)
         if (channelCacheSize != null && channelCacheSize!! > 0) {
             connectionFactory.channelCacheSize = channelCacheSize!!
@@ -133,14 +133,12 @@ class CoreRabbitMQConfiguration {
         if (preFetchCount != null) {
             factory.setPrefetchCount(preFetchCount)
         }
-        //TODO 后面删掉
-        if (KubernetesUtils.inContainer()) {
-            factory.setAutoStartup(false)
-        }
         return factory
     }
 
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) =
         Jackson2JsonMessageConverter(objectMapper)
+
+    private fun vhostTail() = if (KubernetesUtils.inContainer()) "-k8s" else ""
 }

@@ -96,10 +96,6 @@ object Tools {
         container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
         container.setPrefetchCount(prefetchCount)
-        // TODO 后面删掉
-        if (KubernetesUtils.inContainer()) {
-            container.isAutoStartup = false
-        }
         return container
     }
 }
