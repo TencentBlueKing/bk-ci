@@ -26,20 +26,21 @@ class PipelineBuildCommitsService @Autowired constructor(
             var page = 1
             val size = 200
             while (true) {
-                val gitCommitList = matcher.getWebhookCommitList(
+                val webhookCommitList = matcher.getWebhookCommitList(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     repository = repo,
                     page = page,
                     size = size
                 )
-                if (gitCommitList.size < size) break
+                logger.info("commit list is $webhookCommitList")
+                if (webhookCommitList.size < size) break
                 pipelineBuildCommits.create(
                     dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    webhookCommits = gitCommitList,
+                    webhookCommits = webhookCommitList,
                     mrId = matcher.getMergeRequestId()?.toString() ?: ""
                 )
                 page++
