@@ -712,7 +712,9 @@ class EnvService @Autowired constructor(
                 creator = it.creator,
                 type = SharedEnvType.PROJECT,
                 createTime = SimpleDateFormat("YY-MM-DD").parse(it.createdAt).time,
-                updateTime = SimpleDateFormat("YY-MM-DD").parse(it.updatedAt ?: it.createdAt).time
+                updateTime = SimpleDateFormat("YY-MM-DD").parse(
+                    if (it.updatedAt.isNullOrBlank()) it.createdAt else it.updatedAt
+                ).time
             )
         } ?: emptyList()
         val envId = HashUtil.decodeIdToLong(envHashId)
