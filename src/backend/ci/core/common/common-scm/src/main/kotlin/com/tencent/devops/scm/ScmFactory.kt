@@ -156,6 +156,8 @@ object ScmFactory {
                     projectName = projectName,
                     branchName = branchName,
                     url = url,
+                    privateKey = privateKey,
+                    passPhrase = passPhrase,
                     token = token,
                     gitConfig = gitConfig,
                     event = event

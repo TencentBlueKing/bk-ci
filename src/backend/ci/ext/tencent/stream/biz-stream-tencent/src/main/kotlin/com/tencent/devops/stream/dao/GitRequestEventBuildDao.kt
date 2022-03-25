@@ -733,4 +733,20 @@ class GitRequestEventBuildDao {
                 }.toMap()
         }
     }
+
+    // 获取指定日期的日活跃项目数
+    fun getBuildActiveProjectCount(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Int {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectDistinct(GIT_PROJECT_ID).from(this)
+                .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+                .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+                .and(BUILD_ID.isNotNull)
+                .and(PARSED_YAML.like("%v2.0%"))
+            return dsl.fetch().size
+        }
+    }
 }
