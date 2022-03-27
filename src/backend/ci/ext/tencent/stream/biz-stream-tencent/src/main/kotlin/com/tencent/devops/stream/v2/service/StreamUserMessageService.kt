@@ -284,6 +284,9 @@ class StreamUserMessageService @Autowired constructor(
             val records = mutableListOf<RequestMessageContent>()
             // 添加未构建的记录
             noBuildMap[eventId]?.forEach nextBuild@{
+                if (gitProjectId != null && it.gitProjectId != gitProjectId){
+                    return@nextBuild
+                }
                 val pipeline = if (it.pipelineId.isNullOrBlank()) {
                     null
                 } else {
@@ -302,6 +305,9 @@ class StreamUserMessageService @Autowired constructor(
             }
             // 添加构建的记录
             buildMap[eventId]?.forEach nextBuild@{
+                if (gitProjectId != null && it.gitProjectId != gitProjectId){
+                    return@nextBuild
+                }
                 val buildNum = processBuildList?.get(it.buildId)?.buildNum
                 val pipeline = pipelineMap[it.pipelineId]
                 records.add(
