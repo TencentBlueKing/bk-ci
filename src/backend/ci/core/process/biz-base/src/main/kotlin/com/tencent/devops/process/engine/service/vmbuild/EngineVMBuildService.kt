@@ -544,8 +544,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
         // #5109 提前判断，防止异常数据流入，后续各类Redis锁定出现无必要的额外开启。
         if (taskStatus.isFinish() || buildInfo.isFinish()) {
-            LOG.warn("BKSystemErrorMonitor|ENGINE|finish|$buildId|job#$vmSeqId|${result.taskId}" +
-                         "task=$taskStatus|build=${buildInfo.status}")
+            LOG.warn(
+                "BKSystemErrorMonitor|ENGINE|finish|$buildId|job#$vmSeqId|${result.taskId}" +
+                    "task=$taskStatus|build=${buildInfo.status}"
+            )
             return
         }
 
