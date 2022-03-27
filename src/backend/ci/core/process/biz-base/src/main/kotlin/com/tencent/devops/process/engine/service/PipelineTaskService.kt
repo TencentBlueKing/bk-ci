@@ -670,8 +670,11 @@ class PipelineTaskService @Autowired constructor(
                 errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
                 errorMsg = errorMsg ?: ""
             )
+        }
+        // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新
+        if (buildStatus.isRunning()) {
             pipelineBuildSummaryDao.updateCurrentBuildTask(
-                dslContext = transactionContext,
+                dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
