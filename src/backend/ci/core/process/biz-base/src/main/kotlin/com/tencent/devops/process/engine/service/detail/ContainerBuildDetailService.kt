@@ -82,7 +82,7 @@ class ContainerBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING,
-            operation = "containerPreparing"
+            operation = "containerPreparing#$containerId"
         )
     }
 
@@ -123,7 +123,7 @@ class ContainerBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING,
-            operation = "containerStarted"
+            operation = "containerStarted#$containerId"
         )
     }
 
@@ -171,7 +171,7 @@ class ContainerBuildDetailService(
                     return update
                 }
             },
-            buildStatus = BuildStatus.RUNNING, operation = "updateContainerStatus"
+            buildStatus = BuildStatus.RUNNING, operation = "updateContainerStatus#$containerId"
         )
     }
 
@@ -216,7 +216,7 @@ class ContainerBuildDetailService(
                     return update
                 }
             },
-            buildStatus = BuildStatus.RUNNING, operation = "matrix_group"
+            buildStatus = BuildStatus.RUNNING, operation = "matrix_group#$matrixGroupId"
         )
     }
 
@@ -247,7 +247,7 @@ class ContainerBuildDetailService(
                     return update
                 }
             },
-            buildStatus = BuildStatus.RUNNING, operation = "containerSkip"
+            buildStatus = BuildStatus.RUNNING, operation = "containerSkip#$containerId"
         )
     }
 }
