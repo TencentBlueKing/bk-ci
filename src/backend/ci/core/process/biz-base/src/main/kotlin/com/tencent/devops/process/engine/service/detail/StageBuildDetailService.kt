@@ -87,7 +87,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "updateStageStatus#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -113,7 +113,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "stageSkip#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -147,7 +147,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.STAGE_SUCCESS)
+        }, BuildStatus.STAGE_SUCCESS, operation = "stagePause#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -178,7 +178,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.STAGE_SUCCESS)
+        }, BuildStatus.STAGE_SUCCESS, operation = "stageCancel#$stageId")
     }
 
     fun stageCheckQuality(
@@ -209,7 +209,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "stageCheckQuality#$stageId")
         return allStageStatus ?: emptyList()
     }
 
@@ -239,7 +239,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.STAGE_SUCCESS)
+        }, BuildStatus.STAGE_SUCCESS, operation = "stageReview#$stageId")
     }
 
     fun stageStart(
@@ -271,13 +271,13 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING)
+        }, BuildStatus.RUNNING, operation = "stageStart#$stageId")
         return allStageStatus ?: emptyList()
     }
 
     private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
+            by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
         return model.stages.map {
             BuildStageStatus(
