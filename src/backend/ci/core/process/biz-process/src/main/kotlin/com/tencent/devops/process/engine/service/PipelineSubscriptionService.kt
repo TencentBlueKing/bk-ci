@@ -55,14 +55,14 @@ class PipelineSubscriptionService constructor(
         buildStatus: BuildStatus
     ) {
         logger.info("onPipelineShutdown $pipelineId|$buildId|$buildStatus")
-        val vars = buildVariableService.getAllVariable(buildId).toMutableMap()
+        val vars = buildVariableService.getAllVariable(projectId, buildId).toMutableMap()
         vars[PIPELINE_TIME_DURATION]?.takeIf { it.isNotBlank() }?.toLongOrNull()?.let {
             vars[PIPELINE_TIME_DURATION] = DateTimeUtil.formatMillSecond(it * 1000)
         }
         val executionVar = getExecutionVariables(pipelineId, vars)
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId) ?: return
         logger.info("buildInfo is $buildInfo")
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId) ?: return
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
         var pipelineName = pipelineInfo.pipelineName
 
         // 判断codecc类型更改查看详情链接
@@ -90,7 +90,7 @@ class PipelineSubscriptionService constructor(
         logger.info("onPipelineShutdown pipelineNameReal:$pipelineName")
         val replaceWithEmpty = true
         // 流水线设置订阅的用户
-        val setting = pipelineSettingDao.getSetting(dslContext, pipelineId) ?: return
+        val setting = pipelineSettingDao.getSetting(dslContext, projectId, pipelineId) ?: return
         setting.successReceiver = EnvUtils.parseEnv(setting.successReceiver, vars, replaceWithEmpty)
         setting.failReceiver = EnvUtils.parseEnv(setting.failReceiver, vars, replaceWithEmpty)
         // 内容为null的时候处理为空字符串

@@ -190,6 +190,8 @@
                 this.pipelineId = []
                 this.status = []
                 this.timeRange = []
+                this.startTime = ''
+                this.endTime = ''
                 this.getHistoryList()
             },
 

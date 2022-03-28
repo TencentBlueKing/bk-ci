@@ -33,37 +33,45 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("IPA包签名信息")
 data class SignHistory(
     @ApiModelProperty("签名ID", required = true)
-    var resignID: String,
+    val resignId: String,
     @ApiModelProperty("操作用户", required = true)
-    var userId: String = "",
-    @ApiModelProperty("是否采用通配符重签", required = true)
-    var wildcard: Boolean = true,
-    @ApiModelProperty("文件名称", required = false)
-    var fileName: String = "",
-    @ApiModelProperty("文件大小", required = false)
-    var fileSize: Long = 0L,
+    val userId: String,
     @ApiModelProperty("文件MD5", required = false)
-    var md5: String = "",
-    @ApiModelProperty("证书ID", required = false)
-    var certId: String = "",
+    val md5: String?,
+    @ApiModelProperty("结果文件名称", required = false)
+    val resultFileName: String? = "",
+    @ApiModelProperty("结果文件MD5", required = false)
+    val resultFileMd5: String? = "",
     @ApiModelProperty("归档类型(PIPELINE|CUSTOM)", required = false)
-    var archiveType: String = "PIPELINE",
+    val archiveType: String?,
     @ApiModelProperty("项目Id", required = false)
-    var projectId: String = "",
+    val projectId: String?,
     @ApiModelProperty("流水线Id", required = false)
-    var pipelineId: String? = null,
-    @ApiModelProperty("构建Id", required = false)
-    var buildId: String? = null,
+    val pipelineId: String?,
+    @ApiModelProperty("构建ID", required = false)
+    val buildId: String?,
+    @ApiModelProperty("插件ID", required = false)
+    val taskId: String? = null,
     @ApiModelProperty("归档路径", required = false)
-    var archivePath: String? = "/",
-    @ApiModelProperty("主App描述文件ID", required = false)
-    var mobileProvisionId: String? = null,
-    @ApiModelProperty("Universal Link的设置", required = false)
-    var universalLinks: List<String>? = null,
-    @ApiModelProperty("应用安全组", required = false)
-    var keychainAccessGroups: List<String>? = null,
-    @ApiModelProperty("是否替换bundleId", required = false)
-    var replaceBundleId: Boolean? = false,
-    @ApiModelProperty("拓展应用名和对应的描述文件ID", required = false)
-    var appexSignInfo: List<AppexSignInfo>? = null
+    val archivePath: String?,
+    @ApiModelProperty("任务状态", required = false)
+    val status: String?,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: Long?,
+    @ApiModelProperty("完成时间", required = false)
+    val endTime: Long?,
+    @ApiModelProperty("上传完成时间", required = false)
+    val uploadFinishTime: Long?,
+    @ApiModelProperty("解压完成时间", required = false)
+    val unzipFinishTime: Long?,
+    @ApiModelProperty("签名完成时间", required = false)
+    val resignFinishTime: Long?,
+    @ApiModelProperty("压缩完成时间", required = false)
+    val zipFinishTime: Long?,
+    @ApiModelProperty("归档完成时间", required = false)
+    val archiveFinishTime: Long?,
+    @ApiModelProperty("错误信息", required = false)
+    val errorMessage: String?,
+    @ApiModelProperty("签名任务请求原文", required = false)
+    var ipaSignInfoStr: String?
 )

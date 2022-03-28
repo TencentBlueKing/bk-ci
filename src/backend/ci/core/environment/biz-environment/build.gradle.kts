@@ -31,6 +31,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:environment:model-environment"))
     api(project(":core:notify:api-notify"))
+    api(project(":core:repository:api-repository"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
@@ -41,4 +42,5 @@ dependencies {
     api("org.apache.commons:commons-compress")
     api("org.json:json")
     api("org.influxdb:influxdb-java")
+    api(project(":core:auth:api-auth"))
 }

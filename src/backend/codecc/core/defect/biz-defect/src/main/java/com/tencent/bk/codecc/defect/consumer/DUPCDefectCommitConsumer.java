@@ -523,7 +523,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
                 && (dupcDefectEntity.getStatus() & ComConstants.DefectStatus.FIXED.value()) == 0
                 && (PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
                 || (CollectionUtils.isNotEmpty(pathSet)
-                && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathSet))))
+                && !PathUtils.checkIfMaskByPath(filePath, pathSet))))
         {
             dupcDefectEntity.setStatus(dupcDefectEntity.getStatus() | ComConstants.TaskFileStatus.PATH_MASK.value());
             dupcDefectEntity.setExcludeTime(curTime);

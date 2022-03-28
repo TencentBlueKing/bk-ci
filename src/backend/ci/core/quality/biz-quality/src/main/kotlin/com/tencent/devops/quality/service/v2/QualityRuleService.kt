@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -46,12 +47,14 @@ import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.api.v2.pojo.response.UserQualityRule
+import com.tencent.devops.quality.dao.v2.QualityControlPointDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.dao.v2.QualityRuleMapDao
 import com.tencent.devops.quality.pojo.RefreshType
@@ -75,6 +78,7 @@ class QualityRuleService @Autowired constructor(
     private val qualityRuleDao: QualityRuleDao,
     private val ruleMapDao: QualityRuleMapDao,
     private val indicatorService: QualityIndicatorService,
+    private val qualityControlPointDao: QualityControlPointDao,
     private val qualityControlPointService: QualityControlPointService,
     private val dslContext: DSLContext,
     private val client: Client,
@@ -196,6 +200,7 @@ class QualityRuleService @Autowired constructor(
 
     fun userDelete(userId: String, projectId: String, ruleHashId: String) {
         val ruleId = HashUtil.decodeIdToLong(ruleHashId)
+        val ruleRecord = qualityRuleDao.get(dslContext, ruleId)
         logger.info("user($userId) delete the rule($ruleId) in project($projectId)")
         qualityPermissionService.validateRulePermission(
             userId = userId,
@@ -206,7 +211,7 @@ class QualityRuleService @Autowired constructor(
         )
         qualityRuleDao.delete(dslContext, ruleId)
         qualityPermissionService.deleteRuleResource(projectId, ruleId)
-        refreshRedis(projectId, ruleId)
+        refreshDeletedRuleRedis(projectId, ruleRecord.indicatorRange, ruleRecord.pipelineTemplateRange)
     }
 
     fun serviceGet(ruleHashId: String): TQualityRuleRecord {
@@ -215,21 +220,36 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun serviceListRules(projectId: String, startTime: LocalDateTime? = null): List<QualityRule> {
-        return qualityRuleDao.list(dslContext, projectId, startTime)?.map {
-            doGetRuleData(it)
-        } ?: listOf()
+        val recordList = qualityRuleDao.list(dslContext, projectId, startTime)
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
+    }
+
+    fun serviceListByPipelineRange(projectId: String, pipelineId: String?): List<QualityRule> {
+        val recordList = qualityRuleDao.listByPipelineRange(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
+    }
+
+    fun serviceListByTemplateRange(projectId: String, templateId: String?): List<QualityRule> {
+        val recordList = qualityRuleDao.listByTemplateRange(
+            dslContext = dslContext,
+            projectId = projectId,
+            templateId = templateId
+        )
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun serviceListRuleByPosition(projectId: String, position: String): List<QualityRule> {
-        return qualityRuleDao.listByPosition(dslContext, projectId, position)?.map {
-            doGetRuleData(it)
-        } ?: listOf()
+        val recordList = qualityRuleDao.listByPosition(dslContext, projectId, position)
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun serviceListRuleByIds(projectId: String, ruleIds: Collection<Long>): List<QualityRule> {
-        return qualityRuleDao.list(dslContext, projectId, ruleIds)?.map {
-            doGetRuleData(it)
-        } ?: listOf()
+        val recordList = qualityRuleDao.list(dslContext, projectId, ruleIds)
+        return batchGetRuleData(recordList ?: listOf()) ?: listOf()
     }
 
     fun userGetRule(userId: String, projectId: String, ruleHashId: String): UserQualityRule {
@@ -253,7 +273,7 @@ class QualityRuleService @Autowired constructor(
         // 过滤已删除的模板
         val templateIds = rule.templateRange.toSet()
         val templateMap = if (templateIds.isNotEmpty()) {
-            client.get(ServicePTemplateResource::class).listTemplateById(templateIds, null).data?.templates
+            client.get(ServicePTemplateResource::class).listTemplateById(templateIds, projectId, null).data?.templates
         } else {
             mapOf()
         }
@@ -283,6 +303,107 @@ class QualityRuleService @Autowired constructor(
         )
     }
 
+    private fun batchGetRuleData(records: List<TQualityRuleRecord>): List<QualityRule>? {
+        val qualityRuleRecordMap = records.map { it.id to it }.toMap()
+        val ruleIds = qualityRuleRecordMap.keys
+        val ruleMap = ruleMapDao.batchGet(dslContext, ruleIds)?.associateBy { it.ruleId }
+        logger.info("QUALITY|get rule data for ruleIds: $ruleIds")
+        val controlPointRecords = qualityControlPointDao.list(dslContext, records.map { it.controlPoint })
+        val ruleOperationMap = ruleOperationService.serviceBatchGet(dslContext, ruleIds).map { it.ruleId to it }.toMap()
+        if (ruleMap.isNullOrEmpty()) {
+            return null
+        }
+        val resultList = mutableListOf<QualityRule>()
+        records.map { record ->
+            // 顺序遍历rule map生成每个指标实际的operation和threshold
+            val mapRecord = ruleMap[record.id] ?: return@map
+            val indicatorIds = mapRecord.indicatorIds.split(",")
+                .filter { NumberUtils.isDigits(it) }.map { it.toLong() }
+
+            // 查询控制点
+            val controlPoint = qualityControlPointService.serviceGet(controlPointRecords, record.projectId)
+            val dataControlPoint = QualityRule.RuleControlPoint(
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.controlPoint,
+                cnName = ElementUtils.getElementCnName(record.controlPoint, record.projectId),
+                position = ControlPointPosition(record.controlPointPosition),
+                availablePosition = if (controlPoint?.availablePosition != null &&
+                    !controlPoint.availablePosition.isNullOrBlank()) {
+                    controlPoint.availablePosition.split(",").map { ControlPointPosition(it) }
+                } else listOf()
+            )
+            // 查询红线通知方式
+            val ruleOperation = ruleOperationMap[record.id]
+
+            // 把指标的定义值换成实际的值
+            val indicatorOperations = mapRecord.indicatorOperations.split(",")
+            val indicatorThresholds = mapRecord.indicatorThresholds.split(",")
+            val indicatorExtraMap = mutableMapOf<String, Pair<String, String>>()
+            indicatorIds?.forEachIndexed { index, id ->
+                indicatorExtraMap[HashUtil.encodeLongId(id)] = Pair(indicatorOperations[index], indicatorThresholds[index])
+            }
+            val dataIndicators = indicatorService.serviceList(indicatorIds).map {
+                val pair = indicatorExtraMap[it.hashId]!!
+                QualityIndicator(
+                    hashId = it.hashId,
+                    elementType = it.elementType,
+                    elementDetail = it.elementDetail,
+                    enName = it.enName,
+                    cnName = it.cnName,
+                    stage = it.stage,
+                    operation = QualityOperation.valueOf(pair.first),
+                    operationList = it.operationList,
+                    threshold = pair.second,
+                    thresholdType = it.thresholdType,
+                    readOnly = it.readOnly,
+                    type = it.type,
+                    tag = it.tag,
+                    metadataList = it.metadataList,
+                    desc = it.desc,
+                    logPrompt = it.logPrompt,
+                    enable = it.enable,
+                    range = it.range
+                )
+            }
+            val qualityRule = QualityRule(
+                hashId = HashUtil.encodeLongId(record.id),
+                name = record.name,
+                desc = record.desc,
+                indicators = dataIndicators,
+                controlPoint = dataControlPoint,
+                range = if (record.indicatorRange.isNullOrBlank()) {
+                    listOf()
+                } else {
+                    record.indicatorRange.split(",")
+                },
+                templateRange = if (record.pipelineTemplateRange.isNullOrBlank()) {
+                    listOf()
+                } else record.pipelineTemplateRange.split(","),
+                operation = RuleOperation.valueOf(ruleOperation?.type ?: RuleOperation.END.name),
+                notifyTypeList = if (ruleOperation == null || ruleOperation.notifyTypes.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.notifyTypes.split(",").map { NotifyType.valueOf(it) },
+                notifyGroupList = if (ruleOperation == null || ruleOperation.notifyGroupId.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.notifyGroupId.split(","),
+                notifyUserList = if (ruleOperation == null || ruleOperation.notifyUser.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.notifyUser.split(","),
+                auditUserList = if (ruleOperation == null || ruleOperation.auditUser.isNullOrBlank()) {
+                    listOf()
+                } else ruleOperation.auditUser.split(","),
+                auditTimeoutMinutes = ruleOperation?.auditTimeout ?: 15,
+                gatewayId = record.gatewayId,
+                gateKeepers = listOf(),
+                stageId = "1",
+                status = null,
+                taskSteps = listOf()
+            )
+            resultList.add(qualityRule)
+        }
+        return resultList
+    }
+
     private fun doGetRuleData(record: TQualityRuleRecord): QualityRule {
         // 查询rule map
         val ruleId = record.id
@@ -295,7 +416,8 @@ class QualityRuleService @Autowired constructor(
             .map { it.toLong() }
 
         // 查询控制点
-        val controlPoint = qualityControlPointService.serviceGet(record.controlPoint, record.projectId)
+        val controlPointRecord = qualityControlPointService.serviceListByElementType(record.controlPoint)
+        val controlPoint = qualityControlPointService.serviceGet(controlPointRecord, record.projectId)
         val dataControlPoint = QualityRule.RuleControlPoint(
             hashId = HashUtil.encodeLongId(record.id),
             name = record.controlPoint,
@@ -336,7 +458,8 @@ class QualityRuleService @Autowired constructor(
                 metadataList = it.metadataList,
                 desc = it.desc,
                 logPrompt = it.logPrompt,
-                enable = it.enable
+                enable = it.enable,
+                range = it.range
             )
         }
         return QualityRule(
@@ -370,7 +493,8 @@ class QualityRuleService @Autowired constructor(
             gatewayId = record.gatewayId,
             gateKeepers = listOf(),
             stageId = "1",
-            status = null
+            status = null,
+            taskSteps = listOf()
         )
     }
 
@@ -410,13 +534,25 @@ class QualityRuleService @Autowired constructor(
             templateIds.addAll(it.pipelineTemplateRange.split(","))
         }
         val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServicePTemplateResource::class)
-            .listTemplateById(templateIds, null).data?.templates ?: mapOf()
+            .listTemplateById(templateIds, projectId, null).data?.templates ?: mapOf()
         else mapOf()
         val templateIdMap = mutableMapOf<String, OptionalTemplate>()
         srcTemplateIdMap.entries.forEach { templateIdMap[it.value.templateId] = it.value }
 
         val templatePipelineCountMap = client.get(ServiceTemplateInstanceResource::class)
             .countTemplateInstanceDetail(projectId, templateIds).data ?: mapOf()
+
+        // 批量获取元数据信息
+        var ruleMetadataSet = mutableSetOf<Long>()
+        ruleRecordList?.forEach { record ->
+            val ruleDetail = ruleDetailMap[record.id]
+            val ruleIndicators = if (ruleDetail == null || ruleDetail.indicatorIds.isNullOrBlank()) listOf()
+            else ruleDetail.indicatorIds.split(",").map { it.toLong() }
+            ruleMetadataSet.addAll(ruleIndicators)
+        }
+        val indicatorsMap = indicatorService.serviceList(ruleMetadataSet).associateBy {
+            HashUtil.decodeIdToLong(it.hashId)
+        }
 
         val list = ruleRecordList?.map { rule ->
             // 获取所有流水线
@@ -428,7 +564,12 @@ class QualityRuleService @Autowired constructor(
             else ruleDetail.indicatorIds.split(",").map { it.toLong() }
 
             // get rule indicator map
-            val indicators = indicatorService.serviceList(ruleIndicators)
+            var indicators = listOf<QualityIndicator>()
+            try {
+                indicators = ruleIndicators.map { indicatorsMap[it]!! }
+            } catch (e: Exception) {
+                logger.error("QUALITY|get rule indicator error", e)
+            }
             logger.info("serviceList rule indicator ids for project($projectId): ${indicators.map { it.enName }}")
             val indicatorOperations = ruleDetail?.indicatorOperations?.split(",") ?: listOf()
             val indicatorThresholds = ruleDetail?.indicatorThresholds?.split(",") ?: listOf()
@@ -659,14 +800,26 @@ class QualityRuleService @Autowired constructor(
     }
 
     fun getProjectRuleList(projectId: String, pipelineId: String?, templateId: String?): List<QualityRule> {
-        val ruleList = serviceListRules(projectId)
-        logger.info("get project rule list for $projectId, $pipelineId, $templateId: ${ruleList.map { it.name }}")
-        return ruleList.filter {
-            var result = false
-            if (!pipelineId.isNullOrBlank()) result = (result || it.range.contains(pipelineId))
-            if (!templateId.isNullOrBlank()) result = (result || it.templateRange.contains(templateId))
-            return@filter result
+        val watcher = Watcher(id = "QUALITY|getProjectRuleList|$projectId|$pipelineId|$templateId")
+        var ruleList: List<QualityRule>
+        try {
+            watcher.start("ruleList")
+            ruleList = when {
+                pipelineId != null -> {
+                    serviceListByPipelineRange(projectId, pipelineId)
+                }
+                templateId != null -> {
+                    serviceListByTemplateRange(projectId, templateId)
+                }
+                else -> {
+                    serviceListRules(projectId)
+                }
+            }
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500, errorThreshold = 3000)
         }
+        return ruleList
     }
 
     private fun refreshRedis(projectId: String, ruleId: Long?) {
@@ -677,7 +830,7 @@ class QualityRuleService @Autowired constructor(
         val pipelineStr = ruleRecord.indicatorRange
         val templateStr = ruleRecord.pipelineTemplateRange
         logger.info("refreshRedis $projectId| $ruleId| $pipelineStr| $templateStr")
-        if (pipelineStr != null) {
+        if (!pipelineStr.isNullOrBlank()) {
             val pipelineList = pipelineStr.split(",")
             pipelineList.forEach { pipelineId ->
                 val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
@@ -692,7 +845,7 @@ class QualityRuleService @Autowired constructor(
                 logger.info("refreshRedis pipeline $projectId|$pipelineId| $ruleId | $ruleList")
             }
         }
-        if (templateStr != null) {
+        if (!templateStr.isNullOrBlank()) {
             val templateList = templateStr.split(",")
             templateList.forEach { templateId ->
                 val filterRuleList = getProjectRuleList(projectId, null, templateId)
@@ -705,6 +858,40 @@ class QualityRuleService @Autowired constructor(
                     type = RefreshType.OPERATE
                 )
                 logger.info("refreshRedis template $projectId|$templateId| $ruleId| $ruleList")
+            }
+        }
+    }
+
+    private fun refreshDeletedRuleRedis(projectId: String, pipelineRange: String, templateRange: String) {
+        logger.info("refreshRedis $projectId| $pipelineRange| $templateRange")
+        if (!pipelineRange.isNullOrBlank()) {
+            val pipelineList = pipelineRange.split(",")
+            pipelineList.forEach { pipelineId ->
+                val filterRuleList = getProjectRuleList(projectId, pipelineId, null)
+                val ruleList = listMatchTask(filterRuleList)
+                qualityCacheService.refreshCache(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = null,
+                    ruleTasks = ruleList,
+                    type = RefreshType.OPERATE
+                )
+                logger.info("refreshRedis pipeline $projectId|$pipelineId | $ruleList")
+            }
+        }
+        if (!templateRange.isNullOrBlank()) {
+            val templateList = templateRange.split(",")
+            templateList.forEach { templateId ->
+                val filterRuleList = getProjectRuleList(projectId, null, templateId)
+                val ruleList = listMatchTask(filterRuleList)
+                qualityCacheService.refreshCache(
+                    projectId = projectId,
+                    pipelineId = null,
+                    templateId = templateId,
+                    ruleTasks = ruleList,
+                    type = RefreshType.OPERATE
+                )
+                logger.info("refreshRedis template $projectId|$templateId | $ruleList")
             }
         }
     }

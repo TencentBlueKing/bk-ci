@@ -216,8 +216,20 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.execute(action)
     }
 
+    fun listSize(key: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().size(getFinalKey(key, isDistinguishCluster))
+    }
+
+    fun listRange(key: String, start: Long, end: Long, isDistinguishCluster: Boolean? = false): List<String>? {
+        return redisTemplate.opsForList().range(getFinalKey(key, isDistinguishCluster), start, end)
+    }
+
     fun leftPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
         return redisTemplate.opsForList().leftPush(getFinalKey(key, isDistinguishCluster), value)
+    }
+
+    fun rightPush(key: String, value: String, isDistinguishCluster: Boolean? = false): Long? {
+        return redisTemplate.opsForList().rightPush(getFinalKey(key, isDistinguishCluster), value)
     }
 
     fun rightPop(key: String, isDistinguishCluster: Boolean? = false): String? {

@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 
 @Suppress("ALL")
 interface MarketAtomService {
@@ -84,8 +85,8 @@ interface MarketAtomService {
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?>
 
     /**
@@ -180,4 +181,9 @@ interface MarketAtomService {
      * 查找带post属性的插件
      */
     fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp>
+
+    /**
+     * 根据插件标识获取插件回显版本信息
+     */
+    fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo>
 }

@@ -51,5 +51,19 @@ enum class ChannelCode {
         // Only BS need to check the authentication for now
         fun isNeedAuth(channelCode: ChannelCode) =
                 channelCode == BS
+
+        // 页面可见channel
+        fun webChannel(channelCode: ChannelCode): Boolean {
+            return channelCode == BS || channelCode == GIT
+        }
+
+        fun getChannel(channel: String): ChannelCode? {
+            values().forEach {
+                if (it.name == channel) {
+                    return it
+                }
+            }
+            return null
+        }
     }
 }

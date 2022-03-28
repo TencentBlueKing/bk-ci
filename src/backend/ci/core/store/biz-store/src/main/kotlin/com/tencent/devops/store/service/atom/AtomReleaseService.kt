@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomOfflineReq
+import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
@@ -79,11 +80,8 @@ interface AtomReleaseService {
      * 处理插件发布逻辑
      */
     fun handleAtomRelease(
+        userId: String,
         releaseFlag: Boolean,
-        atomId: String,
-        atomCode: String,
-        version: String,
-        atomStatus: Byte,
-        userId: String
+        atomReleaseRequest: AtomReleaseRequest
     ): Result<Boolean>
 }

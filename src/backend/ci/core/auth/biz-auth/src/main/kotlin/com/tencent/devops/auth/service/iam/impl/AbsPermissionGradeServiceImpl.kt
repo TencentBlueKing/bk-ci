@@ -45,15 +45,15 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
         val pageInfoDTO = PageInfoDTO()
         pageInfoDTO.limit = 0
         pageInfoDTO.offset = 500 // 一个用户最多可以加入500个项目
-        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO).map { it.id }
+        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)?.map { it.id }
 
-        if (!managerProject.contains(projectId)) {
-            logger.warn("createRoleMem")
+        if (managerProject == null || !managerProject.contains(projectId)) {
+            logger.warn("checkGradeManagerUser $userId $projectId $managerProject")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionGradeServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionGradeServiceImpl::class.java)
     }
 }

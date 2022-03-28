@@ -48,6 +48,7 @@
             <template v-if="showPanelType === 'PAUSE'">
                 <atom-property-panel
                     :element-index="editingElementPos.elementIndex"
+                    :container-group-index="editingElementPos.containerGroupIndex"
                     :container-index="editingElementPos.containerIndex"
                     :stage-index="editingElementPos.stageIndex"
                     :stages="execDetail.model.stages"

@@ -18,7 +18,7 @@
                     <component :is="panel.component" v-bind="panel.bindData" @hideColumnPopup="toggleColumnsSelectPopup(false)"></component>
                 </bk-tab-panel>
             </bk-tab>
-            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
+            <mini-map :stages="pipeline.stages" scroll-class=".bk-tab-section .bk-tab-content" v-if="!isLoading && pipeline && currentTab === 'pipeline'"></mini-map>
         </template>
     </section>
 </template>

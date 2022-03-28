@@ -148,6 +148,6 @@ open class AbsPermissionService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AbsPermissionService::class.java)
+        private val logger = LoggerFactory.getLogger(AbsPermissionService::class.java)
     }
 }

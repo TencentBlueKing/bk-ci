@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -60,8 +61,18 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
 ) : ServiceBuildResource {
+    override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
+                ?: throw ParamBlankException("Invalid buildId")
+        )
+    }
 
     override fun setVMStatus(
         projectId: String,
@@ -77,16 +88,18 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(engineVMBuildService.setStartUpVMStatus(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            buildStatus = status,
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMsg
-        ))
+        return Result(
+            engineVMBuildService.setStartUpVMStatus(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                buildStatus = status,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
+        )
     }
 
     override fun manualStartupInfo(
@@ -113,22 +126,14 @@ class ServiceBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         buildNo: Int?
     ): Result<BuildId> {
-        checkUserId(userId)
-        checkParam(projectId, pipelineId)
-        return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.SERVICE,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode,
-                    buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
-            )
+        return manualStartupNew(
+            userId = userId,
+            startType = StartType.SERVICE,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            values = values,
+            channelCode = channelCode,
+            buildNo = buildNo
         )
     }
 
@@ -148,19 +153,23 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(pipelineBuildFacadeService.retry(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId,
-            failedContainer = failedContainer,
-            skipFailedTask = skipFailedTask,
-            isMobile = false,
-            channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode),
-            checkManualStartup = checkManualStartup ?: false
-        )))
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.retry(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    failedContainer = failedContainer,
+                    skipFailedTask = skipFailedTask,
+                    isMobile = false,
+                    channelCode = channelCode,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    checkManualStartup = checkManualStartup ?: false
+                )
+            )
+        )
     }
 
     override fun manualShutdown(
@@ -246,22 +255,29 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId, projectId, pipelineId,
-            page, pageSize, channelCode, ChannelCode.isNeedAuth(channelCode)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateTimeDesc = updateTimeDesc
         )
         return Result(result)
     }
 
-    override fun serviceBasic(buildId: String): Result<BuildBasicInfo> {
+    override fun serviceBasic(projectId: String, buildId: String): Result<BuildBasicInfo> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(pipelineBuildFacadeService.serviceBuildBasicInfo(buildId))
+        return Result(pipelineBuildFacadeService.serviceBuildBasicInfo(projectId, buildId))
     }
 
     override fun getBuildStatus(
@@ -399,15 +415,21 @@ class ServiceBuildResourceImpl @Autowired constructor(
     override fun getBatchBuildStatus(
         projectId: String,
         buildId: Set<String>,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        startBeginTime: String?,
+        endBeginTime: String?
     ): Result<List<BuildHistory>> {
         if (buildId.isEmpty()) {
             return Result(listOf())
         }
         return Result(
             pipelineBuildFacadeService.getBatchBuildStatus(
-                projectId, buildId,
-                channelCode, ChannelCode.isNeedAuth(channelCode)
+                projectId = projectId,
+                buildIdSet = buildId,
+                channelCode = channelCode,
+                startBeginTime = startBeginTime,
+                endBeginTime = endBeginTime,
+                checkPermission = ChannelCode.isNeedAuth(channelCode)
             )
         )
     }
@@ -454,6 +476,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
+        nodeHashId: String?,
         simpleResult: SimpleResult
     ): Result<Boolean> {
         pipelineBuildFacadeService.workerBuildFinish(
@@ -461,6 +484,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             vmSeqId = vmSeqId,
+            nodeHashId = nodeHashId,
             simpleResult = simpleResult
         )
         return Result(true)
@@ -540,6 +564,45 @@ class ServiceBuildResourceImpl @Autowired constructor(
                 element = taskPauseExecute.element,
                 stageId = taskPauseExecute.stageId,
                 containerId = taskPauseExecute.containerId
+            )
+        )
+    }
+
+    override fun manualStartupNew(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        values: Map<String, String>,
+        channelCode: ChannelCode,
+        buildNo: Int?,
+        startType: StartType
+    ): Result<BuildId> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = startType,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = channelCode,
+                    buildNo = buildNo,
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    frequencyLimit = true
+                )
+            )
+        )
+    }
+
+    override fun buildRestart(userId: String, projectId: String, pipelineId: String, buildId: String): Result<String> {
+        return Result(
+            pipelineBuildFacadeService.buildRestart(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId
             )
         )
     }

@@ -32,5 +32,6 @@ enum class RuleInterceptResult {
     FAIL,
     WAIT,
     INTERCEPT,
-    INTERCEPT_PASS
+    INTERCEPT_PASS,
+    UNCHECK
 }

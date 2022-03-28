@@ -35,6 +35,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUM
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
+import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -53,26 +54,33 @@ class QueueInterceptor @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRedisService: PipelineRedisService
 ) : PipelineInterceptor {
 
     override fun execute(task: InterceptData): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = pipelineRepositoryService.getSetting(pipelineId)
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: return Response(status = PIPELINE_SETTING_NOT_EXISTS.toInt(), message = "流水线设置不存在/Setting not found")
         val runLockType = setting.runLockType
 
-        val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(pipelineId)
+        val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
         return if (buildSummaryRecord == null) {
             // Summary为空是不正常的，抛错
             Response(status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(), message = "异常：流水线的基础构建数据Summary不存在，请联系管理员")
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
+            if (buildSummaryRecord.latestBuildId == null ||
+                pipelineRedisService.getBuildRestartValue(buildSummaryRecord.latestBuildId) != null) {
+                return Response(data = BuildStatus.RUNNING)
+            }
+
             val maxQueue = setting.maxQueueSize
             if (maxQueue == 0 && buildSummaryRecord.runningCount == 0 && buildSummaryRecord.queueCount == 0) {
                 // 设置了最大排队数量限制为0，但此时没有构建正在执行
                 Response(data = BuildStatus.RUNNING)
-            } else if (maxQueue == 0 && buildSummaryRecord.runningCount > 0) {
+            } else if (maxQueue == 0 && (buildSummaryRecord.runningCount > 0 || buildSummaryRecord.queueCount > 0)) {
                 Response(status = ERROR_PIPELINE_QUEUE_FULL.toInt(), message = "流水线串行，排队数设置为0")
             } else if (buildSummaryRecord.queueCount >= maxQueue) {
                 // 排队数量超过最大限制,排队数量已满，将该流水线最靠前的排队记录，置为"取消构建"，取消人为本次新构建的触发人

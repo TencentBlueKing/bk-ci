@@ -75,7 +75,6 @@ class PipelinePauseValueDao {
                 .set(NEW_VALUE, pipelinePauseValue.newValue)
                 .set(CREATE_TIME, LocalDateTime.now())
                 .onDuplicateKeyUpdate()
-                .set(PROJECT_ID, pipelinePauseValue.projectId)
                 .set(BUILD_ID, pipelinePauseValue.buildId)
                 .set(TASK_ID, pipelinePauseValue.taskId)
                 .set(DEFAULT_VALUE, pipelinePauseValue.defaultValue)
@@ -84,11 +83,12 @@ class PipelinePauseValueDao {
         }
     }
 
-    fun get(dslContext: DSLContext, buildId: String, taskId: String): TPipelinePauseValueRecord? {
+    fun get(dslContext: DSLContext, projectId: String, buildId: String, taskId: String): TPipelinePauseValueRecord? {
         return with(Tables.T_PIPELINE_PAUSE_VALUE) {
             val query = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TASK_ID.eq(taskId))
+                .and(PROJECT_ID.eq(projectId))
             query.fetchAny()
         }
     }

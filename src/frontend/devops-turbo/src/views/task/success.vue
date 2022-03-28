@@ -21,7 +21,7 @@
 
 <script>
     import { getEngineDetail } from '@/api'
-    import { copy } from '@/assets/js/util'
+    import { copyText } from '@/assets/js/util'
     import logo from '@/components/logo'
 
     export default {
@@ -54,7 +54,7 @@
             },
 
             copy () {
-                copy(this.$route.query.planId, this.$t.bind(this))
+                copyText(this.$route.query.planId, this.$t.bind(this))
             },
 
             goToDetail () {

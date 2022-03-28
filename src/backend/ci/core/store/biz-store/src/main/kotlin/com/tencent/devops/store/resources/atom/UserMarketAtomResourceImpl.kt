@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.atom.MyAtomResp
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.StoreProjectService
@@ -96,8 +97,8 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         accessToken: String,
         userId: String,
         atomName: String?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<MyAtomResp?> {
         return marketAtomService.getMyAtoms(accessToken, userId, atomName, page, pageSize)
     }
@@ -139,13 +140,19 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.deleteAtom(userId, atomCode)
     }
 
+    override fun getAtomShowVersionInfo(userId: String, atomCode: String): Result<StoreShowVersionInfo> {
+        return marketAtomService.getAtomShowVersionInfo(userId, atomCode)
+    }
+
     override fun getAtomYmlInfo(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
         return Result(marketAtomService.generateCiYaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag ?: false))
     }
 
     override fun getAtomYmlV2Info(userId: String, atomCode: String, defaultShowFlag: Boolean?): Result<String?> {
-        return Result(marketAtomService.generateCiV2Yaml(atomCode = atomCode, defaultShowFlag = defaultShowFlag
-            ?: false))
+        return Result(marketAtomService.generateCiV2Yaml(
+            atomCode = atomCode,
+            defaultShowFlag = defaultShowFlag ?: false)
+        )
     }
 
     override fun getAtomOutput(userId: String, atomCode: String): Result<List<AtomOutput>> {

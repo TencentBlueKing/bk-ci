@@ -96,7 +96,7 @@ class BuildPushDockerImageTask : ITask() {
                 repoAddr = repoAddr,
                 userName = userName,
                 password = password,
-                elementId = buildTask.elementId)
+                elementId = buildTask.taskId)
 
             Thread.sleep(2000)
             // 轮询状态

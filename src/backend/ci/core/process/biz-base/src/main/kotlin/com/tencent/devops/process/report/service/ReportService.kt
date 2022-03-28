@@ -36,6 +36,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.ReportListDTO
 import com.tencent.devops.process.pojo.TaskReport
@@ -56,6 +57,7 @@ class ReportService @Autowired constructor(
     private val dslContext: DSLContext,
     private val reportDao: ReportDao,
     private val client: Client,
+    private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
     private val logger = LoggerFactory.getLogger(ReportService::class.java)
@@ -140,15 +142,15 @@ class ReportService @Autowired constructor(
     }
 
     fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
-
+        val projectId = reportListDTO.projectId
         val reportRecordList = reportDao.list(
             dslContext = dslContext,
-            projectId = reportListDTO.projectId,
+            projectId = projectId,
             pipelineId = reportListDTO.pipelineId,
             buildId = reportListDTO.buildId
         )
         return reportRecordList.map {
-            val taskRecord = pipelineRuntimeService.getBuildTask(reportListDTO.buildId, it.elementId)
+            val taskRecord = pipelineTaskService.getBuildTask(projectId, reportListDTO.buildId, it.elementId)
             val atomCode = taskRecord?.atomCode ?: ""
             val atomName = taskRecord?.taskName ?: ""
             if (it.type == ReportTypeEnum.INTERNAL.name) {
@@ -180,8 +182,8 @@ class ReportService @Autowired constructor(
         }
     }
 
-    fun getRootUrl(buildId: String, taskId: String): String {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
+    fun getRootUrl(projectId: String, buildId: String, taskId: String): String {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,

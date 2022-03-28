@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.db.util.JooqUtils
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
@@ -39,8 +39,6 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import org.jooq.DSLContext
 import org.jooq.DatePart
-import org.jooq.InsertOnDuplicateSetMoreStep
-import org.jooq.Query
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -91,64 +89,57 @@ class PipelineBuildStageDao {
         logger.info("save the buildStage=$buildStage, result=${count == 1}")
     }
 
-    fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildStage>) {
-        val records = mutableListOf<InsertOnDuplicateSetMoreStep<TPipelineBuildStageRecord>>()
+    fun batchSave(dslContext: DSLContext, stageList: Collection<PipelineBuildStage>) {
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
-                records.add(
-                    dslContext.insertInto(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(BUILD_ID, it.buildId)
-                        .set(STAGE_ID, it.stageId)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status.ordinal)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                        .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                        .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                        .onDuplicateKeyUpdate()
-                        .set(STATUS, it.status.ordinal)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                )
+            stageList.forEach {
+                dslContext.insertInto(this)
+                    .set(PROJECT_ID, it.projectId)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(BUILD_ID, it.buildId)
+                    .set(STAGE_ID, it.stageId)
+                    .set(SEQ, it.seq)
+                    .set(STATUS, it.status.ordinal)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(COST, it.cost)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .onDuplicateKeyUpdate()
+                    .set(STATUS, it.status.ordinal)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(COST, it.cost)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .execute()
             }
         }
-        dslContext.batch(records).execute()
     }
 
-    fun batchUpdate(dslContext: DSLContext, taskList: List<TPipelineBuildStageRecord>) {
-        val records = mutableListOf<Query>()
+    fun batchUpdate(dslContext: DSLContext, stageList: List<TPipelineBuildStageRecord>) {
         with(T_PIPELINE_BUILD_STAGE) {
-            taskList.forEach {
-                records.add(
-                    dslContext.update(this)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
-                        .set(SEQ, it.seq)
-                        .set(STATUS, it.status)
-                        .set(START_TIME, it.startTime)
-                        .set(END_TIME, it.endTime)
-                        .set(COST, it.cost)
-                        .set(EXECUTE_COUNT, it.executeCount)
-                        .set(CONDITIONS, it.conditions)
-                        .set(CHECK_IN, it.checkIn)
-                        .set(CHECK_OUT, it.checkOut)
-                        .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)))
-                )
+            stageList.forEach {
+                dslContext.update(this)
+                    .set(PIPELINE_ID, it.pipelineId)
+                    .set(SEQ, it.seq)
+                    .set(STATUS, it.status)
+                    .set(START_TIME, it.startTime)
+                    .set(END_TIME, it.endTime)
+                    .set(COST, it.cost)
+                    .set(EXECUTE_COUNT, it.executeCount)
+                    .set(CONDITIONS, it.conditions)
+                    .set(CHECK_IN, it.checkIn)
+                    .set(CHECK_OUT, it.checkOut)
+                    .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(PROJECT_ID.eq(it.projectId)))
+                    .execute()
             }
         }
-        dslContext.batch(records).execute()
     }
 
-    fun get(dslContext: DSLContext, buildId: String, stageId: String?): TPipelineBuildStageRecord? {
+    fun get(dslContext: DSLContext, projectId: String, buildId: String, stageId: String?): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
-            val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+            val where = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
             if (!stageId.isNullOrBlank()) {
                 where.and(STAGE_ID.eq(stageId))
             }
@@ -156,19 +147,30 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun getNextStage(dslContext: DSLContext, buildId: String, currentStageSeq: Int): TPipelineBuildStageRecord? {
+    fun getNextStage(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        currentStageSeq: Int
+    ): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).and(SEQ.gt(currentStageSeq))
+                .where(BUILD_ID.eq(buildId)).and(SEQ.gt(currentStageSeq)).and(PROJECT_ID.eq(projectId))
                 .orderBy(SEQ.asc())
                 .limit(1)
                 .fetchAny()
         }
     }
 
-    fun listByBuildId(dslContext: DSLContext, buildId: String): Collection<TPipelineBuildStageRecord> {
+    fun listByBuildId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): Collection<TPipelineBuildStageRecord> {
         return with(T_PIPELINE_BUILD_STAGE) {
-            dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).orderBy(SEQ.asc()).fetch()
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(SEQ.asc()).fetch()
         }
     }
 
@@ -228,18 +230,19 @@ class PipelineBuildStageDao {
 
     fun updateStatus(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String,
-        buildStatus: BuildStatus,
+        buildStatus: BuildStatus?,
         controlOption: PipelineBuildStageControlOption? = null,
         checkIn: StagePauseCheck? = null,
         checkOut: StagePauseCheck? = null,
         initStartTime: Boolean? = false
     ): Int {
         return with(T_PIPELINE_BUILD_STAGE) {
-            val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
+            val update = dslContext.update(this).set(STAGE_ID, stageId)
             // 根据状态来设置字段
-            if (buildStatus.isFinish() || buildStatus == BuildStatus.STAGE_SUCCESS) {
+            if (buildStatus?.isFinish() == true || buildStatus == BuildStatus.STAGE_SUCCESS) {
                 update.set(END_TIME, LocalDateTime.now())
                 update.set(
                     COST, COST + JooqUtils.timestampDiff(
@@ -248,18 +251,20 @@ class PipelineBuildStageDao {
                     END_TIME.cast(java.sql.Timestamp::class.java)
                 )
                 )
-            } else if (buildStatus.isRunning() || initStartTime == true) {
+            } else if (buildStatus?.isRunning() == true || initStartTime == true) {
                 update.set(START_TIME, LocalDateTime.now())
             }
-            if (controlOption != null) update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false))
-            if (checkIn != null) update.set(CHECK_IN, JsonUtil.toJson(checkIn, formatted = false))
-            if (checkOut != null) update.set(CHECK_OUT, JsonUtil.toJson(checkOut, formatted = false))
-            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+            buildStatus?.let { update.set(STATUS, it.ordinal) }
+            controlOption?.let { update.set(CONDITIONS, JsonUtil.toJson(it, formatted = false)) }
+            checkIn?.let { update.set(CHECK_IN, JsonUtil.toJson(it, formatted = false)) }
+            checkOut?.let { update.set(CHECK_OUT, JsonUtil.toJson(it, formatted = false)) }
+            update.where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }
 
     fun update(
         dslContext: DSLContext,
+        projectId: String,
         buildId: String,
         stageId: String,
         startTime: LocalDateTime,
@@ -279,21 +284,27 @@ class PipelineBuildStageDao {
                         END_TIME.cast(java.sql.Timestamp::class.java)
                     )
                 )
-                .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+                .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).and(PROJECT_ID.eq(projectId)).execute()
         }
     }
 
-    fun getMaxStage(dslContext: DSLContext, buildId: String): TPipelineBuildStageRecord? {
+    fun getMaxStage(dslContext: DSLContext, projectId: String, buildId: String): TPipelineBuildStageRecord? {
         return with(T_PIPELINE_BUILD_STAGE) {
             dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).orderBy(SEQ.desc()).limit(1).fetchAny()
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(SEQ.desc()).limit(1).fetchAny()
         }
     }
 
-    fun getByStatus(dslContext: DSLContext, buildId: String, status: BuildStatus): PipelineBuildStage? {
+    fun getByStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        status: BuildStatus
+    ): PipelineBuildStage? {
         with(T_PIPELINE_BUILD_STAGE) {
             val data = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal))
+                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal)).and(PROJECT_ID.eq(projectId))
                 .orderBy(SEQ.asc()).limit(1).fetchAny()
             return convert(data)
         }

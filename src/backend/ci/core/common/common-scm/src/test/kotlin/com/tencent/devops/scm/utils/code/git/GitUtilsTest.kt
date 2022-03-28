@@ -115,4 +115,16 @@ class GitUtilsTest {
         Assert.assertTrue(GitUtils.isLegalSshUrl("git@git.xxx.com:Tencent/bk-ci.git"))
         Assert.assertFalse(GitUtils.isLegalHttpUrl("git@git.xxx.com:Tencent/bk-ci"))
     }
+
+    @Test
+    fun getRepoGroupAndName() {
+        assertEquals(GitUtils.getRepoGroupAndName("Tencent/bk-ci"), Pair("Tencent", "bk-ci"))
+        assertEquals(GitUtils.getRepoGroupAndName("Tencent/plugin/bk-ci"), Pair("Tencent/plugin", "bk-ci"))
+    }
+
+    @Test
+    fun getShortSha() {
+        assertEquals(GitUtils.getShortSha("e49ca115cf9a5fd433cbb539ee37316b67bde243"), "e49ca115")
+        assertEquals(GitUtils.getShortSha(""), "")
+    }
 }

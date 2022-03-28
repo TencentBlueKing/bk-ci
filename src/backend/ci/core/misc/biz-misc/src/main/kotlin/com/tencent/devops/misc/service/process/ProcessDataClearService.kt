@@ -52,38 +52,40 @@ class ProcessDataClearService @Autowired constructor(
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            processDataClearDao.deletePipelineLabelByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineModelTaskByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineRemoteAuthByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineResourceByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineResourceVersionByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineSettingByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineSettingVersionByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineTimerByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineWebhookByPipelineId(context, pipelineId)
-            processDataClearDao.deleteTemplatePipelineByPipelineId(context, pipelineId)
-            processDataClearDao.deletePipelineBuildSummaryByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineLabelByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineModelTaskByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineRemoteAuthByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineResourceByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineResourceVersionByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineSettingByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineSettingVersionByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineTimerByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineWebhookByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deleteTemplatePipelineByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineTemplateAcrossInfo(context, projectId, pipelineId)
             // 添加删除记录，插入要实现幂等
             processDao.addPipelineDataClear(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId
             )
-            processDataClearDao.deletePipelineInfoByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineInfoByPipelineId(context, projectId, pipelineId)
         }
     }
 
     /**
      * 清除流水线基础构建数据
+     * @param projectId 项目ID
      * @param buildId 构建ID
      */
-    fun clearBaseBuildData(buildId: String) {
+    fun clearBaseBuildData(projectId: String, buildId: String) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            processDataClearDao.deleteBuildTaskByBuildId(context, buildId)
-            processDataClearDao.deleteBuildVarByBuildId(context, buildId)
-            processDataClearDao.deleteBuildContainerByBuildId(context, buildId)
-            processDataClearDao.deleteBuildStageByBuildId(context, buildId)
+            processDataClearDao.deleteBuildTaskByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildVarByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildContainerByBuildId(context, projectId, buildId)
+            processDataClearDao.deleteBuildStageByBuildId(context, projectId, buildId)
         }
     }
 
@@ -100,14 +102,14 @@ class ProcessDataClearService @Autowired constructor(
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            processDataClearDao.deleteBuildDetailByBuildId(context, buildId)
+            processDataClearDao.deleteBuildDetailByBuildId(context, projectId, buildId)
             processDataClearDao.deleteReportByBuildId(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deleteMetadataByBuildId(context, buildId)
+            processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,
@@ -115,7 +117,7 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deleteBuildHistoryByBuildId(context, buildId)
+            processDataClearDao.deleteBuildHistoryByBuildId(context, projectId, buildId)
         }
     }
 }

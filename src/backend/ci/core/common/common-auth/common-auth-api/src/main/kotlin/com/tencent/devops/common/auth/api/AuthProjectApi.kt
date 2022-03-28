@@ -85,6 +85,22 @@ interface AuthProjectApi {
     fun isProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): Boolean
 
     /**
+     * 判断是否某个项目中某个组角色的成员
+     * @param user 用户id
+     * @param serviceCode 服务类型，比如PIPELINE
+     * @param projectCode 项目编码
+     * @param group 项目组角色
+     */
+    fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean
+    /**
+     * 判断是否某个项目的管理员
+     * @param userId 用户id
+     * @param serviceCode 服务类型，比如PIPELINE
+     * @param projectCode 项目编码
+     */
+    fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean
+
+    /**
      * 添加用户到指定项目特定分组
      * @param user 目标用户id
      * @param serviceCode 服务类型，比如PIPELINE

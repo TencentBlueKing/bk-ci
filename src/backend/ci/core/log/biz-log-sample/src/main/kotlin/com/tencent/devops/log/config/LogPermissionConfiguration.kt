@@ -30,10 +30,12 @@ package com.tencent.devops.log.config
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.service.impl.BluekingLogPermissionService
 import com.tencent.devops.log.service.impl.SimpleLogPermissionService
+import com.tencent.devops.log.service.impl.StreamLogPermissionService
 import com.tencent.devops.log.service.impl.V3LogPermissionService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -74,5 +76,25 @@ class LogPermissionConfiguration {
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         redisOperation = redisOperation,
         client = client
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamLogPermissionService(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ): LogPermissionService = StreamLogPermissionService(
+        client = client,
+        tokenCheckService = tokenCheckService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamLogPermissionService(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ): LogPermissionService = StreamLogPermissionService(
+        client = client,
+        tokenCheckService = tokenCheckService
     )
 }

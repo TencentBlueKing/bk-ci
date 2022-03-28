@@ -94,4 +94,9 @@ class ServiceNodeResourceImpl @Autowired constructor(
     override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByDisplayName(nodeService.extListNodes(userId, projectId)))
     }
+
+    override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
+        nodeService.deleteNodes(userId, projectId, nodeHashIds)
+        return Result(true)
+    }
 }

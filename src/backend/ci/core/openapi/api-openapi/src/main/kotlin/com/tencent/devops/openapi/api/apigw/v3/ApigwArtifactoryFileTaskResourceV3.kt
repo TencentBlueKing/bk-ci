@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwArtifactoryFileTaskResourceV3 {
 
-    @ApiOperation("创建文件托管任务")
+    @ApiOperation("创建文件托管任务", tags = ["v3_app_file_task_create", "v3_user_file_task_create"])
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/create")
     @POST
     fun createFileTask(
@@ -73,7 +73,7 @@ interface ApigwArtifactoryFileTaskResourceV3 {
         createFileTaskReq: CreateFileTaskReq
     ): Result<String>
 
-    @ApiOperation("查询文件托管任务状态")
+    @ApiOperation("查询文件托管任务状态", tags = ["v3_app_file_task_status", "v3_user_file_task_status"])
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/tasks/{taskId}/status")
     @GET
     fun getStatus(
@@ -94,7 +94,7 @@ interface ApigwArtifactoryFileTaskResourceV3 {
         taskId: String
     ): Result<FileTaskInfo?>
 
-    @ApiOperation("清理文件托管任务")
+    @ApiOperation("清理文件托管任务", tags = ["v3_app_file_task_clear", "v3_user_file_task_clear"])
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/tasks/{taskId}/clear")
     @PUT
     fun clearFileTask(

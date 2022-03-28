@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:common:common-db"))
+    api(project(":core:common:common-db-sharding"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-pipeline"))
     api(project(":core:process:model-process"))

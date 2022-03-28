@@ -1,5 +1,5 @@
 <template>
-    <section :class="[{ 'max-height': limitHeight }, 'store-code']"></section>
+    <section :class="[{ 'max-height': limitHeight }, 'store-code']" v-bkloading="{ isLoading }"></section>
 </template>
 
 <script>
@@ -8,6 +8,7 @@
     import 'codemirror/mode/yaml/yaml'
     import 'codemirror/lib/codemirror.css'
     import 'codemirror/theme/3024-night.css'
+    import { mapActions } from 'vuex'
 
     export default {
         props: {
@@ -26,6 +27,12 @@
             code: {
                 type: String,
                 require: true
+            },
+            name: String,
+            currentTab: String,
+            getDataFunc: {
+                type: Function,
+                default: null
             }
         },
 
@@ -42,7 +49,35 @@
                     autoRefresh: true,
                     autofocus: false
                 },
-                codeEditor: undefined
+                codeEditor: undefined,
+                isLoading: false
+            }
+        },
+
+        computed: {
+            atomCode () {
+                return this.$route.params.code
+            }
+        },
+    
+        watch: {
+            currentTab: {
+                handler (currentVal) {
+                    if (currentVal && currentVal === this.name && !this.code) {
+                        this.isLoading = true
+                        this.getDataFunc({ atomCode: this.atomCode }).then(data => {
+                            this.codeEditor.setValue(data)
+                            this.$emit('update:code', data)
+                            const codeData = {}
+                            if (currentVal === 'YAML') codeData.codeSection = data
+                            if (currentVal === 'YAMLV2') codeData.codeSectionV2 = data
+                            this.setDetail(codeData)
+                        }).finally(() => {
+                            this.isLoading = false
+                        })
+                    }
+                },
+                immediate: true
             }
         },
 
@@ -55,6 +90,10 @@
         },
 
         methods: {
+            ...mapActions('store', [
+                'setDetail'
+            ]),
+
             initCodeMirror () {
                 const ele = this.$el
                 if (this.codeEditor) ele.innerHTML = ''

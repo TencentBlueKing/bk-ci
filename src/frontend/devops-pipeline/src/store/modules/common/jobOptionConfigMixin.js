@@ -65,6 +65,52 @@ const jobOptionConfigMixin = {
                     }
                 }
             },
+            JOB_MATRIX: {
+                strategyStr: {
+                    required: true,
+                    rule: {},
+                    component: 'atom-ace-editor',
+                    lang: 'yaml',
+                    defaultHeight: 100,
+                    label: this.$t('storeMap.strategy'),
+                    desc: this.$t('storeMap.strategyDesc'),
+                    default: ''
+                },
+                includeCaseStr: {
+                    rule: {},
+                    component: 'atom-ace-editor',
+                    lang: 'yaml',
+                    defaultHeight: 100,
+                    label: this.$t('storeMap.includeCase'),
+                    desc: this.$t('storeMap.includeCaseDesc'),
+                    default: ''
+                },
+                excludeCaseStr: {
+                    rule: {},
+                    component: 'atom-ace-editor',
+                    lang: 'yaml',
+                    defaultHeight: 100,
+                    label: this.$t('storeMap.excludeCase'),
+                    desc: this.$t('storeMap.excludeCaseDesc'),
+                    default: ''
+                },
+                fastKill: {
+                    rule: {},
+                    type: 'boolean',
+                    component: 'atom-checkbox',
+                    text: this.$t('storeMap.fastKill'),
+                    // desc: this.$t('storeMap.fastKillDesc'),
+                    default: true
+                },
+                maxConcurrency: {
+                    rule: { numeric: true, min_value: 1, max_value: 20 },
+                    component: 'vuex-input',
+                    required: true,
+                    label: this.$t('storeMap.maxConcurrency'),
+                    placeholder: this.$t('storeMap.maxConcurrencyDesc'),
+                    default: '5'
+                }
+            },
             normalRunConditionList: [
                 {
                     id: 'STAGE_RUNNING',

@@ -37,7 +37,7 @@ object DispatchSubTypeRegisterLoader {
 
     private val logger = LoggerFactory.getLogger(DispatchSubTypeRegisterLoader::class.java)
 
-    fun registerElement() {
+    fun registerType() {
 
         val clazz = DispatchSubTypeFetcher::class.java
         var fetcheries = ServiceLoader.load(clazz)
@@ -45,16 +45,16 @@ object DispatchSubTypeRegisterLoader {
         if (!fetcheries.iterator().hasNext()) {
             fetcheries = ServiceLoader.load(clazz, ServiceLoader::class.java.classLoader)
         }
-        val elementSubModule = SimpleModule()
+        val typeSubModule = SimpleModule()
         fetcheries.forEach { fetcher ->
             logger.info("[DISPATCH_FETCHER]| ${fetcher.javaClass}")
             val jsonSubTypes = fetcher.jsonSubTypes()
             jsonSubTypes.forEach { (classTypeName, clazz) ->
-                elementSubModule.registerSubtypes(NamedType(clazz, classTypeName))
+                typeSubModule.registerSubtypes(NamedType(clazz, classTypeName))
                 logger.info("[REGISTER_DISPATCH]|$clazz for $classTypeName")
             }
         }
 
-        JsonUtil.registerModule(elementSubModule)
+        JsonUtil.registerModule(typeSubModule)
     }
 }

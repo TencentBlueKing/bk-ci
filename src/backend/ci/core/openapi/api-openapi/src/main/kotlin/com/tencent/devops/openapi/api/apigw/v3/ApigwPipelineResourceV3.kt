@@ -39,10 +39,9 @@ import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
-import com.tencent.devops.process.pojo.PipelineWithModel
-import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -67,7 +66,7 @@ import javax.ws.rs.core.MediaType
 interface ApigwPipelineResourceV3 {
 
     @Deprecated("Replace with createPipeline")
-    @ApiOperation("新建流水线编排")
+    @ApiOperation("新建流水线编排", tags = ["v3_app_pipeline_create", "v3_user_pipeline_create"])
     @POST
     @Path("")
     fun create(
@@ -88,7 +87,7 @@ interface ApigwPipelineResourceV3 {
     ): Result<PipelineId>
 
     @Deprecated("Replace with editPipeline")
-    @ApiOperation("编辑流水线编排")
+    @ApiOperation("编辑流水线编排", tags = ["v3_app_pipeline_edit", "v3_user_pipeline_edit"])
     @PUT
     @Path("/{pipelineId}/")
     fun edit(
@@ -111,7 +110,7 @@ interface ApigwPipelineResourceV3 {
         pipeline: Model
     ): Result<Boolean>
 
-    @ApiOperation("导入新流水线, 包含流水线编排和设置")
+    @ApiOperation("导入新流水线, 包含流水线编排和设置", tags = ["v3_user_pipeline_upload", "v3_app_pipeline_upload"])
     @POST
     @Path("/pipeline_upload")
     fun uploadPipeline(
@@ -132,7 +131,7 @@ interface ApigwPipelineResourceV3 {
         modelAndSetting: PipelineModelAndSetting
     ): Result<PipelineId>
 
-    @ApiOperation("更新流水线编排和设置")
+    @ApiOperation("更新流水线编排和设置", tags = ["v3_user_pipeline_update", "v3_app_pipeline_update"])
     @PUT
     @Path("/{pipelineId}/pipeline_update")
     fun updatePipeline(
@@ -156,7 +155,7 @@ interface ApigwPipelineResourceV3 {
         modelAndSetting: PipelineModelAndSetting
     ): Result<DeployPipelineResult>
 
-    @ApiOperation("获取流水线编排")
+    @ApiOperation("获取流水线编排", tags = ["v3_app_pipeline_get", "v3_user_pipeline_get"])
     @GET
     @Path("/{pipelineId}/")
     fun get(
@@ -177,7 +176,7 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String
     ): Result<Model>
 
-    @ApiOperation("批量获取流水线编排与配置")
+    @ApiOperation("批量获取流水线编排与配置", tags = ["v3_app_pipeline_batch_get", "v3_user_pipeline_batch_get"])
     @POST
     @Path("/batchGet")
     fun getBatch(
@@ -195,9 +194,9 @@ interface ApigwPipelineResourceV3 {
         projectId: String,
         @ApiParam("流水线ID列表", required = true)
         pipelineIds: List<String>
-    ): Result<List<PipelineWithModel>>
+    ): Result<List<Pipeline>>
 
-    @ApiOperation("复制流水线编排")
+    @ApiOperation("复制流水线编排", tags = ["v3_user_pipeline_copy", "v3_app_pipeline_copy"])
     @POST
     @Path("/{pipelineId}/copy")
     fun copy(
@@ -214,7 +213,7 @@ interface ApigwPipelineResourceV3 {
         pipeline: PipelineCopy
     ): Result<PipelineId>
 
-    @ApiOperation("删除流水线编排")
+    @ApiOperation("删除流水线编排", tags = ["v3_user_pipeline_delete", "v3_app_pipeline_delete"])
     @DELETE
     @Path("/{pipelineId}/")
     fun delete(
@@ -235,7 +234,7 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("获取项目的流水线列表")
+    @ApiOperation("获取项目的流水线列表", tags = ["v3_user_pipeline_list", "v3_app_pipeline_list"])
     @GET
     @Path("")
     fun getListByUser(
@@ -259,7 +258,7 @@ interface ApigwPipelineResourceV3 {
         pageSize: Int? = null
     ): Result<Page<Pipeline>>
 
-    @ApiOperation("获取流水线状态")
+    @ApiOperation("获取流水线状态", tags = ["v3_app_pipeline_status", "v3_user_pipeline_status"])
     @GET
     @Path("/{pipelineId}/status")
     fun status(
@@ -280,7 +279,7 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String
     ): Result<Pipeline?>
 
-    @ApiOperation("流水线重命名")
+    @ApiOperation("流水线重命名", tags = ["v3_user_pipeline_rename", "v3_app_pipeline_rename"])
     @POST
     @Path("/{pipelineId}/rename")
     fun rename(
@@ -303,7 +302,7 @@ interface ApigwPipelineResourceV3 {
         name: PipelineName
     ): Result<Boolean>
 
-    @ApiOperation("还原流水线编排")
+    @ApiOperation("还原流水线编排", tags = [])
     @PUT
     @Path("/{pipelineId}/restore")
     fun restore(
@@ -324,7 +323,7 @@ interface ApigwPipelineResourceV3 {
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("更新流水线设置")
+    @ApiOperation("更新流水线设置", tags = ["v3_app_pipeline_setting_update", "v3_user_pipeline_setting_update"])
     @PUT
     @Path("/{pipelineId}/setting_update")
     fun saveSetting(

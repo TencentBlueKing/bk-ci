@@ -41,6 +41,10 @@ data class LinuxScriptElement(
     override var id: String? = null,
     @ApiModelProperty("状态", required = false)
     override var status: String? = null,
+    @ApiModelProperty("用户自定义ID", required = false)
+    override var stepId: String? = null,
+    @ApiModelProperty("FAQ url链接", required = false)
+    val errorFAQUrl: String? = null,
     @ApiModelProperty("脚本类型", required = true)
     val scriptType: BuildScriptType,
     @ApiModelProperty("脚本内容", required = true)

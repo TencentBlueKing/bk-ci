@@ -5,13 +5,12 @@
                                                                            [atomCls(atom)]: true,
                                                                            'quality-item': (atom['@type'] === 'qualityGateOutTask') || (atom['@type'] === 'qualityGateInTask'),
                                                                            'last-quality-item': (atom['@type'] === 'qualityGateOutTask' && index === atomList.length - 1),
-                                                                           'arrival-atom': atom.status,
                                                                            'qualitt-next-atom': handlePreviousAtomCheck(atomList, index)
             }"
                 @click.stop="showPropertyPanel(index)"
             >
                 <section class="atom-item atom-section normal-atom" :class="{ [atomCls(atom)]: true,
-                                                                              'is-error': atom.isError,
+                                                                              'is-error': atom.isError || !atom.atomCode,
                                                                               'quality-atom': atom['@type'] === 'qualityGateOutTask',
                                                                               'is-intercept': atom.isQualityCheck,
                                                                               'template-compare-atom': atom.templateModify }"
@@ -56,14 +55,15 @@
                         <Logo name="copy" size="18"></Logo>
                     </span>
                     <i v-if="editable" @click.stop="editAtom(index, false)" class="add-plus-icon close" />
-                    <i v-if="editable && atom.isError" class="devops-icon icon-exclamation-triangle-shape" />
+                    <i v-if="(editable && atom.isError) || !atom.atomCode" class="devops-icon icon-exclamation-triangle-shape" />
                     <span @click.stop="" v-if="isPreview && canSkipElement && container['@type'].indexOf('trigger') < 0">
                         <bk-checkbox class="atom-canskip-checkbox" v-model="atom.canElementSkip" :disabled="useSkipStyle(atom)" />
                     </span>
                 </section>
 
                 <section class="atom-section quality-atom"
-                    :class="{ 'is-review': atom.isReviewing,
+                    :class="{ 'is-in-group': containerGroupIndex !== undefined,
+                              'is-review': atom.isReviewing,
                               'is-success': (atom.status === 'SUCCEED' || atom.status === 'REVIEW_PROCESSED'),
                               'is-fail': (atom.status === 'QUALITY_CHECK_FAIL' || atom.status === 'REVIEW_ABORT') }"
                     v-if="atom['@type'] === 'qualityGateInTask' || atom['@type'] === 'qualityGateOutTask'">
@@ -78,7 +78,10 @@
             </li>
             <span v-if="editable" :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }" @click="editAtom(atomList.length - 1, true)">
                 <i class="add-plus-icon" />
-                <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
+                <span v-if="atomList.length === 0">
+                    {{ $t('editPage.addAtom') }}
+                    <i class="devops-icon icon-exclamation-triangle-shape error-icon" />
+                </span>
             </span>
         </draggable>
         <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog" :element="element"></check-atom-dialog>
@@ -88,7 +91,7 @@
 <script>
     import StatusIcon from './StatusIcon'
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { coverTimer, hashID } from '@/utils/util'
+    import { coverTimer, hashID, randomString } from '@/utils/util'
     import draggable from 'vuedraggable'
     import Logo from '@/components/Logo'
     import CheckAtomDialog from './CheckAtomDialog'
@@ -104,6 +107,7 @@
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
+            containerGroupIndex: Number,
             containerStatus: String,
             containerDisabled: Boolean,
             editable: {
@@ -212,13 +216,14 @@
 
             continueExecute (elementIndex) {
                 if (this.isExecStop) return
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     showPanelType: 'PAUSE',
                     editingElementPos: {
                         stageIndex,
                         containerIndex,
+                        containerGroupIndex,
                         elementIndex
                     }
                 })
@@ -314,12 +319,13 @@
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
-                const { stageIndex, containerIndex } = this
+                const { stageIndex, containerIndex, containerGroupIndex } = this
                 this.togglePropertyPanel({
                     isShow: true,
                     editingElementPos: {
                         stageIndex,
                         containerIndex,
+                        containerGroupIndex,
                         elementIndex
                     }
                 })
@@ -350,10 +356,11 @@
                     return
                 }
                 try {
-                    const { id, ...element } = this.container.elements[atomIndex]
+                    const { id, stepId, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({
                         ...element,
-                        id: `e-${hashID(32)}`
+                        id: `e-${hashID(32)}`,
+                        stepId: stepId ? `step_${randomString(3)}` : ''
                     })))
                     this.setPipelineEditing(true)
                 } catch (e) {
@@ -469,7 +476,7 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            width: 240px;
+            // width: 240px;
             height: $itemHeight;
             margin: 0 0 11px 0;
             background-color: white;
@@ -629,7 +636,7 @@
                 margin-right: 6px;
             }
         }
-
+        
         .quality-item {
             height: 24px;
             line-height: 20px;
@@ -693,6 +700,13 @@
                 &:after {
                     left: 138px;
                     width: 100px;
+                }
+            }
+            &.is-in-group {
+               .atom-title {
+                    &:after {
+                        width: 76px;
+                    }
                 }
             }
             &.is-success {
@@ -760,6 +774,15 @@
             background-color: white;
             cursor: pointer;
             z-index: 3;
+            span {
+                width: 76%;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .error-icon {
+                color: $iconFailColor;
+            }
             .add-plus-icon {
                 @include add-plus-icon($fontLigtherColor, $fontLigtherColor, white, 18px, true);
                 @include add-plus-icon-hover($primaryColor, $primaryColor, white);
@@ -768,8 +791,7 @@
                 @extend .atom-item;
                 position: static;
                 border-style: dashed;
-                color: $borderWeightColor;
-                border-color: $borderWeightColor;
+                border-color: $dangerColor;
                 border-width: 1px;
                 .add-plus-icon {
                     margin: 12px 13px;
@@ -811,9 +833,15 @@
                 &.SKIP,
                 &.REVIEWING {
                     border-color: $warningColor;
-                    
                     .atom-icon {
                         color: $warningColor;
+                    }
+                    &:before {
+                        background: $warningColor;
+                    }
+                    &:after {
+                        border: 2px solid $warningColor;
+                        background: white;
                     }
                 }
                 &.FAILED,
@@ -825,13 +853,26 @@
                     .atom-icon {
                         color: $dangerColor;
                     }
+                    &:before {
+                        background: $dangerColor;
+                    }
+                    &:after {
+                        border: 2px solid $dangerColor;
+                        background: white;
+                    }
                 }
                 &.SUCCEED,
                 &.REVIEW_PROCESSED {
                     border-color: $successColor;
-                    
                     .atom-icon {
                         color: $successColor;
+                    }
+                    &:before {
+                        background: $successColor;
+                    }
+                    &:after {
+                        border: 2px solid $successColor;
+                        background: white;
                     }
                 }
                 &.PAUSE {
@@ -840,15 +881,13 @@
                     .atom-icon {
                         color: $pauseColor;
                     }
-                }
-            }
-            .arrival-atom {
-                &:before {
-                    background: $successColor;
-                }
-                &:after {
-                    border: 2px solid $successColor;
-                    background: white;
+                    &:before {
+                        background: $pauseColor;
+                    }
+                    &:after {
+                        border: 2px solid $pauseColor;
+                        background: white;
+                    }
                 }
             }
             .qualitt-next-atom {

@@ -27,25 +27,25 @@
 
 package com.tencent.devops.worker.common.service
 
-import java.util.Properties
+import com.tencent.devops.common.api.util.PropertyUtil
 import java.util.concurrent.ConcurrentHashMap
 
 object RepoServiceFactory {
 
     private val repoServiceMap = ConcurrentHashMap<String, RepoService>()
 
-    private var property: Properties? = null
-
     private const val REPO_CLASS_NAME = "repo.class.name"
 
+    private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
+
+    /**
+     * 根据配置文件的类名获取实现RepoService的对象
+     * @return 实现RepoService的对象
+     */
     fun getInstance(): RepoService {
         // 从配置文件读取类名
-        if (property == null) {
-            val fileInputStream = RepoServiceFactory::class.java.getResourceAsStream("/.agent.properties")
-            property = Properties()
-            property!!.load(fileInputStream)
-        }
-        val className = property!![REPO_CLASS_NAME] as String
+        val className = PropertyUtil.getPropertyValue(REPO_CLASS_NAME, AGENT_PROPERTIES_FILE_NAME)
+        // 根据类名从缓存中获取实现RepoService的对象
         var repoService = repoServiceMap[className]
         if (repoService == null) {
             // 通过反射生成对象并放入缓存中

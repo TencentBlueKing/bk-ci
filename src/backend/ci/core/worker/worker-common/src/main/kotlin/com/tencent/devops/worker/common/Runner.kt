@@ -132,7 +132,8 @@ object Runner {
         LoggerService.start()
         val variables = buildVariables.variablesWithType
         val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
-        LoggerService.executeCount = retryCount.toInt() + 1
+        val executeCount = retryCount.toInt() + 1
+        LoggerService.executeCount = executeCount
         LoggerService.jobId = buildVariables.containerHashId
         LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
         LoggerService.buildVariables = buildVariables
@@ -142,7 +143,7 @@ object Runner {
         showSystemLog()
         showRuntimeEnvs(buildVariables.variablesWithType)
 
-        Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
+        Heartbeat.start(buildVariables.timeoutMills, executeCount) // #2043 添加Job超时监控
 
         val workspaceAndLogPath = workspaceInterface.getWorkspaceAndLogDir(
             variables = buildVariables.variablesWithType.associate { it.key to it.value.toString() },
@@ -165,14 +166,14 @@ object Runner {
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
                     Preconditions.checkNotNull(
-                        obj = buildTask.elementId,
+                        obj = buildTask.taskId,
                         exception = RemoteServiceException("Not valid build elementId")
                     )
 
                     val task = TaskFactory.create(buildTask.type ?: "empty")
                     val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                     try {
-                        LoggerService.elementId = buildTask.elementId!!
+                        LoggerService.elementId = buildTask.taskId!!
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
 
                         // 开始Task执行
@@ -270,8 +271,6 @@ object Runner {
             errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
         }
 
-        LoggerService.addErrorLine(message)
-
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
             errorMessage = CommonUtils.interceptStringInLength(
@@ -298,7 +297,7 @@ object Runner {
      * 发送构建初始化日志
      */
     private fun showBuildStartupLog(buildId: String, vmSeqId: String) {
-        LoggerService.addNormalLine("The build $buildId environment #$vmSeqId is ready")
+        LoggerService.addNormalLine("构建机已收到请求，准备构建(Build[$buildId] Job#$vmSeqId is ready）")
     }
 
     /**
@@ -331,7 +330,7 @@ object Runner {
         LoggerService.addFoldEndLine("-----")
     }
 
-    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.")
+    private val contextKeys = listOf("variables.", "settings.", "envs.", "ci.", "job.", "jobs.", "steps.", "matrix.")
 
     /**
      * 显示用户预定义变量

@@ -35,6 +35,7 @@ import validDictionary from './utils/validDictionary'
 import PortalVue from 'portal-vue' // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
+import '@icon-cool/bk-icon-devops'
 
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'

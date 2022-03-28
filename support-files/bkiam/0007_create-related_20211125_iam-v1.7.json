@@ -59,6 +59,10 @@
               {
                 "id": "quality_group_create",
                 "required": true
+              },
+              {
+                "id": "rule_create",
+                "required": true
               }
             ],
             "sub_resource_types": [
@@ -197,7 +201,7 @@
                 ]
               },
               {
-                "id": "group",
+                "id": "quality_group",
                 "actions": [
                   {
                     "id": "quality_group_edit",
@@ -217,11 +221,15 @@
                 "id": "rule",
                 "actions": [
                   {
-                    "id": "quality_rule_edit",
+                    "id": "rule_edit",
                     "required": false
                   },
                   {
-                    "id": "quality_rule_delete",
+                    "id": "rule_delete",
+                    "required": false
+                  },
+                  {
+                    "id": "rule_enable",
                     "required": false
                   }
                 ]

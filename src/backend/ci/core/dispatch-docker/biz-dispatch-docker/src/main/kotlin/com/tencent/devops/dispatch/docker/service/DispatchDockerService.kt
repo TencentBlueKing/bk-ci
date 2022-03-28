@@ -167,6 +167,16 @@ class DispatchDockerService @Autowired constructor(
         return true
     }
 
+    fun updateBuildLessStatus(userId: String, dockerIp: String, dockerIpInfoVO: DockerIpInfoVO): Boolean {
+        // logger.info("$userId update Docker IP status enable: $dockerIp, dockerIpInfoVO: $dockerIpInfoVO")
+        pipelineDockerIPInfoDao.updateBuildLessLoad(
+            dslContext = dslContext,
+            dockerIp = dockerIp,
+            dockerIpInfoVO = dockerIpInfoVO
+        )
+        return true
+    }
+
     fun delete(userId: String, dockerIp: String): Boolean {
         logger.info("$userId delete Docker IP: $dockerIp")
         if (dockerIp.isEmpty()) {

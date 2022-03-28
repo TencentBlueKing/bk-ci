@@ -36,7 +36,9 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.CAN_NOT_FIND_RELATION
 import com.tencent.devops.auth.pojo.MemberInfo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
@@ -44,6 +46,7 @@ import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -91,7 +94,25 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         }
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder().expiredAt(expiredTime).members(roleMembers).build()
-        iamManagerService.createRoleGroupMember(iamId!!.toInt(), managerMemberGroupDTO)
+        try {
+            iamManagerService.createRoleGroupMember(iamId!!.toInt(), managerMemberGroupDTO)
+        } catch (iamEx: IamException) {
+            logger.warn("create group user fail. code: ${iamEx.errorCode}| msg: ${iamEx.errorMsg}")
+            throw OperationException(
+                MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
+                    params = arrayOf(iamEx.errorMsg)
+                ).toString()
+            )
+        } catch (e: Exception) {
+            logger.warn("create group user fail. code: $e")
+            throw OperationException(
+                MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
+                    params = arrayOf(e.message ?: "unknown")
+                ).toString()
+            )
+        }
 
         // 添加用户到管理员需要同步添加用户到分级管理员
         if (managerGroup) {

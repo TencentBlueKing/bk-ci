@@ -136,6 +136,16 @@ class MQConfiguration @Autowired constructor() {
         return fanoutExchange
     }
 
+    /**
+     * 构建流水线取消广播交换机
+     */
+    @Bean
+    fun pipelineCancelFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
     @Bean
     fun pipelineBuildDispatchFinishQueue(@Autowired buildListener: BuildListener) =
         Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER + getShutdownQueue(buildListener))

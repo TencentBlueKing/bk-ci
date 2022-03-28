@@ -54,5 +54,7 @@ data class CredentialWithPermission(
     @ApiModelProperty("权限", required = true)
     val permissions: CredentialPermissions,
     @ApiModelProperty("最后更新者", required = true)
-    val updateUser: String? = null
+    val updateUser: String? = null,
+    @ApiModelProperty("当前凭证是否允许跨项目使用", required = false)
+    val allowAcrossProject: Boolean = false
 )

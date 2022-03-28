@@ -31,7 +31,6 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSObject
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.util.script.CommandLineUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
@@ -281,9 +280,11 @@ object SignUtils {
     }
 
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
-        ZipUtil.zipDir(unzipDir, ipaPath)
-        val ipaFile = File(ipaPath)
-        return if (ipaFile.exists()) ipaFile else null
+        val cmd = "zip -r -X $ipaPath ."
+        logger.info("[unzipIpa] $cmd")
+        CommandLineUtils.execute(cmd, unzipDir, true)
+        val resultIpa = File(ipaPath)
+        return if (resultIpa.exists()) resultIpa else null
     }
 
     /**
@@ -333,8 +334,8 @@ object SignUtils {
         appList: MutableList<File>
     ) {
         // 扫描是否有待签目录
-        val needResginFiles = scanNeedResignFiles(appDir)
-        needResginFiles.forEach { needResginDir ->
+        val needResignFiles = scanNeedResignFiles(appDir)
+        needResignFiles.forEach { needResginDir ->
             needResginDir.listFiles().forEach { subFile ->
                 // 如果是个拓展则递归进入进行重签
                 if (subFile.isDirectory && subFile.extension.contains("app")) {
@@ -347,15 +348,15 @@ object SignUtils {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     private fun scanNeedResignFiles(appDir: File): List<File> {
         logger.info("---- scan app directory start -----")
-        val needResginFiles = mutableListOf<File>()
+        val needResignFiles = mutableListOf<File>()
         appDir.listFiles().forEachIndexed { index, it ->
             if (it.isDirectory && resignFilenamesSet.contains(it.name)) {
-                needResginFiles.add(it)
+                needResignFiles.add(it)
                 logger.info("$index -> ${it.absolutePath}")
             }
         }
         logger.info("----- scan app directory finish -----")
-        return needResginFiles
+        return needResignFiles
     }
 
     private fun replaceInfoBundle(bundleId: String, infoPlistPath: String) {
@@ -436,11 +437,11 @@ object SignUtils {
                 )
             } finally {
                 val sb = StringBuilder()
-                sb.appendln("<array>")
+                sb.appendLine("<array>")
                 ul.forEach {
-                    sb.appendln("<string>applinks:$it</string>")
+                    sb.appendLine("<string>applinks:$it</string>")
                 }
-                sb.appendln("</array>")
+                sb.appendLine("</array>")
 
                 val insertCmd = "/usr/bin/plutil -insert " +
                     "\"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
@@ -468,11 +469,11 @@ object SignUtils {
                 )
             } finally {
                 val sb = StringBuilder()
-                sb.appendln("<array>")
+                sb.appendLine("<array>")
                 groups.forEach {
-                    sb.appendln("<string>$it</string>")
+                    sb.appendLine("<string>$it</string>")
                 }
-                sb.appendln("</array>")
+                sb.appendLine("</array>")
 
                 val insertCmd = "/usr/bin/plutil -insert " +
                     "\"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"

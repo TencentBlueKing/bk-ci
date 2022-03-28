@@ -45,12 +45,20 @@ class TemplateService @Autowired constructor(
     private val templatePipelineDao: TemplatePipelineDao
 ) {
 
-    fun getTemplateIdByPipeline(pipelineId: String): String? {
-        return templatePipelineDao.get(dslContext = dslContext, pipelineId = pipelineId)?.templateId
+    fun getTemplateIdByPipeline(projectId: String, pipelineId: String): String? {
+        return templatePipelineDao.get(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )?.templateId
     }
 
-    fun isTemplatePipeline(pipelineId: String): Boolean {
-        return templatePipelineDao.isTemplatePipeline(dslContext = dslContext, pipelineId = pipelineId)
+    fun isTemplatePipeline(projectId: String, pipelineId: String): Boolean {
+        return templatePipelineDao.isTemplatePipeline(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     /**
@@ -75,7 +83,7 @@ class TemplateService @Autowired constructor(
         when {
             fixTemplateVersion != null -> { // 否则以指定的版本
                 templateVersion = fixTemplateVersion
-                versionName = templateDao.getTemplate(dslContext, fixTemplateVersion).versionName
+                versionName = templateDao.getTemplate(dslContext = dslContext, version = fixTemplateVersion).versionName
             }
             else -> { // 以指定的模板Id创建
                 templateVersion = latestTemplate.version

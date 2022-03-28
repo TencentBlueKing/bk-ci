@@ -42,7 +42,8 @@ data class BuildInfo(
     val status: BuildStatus,
     val queueTime: Long,
     val executeTime: Long,
-    val startUser: String,
+    val startUser: String, // 真正用来执行构建的人的身份（一般像Git触发，有可能]与触发人不一样，因为Git平台帐号不一定是人）
+    val triggerUser: String, // 真正的触发人（不一定是人，也可能是机器帐号，比如git平台帐号）
     val startTime: Long?,
     val endTime: Long?,
     val taskCount: Int,

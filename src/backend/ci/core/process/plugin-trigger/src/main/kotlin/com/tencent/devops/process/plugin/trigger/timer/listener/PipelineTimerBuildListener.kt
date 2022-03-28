@@ -62,7 +62,7 @@ class PipelineTimerBuildListener @Autowired constructor(
 
                 // 如果是不存在的流水线，则直接删除定时任务，相当于给异常创建失败的定时流水线做清理
                 if (buildResult.data.isNullOrBlank()) {
-                    pipelineTimerService.deleteTimer(pipelineId, userId)
+                    pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
                     logger.warn("[$pipelineId]|pipeline not exist!${buildResult.message}")
                 } else {
                     logger.info("[$pipelineId]|TimerTrigger start| buildId=${buildResult.data}")
