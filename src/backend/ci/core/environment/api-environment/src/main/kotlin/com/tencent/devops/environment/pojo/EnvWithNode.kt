@@ -31,15 +31,11 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("环境信息-Node数量")
-data class EnvWithNodeCount(
-    @ApiModelProperty("环境 HashId", required = true)
-    val envHashId: String,
+data class EnvWithNode(
+    @ApiModelProperty("环境 Id", required = true)
+    val envId: Long,
     @ApiModelProperty("环境名称", required = true)
-    val name: String,
-    @ApiModelProperty("正常节点数量", required = true)
-    val normalNodeCount: Int,
-    @ApiModelProperty("异常节点数量", required = true)
-    val abnormalNodeCount: Int,
+    val envName: String,
     @ApiModelProperty("源项目", required = false)
     val sharedProjectId: String?,
     @ApiModelProperty("分享人", required = false)
