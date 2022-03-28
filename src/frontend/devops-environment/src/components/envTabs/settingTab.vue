@@ -21,6 +21,7 @@
             :project-id="projectId"
             :env-hash-id="envHashId"
             @confirm="handleShareEnv"
+            @cancel="handleCancel"
         />
     </div>
 </template>
@@ -104,8 +105,8 @@
                 }
                 this.pagination.count = count + 1
             },
-            async handleShareProject () {
-                this.showProjectDialog = true
+            async toggleShareProject () {
+                this.showProjectDialog = !this.showProjectDialog
             },
             handlePageChange (current) {
                 this.pagination.current = current
@@ -157,7 +158,11 @@
                     this.fetchEnvProjects()
                     return res
                 }, this.$t('environment.shareEnvSuc'))
-                fn()
+                await fn()
+                this.toggleShareProject()
+            },
+            handleCancel () {
+                this.toggleShareProject()
             },
             async remove ({ gitProjectId, name }) {
                 const fn = this.actionWrapper(async () => {

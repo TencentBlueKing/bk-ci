@@ -4,7 +4,7 @@
         header-position="left"
         :mask-close="false"
         @confirm="handleConfirm"
-        @cancel="handleSelectChange([])"
+        @cancel="handleCancel"
         :title="$t('environment.addProject')"
     >
         <div class="env-share-project-list">
@@ -94,6 +94,10 @@
             },
             handleConfirm () {
                 this.$emit('confirm', this.selection)
+                this.selection = []
+            },
+            handleCancel () {
+                this.$emit('cancel', this.selection)
                 this.selection = []
             }
         }
