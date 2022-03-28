@@ -28,6 +28,7 @@
 package com.tencent.devops.store.resources.template
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
