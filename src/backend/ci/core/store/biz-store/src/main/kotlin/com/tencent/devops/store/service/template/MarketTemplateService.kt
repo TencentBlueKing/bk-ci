@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
@@ -115,8 +115,9 @@ interface MarketTemplateService {
      */
     fun verificationModelComponentVisibleDept(
         userId: String,
-        stageList: List<Stage>,
-        projectCode: String
+        model: Model,
+        projectCodeList: ArrayList<String>,
+        templateCode: String?
     ): Result<Boolean>
 
     /**

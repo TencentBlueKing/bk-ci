@@ -82,9 +82,16 @@ class ServiceTemplateResourceImpl @Autowired constructor(
 
     override fun validateModelComponentVisibleDept(
         userId: String,
-        stageList: List<Stage>,
+        model: Model,
         projectCode: String
     ): Result<Boolean> {
-        return marketTemplateService.verificationModelComponentVisibleDept(userId, stageList, projectCode)
+        val projectCodeList = ArrayList<String>()
+        projectCodeList.add(projectCode)
+        return marketTemplateService.verificationModelComponentVisibleDept(
+            userId = userId,
+            model = model,
+            projectCodeList = projectCodeList,
+            templateCode = null
+        )
     }
 }
