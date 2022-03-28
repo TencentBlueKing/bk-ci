@@ -29,6 +29,7 @@ package com.tencent.devops.stream.v2.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
@@ -64,13 +65,15 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class StreamScmService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val oauthService: StreamOauthService,
-    private val streamBasicSettingDao: StreamBasicSettingDao
+    private val streamBasicSettingDao: StreamBasicSettingDao,
+    private val streamGitTokenService: StreamGitTokenService
 ) {
 
     companion object {
@@ -158,22 +161,31 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         fileName: String,
         ref: String,
-        useAccessToken: Boolean
+        useAccessToken: Boolean,
+        isFirst: Boolean = true
     ): String {
         logger.info("getYamlFromGit: [$gitProjectId|$fileName|$ref|$useAccessToken]")
-        return retryFun(
-            log = "$gitProjectId get yaml $fileName fail",
-            apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
-                    gitProjectId = gitProjectId,
-                    filePath = fileName,
-                    token = token,
-                    ref = getTriggerBranch(ref),
-                    useAccessToken = useAccessToken
-                ).data!!
+        try {
+            return retryFun(
+                log = "$gitProjectId get yaml $fileName fail",
+                apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
+                        gitProjectId = gitProjectId,
+                        filePath = fileName,
+                        token = token,
+                        ref = getTriggerBranch(ref),
+                        useAccessToken = useAccessToken
+                    ).data!!
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getYamlFromGit(newToken, gitProjectId, fileName, ref, useAccessToken, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getProjectInfoRetry(
@@ -672,6 +684,12 @@ class StreamScmService @Autowired constructor(
                 statusCode = e.httpStatus,
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = "$log: ${e.errorMessage}"
+            )
+        } catch (e: CustomException) {
+            throw ErrorCodeException(
+                statusCode = e.status.statusCode,
+                errorCode = apiErrorCode.errorCode.toString(),
+                defaultMessage = "$log: ${e.message}"
             )
         } catch (e: Throwable) {
             logger.error("retryFun error $log: ${e.message} ")
