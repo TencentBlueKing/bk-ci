@@ -80,7 +80,11 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         )
     }
 
-    override fun validateModelComponentVisibleDept(userId: String, stageList: List<Stage>, projectCode: String): Result<Boolean> {
+    override fun validateModelComponentVisibleDept(
+        userId: String,
+        stageList: List<Stage>,
+        projectCode: String
+    ): Result<Boolean> {
         return marketTemplateService.verificationModelComponentVisibleDept(userId, stageList, projectCode)
     }
 }
