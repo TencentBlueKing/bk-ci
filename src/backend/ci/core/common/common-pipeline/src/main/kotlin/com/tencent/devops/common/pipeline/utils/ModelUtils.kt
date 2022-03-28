@@ -118,12 +118,16 @@ object ModelUtils {
                     c.canRetry = jobStatus.isFailure() || jobStatus.isCancel()
                 }
                 if (c.canRetry == true) {
-                    val failElements = mutableListOf<Element>()
-                    c.elements.forEach { e ->
-                        refreshElement(element = e, failElements = failElements)
-                    }
+                    refreshContainer(c)
                 }
             }
+        }
+    }
+
+    private fun refreshContainer(container: Container) {
+        val failElements = mutableListOf<Element>()
+        container.elements.forEach { e ->
+            refreshElement(element = e, failElements = failElements)
         }
     }
 
