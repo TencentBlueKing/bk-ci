@@ -3,9 +3,9 @@
         width="900"
         header-position="left"
         :mask-close="false"
+        :title="$t('environment.addProject')"
         @confirm="handleConfirm"
         @cancel="handleCancel"
-        :title="$t('environment.addProject')"
     >
         <div class="env-share-project-list">
             <bk-table
@@ -97,7 +97,7 @@
                 this.selection = []
             },
             handleCancel () {
-                this.$emit('cancel', this.selection)
+                this.$emit('cancel')
                 this.selection = []
             }
         }
