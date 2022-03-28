@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -755,13 +756,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         return Result(data = true)
     }
 
-    override fun verificationModelComponentVisibleDept(userId: String, model: Model, projectCode: String): Result<Boolean> {
+    override fun verificationModelComponentVisibleDept(userId: String, stageList: List<Stage>, projectCode: String): Result<Boolean> {
         val invalidImageList = mutableListOf<String>()
         val invalidAtomList = mutableListOf<String>()
         val needInstallImageMap = mutableMapOf<String, StoreBaseInfo>()
         val needInstallAtomMap = mutableMapOf<String, StoreBaseInfo>()
         val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
-        val stageList = model.stages
         // 获取模板下镜像的机构信息
         val modelImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         // 获取每个模板下插件的机构信息

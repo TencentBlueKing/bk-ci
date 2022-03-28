@@ -149,7 +149,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val validateRet = client.get(ServiceTemplateResource::class)
                 .validateModelComponentVisibleDept(
                     userId = userId,
-                    model = model,
+                    stageList = model.stages,
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {

@@ -29,7 +29,7 @@ package com.tencent.devops.store.api.template
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
 import io.swagger.annotations.Api
@@ -94,9 +94,9 @@ interface ServiceTemplateResource {
         @ApiParam("用户", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("流水线模型", required = true)
+        @ApiParam("流水线模型-阶段", required = true)
         @Valid
-        model: Model,
+        stageList: List<Stage>,
         @ApiParam("项目", required = true)
         @PathParam("projectCode")
         projectCode: String
