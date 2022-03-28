@@ -161,6 +161,8 @@ class PipelineRetryFacadeService @Autowired constructor(
             } else if (task.taskName.startsWith(VMUtils.getWaitLabel()) &&
                 task.taskId.startsWith(VMUtils.getEndLabel())) {
                 startAndEndTask.add(task)
+            } else if (task.status == BuildStatus.UNEXEC) {
+                startAndEndTask.add(task)
             }
         }
         startAndEndTask.forEach {
