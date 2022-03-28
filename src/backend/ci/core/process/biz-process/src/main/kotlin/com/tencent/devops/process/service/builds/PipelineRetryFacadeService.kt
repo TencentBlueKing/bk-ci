@@ -166,9 +166,6 @@ class PipelineRetryFacadeService @Autowired constructor(
         startAndEndTask.forEach {
             pipelineTaskService.updateTaskStatus(task = it, userId = userId, buildStatus = BuildStatus.QUEUE)
         }
-
-        taskBuildDetailService.taskStart(projectId, buildId, taskId)
-
         // 修改容器状态位运行
         pipelineContainerService.updateContainerStatus(
             projectId = containerInfo.projectId,
