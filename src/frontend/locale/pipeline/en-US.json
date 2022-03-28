@@ -631,6 +631,11 @@
     },
     "editPage": {
         "invalidValue": "Plugin's Input {0} Invalid",
+        "shareEnvInfo": "from {0} Project，By {1}",
+        "environment": "Environment: ",
+        "envProjectId": "ProjectId: ",
+        "envProjectTips": "The default is the current project. Fill in the English name of the corresponding project",
+        "envProjectPlaceholder": "The default is the current project",
         "tipError": "Tip component return value needs to be a string",
         "atomPropChangedTip": "The current version has added new parameters or changed parameter types, please carefully confirm whether the corresponding settings of the parameters meet expectations (the changed fields have been highlighted)!",
         "checkResultTip": "The audit result is required",

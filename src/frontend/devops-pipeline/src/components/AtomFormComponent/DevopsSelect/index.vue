@@ -3,6 +3,7 @@
         <input
             ref="inputArea"
             class="bk-form-input"
+            type="text"
             v-bind="restProps"
             v-model="displayName"
             :disabled="disabled || loading"
@@ -115,8 +116,16 @@
             },
             options (newOptions) {
                 this.optionList = newOptions
-                this.isFocused && !this.disabled && this.$nextTick(() => {
-                    this.$refs.inputArea.focus()
+                this.$nextTick(() => {
+                    if (this.isFocused && !this.disabled) {
+                        this.$refs.inputArea.focus()
+                    }
+                        
+                    if (this.isMultiple) {
+                        this.getMultipleDisplayName(this.value)
+                    } else {
+                        this.displayName = this.getDisplayName(this.value)
+                    }
                 })
             },
             isLoading (isLoading) {
@@ -310,7 +319,7 @@
                     }
                 })
                 this.selectedMap = resultMap
-                if (invalidVal.length > 0) {
+                if (!this.loading && invalidVal.length > 0) {
                     this.showValValidTips(invalidVal.join(','))
                 }
             },
@@ -332,7 +341,7 @@
                         return option.name
                     }
                 }
-                val && this.showValValidTips(val)
+                val && !this.loading && this.showValValidTips(val)
                 return ''
             },
             showValValidTips (val) {

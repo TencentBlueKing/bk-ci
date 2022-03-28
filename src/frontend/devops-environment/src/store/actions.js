@@ -265,6 +265,22 @@ const actions = {
         return vue.$ajax.get(`${prefix}/user/environment/thirdPartyAgent/projects/${params.projectId}/nodes/${params.nodeHashId}/queryDiskioMetrix?timeRange=${params.timeRange}`).then(response => {
             return response
         })
+    },
+
+    requestShareEnvProjectList (_, { projectId, envHashId, offset, limit }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list?offset=${offset}&limit=${limit}`)
+    },
+
+    requestProjects (_, { projectId, envHashId, page, pageSize }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list_user_project?page=${page}&pageSize=${pageSize}`)
+    },
+
+    shareEnv (_, { projectId, envHashId, body }) {
+        return vue.$ajax.post(`${prefix}/user/environment/${projectId}/${envHashId}/share`, body)
+    },
+
+    removeProjectShare (_, { projectId, envHashId, sharedProjectId }) {
+        return vue.$ajax.delete(`${prefix}/user/environment/${projectId}/${envHashId}/${sharedProjectId}/sharedProject`)
     }
 }
 
