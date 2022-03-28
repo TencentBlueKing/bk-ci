@@ -1,7 +1,8 @@
 {
     "environment": "环境",
     "node": "节点",
-    "project": "项目",    
+    "project": "项目",
+    "projectId": "项目英文名",    
     "operateUser": "操作人",
     "operateTime": "操作时间",
     "addProject": "添加项目",

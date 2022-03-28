@@ -2,6 +2,7 @@
     "environment": "Pools",
     "node": "Agent",
     "project": "Project",
+    "projectId": "Project ID",
     "operateUser": "Operator",
     "operateTime": "Opertate Time",
     "addProject": "Add Project",
