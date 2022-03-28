@@ -7,10 +7,10 @@
             @page-change="handlePageChange"
             @page-limit-change="handlePageLimitChange"
         >
-            <bk-table-column :label="$('environment.project')" prop="name"></bk-table-column>
-            <bk-table-column :label="$('environment.operateUser')" prop="creator"></bk-table-column>
-            <bk-table-column :label="$('environment.operateTime')" prop="updateTime"></bk-table-column>
-            <bk-table-column :label="$('environment.operation')" width="150">
+            <bk-table-column :label="$t('environment.project')" prop="name"></bk-table-column>
+            <bk-table-column :label="$t('environment.operateUser')" prop="creator"></bk-table-column>
+            <bk-table-column :label="$t('environment.operateTime')" prop="updateTime"></bk-table-column>
+            <bk-table-column :label="$t('environment.operation')" width="150">
                 <template slot-scope="props">
                     <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t(environment.remove) }}</bk-button>
                 </template>
