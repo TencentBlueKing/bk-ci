@@ -344,8 +344,9 @@ class EnvService @Autowired constructor(
         }
 
         return validRecordList.map {
+            val nodeProjectId = it.sharedProjectId ?: projectId
             val nodeIds = envNodeDao.list(
-                dslContext = dslContext, projectId = it.sharedProjectId ?: projectId, envIds = listOf(it.envId)
+                dslContext = dslContext, projectId = nodeProjectId, envIds = listOf(it.envId)
             ).map { node ->
                 node.nodeId
             }.toSet()
@@ -353,7 +354,13 @@ class EnvService @Autowired constructor(
             val normalNodeCount = if (nodeIds.isEmpty()) {
                 0
             } else {
-                thirdPartyAgentDao.countAgentByStatusAndOS(dslContext, projectId, nodeIds, AgentStatus.IMPORT_OK, os)
+                thirdPartyAgentDao.countAgentByStatusAndOS(
+                    dslContext,
+                    nodeProjectId,
+                    nodeIds,
+                    AgentStatus.IMPORT_OK,
+                    os
+                )
             }
 
             val abnormalNodeCount = if (nodeIds.isEmpty()) {
@@ -361,7 +368,7 @@ class EnvService @Autowired constructor(
             } else {
                 thirdPartyAgentDao.countAgentByStatusAndOS(
                     dslContext = dslContext,
-                    projectId = projectId,
+                    projectId = nodeProjectId,
                     nodeIds = nodeIds,
                     status = AgentStatus.IMPORT_EXCEPTION,
                     os = os
