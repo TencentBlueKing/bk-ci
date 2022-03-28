@@ -52,7 +52,7 @@
         },
         data () {
             return {
-                curItemTab: 'config', // 当前tab(节点/配置项)
+                curItemTab: 'node', // 当前tab(节点/配置项)
                 curEnvDetail: {}, // 当前环境信息
                 loading: {
                     isLoading: false,
