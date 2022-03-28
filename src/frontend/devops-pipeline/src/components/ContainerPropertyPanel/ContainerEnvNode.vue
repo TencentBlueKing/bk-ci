@@ -36,7 +36,12 @@
         </div>
         <div class="alias-name-select" v-else>
             <div class="env-alias-area">
-                <form-field :is-error="hasError" class="env-alias-area-item" :label="isAgentEnv ? $t('editPage.environment') : ''">
+                <form-field
+                    :is-error="hasError"
+                    :required="required"
+                    class="env-alias-area-item"
+                    :label="isAgentEnv ? $t('editPage.environment') : ''"
+                >
                     <devops-select
                         name="value"
                         :disabled="disabled"
@@ -134,7 +139,8 @@
             },
             hasError: {
                 type: Boolean
-            }
+            },
+            required: Boolean
         },
         data () {
             return {
@@ -277,10 +283,6 @@
                 color: #aaaaaa;
             }
         }
-
-        .agent-type {
-            margin-bottom: 8px;
-        }
     }
     .env-option-item {
         display: flex;
@@ -306,6 +308,7 @@
     .env-alias-area {
         display: flex;
         .env-alias-area-item {
+            margin-top: 0px !important;
             flex: 1;
         }
         .env-alias-area-item:first-child {
