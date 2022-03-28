@@ -20,6 +20,15 @@ BEGIN
             ADD COLUMN `USER_TYPE` BIT DEFAULT 0 NOT NULL COMMENT '用户类型0普通用户 1公共账号' ;
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT'
+                        AND COLUMN_NAME = 'other_router_tags') THEN
+        ALTER TABLE T_PROJECT
+            ADD COLUMN `other_router_tags` VARCHAR(128) COMMENT '其他系统网关路由tags';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

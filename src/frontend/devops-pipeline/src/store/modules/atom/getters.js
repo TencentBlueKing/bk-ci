@@ -167,7 +167,12 @@ export default {
             let manualTriggerCount = 0
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
-            
+
+
+            if (pipelineSetting && !pipelineSetting.pipelineName) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
+            }
+           
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -185,6 +190,16 @@ export default {
             }
 
             const allContainers = getters.getAllContainers(stages)
+
+            // 当前所有插件element
+            const elementsMap = allContainers.reduce(function (prev, cur) {
+                prev.push(...cur.elements)
+                return prev
+            }, [])
+
+            if (elementsMap.some(element => !element.atomCode)) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+            }
 
             if (allContainers.some(container => container.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
@@ -251,8 +266,17 @@ export default {
     getContainers: state => stage => {
         return stage && Array.isArray(stage.containers) ? stage.containers : []
     },
-    getContainer: (state, getters) => (containers, containerIndex) => {
-        const container = Array.isArray(containers) ? containers[containerIndex] : null
+    getContainer: (state, getters) => (containers, containerIndex, containerGroupIndex = undefined) => {
+        let container = null
+        try {
+            if (containerGroupIndex !== undefined) {
+                container = Array.isArray(containers) ? containers[containerIndex].groupContainers[containerGroupIndex] : null
+            } else {
+                container = Array.isArray(containers) ? containers[containerIndex] : null
+            }
+        } catch (_) {
+            container = null
+        }
         if (container !== null) {
             if (isVmContainer(container['@type']) && !container.buildEnv) {
                 Vue.set(container, 'buildEnv', {})

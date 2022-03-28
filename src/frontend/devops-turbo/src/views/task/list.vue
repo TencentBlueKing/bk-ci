@@ -84,9 +84,9 @@
 
 <script>
     import { getPlanList, getPlanInstanceDetail, modifyTurboPlanTopStatus } from '@/api'
-    import { copy } from '../../assets/js/util'
-    import logo from '../../components/logo'
-    import taskStatus from '../../components/task-status'
+    import { copyText } from '@/assets/js/util'
+    import logo from '@/components/logo'
+    import taskStatus from '@/components/task-status'
 
     export default {
         components: {
@@ -148,7 +148,7 @@
             },
 
             copy (value) {
-                copy(value, this.$t.bind(this))
+                copyText(value, this.$t.bind(this))
             },
 
             modifyTurboPlanTopStatus (row) {

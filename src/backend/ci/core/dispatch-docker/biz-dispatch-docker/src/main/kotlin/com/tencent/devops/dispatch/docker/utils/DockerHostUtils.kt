@@ -199,7 +199,7 @@ class DockerHostUtils @Autowired constructor(
         vmSeqId: String,
         containerId: String,
         newIp: String,
-        driftIpInfo: String
+        driftIpInfo: String = ""
     ) {
         val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
             dslContext = dslContext,
@@ -422,15 +422,21 @@ class DockerHostUtils @Autowired constructor(
                 usedNum = dockerHostLoadConfig.usedNum
             )
 
-        return if (dockerIpList.isNotEmpty && sufficientResources(finalCheck, dockerIpList.size, grayEnv)) {
+        return if (dockerIpList.isNotEmpty &&
+            sufficientResources(finalCheck, dockerIpList.size, grayEnv, clusterName)) {
             selectAvailableDockerIp(dockerIpList, unAvailableIpList)
         } else {
             Pair("", 0)
         }
     }
 
-    private fun sufficientResources(finalCheck: Boolean, fittingIpCount: Int, grayEnv: Boolean): Boolean {
-        val enableIpCount = pipelineDockerIpInfoDao.getEnableDockerIpCount(dslContext, grayEnv)
+    private fun sufficientResources(
+        finalCheck: Boolean,
+        fittingIpCount: Int,
+        grayEnv: Boolean,
+        clusterName: DockerHostClusterType
+    ): Boolean {
+        val enableIpCount = pipelineDockerIpInfoDao.getEnableDockerIpCount(dslContext, grayEnv, clusterName)
         // 最后一次check无论还剩几个可用ip，都要顶上，或者集群规模小于10不做判断
         if (enableIpCount < 10 || finalCheck) {
             return true

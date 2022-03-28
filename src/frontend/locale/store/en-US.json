@@ -600,5 +600,10 @@
     "质量红线指标：": "Quality:",
     "指标名": "Quota Name",
     "值类型": "Value Type",
-    "支持的操作": "Supported Operations"
+    "支持的操作": "Supported Operations",
+    "hisUpgradeTips": "Please be cautious and correct compatibility issues based on the latest version of the corresponding major version. It is not recommended to add/delete input parameters in this scenario to avoid abnormal execution of the pipeline using the specified major version.latest after release.",
+    "分支": "Branch",
+    "历史大版本问题修复": "Historical major version problem fix",
+    "当历史大版本下发现 bug 时，使用此方式进行 fix。不建议在此场景下新增/删除入参。": "When a bug is found in a major historical version, use this method to fix it. It is not recommended to add/delete input parameters in this scenario.",
+    "镜像Tag": "Image Tag"
 }

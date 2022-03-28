@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 const val PIPELINE_VERSION = "BK_CI_PIPELINE_VERSION" // "pipeline.version"
+const val PIPELINE_START_PARENT_PROJECT_ID = "BK_CI_PARENT_PROJECT_ID"
 const val PIPELINE_START_PARENT_PIPELINE_ID = "BK_CI_PARENT_PIPELINE_ID" // "pipeline.start.parent.pipeline.id"
 const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.start.parent.build.id"
 const val PIPELINE_START_PARENT_BUILD_TASK_ID = "BK_CI_PARENT_BUILD_TASK_ID" // "pipeline.start.parent.build.task.id"
@@ -47,6 +48,7 @@ const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
 
 const val PIPELINE_NAME = "BK_CI_PIPELINE_NAME" // "pipeline.name"
 const val PIPELINE_ID = "BK_CI_PIPELINE_ID" // "pipeline.id"
+const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
@@ -100,6 +102,7 @@ const val PIPELINE_ATOM_NAME = "BK_CI_ATOM_NAME" // "流水线插件名称"
 const val PIPELINE_ATOM_CODE = "BK_CI_ATOM_CODE" // "流水线插件代码"
 const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本"
 const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
+const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -155,6 +158,15 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
+
+/**
+ * 流水线设置-矩阵内最大并发数量-默认值
+ */
+const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
+/**
+ * 流水线设置-矩阵内最大并发数量-最大值
+ */
+const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX = 20
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

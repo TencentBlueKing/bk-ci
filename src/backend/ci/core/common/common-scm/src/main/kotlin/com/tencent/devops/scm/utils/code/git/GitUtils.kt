@@ -33,7 +33,7 @@ import java.net.URL
 import java.net.URLDecoder
 import java.net.URLEncoder
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "TooManyFunctions")
 object GitUtils {
     // 工蜂pre-push虚拟分支
     private const val PRE_PUSH_BRANCH_NAME_PREFIX = "refs/for/"
@@ -103,5 +103,29 @@ object GitUtils {
 
     fun isLegalSshUrl(url: String): Boolean {
         return Regex("git@([-.a-z0-9A-Z]+):(.*).git").matches(url)
+    }
+
+    fun getRepoGroupAndName(projectName: String): Pair<String, String> {
+        val repoName = projectName.split("/")
+        val repoProjectName = if (repoName.size >= 2) {
+            val index = projectName.lastIndexOf("/")
+            projectName.substring(index + 1)
+        } else {
+            projectName
+        }
+        val repoGroupName = if (repoName.size >= 2) {
+            projectName.removeSuffix("/$repoProjectName")
+        } else {
+            projectName
+        }
+        return Pair(repoGroupName, repoProjectName)
+    }
+
+    fun getShortSha(commitId: String?): String {
+        return if (commitId.isNullOrBlank() || commitId.length < 8) {
+            ""
+        } else {
+            commitId.substring(0, 8)
+        }
     }
 }

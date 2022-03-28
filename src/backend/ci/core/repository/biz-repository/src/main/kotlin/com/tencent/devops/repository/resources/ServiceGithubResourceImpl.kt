@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
+import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
@@ -64,7 +65,7 @@ class ServiceGithubResourceImpl @Autowired constructor(
         return Result(githubService.getFileContent(projectName, ref, filePath))
     }
 
-    override fun getGithubAppUrl(): Result<String> {
+    override fun getGithubAppUrl(): Result<GithubAppUrl> {
         return Result(githubOAuthService.getGithubAppUrl())
     }
 

@@ -27,15 +27,17 @@
 
 rootProject.name = "bk-ci-backend"
 
+// 适用于project的plugins
 pluginManagement {
-    val devopsBootVersion: String by settings
-    plugins {
-        id("com.tencent.devops.boot") version devopsBootVersion
-    }
     repositories {
         mavenLocal()
-        mavenCentral()
-        gradlePluginPortal()
+        if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
+            maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
+            maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
+        } else { // GitHub Action 环境
+            mavenCentral()
+            gradlePluginPortal()
+        }
     }
 }
 
@@ -48,7 +50,9 @@ include(":core:common")
 include(":core:common:common-event")
 include(":core:common:common-api")
 include(":core:common:common-web")
+include(":core:common:common-db-base")
 include(":core:common:common-db")
+include(":core:common:common-db-sharding")
 include(":core:common:common-environment-thirdpartyagent")
 include(":core:common:common-client")
 include(":core:common:common-redis")
@@ -101,6 +105,11 @@ include(":core:quality:biz-quality")
 include(":core:quality:biz-quality-sample")
 include(":core:quality:boot-quality")
 include(":core:quality:model-quality")
+
+include(":core:buildless")
+include(":core:buildless:api-buildless")
+include(":core:buildless:biz-buildless")
+include(":core:buildless:boot-buildless")
 
 include(":core:dockerhost")
 include(":core:dockerhost:api-dockerhost")

@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -64,6 +65,7 @@ data class StartBuildContext(
     val parentTaskId: String?,
     val channelCode: ChannelCode,
     val retryFailedContainer: Boolean,
+    var needUpdateStage: Boolean,
     val skipFailedTask: Boolean // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
 ) {
 
@@ -119,15 +121,24 @@ data class StartBuildContext(
      * 是否是要重试的失败容器
      */
     fun isRetryFailedContainer(stage: Stage, container: Container): Boolean {
-        if (stage.finally) { // 当前是finallyStage
-            return if (stage.id == retryStartTaskId) { // finallyStage的重试
-                retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
-            } else {
-                false
+        return when {
+            stage.finally -> {
+                if (stage.id == retryStartTaskId) { // finallyStage的重试
+                    retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
+                } else {
+                    false
+                }
             }
+            isRetryDependOnContainer(container) -> false
+            else -> retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
         }
-        // 其他
-        return retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
+    }
+
+    // 失败重试,跳过的dependOn容器也应该被执行
+    private fun isRetryDependOnContainer(container: Container): Boolean {
+        return retryFailedContainer &&
+            DependOnUtils.enableDependOn(container) &&
+            BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
     fun needRerun(stage: Stage): Boolean {
@@ -168,7 +179,8 @@ data class StartBuildContext(
                     ChannelCode.BS
                 },
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() ?: false,
-                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false
+                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false,
+                needUpdateStage = false
             )
         }
     }

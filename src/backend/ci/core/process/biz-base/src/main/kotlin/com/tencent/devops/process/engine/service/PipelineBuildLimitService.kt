@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -89,15 +88,6 @@ class PipelineBuildLimitService @Autowired constructor(
      */
     fun executeCountLess() {
         redisOperation.increment(executeJobKey, -1)
-    }
-
-    /**
-     * 刷新redis运行job数据
-     */
-    fun refreshExecuteCount() {
-        val runningCount = pipelineBuildContainerDao.countByStatus(dslContext, BuildStatus.RUNNING.ordinal)
-        logger.info("refreshExecuteCount $runningCount")
-        redisOperation.set(executeJobKey, runningCount.toString())
     }
 
     /**

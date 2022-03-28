@@ -29,23 +29,24 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_IID
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_PROPOSER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
-import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
-import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
-import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
-import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
-import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.util.WebhookUtils.convert
-import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
-import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
-import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitMrEventAction
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
@@ -74,14 +75,34 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.GIT_MR_NUMBER
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
+import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
+import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
+import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
+import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
+import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.util.WebhookUtils.convert
+import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
+import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -179,6 +200,12 @@ class TGitMrTriggerHandler(
                 pipelineId = pipelineId,
                 triggerOnMessage = event.object_attributes.last_commit.message
             )
+            val actionFilter = ContainsFilter(
+                pipelineId = pipelineId,
+                filterName = "mrAction",
+                triggerOn = TGitMrEventAction.getActionValue(event) ?: "",
+                included = convert(includeMrAction)
+            )
 
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
             val pathFilter = object : WebhookFilter {
@@ -218,7 +245,7 @@ class TGitMrTriggerHandler(
                 event.object_attributes.last_commit.message,
                 pipelineId
             )
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter)
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter)
         }
     }
 
@@ -245,10 +272,37 @@ class TGitMrTriggerHandler(
             GitUtils.getProjectName(event.object_attributes.source.http_url)
         startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
             GitUtils.getProjectName(event.object_attributes.target.http_url)
-        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url ?: ""
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
+
+        // 兼容stream变量
+        startParams[PIPELINE_GIT_REPO_URL] = event.object_attributes.target.http_url
+        startParams[PIPELINE_GIT_BASE_REPO_URL] = event.object_attributes.source.http_url
+        startParams[PIPELINE_GIT_HEAD_REPO_URL] = event.object_attributes.target.http_url
+        startParams[PIPELINE_GIT_MR_URL] = event.object_attributes.url ?: ""
+        startParams[PIPELINE_GIT_EVENT] = GitMergeRequestEvent.classType
+        startParams[PIPELINE_GIT_HEAD_REF] = event.object_attributes.target_branch
+        startParams[PIPELINE_GIT_BASE_REF] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
+        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = event.object_attributes.target_branch
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = event.object_attributes.target_branch
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_SOURCE_URL] = event.object_attributes.source.http_url
+        startParams[PIPELINE_WEBHOOK_TARGET_URL] = event.object_attributes.target.http_url
+        startParams[PIPELINE_GIT_MR_ID] = event.object_attributes.id.toString()
+        startParams[PIPELINE_GIT_MR_IID] = event.object_attributes.iid.toString()
+        startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.object_attributes.last_commit.author.name
+        startParams[PIPELINE_GIT_MR_TITLE] = event.object_attributes.title
+        if (!event.object_attributes.description.isNullOrBlank()) {
+            startParams[PIPELINE_GIT_MR_DESC] = event.object_attributes.description!!
+        }
+        startParams[PIPELINE_GIT_MR_PROPOSER] = event.user.username
+        startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
+        startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
+        startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
         return startParams
     }
 

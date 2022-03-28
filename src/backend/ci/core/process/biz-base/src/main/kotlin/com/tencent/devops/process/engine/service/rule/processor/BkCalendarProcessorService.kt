@@ -42,7 +42,7 @@ class BkCalendarProcessorService : ProcessorService {
         private const val FORMAT_DATE_NAME = "DATE:"
     }
 
-    override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
+    override fun getRuleValue(projectId: String, ruleName: String, pipelineId: String?, buildId: String?): String? {
         return when {
             ruleName == "MONTH_OF_YEAR" -> {
                 (calendar.get(Calendar.MONTH) + 1).toString()

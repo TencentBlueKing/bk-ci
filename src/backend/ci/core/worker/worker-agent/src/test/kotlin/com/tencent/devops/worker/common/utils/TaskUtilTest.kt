@@ -103,6 +103,7 @@ class TaskUtilTest {
             status = BuildTaskStatus.DO,
             taskId = "task.taskId",
             elementId = "task.taskId",
+            stepId = "task.stepId",
             elementName = "task.taskName",
             type = "taskType",
             params = if (elementAdditionalOptions != null) {

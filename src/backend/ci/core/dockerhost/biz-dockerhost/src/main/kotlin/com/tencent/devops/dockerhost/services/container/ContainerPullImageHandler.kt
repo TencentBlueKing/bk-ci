@@ -36,7 +36,6 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.services.Handler
 import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -48,7 +47,7 @@ class ContainerPullImageHandler(
     override fun handlerRequest(handlerContext: ContainerHandlerContext) {
         with(handlerContext) {
             formatImageName = CommonUtils.normalizeImageName(originImageName)
-            val taskId = VMUtils.genStartVMTaskId(vmSeqId.toString())
+            val taskId = taskId()
 
             try {
                 LocalImageCache.saveOrUpdate(formatImageName!!)

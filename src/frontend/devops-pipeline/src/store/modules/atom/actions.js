@@ -137,7 +137,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1500,
+                pageSize: 2000,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword
@@ -457,10 +457,11 @@ export default {
 
     // 第一次拉取日志
 
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag, debug }) {
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, subTag, debug }) {
         return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
+                jobId,
                 executeCount: currentExe,
                 subTag,
                 debug
@@ -469,12 +470,13 @@ export default {
     },
 
     // 后续拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag, debug }) {
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, jobId, currentExe, lineNo, subTag, debug }) {
         return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,
                 tag,
+                jobId,
                 subTag,
                 debug
             }
@@ -485,8 +487,8 @@ export default {
         return request.get(`/dispatch-docker/api/user/dispatch-docker/resource-config/projects/${projectId}/list?buildType=${buildType}`)
     },
 
-    getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
-        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
+    getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, jobId, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, jobId, executeCount } })
     },
 
     getDownloadLogFromArtifactory ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {

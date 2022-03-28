@@ -42,9 +42,9 @@ class BuildNoOfDayProcessorService : ProcessorService {
         private val logger = LoggerFactory.getLogger(BuildNoOfDayProcessorService::class.java)
     }
 
-    override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
+    override fun getRuleValue(projectId: String, ruleName: String, pipelineId: String?, buildId: String?): String? {
         val ruleValue = if (pipelineId != null) {
-            (pipelineSettingService.getCurrentDayBuildCount(pipelineId) + 1).toString()
+            (pipelineSettingService.getCurrentDayBuildCount(projectId, pipelineId) + 1).toString()
         } else {
             null
         }

@@ -38,8 +38,8 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.ApiFactory
+import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.process.BuildSDKApi
@@ -67,7 +67,7 @@ class BuildArchiveGetTask : ITask() {
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val pipelineId = taskParams["pipelineId"] ?: throw ParamBlankException("pipelineId is null")
-        val buildNo = taskParams["buildNo"] ?: "-1"
+        val buildNo = if (taskParams["buildNo"].isNullOrBlank()) "-1" else taskParams["buildNo"]!!
         val buildId = getBuildId(pipelineId, buildVariables, buildNo).id
         val destPath = File(workspace, taskParams["destPath"] ?: ".")
         val srcPaths = taskParams["srcPaths"] ?: throw ParamBlankException("srcPaths can not be null")

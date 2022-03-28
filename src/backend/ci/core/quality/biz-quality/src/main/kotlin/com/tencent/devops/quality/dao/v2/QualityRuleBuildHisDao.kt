@@ -29,8 +29,10 @@ package com.tencent.devops.quality.dao.v2
 
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.model.quality.tables.TQualityRuleBuildHis
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
+import com.tencent.devops.quality.api.v2.pojo.QualityRule
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import org.jooq.DSLContext
@@ -70,7 +72,8 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 CREATE_TIME,
                 CREATE_USER,
                 GATE_KEEPERS,
-                STAGE_ID
+                STAGE_ID,
+                TASK_STEPS
             ).values(
                 projectId,
                 pipelineId,
@@ -87,7 +90,8 @@ class QualityRuleBuildHisDao @Autowired constructor(
                 LocalDateTime.now(),
                 userId,
                 ruleRequest.gateKeepers?.joinToString(",") ?: "",
-                ruleRequest.stageId
+                ruleRequest.stageId,
+                JsonUtil.toJson(ruleRequest.taskSteps ?: listOf<QualityRule.RuleTask>())
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -96,6 +100,21 @@ class QualityRuleBuildHisDao @Autowired constructor(
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             dslContext.selectFrom(this)
                 .where(ID.`in`(ruleIds))
+                .fetch()
+        }
+    }
+
+    fun listBuildHisRules(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        ruleBuildId: String
+    ): Result<TQualityRuleBuildHisRecord> {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(ruleBuildId))
                 .fetch()
         }
     }
@@ -109,7 +128,7 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun updateBuildId(ruleBuildIds: Collection<Long>, buildId: String): Int {
+    fun updateBuildId(ruleBuildIds: Collection<Long>, buildId: String?): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             innerDslContext.update(this)
                 .set(BUILD_ID, buildId)
@@ -118,11 +137,20 @@ class QualityRuleBuildHisDao @Autowired constructor(
         }
     }
 
-    fun updateStatus(ruleBuildId: Long, ruleResult: String): Int {
+    fun updateStatus(ruleBuildId: Long, ruleResult: String?): Int {
         return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
             innerDslContext.update(this)
                 .set(STATUS, ruleResult)
                 .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun batchUpdateStatus(ruleBuildIds: Collection<Long>, ruleResult: String?): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(STATUS, ruleResult)
+                .where(ID.`in`(ruleBuildIds))
                 .execute()
         }
     }
@@ -149,6 +177,15 @@ class QualityRuleBuildHisDao @Autowired constructor(
             innerDslContext.update(this)
                 .set(INDICATOR_THRESHOLDS, indicatorThreshold)
                 .where(ID.eq(ruleBuildId))
+                .execute()
+        }
+    }
+
+    fun updateTimeoutRuleStatus(ruleBuildIds: Collection<Long>): Int {
+        return with(TQualityRuleBuildHis.T_QUALITY_RULE_BUILD_HIS) {
+            innerDslContext.update(this)
+                .set(STATUS, RuleInterceptResult.INTERCEPT.name)
+                .where(ID.`in`(ruleBuildIds))
                 .execute()
         }
     }

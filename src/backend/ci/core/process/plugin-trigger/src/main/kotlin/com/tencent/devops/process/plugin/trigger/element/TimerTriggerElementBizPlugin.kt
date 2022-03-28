@@ -109,14 +109,14 @@ class TimerTriggerElementBizPlugin constructor(
                 )
             }
         } else {
-            pipelineTimerService.deleteTimer(pipelineId, userId)
+            pipelineTimerService.deleteTimer(projectId, pipelineId, userId)
             logger.info("[$pipelineId]|$userId| Delete pipeline timer")
         }
     }
 
     override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
         if (param.pipelineId.isNotBlank()) {
-            pipelineTimerService.deleteTimer(param.pipelineId, param.userId)
+            pipelineTimerService.deleteTimer(param.projectId, param.pipelineId, param.userId)
         }
     }
 

@@ -116,7 +116,7 @@ class ServiceQualityRuleResourceImpl @Autowired constructor(
     ): Result<Page<QualityRuleSummaryWithPermission>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val limit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val result = ruleService.listRuleDataSummary(userId, projectId, limit.offset, limit.limit)
         return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
     }

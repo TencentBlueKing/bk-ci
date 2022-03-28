@@ -91,7 +91,8 @@ object ShellUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
-        elementId: String? = null
+        jobId: String? = null,
+        stepId: String? = null
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
@@ -109,8 +110,9 @@ object ShellUtil {
             errorMessage = errorMessage,
             print2Logger = print2Logger,
             executeErrorMessage = "",
+            jobId = jobId,
             buildId = buildId,
-            elementId = elementId
+            stepId = stepId
         )
     }
 
@@ -208,7 +210,8 @@ object ShellUtil {
         print2Logger: Boolean = true,
         executeErrorMessage: String? = null,
         buildId: String? = null,
-        elementId: String? = null
+        jobId: String? = null,
+        stepId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -218,7 +221,8 @@ object ShellUtil {
                 prefix = prefix,
                 executeErrorMessage = executeErrorMessage,
                 buildId = buildId,
-                elementId = elementId
+                jobId = jobId,
+                stepId = stepId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"

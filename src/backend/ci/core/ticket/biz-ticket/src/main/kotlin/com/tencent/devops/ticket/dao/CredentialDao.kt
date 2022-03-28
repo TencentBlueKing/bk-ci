@@ -274,4 +274,19 @@ class CredentialDao {
                     .fetchOne(0, Long::class.java)!!
         }
     }
+
+    fun updateSetting(
+        dslContext: DSLContext,
+        projectId: String,
+        credentialId: String,
+        allowAcrossProject: Boolean
+    ): Int {
+        with(TCredential.T_CREDENTIAL) {
+            return dslContext.update(this)
+                .set(ALLOW_ACROSS_PROJECT, allowAcrossProject)
+                .where(PROJECT_ID.eq(projectId))
+                .and(CREDENTIAL_ID.eq(credentialId))
+                .execute()
+        }
+    }
 }

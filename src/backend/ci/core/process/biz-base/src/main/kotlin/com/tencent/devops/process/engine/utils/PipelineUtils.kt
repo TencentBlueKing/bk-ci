@@ -46,11 +46,9 @@ object PipelineUtils {
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
     private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9]*"
-    private const val MAX_DESC_LENGTH = 100
-    private const val MAX_NAME_LENGTH = 64
 
-    fun checkPipelineName(name: String) {
-        if (name.toCharArray().size > MAX_NAME_LENGTH) {
+    fun checkPipelineName(name: String, maxPipelineNameSize: Int) {
+        if (name.toCharArray().size > maxPipelineNameSize) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_TOO_LONG,
                 defaultMessage = "Pipeline's name is too long"
@@ -69,8 +67,8 @@ object PipelineUtils {
         }
     }
 
-    fun checkPipelineDescLength(desc: String?) {
-        if (desc != null && desc.toCharArray().size > MAX_DESC_LENGTH) {
+    fun checkPipelineDescLength(desc: String?, maxPipelineNameSize: Int) {
+        if (desc != null && desc.toCharArray().size > maxPipelineNameSize) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_DESC_TOO_LONG,
                 defaultMessage = "Pipeline's desc is too long"
@@ -131,7 +129,8 @@ object PipelineUtils {
             params = instanceParam,
             buildNo = buildNo,
             canRetry = templateTrigger.canRetry,
-            containerId = templateTrigger.containerId
+            containerId = templateTrigger.containerId,
+            containerHashId = templateTrigger.containerHashId
         )
 
         return Model(

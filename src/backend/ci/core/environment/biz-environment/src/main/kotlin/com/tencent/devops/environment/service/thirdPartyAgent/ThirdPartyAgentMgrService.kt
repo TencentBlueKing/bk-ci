@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.AgentResult
@@ -67,6 +68,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentTask
 import com.tencent.devops.environment.pojo.thirdPartyAgent.HeartbeatResponse
@@ -86,15 +88,18 @@ import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -120,43 +125,60 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val websocketService: NodeWebsocketService,
     private val envShareProjectDao: EnvShareProjectDao
 ) {
+
+    fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
+        val id = HashUtil.decodeIdToLong(agentHashId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id, projectId = projectId) ?: return null
+
+        return getThirdPartyAgentDetail(agentRecord, userId, true)
+    }
+
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
             ?: return null
-        val nodeRecord = nodeDao.get(
-            dslContext,
-            projectId,
-            agentRecord.nodeId ?: return null
-        ) ?: return null
+
+        return getThirdPartyAgentDetail(agentRecord, userId)
+    }
+
+    private fun getThirdPartyAgentDetail(
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
+        userId: String,
+        needHeartbeatInfo: Boolean = false
+    ): ThirdPartyAgentDetail? {
+
+        val nodeRecord = nodeDao.get(dslContext, agentRecord.projectId, nodeId = agentRecord.nodeId ?: return null)
+            ?: return null
 
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+        val nodeHashId = HashUtil.encodeLongId(agentRecord.nodeId)
         val nodeStringId = NodeStringIdUtils.getNodeStringId(nodeRecord)
         val displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, nodeRecord.displayName)
-        val lastHeartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(agentRecord.id, agentRecord.projectId)
+        val heartBeatInfo = thirdPartyAgentHeartbeatUtils.getNewHeartbeat(agentRecord.projectId, agentRecord.id)
+        val lastHeartbeatTime = heartBeatInfo?.heartbeatTime
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
         val agentHostInfo = try {
-            influxdbClient.queryHostInfo(agentHashId)
+            if (needHeartbeatInfo) {
+                AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
+            } else {
+                influxdbClient.queryHostInfo(agentHashId)
+            }
         } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            AgentHostInfo("0", "0", "0")
+            logger.warn("[$agentHashId]|[$nodeHashId]|[${agentRecord.projectId}]|influx query error: ", e)
+            AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
         }
-        return ThirdPartyAgentDetail(
+        val tpad = ThirdPartyAgentDetail(
             agentId = HashUtil.encodeLongId(agentRecord.id),
             nodeId = nodeHashId,
             displayName = displayName,
-            projectId = projectId,
+            projectId = agentRecord.projectId,
             status = nodeRecord.nodeStatus,
             hostname = agentRecord.hostname,
             os = agentRecord.os,
             osName = agentRecord.detectOs,
             ip = agentRecord.ip,
             createdUser = nodeRecord.createdUser,
-            createdTime = if (null == nodeRecord.createdTime) {
-                ""
-            } else {
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(nodeRecord.createdTime)
-            },
+            createdTime = nodeRecord.createdTime?.let { self -> DateTimeUtil.toDateTime(self) } ?: "",
             agentVersion = agentRecord.masterVersion ?: "",
             slaveVersion = agentRecord.version ?: "",
             agentInstallPath = agentRecord.agentInstallPath ?: "",
@@ -165,14 +187,26 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             startedUser = agentRecord.startedUser ?: "",
             agentUrl = agentUrlService.genAgentUrl(agentRecord),
             agentScript = agentUrlService.genAgentInstallScript(agentRecord),
-            lastHeartbeatTime = if (null == lastHeartbeatTime) "" else DateTimeUtil.formatDate(Date(lastHeartbeatTime)),
-            nCpus = agentHostInfo.nCpus,
+            lastHeartbeatTime = lastHeartbeatTime?.let { self -> DateTimeUtil.formatDate(Date(self)) } ?: "",
+            ncpus = agentHostInfo.nCpus,
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
-            canEdit = environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT),
             currentAgentVersion = upgradeService.getAgentVersion(),
             currentWorkerVersion = upgradeService.getWorkerVersion()
         )
+
+        if (needHeartbeatInfo) {
+            tpad.heartbeatInfo = heartBeatInfo
+        } else {
+            tpad.canEdit = environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = agentRecord.projectId,
+                nodeId = nodeRecord.nodeId,
+                permission = AuthPermission.EDIT
+            )
+        }
+
+        return tpad
     }
 
     fun saveAgentEnv(userId: String, projectId: String, nodeHashId: String, envs: List<EnvVar>) {
@@ -209,7 +243,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION)
+            )
         }
     }
 
@@ -522,7 +557,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (nodes.isEmpty()) {
             return emptyList()
         }
-        val nodeMap = nodes.map { it.nodeId to it }.toMap()
+        val nodeMap = nodes.associateBy { it.nodeId }
 
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
             userId = userId,
@@ -665,17 +700,66 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         val sharedProjectId = sharedProjEnv[0]
         val sharedEnvName = sharedProjEnv[1]
-        val sharedEnvRecord = envShareProjectDao.get(dslContext, sharedEnvName, projectId, sharedProjectId)
+
+        envDao.getByEnvName(
+            dslContext = dslContext,
+            projectId = sharedProjectId,
+            envName = sharedEnvName
+        ) ?: throw CustomException(Response.Status.NOT_FOUND, "第三方构建机环境不存在($projectEnvName)")
+
+        val sharedEnvRecord = envShareProjectDao.list(
+            dslContext = dslContext,
+            envName = sharedEnvName,
+            mainProjectId = sharedProjectId
+        )
         if (sharedEnvRecord.isEmpty()) {
-            logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
-                "mainProjectId: $sharedProjectId")
-            return emptyList()
+            logger.info(
+                "env name not exists, envName: $sharedEnvName, projectId：$projectId, mainProjectId: $sharedProjectId"
+            )
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
         val sharedThirdPartyAgents = mutableListOf<ThirdPartyAgent>()
-        sharedEnvRecord.forEach {
-            val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@forEach
-            sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+
+        run outSide@{
+            // 优先进行单个项目的匹配
+            sharedEnvRecord.sortedByDescending { it.type }.forEach nextRecord@{
+                // 对于分享的单独项目则查看是否是同一个
+                if (it.type == SharedEnvType.PROJECT.name && it.sharedProjectId != projectId) {
+                    return@nextRecord
+                }
+
+                // 通过项目组获取所有项目，判断当前项目是否处于被分享的项目组中
+                if (it.type == SharedEnvType.GROUP.name) {
+                    val projectsInGroups = try {
+                        val token = client.get(ServiceOauthResource::class).gitGet(it.creator).data?.accessToken
+                            ?: throw NotFoundException("cannot found oauth access token for user(${it.creator})")
+                        client.get(ServiceGitResource::class).getProjectGroupInfo(
+                            id = it.sharedProjectId.removePrefix("git_"),
+                            includeSubgroups = true,
+                            token = token,
+                            tokenType = TokenTypeEnum.OAUTH
+                        ).data
+                    } catch (e: Exception) {
+                        logger.warn("$projectId $projectEnvName get share project error: ${e.message}")
+                        null
+                    }
+                    val gitProjectId = projectId.removePrefix("git_")
+                    projectsInGroups?.projects?.filter { project -> project.id == gitProjectId }?.ifEmpty {
+                        projectsInGroups.subProjects?.filter { subProject -> subProject.id == gitProjectId }?.ifEmpty {
+                            return@nextRecord
+                        }
+                    }
+                }
+
+                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, sharedEnvName) ?: return@nextRecord
+                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+                // 找到了环境可用就可以退出了
+                return@outSide
+            }
+        }
+        if (sharedThirdPartyAgents.isEmpty()) {
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents

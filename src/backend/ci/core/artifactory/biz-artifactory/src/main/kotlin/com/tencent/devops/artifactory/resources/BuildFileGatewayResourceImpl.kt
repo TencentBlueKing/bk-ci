@@ -37,7 +37,7 @@ import com.tencent.devops.common.web.RestResource
 class BuildFileGatewayResourceImpl(
     private val fileGatewayService: FileGatewayService
 ) : BuildFileGatewayResource {
-    override fun getFileGateway(projectId: String): Result<FileGatewayInfo> {
-        return Result(fileGatewayService.getFileGateway(projectId))
+    override fun getFileGateway(): Result<FileGatewayInfo> {
+        return Result(fileGatewayService.getFileGateway())
     }
 }

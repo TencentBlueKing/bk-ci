@@ -52,13 +52,39 @@ class QualityControlPointService @Autowired constructor(
         return serviceGetByType(projectId, elementType)
     }
 
-    fun serviceGet(elementType: String, projectId: String): TQualityControlPointRecord? {
-        return controlPointDao.list(dslContext, setOf(elementType), projectId)?.firstOrNull()
+    fun serviceListByElementType(elementType: String): List<TQualityControlPointRecord> {
+        return controlPointDao.list(dslContext, setOf(elementType))
+    }
+
+    fun serviceListFilter(
+        controlPointRecords: List<TQualityControlPointRecord>,
+        projectId: String
+    ): List<TQualityControlPointRecord>? {
+        val filterResult = mutableListOf<TQualityControlPointRecord>()
+        // 获取生产跑的，或者测试项目对应的
+        controlPointRecords.groupBy { it.elementType }.forEach { elementType, list ->
+            val testControlPoint = list.firstOrNull { it.testProject == projectId }
+            val prodControlPoint = list.firstOrNull { it.testProject.isNullOrBlank() }
+            if (testControlPoint != null) {
+                filterResult.add(testControlPoint)
+            } else {
+                if (prodControlPoint != null) filterResult.add(prodControlPoint)
+            }
+        }
+        return filterResult
+    }
+
+    fun serviceGet(
+        controlPointRecords: List<TQualityControlPointRecord>,
+        projectId: String
+    ): TQualityControlPointRecord? {
+        return serviceListFilter(controlPointRecords, projectId)?.firstOrNull()
     }
 
     fun serviceGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         if (elementType.isNullOrBlank()) return null
-        val record = serviceGet(elementType!!, projectId) ?: return null
+        val recordList = serviceListByElementType(elementType!!)
+        val record = serviceGet(recordList, projectId) ?: return null
         return QualityControlPoint(
             hashId = HashUtil.encodeLongId(record.id ?: 0L),
             type = record.elementType ?: "",
@@ -81,7 +107,8 @@ class QualityControlPointService @Autowired constructor(
 
     fun serviceList(projectId: String): List<QualityControlPoint> {
         val elements = ElementUtils.getProjectElement(projectId).keys
-        val controlPointList = controlPointDao.list(dslContext, elements, projectId) ?: return listOf()
+        val recordList = controlPointDao.list(dslContext, elements)
+        val controlPointList = serviceListFilter(recordList, projectId) ?: return listOf()
         return controlPointList.filter { it.elementType in elements }
                 .map {
             QualityControlPoint(
@@ -136,19 +163,23 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun isControlPoint(elementType: String, atomVersion: String, projectId: String): Boolean {
-        val controlPoint = serviceGet(elementType, projectId)
+        val recordList = serviceListByElementType(elementType)
+        val controlPoint = serviceGet(recordList, projectId)
         return controlPoint != null && controlPoint.atomVersion <= atomVersion
     }
 
     fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Int {
+        logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type}")
         return controlPointDao.setTestControlPoint(dslContext, userId, controlPoint)
     }
 
     fun refreshControlPoint(elementType: String): Int {
+        logger.info("QUALITY|refreshControlPoint controlPoint: $elementType")
         return controlPointDao.refreshControlPoint(dslContext, elementType)
     }
 
     fun deleteTestControlPoint(elementType: String): Int {
+        logger.info("QUALITY|deleteTestControlPoint controlPoint: $elementType")
         return controlPointDao.deleteTestControlPoint(dslContext, elementType)
     }
 

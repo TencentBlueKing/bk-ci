@@ -213,7 +213,8 @@
                     NEW: this.$t('store.新上架'),
                     INCOMPATIBILITY_UPGRADE: this.$t('store.非兼容式升级'),
                     COMPATIBILITY_UPGRADE: this.$t('store.兼容式功能更新'),
-                    COMPATIBILITY_FIX: this.$t('store.兼容式问题修正')
+                    COMPATIBILITY_FIX: this.$t('store.兼容式问题修正'),
+                    HIS_VERSION_UPGRADE: this.$t('store.历史大版本问题修复')
                 },
                 versionDetail: {
                     atomCode: '',

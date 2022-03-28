@@ -2,7 +2,7 @@
     <section style="pointer-events: all; position: relative" v-bkloading="{ isLoading }">
         <div :class="['ace-fullscreen', { 'active': isFullScreen }]" :alt="$t('editPage.isFullScreen')" :title="$t('editPage.isFullScreen')"
             @click="setFullScreen">
-            <i class="devops-icon" :class="isFullScreen ? 'icon-un-full-screen' : 'icon-full-screen'"></i>
+            <i class="devops-icon" :class="isFullScreen ? &quot;icon-un-full-screen&quot; : &quot;icon-full-screen&quot;"></i>
         </div>
         <ace
             class="ace-wrapper"
@@ -13,8 +13,7 @@
             :full-screen="isFullScreen"
             @input="handleScriptInput"
             :height="height"
-            width="100%"
-        >
+            width="100%">
         </ace>
     </section>
 </template>
@@ -33,12 +32,16 @@
         props: {
             lang: {
                 type: String,
-                default: 'shell'
+                default: 'sh'
             },
             default: String,
             bashConf: {
                 type: Object,
                 default: () => ({})
+            },
+            defaultHeight: {
+                type: Number,
+                default: 360
             }
         },
         data () {
@@ -53,17 +56,20 @@
                 const top = getActualTop(this.$el)
                 const { clientHeight } = document.body
                 if (newVal) {
-                    this.height = Math.max(clientHeight - 10, 360)
+                    this.height = Math.max(clientHeight - 10, this.defaultHeight)
                 } else {
-                    this.height = Math.max(clientHeight - top - 180, 360)
+                    this.height = Math.max(clientHeight - top - 180, this.defaultHeight)
                 }
             }
         },
         mounted () {
-            console.log(this.lang)
             const top = getActualTop(this.$el)
             const { clientHeight } = document.body
-            this.height = Math.max(clientHeight - top - 180, 360)
+            if (this.defaultHeight !== 360) {
+                this.height = this.defaultHeight
+            } else {
+                this.height = Math.max(clientHeight - top - 180, this.defaultHeight)
+            }
             this.getInitValue()
         },
         methods: {

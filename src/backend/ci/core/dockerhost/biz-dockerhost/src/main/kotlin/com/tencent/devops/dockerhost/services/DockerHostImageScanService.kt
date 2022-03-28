@@ -1,15 +1,11 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
+import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
 
 interface DockerHostImageScanService {
     fun scanningDocker(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        userName: String,
-        imageTagSet: MutableSet<String>,
+        imageHandlerContext: ImageHandlerContext,
         dockerClient: DockerClient
-    )
+    ): String
 }

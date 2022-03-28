@@ -50,7 +50,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
-import com.tencent.devops.worker.common.api.archive.ArtifactoryConfigResourceApi
+import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -60,7 +60,7 @@ import java.net.URLEncoder
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
-    private val realm = ArtifactoryConfigResourceApi().getRealm()
+    private val realm = ArtifactoryBuildResourceApi().getRealm()
 
     /**
      * 获取插件信息

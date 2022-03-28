@@ -70,10 +70,10 @@ class UserFileResourceImpl @Autowired constructor(
         checkParam(userId, projectId, path)
         val url = archiveFileService.uploadFile(
             userId = userId,
-            projectId = projectId,
-            filePath = path,
             inputStream = inputStream,
             disposition = disposition,
+            projectId = projectId,
+            filePath = path,
             fileType = FileTypeEnum.BK_CUSTOM,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW
         )

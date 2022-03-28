@@ -26,91 +26,69 @@ function _M:get_tag(ns_config)
     local devops_project = ngx.var.project
     local devops_service = ngx.var.service
     local default_tag = ns_config.tag
-    local tag = default_tag
+    local tag = nil
 
     -- 根据header强制路由tag
     if ngx.var.http_x_gateway_tag ~= nil then
         return ngx.var.http_x_gateway_tag
     end
 
-    -- 获取redis连接
-    local red, err = redisUtil:new()
-    if not red then
-        ngx.log(ngx.ERR, "tag failed to new redis ", err)
-        return tag
-    end
     -- 获取本地缓存
     local tag_cache = ngx.shared.tag_project_store
+    local tag_cache_key = 'tag_cache_' .. tostring(devops_project_id) .. '_' .. tostring(devops_service) .. '_' ..
+                              tostring(devops_project)
+    local tag_cache_value = tag_cache:get(tag_cache_key)
 
-    -- 根据project_id路由
-    local useProjectTag = false
-    if devops_project_id ~= nil and devops_project_id ~= '' then
-        local tag_cache_value = tag_cache:get(devops_project_id)
-        if tag_cache_value ~= '-1' then
-            if tag_cache_value ~= nil then
-                tag = tag_cache_value
-                useProjectTag = true
+    -- 如果有缓存 ,则使用缓存变量
+    if tag_cache_value ~= nil and tag_cache_value ~= '' then
+        tag = tag_cache_value
+    else -- 否则从redis中拿到策略
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return tag
+        end
+        -- 根据project_id路由
+        if devops_project_id ~= nil and devops_project_id ~= '' then
+            local redis_key = nil
+            if devops_project == 'codecc' then
+                redis_key = 'project:setting:tag:codecc:v2'
             else
-                local redis_key = nil
-                if devops_project == 'codecc' then
-                    redis_key = 'project:setting:tag:codecc:v2'
-                else
-                    redis_key = "project:setting:tag:v2"
-                end
-                -- 从redis获取tag
-                local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project_id:len()) .. devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
-                local redRes = red:hget(redis_key, hash_key)
-                if redRes and redRes ~= ngx.null then
-                    local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                    tag_cache:set(devops_project_id, hash_val, 5)
-                    tag = hash_val
-                    useProjectTag = true
-                else
-                    tag_cache:set(devops_project_id, '-1', 5)
-                end
+                redis_key = "project:setting:tag:v2"
+            end
+            -- 从redis获取tag
+            local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project_id:len()) .. devops_project_id -- 兼容Spring Redis的hashKey的默认序列化
+            local redRes = red:hget(redis_key, hash_key)
+            if redRes and redRes ~= ngx.null then
+                local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
+                tag_cache:set(devops_project_id, hash_val, 5)
+                tag = hash_val
             end
         end
-    end
-
-    -- 根据service路由
-    local useServiceTag = false
-    if useProjectTag == false and devops_service ~= nil and devops_service ~= '' then
-        local service_local_cache_key = 'tag_local_cache_key_' .. devops_service
-        local service_local_cache_value = tag_cache:get(service_local_cache_key)
-        if service_local_cache_value ~= nil then
-            tag = service_local_cache_value
-            useServiceTag = true
-        else
+        -- 根据service路由
+        if tag == nil and devops_service ~= '' then
             local service_redis_cache_value = red:get("project:setting:service:tag:" .. devops_service)
             if service_redis_cache_value and service_redis_cache_value ~= ngx.null then
-                tag_cache:set(service_local_cache_key, service_redis_cache_value, 5)
                 tag = service_redis_cache_value
-                useServiceTag = true
-            else
-                tag_cache:set(service_local_cache_key, default_tag, 5)
             end
         end
-    end
-
-    -- 根据ngx.var.project路由
-    if useProjectTag == false and useServiceTag == false and devops_project then
-        local project_local_cache_key = 'tag_local_cache_key_project_' .. devops_project
-        local project_local_cache_value = tag_cache:get(project_local_cache_key)
-        if project_local_cache_value ~= nil then
-            tag = project_local_cache_value
-        else
+        -- 根据ngx.var.project路由
+        if tag == nil and devops_project then
             local project_redis_cache_value = red:get("project:setting:project:tag:" .. devops_project)
             if project_redis_cache_value and project_redis_cache_value ~= ngx.null then
-                tag_cache:set(project_local_cache_key, project_redis_cache_value, 5)
                 tag = project_redis_cache_value
-            else
-                tag_cache:set(project_local_cache_key, default_tag, 5)
             end
         end
-    end
+        -- 使用默认值
+        if tag == nil then
+            tag = default_tag
+        end
+        --- 将redis连接放回pool中
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
-    --- 将redis连接放回pool中
-    red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+        -- 将redis拿到的tag保存在缓存
+        tag_cache:set(tag_cache_key, tag, 5)
+    end
 
     -- 设置tag到http请求头
     self:set_header(tag)

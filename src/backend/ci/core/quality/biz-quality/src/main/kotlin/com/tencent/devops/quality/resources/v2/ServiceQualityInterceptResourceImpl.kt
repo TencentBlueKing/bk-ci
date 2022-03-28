@@ -79,7 +79,7 @@ class ServiceQualityInterceptResourceImpl @Autowired constructor(
         }
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val limit = PageUtil.convertPageSizeToSQLMAXLimit(pageNotNull, pageSizeNotNull)
         val result = historyService.listInterceptHistory(
             userId,
             projectId,

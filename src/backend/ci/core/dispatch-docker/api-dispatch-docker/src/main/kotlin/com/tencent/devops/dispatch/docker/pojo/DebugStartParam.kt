@@ -56,5 +56,7 @@ data class DebugStartParam(
     @ApiModelProperty("启动命令", required = false)
     val cmd: String? = "/bin/sh",
     @ApiModelProperty("镜像信息", required = false)
-    val containerPool: String? = null
+    val containerPool: String? = null,
+    @ApiModelProperty("buildId", required = false)
+    val buildId: String? = null
 )
