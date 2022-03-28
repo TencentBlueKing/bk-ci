@@ -1,6 +1,6 @@
 <template>
     <div class="env-setting-tab-wrapper">
-        <bk-button class="setting-header" theme="primary" @click="handleShareProject">添加项目</bk-button>
+        <bk-button class="setting-header" theme="primary" @click="toggleShareProject">添加项目</bk-button>
         <bk-table
             :data="shareEnvProjectList"
             :pagination="pagination"
@@ -105,7 +105,7 @@
                 }
                 this.pagination.count = count + 1
             },
-            async toggleShareProject () {
+            toggleShareProject () {
                 this.showProjectDialog = !this.showProjectDialog
             },
             handlePageChange (current) {
