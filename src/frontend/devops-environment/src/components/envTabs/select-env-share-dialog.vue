@@ -1,7 +1,8 @@
 <template>
-    <bk-dialog :value="showProjectDialog"
+    <bk-dialog
         width="900"
         header-position="left"
+        :value="showProjectDialog"
         :mask-close="false"
         :title="$t('environment.addProject')"
         @confirm="handleConfirm"
@@ -9,6 +10,7 @@
     >
         <div class="env-share-project-list">
             <bk-table
+                ref="shareDiaglogTable"
                 :height="500"
                 :data="projects"
                 :pagination="pagination"
@@ -92,13 +94,19 @@
             handleSelectChange (selection) {
                 this.selection = selection
             },
+            clearSelection () {
+                if (this.$refs.shareDiaglogTable) {
+                    this.$refs.shareDiaglogTable.clearSelection()
+                }
+            },
             handleConfirm () {
                 this.$emit('confirm', this.selection)
-                this.selection = []
+                this.clearSelection()
             },
+            
             handleCancel () {
                 this.$emit('cancel')
-                this.selection = []
+                this.clearSelection()
             }
         }
     }
