@@ -66,6 +66,7 @@ class GitCheckService @Autowired constructor(
         commitId: String,
         description: String,
         mergeRequestId: Long?,
+        projectId: Long,
         buildId: String,
         userId: String,
         status: GitCICommitCheckState,
@@ -75,14 +76,13 @@ class GitCheckService @Autowired constructor(
         block: Boolean,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     ) {
-        val gitProjectId = streamGitProjectInfo.gitProjectId
         pushCommitCheck(
             event = GitCommitCheckEvent(
-                projectId = GitCommonUtils.getCiProjectId(gitProjectId),
+                projectId = GitCommonUtils.getCiProjectId(projectId),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 repositoryConfig = RepositoryConfig(
-                    repositoryHashId = gitProjectId.toString(),
+                    repositoryHashId = streamGitProjectInfo.gitProjectId.toString(),
                     repositoryName = null,
                     repositoryType = RepositoryType.ID
                 ),

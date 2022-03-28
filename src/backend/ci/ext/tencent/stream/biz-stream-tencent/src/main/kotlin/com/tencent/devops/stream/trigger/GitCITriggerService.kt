@@ -49,8 +49,6 @@ import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.mq.streamTrigger.StreamRepoTriggerDispatch
-import com.tencent.devops.stream.mq.streamTrigger.StreamRepoTriggerEvent
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.pojo.GitProjectPipeline
@@ -104,7 +102,8 @@ class GitCITriggerService @Autowired constructor(
     private val triggerParameter: TriggerParameter,
     private val yamlSchemaCheck: YamlSchemaCheck,
     private val streamTriggerCache: StreamTriggerCache,
-    private val gitCIEventService: GitCIEventService
+    private val gitCIEventService: GitCIEventService,
+    private val gitCITriggerRepoService: GitCITriggerRepoService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -160,12 +159,15 @@ class GitCITriggerService @Autowired constructor(
         }
 
         if (!gitRequestEvent.repoTriggerPipelineList.isNullOrEmpty()) {
-            dispatchRepoStreamTrigger(
-                StreamRepoTriggerEvent(
+            try {
+                gitCITriggerRepoService.repoTriggerBuild(
+                    triggerPipelineList = gitRequestEvent.repoTriggerPipelineList,
                     gitRequestEvent = gitRequestEvent,
                     event = eventObject
                 )
-            )
+            } catch (ignore: Throwable) {
+                logger.error("Fail to start repo trigger (${gitRequestEvent.gitProjectName})", ignore)
+            }
         }
 
         val gitRequestEventForHandle = gitCiTriggerChangeGitRequestEvent(gitRequestEvent)
@@ -649,10 +651,6 @@ class GitCITriggerService @Autowired constructor(
 
     private fun dispatchStreamTrigger(event: StreamTriggerEvent) {
         StreamTriggerDispatch.dispatch(rabbitTemplate, event)
-    }
-
-    private fun dispatchRepoStreamTrigger(event: StreamRepoTriggerEvent) {
-        StreamRepoTriggerDispatch.dispatch(rabbitTemplate, event)
     }
 
     private fun handleGetToken(

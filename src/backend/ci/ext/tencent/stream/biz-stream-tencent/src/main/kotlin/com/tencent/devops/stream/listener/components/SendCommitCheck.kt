@@ -126,6 +126,7 @@ class SendCommitCheck @Autowired constructor(
                 description = getDescByBuildStatus(this),
                 // 由stage event红线评论发送
                 mergeRequestId = null,
+                projectId = pipeline.gitProjectId,
                 buildId = buildEvent.buildId,
                 userId = buildEvent.userId,
                 status = getGitCommitCheckState(),

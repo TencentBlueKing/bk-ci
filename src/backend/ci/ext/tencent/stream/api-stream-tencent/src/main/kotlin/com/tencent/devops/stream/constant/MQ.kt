@@ -51,11 +51,6 @@ object MQ {
     const val ROUTE_STREAM_TRIGGER_PIPELINE_EVENT = "r.stream.trigger.pipeline.event"
     const val QUEUE_STREAM_TRIGGER_PIPELINE_EVENT = "q.stream.trigger.pipeline.event"
 
-    // Stream 远程仓库的触发构建请求
-    const val EXCHANGE_STREAM_TRIGGER_REPO_PIPELINE_EVENT = "e.stream.trigger.repo.pipeline.event"
-    const val ROUTE_STREAM_TRIGGER_REPO_PIPELINE_EVENT = "r.stream.trigger.repo.pipeline.event"
-    const val QUEUE_STREAM_TRIGGER_REPO_PIPELINE_EVENT = "q.stream.trigger.repo.pipeline.event"
-
     // 定时变更广播exchange ====================================
     const val ENGINE_STREAM_LISTENER_EXCHANGE = "e.engine.stream.listener"
     const val EXCHANGE_STREAM_TIMER_CHANGE_FANOUT = "e.engine.stream.timer.change"

@@ -29,18 +29,19 @@ package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isDeleteTag
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 object CommitCheckUtils {
     // 推送启动构建消息,当人工触发以及未开启的不推送构建消息
-    fun needSendCheck(request: GitRequestEvent, gitCIBasicSetting: GitCIBasicSetting): Boolean {
+    fun needSendCheck(gitRequestEventForHandle: GitRequestEventForHandle, gitCIBasicSetting: GitCIBasicSetting): Boolean {
 //        val event = request.gitEvent ?: return false
-        return gitCIBasicSetting.enableCommitCheck &&
-            request.objectKind != TGitObjectKind.MANUAL.value &&
-            request.objectKind != TGitObjectKind.OPENAPI.value &&
-            !request.isDeleteBranch() &&
-            !request.isDeleteTag()
+        return (gitCIBasicSetting.enableCommitCheck || gitRequestEventForHandle.checkRepoTrigger) &&
+            gitRequestEventForHandle.gitRequestEvent.objectKind != TGitObjectKind.MANUAL.value &&
+            gitRequestEventForHandle.gitRequestEvent.objectKind != TGitObjectKind.OPENAPI.value &&
+            !gitRequestEventForHandle.gitRequestEvent.isDeleteBranch() &&
+            !gitRequestEventForHandle.gitRequestEvent.isDeleteTag()
     }
 }

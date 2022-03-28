@@ -349,7 +349,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 }
 
                 // 发送commitCheck
-                if (CommitCheckUtils.needSendCheck(gitRequestEvent, gitCIBasicSetting)) {
+                if (CommitCheckUtils.needSendCheck(gitRequestEventForHandle, gitCIBasicSetting)) {
                     // 发commit check 需要用到触发库的相关信息
                     val streamGitProjectInfo = with(gitRequestEventForHandle) {
                         streamTriggerCache.getAndSaveRequestGitProjectInfo(
@@ -365,6 +365,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                         commitId = gitRequestEvent.commitId,
                         description = buildRunningDesc,
                         mergeRequestId = gitRequestEvent.mergeRequestId,
+                        projectId = gitProjectId,
                         buildId = buildId,
                         userId = gitRequestEvent.userId,
                         status = GitCICommitCheckState.PENDING,
