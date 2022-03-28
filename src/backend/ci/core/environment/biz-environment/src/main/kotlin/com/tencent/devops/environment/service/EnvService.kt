@@ -318,9 +318,6 @@ class EnvService @Autowired constructor(
 
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): List<EnvWithNodeCount> {
         val envRecordList = envDao.listByType(dslContext, projectId, EnvType.BUILD)
-        if (envRecordList.isEmpty()) {
-            return emptyList()
-        }
 
         val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.LIST)
         val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }.map {
