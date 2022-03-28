@@ -349,7 +349,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 }
 
                 // 发送commitCheck
-                if (CommitCheckUtils.needSendCheck(gitRequestEventForHandle, gitCIBasicSetting)) {
+                if (CommitCheckUtils.needSendCheck(gitRequestEventForHandle.gitRequestEvent, gitCIBasicSetting)) {
                     // 发commit check 需要用到触发库的相关信息
                     val streamGitProjectInfo = with(gitRequestEventForHandle) {
                         streamTriggerCache.getAndSaveRequestGitProjectInfo(
