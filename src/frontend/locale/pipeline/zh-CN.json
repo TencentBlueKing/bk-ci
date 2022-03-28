@@ -635,8 +635,8 @@
     "editPage": {
         "invalidValue": "插件表单参数{0}非法 ",
         "shareEnvInfo": "来自{0}项目，由{1}分享",
-        "environment": "环境：",
-        "envProjectId": "所属项目英文名：",
+        "environment": "环境",
+        "envProjectId": "所属项目英文名",
         "envProjectTips": "默认为当前项目，当跨项目引用环境时填写对应的项目英文名",
         "envProjectPlaceholder": "默认为当前项目",
         "tipError": "Tip组件返回值需要是字符串",
