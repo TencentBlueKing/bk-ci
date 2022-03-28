@@ -12,7 +12,7 @@
             <bk-table-column :label="$t('environment.operateTime')" prop="updateTime"></bk-table-column>
             <bk-table-column :label="$t('environment.operation')" width="150">
                 <template slot-scope="props">
-                    <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t(environment.remove) }}</bk-button>
+                    <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -154,6 +154,7 @@
                             sharedProjects
                         }
                     })
+                    this.fetchEnvProjects()
                     return res
                 }, this.$t('environment.shareEnvSuc'))
                 fn()
