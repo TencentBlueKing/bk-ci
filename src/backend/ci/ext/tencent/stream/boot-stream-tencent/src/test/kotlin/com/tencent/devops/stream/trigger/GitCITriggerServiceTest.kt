@@ -53,6 +53,7 @@ class GitCITriggerServiceTest {
         mock(),
         mock(),
         mock(),
+        mock(),
         mock()
     )
 
