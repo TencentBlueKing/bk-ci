@@ -33,8 +33,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import org.jooq.DSLContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -44,12 +42,9 @@ import javax.ws.rs.core.Response
 class TestStreamScmService {
 
     private val client: Client = mock()
-    private val dslContext: DSLContext = mock()
-    private val oauthService: StreamOauthService = mock()
-    private val streamBasicSettingDao: StreamBasicSettingDao = mock()
     private val streamGitTokenService: StreamGitTokenService = mock()
     private val serviceGitCiResource: ServiceGitCiResource = mock()
-    private val streamScmService: StreamScmService = StreamScmService(client, dslContext, oauthService, streamBasicSettingDao, streamGitTokenService)
+    private val streamScmService: StreamScmService = StreamScmService(client, mock(), mock(), mock(), streamGitTokenService)
 
     @Before
     fun init() {
