@@ -83,7 +83,7 @@ class TxProjectDataSourceAssignServiceImpl(
      * @return 最小构建量数据源名称
      */
     private fun getMinBuildNumDataSourceName(dataSourceNames: List<String>): String {
-        var totalBuildNum = 0L  // 总构建量
+        var totalBuildNum = 0L // 总构建量
         var totalBuildProjectNum = 0L // 总构建项目数量
         // 1、找出低于平均构建量的最小构建量数据源(默认取第一个数据源作为最小数据源)
         var minBuildNumDataSourceName = dataSourceNames[0]

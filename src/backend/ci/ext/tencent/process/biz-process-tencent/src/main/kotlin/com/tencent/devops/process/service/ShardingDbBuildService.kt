@@ -154,7 +154,7 @@ class ShardingDbBuildService @Autowired constructor(
     ): MutableMap<String, Long> {
         val shardingDbBuildInfoMap = mutableMapOf<String, Long>()
         bkDataQueryData?.list?.forEach { dataMap ->
-            val routingRule = dataMap[keyName] as String  // 路由规则（实为分区库别名）
+            val routingRule = dataMap[keyName] as String // 路由规则（实为分区库别名）
             val totalNum = dataMap[valueName]?.toLong() ?: 0L // 路由规则对应的总数量
             if (shardingDbBuildInfoMap.containsKey(routingRule)) {
                 // 该规则如果已经存在则追加构建项目数量
