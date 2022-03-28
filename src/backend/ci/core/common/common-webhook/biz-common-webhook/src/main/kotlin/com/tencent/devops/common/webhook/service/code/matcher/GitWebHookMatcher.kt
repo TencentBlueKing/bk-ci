@@ -76,10 +76,6 @@ open class GitWebHookMatcher(
         page: Int,
         size: Int
     ): List<WebhookCommit> {
-        if (event !is GitMergeRequestEvent && event !is GitPushEvent) {
-            logger.info("git event is not merge request event or push event")
-            return emptyList()
-        }
         if (repository !is CodeGitRepository &&
             repository !is CodeTGitRepository
         ) {
