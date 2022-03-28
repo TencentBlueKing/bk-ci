@@ -55,10 +55,11 @@ class InfluxdbClient {
     val influxdbPassword: String = ""
 
     private val influxdb by lazy {
-        if (influxdbUserName.isBlank())
+        if (influxdbUserName.isBlank()) {
             InfluxDBFactory.connect(influxdbServer)
-        else
+        } else {
             InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
+        }
     }
 
     fun getInfluxDb(): InfluxDB? {

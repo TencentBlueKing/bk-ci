@@ -114,7 +114,7 @@ const actions = {
         })
     },
     deleteTemplateVersionByName (_, { projectId, templateId, versionName }) {
-        return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/versionNames/${versionName}`).then(response => {
+        return ajax.delete(`${prefix}/templates/projects/${projectId}/templates/${templateId}/deletetemplate?versionName=${versionName}`).then(response => {
             return response.data
         })
     }

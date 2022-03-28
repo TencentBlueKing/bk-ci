@@ -59,7 +59,7 @@ dependencies {
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
-
+    api(project(":ext:tencent:common:common-notify-tencent"))
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.apache.commons:commons-exec")

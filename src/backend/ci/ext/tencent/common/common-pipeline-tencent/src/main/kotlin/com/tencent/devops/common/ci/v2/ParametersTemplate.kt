@@ -29,8 +29,9 @@ package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-data class ParametersTemplate(
-    val parameters: List<Parameters>
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreParametersTemplate(
+    val parameters: List<Map<String, Any>>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

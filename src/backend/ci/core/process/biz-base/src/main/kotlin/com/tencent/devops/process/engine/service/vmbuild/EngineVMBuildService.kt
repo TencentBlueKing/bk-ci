@@ -44,9 +44,12 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCas
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
@@ -154,7 +157,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(projectId, buildId)
 
-        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId)
+        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
@@ -195,6 +198,17 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
                                 ).data?.let { self -> envList.add(self) }
                             }
+
+                            // 设置Job环境变量customBuildEnv到variablesWithType中
+                            c.customBuildEnv?.map { (t, u) ->
+                                BuildParameters(
+                                    key = t,
+                                    value = EnvUtils.parseEnv(u, contextMap),
+                                    valueType = BuildFormPropertyType.STRING,
+                                    readOnly = true
+                                )
+                            }?.let { self -> variablesWithType.addAll(self) }
+
                             Triple(envList, contextMap, timeoutMills)
                         }
                         is NormalContainer -> {
@@ -254,6 +268,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 "$ENV_CONTEXT_KEY_PREFIX${it.key}" to EnvUtils.parseEnv(it.value, context)
             }.toMap())
         }
+
         if (matrixContext?.isNotEmpty() == true) context.putAll(matrixContext)
     }
 
@@ -640,15 +655,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 ) -> {
                     BuildStatus.RETRY
                 }
-                result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT -> {
-                    BuildStatus.EXEC_TIMEOUT
-                }
                 else -> { // 记录错误插件信息
                     pipelineTaskService.createFailTaskVar(
                         buildId = buildId, projectId = buildInfo.projectId,
                         pipelineId = buildInfo.pipelineId, taskId = result.taskId
                     )
-                    BuildStatus.FAILED
+                    if (result.errorCode == ErrorCode.USER_TASK_OUTTIME_LIMIT) BuildStatus.EXEC_TIMEOUT
+                    else BuildStatus.FAILED
                 }
             }
         }
@@ -755,6 +768,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
+                    (errorCode?.let {
+                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
+                    }
+                        ?: "") +
                     when (errorType) {
                         ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
@@ -809,10 +826,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("writeRemark by setEnv $projectId|$pipelineId|$buildId|$remark")
                 pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
                 pipelineEventDispatcher.dispatch(
-                        PipelineBuildWebSocketPushEvent(
-                                source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
-                                userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
-                        )
+                    PipelineBuildWebSocketPushEvent(
+                        source = "writeRemark", projectId = projectId, pipelineId = pipelineId,
+                        userId = userId, buildId = buildId, refreshTypes = RefreshType.HISTORY.binary
+                    )
                 )
             }
         }

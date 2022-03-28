@@ -41,6 +41,7 @@ type ThirdPartyBuildInfo struct {
 	VmSeqId    string `json:"vmSeqId"`
 	Workspace  string `json:"workspace"`
 	PipelineId string `json:"pipelineId"`
+	ToDelTmpFiles []string // #5806 增加异常时清理脚本文件列表
 }
 
 type ThirdPartyBuildWithStatus struct {
