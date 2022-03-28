@@ -33,6 +33,8 @@ import com.tencent.devops.common.notify.utils.HashUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.stream.config.streamSlaConfig
+import com.tencent.devops.stream.config.StreamSlaConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -47,30 +49,23 @@ import java.time.ZoneId
 @Component
 class StreamActiveProjectsReportJob @Autowired constructor(
     private val dslContext: DSLContext,
-    private val profile: Profile,
+    private val streamSlaConfig: StreamSlaConfig,
     private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
-    @Value("\${sla.oteam.url:#{null}}")
-    private var oteamUrl: String? = null
-    @Value("\${sla.oteam.token:#{null}}")
-    private var oteamToken: String? = null
-    @Value("\${sla.oteam.techmap:#{null}}")
-    private var oteamTechmap: String? = null
-    @Value("\${sla.oteam.target.activeProject:#{null}}")
-    private var oteamActiveProjectTarget: Int? = null
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamActiveProjectsReportJob::class.java)
         private const val STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY =
             "stream:active:project:sla:report"
     }
-    @Scheduled(cron = "0 0 2 * * ?")
+    @Scheduled(cron = "0 45 15 * * ?")
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
-        if (profile.isProd() && !profile.isStreamGray()) {
-            logger.info("profile is not prod gray , no start")
+        if (!streamSlaConfig.switch.toBoolean()) {
+            logger.info("switch is false , no start")
             return
         }
         if (illegalConfig()) {
@@ -99,11 +94,11 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
         val projectCount = gitRequestEventBuildDao.getBuildActiveProjectCount(dslContext, startTime, endTime)
         // 上报数据
-        oteamStatus(projectCount.toDouble(), oteamActiveProjectTarget, startTime)
+        oteamStatus(projectCount.toDouble(), streamSlaConfig.oteamActiveProjectTarget, startTime)
     }
     private fun illegalConfig() =
-        null == oteamUrl || null == oteamToken || null == oteamTechmap ||
-            null == oteamActiveProjectTarget
+        null == streamSlaConfig.oteamUrl || null == streamSlaConfig.oteamToken || null == streamSlaConfig.oteamTechmap ||
+            null == streamSlaConfig.oteamActiveProjectTarget
 
     /**
      * 上报数据到oteam
@@ -114,19 +109,19 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         targetId: Int?,
         startTime: Long
     ) {
-        if (null == oteamUrl) {
+        if (null == streamSlaConfig.oteamUrl) {
             logger.warn("null oteamUrl , can not oteam status , targetId: $targetId , data: $data")
             return
         }
         try {
             val yesterday = LocalDateTime.ofInstant(Instant.ofEpochMilli(startTime), ZoneId.systemDefault())
             val timestamp = "${System.currentTimeMillis() / 1000}"
-            val token = oteamToken
-            val techmapId = oteamTechmap
+            val token = streamSlaConfig.oteamToken
+            val techmapId = streamSlaConfig.oteamTechmap
             val techmapType = "oteam"
             val signature = HashUtils.sha256(timestamp + techmapType + techmapId + token + timestamp)
             val response = OkhttpUtils.doPost(
-                url = oteamUrl!!,
+                url = streamSlaConfig.oteamUrl!!,
                 jsonParam = """
                         {
                           "method":"measureReport",
