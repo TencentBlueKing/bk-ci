@@ -69,7 +69,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
-        if (!profile.isStreamGray()) {
+        if (profile.isProd() && !profile.isStreamGray()) {
             logger.info("profile is not prod gray , no start")
             return
         }
