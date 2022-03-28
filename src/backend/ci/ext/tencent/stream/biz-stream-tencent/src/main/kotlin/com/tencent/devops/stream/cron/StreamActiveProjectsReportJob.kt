@@ -56,7 +56,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         private const val STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY =
             "stream:active:project:sla:report"
     }
-    @Scheduled(cron = "0 45 15 * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     fun reportActiveProjectsDaily() {
 
         // 增加逻辑判断：只在灰度环境执行
@@ -93,8 +93,8 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         oteamStatus(projectCount.toDouble(), streamSlaConfig.oteamActiveProjectTarget, startTime)
     }
     private fun illegalConfig() =
-        null == streamSlaConfig.oteamUrl || null == streamSlaConfig.oteamToken || null == streamSlaConfig.oteamTechmap ||
-            null == streamSlaConfig.oteamActiveProjectTarget
+        null == streamSlaConfig.oteamUrl || null == streamSlaConfig.oteamToken ||
+            null == streamSlaConfig.oteamTechmap || null == streamSlaConfig.oteamActiveProjectTarget
 
     /**
      * 上报数据到oteam
