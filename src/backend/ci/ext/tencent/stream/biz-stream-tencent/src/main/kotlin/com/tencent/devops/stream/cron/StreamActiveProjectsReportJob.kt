@@ -32,14 +32,11 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.notify.utils.HashUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.Profile
-import com.tencent.devops.stream.config.streamSlaConfig
 import com.tencent.devops.stream.config.StreamSlaConfig
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -53,7 +50,6 @@ class StreamActiveProjectsReportJob @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamActiveProjectsReportJob::class.java)
