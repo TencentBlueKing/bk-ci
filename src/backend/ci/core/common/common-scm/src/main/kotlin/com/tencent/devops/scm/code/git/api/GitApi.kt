@@ -348,11 +348,11 @@ open class GitApi {
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
-        OkhttpUtils.doHttp(request).use { response ->
+        return OkhttpUtils.doRedirectHttp(request) { response ->
             if (!response.isSuccessful) {
                 handleApiException(operation, response.code(), response.body()?.string() ?: "")
             }
-            return JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
+            JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
         }
     }
 

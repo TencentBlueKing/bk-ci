@@ -25,32 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.store.service.atom
 
-import com.tencent.devops.common.api.pojo.Zone
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.store.pojo.atom.AtomProp
 
-@ApiModel("")
-data class RedisAtomsBuild(
-    @ApiModelProperty("构建机名称标识，不唯一", required = false)
-    val vmName: String,
-    @ApiModelProperty("项目id", required = false)
-    val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
-    val pipelineId: String,
-    @ApiModelProperty("构建号id", required = false)
-    val buildId: String,
-    @ApiModelProperty("Job序号，根据编排（忽略掉第1个触发Job）从左到右，从上到下，从1开始", required = false)
-    val vmSeqId: String,
-    @ApiModelProperty("流水线的来源，见ChannelCode枚举说明", required = false)
-    val channelCode: String?,
-    @ApiModelProperty("SVN代码库所在区域，作废字段", required = false)
-    val zone: Zone?,
-    @ApiModelProperty("用到的插件code和路径键值对", required = false)
-    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
-    @ApiModelProperty("执行次数，第1次执行为1，重试>1", required = false)
-    val executeCount: Int? = 1,
-    @ApiModelProperty("构建用户id", required = false)
-    val userId: String?
-)
+interface AtomPropService {
+
+    /**
+     * 获取插件属性列表
+     * @param atomCodes 插件代码集合
+     * @return 插件属性集合
+     */
+    fun getAtomProps(
+        atomCodes: Set<String>
+    ): Map<String, AtomProp>?
+}

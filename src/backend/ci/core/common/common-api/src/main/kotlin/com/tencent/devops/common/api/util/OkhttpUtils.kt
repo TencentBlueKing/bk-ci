@@ -44,6 +44,7 @@ import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
+import java.net.HttpURLConnection
 import java.net.URLEncoder
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -110,6 +111,16 @@ object OkhttpUtils {
         .hostnameVerifier { _, _ -> true }
         .build()
 
+    // 服务端返回301、302状态码，okhttp会把post请求转换成get请求，导致请求异常,通过followRedirects设置关闭跳转，自定义重定向
+    private val redirectOkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(connectTimeout, TimeUnit.SECONDS)
+        .readTimeout(readTimeout, TimeUnit.SECONDS)
+        .writeTimeout(writeTimeout, TimeUnit.SECONDS)
+        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
+        .followRedirects(false)
+        .hostnameVerifier { _, _ -> true }
+        .build()
+
     @Throws(UnsupportedEncodingException::class)
     fun joinParams(params: Map<String, String>): String {
         val paramItem = ArrayList<String>()
@@ -137,6 +148,23 @@ object OkhttpUtils {
 
     fun doShortHttp(request: Request): Response {
         return doHttp(shortOkHttpClient, request)
+    }
+
+    fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R): R {
+        doHttp(redirectOkHttpClient, request).use { response ->
+            if (
+                request.method() == "POST" &&
+                (response.code() == HttpURLConnection.HTTP_MOVED_PERM ||
+                    response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
+            ) {
+                val location = response.header("Location")
+                if (location != null) {
+                    val newRequest = request.newBuilder().url(location).build()
+                    return handleResponse(doHttp(okHttpClient, newRequest))
+                }
+            }
+            return handleResponse(response)
+        }
     }
 
     private fun doGet(okHttpClient: OkHttpClient, url: String, headers: Map<String, String> = mapOf()): Response {

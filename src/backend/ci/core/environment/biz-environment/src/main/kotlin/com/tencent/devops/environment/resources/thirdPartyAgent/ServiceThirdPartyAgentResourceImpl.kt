@@ -27,8 +27,6 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -37,6 +35,7 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
@@ -93,8 +92,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     }
 
     override fun listAgents(userId: String, projectId: String, os: OS): Result<List<ThirdPartyAgentInfo>> {
-        checkUserId(userId)
-        checkProjectId(projectId)
         return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
     }
 
@@ -116,9 +113,6 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         sortBy: String?,
         sortDirection: String?
     ): Result<List<AgentPipelineRef>> {
-        checkUserId(userId)
-        checkProjectId(projectId)
-        checkNodeId(nodeHashId)
         val pipelineRefs = agentPipelineService.listPipelineRef(projectId, nodeHashId)
         return Result(sortPipelineRef(pipelineRefs, sortBy, sortDirection))
     }
@@ -152,21 +146,11 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    private fun checkUserId(userId: String) {
-        if (userId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("userId"))
-        }
-    }
-
-    private fun checkProjectId(projectId: String) {
-        if (projectId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
-        }
-    }
-
-    private fun checkNodeId(nodeHashId: String) {
-        if (nodeHashId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
-        }
+    override fun getAgentDetail(
+        userId: String,
+        projectId: String,
+        agentHashId: String
+    ): Result<ThirdPartyAgentDetail?> {
+        return Result(thirdPartyAgentService.getAgentDetailById(userId, projectId, agentHashId = agentHashId))
     }
 }

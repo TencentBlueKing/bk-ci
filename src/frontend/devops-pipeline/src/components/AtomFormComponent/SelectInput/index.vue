@@ -194,11 +194,13 @@
             },
 
             setSelectPointer (index) {
+                this.$refs.inputArea.focus()
                 this.selectedPointer = index
                 this.adjustViewPort()
             },
 
             setSelectGroupPointer (index, childIndex) {
+                this.$refs.inputArea.focus()
                 this.selectedGroupPointer = index
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
@@ -333,11 +335,15 @@
                     white-space: nowrap;
                     cursor: pointer;
                     font-size: 12px;
+                    border: 1px solid transparent;
                     &.selected,
                     &.active,
                     &:hover {
                         background-color: $primaryLightColor;
                         color: $primaryColor;
+                    }
+                    &.selected {
+                       border-color : $primaryColor;
                     }
 
                     &[disabled] {
