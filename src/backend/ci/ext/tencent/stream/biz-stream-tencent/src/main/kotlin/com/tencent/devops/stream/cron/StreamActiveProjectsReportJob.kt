@@ -73,6 +73,10 @@ class StreamActiveProjectsReportJob @Autowired constructor(
             logger.info("profile is not prod gray , no start")
             return
         }
+        if (illegalConfig()) {
+            logger.info("some params is null , reportDaily no start")
+            return
+        }
         val redisLock = RedisLock(redisOperation, STREAM_ACTIVE_PROJECT_SLA_REPORT_KEY, 60L)
         try {
             logger.info("StreamActiveProjectsReportJob , reportDaily start")
@@ -97,6 +101,9 @@ class StreamActiveProjectsReportJob @Autowired constructor(
         // 上报数据
         oteamStatus(projectCount.toDouble(), oteamActiveProjectTarget, startTime)
     }
+    private fun illegalConfig() =
+        null == oteamUrl || null == oteamToken || null == oteamTechmap ||
+            null == oteamActiveProjectTarget
 
     /**
      * 上报数据到oteam
