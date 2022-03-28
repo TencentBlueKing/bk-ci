@@ -90,14 +90,31 @@ class EnvShareProjectDao {
 
     fun list(
         dslContext: DSLContext,
-        envName: String,
+        envName: String?,
         mainProjectId: String
     ): List<TEnvShareProjectRecord> {
         with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            return dslContext.selectFrom(this)
-                .where(ENV_NAME.eq(envName))
-                .and(MAIN_PROJECT_ID.eq(mainProjectId))
-                .fetch()
+            val dsl = dslContext.selectFrom(this)
+                .where(MAIN_PROJECT_ID.eq(mainProjectId))
+            if (!envName.isNullOrBlank()) {
+                dsl.and(ENV_NAME.eq(envName))
+            }
+            return dsl.fetch()
+        }
+    }
+
+    fun listByShare(
+        dslContext: DSLContext,
+        envName: String?,
+        sharedProjectId: String
+    ): List<TEnvShareProjectRecord> {
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            val dsl = dslContext.selectFrom(this)
+                .where(SHARED_PROJECT_ID.eq(sharedProjectId))
+            if (!envName.isNullOrBlank()) {
+                dsl.and(ENV_NAME.eq(envName))
+            }
+            return dsl.fetch()
         }
     }
 

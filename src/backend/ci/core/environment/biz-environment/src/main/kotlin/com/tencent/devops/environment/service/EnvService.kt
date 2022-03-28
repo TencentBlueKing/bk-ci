@@ -62,6 +62,7 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
+import com.tencent.devops.environment.pojo.EnvWithNode
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -265,7 +266,24 @@ class EnvService @Autowired constructor(
         }
 
         val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.LIST)
-        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
+        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }.map {
+            EnvWithNode(
+                envId = it.envId, envName = it.envName, sharedProjectId = null, sharedUserId = null
+            )
+        }.plus(
+            envShareProjectDao.listByShare(
+                dslContext = dslContext,
+                envName = null,
+                sharedProjectId = projectId
+            ).map {
+                EnvWithNode(
+                    envId = it.envId,
+                    envName = it.envName,
+                    sharedProjectId = it.mainProjectId,
+                    sharedUserId = it.creator
+                )
+            }
+        )
         if (validRecordList.isEmpty()) {
             return emptyList()
         }
@@ -291,7 +309,9 @@ class EnvService @Autowired constructor(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
-                abnormalNodeCount = abnormalNodeCount
+                abnormalNodeCount = abnormalNodeCount,
+                sharedProjectId = it.sharedProjectId,
+                sharedUserId = it.sharedUserId
             )
         }
     }
@@ -303,7 +323,25 @@ class EnvService @Autowired constructor(
         }
 
         val canListEnvIds = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.LIST)
-        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
+        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }.map {
+            EnvWithNode(
+                envId = it.envId, envName = it.envName, sharedProjectId = null, sharedUserId = null
+            )
+        }.plus(
+            envShareProjectDao.listByShare(
+                dslContext = dslContext,
+                envName = null,
+                sharedProjectId = projectId
+            ).map {
+                EnvWithNode(
+                    envId = it.envId,
+                    envName = it.envName,
+                    sharedProjectId = it.mainProjectId,
+                    sharedUserId = it.creator
+                )
+            }
+        )
+
         if (validRecordList.isEmpty()) {
             return emptyList()
         }
@@ -335,7 +373,9 @@ class EnvService @Autowired constructor(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
                 normalNodeCount = normalNodeCount,
-                abnormalNodeCount = abnormalNodeCount
+                abnormalNodeCount = abnormalNodeCount,
+                sharedProjectId = it.sharedProjectId,
+                sharedUserId = it.sharedUserId
             )
         }
     }
