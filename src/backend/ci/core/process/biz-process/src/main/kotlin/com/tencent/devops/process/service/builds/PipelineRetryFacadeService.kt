@@ -168,6 +168,15 @@ class PipelineRetryFacadeService @Autowired constructor(
         }
 
         taskBuildDetailService.taskStart(projectId, buildId, taskId)
+
+        // 修改容器状态位运行
+        pipelineContainerService.updateContainerStatus(
+            projectId = containerInfo.projectId,
+            buildId = containerInfo.buildId,
+            stageId = containerInfo.stageId,
+            containerId = containerInfo.containerId,
+            buildStatus = BuildStatus.QUEUE
+        )
     }
 
     companion object {
