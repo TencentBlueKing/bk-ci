@@ -28,10 +28,10 @@
 package com.tencent.devops.auth.pojo.enum
 
 enum class SystemType(system: String, desc: String) {
-    CI("pipeline","CI系统"),
+    CI("pipeline", "CI系统"),
     REPO("repo", "代码库"),
     CODECC("codecc", "代码检查"),
-    TURBO("turbo","编译加速"),
+    TURBO("turbo", "编译加速"),
     ALL("all", "所有系统")
     ;
 }

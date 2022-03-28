@@ -44,10 +44,6 @@ data class ActionInfo(
     val resourceId: String,
     @ApiModelProperty("创建人")
     val creator: String,
-    @ApiModelProperty("最后修改人")
-    val updator: String?,
     @ApiModelProperty("创建时间")
-    val creatorTime: Long,
-    @ApiModelProperty("最后修改时间")
-    val updateTime: Long?,
+    val creatorTime: Long
 )

@@ -25,30 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.resource
+package com.tencent.devops.auth.resources.op
 
+import com.tencent.devops.auth.api.op.OpResourceResource
 import com.tencent.devops.auth.pojo.enum.SystemType
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
+import com.tencent.devops.auth.pojo.resource.ResourceInfo
+import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
+import com.tencent.devops.common.api.pojo.Result
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-data class ResourceInfo(
-    @ApiModelProperty("资源编码 不可修改")
-    val resourceId: String,
-    @ApiModelProperty("资源名称")
-    val name: String,
-    @ApiModelProperty("资源描述")
-    val desc: String,
-    @ApiModelProperty("资源描述-英文")
-    val englishDes: String,
-    @ApiModelProperty("上级资源，蓝盾下默认所有的资源都是挂靠在项目下")
-    val parent: String?,
-    @ApiModelProperty("资源属于蓝盾下哪个系统:CI,REPO,CODECC,TURBO等")
-    val system: SystemType,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("最后修改人")
-    val updator: String?,
-    @ApiModelProperty("创建时间")
-    val creatorTime: Long,
-    @ApiModelProperty("最后修改时间")
-    val updateTime: Long?
-)
+@Service
+class OpResourceResourceImpl @Autowired constructor(
+
+): OpResourceResource {
+    override fun createSystemResource(userId: String, resourceInfo: CreateResourceDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun updateSystemResource(userId: String, resourceId: String, resourceInfo: UpdateResourceDTO): Result<Boolean> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getSystemResource(resourceId: String): Result<ResourceInfo> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getSystemResourceByResourceName(resourceName: String): Result<List<ResourceInfo>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getSystemResourceBySystem(systemId: SystemType): Result<ResourceInfo> {
+        TODO("Not yet implemented")
+    }
+
+    override fun listSystemResource(): Result<List<ResourceInfo>> {
+        TODO("Not yet implemented")
+    }
+}

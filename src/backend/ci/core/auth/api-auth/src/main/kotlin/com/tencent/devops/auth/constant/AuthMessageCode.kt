@@ -75,4 +75,11 @@ object AuthMessageCode {
     const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
     const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
+
+    const val ACTION_EXIST = "2121301" // 权限系统： action{0}已经存在
+    const val RESOURCE_EXSIT = "2121302" // 权限系统：resource{0}已经存在
+    const val RESOURCE_NOT_EXSIT = "2121303" // 权限系统：resource{0}不存在
+    const val ACTION_CREATE_FAIL = "2121304" // 权限系统： action添加失败
+
+
 }

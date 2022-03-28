@@ -25,30 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.resource
+package com.tencent.devops.auth.service.action
 
-import com.tencent.devops.auth.pojo.enum.SystemType
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.pojo.action.ActionInfo
+import com.tencent.devops.auth.pojo.action.CreateActionDTO
+import com.tencent.devops.auth.pojo.action.UpdateActionDTO
 
-data class ResourceInfo(
-    @ApiModelProperty("资源编码 不可修改")
-    val resourceId: String,
-    @ApiModelProperty("资源名称")
-    val name: String,
-    @ApiModelProperty("资源描述")
-    val desc: String,
-    @ApiModelProperty("资源描述-英文")
-    val englishDes: String,
-    @ApiModelProperty("上级资源，蓝盾下默认所有的资源都是挂靠在项目下")
-    val parent: String?,
-    @ApiModelProperty("资源属于蓝盾下哪个系统:CI,REPO,CODECC,TURBO等")
-    val system: SystemType,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("最后修改人")
-    val updator: String?,
-    @ApiModelProperty("创建时间")
-    val creatorTime: Long,
-    @ApiModelProperty("最后修改时间")
-    val updateTime: Long?
-)
+interface ActionService {
+    fun createAction(userId: String, action: CreateActionDTO): Boolean
+
+    fun updateAction(userId: String, actionId: String, action: UpdateActionDTO): Boolean
+
+    fun getAction(actionId: String): ActionInfo?
+
+    fun actionList(): List<ActionInfo>?
+
+    /**
+     * 返回以resouce为key的actionMap
+     */
+    fun actionMap(): Map<String, List<ActionInfo>>?
+}

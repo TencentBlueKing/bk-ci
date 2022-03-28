@@ -25,30 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.resource
+package com.tencent.devops.auth.service.action
 
-import com.tencent.devops.auth.pojo.enum.SystemType
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
+import com.tencent.devops.auth.pojo.resource.ResourceInfo
+import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 
-data class ResourceInfo(
-    @ApiModelProperty("资源编码 不可修改")
-    val resourceId: String,
-    @ApiModelProperty("资源名称")
-    val name: String,
-    @ApiModelProperty("资源描述")
-    val desc: String,
-    @ApiModelProperty("资源描述-英文")
-    val englishDes: String,
-    @ApiModelProperty("上级资源，蓝盾下默认所有的资源都是挂靠在项目下")
-    val parent: String?,
-    @ApiModelProperty("资源属于蓝盾下哪个系统:CI,REPO,CODECC,TURBO等")
-    val system: SystemType,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("最后修改人")
-    val updator: String?,
-    @ApiModelProperty("创建时间")
-    val creatorTime: Long,
-    @ApiModelProperty("最后修改时间")
-    val updateTime: Long?
-)
+interface BkResourceService {
+    fun createResource(userId: String, resource: CreateResourceDTO): Boolean
+    fun updateResource(userId: String, resource: UpdateResourceDTO): Boolean
+
+    fun getResource(resourceType: String): ResourceInfo?
+
+    fun getResourceBySystem(systemId: String): List<ResourceInfo>?
+
+    fun resourceList(): List<ResourceInfo>?
+}

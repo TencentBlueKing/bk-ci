@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 data class UpdateResourceDTO(
     @ApiModelProperty("资源名称")
     val name: String,
+    @ApiModelProperty("资源名称--英文名")
+    val englishName: String,
     @ApiModelProperty("资源描述")
     val desc: String,
     @ApiModelProperty("资源描述-英文")

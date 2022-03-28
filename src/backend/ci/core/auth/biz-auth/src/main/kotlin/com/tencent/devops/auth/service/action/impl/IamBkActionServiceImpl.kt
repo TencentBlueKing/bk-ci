@@ -25,30 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.resource
+package com.tencent.devops.auth.service.action.impl
 
-import com.tencent.devops.auth.pojo.enum.SystemType
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.pojo.action.CreateActionDTO
+import com.tencent.devops.auth.pojo.action.UpdateActionDTO
+import org.springframework.beans.factory.annotation.Autowired
 
-data class ResourceInfo(
-    @ApiModelProperty("资源编码 不可修改")
-    val resourceId: String,
-    @ApiModelProperty("资源名称")
-    val name: String,
-    @ApiModelProperty("资源描述")
-    val desc: String,
-    @ApiModelProperty("资源描述-英文")
-    val englishDes: String,
-    @ApiModelProperty("上级资源，蓝盾下默认所有的资源都是挂靠在项目下")
-    val parent: String?,
-    @ApiModelProperty("资源属于蓝盾下哪个系统:CI,REPO,CODECC,TURBO等")
-    val system: SystemType,
-    @ApiModelProperty("创建人")
-    val creator: String,
-    @ApiModelProperty("最后修改人")
-    val updator: String?,
-    @ApiModelProperty("创建时间")
-    val creatorTime: Long,
-    @ApiModelProperty("最后修改时间")
-    val updateTime: Long?
-)
+class IamBkActionServiceImpl @Autowired constructor(
+
+): BKActionServiceImpl(){
+
+    override fun extSystemCreate(userId: String, action: CreateActionDTO) {
+        // 1. 优先判断action是否存在。
+
+        // 2. 添加action
+
+        // 3. 判断actionGroup是否存在。 不存在添加，存在继续追加
+
+        // 4. 维护系统新建关联yml（不存在添加，存在继续追击。 create类挂project级别，其他action挂对应资源子集）
+    }
+
+    override fun extSystemUpdate(userId: String, action: UpdateActionDTO) {
+        TODO("Not yet implemented")
+    }
+}
