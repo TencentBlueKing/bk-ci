@@ -10,9 +10,9 @@
         </enum-input>
         <div :class="{ 'agent-name-select': true, 'abnormal-tip': abnormalSlave }" v-if="showAgentById">
             <selector
-                name="value"
+                :name="name"
                 :disabled="disabled"
-                :handle-change="handleChange"
+                :handle-change="handleSelect"
                 :list="nodeList"
                 :value="value"
                 :toggle-visible="toggleAgentList"
@@ -43,7 +43,7 @@
                     :label="isAgentEnv ? $t('editPage.environment') : ''"
                 >
                     <devops-select
-                        name="value"
+                        :name="name"
                         :disabled="disabled"
                         :is-loading="isLoading"
                         :handle-change="handleChange"
@@ -198,6 +198,11 @@
             ...mapActions('atom', [
                 'fetchBuildResourceByType'
             ]),
+            handleSelect (name, value) {
+                const node = this.nodeList.find(item => item.id === value)
+                const sharedId = node && node.sharedProjectId ? node.sharedProjectId : ''
+                this.handleChange(name, value, sharedId)
+            },
             handleBlur () {
                 this.isFocus = false
             },

@@ -602,9 +602,12 @@
                 this.handleContainerChange('isError', isError)
             },
 
-            changeBuildResource (name, value) {
-                console.log(name, value)
+            changeBuildResource (name, value, envProjectId) {
+                console.log(name, value, envProjectId)
                 const emptyValueObj = (name === 'imageType' || name === 'agentType') ? { value: '', envProjectId: '' } : {}
+                if (name === 'buildResource') {
+                    emptyValueObj.envProjectId = envProjectId
+                }
                 this.handleContainerChange('dispatchType', Object.assign({
                     ...this.container.dispatchType,
                     [name]: value
