@@ -171,7 +171,7 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('b6d9420993954802884f474828cc0db1', '2101904', '01', '流水线：排队超时，取消运行! [{0}]', 'Pipeline:  Queue timed out, canceled running! [{0}]');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('7d8f2d20b939448f91550967d5ff63b6', '2101905', '01', '流水线：暂停的流水线已开始运行', 'Pipeline:  Pipeline: puase pipeline running now');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('4e6d9a9c3c874c16b2fcff32b6a731fd', '2101906', '01', '流水线：{0} element大小越界', 'Pipeline:  Pipeline:  {0} element size too long');
-REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('894102da867c431baf9fca6bfd6bc640', '2101907', '01', '流水线: stopVm还未完成，请稍后重试', 'Pipeline:  stopVm running, please wait...');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('894102da867c431baf9fca6bfd6bc640', '2101907', '01', '流水线: job非完成态，不能进行重试', 'Pipeline:  job is running, forbid retry');
 
 
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_EN`) VALUES  ('a1d8bb8bc3e54b0daaf6d22daef17650', '2101908', '01', '流水线：质量红线(准入)配置有误：Fail to find quality gate intercept element', 'Pipeline: The quality red line (access) is incorrectly configured: Fail to find quality gate intercept element');

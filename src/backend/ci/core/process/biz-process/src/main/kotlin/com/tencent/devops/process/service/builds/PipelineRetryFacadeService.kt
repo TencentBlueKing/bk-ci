@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -122,33 +123,17 @@ class PipelineRetryFacadeService @Autowired constructor(
         )
     }
 
-    // 若当前job的关机任务还未完成，报错让用户稍后再重试。否则会因为开机比关机早到引发引擎调度问题
+    // 若当前job状态还未完成，报错让用户稍后再重试。否则会因为开机比关机早到引发引擎调度问题
     private fun checkStopTask(
         projectId: String,
         buildId: String,
         containerInfo: PipelineBuildContainer
     ) {
-        var jobFinish = true
         if (!containerInfo.status.isFinish()) {
-            val runningTasks = pipelineTaskService.listContainerBuildTasks(
-                projectId = projectId,
-                buildId = buildId,
-                containerSeqId = containerInfo.containerId,
-                buildStatusSet = setOf(BuildStatus.RUNNING)
-            )
-            runningTasks.forEach {
-                if (it.taskId.startsWith(VMUtils.getStopVmLabel()) || it.taskId.startsWith(VMUtils.getEndLabel())) {
-                    jobFinish = false
-                    return@forEach
-                }
-            }
-        }
-
-        if (!jobFinish) {
-            logger.warn("retry runningJob: $projectId|$buildId stopVm not finish")
+            logger.warn("retry runningJob: $projectId|$buildId｜${containerInfo.containerId} is running")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_STOP_VM_UN_FINISH,
-                defaultMessage = "$buildId｜${containerInfo.containerId} stopVm未完成,请稍后重试"
+                errorCode = ProcessMessageCode.ERROR_JOB_RUNNING,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_JOB_RUNNING)
             )
         }
     }
