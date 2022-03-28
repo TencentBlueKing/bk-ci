@@ -74,12 +74,6 @@ open class GitWebHookMatcher(
         page: Int,
         size: Int
     ): List<WebhookCommit> {
-        if (repository !is CodeGitRepository &&
-            repository !is CodeTGitRepository
-        ) {
-            logger.warn("$pipelineId|Is not code repo for git web hook for repo and pipeline: $repository")
-            return emptyList()
-        }
         return eventHandler.getWebhookCommitList(
             event = event,
             projectId = projectId,
