@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.utils
 
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.isDeleteBranch
 import com.tencent.devops.stream.pojo.isDeleteTag
