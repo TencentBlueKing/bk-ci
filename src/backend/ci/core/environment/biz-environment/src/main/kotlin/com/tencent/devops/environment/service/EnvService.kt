@@ -344,7 +344,9 @@ class EnvService @Autowired constructor(
         }
 
         return validRecordList.map {
-            val nodeIds = envNodeDao.list(dslContext, projectId, listOf(it.envId)).map { node ->
+            val nodeIds = envNodeDao.list(
+                dslContext = dslContext, projectId = it.sharedProjectId ?: projectId, envIds = listOf(it.envId)
+            ).map { node ->
                 node.nodeId
             }.toSet()
 
