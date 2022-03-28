@@ -299,7 +299,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             AgentType.NAME -> {
                 try {
                     client.get(ServiceThirdPartyAgentResource::class)
-                        .getAgentsByEnvName(event.projectId, dispatchType.envName)
+                        .getAgentsByEnvName(
+                            event.projectId,
+                            dispatchType.envProjectId?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
                 } catch (e: Exception) {
                     onFailBuild(
                         client = client,
@@ -319,8 +321,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
 
         if (agentsResult.isNotOk()) {
-            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}")
+            logger.warn(
+                "${event.buildId}|START_AGENT_FAILED|" +
+                    "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
+            )
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -415,7 +419,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                  */
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                    "开始查找最近使用过并且当前没有任何任务的空闲构建机...(Searching Agent: Most recently used and idle)"
+                        "开始查找最近使用过并且当前没有任何任务的空闲构建机...(Searching Agent: Most recently used and idle)"
                 )
                 if (startEmptyAgents(
                         event = event,
@@ -439,7 +443,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 )
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                    "查找最近使用过并且未达到最大构建数的构建机...(Searching Agent: Recently used and parallel available)"
+                        "查找最近使用过并且未达到最大构建数的构建机...(Searching Agent: Recently used and parallel available)"
                 )
                 /**
                  * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
@@ -461,7 +465,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                    "开始查找没有任何任务的空闲构建机...(Searching Agent: Most idle)"
+                        "开始查找没有任何任务的空闲构建机...(Searching Agent: Most idle)"
                 )
                 /**
                  * 根据哪些agent没有任何任务
@@ -483,7 +487,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                    "开始查找当前构建任务还没到达最大并行数构建机...(Searching Agent: Parallel available)"
+                        "开始查找当前构建任务还没到达最大并行数构建机...(Searching Agent: Parallel available)"
                 )
                 /**
                  * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
