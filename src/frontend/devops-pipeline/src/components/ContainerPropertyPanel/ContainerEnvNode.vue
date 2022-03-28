@@ -22,7 +22,7 @@
                     <div class="env-option-item">
                         <span>{{optionProps.name}}</span>
                         <span v-if="optionProps.isShared" class="env-info">{{ $t('editPage.shareEnvInfo', [optionProps.sharedProjectId, optionProps.sharedUserId]) }}</span>
-                        <bk-link class="env-link" :href="optionProps.envInfoHref" theme="primary">{{ $t('newlist.view') }}</bk-link>
+                        <bk-link target="_blank" class="env-link" :href="optionProps.envInfoHref" theme="primary">{{ $t('newlist.view') }}</bk-link>
                     </div>
                 </template>
                 
