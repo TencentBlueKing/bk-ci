@@ -659,7 +659,7 @@ class RepositoryService @Autowired constructor(
                     aliasName = repository.aliasName,
                     url = repository.url,
                     credentialId = record.credentialId,
-                    region = CodeSvnRegion.valueOf(record.region),
+                    region = CodeSvnRegion.getRegion(record.region),
                     projectName = record.projectName,
                     userName = record.userName,
                     projectId = repository.projectId,
