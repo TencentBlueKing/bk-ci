@@ -61,6 +61,7 @@ class GitCITriggerRepoService @Autowired constructor(
     private val mergeConflictCheck: MergeConflictCheck,
     private val triggerExceptionService: TriggerExceptionService,
     private val tokenService: StreamGitTokenService,
+    @org.springframework.context.annotation.Lazy
     private val gitCITriggerService: GitCITriggerService
 ) {
     companion object {
