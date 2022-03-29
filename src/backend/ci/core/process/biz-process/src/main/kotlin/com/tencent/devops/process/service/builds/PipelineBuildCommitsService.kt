@@ -1,9 +1,11 @@
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.dao.PipelineBuildCommitsDao
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -15,7 +17,8 @@ import org.springframework.stereotype.Service
 class PipelineBuildCommitsService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineBuildCommitsDao: PipelineBuildCommitsDao,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val client: Client
 ) {
 
     fun create(
@@ -37,14 +40,22 @@ class PipelineBuildCommitsService @Autowired constructor(
                     size = size
                 )
                 logger.info("commit list is $webhookCommitList")
-                pipelineBuildCommitsDao.create(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    webhookCommits = webhookCommitList,
-                    mrId = matcher.getMergeRequestId()?.toString() ?: ""
-                )
+                webhookCommitList.forEach {
+                    pipelineBuildCommitsDao.create(
+                        dslContext = dslContext,
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("PIPELINE_BUILD_COMMITS").data,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        commitId = it.commitId,
+                        authorName = it.authorName,
+                        message = it.message,
+                        repoType = it.repoType,
+                        commitTime = it.commitTime,
+                        mrId = matcher.getMergeRequestId()?.toString() ?: ""
+                    )
+                }
                 if (webhookCommitList.size < size) break
                 page++
             }
