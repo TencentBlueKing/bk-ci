@@ -46,7 +46,6 @@ import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.service.EnvService
-import com.tencent.devops.project.pojo.ProjectVO
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")

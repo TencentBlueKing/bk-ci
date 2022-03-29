@@ -79,12 +79,10 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import com.tencent.devops.model.environment.tables.records.TEnvRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.ParsePosition
 import java.text.SimpleDateFormat
 
 @Service
