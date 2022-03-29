@@ -41,7 +41,7 @@ import org.mockito.Mockito
 import javax.ws.rs.core.Response
 
 @Suppress("All")
-class TestStreamScmService {
+class StreamScmServiceTest {
 
     private val client: Client = mock()
     private val streamGitTokenService: StreamGitTokenService = mock()
@@ -49,13 +49,12 @@ class TestStreamScmService {
     private val streamScmService: StreamScmService = StreamScmService(client, mock(), mock(), mock(), streamGitTokenService)
     private val ongoingStubbing = Mockito.`when`(
         serviceGitCiResource.getGitCIFileContent("1", "1", "1", "1", true)
-    )
-        .thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
+    ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
 
     @Before
     fun init() {
         Mockito.`when`(client.getScm(ServiceGitCiResource::class)).thenReturn(serviceGitCiResource)
-        Mockito.`when`(streamGitTokenService.getToken(1)).thenReturn("1");
+        Mockito.`when`(streamGitTokenService.getToken(1)).thenReturn("1")
     }
 
     @Test
@@ -72,7 +71,7 @@ class TestStreamScmService {
         ongoingStubbing.thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
         var flag = false
         try {
-            val yamlFromGit = streamScmService.getYamlFromGit("1", "1", "1", "1", true)
+            streamScmService.getYamlFromGit("1", "1", "1", "1", true)
         } catch (e: Exception) {
             flag = true;
         }
