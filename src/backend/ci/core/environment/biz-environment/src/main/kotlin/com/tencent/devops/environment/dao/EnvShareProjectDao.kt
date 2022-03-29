@@ -31,16 +31,7 @@ import com.tencent.devops.environment.pojo.AddSharedProjectInfo
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvShareProject
 import com.tencent.devops.model.environment.tables.records.TEnvShareProjectRecord
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ICON_URL
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY_ID
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY_NAME
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY_TYPE
-import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import org.jooq.DSLContext
-import org.jooq.Record7
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -56,7 +47,7 @@ class EnvShareProjectDao {
     ): List<TEnvShareProjectRecord> {
         val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
         val b = TEnv.T_ENV.`as`("b")
-        return dslContext.select(
+        val dsl = dslContext.select(
             a.ENV_ID,
             b.ENV_NAME,
             a.MAIN_PROJECT_ID,
@@ -67,6 +58,12 @@ class EnvShareProjectDao {
             a.CREATE_TIME,
             a.UPDATE_TIME
         ).from(a).join(b).on(a.ENV_ID.eq(b.ENV_ID))
+            .where(a.MAIN_PROJECT_ID.eq(projectId))
+            .and((a.ENV_ID.eq(envId)))
+        if (!name.isNullOrBlank()) {
+            dsl.and(a.SHARED_PROJECT_NAME.like("%$name%"))
+        }
+        return dsl.orderBy(a.UPDATE_TIME.desc()).limit(limit).offset(offset)
             .fetch().map {
                 TEnvShareProjectRecord(
                     it.value1(),
@@ -138,13 +135,35 @@ class EnvShareProjectDao {
         envName: String?,
         sharedProjectId: String
     ): List<TEnvShareProjectRecord> {
-        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            val dsl = dslContext.selectFrom(this)
-                .where(SHARED_PROJECT_ID.eq(sharedProjectId))
-            if (!envName.isNullOrBlank()) {
-                dsl.and(ENV_NAME.eq(envName))
-            }
-            return dsl.fetch()
+        val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
+        val b = TEnv.T_ENV.`as`("b")
+        val dsl = dslContext.select(
+            a.ENV_ID,
+            b.ENV_NAME,
+            a.MAIN_PROJECT_ID,
+            a.SHARED_PROJECT_ID,
+            a.SHARED_PROJECT_NAME,
+            a.TYPE,
+            a.CREATOR,
+            a.CREATE_TIME,
+            a.UPDATE_TIME
+        ).from(a).join(b).on(a.ENV_ID.eq(b.ENV_ID))
+            .where(a.SHARED_PROJECT_ID.eq(sharedProjectId))
+        if (!envName.isNullOrBlank()) {
+            dsl.and(a.ENV_NAME.eq(envName))
+        }
+        return dsl.fetch().map {
+            TEnvShareProjectRecord(
+                it.value1(),
+                it.value2(),
+                it.value3(),
+                it.value4(),
+                it.value5(),
+                it.value6(),
+                it.value7(),
+                it.value8(),
+                it.value9()
+            )
         }
     }
 
