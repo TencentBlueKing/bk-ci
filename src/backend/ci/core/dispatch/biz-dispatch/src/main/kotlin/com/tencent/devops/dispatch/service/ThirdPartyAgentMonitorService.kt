@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
@@ -37,12 +38,14 @@ import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Date
+import java.util.concurrent.TimeUnit
 
 /**
  * 三方构建机的业务监控拓展
@@ -60,12 +63,15 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     fun monitor(event: AgentStartMonitor) {
 
         val record = thirdPartyAgentBuildDao.get(dslContext, event.buildId, event.vmSeqId) ?: return
+
+        val logMessage = StringBuilder(128)
+
+        tryRollBackQueue(event, record, logMessage)
+
         // #5806 已经不再排队，则退出监控, 暂时需求如此，后续可修改
         if (PipelineTaskStatus.toStatus(record.status) != PipelineTaskStatus.QUEUE) {
             return
         }
-
-        val logMessage = StringBuilder()
 
         val agentDetail = client.get(ServiceThirdPartyAgentResource::class)
             .getAgentDetail(userId = event.userId, projectId = event.projectId, agentHashId = record.agentId)
@@ -128,5 +134,33 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
     private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
             "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+    }
+
+    /**
+     * 3分钟如果Agent端发起了构建任务领取后还没启动，尝试回退到队列让其以便能重新领取到。
+     * 用于解决Agent端几类极端问题场景：
+     *  1、网络问题导致Agent侧领取中断，数据包丢失，没有收到领取任务，但任务已经被改成RUNNING，需要回退。
+     *  2、Agent领取后未处理构建前，进程意外退出
+     * 未解决的场景：
+     *  本次不涉及构建机集群重新漂移指定其他构建机，需要重新设计。
+     */
+    fun tryRollBackQueue(event: AgentStartMonitor, record: TDispatchThirdpartyAgentBuildRecord, sb: StringBuilder) {
+        if (PipelineTaskStatus.toStatus(record.status) != PipelineTaskStatus.RUNNING) {
+            return
+        }
+
+        record.updatedTime?.let { self ->
+            // Agent发起领取超过x分钟没有启动，基本上存在问题需要重回队列以便被再次调度到
+            if (System.currentTimeMillis() - self.timestampmilli() > TimeUnit.MINUTES.toMillis(ROLLBACK_MIN)) {
+                thirdPartyAgentBuildDao.updateStatus(dslContext, record.id, PipelineTaskStatus.QUEUE)
+                sb.append("任务领取超过$ROLLBACK_MIN 分钟没有启动, 可能存在异常，开始重置")
+                    .append("(Over $ROLLBACK_MIN minutes, try roll back to queue.)")
+                log(event, sb, VMUtils.genStartVMTaskId(event.vmSeqId))
+            }
+        }
+    }
+
+    companion object {
+        private const val ROLLBACK_MIN = 3L // 3分钟如果构建任务领取后没启动，尝试回退状态
     }
 }

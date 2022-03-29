@@ -691,11 +691,12 @@ open class MarketAtomTask : ITask() {
 
                 // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
                 // 即使没有jobId也以containerId前缀输出
-                // #6372 上下文输出后，取消原变量名输出，防止冲突
-                buildTask.stepId?.let {
-                    val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
-                    env["$jobPrefix.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
-                    env.remove(key)
+                val value = env[key] ?: ""
+                if (!buildTask.stepId.isNullOrBlank() && !buildVariables.jobId.isNullOrBlank()) {
+                    val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
+                    env[contextKey] = value
+                    // TODO 待定：是否进行原变量名输出，暂时保留
+                    // env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
@@ -705,10 +706,10 @@ open class MarketAtomTask : ITask() {
                     if (sensitiveFlag) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
-                        LoggerService.addNormalLine("output(normal): $key=${env[key]}")
+                        LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=${env[key]}")
+                    LoggerService.addWarnLine("output(except): $key=$value")
                 }
             }
 
