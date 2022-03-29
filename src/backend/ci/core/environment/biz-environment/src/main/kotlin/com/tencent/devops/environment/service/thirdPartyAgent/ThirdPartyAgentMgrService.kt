@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
@@ -694,7 +693,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
         if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envName] The env is not exist")
-            throw RemoteServiceException(
+            throw CustomException(
+                Response.Status.NOT_FOUND,
                 "第三方构建机环境不存在($projectId:$envName)"
             )
         }
@@ -718,7 +718,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     dslContext = dslContext,
                     projectId = sharedProjectId,
                     envName = sharedEnvName
-                ) ?: throw RemoteServiceException(
+                ) ?: throw CustomException(
+                    Response.Status.NOT_FOUND,
                     "第三方构建机环境不存在($sharedProjectId:$sharedEnvName)"
                 )
                 envShareProjectDao.list(
@@ -733,7 +734,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     dslContext = dslContext,
                     projectId = sharedProjectId,
                     envId = sharedEnvId
-                ) ?: throw RemoteServiceException(
+                ) ?: throw CustomException(
+                    Response.Status.NOT_FOUND,
                     "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
                 )
                 envShareProjectDao.list(
@@ -750,7 +752,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
                     "mainProjectId: $sharedProjectId"
             )
-            throw RemoteServiceException(
+            throw CustomException(
+                Response.Status.FORBIDDEN,
                 "无权限使用第三方构建机环境($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
@@ -795,7 +798,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
         }
         if (sharedThirdPartyAgents.isEmpty()) {
-            throw RemoteServiceException("无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)")
+            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)")
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents
@@ -819,7 +822,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val nodes = envNodeDao.list(dslContext = dslContext, projectId = projectId, envIds = listOf(envId))
         if (nodes.isEmpty() && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envHashId] The env is not exist")
-            throw RemoteServiceException(
+            throw CustomException(
+                Response.Status.NOT_FOUND,
                 "第三方构建机环境节点不存在($projectId:$envHashId)"
             )
         }
