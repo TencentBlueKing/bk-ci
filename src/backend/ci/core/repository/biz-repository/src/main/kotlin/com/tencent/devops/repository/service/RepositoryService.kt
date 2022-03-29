@@ -512,7 +512,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeSvnDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = repository.region,
+                        region = getSvnRegion(repository.region),
                         projectName = repository.projectName,
                         userName = repository.userName,
                         privateToken = repository.credentialId,
@@ -615,6 +615,12 @@ class RepositoryService @Autowired constructor(
         return repositoryId
     }
 
+    private fun getSvnRegion(region: CodeSvnRegion?): CodeSvnRegion {
+        logger.info("region is $region")
+        if(region == null) return CodeSvnRegion.TC
+        return CodeSvnRegion.getRegion(region.name)
+    }
+
     fun userGet(userId: String, projectId: String, repositoryConfig: RepositoryConfig): Repository {
         val repository = getRepository(projectId, repositoryConfig)
 
@@ -659,7 +665,7 @@ class RepositoryService @Autowired constructor(
                     aliasName = repository.aliasName,
                     url = repository.url,
                     credentialId = record.credentialId,
-                    region = CodeSvnRegion.getRegion(record.region),
+                    region = CodeSvnRegion.valueOf(record.region),
                     projectName = record.projectName,
                     userName = record.userName,
                     projectId = repository.projectId,
