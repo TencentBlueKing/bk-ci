@@ -24,39 +24,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.listener
 
-package com.tencent.devops.lambda.config
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
+import com.tencent.devops.lambda.service.process.LambdaDataService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Configuration
+@Component
+class LambdaBuildCommitsFinishListener @Autowired constructor(
+    private val lambdaDataService: LambdaDataService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildCommitsFinishEvent>(pipelineEventDispatcher) {
 
-@Configuration
-class LambdaKafkaTopicConfig {
-
-    @Value("\${spring.kafka.topics.buildHistoryTopic:#{null}}")
-    val buildHistoryTopic: String? = null
-
-    @Value("\${spring.kafka.topics.buildDetailTopic:#{null}}")
-    val buildDetailTopic: String? = null
-
-    @Value("\${spring.kafka.topics.jobDetailTopic:#{null}}")
-    val jobDetailTopic: String? = null
-
-    @Value("\${spring.kafka.topics.taskDetailTopic:#{null}}")
-    val taskDetailTopic: String? = null
-
-    @Value("\${spring.kafka.topics.projectInfoTopic:#{null}}")
-    val projectInfoTopic: String? = null
-
-    @Value("\${spring.kafka.topics.pipelineInfoTopic:#{null}}")
-    val pipelineInfoTopic: String? = null
-
-    @Value("\${spring.kafka.topics.pipelineResourceTopic:#{null}}")
-    val pipelineResourceTopic: String? = null
-
-    @Value("\${spring.kafka.topics.gitTaskTopic:#{null}}")
-    val gitTaskTopic: String? = null
-
-    @Value("\${spring.kafka.topics.buildCommitsTopic:#{null}}")
-    val buildCommitsTopic: String? = null
+    override fun run(event: PipelineBuildCommitsFinishEvent) {
+        lambdaDataService.onBuildCommitsFinish(event)
+    }
 }

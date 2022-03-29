@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
@@ -53,12 +54,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
+import com.tencent.devops.lambda.dao.process.LambdaBuildCommitsDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineLabelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineTemplateDao
+import com.tencent.devops.lambda.pojo.DataPlatBuildCommits
 import com.tencent.devops.lambda.pojo.DataPlatBuildDetail
 import com.tencent.devops.lambda.pojo.DataPlatBuildHistory
 import com.tencent.devops.lambda.pojo.DataPlatJobDetail
@@ -94,7 +97,8 @@ class LambdaDataService @Autowired constructor(
     private val lambdaBuildContainerDao: LambdaBuildContainerDao,
     private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient,
-    private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig
+    private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig,
+    private val lambdaBuildCommitsDao: LambdaBuildCommitsDao
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -169,6 +173,35 @@ class LambdaDataService @Autowired constructor(
         }
 
         return true
+    }
+
+    fun onBuildCommitsFinish(event: PipelineBuildCommitsFinishEvent) {
+        val records = lambdaBuildCommitsDao.getCommits(
+            dslContext = dslContext,
+            projectId = event.projectId,
+            buildId = event.buildId
+        )
+        try {
+            records.map { record ->
+                val buildCommits = with(record) {
+                    DataPlatBuildCommits(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        commitId = commitId,
+                        authorName = authorName,
+                        message = message,
+                        repoType = repositoryType,
+                        commitTime = commitTime.format(dateTimeFormatter),
+                        createTime = createTime.format(dateTimeFormatter)
+                    )
+                }
+                checkParamBlank(lambdaKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
+                kafkaClient.send(lambdaKafkaTopicConfig.buildCommitsTopic!!, JsonUtil.toJson(buildCommits))
+            }
+        } catch (ignore: Throwable) {
+            logger.error("Push build commits to kafka error, buildId: ${event.buildId}", ignore)
+        }
     }
 
     private fun pushTaskDetail(task: TPipelineBuildTaskRecord) {
