@@ -100,10 +100,11 @@ class AppExperienceResourceImpl @Autowired constructor(
         platform: Int,
         appVersion: String?,
         organization: String?,
-        experienceHashId: String
+        experienceHashId: String,
+        forceNew: Boolean
     ): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization)
+        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization, forceNew)
         return Result(result)
     }
 

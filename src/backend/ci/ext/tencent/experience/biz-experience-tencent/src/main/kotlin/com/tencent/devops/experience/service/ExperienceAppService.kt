@@ -111,7 +111,8 @@ class ExperienceAppService(
         experienceHashId: String,
         platform: Int,
         appVersion: String?,
-        organization: String?
+        organization: String?,
+        forceNew: Boolean
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         var experience = experienceDao.get(dslContext, experienceId)
@@ -125,7 +126,7 @@ class ExperienceAppService(
         // 移除红点
         removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
-        if (newestRecordId != null && newestRecordId != experienceId) {
+        if (forceNew && newestRecordId != null && newestRecordId != experienceId) {
             experienceId = newestRecordId
             experience = experienceDao.get(dslContext, experienceId)
         }
