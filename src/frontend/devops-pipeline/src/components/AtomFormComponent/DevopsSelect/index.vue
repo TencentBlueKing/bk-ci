@@ -110,7 +110,7 @@
             queryParams (newQueryParams, oldQueryParams) {
                 if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
                     this.debounceGetOptionList()
-                    this.clearValue()
+                    this.clearValue(false)
                 }
             },
             options (newOptions) {
