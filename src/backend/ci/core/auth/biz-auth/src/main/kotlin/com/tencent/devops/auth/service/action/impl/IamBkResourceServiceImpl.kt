@@ -29,14 +29,15 @@ package com.tencent.devops.auth.service.action.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
+import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
 import com.tencent.bk.sdk.iam.service.ResourceService
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO as ResourceDTO1
 
 class IamBkResourceServiceImpl @Autowired constructor(
     val iamConfiguration: IamConfiguration,
@@ -50,6 +51,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
     val otherResourceCallbackPath = ""
 
     override fun createExtSystem(resource: CreateResourceDTO) {
+        logger.info("createExtSystem $resource")
         // 1. 创建资源类型
         val resourceInfo = ResourceTypeDTO()
         resourceInfo.id = resource.resourceId
@@ -63,14 +65,17 @@ class IamBkResourceServiceImpl @Autowired constructor(
             path.path = projectCallbackPath
             resourceInfo.providerConfig = path
         } else {
-            val projectResource = ResourceDTO1(iamConfiguration.systemId, "", AuthResourceType.PROJECT.value, null)
+            val projectResource = ResourceDTO.builder()
+                .system(iamConfiguration.systemId)
+                .id(AuthResourceType.PROJECT.value)
+                .build()
             resourceInfo.parent = arrayListOf(projectResource)
             val path = ProviderConfigDTO()
             path.path = otherResourceCallbackPath
             resourceInfo.providerConfig = path
         }
         val result = resourceService.createResource(resourceInfo)
-
+        logger.info("createExtSystem createResource:$result")
         // 2. 资源视图
     }
 
@@ -82,5 +87,9 @@ class IamBkResourceServiceImpl @Autowired constructor(
         resourceInfo.description = resource.desc
         resourceInfo.englishDescription = resource.englishDes
         val result = resourceService.updateResource(resourceInfo, resourceType)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(IamBkResourceServiceImpl::class.java)
     }
 }
