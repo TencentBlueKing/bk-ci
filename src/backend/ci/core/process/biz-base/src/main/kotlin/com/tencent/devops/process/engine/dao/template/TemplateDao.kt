@@ -295,6 +295,28 @@ class TemplateDao {
         }
     }
 
+    fun getTemplateByVersionName(
+        dslContext: DSLContext,
+        projectId: String? = null,
+        versionName: String
+    ): TTemplateRecord {
+        with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(VERSION_NAME.eq(versionName))
+            if (!projectId.isNullOrBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(VERSION.desc())
+                .limit(1)
+                .fetchOne() ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                defaultMessage = "模板不存在"
+            )
+        }
+    }
+
     fun getSrcTemplateId(dslContext: DSLContext, projectId: String, templateId: String, type: String? = null): String? {
         return with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
