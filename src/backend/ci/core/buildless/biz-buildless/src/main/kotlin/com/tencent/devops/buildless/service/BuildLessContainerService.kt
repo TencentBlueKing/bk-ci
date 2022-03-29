@@ -54,9 +54,13 @@ import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.TimeZone
 import kotlin.streams.toList
@@ -100,12 +104,16 @@ class BuildLessContainerService(
         val containerName = "$BUILDLESS_POOL_PREFIX-${RandomUtil.randomString()}"
 
         val hostWorkspace = buildLessConfig.hostPathWorkspace + "/$containerName"
+
+        val linkPath = createSymbolicLink(hostWorkspace)
+
         val binds = Binds(
             Bind(buildLessConfig.hostPathApps, volumeApps, AccessMode.ro),
             Bind(buildLessConfig.hostPathInit, volumeInit, AccessMode.ro),
             Bind(buildLessConfig.hostPathSleep, volumeSleep, AccessMode.ro),
             Bind(buildLessConfig.hostPathLogs + "/$containerName", volumeLogs),
-            Bind(hostWorkspace, volumeWs)
+            Bind(hostWorkspace, volumeWs),
+            Bind(linkPath, Volume(linkPath))
         )
 
         try {
@@ -240,6 +248,27 @@ class BuildLessContainerService(
         }
 
         return timeoutContainerList
+    }
+
+    fun createSymbolicLink(hostWorkspace: String): String {
+        val hostWorkspaceFile = File(hostWorkspace)
+        if (!hostWorkspaceFile.exists()) {
+            hostWorkspaceFile.mkdirs() // 新建的流水线的工作空间路径为空则新建目录
+        }
+        val shaContent = ShaUtils.sha1(hostWorkspace.toByteArray())
+        val linkFilePathDir = buildLessConfig.hostPathLinkDir
+        val linkFileDir = File(linkFilePathDir)
+        if (!linkFileDir.exists()) {
+            linkFileDir.mkdirs()
+        }
+        val linkPath = "$linkFilePathDir/$shaContent"
+        logger.info("hostWorkspace:$hostWorkspace linkPath is: $linkPath")
+        val link = FileSystems.getDefault().getPath(linkPath)
+        if (!link.toFile().exists()) {
+            val target = FileSystems.getDefault().getPath(hostWorkspace)
+            Files.createSymbolicLink(link, target) // 为真实工作空间地址创建软链
+        }
+        return linkPath
     }
 
     private fun checkStartTime(utcTime: String?): Boolean {
