@@ -22,8 +22,12 @@
         },
         computed: {
             svgHref () {
-                const id = `bk-pipeline-${this.name}`
-                return document.getElementById(id) ? `#${id}` : '#bk-pipeline-order'
+                const defaultId = '#bk-pipeline-order'
+                if (typeof this.name !== 'string') {
+                    return defaultId
+                }
+                const id = `bk-pipeline-${this.name.toLowerCase()}`
+                return document.getElementById(id) ? `#${id}` : defaultId
             }
             
         }
