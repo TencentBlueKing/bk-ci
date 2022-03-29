@@ -10,7 +10,7 @@
         </enum-input>
         <div :class="{ 'agent-name-select': true, 'abnormal-tip': abnormalSlave }" v-if="showAgentById">
             <selector
-                :name="name"
+                name="value"
                 :disabled="disabled"
                 :handle-change="handleSelect"
                 :list="nodeList"
@@ -43,7 +43,7 @@
                     :label="isAgentEnv ? $t('editPage.environment') : ''"
                 >
                     <devops-select
-                        :name="name"
+                        name="value"
                         :disabled="disabled"
                         :is-loading="isLoading"
                         :handle-change="handleChange"
