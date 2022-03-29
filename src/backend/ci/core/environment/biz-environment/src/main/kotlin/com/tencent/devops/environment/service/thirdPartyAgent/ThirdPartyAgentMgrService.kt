@@ -694,7 +694,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envName] The env is not exist")
             throw CustomException(
-                Response.Status.NOT_FOUND,
+                Response.Status.FORBIDDEN,
                 "第三方构建机环境不存在($projectId:$envName)"
             )
         }
@@ -719,7 +719,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     projectId = sharedProjectId,
                     envName = sharedEnvName
                 ) ?: throw CustomException(
-                    Response.Status.NOT_FOUND,
+                    Response.Status.FORBIDDEN,
                     "第三方构建机环境不存在($sharedProjectId:$sharedEnvName)"
                 )
                 envShareProjectDao.list(
@@ -735,7 +735,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     projectId = sharedProjectId,
                     envId = sharedEnvId
                 ) ?: throw CustomException(
-                    Response.Status.NOT_FOUND,
+                    Response.Status.FORBIDDEN,
                     "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
                 )
                 envShareProjectDao.list(
@@ -823,7 +823,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (nodes.isEmpty() && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
-                Response.Status.NOT_FOUND,
+                Response.Status.FORBIDDEN,
                 "第三方构建机环境节点不存在($projectId:$envHashId)"
             )
         }
