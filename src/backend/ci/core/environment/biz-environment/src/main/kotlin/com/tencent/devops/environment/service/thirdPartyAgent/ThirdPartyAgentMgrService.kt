@@ -693,7 +693,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
         if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
             logger.warn("[$projectId|$envName] The env is not exist")
-            return emptyList()
+            throw CustomException(
+                Response.Status.NOT_FOUND,
+                "第三方构建机环境不存在($projectId:$envName)"
+            )
         }
 
         return (if (envRecord != null) {
@@ -803,12 +806,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     fun getAgentByEnvId(projectId: String, envHashId: String): List<ThirdPartyAgent> {
         logger.info("[$projectId|$envHashId] Get the agents by envId")
-        run {
+        val sharedThridPartyAgentList = run {
             val sharedProjEnv = envHashId.split("@") // sharedProjId@poolName
             if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
-                return@run
+                return emptyList()
             }
-            return getSharedThirdPartyAgentList(
+            getSharedThirdPartyAgentList(
                 projectId = projectId,
                 sharedProjectId = sharedProjEnv[0],
                 sharedEnvName = null,
@@ -817,8 +820,12 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
         val envId = HashUtil.decodeIdToLong(envHashId)
         val nodes = envNodeDao.list(dslContext = dslContext, projectId = projectId, envIds = listOf(envId))
-        if (nodes.isEmpty()) {
-            return emptyList()
+        if (nodes.isEmpty() && sharedThridPartyAgentList.isEmpty()) {
+            logger.warn("[$projectId|$envHashId] The env is not exist")
+            throw CustomException(
+                Response.Status.NOT_FOUND,
+                "第三方构建机环境节点不存在($projectId:$envHashId)"
+            )
         }
         val nodeIds = nodes.map {
             it.nodeId
@@ -828,9 +835,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             nodeIds = nodeIds,
             projectId = projectId
         )
-        if (agents.isEmpty()) {
-            return emptyList()
-        }
         return agents.map {
             val nodeId = if (it.nodeId != null) {
                 HashUtil.encodeLongId(it.nodeId)
@@ -850,7 +854,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 createTime = it.createdTime.timestamp(),
                 parallelTaskCount = it.parallelTaskCount
             )
-        }
+        }.plus(sharedThridPartyAgentList)
     }
 
     fun checkIfCanUpgrade(
