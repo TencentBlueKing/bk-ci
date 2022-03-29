@@ -151,7 +151,7 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
+        val isPrivate = experienceBaseService.isPrivate(experience, isOuter, userId)
         val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 

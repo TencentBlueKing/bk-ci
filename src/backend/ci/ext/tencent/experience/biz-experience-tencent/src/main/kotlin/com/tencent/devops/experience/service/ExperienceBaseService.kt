@@ -214,11 +214,14 @@ class ExperienceBaseService @Autowired constructor(
             (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1()
                 ?: 0) > 0
 
-    fun isPrivate(experienceId: Long, isOuter: Boolean = false): Boolean {
-        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
+    fun isPrivate(experience: TExperienceRecord, isOuter: Boolean = false, userId: String): Boolean {
+        if (experience.creator == userId) {
+            return true
+        }
+        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experience.id)
             .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.isNotEmpty() ||
-                (if (isOuter) experienceOuterDao.countByRecordId(dslContext, experienceId)
-                else experienceInnerDao.countByRecordId(dslContext, experienceId)) > 0
+                (if (isOuter) experienceOuterDao.countByRecordId(dslContext, experience.id)
+                else experienceInnerDao.countByRecordId(dslContext, experience.id)) > 0
     }
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
