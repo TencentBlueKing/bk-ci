@@ -29,7 +29,6 @@ package com.tencent.devops.auth.service.action.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ActionTypeEnum
-import com.tencent.bk.sdk.iam.dto.SelectionDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionUpdateDTO
 import com.tencent.bk.sdk.iam.dto.resource.RelatedResourceTypeDTO
@@ -38,8 +37,8 @@ import com.tencent.bk.sdk.iam.dto.resource.ResourceCreateConfigAction
 import com.tencent.bk.sdk.iam.dto.resource.ResourceCreateConfigDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceCreatorActionsDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
-import com.tencent.bk.sdk.iam.service.ActionService
-import com.tencent.bk.sdk.iam.service.ResourceService
+import com.tencent.bk.sdk.iam.service.IamActionService
+import com.tencent.bk.sdk.iam.service.IamResourceService
 import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.devops.auth.dao.ActionDao
 import com.tencent.devops.auth.pojo.action.CreateActionDTO
@@ -56,8 +55,8 @@ class IamBkActionServiceImpl @Autowired constructor(
     override val resourceService: BkResourceService,
     val iamConfiguration: IamConfiguration,
     val systemService: SystemService,
-    val iamActionService: ActionService,
-    val iamResourceService: ResourceService
+    val iamActionService: IamActionService,
+    val iamResourceService: IamResourceService
 ): BKActionServiceImpl(dslContext, actionDao, resourceService) {
 
     override fun extSystemCreate(userId: String, action: CreateActionDTO) {

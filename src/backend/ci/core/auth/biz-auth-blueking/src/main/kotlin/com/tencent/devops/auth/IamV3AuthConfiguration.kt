@@ -29,9 +29,9 @@ package com.tencent.devops.auth
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
-import com.tencent.bk.sdk.iam.service.ActionService
+import com.tencent.bk.sdk.iam.service.IamActionService
+import com.tencent.bk.sdk.iam.service.IamResourceService
 import com.tencent.bk.sdk.iam.service.PolicyService
-import com.tencent.bk.sdk.iam.service.ResourceService
 import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.bk.sdk.iam.service.impl.ActionServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
@@ -131,8 +131,8 @@ class IamV3AuthConfiguration {
         resourceService: BkResourceService,
         iamConfiguration: IamConfiguration,
         systemService: SystemService,
-        iamActionService: ActionService,
-        iamResourceService: ResourceService
+        iamActionService: IamActionService,
+        iamResourceService: IamResourceService
     ) = IamBkActionServiceImpl(
         dslContext = dslContext,
         actionDao = actionDao,
@@ -146,6 +146,6 @@ class IamV3AuthConfiguration {
     @Bean
     fun iamResourceService(
         iamConfiguration: IamConfiguration,
-        resourceService: ResourceService
+        resourceService: IamResourceService
     ) = IamBkResourceServiceImpl(iamConfiguration, resourceService)
 }

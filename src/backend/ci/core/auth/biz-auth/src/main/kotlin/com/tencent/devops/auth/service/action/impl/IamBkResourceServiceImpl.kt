@@ -31,7 +31,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
-import com.tencent.bk.sdk.iam.service.ResourceService
+import com.tencent.bk.sdk.iam.service.IamResourceService
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Value
 
 class IamBkResourceServiceImpl @Autowired constructor(
     val iamConfiguration: IamConfiguration,
-    val resourceService: ResourceService
+    val resourceService: IamResourceService
 ): BkResourceServiceImpl() {
 
     @Value("")
@@ -87,6 +87,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
         resourceInfo.description = resource.desc
         resourceInfo.englishDescription = resource.englishDes
         val result = resourceService.updateResource(resourceInfo, resourceType)
+        logger.info("updateExtSystem createResource:$result")
     }
 
     companion object {
