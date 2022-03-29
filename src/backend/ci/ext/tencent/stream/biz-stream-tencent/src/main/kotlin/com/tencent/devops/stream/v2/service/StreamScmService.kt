@@ -191,26 +191,36 @@ class StreamScmService @Autowired constructor(
     fun getProjectInfoRetry(
         token: String,
         gitProjectId: String,
-        useAccessToken: Boolean
+        useAccessToken: Boolean,
+        isFirst: Boolean = true
     ): GitCIProjectInfo {
         logger.info("getProjectInfoRetry: [$gitProjectId]")
-        return retryFun(
-            log = "$gitProjectId get project $gitProjectId fail",
-            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getProjectInfo(
-                    accessToken = token,
-                    gitProjectId = gitProjectId,
-                    useAccessToken = useAccessToken
-                ).data!!
+        try {
+            return retryFun(
+                log = "$gitProjectId get project $gitProjectId fail",
+                apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getProjectInfo(
+                        accessToken = token,
+                        gitProjectId = gitProjectId,
+                        useAccessToken = useAccessToken
+                    ).data!!
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getProjectInfoRetry(newToken, gitProjectId, useAccessToken, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getProjectInfo(
         token: String,
         gitProjectId: String,
-        useAccessToken: Boolean
+        useAccessToken: Boolean,
+        isFirst: Boolean = true
     ): GitCIProjectInfo? {
         logger.info("GitCIProjectInfo: [$gitProjectId|$useAccessToken]")
         try {
@@ -248,6 +258,12 @@ class StreamScmService @Autowired constructor(
                     )
                 }
             }
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getProjectInfo(newToken, gitProjectId, useAccessToken, false)
+            }
+            throw e
         } catch (e: Exception) {
             logger.error("getProjectInfo Exception: $e")
             error(" getProjectInfo error ${e.message}", ErrorCodeEnum.GET_PROJECT_INFO_ERROR)
@@ -263,26 +279,36 @@ class StreamScmService @Autowired constructor(
         since: String?,
         until: String?,
         page: Int?,
-        perPage: Int?
+        perPage: Int?,
+        isFirst: Boolean = true
     ): List<Commit>? {
         logger.info("getCommits: [$gitProjectId|$filePath|$branch|$since|$until|$page|$perPage]")
-        return client.getScm(ServiceGitResource::class).getCommits(
-            gitProjectId = gitProjectId,
-            filePath = filePath,
-            branch = branch,
-            token = token,
-            since = since,
-            until = until,
-            page = page ?: 1,
-            perPage = perPage ?: 20
-        ).data
+        try {
+            return client.getScm(ServiceGitResource::class).getCommits(
+                gitProjectId = gitProjectId,
+                filePath = filePath,
+                branch = branch,
+                token = token,
+                since = since,
+                until = until,
+                page = page ?: 1,
+                perPage = perPage ?: 20
+            ).data
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getCommits(newToken, gitProjectId, filePath, branch, since, until, page, perPage, false)
+            }
+            throw e
+        }
     }
 
     fun createNewFile(
         userId: String,
         token: String,
         gitProjectId: String,
-        gitCICreateFile: GitCICreateFile
+        gitCICreateFile: GitCICreateFile,
+        isFirst: Boolean = true
     ): Boolean {
         logger.info("createNewFile: [$gitProjectId|$gitCICreateFile]")
         try {
@@ -310,6 +336,12 @@ class StreamScmService @Autowired constructor(
                     exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.formatErrorMessage.format(e.errorMessage)
                 )
             }
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return createNewFile(userId, newToken, gitProjectId, gitCICreateFile, false)
+            }
+            throw e
         } catch (e: Exception) {
             logger.error("createNewFile Exception: $e")
             error(" createNewFile error ${e.message}", ErrorCodeEnum.CREATE_NEW_FILE_ERROR)
@@ -322,16 +354,25 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?
+        search: String?,
+        isFirst: Boolean = true
     ): List<GitMember>? {
         logger.info("getProjectMembers: [$gitProjectId|$page|$pageSize|$search]")
-        return client.getScm(ServiceGitCiResource::class).getMembers(
-            token = token,
-            gitProjectId = gitProjectId,
-            page = page ?: 1,
-            pageSize = pageSize ?: 20,
-            search = search
-        ).data
+        try {
+            return client.getScm(ServiceGitCiResource::class).getMembers(
+                token = token,
+                gitProjectId = gitProjectId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                search = search
+            ).data
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getProjectMembers(newToken, gitProjectId, page, pageSize, search, false)
+            }
+            throw e
+        }
     }
 
     fun getProjectMembersRetry(
