@@ -311,7 +311,7 @@
                 if (!atomCode) {
                     return 'placeholder'
                 }
-                return document.getElementById(atomCode) ? atomCode : 'order'
+                return atomCode
             },
             hasReviewPerm () {
                 return this.atom.computedReviewers.includes(this.userName)
