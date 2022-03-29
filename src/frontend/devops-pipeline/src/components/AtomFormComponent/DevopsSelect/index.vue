@@ -248,7 +248,7 @@
                 
                 if (this.isMultiple) {
                     if (this.displayName) {
-                        this.getMultipleDisplayName(this.displayName)
+                        this.getMultipleDisplayName(this.displayName, 'name')
                     } else {
                         this.getMultipleDisplayName(this.value)
                     }
@@ -294,7 +294,7 @@
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
-            getMultipleDisplayName (val) {
+            getMultipleDisplayName (val, type = 'id') {
                 if (typeof val === 'string') {
                     val = val === '' ? [] : val.split(',')
                 }
@@ -307,7 +307,8 @@
                     }, [])
                 }
                 const typeMap = opts.reduce((cur, opt) => {
-                    cur[opt.id] = opt
+                    const key = type === 'name' ? opt.name : opt.id
+                    cur[key] = opt
                     return cur
                 }, {})
                 const resultMap = {}
