@@ -202,7 +202,7 @@ class GitCIEventService @Autowired constructor(
         var messageId = -1L
         val event = gitEvent ?: (gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId"))
-        val messageTitle = eventMessageUtil.getEventMessageTitle(event, gitProjectId)
+        val messageTitle = eventMessageUtil.getEventMessageTitle(event)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             messageId = gitRequestEventNotBuildDao.save(

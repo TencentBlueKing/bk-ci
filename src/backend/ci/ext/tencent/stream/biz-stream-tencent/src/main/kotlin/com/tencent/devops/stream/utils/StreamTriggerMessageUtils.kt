@@ -3,13 +3,11 @@ package com.tencent.devops.stream.utils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.slf4j.LoggerFactory
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class StreamTriggerMessageUtils @Autowired constructor(
-    private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -27,7 +24,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
     }
 
     @SuppressWarnings("ComplexMethod")
-    fun getEventMessageTitle(event: GitRequestEvent, gitProjectId: Long): String {
+    fun getEventMessageTitle(event: GitRequestEvent): String {
         val messageTitle = when (event.objectKind) {
             TGitObjectKind.MERGE_REQUEST.value -> {
                 "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
@@ -42,12 +39,6 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
                     "Tag [${event.branch}] deleted by ${event.userId}"
                 } else {
-                    val eventMap = try {
-                        objectMapper.readValue<GitTagPushEvent>(event.event)
-                    } catch (e: Exception) {
-                        logger.error("event as GitTagPushEvent error ${e.message}")
-                        null
-                    }
                     "Tag [${event.branch}] pushed by ${event.userId}"
                 }
             }

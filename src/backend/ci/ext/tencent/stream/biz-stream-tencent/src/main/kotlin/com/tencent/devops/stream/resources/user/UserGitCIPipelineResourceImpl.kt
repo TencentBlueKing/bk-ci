@@ -71,12 +71,13 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     ): Result<GitProjectPipeline?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        return Result(
-            pipelineV2Service.getPipelineById(
-                gitProjectId = gitProjectId,
-                pipelineId = pipelineId
-            )
-        )
+        val pipeline = pipelineV2Service.getPipelineById(
+            pipelineId = pipelineId
+        ) ?: return Result(null)
+        if (pipeline.gitProjectId != gitProjectId) {
+            throw ParamBlankException("Invalid gitProjectId")
+        }
+        return Result(pipeline)
     }
 
     override fun enablePipeline(
