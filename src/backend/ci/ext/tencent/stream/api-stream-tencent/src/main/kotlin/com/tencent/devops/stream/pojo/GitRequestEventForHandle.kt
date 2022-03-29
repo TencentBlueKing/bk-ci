@@ -25,26 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.mq.streamMrConflict
+package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object GitCIMrConflictCheckDispatcher {
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIMrConflictCheckEvent) {
-        try {
-            logger.info("[${event.gitRequestEventForHandle}] Dispatch the event")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                message.messageProperties.setHeader("x-delay", event.delayMills)
-                message
-            }
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
-
-    private val logger = LoggerFactory.getLogger(GitCIMrConflictCheckDispatcher::class.java)
-}
+@ApiModel("工蜂触发请求-封装给流水线执行库处理使用")
+data class GitRequestEventForHandle(
+    @ApiModelProperty("Git Request Event ID")
+    val id: Long?,
+    @ApiModelProperty("流水线所在工蜂项目ID")
+    val gitProjectId: Long,
+    @ApiModelProperty("流水线所在分支名")
+    val branch: String,
+    @ApiModelProperty("触发用户")
+    val userId: String,
+    @ApiModelProperty("是否为远程仓库触发")
+    val checkRepoTrigger: Boolean = false,
+    @ApiModelProperty("工蜂触发的请求内容")
+    val gitRequestEvent: GitRequestEvent
+)

@@ -75,7 +75,7 @@ constructor(
                 gitProjectConf = gitProjectConf,
                 path2PipelineExists = path2PipelineExists,
                 event = event,
-                gitRequestEvent = gitRequestEvent,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 isEndCheck = retryTime == 1,
                 notBuildRecordId = notBuildRecordId
             )
@@ -84,20 +84,20 @@ constructor(
         if (!isFinish && checkEvent.retryTime > 0) {
             logger.warn(
                 "Retry to check gitci mr request conflict " +
-                        "event [${checkEvent.gitRequestEvent}|${checkEvent.retryTime}]"
+                    "event [${checkEvent.gitRequestEventForHandle}|${checkEvent.retryTime}]"
             )
             checkEvent.retryTime--
             GitCIMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
         } else {
             if (isTrigger) {
                 triggerExceptionService.handle(
-                    requestEvent = checkEvent.gitRequestEvent,
+                    requestEvent = checkEvent.gitRequestEventForHandle,
                     gitEvent = checkEvent.event,
                     basicSetting = checkEvent.gitProjectConf
                 ) {
-                    triggerExceptionService.handleErrorCode(request = checkEvent.gitRequestEvent) {
+                    triggerExceptionService.handleErrorCode(request = checkEvent.gitRequestEventForHandle) {
                         gitCITriggerService.matchAndTriggerPipeline(
-                            gitRequestEvent = checkEvent.gitRequestEvent,
+                            gitRequestEventForHandle = checkEvent.gitRequestEventForHandle,
                             event = checkEvent.event,
                             path2PipelineExists = checkEvent.path2PipelineExists,
                             gitProjectConf = checkEvent.gitProjectConf

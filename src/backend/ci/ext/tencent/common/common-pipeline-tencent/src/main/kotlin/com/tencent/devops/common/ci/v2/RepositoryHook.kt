@@ -25,26 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.mq.streamMrConflict
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-object GitCIMrConflictCheckDispatcher {
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreRepositoryHook(
+    val name: String? = null,
 
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: GitCIMrConflictCheckEvent) {
-        try {
-            logger.info("[${event.gitRequestEventForHandle}] Dispatch the event")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                message.messageProperties.setHeader("x-delay", event.delayMills)
-                message
-            }
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
+    val credentials: Any? = null,
 
-    private val logger = LoggerFactory.getLogger(GitCIMrConflictCheckDispatcher::class.java)
-}
+    val events: RepositoryHookEvents? = null
+)
+
+data class RepositoryHook(
+    val name: String? = null,
+
+    val credentialsForTicketId: String? = null,
+
+    val credentialsForUserName: String? = null,
+
+    val credentialsForPassword: String? = null,
+
+    val credentialsForToken: String? = null
+
+)
+
+data class RepositoryHookEvents(
+    val push: Any? = null,
+    val tag: Any? = null,
+    val mr: Any? = null,
+    val schedules: SchedulesRule? = null,
+    val delete: DeleteRule? = null,
+    val issue: IssueRule? = null,
+    val review: ReviewRule? = null,
+    val note: NoteRule? = null
+)

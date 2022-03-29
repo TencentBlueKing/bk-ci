@@ -39,8 +39,10 @@ import com.tencent.devops.stream.pojo.BranchBuildHistory
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.enums.BranchType
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +56,9 @@ class GitCIBranchService @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBranchService::class.java)
@@ -104,29 +108,42 @@ class GitCIBranchService @Autowired constructor(
                     pipelineId = gitRequestBuildEvent.pipelineId
                 ) ?: return@forEach
 
-                gitCIBuildHistoryList.add(GitCIBuildHistory(
-                    displayName = pipeline.displayName,
-                    pipelineId = pipeline.pipelineId,
-                    gitRequestEvent = GitRequestEventReq(gitRequestEvent),
-                    buildHistory = history
-                ))
+                gitCIBuildHistoryList.add(
+                    GitCIBuildHistory(
+                        displayName = pipeline.displayName,
+                        pipelineId = pipeline.pipelineId,
+                        gitRequestEvent = GitRequestEventReq(gitRequestEvent),
+                        buildHistory = history
+                    )
+                )
             }
             // 如果是来自fork库的分支，单独标识
-            result.add(BranchBuildHistory(
-                branchName = GitCommonUtils.checkAndGetForkBranchName(
-                    gitProjectId = it.gitProjectId,
-                    sourceGitProjectId = it.sourceGitProjectId,
-                    branch = it.branch,
-                    client = client
-                ),
-                buildTotal = it.buildTotal,
-                branchType = if (default.equals(it.branch, true)) {
-                    BranchType.Default
-                } else {
-                    BranchType.Active
-                },
-                buildHistory = gitCIBuildHistoryList
-            ))
+            val gitProjectInfoCache = it.sourceGitProjectId?.let { id ->
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = id,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
+            result.add(
+                BranchBuildHistory(
+                    branchName = GitCommonUtils.checkAndGetForkBranchName(
+                        gitProjectId = it.gitProjectId,
+                        sourceGitProjectId = it.sourceGitProjectId,
+                        branch = it.branch,
+                        gitProjectCache = gitProjectInfoCache
+                    ),
+                    buildTotal = it.buildTotal,
+                    branchType = if (default.equals(it.branch, true)) {
+                        BranchType.Default
+                    } else {
+                        BranchType.Active
+                    },
+                    buildHistory = gitCIBuildHistoryList
+                )
+            )
         }
         return result
     }
