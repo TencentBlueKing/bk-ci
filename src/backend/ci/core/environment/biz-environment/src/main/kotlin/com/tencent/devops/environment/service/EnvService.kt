@@ -762,19 +762,21 @@ class EnvService @Autowired constructor(
         }
         val projectList = client.get(ServiceProjectResource::class).list(
             userId = userId
-        ).data?.filter { search.isNullOrBlank() || it.projectName.contains(search) }?.map {
-            SharedProjectInfo(
-                projectId = it.englishName,
-                gitProjectId = null,
-                name = it.projectName,
-                creator = it.creator,
-                type = SharedEnvType.PROJECT,
-                createTime = SimpleDateFormat("YY-MM-DD").parse(it.createdAt).time,
-                updateTime = SimpleDateFormat("YY-MM-DD").parse(
-                    if (it.updatedAt.isNullOrBlank()) it.createdAt else it.updatedAt
-                ).time
-            )
-        }?.sortedBy { it.name } ?: emptyList()
+        ).data
+            ?.filter { it.englishName != projectId && (search.isNullOrBlank() || it.projectName.contains(search)) }
+            ?.map {
+                SharedProjectInfo(
+                    projectId = it.englishName,
+                    gitProjectId = null,
+                    name = it.projectName,
+                    creator = it.creator,
+                    type = SharedEnvType.PROJECT,
+                    createTime = SimpleDateFormat("YY-MM-DD").parse(it.createdAt).time,
+                    updateTime = SimpleDateFormat("YY-MM-DD").parse(
+                        if (it.updatedAt.isNullOrBlank()) it.createdAt else it.updatedAt
+                    ).time
+                )
+            }?.sortedBy { it.name } ?: emptyList()
         val envId = HashUtil.decodeIdToLong(envHashId)
         val count = envShareProjectDao.count(
             dslContext = dslContext,
