@@ -135,7 +135,7 @@ class ExperienceBaseService @Autowired constructor(
 
     fun toAppExperiences(
         userId: String,
-        records: Result<TExperienceRecord>
+        records: List<TExperienceRecord>
     ): MutableList<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()

@@ -417,10 +417,18 @@ class ExperienceAppService(
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
             dslContext, platformStr, 100
-        ).map { it.value1() }.filterNot { recordIds.contains(it) }
+        ).filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
 
-        val records = experienceDao.list(dslContext, recordIds)
+        // 找到结果
+        val recordMap = experienceDao.list(dslContext, recordIds).map { it.id to it }.toMap()
+
+        // 排序
+        val records = mutableListOf<TExperienceRecord>()
+        for (recordId in recordIds) {
+            recordMap[recordId]?.let { records.add(it) }
+        }
+
         return experienceBaseService.toAppExperiences(userId, records)
     }
 }
