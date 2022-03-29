@@ -181,6 +181,10 @@ class LambdaDataService @Autowired constructor(
             projectId = event.projectId,
             buildId = event.buildId
         )
+        if (records.isEmpty()) {
+            logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build commits is empty")
+            return
+        }
         try {
             records.map { record ->
                 val buildCommits = with(record) {
