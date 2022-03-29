@@ -54,7 +54,6 @@ import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.trigger.StreamTriggerCache
-import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
