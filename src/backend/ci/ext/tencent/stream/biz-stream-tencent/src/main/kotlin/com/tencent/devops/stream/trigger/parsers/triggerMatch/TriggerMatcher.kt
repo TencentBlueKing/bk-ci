@@ -188,13 +188,39 @@ class TriggerMatcher @Autowired constructor(
 
         val gitRequestEvent = context.gitRequestEventForHandle.gitRequestEvent
 
-        val (repoTriggerCredentialsCheck, repoTriggerUserId) = repoTriggerEventService.checkRepoTriggerCredentials(
-            gitRequestEventForHandle = context.gitRequestEventForHandle,
-            repoHook = triggerOn.repoHook
-        )
+        val (repoTriggerCredentialsCheck, repoTriggerUserId) = try {
+            repoTriggerEventService.checkRepoTriggerCredentials(
+                gitRequestEventForHandle = context.gitRequestEventForHandle,
+                repoHook = triggerOn.repoHook
+            )
+        } catch (e: Exception) {
+            TriggerException.triggerError(
+                request = context.gitRequestEventForHandle,
+                event = context.gitEvent,
+                pipeline = context.pipeline,
+                reason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("请检查远程仓库(${triggerOn.repoHook?.name})鉴权信息是否正确,${e.message}"),
+                yamls = Yamls(context.originYaml, null, null),
+                commitCheck = CommitCheck(
+                    block = context.gitRequestEventForHandle.gitRequestEvent.isMr(),
+                    state = GitCICommitCheckState.FAILURE
+                )
+            )
+        }
         if (!repoTriggerCredentialsCheck) {
             logger.warn("repo trigger check credentials fail")
-            return TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
+            TriggerException.triggerError(
+                request = context.gitRequestEventForHandle,
+                event = context.gitEvent,
+                pipeline = context.pipeline,
+                reason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("请检查远程仓库(${triggerOn.repoHook?.name})使用的权限是否大于等于MASTER"),
+                yamls = Yamls(context.originYaml, null, null),
+                commitCheck = CommitCheck(
+                    block = context.gitRequestEventForHandle.gitRequestEvent.isMr(),
+                    state = GitCICommitCheckState.FAILURE
+                )
+            )
         }
 
         // 判断是否是默认分支上的push，来判断是否注册定时任务
