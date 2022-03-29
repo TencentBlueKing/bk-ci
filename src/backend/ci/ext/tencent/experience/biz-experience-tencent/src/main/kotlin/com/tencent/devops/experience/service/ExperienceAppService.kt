@@ -402,20 +402,21 @@ class ExperienceAppService(
     }
 
     fun publicExperiences(userId: String, platform: Int, offset: Int, limit: Int): List<AppExperience> {
+        val platformStr = PlatformEnum.of(platform)?.name
         val recordIds = mutableListOf<Long>()
 
         // 订阅的需要置顶
-        val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, 100)
+        val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, platformStr, 100)
         recordIds.addAll(subscribeRecordIds)
 
         // 自己发布的
         val recordIdsBySelf =
-            experienceDao.listIdsByCreator(dslContext, userId, 100).filterNot { recordIds.contains(it) }
+            experienceDao.listIdsByCreator(dslContext, userId, platformStr, 100).filterNot { recordIds.contains(it) }
         recordIds.addAll(recordIdsBySelf)
 
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
-            dslContext, PlatformEnum.of(platform)?.name, 100
+            dslContext, platformStr, 100
         ).map { it.value1() }.filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
 

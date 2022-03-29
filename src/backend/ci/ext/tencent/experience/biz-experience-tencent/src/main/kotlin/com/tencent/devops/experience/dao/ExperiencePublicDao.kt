@@ -28,7 +28,6 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
-import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
@@ -421,6 +420,7 @@ class ExperiencePublicDao {
     fun listSubscribeRecordIds(
         dslContext: DSLContext,
         userId: String,
+        platform: String?,
         limit: Int
     ): List<Long> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC
@@ -433,6 +433,7 @@ class ExperiencePublicDao {
         return dslContext.select(p.RECORD_ID)
             .from(join)
             .where(s.USER_ID.eq(userId))
+            .let { if (platform == null) it else it.and(s.PLATFORM.eq(platform)) }
             .orderBy(p.UPDATE_TIME.desc())
             .limit(limit)
             .fetch(p.RECORD_ID)
