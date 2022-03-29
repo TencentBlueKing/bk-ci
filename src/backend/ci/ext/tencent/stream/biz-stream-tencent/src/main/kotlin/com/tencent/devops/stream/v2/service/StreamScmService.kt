@@ -258,8 +258,8 @@ class StreamScmService @Autowired constructor(
                     )
                 }
             }
-        } catch (e: ErrorCodeException) {
-            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+        } catch (e: CustomException) {
+            if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
                 val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
                 return getProjectInfo(newToken, gitProjectId, useAccessToken, false)
             }
@@ -294,9 +294,9 @@ class StreamScmService @Autowired constructor(
                 page = page ?: 1,
                 perPage = perPage ?: 20
             ).data
-        } catch (e: ErrorCodeException) {
-            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+        } catch (e: CustomException) {
+            if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId)
                 return getCommits(newToken, gitProjectId, filePath, branch, since, until, page, perPage, false)
             }
             throw e
@@ -336,8 +336,8 @@ class StreamScmService @Autowired constructor(
                     exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.formatErrorMessage.format(e.errorMessage)
                 )
             }
-        } catch (e: ErrorCodeException) {
-            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+        } catch (e: CustomException) {
+            if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
                 val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
                 return createNewFile(userId, newToken, gitProjectId, gitCICreateFile, false)
             }
@@ -366,8 +366,8 @@ class StreamScmService @Autowired constructor(
                 pageSize = pageSize ?: 20,
                 search = search
             ).data
-        } catch (e: ErrorCodeException) {
-            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+        } catch (e: CustomException) {
+            if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
                 val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
                 return getProjectMembers(newToken, gitProjectId, page, pageSize, search, false)
             }
@@ -380,44 +380,62 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?
+        search: String?,
+        isFirst: Boolean = true
     ): List<GitMember>? {
-        return retryFun(
-            log = "getProjectMembersRetry: [$gitProjectId|$page|$pageSize|$search]",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_PROJECT_MEMBERS_ERROR,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getMembers(
-                    token = token,
-                    gitProjectId = gitProjectId,
-                    page = page ?: 1,
-                    pageSize = pageSize ?: 20,
-                    search = search
-                ).data
+        return try {
+            retryFun(
+                log = "getProjectMembersRetry: [$gitProjectId|$page|$pageSize|$search]",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_PROJECT_MEMBERS_ERROR,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getMembers(
+                        token = token,
+                        gitProjectId = gitProjectId,
+                        page = page ?: 1,
+                        pageSize = pageSize ?: 20,
+                        search = search
+                    ).data
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getProjectMembersRetry(newToken, gitProjectId, page, pageSize, search, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getProjectBranchesRetry(
         token: String,
         gitProjectId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        isFirst: Boolean = true
     ): List<String>? {
-        return retryFun(
-            log = "getProjectBranchesRetry: [$gitProjectId] error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getBranches(
-                    token = token,
-                    gitProjectId = gitProjectId,
-                    page = page ?: 1,
-                    pageSize = pageSize ?: 20,
-                    search = null,
-                    orderBy = null,
-                    sort = null
-                ).data
+        return try {
+            retryFun(
+                log = "getProjectBranchesRetry: [$gitProjectId] error",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getBranches(
+                        token = token,
+                        gitProjectId = gitProjectId,
+                        page = page ?: 1,
+                        pageSize = pageSize ?: 20,
+                        search = null,
+                        orderBy = null,
+                        sort = null
+                    ).data
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getProjectBranchesRetry(newToken, gitProjectId, page, pageSize, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getProjectBranches(
@@ -427,19 +445,28 @@ class StreamScmService @Autowired constructor(
         pageSize: Int?,
         search: String?,
         orderBy: GitCodeBranchesOrder?,
-        sort: GitCodeBranchesSort?
+        sort: GitCodeBranchesSort?,
+        isFirst: Boolean = true
     ): List<String>? {
         logger.info("getProjectBranches: [$gitProjectId|$page|$pageSize|$search|$orderBy|$sort]")
-        return client.getScm(ServiceGitCiResource::class)
-            .getBranches(
-                token = token,
-                gitProjectId = gitProjectId,
-                page = page ?: 1,
-                pageSize = pageSize ?: 20,
-                search = search,
-                orderBy = orderBy,
-                sort = sort
-            ).data
+        return try {
+            client.getScm(ServiceGitCiResource::class)
+                .getBranches(
+                    token = token,
+                    gitProjectId = gitProjectId,
+                    page = page ?: 1,
+                    pageSize = pageSize ?: 20,
+                    search = search,
+                    orderBy = orderBy,
+                    sort = sort
+                ).data
+        } catch (e: CustomException) {
+            if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getProjectBranches(newToken, gitProjectId, page, pageSize, search, orderBy, sort, false)
+            }
+            throw e
+        }
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
@@ -457,24 +484,33 @@ class StreamScmService @Autowired constructor(
         userId: String?,
         token: String?,
         gitProjectId: Long,
-        mrId: Long
+        mrId: Long,
+        isFirst: Boolean = true
     ): GitMrChangeInfo? {
         logger.info("getMergeRequestChangeInfo: [$gitProjectId|$mrId]")
-        return retryFun(
-            log = "$gitProjectId get mr $mrId changeInfo error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
-                    token = if (userId == null) {
-                        token!!
-                    } else {
-                        getOauthToken(userId, true, gitProjectId)
-                    },
-                    gitProjectId = gitProjectId,
-                    mrId = mrId
-                ).data
+        return try {
+            retryFun(
+                log = "$gitProjectId get mr $mrId changeInfo error",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getMergeRequestChangeInfo(
+                        token = if (userId == null) {
+                            token!!
+                        } else {
+                            getOauthToken(userId, true, gitProjectId)
+                        },
+                        gitProjectId = gitProjectId,
+                        mrId = mrId
+                    ).data
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId)
+                return getMergeRequestChangeInfo(userId, newToken, gitProjectId, mrId, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getProjectList(
@@ -504,85 +540,121 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         filePath: String?,
         ref: String?,
-        useAccessToken: Boolean
+        useAccessToken: Boolean,
+        isFirst: Boolean = true
     ): GitCodeFileInfo? {
         logger.info("getFileInfo: [$gitProjectId|$filePath][$ref]")
-        return retryFun(
-            log = "getFileInfo: [$gitProjectId|$filePath][$ref] error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getGitFileInfo(
-                    gitProjectId = gitProjectId,
-                    filePath = filePath,
-                    ref = ref,
-                    token = token,
-                    useAccessToken = useAccessToken
-                ).data
+        return try {
+            retryFun(
+                log = "getFileInfo: [$gitProjectId|$filePath][$ref] error",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getGitFileInfo(
+                        gitProjectId = gitProjectId,
+                        filePath = filePath,
+                        ref = ref,
+                        token = token,
+                        useAccessToken = useAccessToken
+                    ).data
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return getFileInfo(newToken, gitProjectId, filePath, ref, useAccessToken, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getMergeInfo(
         gitProjectId: Long,
         mergeRequestId: Long,
-        token: String
+        token: String,
+        isFirst: Boolean = true
     ): GitCIMrInfo {
         logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId]")
-        return retryFun(
-            log = "$gitProjectId get mr $mergeRequestId info error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO,
-            action = {
-                client.getScm(ServiceGitResource::class).getGitCIMrInfo(
-                    gitProjectId = gitProjectId,
-                    mergeRequestId = mergeRequestId,
-                    token = token
-                ).data!!
+        return try {
+            retryFun(
+                log = "$gitProjectId get mr $mergeRequestId info error",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO,
+                action = {
+                    client.getScm(ServiceGitResource::class).getGitCIMrInfo(
+                        gitProjectId = gitProjectId,
+                        mergeRequestId = mergeRequestId,
+                        token = token
+                    ).data!!
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId)
+                return getMergeInfo(gitProjectId, mergeRequestId, newToken, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getFileTreeFromGit(
         gitProjectId: Long,
         token: String,
         filePath: String,
-        ref: String?
+        ref: String?,
+        isFirst: Boolean = true
     ): List<GitFileInfo> {
-        return retryFun(
-            log = "$gitProjectId get $filePath file tree error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
-            action = {
-                client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                    gitProjectId = gitProjectId,
-                    path = filePath,
-                    token = token,
-                    ref = ref
-                ).data ?: emptyList()
+        return try {
+            retryFun(
+                log = "$gitProjectId get $filePath file tree error",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+                action = {
+                    client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                        gitProjectId = gitProjectId,
+                        path = filePath,
+                        token = token,
+                        ref = ref
+                    ).data ?: emptyList()
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId)
+                return getFileTreeFromGit(gitProjectId, newToken, filePath, ref, false)
             }
-        )
+            throw e
+        }
     }
 
     // 获取指定文件在项目中的文件树信息，用于删除分支时判断yml是否在默认分支还存在的情况
     fun getFileTreeFromGitWithDefaultBranch(
         gitToken: String,
         gitProjectId: Long,
-        filePath: String
+        filePath: String,
+        isFirst: Boolean = true
     ): List<GitFileInfo> {
-        return retryFun(
-            log = "$gitProjectId get $filePath file tree error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
-            action = {
-                client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                    gitProjectId = gitProjectId,
-                    path = if (filePath.contains("/")) {
-                        filePath.substring(0, filePath.lastIndexOf("/"))
-                    } else {
-                        filePath
-                    },
-                    token = gitToken,
-                    ref = ""
-                ).data ?: emptyList()
+        return try {
+            retryFun(
+                log = "$gitProjectId get $filePath file tree error",
+                apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+                action = {
+                    client.getScm(ServiceGitResource::class).getGitCIFileTree(
+                        gitProjectId = gitProjectId,
+                        path = if (filePath.contains("/")) {
+                            filePath.substring(0, filePath.lastIndexOf("/"))
+                        } else {
+                            filePath
+                        },
+                        token = gitToken,
+                        ref = ""
+                    ).data ?: emptyList()
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId)
+                return getFileTreeFromGitWithDefaultBranch(newToken, gitProjectId, filePath, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getCommitChangeFileListRetry(
@@ -593,27 +665,36 @@ class StreamScmService @Autowired constructor(
         to: String,
         straight: Boolean?,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        isFirst: Boolean = true
     ): List<ChangeFileInfo> {
-        return retryFun(
-            log = "getCommitChangeFileListRetry from: $from to: $to error",
-            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR,
-            action = {
-                client.getScm(ServiceGitCiResource::class).getCommitChangeFileList(
-                    token = if (userId == null) {
-                        token!!
-                    } else {
-                        getOauthToken(userId, true, gitProjectId)
-                    },
-                    gitProjectId = gitProjectId.toString(),
-                    from = from,
-                    to = to,
-                    straight = straight,
-                    page = page,
-                    pageSize = pageSize
-                ).data ?: emptyList()
+        return try {
+            retryFun(
+                log = "getCommitChangeFileListRetry from: $from to: $to error",
+                apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR,
+                action = {
+                    client.getScm(ServiceGitCiResource::class).getCommitChangeFileList(
+                        token = if (userId == null) {
+                            token!!
+                        } else {
+                            getOauthToken(userId, true, gitProjectId)
+                        },
+                        gitProjectId = gitProjectId.toString(),
+                        from = from,
+                        to = to,
+                        straight = straight,
+                        page = page,
+                        pageSize = pageSize
+                    ).data ?: emptyList()
+                }
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId)
+                return getCommitChangeFileListRetry(newToken, userId, gitProjectId, from, to, straight, page, pageSize, false)
             }
-        )
+            throw e
+        }
     }
 
     fun getLatestRevisionRetry(
@@ -663,15 +744,24 @@ class StreamScmService @Autowired constructor(
         token: String,
         gitProjectId: String,
         mrId: Long,
-        mrBody: MrCommentBody
+        mrBody: MrCommentBody,
+        isFirst: Boolean = true
     ) {
         logger.info("addMrComment: [$gitProjectId|$mrId]")
-        client.getScm(ServiceGitCiResource::class).addMrComment(
-            token = token,
-            gitProjectId = gitProjectId,
-            mrId = mrId,
-            mrBody = mrBody
-        )
+        try {
+            client.getScm(ServiceGitCiResource::class).addMrComment(
+                token = token,
+                gitProjectId = gitProjectId,
+                mrId = mrId,
+                mrBody = mrBody
+            )
+        } catch (e: CustomException) {
+            if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                return addMrComment(newToken, gitProjectId, mrId, mrBody, false)
+            }
+            throw e
+        }
     }
 
     fun getProjectGroupList(
@@ -727,6 +817,7 @@ class StreamScmService @Autowired constructor(
                 defaultMessage = "$log: ${e.errorMessage}"
             )
         } catch (e: CustomException) {
+            logger.warn("GIT_SCM_ERROR $log: ${e.message} ")
             throw ErrorCodeException(
                 statusCode = e.status.statusCode,
                 errorCode = apiErrorCode.errorCode.toString(),
