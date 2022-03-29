@@ -249,6 +249,9 @@ interface UserEnvironmentResource {
         @ApiParam("环境 hashId", required = true)
         @PathParam("envHashId")
         envHashId: String,
+        @ApiParam("关键字搜索", required = false)
+        @QueryParam("search")
+        search: String? = null,
         @ApiParam("页码", required = false)
         @QueryParam("page")
         page: Int? = null,

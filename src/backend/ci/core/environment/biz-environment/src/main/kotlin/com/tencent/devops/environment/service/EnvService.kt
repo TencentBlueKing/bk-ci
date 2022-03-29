@@ -53,6 +53,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_INVALID_CHARACTER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
@@ -714,6 +715,11 @@ class EnvService @Autowired constructor(
                 message = MessageCodeUtil.getCodeLanMessage(ERROR_ENV_NO_EDIT_PERMISSSION)
             )
         }
+        envShareProjectDao.count(dslContext = dslContext, projectId = projectId, envId = envId, name = null).let {
+            if (it + sharedProjects.size > 100) {
+                throw ErrorCodeException(errorCode = ERROR_QUOTA_LIMIT, params = arrayOf("100", it.toString()))
+            }
+        }
 
         val existEnv = envDao.get(dslContext, projectId, envId)
         if (existEnv.envType != EnvType.BUILD.name) {
@@ -745,6 +751,7 @@ class EnvService @Autowired constructor(
         userId: String,
         projectId: String,
         envHashId: String,
+        search: String?,
         page: Int = 1,
         pageSize: Int = 20
     ): Page<SharedProjectInfo> {
@@ -755,7 +762,7 @@ class EnvService @Autowired constructor(
         }
         val projectList = client.get(ServiceProjectResource::class).list(
             userId = userId
-        ).data?.map {
+        ).data?.filter { search.isNullOrBlank() || it.englishName.contains(search) }?.map {
             SharedProjectInfo(
                 projectId = it.englishName,
                 gitProjectId = null,
