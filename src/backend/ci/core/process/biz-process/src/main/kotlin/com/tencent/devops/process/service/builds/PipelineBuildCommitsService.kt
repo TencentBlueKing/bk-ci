@@ -1,5 +1,7 @@
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.dao.PipelineBuildCommitsDao
 import com.tencent.devops.repository.pojo.Repository
@@ -12,7 +14,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineBuildCommitsService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineBuildCommitsDao: PipelineBuildCommitsDao
+    private val pipelineBuildCommitsDao: PipelineBuildCommitsDao,
+    private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
     fun create(
@@ -45,6 +48,14 @@ class PipelineBuildCommitsService @Autowired constructor(
                 if (webhookCommitList.size < size) break
                 page++
             }
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildCommitsFinishEvent(
+                    source = "build_commits",
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId
+                )
+            )
         } catch (ignore: Throwable) {
             logger.info("save build info err | err is $ignore")
         }
