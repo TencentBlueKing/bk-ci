@@ -512,7 +512,7 @@ class RepositoryService @Autowired constructor(
                     repositoryCodeSvnDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
-                        region = getSvnRegion(repository.region),
+                        region = repository.region ?: CodeSvnRegion.TC,
                         projectName = repository.projectName,
                         userName = repository.userName,
                         privateToken = repository.credentialId,
@@ -613,12 +613,6 @@ class RepositoryService @Autowired constructor(
 
         createResource(userId, projectId, repositoryId, repository.aliasName)
         return repositoryId
-    }
-
-    private fun getSvnRegion(region: CodeSvnRegion?): CodeSvnRegion {
-        logger.info("region is $region")
-        if(region == null) return CodeSvnRegion.TC
-        return CodeSvnRegion.getRegion(region.name)
     }
 
     fun userGet(userId: String, projectId: String, repositoryConfig: RepositoryConfig): Repository {
