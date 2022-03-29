@@ -31,14 +31,9 @@ import com.tencent.devops.auth.service.SimpleAuthPermissionProjectService
 import com.tencent.devops.auth.service.SimpleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.ActionService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.auth.dao.ActionDao
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
-import com.tencent.devops.auth.service.action.BkResourceService
-import com.tencent.devops.auth.service.action.impl.SimpleBkActionServiceImpl
-import com.tencent.devops.auth.service.action.impl.SimpleBkResourceServiceImpl
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
@@ -47,7 +42,6 @@ import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.redis.RedisOperation
-import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -124,16 +118,4 @@ class AuthConfiguration {
     fun gitlabStreamProjectPermissionService(
         streamPermissionService: StreamPermissionServiceImpl
     ) = StreamPermissionProjectServiceImpl(streamPermissionService)
-
-    @Bean
-    @ConditionalOnMissingBean(ActionService::class)
-    fun simpleActionService(
-        dslContext: DSLContext,
-        actionDao: ActionDao,
-        resourceService: BkResourceService
-    ) = SimpleBkActionServiceImpl(dslContext, actionDao, resourceService)
-
-    @Bean
-    @ConditionalOnMissingBean(BkResourceService::class)
-    fun simpleResourceService() = SimpleBkResourceServiceImpl()
 }

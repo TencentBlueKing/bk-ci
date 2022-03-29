@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.auth.dao.ActionDao
 import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
@@ -35,9 +36,14 @@ import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.EmptyPermissionExtServiceImpl
 import com.tencent.devops.auth.service.EmptyPermissionUrlServiceImpl
+import com.tencent.devops.auth.service.action.ActionService
+import com.tencent.devops.auth.service.action.BkResourceService
+import com.tencent.devops.auth.service.action.impl.SimpleBkActionServiceImpl
+import com.tencent.devops.auth.service.action.impl.SimpleBkResourceServiceImpl
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -143,4 +149,17 @@ class AuthCoreConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["permissionUrlService"])
     fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
+
+
+    @Bean
+    @ConditionalOnMissingBean(ActionService::class)
+    fun simpleActionService(
+        dslContext: DSLContext,
+        actionDao: ActionDao,
+        resourceService: BkResourceService
+    ) = SimpleBkActionServiceImpl(dslContext, actionDao, resourceService)
+
+    @Bean
+    @ConditionalOnMissingBean(BkResourceService::class)
+    fun simpleResourceService() = SimpleBkResourceServiceImpl()
 }
