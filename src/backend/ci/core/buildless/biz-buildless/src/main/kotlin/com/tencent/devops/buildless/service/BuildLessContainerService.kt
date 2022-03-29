@@ -131,7 +131,7 @@ class BuildLessContainerService(
                         "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                         "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
                         "$ENV_CONTAINER_NAME=$containerName",
-                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$hostWorkspace"
+                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"
                     )
                 )
                 .withHostConfig(
