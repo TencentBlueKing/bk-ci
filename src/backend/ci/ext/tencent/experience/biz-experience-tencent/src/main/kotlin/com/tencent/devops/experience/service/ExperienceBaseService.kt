@@ -157,7 +157,7 @@ class ExperienceBaseService @Autowired constructor(
                 categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
                 productOwner = objectMapper.readValue(it.productOwner),
                 size = it.size,
-                createDate = it.createTime.timestampmilli(),
+                createDate = it.updateTime.timestampmilli(),
                 appScheme = it.scheme,
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",

@@ -405,13 +405,18 @@ class ExperienceAppService(
         val recordIds = mutableListOf<Long>()
 
         // 订阅的需要置顶
-        val subcribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, 100)
-        recordIds.addAll(subcribeRecordIds)
+        val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, 100)
+        recordIds.addAll(subscribeRecordIds)
+
+        // 自己发布的
+        val recordIdsBySelf =
+            experienceDao.listIdsByCreator(dslContext, userId, 100).filterNot { recordIds.contains(it) }
+        recordIds.addAll(recordIdsBySelf)
 
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
             dslContext, PlatformEnum.of(platform)?.name, 100
-        ).map { it.value1() }.filterNot { subcribeRecordIds.contains(it) }
+        ).map { it.value1() }.filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
 
         val records = experienceDao.list(dslContext, recordIds)

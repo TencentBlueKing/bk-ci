@@ -694,13 +694,6 @@ class ExperienceService @Autowired constructor(
                 return@submit
             }
 
-//            val projectId = experienceRecord.projectId
-//            val name = experienceRecord.name
-//            val experienceName = experienceRecord.experienceName
-//            val version = experienceRecord.version
-//            val userId = experienceRecord.creator
-//            val platform = experienceRecord.platform
-//            val bundleIdentifier = experienceRecord.bundleIdentifier
             val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
             val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
 
@@ -752,6 +745,9 @@ class ExperienceService @Autowired constructor(
         }
     }
 
+    /**
+     * 发给外部人员
+     */
     private fun sendMessageToOuterReceivers(
         outerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord
@@ -767,6 +763,9 @@ class ExperienceService @Autowired constructor(
         }
     }
 
+    /**
+     * 发给订阅人员
+     */
     private fun sendMessageToSubscriber(
         subscribeUsers: Set<String>,
         experienceRecord: TExperienceRecord
