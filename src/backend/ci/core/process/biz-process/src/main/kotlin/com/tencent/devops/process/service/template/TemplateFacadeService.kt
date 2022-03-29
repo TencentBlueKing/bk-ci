@@ -1377,7 +1377,8 @@ class TemplateFacadeService @Autowired constructor(
         projectId: String,
         userId: String,
         templateId: String,
-        version: Long,
+        version: Long?,
+        versionName: String? = null,
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
@@ -1387,8 +1388,9 @@ class TemplateFacadeService @Autowired constructor(
         val failurePipelines = ArrayList<String>()
         val messages = HashMap<String, String>()
 
-        val template = templateDao.getTemplate(dslContext = dslContext, version = version)
-
+        val template =
+            if (versionName.isNullOrBlank()) templateDao.getTemplate(dslContext = dslContext, version = version!!)
+            else templateDao.getTemplateByVersionName(dslContext = dslContext, versionName = versionName)
         instances.forEach {
             try {
                 updateTemplateInstanceInfo(
