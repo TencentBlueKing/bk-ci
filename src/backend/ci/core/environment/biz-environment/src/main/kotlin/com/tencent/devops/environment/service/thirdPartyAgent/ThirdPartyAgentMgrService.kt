@@ -681,7 +681,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val sharedThridPartyAgentList = run {
             val sharedProjEnv = envName.split("@") // sharedProjId@poolName
             if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
-                return emptyList()
+                return@run emptyList()
             }
             getSharedThirdPartyAgentList(
                 projectId = projectId,
@@ -809,7 +809,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val sharedThridPartyAgentList = run {
             val sharedProjEnv = envHashId.split("@") // sharedProjId@poolName
             if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
-                return emptyList()
+                return@run emptyList()
             }
             getSharedThirdPartyAgentList(
                 projectId = projectId,
