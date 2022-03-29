@@ -39,5 +39,5 @@ data class PipelineBuildCommitsFinishEvent(
     override val userId: String = "",
     val buildId: String,
     override var actionType: ActionType = ActionType.START,
-    override var delayMills: Int = 0,
+    override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
