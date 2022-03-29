@@ -409,16 +409,15 @@ class ExperienceAppService(
         val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, platformStr, 100)
         recordIds.addAll(subscribeRecordIds)
 
-        // 自己发布的
-        val recordIdsBySelf = experiencePublicDao.listRecordIdsByCreator(dslContext, userId, platformStr, 100)
-            .filterNot { recordIds.contains(it) }
-        recordIds.addAll(recordIdsBySelf)
-
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
             dslContext, platformStr, 100
         ).filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
+
+        // 过滤内部体验ID
+        val privateRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, false)
+        recordIds.removeAll(privateRecordIds)
 
         // 找到结果
         val recordMap = experienceDao.list(dslContext, recordIds).map { it.id to it }.toMap()

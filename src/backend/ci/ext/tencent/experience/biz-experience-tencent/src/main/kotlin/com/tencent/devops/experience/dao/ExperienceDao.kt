@@ -497,4 +497,14 @@ class ExperienceDao {
                 .fetch()
         }
     }
+
+    fun listIdsByCreator(dslContext: DSLContext, creator: String): List<Long> {
+        return with((TExperience.T_EXPERIENCE)) {
+            dslContext.select(ID).from(this)
+                .where(CREATOR.eq(creator))
+                .and(END_DATE.gt(LocalDateTime.now()))
+                .and(ONLINE.eq(true))
+                .fetch(ID)
+        }
+    }
 }
