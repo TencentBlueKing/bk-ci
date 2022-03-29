@@ -29,6 +29,7 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
+import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -494,19 +495,6 @@ class ExperienceDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .fetch()
-        }
-    }
-
-    fun listIdsByCreator(dslContext: DSLContext, creator: String, platform: String?, limit: Int): List<Long> {
-        return with(TExperience.T_EXPERIENCE) {
-            dslContext.select(ID).from(this)
-                .where(CREATOR.eq(creator))
-                .let { if (platform == null) it else it.and(PLATFORM.eq(platform)) }
-                .and(END_DATE.gt(LocalDateTime.now()))
-                .and(ONLINE.eq(true))
-                .orderBy(CREATE_TIME.desc())
-                .limit(limit)
-                .fetch(ID)
         }
     }
 }

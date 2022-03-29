@@ -28,6 +28,7 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
@@ -437,5 +438,21 @@ class ExperiencePublicDao {
             .orderBy(p.UPDATE_TIME.desc())
             .limit(limit)
             .fetch(p.RECORD_ID)
+    }
+
+    fun listRecordIdsByCreator(dslContext: DSLContext, creator: String, platform: String?, limit: Int): List<Long> {
+        val p = TExperiencePublic.T_EXPERIENCE_PUBLIC
+        val e = TExperience.T_EXPERIENCE
+        val table = p.leftJoin(e).on(e.ID.eq(p.RECORD_ID))
+
+        return with(table) {
+            dslContext.select(p.RECORD_ID).from(this)
+                .where(e.CREATOR.eq(creator))
+                .let { if (platform == null) it else it.and(p.PLATFORM.eq(platform)) }
+                .and(p.END_DATE.gt(LocalDateTime.now()))
+                .and(p.ONLINE.eq(true))
+                .orderBy(p.UPDATE_TIME.desc())
+                .limit(limit).fetch(p.RECORD_ID)
+        }
     }
 }
