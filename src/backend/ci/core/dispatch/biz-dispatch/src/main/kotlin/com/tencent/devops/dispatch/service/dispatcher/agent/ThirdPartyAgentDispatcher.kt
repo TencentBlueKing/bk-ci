@@ -59,6 +59,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 @Suppress("NestedBlockDepth")
@@ -320,6 +321,22 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     Result(data = null)
                 }
             }
+        }
+
+        if (agentsResult.status == Response.Status.FORBIDDEN.statusCode) {
+            logger.warn(
+                "${event.buildId}|START_AGENT_FAILED_FORBIDDEN|" +
+                    "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}"
+            )
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = event,
+                errorType = ErrorCodeEnum.GET_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.GET_VM_ERROR.errorCode,
+                errorMsg = agentsResult.message ?: ""
+            )
+            return
         }
 
         if (agentsResult.isNotOk()) {
