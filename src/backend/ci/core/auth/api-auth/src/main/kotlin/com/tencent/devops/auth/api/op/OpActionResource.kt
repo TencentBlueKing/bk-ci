@@ -57,8 +57,8 @@ interface OpActionResource {
         @ApiParam("操作人")
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("resourceInfo")
-        resourceInfo: CreateActionDTO
+        @ApiParam("actionInfo")
+        actionInfo: CreateActionDTO
     ): Result<Boolean>
 
     @PUT
@@ -72,20 +72,34 @@ interface OpActionResource {
         @PathParam("actionId")
         actionId: String,
         @ApiParam("系统action参数")
-        resourceInfo: UpdateActionDTO
+        actionInfo: UpdateActionDTO
     ): Result<Boolean>
 
     @GET
     @ApiOperation("获取资源信息")
     @Path("/{actionId}")
-    fun getSystemAction(
-        @ApiParam("资源编码")
+    fun getAction(
+        @ApiParam("操作编码")
         @PathParam("actionId")
         actionId: String
-    ): Result<ActionInfo>
+    ): Result<ActionInfo?>
 
     @GET
     @ApiOperation("获取操作列表")
     @Path("/")
-    fun listSystemAction(): Result<List<ActionInfo>>
+    fun listAllAction(): Result<List<ActionInfo>?>
+
+    @GET
+    @ApiOperation("获取操作列表")
+    @Path("/resource")
+    fun listActionResource(): Result<Map<String, List<ActionInfo>>?>
+
+    @GET
+    @ApiOperation("获取操作列表")
+    @Path("/resources/{resourceId}")
+    fun listActionByResource(
+        @ApiParam("资源编码")
+        @PathParam("resourceId")
+        resourceId: String
+    ): Result<List<ActionInfo>?>
 }

@@ -25,43 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.op
+package com.tencent.devops.auth.service.action.impl
 
-import com.tencent.devops.auth.api.op.OpActionResource
-import com.tencent.devops.auth.pojo.action.ActionInfo
+import com.tencent.devops.auth.dao.ActionDao
 import com.tencent.devops.auth.pojo.action.CreateActionDTO
 import com.tencent.devops.auth.pojo.action.UpdateActionDTO
-import com.tencent.devops.auth.service.action.ActionService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.auth.service.action.BkResourceService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class OpActionResourceImpl @Autowired constructor(
-    val actionService: ActionService
-): OpActionResource {
-    override fun createSystemAction(userId: String, actionInfo: CreateActionDTO): Result<Boolean> {
-        return Result(actionService.createAction(userId, actionInfo))
+class SimpleBkActionServiceImpl @Autowired constructor(
+    override val dslContext: DSLContext,
+    override val actionDao: ActionDao,
+    override val resourceService: BkResourceService
+): BKActionServiceImpl(dslContext, actionDao, resourceService) {
+
+    override fun extSystemCreate(userId: String, action: CreateActionDTO) {
+        return
     }
 
-    override fun updateSystemAction(userId: String, actionId: String, actionInfo: UpdateActionDTO): Result<Boolean> {
-        return Result(actionService.updateAction(userId, actionId, actionInfo))
-    }
-
-    override fun getAction(actionId: String): Result<ActionInfo?> {
-        return Result(actionService.getAction(actionId))
-    }
-
-    override fun listAllAction(): Result<List<ActionInfo>?> {
-        return Result(actionService.actionList())
-    }
-
-    override fun listActionResource(): Result<Map<String, List<ActionInfo>>?> {
-        return Result(actionService.actionMap())
-    }
-
-    override fun listActionByResource(resourceId: String): Result<List<ActionInfo>?> {
-        val actionMap = actionService.actionMap() ?: return Result(emptyList())
-        return Result(actionMap[resourceId])
+    override fun extSystemUpdate(userId: String, actionId: String, action: UpdateActionDTO) {
+        return
     }
 }

@@ -25,43 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources.op
+package com.tencent.devops.auth.service.action.impl
 
-import com.tencent.devops.auth.api.op.OpActionResource
-import com.tencent.devops.auth.pojo.action.ActionInfo
+import com.nhaarman.mockito_kotlin.mock
+import com.tencent.bk.sdk.iam.constants.ActionTypeEnum
+import com.tencent.bk.sdk.iam.dto.resource.ResourceCreatorActionsDTO
 import com.tencent.devops.auth.pojo.action.CreateActionDTO
-import com.tencent.devops.auth.pojo.action.UpdateActionDTO
-import com.tencent.devops.auth.service.action.ActionService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.auth.api.AuthResourceType
+import org.junit.Assert
+import org.junit.Test
+import org.junit.jupiter.api.Assertions.*
 
-@RestResource
-class OpActionResourceImpl @Autowired constructor(
-    val actionService: ActionService
-): OpActionResource {
-    override fun createSystemAction(userId: String, actionInfo: CreateActionDTO): Result<Boolean> {
-        return Result(actionService.createAction(userId, actionInfo))
-    }
+class IamBkActionServiceImplTest {
 
-    override fun updateSystemAction(userId: String, actionId: String, actionInfo: UpdateActionDTO): Result<Boolean> {
-        return Result(actionService.updateAction(userId, actionId, actionInfo))
-    }
+    private val iamActionService: IamBkActionServiceImpl = mock()
 
-    override fun getAction(actionId: String): Result<ActionInfo?> {
-        return Result(actionService.getAction(actionId))
-    }
 
-    override fun listAllAction(): Result<List<ActionInfo>?> {
-        return Result(actionService.actionList())
-    }
+    @Test
+    fun buildCreateRelationTest() {
+        val action = CreateActionDTO(
+            actionId = "project_test",
+            resourceId = AuthResourceType.PROJECT.value,
+            actionEnglishName = "项目_测试action",
+            actionName = "project_test",
+            actionType = ActionTypeEnum.LIST.name,
+            desc = "",
+            relationAction = arrayOf("project_view").toList()
+        )
+        val systemCreateRelationInfo: ResourceCreatorActionsDTO? = null
 
-    override fun listActionResource(): Result<Map<String, List<ActionInfo>>?> {
-        return Result(actionService.actionMap())
-    }
-
-    override fun listActionByResource(resourceId: String): Result<List<ActionInfo>?> {
-        val actionMap = actionService.actionMap() ?: return Result(emptyList())
-        return Result(actionMap[resourceId])
+        val relation = iamActionService.buildCreateRelation(action, systemCreateRelationInfo)
+        println(relation)
+        Assert.assertEquals(relation.config[0].id, "project")
     }
 }

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.service.action.impl
 
-import com.tencent.bk.sdk.iam.service.ResourceService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ActionDao
 import com.tencent.devops.auth.pojo.action.ActionInfo
@@ -41,11 +40,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class BKActionServiceImpl @Autowired constructor(
-    val dslContext: DSLContext,
-    val actionDao: ActionDao,
-    val resourceService: BkResourceService
+    open val dslContext: DSLContext,
+    open val actionDao: ActionDao,
+    open val resourceService: BkResourceService
 ): ActionService {
     override fun createAction(userId: String, action: CreateActionDTO): Boolean {
+        logger.info("createAction $userId|$action")
         val actionId = action.actionId
         val resourceId = action.resourceId
 
@@ -77,12 +77,15 @@ abstract class BKActionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun updateAction(userId: String,actionId: String, action: UpdateActionDTO): Boolean {
-        val actionInfo = actionDao.getAction(dslContext, actionId, "RESOURCEID")
+    override fun updateAction(userId: String, actionId: String, action: UpdateActionDTO): Boolean {
+        logger.info("updateAction $userId|$actionId|$action")
+        actionDao.getAction(dslContext, actionId, "RESOURCEID")
             ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.RESOURCE_NOT_EXSIT,
                 params = arrayOf(action.resourceId)
             )
+        actionDao.updateAction(dslContext, action, actionId, userId)
+        return true
     }
 
     override fun getAction(actionId: String): ActionInfo? {
@@ -97,12 +100,12 @@ abstract class BKActionServiceImpl @Autowired constructor(
         val actionInfos = actionDao.getAllAction(dslContext, "*") ?: return emptyMap()
         val actionMap = mutableMapOf<String, List<ActionInfo>>()
         actionInfos.forEach {
-            if (actionMap.get(it.resourceId) == null) {
+            if (actionMap[it.resourceId] == null) {
                 actionMap[it.resourceId] = arrayListOf(it)
             } else {
                 val newActionList = mutableListOf<ActionInfo>()
                 val actionList = actionMap[it.resourceId]
-                newActionList.addAll(actionInfos)
+                newActionList.addAll(actionList!!)
                 newActionList.add(it)
                 actionMap[it.resourceId] = newActionList
             }
@@ -112,7 +115,7 @@ abstract class BKActionServiceImpl @Autowired constructor(
 
     abstract fun extSystemCreate(userId: String, action: CreateActionDTO)
 
-    abstract fun extSystemUpdate(userId: String, action: UpdateActionDTO)
+    abstract fun extSystemUpdate(userId: String,actionId: String, action: UpdateActionDTO)
 
     companion object {
         val logger = LoggerFactory.getLogger(BKActionServiceImpl::class.java)

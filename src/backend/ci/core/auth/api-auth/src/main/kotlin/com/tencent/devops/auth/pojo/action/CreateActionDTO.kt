@@ -36,10 +36,14 @@ data class CreateActionDTO(
     val actionId: String,
     @ApiModelProperty("操作名称")
     val actionName: String,
+    @ApiModelProperty("操作描述")
+    val desc: String,
     @ApiModelProperty("操作名称-英文名")
     val actionEnglishName: String,
     @ApiModelProperty("关联操作")
     val relationAction: List<String>,
     @ApiModelProperty("操作所属资源")
-    val resourceId: String
+    val resourceId: String,
+    @ApiModelProperty("操作类型")
+    val actionType: String
 )

@@ -29,7 +29,6 @@ package com.tencent.devops.auth.service.action.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
-import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
 import com.tencent.bk.sdk.iam.service.ResourceService
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
@@ -37,6 +36,7 @@ import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO as ResourceDTO1
 
 class IamBkResourceServiceImpl @Autowired constructor(
     val iamConfiguration: IamConfiguration,
@@ -63,7 +63,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
             path.path = projectCallbackPath
             resourceInfo.providerConfig = path
         } else {
-            val projectResource = ResourceDTO(iamConfiguration.systemId, "", AuthResourceType.PROJECT.value, emptyList<String>())
+            val projectResource = ResourceDTO1(iamConfiguration.systemId, "", AuthResourceType.PROJECT.value, null)
             resourceInfo.parent = arrayListOf(projectResource)
             val path = ProviderConfigDTO()
             path.path = otherResourceCallbackPath
