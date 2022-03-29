@@ -137,7 +137,8 @@ class PipelineBuildFacadeService(
     private val paramFacadeService: ParamFacadeService,
     private val buildLogPrinter: BuildLogPrinter,
     private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
-    private val pipelineRedisService: PipelineRedisService
+    private val pipelineRedisService: PipelineRedisService,
+    private val pipelineRetryFacadeService: PipelineRetryFacadeService
 ) {
 
     @Value("\${pipeline.build.cancel.intervalLimitTime:60}")
@@ -329,15 +330,28 @@ class PipelineBuildFacadeService(
                     params = arrayOf(buildId)
                 )
 
+            if (buildInfo.pipelineId != pipelineId) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
+            }
+
+            // 运行中的task重试走全新的处理逻辑
+            if (!buildInfo.status.isFinish()) {
+                if (pipelineRetryFacadeService.runningBuildTaskRetry(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        taskId = taskId
+                    )) {
+                    return buildId
+                }
+            }
+
             if (!buildInfo.status.isFinish() && buildInfo.status != BuildStatus.STAGE_SUCCESS) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
                     defaultMessage = "重试已经启动，忽略重复的请求"
                 )
-            }
-
-            if (buildInfo.pipelineId != pipelineId) {
-                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT)
             }
 
             val readyToBuildPipelineInfo =
