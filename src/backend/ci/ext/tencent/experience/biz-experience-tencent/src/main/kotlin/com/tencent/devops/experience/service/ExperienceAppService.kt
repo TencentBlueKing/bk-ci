@@ -405,7 +405,7 @@ class ExperienceAppService(
         val recordIds = mutableListOf<Long>()
 
         // 订阅的需要置顶
-        val subcribeRecordIds = experiencePublicDao.listSubcribeRecordIds(dslContext, userId, 100)
+        val subcribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, 100)
         recordIds.addAll(subcribeRecordIds)
 
         // 普通的公开体验

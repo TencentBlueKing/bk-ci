@@ -40,6 +40,7 @@ import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
@@ -48,7 +49,6 @@ import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
-import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
@@ -370,7 +370,8 @@ class ExperienceBaseService @Autowired constructor(
      */
     fun getInnerReceivers(
         dslContext: DSLContext,
-        experienceId: Long
+        experienceId: Long,
+        userId: String
     ): MutableSet<String> {
         val innerReceivers = mutableSetOf<String>()
         val extraUsers =
@@ -380,6 +381,7 @@ class ExperienceBaseService @Autowired constructor(
         )
         innerReceivers.addAll(extraUsers)
         innerReceivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
+        innerReceivers.add(userId)
         return innerReceivers
     }
 

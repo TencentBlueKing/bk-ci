@@ -28,6 +28,7 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
+import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
@@ -417,7 +418,7 @@ class ExperiencePublicDao {
         }
     }
 
-    fun listSubcribeRecordIds(
+    fun listSubscribeRecordIds(
         dslContext: DSLContext,
         userId: String,
         limit: Int
