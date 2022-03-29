@@ -411,6 +411,7 @@ class ExperienceAppService(
 
         // 自己发布的
         val recordIdsBySelf = experiencePublicDao.listRecordIdsByCreator(dslContext, userId, platformStr, 100)
+            .filterNot { recordIds.contains(it) }
         recordIds.addAll(recordIdsBySelf)
 
         // 普通的公开体验
