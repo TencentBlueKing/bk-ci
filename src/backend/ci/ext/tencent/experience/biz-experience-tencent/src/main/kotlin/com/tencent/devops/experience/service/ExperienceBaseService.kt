@@ -136,7 +136,7 @@ class ExperienceBaseService @Autowired constructor(
     fun toAppExperiences(
         userId: String,
         records: List<TExperienceRecord>
-    ): MutableList<AppExperience> {
+    ): List<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
         val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
