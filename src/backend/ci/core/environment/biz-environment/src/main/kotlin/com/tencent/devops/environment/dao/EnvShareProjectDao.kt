@@ -90,14 +90,18 @@ class EnvShareProjectDao {
 
     fun list(
         dslContext: DSLContext,
+        mainProjectId: String,
         envName: String?,
-        mainProjectId: String
+        envId: Long?
     ): List<TEnvShareProjectRecord> {
         with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
             val dsl = dslContext.selectFrom(this)
                 .where(MAIN_PROJECT_ID.eq(mainProjectId))
             if (!envName.isNullOrBlank()) {
                 dsl.and(ENV_NAME.eq(envName))
+            }
+            if (envId != null) {
+                dsl.and(ENV_ID.eq(envId))
             }
             return dsl.fetch()
         }

@@ -294,7 +294,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         val agentsResult = when (dispatchType.agentType) {
             AgentType.ID -> {
                 client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvId(dispatchType.envProjectId ?: event.projectId, dispatchType.envName)
+                    .getAgentsByEnvId(
+                        event.projectId,
+                        dispatchType.envProjectId?.let { "$it@${dispatchType.envName}" } ?: dispatchType.envName)
             }
             AgentType.NAME -> {
                 try {
