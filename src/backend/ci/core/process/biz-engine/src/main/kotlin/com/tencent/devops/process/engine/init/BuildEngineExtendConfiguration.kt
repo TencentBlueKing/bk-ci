@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Configuration
  * 流水线构建扩展配置
  */
 @Configuration
+@SuppressWarnings("TooManyFunctions")
 class BuildEngineExtendConfiguration {
 
     /**
@@ -114,6 +115,13 @@ class BuildEngineExtendConfiguration {
     @ConditionalOnMissingBean(name = ["pipelineBuildStatusCallbackFanoutExchange"])
     fun pipelineBuildStatusCallbackFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_CALL_BACK_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineBuildCommitsFinishFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_COMMITS_FINISH_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }

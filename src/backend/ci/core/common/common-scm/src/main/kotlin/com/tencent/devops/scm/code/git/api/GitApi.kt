@@ -436,9 +436,10 @@ open class GitApi {
         return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
     }
 
-    fun getMrCommitList(host: String, token: String, url: String, page: String): List<GitCommit> {
+    fun getMrCommitList(host: String, token: String, url: String, page: Int, size: Int): List<GitCommit> {
         logger.info("get mr commit list url: $url")
-        val request = get(host, token, url, page)
+        val searchReq = "page=$page&per_page=$size"
+        val request = get(host, token, url, searchReq)
         val result: List<GitCommit> =
             JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_MR_COMMIT_LIST, request))
         return result

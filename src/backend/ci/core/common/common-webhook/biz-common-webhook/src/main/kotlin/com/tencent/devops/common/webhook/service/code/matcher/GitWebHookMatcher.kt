@@ -30,8 +30,6 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -76,16 +74,6 @@ open class GitWebHookMatcher(
         page: Int,
         size: Int
     ): List<WebhookCommit> {
-        if (event !is GitMergeRequestEvent && event !is GitPushEvent) {
-            logger.info("git event is not merge request event or push event")
-            return emptyList()
-        }
-        if (repository !is CodeGitRepository &&
-            repository !is CodeTGitRepository
-        ) {
-            logger.warn("$pipelineId|Is not code repo for git web hook for repo and pipeline: $repository")
-            return emptyList()
-        }
         return eventHandler.getWebhookCommitList(
             event = event,
             projectId = projectId,

@@ -256,12 +256,12 @@ class CodeGitScmOauthImpl constructor(
 
     override fun getMrCommitList(mrId: Long, page: Int, size: Int): List<GitCommit> {
         val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId/commits"
-        val searchReq = "page=$page&per_page=$size"
         return gitOauthApi.getMrCommitList(
             host = apiUrl,
             token = token,
             url = url,
-            page = searchReq
+            page = page,
+            size = size
         )
     }
 

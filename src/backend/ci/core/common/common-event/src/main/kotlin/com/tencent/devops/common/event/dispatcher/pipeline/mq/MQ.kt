@@ -262,4 +262,7 @@ object MQ {
     const val EXCHANGE_AUTH_REFRESH_FANOUT = "e.auth.refresh.exchange.fanout"
     const val ROUTE_AUTH_REFRESH_FANOUT = "r.auth.refresh.exchange.fanout"
     const val QUEUE_AUTH_REFRESH_EVENT = "q.auth.refresh.exchange.queue"
+
+    // 流水线webhook commit记录
+    const val EXCHANGE_PIPELINE_BUILD_COMMITS_FINISH_FANOUT = "e.engine.pipeline.build.commits.finish.fanout"
 }
