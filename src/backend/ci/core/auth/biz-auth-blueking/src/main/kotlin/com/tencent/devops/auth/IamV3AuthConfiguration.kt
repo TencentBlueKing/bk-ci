@@ -104,20 +104,20 @@ class IamV3AuthConfiguration {
 
 
     @Bean
-    fun systemService(
+    fun iamSystemService(
         apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl,
         iamConfiguration: IamConfiguration
     ) = SystemServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
-    fun actionService(
+    fun iamActionService(
         iamConfiguration: IamConfiguration,
         apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl,
         systemService: SystemService
     ) = ActionServiceImpl(iamConfiguration, apigwHttpClientServiceImpl, systemService)
 
     @Bean
-    fun resourceService(
+    fun iamResourceService(
         iamConfiguration: IamConfiguration,
         apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl,
         systemService: SystemService
@@ -125,7 +125,7 @@ class IamV3AuthConfiguration {
 
 
     @Bean
-    fun iamActionService(
+    fun ciIamActionService(
         dslContext: DSLContext,
         actionDao: ActionDao,
         resourceService: BkResourceService,
@@ -144,7 +144,7 @@ class IamV3AuthConfiguration {
     )
 
     @Bean
-    fun iamResourceService(
+    fun ciIamResourceService(
         iamConfiguration: IamConfiguration,
         resourceService: IamResourceService
     ) = IamBkResourceServiceImpl(iamConfiguration, resourceService)
