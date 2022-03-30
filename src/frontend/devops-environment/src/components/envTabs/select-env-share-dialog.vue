@@ -74,6 +74,15 @@
                 return throttle(this.getProjects, 500)
             }
         },
+        watch: {
+            showProjectDialog (val) {
+                if (!val) {
+                    this.reset()
+                } else {
+                    this.getProjects()
+                }
+            }
+        },
         created () {
             this.getProjects()
         },
@@ -88,7 +97,7 @@
                     const { records, count } = await this.requestProjects({
                         projectId: this.projectId,
                         envHashId: this.envHashId,
-                        page: this.pagination.current,
+                        page: this.searchVal ? 1 : this.pagination.current,
                         pageSize: this.pagination.limit,
                         search: this.searchVal
                     })
@@ -118,20 +127,19 @@
             handleSelectChange (selection) {
                 this.selection = selection
             },
-            clearSelection () {
+            reset () {
                 if (this.$refs.shareDiaglogTable) {
                     this.$refs.shareDiaglogTable.clearSelection()
                 }
+                this.pagination.current = 1
                 this.searchVal = ''
             },
             handleConfirm () {
                 this.$emit('confirm', this.selection)
-                this.clearSelection()
             },
             
             handleCancel () {
                 this.$emit('cancel')
-                this.clearSelection()
             }
         }
     }
