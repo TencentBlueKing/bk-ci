@@ -264,17 +264,7 @@ class ExperienceService @Autowired constructor(
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups) // 是否有公开体验组
 
-        if (!hasArtifactoryPermission(userId, projectId, experience.path, experience.artifactoryType)) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
-                defaultMessage = AuthPermission.EXECUTE.alias
-            )
-            throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                params = arrayOf(permissionMsg)
-            )
-        }
+        checkCreatePermission(userId, projectId, experience.path, experience.artifactoryType)
 
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
@@ -633,6 +623,8 @@ class ExperienceService @Autowired constructor(
     }
 
     fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate): ExperienceCreateResp {
+        checkCreatePermission(userId, projectId, experience.path, experience.artifactoryType)
+
         val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
 
         val path = experience.path
@@ -684,6 +676,25 @@ class ExperienceService @Autowired constructor(
             url = getShortExternalUrl(experienceId),
             experienceHashId = HashUtil.encodeLongId(experienceId)
         )
+    }
+
+    private fun checkCreatePermission(
+        userId: String,
+        projectId: String,
+        artifactoryPath: String,
+        artifactoryType: ArtifactoryType
+    ) {
+        if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
+                defaultMessage = AuthPermission.EXECUTE.alias
+            )
+            throw ErrorCodeException(
+                defaultMessage = "用户没有流水线执行权限",
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                params = arrayOf(permissionMsg)
+            )
+        }
     }
 
     private fun sendNotification(experienceId: Long) {
