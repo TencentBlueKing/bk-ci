@@ -182,7 +182,7 @@ interface ApigwExperienceResourceV3 {
         projectId: String,
         @ApiParam("体验组", required = true)
         group: GroupCreate
-    ): Result<Boolean>
+    ): Result<String>
 
     @ApiOperation("修改体验组")
     @Path("/{projectId}/{groupHashId}")

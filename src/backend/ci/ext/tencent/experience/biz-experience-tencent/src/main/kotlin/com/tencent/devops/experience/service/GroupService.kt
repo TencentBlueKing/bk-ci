@@ -155,7 +155,7 @@ class GroupService @Autowired constructor(
         return groupDao.getOrNull(dslContext, HashUtil.decodeIdToLong(groupHashId)) != null
     }
 
-    fun create(projectId: String, userId: String, group: GroupCreate) {
+    fun create(projectId: String, userId: String, group: GroupCreate): String {
         if (groupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 defaultMessage = "体验组(${group.name})已存在",
@@ -191,6 +191,8 @@ class GroupService @Autowired constructor(
             groupId = groupId,
             groupName = group.name
         )
+
+        return HashUtil.encodeLongId(groupId)
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {

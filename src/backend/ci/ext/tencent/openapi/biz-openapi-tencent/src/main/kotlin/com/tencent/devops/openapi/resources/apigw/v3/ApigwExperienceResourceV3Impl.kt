@@ -87,7 +87,7 @@ class ApigwExperienceResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         group: GroupCreate
-    ): Result<Boolean> {
+    ): Result<String> {
         return client.get(ServiceExperienceGroupResource::class).create(userId, projectId, group)
     }
 

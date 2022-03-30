@@ -19,10 +19,10 @@ class ServiceExperienceGroupResourceImpl @Autowired constructor(
     private val groupService: GroupService,
     private val client: Client
 ) : ServiceExperienceGroupResource {
-    override fun create(userId: String, projectId: String, group: GroupCreate): Result<Boolean> {
+    override fun create(userId: String, projectId: String, group: GroupCreate): Result<String> {
         checkParam(userId, projectId)
-        groupService.create(projectId = projectId, userId = userId, group = group)
-        return Result(true)
+        val groupId = groupService.create(projectId = projectId, userId = userId, group = group)
+        return Result(groupId)
     }
 
     override fun getUsers(userId: String, projectId: String, groupHashId: String): Result<GroupUsers> {
