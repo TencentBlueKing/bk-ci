@@ -21,6 +21,7 @@
                 :class="stageTitleCls"
             >
                 <Logo
+                    v-if="!!stageStatusIcon"
                     v-bk-tooltips="isStageSkip ? t('skipStageDesc') : { disabled: true }"
                     :name="stageStatusIcon"
                     :class="stageNameStatusCls"
