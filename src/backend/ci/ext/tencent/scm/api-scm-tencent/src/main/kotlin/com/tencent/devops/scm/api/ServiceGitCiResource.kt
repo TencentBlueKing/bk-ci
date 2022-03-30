@@ -77,7 +77,16 @@ interface ServiceGitCiResource {
         userId: String,
         @ApiParam("gitProjectId", required = true)
         @QueryParam("gitProjectId")
-        gitProjectId: String
+        gitProjectId: String,
+        @ApiParam("accessLevel", required = true)
+        @QueryParam("accessLevel")
+        accessLevel: Int,
+        @ApiParam("privateToken", required = false)
+        @QueryParam("privateToken")
+        privateToken: String? = null,
+        @ApiParam("useAccessToken", required = false)
+        @QueryParam("useAccessToken")
+        useAccessToken: Boolean = true
     ): Result<Boolean>
 
     @ApiOperation("销毁项目的token")

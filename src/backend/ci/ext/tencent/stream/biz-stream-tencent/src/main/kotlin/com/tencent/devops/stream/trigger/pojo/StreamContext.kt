@@ -29,7 +29,7 @@ package com.tencent.devops.stream.trigger.pojo
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 // TODO:  统一的上下文参数，除了消息队列，逐步替代stream触发中的所有参数传递对象
@@ -39,7 +39,7 @@ interface StreamContext {
     val gitEvent: GitEvent
 
     // stream 当前对git event 做了预处理的部分数据
-    val requestEvent: GitRequestEvent
+    val gitRequestEventForHandle: GitRequestEventForHandle
 
     // stream 项目的设置
     val streamSetting: GitCIBasicSetting
@@ -47,13 +47,13 @@ interface StreamContext {
 
 data class StreamRequestContext(
     override val gitEvent: GitEvent,
-    override val requestEvent: GitRequestEvent,
+    override val gitRequestEventForHandle: GitRequestEventForHandle,
     override val streamSetting: GitCIBasicSetting
 ) : StreamContext
 
 data class StreamTriggerContext(
     override val gitEvent: GitEvent,
-    override val requestEvent: GitRequestEvent,
+    override val gitRequestEventForHandle: GitRequestEventForHandle,
     override val streamSetting: GitCIBasicSetting,
     // 用来构建的流水线
     val pipeline: GitProjectPipeline,

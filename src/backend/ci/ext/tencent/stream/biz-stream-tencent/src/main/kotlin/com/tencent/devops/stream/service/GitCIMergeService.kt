@@ -39,8 +39,10 @@ import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitMergeHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +57,9 @@ class GitCIMergeService @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIMergeService::class.java)
@@ -89,7 +93,16 @@ class GitCIMergeService @Autowired constructor(
         mergeList.forEach { event ->
             val mrId = event.mergeRequestId ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
+            val gitProjectInfoCache = event.sourceGitProjectId?.let {
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = it,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
 
             val mergeHistory = GitMergeHistory(
                 id = realEvent.id ?: return@forEach,
@@ -121,15 +134,19 @@ class GitCIMergeService @Autowired constructor(
                         val history = getBuildHistory(buildList, it.buildId ?: return@nextBuild)
                         val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId)
                             ?: return@nextBuild
-                        records.add(GitCIBuildHistory(
-                            displayName = pipeline.displayName,
-                            pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = GitRequestEventReq(realEvent),
-                            buildHistory = history
-                        ))
+                        records.add(
+                            GitCIBuildHistory(
+                                displayName = pipeline.displayName,
+                                pipelineId = pipeline.pipelineId,
+                                gitRequestEvent = GitRequestEventReq(realEvent),
+                                buildHistory = history
+                            )
+                        )
                     } catch (e: Exception) {
-                        logger.error("Load gitProjectId: ${it.gitProjectId}, " +
-                            "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e)
+                        logger.error(
+                            "Load gitProjectId: ${it.gitProjectId}, " +
+                                "eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ", e
+                        )
                         return@nextBuild
                     }
                 }

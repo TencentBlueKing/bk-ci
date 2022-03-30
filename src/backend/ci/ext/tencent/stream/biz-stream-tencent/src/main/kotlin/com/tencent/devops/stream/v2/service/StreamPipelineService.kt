@@ -144,17 +144,16 @@ class StreamPipelineService @Autowired constructor(
     }
 
     fun getPipelineById(
-        gitProjectId: Long,
         pipelineId: String
     ): GitProjectPipeline? {
-        logger.info("get pipeline: $pipelineId, gitProjectId: $gitProjectId")
-        val pipeline = pipelineResourceDao.getPipelineById(
+        logger.info("get pipeline: $pipelineId")
+        val pipeline = pipelineResourceDao.getPipelinesInIds(
             dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId
-        ) ?: return null
+            gitProjectId = null,
+            pipelineIds = listOf(pipelineId)
+        ).getOrNull(0) ?: return null
         return GitProjectPipeline(
-            gitProjectId = gitProjectId,
+            gitProjectId = pipeline.gitProjectId,
             pipelineId = pipeline.pipelineId,
             filePath = pipeline.filePath,
             displayName = pipeline.displayName,

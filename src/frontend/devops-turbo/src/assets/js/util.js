@@ -1,6 +1,5 @@
 import { bkMessage } from 'bk-magic-vue'
 
-
 export function copyText (value, $t) {
     const input = document.createElement('input')
     document.body.appendChild(input)
