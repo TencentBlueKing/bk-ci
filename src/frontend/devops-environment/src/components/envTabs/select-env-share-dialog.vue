@@ -122,6 +122,7 @@
                 if (this.$refs.shareDiaglogTable) {
                     this.$refs.shareDiaglogTable.clearSelection()
                 }
+                this.searchVal = ''
             },
             handleConfirm () {
                 this.$emit('confirm', this.selection)
@@ -131,7 +132,6 @@
             handleCancel () {
                 this.$emit('cancel')
                 this.clearSelection()
-                this.searchVal = ''
             }
         }
     }
