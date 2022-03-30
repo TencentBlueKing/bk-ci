@@ -509,6 +509,7 @@ class RepositoryService @Autowired constructor(
                         url = repository.getFormatURL(),
                         type = ScmType.CODE_SVN
                     )
+                    // 如果repository为null，则默认为TC
                     repositoryCodeSvnDao.create(
                         dslContext = transactionContext,
                         repositoryId = repositoryId,
