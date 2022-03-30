@@ -21,7 +21,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_EXPERIENCE_GROUP"], description = "版本体验-发布体验")
-@Path("/service/experiences")
+@Path("/service/experiences/group")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceExperienceGroupResource {
