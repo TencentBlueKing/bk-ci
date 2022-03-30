@@ -712,28 +712,30 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         sharedEnvName: String?,
         sharedEnvId: Long?
     ): List<ThirdPartyAgent> {
+        logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
             !sharedEnvName.isNullOrBlank() -> {
-                val share = envShareProjectDao.list(
+                envShareProjectDao.list(
                     dslContext = dslContext,
                     mainProjectId = sharedProjectId,
                     envName = sharedEnvName,
                     envId = null
-                )
-                share.getOrNull(0)?.let {
-                    val env = envDao.getOrNull(
+                ).ifEmpty {
+                    val env = envDao.getByEnvName(
                         dslContext = dslContext,
                         projectId = sharedProjectId,
-                        envId = it.envId
+                        envName = sharedEnvName
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
                     )
-                    if (env.envName != it.envName) {
-                        envShareProjectDao.batchUpdateEnvName(dslContext, it.envId, env.envName)
-                    }
+                    envShareProjectDao.list(
+                        dslContext = dslContext,
+                        mainProjectId = sharedProjectId,
+                        envName = null,
+                        envId = env.envId
+                    )
                 }
-                share
             }
             sharedEnvId != null -> {
                 envDao.getOrNull(
@@ -752,6 +754,20 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 )
             }
             else -> emptyList()
+        }
+        // 兼容如果更改了环境名称
+        sharedEnvRecord.getOrNull(0)?.let {
+            val env = envDao.getOrNull(
+                dslContext = dslContext,
+                projectId = sharedProjectId,
+                envId = it.envId
+            ) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
+            )
+            if (env.envName != it.envName) {
+                envShareProjectDao.batchUpdateEnvName(dslContext, it.envId, env.envName)
+            }
         }
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
@@ -797,8 +813,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     }
                 }
 
-                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, it.envName) ?: return@nextRecord
-                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(it.envId)))
                 // 找到了环境可用就可以退出了
                 return@outSide
             }
