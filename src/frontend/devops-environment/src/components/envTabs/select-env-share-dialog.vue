@@ -131,6 +131,7 @@
             handleCancel () {
                 this.$emit('cancel')
                 this.clearSelection()
+                this.searchVal = ''
             }
         }
     }
