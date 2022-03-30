@@ -135,7 +135,7 @@ interface AppExperienceResource {
         experienceHashId: String,
         @ApiParam("强制最新版本", required = false)
         @QueryParam("forceNew")
-        forceNew: Boolean = false
+        forceNew: Boolean = true
     ): Result<AppExperienceDetail>
 
     @ApiOperation("历史版本")
