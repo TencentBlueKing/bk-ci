@@ -738,14 +738,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 }
             }
             sharedEnvId != null -> {
-                envDao.getOrNull(
-                    dslContext = dslContext,
-                    projectId = sharedProjectId,
-                    envId = sharedEnvId
-                ) ?: throw CustomException(
-                    Response.Status.FORBIDDEN,
-                    "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
-                )
                 envShareProjectDao.list(
                     dslContext = dslContext,
                     mainProjectId = sharedProjectId,
