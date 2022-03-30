@@ -712,6 +712,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         sharedEnvName: String?,
         sharedEnvId: Long?
     ): List<ThirdPartyAgent> {
+        logger.info("[$projectId|$sharedProjectId|$sharedEnvName|$sharedEnvId]get shared third party agent list")
         val sharedEnvRecord = when {
             !sharedEnvName.isNullOrBlank() -> {
                 val share = envShareProjectDao.list(
@@ -719,7 +720,23 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     mainProjectId = sharedProjectId,
                     envName = sharedEnvName,
                     envId = null
-                )
+                ).ifEmpty {
+                    val env = envDao.getByEnvName(
+                        dslContext = dslContext,
+                        projectId = sharedProjectId,
+                        envName = sharedEnvName
+                    ) ?: throw CustomException(
+                        Response.Status.FORBIDDEN,
+                        "第三方构建机环境不存在($sharedProjectId:$sharedEnvId)"
+                    )
+                    envShareProjectDao.list(
+                        dslContext = dslContext,
+                        mainProjectId = sharedProjectId,
+                        envName = null,
+                        envId = env.envId
+                    )
+                }
+
                 share.getOrNull(0)?.let {
                     val env = envDao.getOrNull(
                         dslContext = dslContext,
