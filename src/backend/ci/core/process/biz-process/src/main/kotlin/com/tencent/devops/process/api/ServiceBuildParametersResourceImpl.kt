@@ -28,19 +28,29 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserBuildParametersResource
+import com.tencent.devops.process.api.service.ServiceBuildParametersResource
 import com.tencent.devops.process.engine.service.PipelineBuildParamsService
+import com.tencent.devops.process.utils.WORKSPACE
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.stream.Collectors
 
-@Suppress("UNUSED")
 @RestResource
-class UserBuildParametersResourceImpl @Autowired constructor(
-    private val pipelineBuildParamsService: PipelineBuildParamsService
-) : UserBuildParametersResource {
+class ServiceBuildParametersResourceImpl @Autowired constructor(
+    private val pipelineBuildParamsService: PipelineBuildParamsService,
 
-    override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
-        return Result(pipelineBuildParamsService.getCommonBuildParams())
+) : ServiceBuildParametersResource {
+
+    override fun formatCustomBuildEnv(
+        buildId: String,
+        vmSeqId: String,
+        containerHashId: String,
+        executeCount: String,
+        customBuildEnv: Map<String, String>?
+    ): Result<Map<String, String>?> {
+        return Result(pipelineBuildParamsService
+            .formatCustomBuildEnv(buildId, vmSeqId, containerHashId, executeCount, customBuildEnv))
     }
 }

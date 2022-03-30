@@ -25,22 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserBuildParametersResource
-import com.tencent.devops.process.engine.service.PipelineBuildParamsService
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Suppress("UNUSED")
-@RestResource
-class UserBuildParametersResourceImpl @Autowired constructor(
-    private val pipelineBuildParamsService: PipelineBuildParamsService
-) : UserBuildParametersResource {
+@Api(tags = ["SERVICE_BUILD_PARAMETERS"], description = "服务-构建环境参数")
+@Path("/service/buildParam")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceBuildParametersResource {
 
-    override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
-        return Result(pipelineBuildParamsService.getCommonBuildParams())
-    }
+    @ApiOperation("校验自定义JOB ENV")
+    @GET
+    @Path("/customBuildEnv/format")
+    fun formatCustomBuildEnv(
+        @ApiParam("BUILD ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam("VM SEQ ID", required = true)
+        @QueryParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("CONTAINER HASHID", required = true)
+        @QueryParam("containerHashId")
+        containerHashId: String,
+        @ApiParam("重试次数", required = true)
+        @QueryParam("executeCount")
+        executeCount: String,
+        @ApiParam("自定义环境变量", required = true)
+        customBuildEnv: Map<String, String>?
+    ): Result<Map<String, String>?>
 }

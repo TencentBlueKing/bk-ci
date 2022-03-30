@@ -58,6 +58,7 @@ import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineBuildParamsService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
@@ -88,7 +89,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineContextService: PipelineContextService,
+    private val pipelineBuildParamsService: PipelineBuildParamsService
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
         return JsonUtil.mapTo(task.taskParams, VMBuildContainer::class.java)
@@ -242,7 +244,13 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 containerHashId = task.containerHashId,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 containerType = task.containerType,
-                customBuildEnv = param.customBuildEnv
+                customBuildEnv = pipelineBuildParamsService.formatCustomBuildEnv(
+                    buildId = task.buildId,
+                    vmSeqId = task.containerId,
+                    containerHashId = task.containerHashId,
+                    executeCount = task.executeCount.toString(),
+                    customBuildEnv = param.customBuildEnv
+                )
             )
         )
     }

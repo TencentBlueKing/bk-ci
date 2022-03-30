@@ -64,6 +64,7 @@ import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelineBuildParamsService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -110,6 +111,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val client: Client,
     private val pipelineContainerService: PipelineContainerService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
+    private val pipelineBuildParamsService: PipelineBuildParamsService,
     private val redisOperation: RedisOperation
 ) {
 
@@ -203,7 +205,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType中
-                            c.customBuildEnv?.map { (t, u) ->
+                            pipelineBuildParamsService.formatCustomBuildEnv(
+                                buildId = buildId,
+                                vmSeqId = vmSeqId,
+                                containerHashId = c.containerHashId,
+                                executeCount = c.executeCount.toString(),
+                                customBuildEnv = c.customBuildEnv
+                            )?.map { (t, u) ->
                                 BuildParameters(
                                     key = t,
                                     value = EnvUtils.parseEnv(u, contextMap),
