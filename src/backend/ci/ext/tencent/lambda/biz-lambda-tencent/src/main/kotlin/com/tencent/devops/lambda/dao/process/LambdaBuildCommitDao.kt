@@ -7,7 +7,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class LambdaBuildCommitsDao {
+class LambdaBuildCommitDao {
 
     fun getCommits(
         dslContext: DSLContext,

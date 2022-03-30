@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildTaskFinishBroadCastEvent
 import com.tencent.devops.common.kafka.KafkaClient
@@ -54,7 +54,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
-import com.tencent.devops.lambda.dao.process.LambdaBuildCommitsDao
+import com.tencent.devops.lambda.dao.process.LambdaBuildCommitDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildTaskDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineBuildDao
@@ -98,7 +98,7 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient,
     private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig,
-    private val lambdaBuildCommitsDao: LambdaBuildCommitsDao
+    private val lambdaBuildCommitDao: LambdaBuildCommitDao
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -175,8 +175,8 @@ class LambdaDataService @Autowired constructor(
         return true
     }
 
-    fun onBuildCommitsFinish(event: PipelineBuildCommitsFinishEvent) {
-        val records = lambdaBuildCommitsDao.getCommits(
+    fun onBuildCommitFinish(event: PipelineBuildCommitFinishEvent) {
+        val records = lambdaBuildCommitDao.getCommits(
             dslContext = dslContext,
             projectId = event.projectId,
             buildId = event.buildId

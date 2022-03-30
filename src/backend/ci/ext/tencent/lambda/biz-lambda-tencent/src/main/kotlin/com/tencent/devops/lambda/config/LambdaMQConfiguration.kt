@@ -28,7 +28,7 @@ package com.tencent.devops.lambda.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.lambda.listener.LambdaBuildCommitsFinishListener
+import com.tencent.devops.lambda.listener.LambdaBuildCommitFinishListener
 import com.tencent.devops.lambda.listener.LambdaBuildTaskFinishListener
 import com.tencent.devops.lambda.listener.LambdaBuildFinishListener
 import com.tencent.devops.lambda.listener.LambdaPipelineModelListener
@@ -272,43 +272,43 @@ class LambdaMQConfiguration {
      * webhook commits完成事件交换机
      */
     @Bean
-    fun pipelineBuildCommitsFinishFanoutExchange(): FanoutExchange {
+    fun pipelineBuildCommitFinishFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(
-            MQ.EXCHANGE_PIPELINE_BUILD_COMMITS_FINISH_FANOUT, true, false
+            MQ.EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT, true, false
         )
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
 
     @Bean
-    fun pipelineBuildCommitsFinishLambdaQueue() = Queue(LambdaMQ.QUEUE_PIPELINE_BUILD_COMMITS_FINISH_LAMBDA)
+    fun pipelineBuildCommitFinishLambdaQueue() = Queue(LambdaMQ.QUEUE_PIPELINE_BUILD_COMMIT_FINISH_LAMBDA)
 
     @Bean
     fun pipelineBuildCommitsFinishQueueBind(
-        @Autowired pipelineBuildCommitsFinishLambdaQueue: Queue,
-        @Autowired pipelineBuildCommitsFinishFanoutExchange: FanoutExchange
+        @Autowired pipelineBuildCommitFinishLambdaQueue: Queue,
+        @Autowired pipelineBuildCommitFinishFanoutExchange: FanoutExchange
     ): Binding {
-        return BindingBuilder.bind(pipelineBuildCommitsFinishLambdaQueue).to(pipelineBuildCommitsFinishFanoutExchange)
+        return BindingBuilder.bind(pipelineBuildCommitFinishLambdaQueue).to(pipelineBuildCommitFinishFanoutExchange)
     }
 
     @Bean
     fun pipelineBuildCommitsFinishListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildCommitsFinishLambdaQueue: Queue,
+        @Autowired pipelineBuildCommitFinishLambdaQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired lambdaBuildCommitsFinishListener: LambdaBuildCommitsFinishListener,
+        @Autowired lambdaBuildCommitFinishListener: LambdaBuildCommitFinishListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineBuildCommitsFinishLambdaQueue.name)
+        container.setQueueNames(pipelineBuildCommitFinishLambdaQueue.name)
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(30)
         container.setAmqpAdmin(rabbitAdmin)
         container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(
-            lambdaBuildCommitsFinishListener,
-            LambdaBuildCommitsFinishListener::execute.name
+            lambdaBuildCommitFinishListener,
+            LambdaBuildCommitFinishListener::execute.name
         )
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)

@@ -28,18 +28,18 @@ package com.tencent.devops.lambda.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.lambda.service.process.LambdaDataService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LambdaBuildCommitsFinishListener @Autowired constructor(
+class LambdaBuildCommitFinishListener @Autowired constructor(
     private val lambdaDataService: LambdaDataService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildCommitsFinishEvent>(pipelineEventDispatcher) {
+) : BaseListener<PipelineBuildCommitFinishEvent>(pipelineEventDispatcher) {
 
-    override fun run(event: PipelineBuildCommitsFinishEvent) {
-        lambdaDataService.onBuildCommitsFinish(event)
+    override fun run(event: PipelineBuildCommitFinishEvent) {
+        lambdaDataService.onBuildCommitFinish(event)
     }
 }

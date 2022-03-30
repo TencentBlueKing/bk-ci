@@ -33,5 +33,5 @@ object LambdaMQ {
 
     const val QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA = "q.engine.pipeline.extends.model.lambda"
 
-    const val QUEUE_PIPELINE_BUILD_COMMITS_FINISH_LAMBDA = "q.engine.pipeline.build.commits.finish.lambda"
+    const val QUEUE_PIPELINE_BUILD_COMMIT_FINISH_LAMBDA = "q.engine.pipeline.build.commit.finish.lambda"
 }
