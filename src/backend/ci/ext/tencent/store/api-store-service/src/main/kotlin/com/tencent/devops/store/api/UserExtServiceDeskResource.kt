@@ -128,14 +128,11 @@ interface UserExtServiceDeskResource {
 
     @ApiOperation("工作台--删除扩展服务")
     @DELETE
-    @Path("/{projectName}/{serviceCode}")
-    fun deleteAtom(
+    @Path("/{serviceCode}/delete")
+    fun deleteExtensionService(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目名称", required = true)
-        @PathParam("projectName")
-        projectName: String,
         @ApiParam("扩展服务Code", required = true)
         @PathParam("serviceCode")
         serviceCode: String
