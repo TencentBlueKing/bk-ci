@@ -351,7 +351,10 @@
                         return option.name
                     }
                 }
-                defaultVal && !this.loading && this.showValValidTips(defaultVal)
+                if (defaultVal && !this.loading) {
+                    this.showValValidTips(defaultVal)
+                    this.handleChange(this.name, '')
+                }
                 return ''
             },
             showValValidTips (val) {
