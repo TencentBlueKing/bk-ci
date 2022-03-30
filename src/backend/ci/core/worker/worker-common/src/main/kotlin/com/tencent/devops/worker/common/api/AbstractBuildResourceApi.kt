@@ -174,11 +174,11 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
             if (response.code() == StatusCodes.NOT_FOUND) {
-                throw RemoteServiceException("文件不存在")
+                throw RemoteServiceException("file does not exist")
             }
             if (!response.isSuccessful) {
                 LoggerService.addNormalLine(response.body()!!.string())
-                throw RemoteServiceException("获取文件失败")
+                throw RemoteServiceException("Failed to get file")
             }
             val dest = destPath.toPath()
             if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
