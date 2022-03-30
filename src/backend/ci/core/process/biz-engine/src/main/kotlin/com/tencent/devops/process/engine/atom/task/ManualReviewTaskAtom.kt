@@ -81,6 +81,7 @@ class ManualReviewTaskAtom(
 
         val reviewUsers = parseVariable(param.reviewUsers.joinToString(","), runVariables)
         val reviewDesc = parseVariable(param.desc, runVariables)
+        val notifyTitle = parseVariable(param.notifyTitle, runVariables)
 
         if (reviewUsers.isBlank()) {
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
@@ -122,7 +123,7 @@ class ManualReviewTaskAtom(
                 receivers = reviewUsers.split(","),
                 notifyType = checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
-                    "content" to (param.notifyTitle ?: "")
+                    "content" to notifyTitle
                 ),
                 bodyParams = mutableMapOf(
                     "buildNum" to (runVariables[PIPELINE_BUILD_NUM] ?: "1"),
