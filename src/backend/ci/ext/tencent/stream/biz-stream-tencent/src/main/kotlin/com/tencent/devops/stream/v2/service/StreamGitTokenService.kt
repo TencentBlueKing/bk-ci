@@ -46,6 +46,8 @@ class StreamGitTokenService @Autowired constructor(
         private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:"
         fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
         fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
+
+        // 工蜂超级token有效时间为8个小时，我们redis存7.5个小时，提前半个小时，这里token的使用都在初始化时间完成，不会超过30分钟
         private val validTime = TimeUnit.MINUTES.toSeconds(30) + TimeUnit.HOURS.toSeconds(7)
     }
 
