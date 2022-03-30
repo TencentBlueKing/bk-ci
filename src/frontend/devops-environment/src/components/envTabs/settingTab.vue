@@ -1,6 +1,6 @@
 <template>
     <div class="env-setting-tab-wrapper">
-        <bk-button class="setting-header" theme="primary" @click="toggleShareProject">添加项目</bk-button>
+        <bk-button class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
         <bk-table
             :data="shareEnvProjectList"
             :pagination="pagination"

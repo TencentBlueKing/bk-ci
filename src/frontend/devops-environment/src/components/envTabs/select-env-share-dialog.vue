@@ -4,7 +4,6 @@
         header-position="left"
         :value="showProjectDialog"
         :mask-close="false"
-        :position="{ top: 120 }"
         @confirm="handleConfirm"
         @cancel="handleCancel"
     >
@@ -23,7 +22,7 @@
         <div class="env-share-project-list">
             <bk-table
                 ref="shareDiaglogTable"
-                :height="500"
+                :height="tableHieght"
                 :data="projects"
                 :pagination="pagination"
                 @page-change="handlePageChange"
@@ -72,6 +71,9 @@
         computed: {
             handleSearch () {
                 return throttle(this.getProjects, 500)
+            },
+            tableHieght () {
+                return window.screen.height * 0.4
             }
         },
         watch: {
