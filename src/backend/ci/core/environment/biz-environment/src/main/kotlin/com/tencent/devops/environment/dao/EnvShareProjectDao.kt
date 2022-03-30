@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
+import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvShareProject
 import com.tencent.devops.model.environment.tables.records.TEnvShareProjectRecord
 import org.jooq.DSLContext
@@ -44,16 +45,38 @@ class EnvShareProjectDao {
         offset: Int,
         limit: Int
     ): List<TEnvShareProjectRecord> {
-        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            val where = dslContext.selectFrom(this)
-                .where(MAIN_PROJECT_ID.eq(projectId))
-                .and((ENV_ID.eq(envId)))
-            if (!name.isNullOrBlank()) {
-                where.and(SHARED_PROJECT_NAME.like("%$name%"))
-            }
-            return where.orderBy(UPDATE_TIME.desc()).limit(limit).offset(offset)
-                .fetch()
+        val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
+        val b = TEnv.T_ENV.`as`("b")
+        val dsl = dslContext.select(
+            a.ENV_ID,
+            b.ENV_NAME,
+            a.MAIN_PROJECT_ID,
+            a.SHARED_PROJECT_ID,
+            a.SHARED_PROJECT_NAME,
+            a.TYPE,
+            a.CREATOR,
+            a.CREATE_TIME,
+            a.UPDATE_TIME
+        ).from(a).join(b).on(a.ENV_ID.eq(b.ENV_ID))
+            .where(a.MAIN_PROJECT_ID.eq(projectId))
+            .and((a.ENV_ID.eq(envId)))
+        if (!name.isNullOrBlank()) {
+            dsl.and(a.SHARED_PROJECT_NAME.like("%$name%"))
         }
+        return dsl.orderBy(a.UPDATE_TIME.desc()).limit(limit).offset(offset)
+            .fetch().map {
+                TEnvShareProjectRecord(
+                    it.value1(),
+                    it.value2(),
+                    it.value3(),
+                    it.value4(),
+                    it.value5(),
+                    it.value6(),
+                    it.value7(),
+                    it.value8(),
+                    it.value9()
+                )
+            }
     }
 
     fun count(
@@ -112,13 +135,35 @@ class EnvShareProjectDao {
         envName: String?,
         sharedProjectId: String
     ): List<TEnvShareProjectRecord> {
-        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
-            val dsl = dslContext.selectFrom(this)
-                .where(SHARED_PROJECT_ID.eq(sharedProjectId))
-            if (!envName.isNullOrBlank()) {
-                dsl.and(ENV_NAME.eq(envName))
-            }
-            return dsl.fetch()
+        val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
+        val b = TEnv.T_ENV.`as`("b")
+        val dsl = dslContext.select(
+            a.ENV_ID,
+            b.ENV_NAME,
+            a.MAIN_PROJECT_ID,
+            a.SHARED_PROJECT_ID,
+            a.SHARED_PROJECT_NAME,
+            a.TYPE,
+            a.CREATOR,
+            a.CREATE_TIME,
+            a.UPDATE_TIME
+        ).from(a).join(b).on(a.ENV_ID.eq(b.ENV_ID))
+            .where(a.SHARED_PROJECT_ID.eq(sharedProjectId))
+        if (!envName.isNullOrBlank()) {
+            dsl.and(a.ENV_NAME.eq(envName))
+        }
+        return dsl.fetch().map {
+            TEnvShareProjectRecord(
+                it.value1(),
+                it.value2(),
+                it.value3(),
+                it.value4(),
+                it.value5(),
+                it.value6(),
+                it.value7(),
+                it.value8(),
+                it.value9()
+            )
         }
     }
 
@@ -166,6 +211,21 @@ class EnvShareProjectDao {
                     .set(UPDATE_TIME, now)
             }
         }).execute()
+    }
+
+    fun batchUpdateEnvName(
+        dslContext: DSLContext,
+        envId: Long,
+        envName: String
+    ) {
+        val now = LocalDateTime.now()
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            dslContext.update(this)
+                .set(ENV_NAME, envName)
+                .set(UPDATE_TIME, now)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
     }
 
     fun deleteByEnvAndMainProj(
