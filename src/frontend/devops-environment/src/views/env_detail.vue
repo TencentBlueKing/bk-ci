@@ -283,23 +283,6 @@
             }
         }
 
-        .node-table {
-            height: calc(95% - 32px);
-            overflow: auto;
-        }
-
-        // 表格滚动
-        // .node-table {
-        //     height: 94%;
-        //     overflow: hidden;
-        // }
-        //
-        // .table-node-body {
-        //     height: 92%;
-        //     overflow: auto;
-        //     position: relative;
-        // }
-
         .table-head,
         .table-row {
             padding: 0 20px;

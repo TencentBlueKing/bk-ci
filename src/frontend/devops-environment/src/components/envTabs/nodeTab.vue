@@ -3,61 +3,54 @@
         <div class="node-content-header">
             <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
         </div>
+
         <div class="node-table" v-if="showContent && nodeList.length">
-            <div class="table-head">
-                <div class="table-node-item node-item-ip">{{ $t('environment.envInfo.name') }}</div>
-                <div class="table-node-item node-item-name">IP</div>
-                <div class="table-node-item node-item-type">{{ `${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}` }}</div>
-                <div class="table-node-item node-item-os">{{ $t('environment.nodeInfo.os') }}</div>
-                <div class="table-node-item node-item-area">{{ $t('environment.nodeInfo.gateway') }}</div>
-                <div class="table-node-item node-item-status">{{ $t('environment.nodeInfo.cpuStatus') }}</div>
-                <div class="table-node-item node-item-handler node-header-head">{{ $t('environment.operation') }}</div>
-            </div>
-            <div class="table-node-body" ref="scrollBox">
-                <div class="table-row" v-for="(row, index) of nodeList" :key="index">
-                    <div class="table-node-item node-item-ip">
-                        <span class="node-ip">{{ row.displayName }}</span>
-                    </div>
-                    <div class="table-node-item node-item-name">
-                        <span class="node-name">{{ row.ip }}</span>
-                    </div>
-                    <div class="table-node-item node-item-type">
-                        <div>
-                            <span class="node-name">{{ row.nodeType }}</span>
-                            <span>({{ row.createdUser }})</span>
+            <bk-table
+                ref="shareDiaglogTable"
+                :data="nodeList"
+            >
+                <bk-table-column :label="$t('environment.envInfo.name')" prop="displayName"></bk-table-column>
+                <bk-table-column :width="150" label="IP" prop="ip"></bk-table-column>
+                <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`">
+                    <template slot-scope="props">
+                        <span class="node-name">{{ props.row.nodeType }}</span>
+                        <span>({{ props.row.createdUser }})</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :width="80" :label="$t('environment.nodeInfo.os')" prop="osName"></bk-table-column>
+                <bk-table-column :width="80" :label="$t('environment.nodeInfo.gateway')" prop="gateway"></bk-table-column>
+                <bk-table-column :label="$t('environment.nodeInfo.cpuStatus')">
+                    <template slot-scope="props">
+                        <div
+                            v-if="props.row.nodeStatusIcon === 'creating'"
+                            class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
+                        >
+                            <div
+                                v-for="i in [1,2,3,4,5,6,7,8]"
+                                :key="i"
+                                :class="`rotate rotate${i}`"
+                            ></div>
                         </div>
-                    </div>
-                    <div class="table-node-item node-item-os">
-                        <span class="node-type">{{ row.osName }}</span>
-                    </div>
-                    <div class="table-node-item node-item-area">
-                        <span v-if="row.gateway">{{ row.gateway }}</span>
-                        <span v-else>--</span>
-                    </div>
-                    <div class="table-node-item node-item-status">
-                        <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary"
-                            v-if="row.nodeStatus === $t('environment.nodeInfo.normal')">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
-                        </div>
-                        <span class="node-status-icon normal-stutus-icon" v-if="row.nodeStatus === $t('environment.nodeInfo.normal')"></span>
-                        <span class="node-status-icon abnormal-stutus-icon"
-                            v-if="row.nodeStatus === $t('environment.nodeInfo.abnormal') || row.nodeStatus === $t('environment.nodeInfo.unknown') || row.nodeStatus === $t('environment.nodeInfo.deleted') || row.nodeStatus === $t('environment.nodeInfo.loss')">
+                        <span
+                            v-if="props.row.nodeStatusIcon === 'normal'"
+                            class="node-status-icon normal-stutus-icon"
+                        >
+                        </span>
+                        <span
+                            v-if="props.row.nodeStatusIcon === 'unnormal'"
+                            class="node-status-icon abnormal-stutus-icon"
+                        >
                         </span>
 
-                        <span class="node-status">{{ row.nodeStatus }}</span>
-                    </div>
-                    <div class="table-node-item node-item-handler">
-                        <span class="node-delete delete-node-text" @click.stop="confirmDelete(row, index)">{{ $t('environment.remove') }}</span>
-                    </div>
-                </div>
-            </div>
+                        <span class="node-status">{{ props.row.nodeStatus }}</span>
+                    </template>
+                </bk-table-column>
+                <bk-table-column :width="80" :label="$t('environment.operation')">
+                    <template slot-scope="props">
+                        <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
+                    </template>
+                </bk-table-column>
+            </bk-table>
         </div>
         <bk-empty v-if="showContent && !nodeList.length"></bk-empty>
         <node-select :node-select-conf="nodeSelectConf"
@@ -221,6 +214,27 @@
                 this.nodeSelectConf.isShow = true
                 this.requestNodeList()
             },
+
+            getNodeStatusIcon (nodeStatus) {
+                console.log(nodeStatus)
+                const i18nPrefix = 'environment.nodeInfo'
+                const statusArray = [
+                    'abnormal',
+                    'unknown',
+                    'deleted',
+                    'loss'
+                ]
+            
+                switch (true) {
+                    case nodeStatus === this.$t(`${i18nPrefix}.creating`):
+                        return 'ceating'
+                    case nodeStatus === this.$t(`${i18nPrefix}.normal`):
+                        return 'normal'
+                    case statusArray.some(status => nodeStatus === this.$t(`${i18nPrefix}.${status}`)):
+                    default:
+                        return 'unnormal'
+                }
+            },
             /**
              * 获取环境节点列表
              */
@@ -233,7 +247,10 @@
 
                     this.nodeList.splice(0, this.nodeList.length)
                     res.forEach(item => {
-                        this.nodeList.push(item)
+                        this.nodeList.push({
+                            ...item,
+                            nodeStatusIcon: this.getNodeStatusIcon(item.nodeStatus)
+                        })
                     })
 
                     if (this.importNodeList.length) {
@@ -389,7 +406,7 @@
                     style: {
                         textAlign: 'center'
                     }
-                }, `${this.$t('environment.nodeInfo.removeNodetips')}(${row.nodeId})？`)
+                }, `${this.$t('environment.nodeInfo.removeNodetips', [row.nodeId])}？`)
 
                 this.$bkInfo({
                     title: this.$t('environment.remove'),
@@ -543,3 +560,11 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .node-table {
+        margin-top: 24px;
+        height: calc(95% - 32px);
+        overflow: auto;
+    }
+</style>

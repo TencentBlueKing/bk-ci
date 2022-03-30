@@ -4,10 +4,22 @@
         header-position="left"
         :value="showProjectDialog"
         :mask-close="false"
-        :title="$t('environment.addProject')"
+        :position="{ top: 120 }"
         @confirm="handleConfirm"
         @cancel="handleCancel"
     >
+        <header class="share-project-dialog-header">
+            <h2>{{ $t('environment.addProject') }}</h2>
+            <bk-input
+                class="share-project-search-input"
+                right-icon="bk-icon icon-search"
+                :placeholder="$t('environment.search')"
+                :clearable="true"
+                show-clear-only-hover
+                v-model="searchVal"
+                @change="handleSearch"
+            />
+        </header>
         <div class="env-share-project-list">
             <bk-table
                 ref="shareDiaglogTable"
@@ -30,7 +42,7 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import { convertTime } from '@/utils/util'
+    import { throttle, convertTime } from '@/utils/util'
     export default {
         name: 'select-env-share-dialog',
         props: {
@@ -52,7 +64,14 @@
                     limit: 20
                 },
                 selection: [],
-                projects: []
+                projects: [],
+                searchVal: '',
+                searching: false
+            }
+        },
+        computed: {
+            handleSearch () {
+                return throttle(this.getProjects, 500)
             }
         },
         created () {
@@ -63,12 +82,15 @@
                 'requestProjects'
             ]),
             async getProjects () {
+                if (this.searching) return
                 try {
+                    this.searching = true
                     const { records, count } = await this.requestProjects({
                         projectId: this.projectId,
                         envHashId: this.envHashId,
                         page: this.pagination.current,
-                        pageSize: this.pagination.limit
+                        pageSize: this.pagination.limit,
+                        search: this.searchVal
                     })
                     this.projects = records.map(item => ({
                         ...item,
@@ -77,6 +99,8 @@
                     this.pagination.count = count
                 } catch (error) {
                     console.trace(error)
+                } finally {
+                    this.searching = false
                 }
             },
             handlePageChange (current) {
@@ -111,3 +135,15 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .share-project-dialog-header {
+        display: flex;
+        justify-content: space-between;
+        margin: 12px 0 24px 0;
+
+        .share-project-search-input {
+            width: 360px;
+        }
+    }
+</style>

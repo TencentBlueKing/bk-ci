@@ -271,8 +271,8 @@ const actions = {
         return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list?offset=${offset}&limit=${limit}`)
     },
 
-    requestProjects (_, { projectId, envHashId, page, pageSize }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list_user_project?page=${page}&pageSize=${pageSize}`)
+    requestProjects (_, { projectId, envHashId, page, pageSize, search }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list_user_project?page=${page}&pageSize=${pageSize}&search=${search}`)
     },
 
     shareEnv (_, { projectId, envHashId, body }) {

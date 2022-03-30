@@ -298,6 +298,7 @@
         }
         .env-info {
             margin-right: 12px;
+            color: $fontWeightColor;
         }
         .env-link .bk-link-text {
             font-size: 12px;

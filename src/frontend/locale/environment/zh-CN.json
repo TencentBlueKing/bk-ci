@@ -109,6 +109,7 @@
     "removeShareEnvProjectSuc": "项目 {0} 移除成功",
     "shareEnvSuc": "共享环境成功",
     "removeShareProjectConfirm": "是否移除项目 {0}",
+    "search": "搜索",
     "envInfo": {
         "createVariable": "新增变量",
         "name": "名称",
