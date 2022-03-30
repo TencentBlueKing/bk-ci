@@ -421,7 +421,7 @@ class ExperienceAppService(
         recordIds.removeAll(privateRecordIds)
 
         // 找到结果
-        val recordMap = experienceDao.list(dslContext, recordIds).map { it.id to it }.toMap()
+        val recordMap = experienceDao.listOnline(dslContext, recordIds).map { it.id to it }.toMap()
 
         // 排序
         val records = mutableListOf<TExperienceRecord>()

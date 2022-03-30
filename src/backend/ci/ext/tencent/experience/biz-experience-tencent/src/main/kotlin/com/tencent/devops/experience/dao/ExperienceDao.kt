@@ -55,6 +55,16 @@ class ExperienceDao {
         }
     }
 
+    fun listOnline(dslContext: DSLContext, idSet: Collection<Long>): Result<TExperienceRecord> {
+        with(TExperience.T_EXPERIENCE) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(idSet))
+                .and(ONLINE.eq(true))
+                .and(UPDATE_TIME.eq(LocalDateTime.now()))
+                .fetch()
+        }
+    }
+
     fun list(
         dslContext: DSLContext,
         projectId: String,
