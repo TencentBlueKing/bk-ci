@@ -57,6 +57,7 @@
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
             :row-list="importNodeList"
+            :change-created-user="changeCreatedUser"
             :select-handlerc-conf="selectHandlercConf"
             :confirm-fn="confirmFn"
             :toggle-all-select="toggleAllSelect"
@@ -556,6 +557,33 @@
                     this.selectHandlercConf.searchEmpty = false
                     this.nodeSelectConf.importText = this.$t('environment.import')
                 }
+            },
+            async changeCreatedUser (id) {
+                this.$bkInfo({
+                    title: this.$t('environment.nodeInfo.modifyImporter'),
+                    subTitle: this.$t('environment.nodeInfo.modifyOperatorTips'),
+                    confirmFn: async () => {
+                        let message, theme
+                        try {
+                            await this.$store.dispatch('environment/changeCreatedUser', {
+                                projectId: this.projectId,
+                                nodeHashId: id
+                            })
+
+                            message = this.$t('environment.successfullyModified')
+                            theme = 'success'
+                        } catch (err) {
+                            message = err.message ? err.message : err
+                            theme = 'error'
+                        } finally {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
+                            this.requestList()
+                        }
+                    }
+                })
             }
         }
     }
