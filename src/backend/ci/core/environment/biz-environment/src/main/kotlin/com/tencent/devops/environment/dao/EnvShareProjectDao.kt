@@ -213,7 +213,6 @@ class EnvShareProjectDao {
         }).execute()
     }
 
-    @SuppressWarnings("LongParameterList")
     fun batchUpdateEnvName(
         dslContext: DSLContext,
         envId: Long,
