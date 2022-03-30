@@ -219,7 +219,8 @@ class EnvService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = canEditEnvIds.contains(it.envId),
                 canDelete = canDeleteEnvIds.contains(it.envId),
-                canUse = canUseEnvIds.contains(it.envId)
+                canUse = canUseEnvIds.contains(it.envId),
+                projectName = null
             )
         }
     }
@@ -253,7 +254,8 @@ class EnvService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = null,
                 canDelete = null,
-                canUse = null
+                canUse = null,
+                projectName = null
             )
         }
     }
@@ -412,7 +414,8 @@ class EnvService @Autowired constructor(
                 envId,
                 AuthPermission.DELETE
             ),
-            canUse = null
+            canUse = null,
+            projectName = client.get(ServiceProjectResource::class).get(env.projectId).data?.projectName
         )
     }
 
@@ -454,7 +457,8 @@ class EnvService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = null,
                 canDelete = null,
-                canUse = canUseEnvIds.contains(it.envId)
+                canUse = canUseEnvIds.contains(it.envId),
+                projectName = null
             )
         }
     }
@@ -636,7 +640,8 @@ class EnvService @Autowired constructor(
                     updatedTime = it.updatedTime.timestamp(),
                     canEdit = null,
                     canDelete = null,
-                    canUse = null
+                    canUse = null,
+                    projectName = null
                 )
             )
         }
@@ -673,7 +678,8 @@ class EnvService @Autowired constructor(
                     updatedTime = it.updatedTime.timestamp(),
                     canEdit = null,
                     canDelete = null,
-                    canUse = null
+                    canUse = null,
+                    projectName = null
                 )
             )
         }
@@ -701,7 +707,8 @@ class EnvService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = null,
                 canDelete = null,
-                canUse = null
+                canUse = null,
+                projectName = null
             )
         }
     }
