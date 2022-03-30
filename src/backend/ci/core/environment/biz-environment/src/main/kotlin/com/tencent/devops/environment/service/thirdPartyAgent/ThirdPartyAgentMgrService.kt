@@ -813,8 +813,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     }
                 }
 
-                val envRecord = envDao.getByEnvName(dslContext, it.mainProjectId, it.envName) ?: return@nextRecord
-                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(envRecord.envId)))
+                sharedThirdPartyAgents.addAll(getAgentByEnvId(it.mainProjectId, HashUtil.encodeLongId(it.envId)))
                 // 找到了环境可用就可以退出了
                 return@outSide
             }
