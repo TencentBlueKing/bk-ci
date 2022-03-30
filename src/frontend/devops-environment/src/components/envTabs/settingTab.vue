@@ -96,7 +96,7 @@
                 if (page === 1) {
                     this.shareEnvProjectList.unshift({
                         projectId: this.projectId,
-                        name: this.projectId,
+                        name: this.projectName,
                         type: 'PROJECT',
                         creator: this.curEnvDetail.updatedUser,
                         isDefault: true,
