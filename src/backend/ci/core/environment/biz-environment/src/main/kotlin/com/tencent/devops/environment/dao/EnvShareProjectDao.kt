@@ -213,6 +213,22 @@ class EnvShareProjectDao {
         }).execute()
     }
 
+    @SuppressWarnings("LongParameterList")
+    fun batchUpdateEnvName(
+        dslContext: DSLContext,
+        envId: Long,
+        envName: String
+    ) {
+        val now = LocalDateTime.now()
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            dslContext.update(this)
+                .set(ENV_NAME, envName)
+                .set(UPDATE_TIME, now)
+                .where(ENV_ID.eq(envId))
+                .execute()
+        }
+    }
+
     fun deleteByEnvAndMainProj(
         dslContext: DSLContext,
         envId: Long,
