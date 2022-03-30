@@ -69,7 +69,7 @@ import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.service.builds.PipelineBuildCommitsService
+import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -93,7 +93,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         pipelineWebHookQueueService = applicationContext.getBean(PipelineWebHookQueueService::class.java)
         buildLogPrinter = applicationContext.getBean(BuildLogPrinter::class.java)
         pipelinebuildWebhookService = applicationContext.getBean(PipelineBuildWebhookService::class.java)
-        pipelineBuildCommitsService = applicationContext.getBean(PipelineBuildCommitsService::class.java)
+        pipelineBuildCommitService = applicationContext.getBean(PipelineBuildCommitService::class.java)
     }
 
     companion object {
@@ -107,7 +107,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         lateinit var pipelineWebHookQueueService: PipelineWebHookQueueService
         lateinit var buildLogPrinter: BuildLogPrinter
         lateinit var pipelinebuildWebhookService: PipelineBuildWebhookService // 给AOP调用
-        lateinit var pipelineBuildCommitsService: PipelineBuildCommitsService
+        lateinit var pipelineBuildCommitService: PipelineBuildCommitService
         private val logger = LoggerFactory.getLogger(PipelineBuildWebhookService::class.java)
     }
 
@@ -435,7 +435,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             .generateSegmentId("PIPELINE_WEBHOOK_BUILD_LOG_DETAIL").data
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
-                    pipelineBuildCommitsService.create(
+                    pipelineBuildCommitService.create(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         buildId = buildId!!,
