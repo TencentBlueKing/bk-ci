@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
-class PipelineBuildCommitsDao {
+class PipelineBuildCommitDao {
 
     fun create(
         dslContext: DSLContext,

@@ -2,9 +2,9 @@ package com.tencent.devops.process.service.builds
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitsFinishEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.process.dao.PipelineBuildCommitsDao
+import com.tencent.devops.process.dao.PipelineBuildCommitDao
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
-class PipelineBuildCommitsService @Autowired constructor(
+class PipelineBuildCommitService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineBuildCommitsDao: PipelineBuildCommitsDao,
+    private val pipelineBuildCommitDao: PipelineBuildCommitDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val client: Client
 ) {
@@ -41,7 +41,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                 )
                 logger.info("commit list is $webhookCommitList")
                 webhookCommitList.forEach {
-                    pipelineBuildCommitsDao.create(
+                    pipelineBuildCommitDao.create(
                         dslContext = dslContext,
                         id = client.get(ServiceAllocIdResource::class)
                             .generateSegmentId("PIPELINE_BUILD_COMMITS").data,
@@ -60,7 +60,7 @@ class PipelineBuildCommitsService @Autowired constructor(
                 page++
             }
             pipelineEventDispatcher.dispatch(
-                PipelineBuildCommitsFinishEvent(
+                PipelineBuildCommitFinishEvent(
                     source = "build_commits",
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -73,6 +73,6 @@ class PipelineBuildCommitsService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineBuildCommitsService::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineBuildCommitService::class.java)
     }
 }

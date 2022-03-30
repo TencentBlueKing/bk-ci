@@ -120,8 +120,8 @@ class BuildEngineExtendConfiguration {
     }
 
     @Bean
-    fun pipelineBuildCommitsFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_COMMITS_FINISH_FANOUT, true, false)
+    fun pipelineBuildCommitFinishFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
