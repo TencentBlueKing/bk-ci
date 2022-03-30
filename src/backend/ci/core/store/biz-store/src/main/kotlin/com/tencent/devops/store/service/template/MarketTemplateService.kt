@@ -117,7 +117,7 @@ interface MarketTemplateService {
         userId: String,
         model: Model,
         projectCodeList: ArrayList<String>,
-        templateCode: String?
+        templateCode: String? = null
     ): Result<Boolean>
 
     /**

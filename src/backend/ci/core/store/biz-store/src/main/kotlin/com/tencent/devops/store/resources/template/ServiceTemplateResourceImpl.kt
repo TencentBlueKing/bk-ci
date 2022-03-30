@@ -90,8 +90,7 @@ class ServiceTemplateResourceImpl @Autowired constructor(
         return marketTemplateService.verificationModelComponentVisibleDept(
             userId = userId,
             model = model,
-            projectCodeList = projectCodeList,
-            templateCode = null
+            projectCodeList = projectCodeList
         )
     }
 }
