@@ -24,14 +24,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.listener
 
-package com.tencent.devops.lambda.config
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
+import com.tencent.devops.lambda.service.process.LambdaDataService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-object LambdaMQ {
-    const val QUEUE_PROJECT_CREATE_LAMBDA_EVENT = "q.project.create.project.queue.lambda"
-    const val QUEUE_PROJECT_UPDATE_LAMBDA_EVENT = "q.project.update.project.queue.lambda"
+@Component
+class LambdaBuildCommitFinishListener @Autowired constructor(
+    private val lambdaDataService: LambdaDataService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineBuildCommitFinishEvent>(pipelineEventDispatcher) {
 
-    const val QUEUE_PIPELINE_EXTENDS_MODEL_LAMBDA = "q.engine.pipeline.extends.model.lambda"
-
-    const val QUEUE_PIPELINE_BUILD_COMMIT_FINISH_LAMBDA = "q.engine.pipeline.build.commit.finish.lambda"
+    override fun run(event: PipelineBuildCommitFinishEvent) {
+        lambdaDataService.onBuildCommitFinish(event)
+    }
 }
