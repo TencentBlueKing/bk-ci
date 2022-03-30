@@ -142,7 +142,7 @@ interface ApigwExperienceResourceV3 {
     ): Result<String>
 
     @ApiOperation("编辑体验")
-    @Path("/{projectId}/{experienceHashId}")
+    @Path("/{projectId}/{experienceHashId}/edit")
     @POST
     fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -165,7 +165,7 @@ interface ApigwExperienceResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("创建体验组")
-    @Path("/{projectId}/")
+    @Path("/group/{projectId}/create")
     @POST
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -185,8 +185,8 @@ interface ApigwExperienceResourceV3 {
     ): Result<String>
 
     @ApiOperation("修改体验组")
-    @Path("/{projectId}/{groupHashId}")
-    @PUT
+    @Path("/group/{projectId}/{groupHashId}/edit")
+    @POST
     fun edit(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -208,7 +208,7 @@ interface ApigwExperienceResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("删除体验组")
-    @Path("/{projectId}/{groupHashId}")
+    @Path("/group/{projectId}/{groupHashId}/delete")
     @DELETE
     fun delete(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -229,7 +229,7 @@ interface ApigwExperienceResourceV3 {
     ): Result<Boolean>
 
     @ApiOperation("获取体验组用户")
-    @Path("/{projectId}/{groupHashId}/users")
+    @Path("/group/{projectId}/{groupHashId}/users")
     @GET
     fun getUsers(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
