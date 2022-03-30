@@ -28,7 +28,6 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
-import com.tencent.devops.model.experience.tables.TExperience
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
@@ -401,12 +400,12 @@ class ExperiencePublicDao {
         }
     }
 
-    fun getNewestRecordId(
+    fun getNewestRecord(
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
         platform: String
-    ): Long? {
+    ): TExperiencePublicRecord? {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -414,7 +413,7 @@ class ExperiencePublicDao {
                 .and(ONLINE.eq(true))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
-                .fetchOne()?.recordId
+                .fetchOne()
         }
     }
 

@@ -52,6 +52,7 @@ import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
+import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
@@ -459,8 +460,8 @@ class ExperienceBaseService @Autowired constructor(
         }
     }
 
-    fun getNewestRecordId(projectId: String, bundleIdentifier: String, platform: String): Long? {
-        return experiencePublicDao.getNewestRecordId(dslContext, projectId, bundleIdentifier, platform)
+    fun getNewestPublic(projectId: String, bundleIdentifier: String, platform: String): TExperiencePublicRecord? {
+        return experiencePublicDao.getNewestRecord(dslContext, projectId, bundleIdentifier, platform)
     }
 }
 
