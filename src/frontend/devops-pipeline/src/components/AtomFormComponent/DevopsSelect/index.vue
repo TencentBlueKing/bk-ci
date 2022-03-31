@@ -382,13 +382,12 @@
                 } catch (e) {
                     console.error(e)
                 } finally {
-                    if (this.value.length) {
-                        if (this.isMultiple) {
-                            this.getMultipleDisplayName(this.value)
-                        } else {
-                            this.displayName = this.getDisplayName(this.value)
-                        }
+                    if (this.isMultiple) {
+                        this.getMultipleDisplayName(this.value)
+                    } else {
+                        this.displayName = this.getDisplayName(this.value)
                     }
+                    
                     this.loading = false
                 }
             },
