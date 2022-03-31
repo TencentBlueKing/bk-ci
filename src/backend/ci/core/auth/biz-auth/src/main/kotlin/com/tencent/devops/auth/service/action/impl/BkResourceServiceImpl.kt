@@ -34,6 +34,7 @@ import com.tencent.devops.auth.pojo.resource.ResourceInfo
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 import com.tencent.devops.auth.service.action.BkResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +47,13 @@ abstract class BkResourceServiceImpl @Autowired constructor(
         // 判断此资源是否存在, 存在直接报错
         if (resourceDao.getResourceById(dslContext, resource.resourceId) != null) {
             logger.warn("createResource $resource exist")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_EXSIT,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.RESOURCE_EXSIT,
+                    params = arrayOf(resource.resourceId)
+                )
+            )
         }
         // 添加资源类数据
         resourceDao.createResource(dslContext, userId, resource)

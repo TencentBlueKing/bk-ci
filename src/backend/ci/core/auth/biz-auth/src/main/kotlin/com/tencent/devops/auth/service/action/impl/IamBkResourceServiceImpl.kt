@@ -157,11 +157,11 @@ class IamBkResourceServiceImpl @Autowired constructor(
         if (create) {
             val createSelectionDTO = buildResourceSelector(resource, projectSelect)
             logger.info("buildIamResourceSelectorInstance create $createSelectionDTO")
-            resourceService.createResourceInstanceSelector(createSelectionDTO)
+            resourceService.createResourceInstanceSelector(arrayListOf(createSelectionDTO))
         } else {
             val updateSelectionDTO = buildResourceSelector(resource, projectSelect)
             logger.info("buildIamResourceSelectorInstance update $updateSelectionDTO")
-            resourceService.updateResourceInstanceSelector(updateSelectionDTO)
+            resourceService.updateResourceInstanceSelector(resourceSelectId, updateSelectionDTO)
         }
     }
 
