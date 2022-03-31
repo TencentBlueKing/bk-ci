@@ -27,6 +27,11 @@
 
 package com.tencent.devops.stream.trigger.v2
 
+import com.devops.process.yaml.modelCreate.ModelCreate
+import com.devops.process.yaml.modelCreate.inner.GitData
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.devops.process.yaml.modelCreate.inner.PipelineInfo
+import com.devops.process.yaml.modelCreate.inner.StreamData
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -36,45 +41,45 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.YamlTransferData
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.QualityRulesException
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
+import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.GitCITriggerLock
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.stream.config.StreamStorageBean
 import com.tencent.devops.stream.pojo.v2.StreamDeleteEvent
 import com.tencent.devops.stream.service.GitCIPipelineService
-import com.devops.process.yaml.modelCreate.ModelCreate
-import com.devops.process.yaml.modelCreate.inner.GitData
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.modelCreate.inner.PipelineInfo
-import com.devops.process.yaml.modelCreate.inner.StreamData
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.modelCreate.InnerModelCreatorImpl
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
+import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
+import com.tencent.devops.stream.utils.GitCIPipelineUtils
+import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.DeleteEventService
+import com.tencent.devops.stream.v2.service.RepoTriggerEventService
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -94,7 +99,11 @@ class StreamYamlBuild @Autowired constructor(
     private val modelCreateInnerImpl: InnerModelCreatorImpl,
     private val streamStorageBean: StreamStorageBean,
     private val streamTimerService: StreamTimerService,
-    private val deleteEventService: DeleteEventService
+    private val deleteEventService: DeleteEventService,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitTokenService: StreamGitTokenService,
+    private val streamScmService: StreamScmService,
+    private val repoTriggerEventService: RepoTriggerEventService
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -117,7 +126,7 @@ class StreamYamlBuild @Autowired constructor(
     @SuppressWarnings("LongParameterList")
     fun gitStartBuild(
         pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         yaml: ScriptBuildYaml,
         originYaml: String,
         parsedYaml: String,
@@ -126,6 +135,7 @@ class StreamYamlBuild @Autowired constructor(
         onlySavePipeline: Boolean,
         isTimeTrigger: Boolean,
         isDeleteTrigger: Boolean = false,
+        repoHookName: List<String>? = null,
         gitProjectInfo: GitCIProjectInfo? = null,
         changeSet: Set<String>? = null,
         params: Map<String, String> = mapOf(),
@@ -135,24 +145,24 @@ class StreamYamlBuild @Autowired constructor(
         // pipelineId可能为blank所以使用filePath为key
         val triggerLock = GitCITriggerLock(
             redisOperation = redisOperation,
-            gitProjectId = event.gitProjectId,
+            gitProjectId = gitRequestEventForHandle.gitProjectId,
             filePath = pipeline.filePath
         )
         try {
             val realPipeline: GitProjectPipeline
-            val gitBasicSetting = streamBasicSettingDao.getSetting(dslContext, event.gitProjectId)!!
+            val gitBasicSetting = streamBasicSettingDao.getSetting(dslContext, gitRequestEventForHandle.gitProjectId)!!
             // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
             try {
                 triggerLock.lock()
                 realPipeline = pipelineService.getPipelineByFile(
-                    event.gitProjectId,
+                    gitRequestEventForHandle.gitProjectId,
                     pipeline.filePath
                 ) ?: pipeline
                 // 优先创建流水线为了绑定红线
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
                         pipeline = realPipeline,
-                        event = event,
+                        gitRequestEventForHandle = gitRequestEventForHandle,
                         gitCIBasicSetting = gitBasicSetting,
                         model = createTriggerModel(gitBasicSetting),
                         updateLastModifyUser = true
@@ -167,18 +177,19 @@ class StreamYamlBuild @Autowired constructor(
 
             saveSpecialTriggerEvent(
                 isTimeTrigger = isTimeTrigger,
-                event = event,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 realPipeline = realPipeline,
                 yaml = yaml,
                 gitProjectInfo = gitProjectInfo,
                 originYaml = originYaml,
-                isDeleteTrigger = isDeleteTrigger
+                isDeleteTrigger = isDeleteTrigger,
+                repoHookName = repoHookName
             )
 
             return if (gitBuildId != null) {
                 startBuildPipeline(
                     pipeline = realPipeline,
-                    event = event,
+                    gitRequestEventForHandle = gitRequestEventForHandle,
                     yaml = yaml,
                     gitBuildId = gitBuildId,
                     changeSet = changeSet,
@@ -189,7 +200,7 @@ class StreamYamlBuild @Autowired constructor(
             } else if (onlySavePipeline) {
                 savePipeline(
                     pipeline = realPipeline,
-                    event = event,
+                    gitRequestEventForHandle = gitRequestEventForHandle,
                     yaml = yaml,
                     changeSet = changeSet,
                     gitBasicSetting = gitBasicSetting
@@ -199,11 +210,11 @@ class StreamYamlBuild @Autowired constructor(
                 null
             }
         } catch (e: Throwable) {
-            logger.warn("Fail to start the git ci build($event)", e)
+            logger.warn("Fail to start the git ci build($gitRequestEventForHandle)", e)
             val (block, message, reason) = when (e) {
                 is JsonProcessingException, is ParamBlankException, is CustomException -> {
                     Triple(
-                        (event.objectKind == TGitObjectKind.MERGE_REQUEST.value),
+                        (gitRequestEventForHandle.gitRequestEvent.objectKind == TGitObjectKind.MERGE_REQUEST.value),
                         e.message,
                         TriggerReason.PIPELINE_PREPARE_ERROR
                     )
@@ -220,12 +231,12 @@ class StreamYamlBuild @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("event: ${event.id} unknow error: ${e.message}")
+                    logger.error("event: ${gitRequestEventForHandle.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
             TriggerException.triggerError(
-                request = event,
+                request = gitRequestEventForHandle,
                 pipeline = pipeline,
                 reason = reason,
                 reasonParams = listOf(message ?: ""),
@@ -243,29 +254,30 @@ class StreamYamlBuild @Autowired constructor(
 
     private fun saveSpecialTriggerEvent(
         isTimeTrigger: Boolean,
-        event: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         realPipeline: GitProjectPipeline,
         yaml: ScriptBuildYaml,
         gitProjectInfo: GitCIProjectInfo?,
         originYaml: String,
-        isDeleteTrigger: Boolean
+        isDeleteTrigger: Boolean,
+        repoHookName: List<String>?
     ) {
         // 如果是定时触发需要注册事件
         if (isTimeTrigger) {
             streamTimerService.saveTimer(
                 StreamTimer(
-                    projectId = GitCIPipelineUtils.genGitProjectCode(event.gitProjectId),
+                    projectId = GitCIPipelineUtils.genGitProjectCode(gitRequestEventForHandle.gitProjectId),
                     pipelineId = realPipeline.pipelineId,
-                    userId = event.userId,
+                    userId = gitRequestEventForHandle.userId,
                     crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
-                    gitProjectId = event.gitProjectId,
+                    gitProjectId = gitRequestEventForHandle.gitProjectId,
                     // 未填写则在每次触发拉默认分支
                     branchs = yaml.triggerOn?.schedules?.branches?.ifEmpty {
                         listOf(gitProjectInfo?.defaultBranch!!)
                     } ?: listOf(gitProjectInfo?.defaultBranch!!),
                     always = yaml.triggerOn?.schedules?.always ?: false,
                     channelCode = channelCode,
-                    eventId = event.id!!,
+                    eventId = gitRequestEventForHandle.id!!,
                     originYaml = originYaml
                 )
             )
@@ -274,12 +286,20 @@ class StreamYamlBuild @Autowired constructor(
         if (isDeleteTrigger && deleteEventService.getDeleteEvent(realPipeline.pipelineId) == null) {
             deleteEventService.saveDeleteEvent(
                 StreamDeleteEvent(
-                    gitProjectId = event.gitProjectId,
+                    gitProjectId = gitRequestEventForHandle.gitProjectId,
                     pipelineId = realPipeline.pipelineId,
-                    userId = event.userId,
-                    eventId = event.id!!,
+                    userId = gitRequestEventForHandle.userId,
+                    eventId = gitRequestEventForHandle.id!!,
                     originYaml = originYaml
                 )
+            )
+        }
+        // 储存远程仓库触发的特殊事件
+        if (!repoHookName.isNullOrEmpty()) {
+            repoTriggerEventService.saveRepoTriggerEvent(
+                targetGitProjectId = gitRequestEventForHandle.gitProjectId,
+                sourceGitProjectPath = repoHookName,
+                pipelineId = realPipeline.pipelineId
             )
         }
     }
@@ -310,7 +330,7 @@ class StreamYamlBuild @Autowired constructor(
     @SuppressWarnings("LongParameterList")
     private fun startBuildPipeline(
         pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         yaml: ScriptBuildYaml,
         gitBuildId: Long,
         gitBasicSetting: GitCIBasicSetting,
@@ -318,11 +338,14 @@ class StreamYamlBuild @Autowired constructor(
         params: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData
     ): BuildId? {
-        logger.info("Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}, event: ${event.id}")
+        logger.info(
+            "Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}," +
+                    " event: ${gitRequestEventForHandle.id}"
+        )
 
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
             pipeline = pipeline,
-            event = event,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             yaml = yaml,
             gitBasicSetting = gitBasicSetting,
             changeSet = changeSet,
@@ -344,7 +367,7 @@ class StreamYamlBuild @Autowired constructor(
 
         return streamYamlBaseBuild.startBuild(
             pipeline = pipeline,
-            event = event,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             gitCIBasicSetting = gitBasicSetting,
             model = model,
             gitBuildId = gitBuildId,
@@ -355,14 +378,14 @@ class StreamYamlBuild @Autowired constructor(
 
     private fun savePipeline(
         pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         yaml: ScriptBuildYaml,
         changeSet: Set<String>? = null,
         gitBasicSetting: GitCIBasicSetting
     ) {
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
             pipeline = pipeline,
-            event = event,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             yaml = yaml,
             gitBasicSetting = gitBasicSetting,
             changeSet = changeSet,
@@ -381,41 +404,56 @@ class StreamYamlBuild @Autowired constructor(
         // 判断是否更新最后修改人
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
 
-        streamYamlBaseBuild.savePipeline(pipeline, event, gitBasicSetting, model, updateLastModifyUser)
+        streamYamlBaseBuild.savePipeline(
+            pipeline = pipeline,
+            gitRequestEventForHandle = gitRequestEventForHandle,
+            gitCIBasicSetting = gitBasicSetting,
+            model = model,
+            updateLastModifyUser = updateLastModifyUser
+        )
     }
 
     private fun getModelCreateEventAndParams(
         pipeline: GitProjectPipeline,
-        event: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         yaml: ScriptBuildYaml,
         gitBasicSetting: GitCIBasicSetting,
         webhookParams: Map<String, String>,
         changeSet: Set<String>?,
         yamlTransferData: YamlTransferData?
     ): Pair<ModelCreateEvent, List<BuildFormProperty>> {
+        val streamGitProjectInfo = with(gitRequestEventForHandle) {
+            streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitRequestEventId = id!!,
+                gitProjectId = gitRequestEvent.gitProjectId.toString(),
+                token = streamGitTokenService.getToken(gitRequestEvent.gitProjectId),
+                useAccessToken = true,
+                getProjectInfo = streamScmService::getProjectInfoRetry
+            )
+        }
         val modelParams = getModelParams(
-            event = event,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             yaml = yaml,
-            gitBasicSetting = gitBasicSetting,
+            streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
             yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(
-            userId = event.userId,
+            userId = gitRequestEventForHandle.userId,
             projectCode = gitBasicSetting.projectCode!!,
             pipelineInfo = PipelineInfo(pipeline.pipelineId),
             gitData = GitData(
-                repositoryUrl = gitBasicSetting.gitHttpUrl,
-                gitProjectId = gitBasicSetting.gitProjectId,
-                commitId = event.commitId,
-                branch = event.branch
+                repositoryUrl = streamGitProjectInfo.gitHttpUrl,
+                gitProjectId = streamGitProjectInfo.gitProjectId,
+                commitId = gitRequestEventForHandle.gitRequestEvent.commitId,
+                branch = gitRequestEventForHandle.gitRequestEvent.branch
             ),
             streamData = StreamData(
-                gitProjectId = event.gitProjectId,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
                 enableUserId = gitBasicSetting.enableUserId,
-                requestEventId = event.id!!,
-                objectKind = getObjectKindFromValue(event.objectKind)
+                requestEventId = gitRequestEventForHandle.id!!,
+                objectKind = getObjectKindFromValue(gitRequestEventForHandle.gitRequestEvent.objectKind)
             ),
             changeSet = changeSet,
             yamlTransferData = yamlTransferData
@@ -425,14 +463,14 @@ class StreamYamlBuild @Autowired constructor(
     }
 
     private fun getModelParams(
-        event: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         yaml: ScriptBuildYaml,
-        gitBasicSetting: GitCIBasicSetting,
+        streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
         yamlTransferData: YamlTransferData? = null
     ): List<BuildFormProperty> {
         val originEvent = try {
-            objectMapper.readValue<GitEvent>(event.event)
+            objectMapper.readValue<GitEvent>(gitRequestEventForHandle.gitRequestEvent.event)
         } catch (e: Exception) {
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
             null
@@ -440,8 +478,8 @@ class StreamYamlBuild @Autowired constructor(
 
         return ModelParameters.createPipelineParams(
             yaml = yaml,
-            gitBasicSetting = gitBasicSetting,
-            event = event,
+            streamGitProjectInfo = streamGitProjectInfo,
+            event = gitRequestEventForHandle.gitRequestEvent,
             v2GitUrl = v2GitUrl,
             originEvent = originEvent,
             webhookParams = webhookParams,

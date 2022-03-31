@@ -310,4 +310,24 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             mrId = mrId
         ).data
     }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return client.getScm(ServiceScmResource::class).getMrCommitList(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId,
+            page = page,
+            size = size
+        ).data ?: emptyList()
+    }
 }

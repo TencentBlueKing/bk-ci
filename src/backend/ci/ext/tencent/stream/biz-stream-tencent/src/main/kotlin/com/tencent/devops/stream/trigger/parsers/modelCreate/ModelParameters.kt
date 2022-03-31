@@ -50,7 +50,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.trigger.pojo.StreamGitProjectCache
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
 import com.tencent.devops.stream.v2.common.CommonVariables
 
@@ -61,7 +61,7 @@ object ModelParameters {
 
     fun createPipelineParams(
         yaml: ScriptBuildYaml,
-        gitBasicSetting: GitCIBasicSetting,
+        streamGitProjectInfo: StreamGitProjectCache,
         event: GitRequestEvent,
         v2GitUrl: String?,
         originEvent: GitEvent?,
@@ -109,8 +109,8 @@ object ModelParameters {
                     startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.userId
                     TGitObjectKind.MANUAL.value
                 }
-                startParams[PIPELINE_GIT_REPO_URL] = gitBasicSetting.gitHttpUrl
-                val gitProjectName = GitUtils.getProjectName(gitBasicSetting.gitHttpUrl)
+                startParams[PIPELINE_GIT_REPO_URL] = streamGitProjectInfo.gitHttpUrl
+                val gitProjectName = GitUtils.getProjectName(streamGitProjectInfo.gitHttpUrl)
                 startParams[PIPELINE_GIT_REPO] = gitProjectName
                 val (group, name) = GitUtils.getRepoGroupAndName(gitProjectName)
                 startParams[PIPELINE_GIT_REPO_NAME] = name

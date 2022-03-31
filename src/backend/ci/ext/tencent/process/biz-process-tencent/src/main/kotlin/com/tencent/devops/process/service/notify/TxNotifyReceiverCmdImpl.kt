@@ -54,7 +54,7 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
                 data = commandContext.variables,
                 replaceWithEmpty = true)
             users.addAll(successReceiver.split(",").toMutableSet())
-            if (commandContext.pipelineSetting.successSubscription.groups.isNotEmpty()) {
+            if (!emptyGroup(commandContext.pipelineSetting.successSubscription.groups)) {
                 logger.info("success notify config group: ${commandContext.pipelineSetting.successSubscription.groups}")
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
                     serviceCode = bsPipelineAuthServiceCode,
@@ -72,7 +72,7 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
                 data = commandContext.variables,
                 replaceWithEmpty = true)
             users.addAll(failReceiver.split(",").toMutableSet())
-            if (commandContext.pipelineSetting.failSubscription.groups.isNotEmpty()) {
+            if (!emptyGroup(commandContext.pipelineSetting.failSubscription.groups)) {
                 logger.info("fail notify config group: ${commandContext.pipelineSetting.failSubscription.groups}")
                 val projectRoleUsers = bsAuthProjectApi.getProjectGroupAndUserList(
                     serviceCode = bsPipelineAuthServiceCode,
@@ -86,6 +86,17 @@ class TxNotifyReceiverCmdImpl @Autowired constructor(
             users
         }
         commandContext.receivers = receivers
+    }
+
+    fun emptyGroup(groups: Set<String>): Boolean {
+        if (groups.isEmpty()) {
+            return true
+        } else {
+            if (groups.size == 1 && groups.first().isEmpty()) {
+                return true
+            }
+        }
+        return false
     }
 
     companion object {

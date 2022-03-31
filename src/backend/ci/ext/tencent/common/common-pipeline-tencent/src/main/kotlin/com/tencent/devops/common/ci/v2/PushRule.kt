@@ -54,5 +54,7 @@ data class PushRule(
 
     @ApiModelProperty(name = "users-ignore")
     @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null
+    val usersIgnore: List<String>? = null,
+
+    val action: List<String>? = null
 )

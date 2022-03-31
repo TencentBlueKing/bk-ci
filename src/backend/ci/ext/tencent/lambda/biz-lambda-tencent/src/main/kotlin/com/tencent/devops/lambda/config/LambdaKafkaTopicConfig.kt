@@ -56,4 +56,7 @@ class LambdaKafkaTopicConfig {
 
     @Value("\${spring.kafka.topics.gitTaskTopic:#{null}}")
     val gitTaskTopic: String? = null
+
+    @Value("\${spring.kafka.topics.buildCommitsTopic:#{null}}")
+    val buildCommitsTopic: String? = null
 }

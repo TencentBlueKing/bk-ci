@@ -30,14 +30,14 @@ package com.tencent.devops.stream.mq.streamMrConflict
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 @Event(MQ.EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT, MQ.ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT)
 data class GitCIMrConflictCheckEvent(
     val token: String,
-    val gitRequestEvent: GitRequestEvent,
+    val gitRequestEventForHandle: GitRequestEventForHandle,
     val event: GitEvent,
     val path2PipelineExists: Map<String, GitProjectPipeline>,
     val gitProjectConf: GitCIBasicSetting,

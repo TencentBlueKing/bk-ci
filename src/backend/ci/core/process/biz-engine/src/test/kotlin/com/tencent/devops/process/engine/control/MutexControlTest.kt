@@ -113,7 +113,8 @@ class MutexControlTest {
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,
-            mutexGroup = initMutexGroup
+            mutexGroup = initMutexGroup,
+            executeCount = container.executeCount
         )
     }
 }

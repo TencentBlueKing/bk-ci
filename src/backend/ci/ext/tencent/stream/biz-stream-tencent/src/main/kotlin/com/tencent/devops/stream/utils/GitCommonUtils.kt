@@ -27,9 +27,10 @@
 
 package com.tencent.devops.stream.utils
 
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.stream.pojo.isFork
+import com.tencent.devops.stream.trigger.pojo.GitProjectCache
 import org.slf4j.LoggerFactory
 
 @Suppress("NestedBlockDepth", "DuplicateCaseInWhenExpression")
@@ -101,35 +102,33 @@ object GitCommonUtils {
     }
 
     // 判断是否为fork库的mr请求并返回带fork库信息的event
-    fun checkAndGetForkBranch(gitRequestEvent: GitRequestEvent, client: Client): GitRequestEvent {
+    fun checkAndGetForkBranch(
+        gitRequestEvent: GitRequestEvent,
+        gitProjectCache: Lazy<GitProjectCache>?
+    ): GitRequestEvent {
         var realEvent = gitRequestEvent
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
-        if (gitRequestEvent.sourceGitProjectId != null &&
-            gitRequestEvent.gitProjectId != gitRequestEvent.sourceGitProjectId
-        ) {
-            try {
-                val gitToken = client.getScm(ServiceGitResource::class)
-                    .getToken(gitRequestEvent.sourceGitProjectId!!).data!!
-                logger.info(
-                    "get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, " +
-                            "token: $gitToken"
-                )
-                val sourceRepositoryConf = client.getScm(ServiceGitResource::class)
-                    .getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
-                realEvent = gitRequestEvent.copy(
-                    // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
-                    branch = if (sourceRepositoryConf != null) {
-                        val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
-                        "${path.split("/")[0]}:${gitRequestEvent.branch}"
-                    } else {
-                        gitRequestEvent.branch
-                    }
-                )
-            } catch (e: Exception) {
-                logger.error("Cannot get source GitProjectInfo: ", e)
-            }
+        if (gitRequestEvent.isFork()) {
+            realEvent = gitRequestEvent.copy(
+                // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
+                branch = gitProjectCache?.value?.pathWithNamespace?.let {
+                    "${it.split("/")[0]}:${gitRequestEvent.branch}"
+                } ?: gitRequestEvent.branch
+            )
         }
         return realEvent
+    }
+
+    // 判断是否为远程库的请求并返回带远程库信息的event
+    fun checkAndGetRepoBranch(gitRequestEvent: GitRequestEvent, gitProjectCache: GitProjectCache): GitRequestEvent {
+        return gitRequestEvent.copy(
+            // name_with_namespace: git_namespace/project_name , 要的是  git_namespace/project_name:branch
+            branch = if (gitProjectCache.pathWithNamespace != null) {
+                "${gitProjectCache.pathWithNamespace}:${gitRequestEvent.branch}"
+            } else {
+                gitRequestEvent.branch
+            }
+        )
     }
 
     // 判断是否为fork库的mr请求并返回带fork库信息的branchName
@@ -137,27 +136,14 @@ object GitCommonUtils {
         gitProjectId: Long,
         sourceGitProjectId: Long?,
         branch: String,
-        client: Client
+        gitProjectCache: Lazy<GitProjectCache>?
     ): String {
         // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
         if (sourceGitProjectId != null && gitProjectId != sourceGitProjectId) {
-            try {
-                val gitToken = client.getScm(ServiceGitResource::class).getToken(sourceGitProjectId).data!!
-                logger.info("get token for gitProjectId[$sourceGitProjectId] form scm, token: $gitToken")
-                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(
-                    gitToken
-                        .accessToken, sourceGitProjectId
-                ).data
-                // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
-                return if (sourceRepositoryConf != null) {
-                    val path = sourceRepositoryConf.pathWithNamespace ?: sourceRepositoryConf.nameWithNamespace
-                    "${path.split("/")[0]}:$branch"
-                } else {
-                    branch
-                }
-            } catch (e: Exception) {
-                logger.error("Cannot get source GitProjectInfo: ", e)
-            }
+            // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
+            return gitProjectCache?.value?.pathWithNamespace?.let {
+                "${it.split("/")[0]}:$branch"
+            } ?: branch
         }
         return branch
     }
@@ -167,10 +153,10 @@ object GitCommonUtils {
             try {
                 return projectId.removePrefix(projectPrefix).toLong()
             } catch (e: Exception) {
-                throw RuntimeException("蓝盾项目ID不正确")
+                throw OperationException("蓝盾项目ID不正确")
             }
         } else {
-            throw RuntimeException("蓝盾项目ID不正确")
+            throw OperationException("蓝盾项目ID不正确")
         }
     }
 

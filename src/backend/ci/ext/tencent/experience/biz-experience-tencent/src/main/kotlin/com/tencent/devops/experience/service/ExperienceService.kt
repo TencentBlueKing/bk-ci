@@ -58,14 +58,15 @@ import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
+import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
+import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Experience
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
@@ -78,12 +79,12 @@ import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.Source
+import com.tencent.devops.experience.util.AppNotifyUtil
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.EmailUtil
 import com.tencent.devops.experience.util.RtxUtil
 import com.tencent.devops.experience.util.WechatGroupUtil
 import com.tencent.devops.experience.util.WechatUtil
-import com.tencent.devops.experience.util.AppNotifyUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
@@ -441,7 +442,8 @@ class ExperienceService @Autowired constructor(
                 platform = platform,
                 appBundleIdentifier = appBundleIdentifier,
                 logoUrl = logoUrl,
-                scheme = scheme
+                scheme = scheme,
+                version = appVersion
             )
         }
 
@@ -466,7 +468,8 @@ class ExperienceService @Autowired constructor(
         platform: PlatformEnum,
         appBundleIdentifier: String,
         logoUrl: String,
-        scheme: String
+        scheme: String,
+        version: String
     ) {
 
         experiencePublicDao.create(
@@ -480,7 +483,8 @@ class ExperienceService @Autowired constructor(
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(expireDate), ZoneId.systemDefault()),
             size = size,
             logoUrl = logoUrl,
-            scheme = scheme
+            scheme = scheme,
+            version = version
         )
     }
 
@@ -551,7 +555,8 @@ class ExperienceService @Autowired constructor(
                 platform = PlatformEnum.valueOf(experienceRecord.platform),
                 appBundleIdentifier = experienceRecord.bundleIdentifier,
                 logoUrl = experienceRecord.logoUrl,
-                scheme = experienceRecord.scheme
+                scheme = experienceRecord.scheme,
+                version = experienceRecord.version
             )
         } else {
             experiencePublicDao.updateByRecordId(
@@ -886,6 +891,11 @@ class ExperienceService @Autowired constructor(
             val innerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
             val outers = experienceOuterDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
             val groups = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceRecord.id)
+            val groupScope = if (groups.size == 1 && groups[0].value1() == 0L) {
+                GroupScopeEnum.PUBLIC
+            } else {
+                GroupScopeEnum.PRIVATE
+            }.id
 
             return ExperienceCreate(
                 name = experienceRecord.name,
@@ -902,7 +912,8 @@ class ExperienceService @Autowired constructor(
                 experienceName = experienceRecord.experienceName,
                 versionTitle = experienceRecord.versionTitle,
                 categoryId = experienceRecord.category,
-                productOwner = objectMapper.readValue(experienceRecord.productOwner)
+                productOwner = objectMapper.readValue(experienceRecord.productOwner),
+                groupScope = groupScope
             )
         }
     }

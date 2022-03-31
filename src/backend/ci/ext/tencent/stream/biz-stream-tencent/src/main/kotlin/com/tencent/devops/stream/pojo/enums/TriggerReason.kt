@@ -74,6 +74,14 @@ enum class TriggerReason(val summary: String, val detail: String) {
                 "there are none in the mr changelist" +
                 " .Stream not trigger."
     ),
+    USER_SKIPED(
+        "Skip ci by keyword in commit message",
+        "Skip ci by keyword in commit message"
+    ),
+    REPO_TRIGGER_FAILED(
+        "repo trigger failed",
+        "repo trigger failed: %s"
+    ),
     UNKNOWN_ERROR(
         "Unknown error, please contact DevOps-helper",
         "Unknown error, please contact DevOps-helper. %s"

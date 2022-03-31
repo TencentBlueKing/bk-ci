@@ -32,6 +32,7 @@ import org.springframework.jmx.export.annotation.ManagedResource
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicLong
 
+@Suppress("TooManyFunctions")
 @Component
 @ManagedResource(objectName = "com.tencent.devops.log.v2:type=logs", description = "log performance")
 class LogStorageBean {
@@ -49,6 +50,21 @@ class LogStorageBean {
     private val queryLogElapse = AtomicLong(0)
     private val queryCalculateCount = AtomicLong(0)
     private val queryFailureCount = AtomicLong(0)
+
+    private val downloadLogCount = AtomicLong(0)
+    private val downloadLogElapse = AtomicLong(0)
+    private val downloadCalculateCount = AtomicLong(0)
+    private val downloadFailureCount = AtomicLong(0)
+
+    @Synchronized
+    fun download(elapse: Long, success: Boolean) {
+        downloadLogCount.incrementAndGet()
+        downloadCalculateCount.incrementAndGet()
+        downloadLogElapse.addAndGet(elapse)
+        if (!success) {
+            downloadFailureCount.incrementAndGet()
+        }
+    }
 
     @Synchronized
     fun batchWrite(elapse: Long, success: Boolean) {
@@ -115,6 +131,18 @@ class LogStorageBean {
         }
     }
 
+    @Synchronized
+    @ManagedAttribute
+    fun getDownloadLogPerformance(): Double {
+        val elapse = downloadLogElapse.getAndSet(0)
+        val count = downloadCalculateCount.getAndSet(0)
+        return if (count == 0L) {
+            0.0
+        } else {
+            elapse.toDouble() / count
+        }
+    }
+
     @ManagedAttribute
     fun getExecuteCount() = batchWriteCount.get()
 
@@ -129,4 +157,7 @@ class LogStorageBean {
 
     @ManagedAttribute
     fun getQueryFailureCount() = queryFailureCount.get()
+
+    @ManagedAttribute
+    fun getDownloadFailureCount() = downloadFailureCount.get()
 }

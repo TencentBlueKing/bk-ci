@@ -29,13 +29,14 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -354,4 +355,31 @@ interface ServiceScmResource {
         @QueryParam("mrId")
         mrId: Long
     ): Result<GitMrReviewInfo?>
+
+    @ApiOperation("查询合并请求的commit记录")
+    @GET
+    @Path("getMrCommitList")
+    fun getMrCommitList(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long,
+        @ApiParam("page", required = true)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("size", required = true)
+        @QueryParam("size")
+        size: Int
+    ): Result<List<GitCommit>>
 }

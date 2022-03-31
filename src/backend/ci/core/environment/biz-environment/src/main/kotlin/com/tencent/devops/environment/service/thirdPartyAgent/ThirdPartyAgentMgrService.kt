@@ -97,7 +97,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
@@ -126,43 +125,60 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val websocketService: NodeWebsocketService,
     private val envShareProjectDao: EnvShareProjectDao
 ) {
+
+    fun getAgentDetailById(userId: String, projectId: String, agentHashId: String): ThirdPartyAgentDetail? {
+        val id = HashUtil.decodeIdToLong(agentHashId)
+        val agentRecord = thirdPartyAgentDao.getAgent(dslContext, id = id, projectId = projectId) ?: return null
+
+        return getThirdPartyAgentDetail(agentRecord, userId, true)
+    }
+
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
+        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
             ?: return null
-        val nodeRecord = nodeDao.get(
-            dslContext,
-            projectId,
-            agentRecord.nodeId ?: return null
-        ) ?: return null
+
+        return getThirdPartyAgentDetail(agentRecord, userId)
+    }
+
+    private fun getThirdPartyAgentDetail(
+        agentRecord: TEnvironmentThirdpartyAgentRecord,
+        userId: String,
+        needHeartbeatInfo: Boolean = false
+    ): ThirdPartyAgentDetail? {
+
+        val nodeRecord = nodeDao.get(dslContext, agentRecord.projectId, nodeId = agentRecord.nodeId ?: return null)
+            ?: return null
 
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
+        val nodeHashId = HashUtil.encodeLongId(agentRecord.nodeId)
         val nodeStringId = NodeStringIdUtils.getNodeStringId(nodeRecord)
         val displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, nodeRecord.displayName)
-        val lastHeartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(agentRecord.id, agentRecord.projectId)
+        val heartBeatInfo = thirdPartyAgentHeartbeatUtils.getNewHeartbeat(agentRecord.projectId, agentRecord.id)
+        val lastHeartbeatTime = heartBeatInfo?.heartbeatTime
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
         val agentHostInfo = try {
-            influxdbClient.queryHostInfo(agentHashId)
+            if (needHeartbeatInfo) {
+                AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
+            } else {
+                influxdbClient.queryHostInfo(agentHashId)
+            }
         } catch (e: Throwable) {
-            logger.warn("influx query error: ", e)
-            AgentHostInfo("0", "0", "0")
+            logger.warn("[$agentHashId]|[$nodeHashId]|[${agentRecord.projectId}]|influx query error: ", e)
+            AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
         }
-        return ThirdPartyAgentDetail(
+        val tpad = ThirdPartyAgentDetail(
             agentId = HashUtil.encodeLongId(agentRecord.id),
             nodeId = nodeHashId,
             displayName = displayName,
-            projectId = projectId,
+            projectId = agentRecord.projectId,
             status = nodeRecord.nodeStatus,
             hostname = agentRecord.hostname,
             os = agentRecord.os,
             osName = agentRecord.detectOs,
             ip = agentRecord.ip,
             createdUser = nodeRecord.createdUser,
-            createdTime = if (null == nodeRecord.createdTime) {
-                ""
-            } else {
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(nodeRecord.createdTime)
-            },
+            createdTime = nodeRecord.createdTime?.let { self -> DateTimeUtil.toDateTime(self) } ?: "",
             agentVersion = agentRecord.masterVersion ?: "",
             slaveVersion = agentRecord.version ?: "",
             agentInstallPath = agentRecord.agentInstallPath ?: "",
@@ -171,14 +187,26 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             startedUser = agentRecord.startedUser ?: "",
             agentUrl = agentUrlService.genAgentUrl(agentRecord),
             agentScript = agentUrlService.genAgentInstallScript(agentRecord),
-            lastHeartbeatTime = if (null == lastHeartbeatTime) "" else DateTimeUtil.formatDate(Date(lastHeartbeatTime)),
-            nCpus = agentHostInfo.nCpus,
+            lastHeartbeatTime = lastHeartbeatTime?.let { self -> DateTimeUtil.formatDate(Date(self)) } ?: "",
+            ncpus = agentHostInfo.nCpus,
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
-            canEdit = environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT),
             currentAgentVersion = upgradeService.getAgentVersion(),
             currentWorkerVersion = upgradeService.getWorkerVersion()
         )
+
+        if (needHeartbeatInfo) {
+            tpad.heartbeatInfo = heartBeatInfo
+        } else {
+            tpad.canEdit = environmentPermissionService.checkNodePermission(
+                userId = userId,
+                projectId = agentRecord.projectId,
+                nodeId = nodeRecord.nodeId,
+                permission = AuthPermission.EDIT
+            )
+        }
+
+        return tpad
     }
 
     fun saveAgentEnv(userId: String, projectId: String, nodeHashId: String, envs: List<EnvVar>) {
@@ -215,7 +243,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private fun checkEditPermmission(userId: String, projectId: String, nodeId: Long) {
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION)
+            )
         }
     }
 
@@ -528,7 +557,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (nodes.isEmpty()) {
             return emptyList()
         }
-        val nodeMap = nodes.map { it.nodeId to it }.toMap()
+        val nodeMap = nodes.associateBy { it.nodeId }
 
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(
             userId = userId,
@@ -684,8 +713,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             mainProjectId = sharedProjectId
         )
         if (sharedEnvRecord.isEmpty()) {
-            logger.info("env name not exists, envName: $sharedEnvName, projectId：$projectId, " +
-                "mainProjectId: $sharedProjectId")
+            logger.info(
+                "env name not exists, envName: $sharedEnvName, projectId：$projectId, mainProjectId: $sharedProjectId"
+            )
             throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($projectEnvName)")
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
