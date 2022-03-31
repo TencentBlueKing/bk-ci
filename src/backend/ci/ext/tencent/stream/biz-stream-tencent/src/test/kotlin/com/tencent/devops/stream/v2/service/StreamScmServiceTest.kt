@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -40,17 +41,13 @@ import org.junit.Test
 import org.mockito.Mockito
 import javax.ws.rs.core.Response
 
-@Suppress("All")
+@Suppress("ALL")
 class StreamScmServiceTest {
 
     private val client: Client = mock()
     private val streamGitTokenService: StreamGitTokenService = mock()
     private val serviceGitCiResource: ServiceGitCiResource = mock()
     private val streamScmService: StreamScmService = StreamScmService(client, mock(), mock(), mock(), streamGitTokenService)
-    private val ongoingStubbing = Mockito.`when`(
-        serviceGitCiResource.getGitCIFileContent("1", "1", "1", "1", true)
-    ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
-
     @Before
     fun init() {
         Mockito.`when`(client.getScm(ServiceGitCiResource::class)).thenReturn(serviceGitCiResource)
@@ -59,7 +56,9 @@ class StreamScmServiceTest {
 
     @Test
     fun testGetYaml403RetrySuccess() {
-        ongoingStubbing.thenReturn(Result("success"))
+        Mockito.`when`(
+            serviceGitCiResource.getGitCIFileContent("1", "1", "1", "1", true)
+        ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限")).thenReturn(Result("success"))
         val yamlFromGit = streamScmService.getYamlFromGit("1", "1", "1", "1", true)
         Mockito.verify(serviceGitCiResource, times(2)).getGitCIFileContent("1", "1", "1", "1", true)
         Mockito.verify(streamGitTokenService).getToken(1)
@@ -68,14 +67,45 @@ class StreamScmServiceTest {
 
     @Test
     fun testGetYaml403RetryFail() {
-        ongoingStubbing.thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
+        Mockito.`when`(
+            serviceGitCiResource.getGitCIFileContent("1", "1", "1", "1", true)
+        ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
         var flag = false
         try {
             streamScmService.getYamlFromGit("1", "1", "1", "1", true)
         } catch (e: Exception) {
-            flag = true;
+            flag = true
         }
         Mockito.verify(serviceGitCiResource, times(2)).getGitCIFileContent("1", "1", "1", "1", true)
+        Mockito.verify(streamGitTokenService).getToken(1)
+        assertTrue(flag)
+    }
+
+    @Test
+    fun testGetProjectInfSuccess() {
+        val gitCIProjectInfoMock = GitCIProjectInfo(222, "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
+        Mockito.`when`(
+            serviceGitCiResource.getProjectInfo("1", "1", true)
+        ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限")).thenReturn(Result(gitCIProjectInfoMock))
+        val gitCIProjectInfo = streamScmService.getProjectInfo("1", "1", true)
+        Mockito.verify(serviceGitCiResource, times(2)).getProjectInfo("1", "1", true)
+        Mockito.verify(streamGitTokenService).getToken(1)
+        assertEquals(gitCIProjectInfoMock.gitProjectId, gitCIProjectInfo?.gitProjectId ?: 111)
+    }
+
+    @Test
+    fun testGetProjectInfFail() {
+        Mockito.`when`(
+            serviceGitCiResource.getProjectInfo("1", "1", true)
+        ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
+            .thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限"))
+        var flag = false
+        try {
+            streamScmService.getProjectInfo("1", "1", true)
+        } catch (e: Exception) {
+            flag = true
+        }
+        Mockito.verify(serviceGitCiResource, times(2)).getProjectInfo("1", "1", true)
         Mockito.verify(streamGitTokenService).getToken(1)
         assertTrue(flag)
     }

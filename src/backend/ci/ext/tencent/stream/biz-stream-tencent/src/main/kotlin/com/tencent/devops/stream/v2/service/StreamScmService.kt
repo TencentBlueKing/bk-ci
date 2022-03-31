@@ -691,7 +691,17 @@ class StreamScmService @Autowired constructor(
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
                 val newToken = streamGitTokenService.getToken(gitProjectId)
-                return getCommitChangeFileListRetry(newToken, userId, gitProjectId, from, to, straight, page, pageSize, false)
+                return getCommitChangeFileListRetry(
+                    newToken,
+                    userId,
+                    gitProjectId,
+                    from,
+                    to,
+                    straight,
+                    page,
+                    pageSize,
+                    false
+                )
             }
             throw e
         }
