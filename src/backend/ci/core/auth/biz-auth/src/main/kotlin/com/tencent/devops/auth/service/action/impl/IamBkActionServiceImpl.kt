@@ -63,16 +63,18 @@ class IamBkActionServiceImpl @Autowired constructor(
         logger.info("extSystemCreate $userId $action")
         // TODO: 系统id换回ci
 //        val systemInfo = systemService.getSystemFieldsInfo(iamConfiguration.systemId)
-        val systemInfo = systemService.getSystemFieldsInfo(systemId)
+        val actionInfo = iamActionService.getAction(action.actionId)
         // 1. 优先判断action是否存在, 存在修改，不存在添加
-        val iamActionInfo = systemInfo.actions
-        if (iamActionInfo == null) {
+        if (actionInfo == null) {
             // action基本数据
             val iamCreateAction = buildAction(action)
+            val iamActions = mutableListOf<ActionDTO>()
+            iamActions.add(iamCreateAction)
             logger.info("extSystemCreate create ${action.actionId} $iamCreateAction")
             // 新增action需要把新的action添加到对应actionGroup
-            iamActionService.createAction(iamCreateAction)
+            iamActionService.createAction(iamActions)
         } else {
+
             val iamUpdateAction = ActionUpdateDTO()
             iamUpdateAction.name = action.actionName
             iamUpdateAction.englishName = action.actionEnglishName
@@ -82,7 +84,7 @@ class IamBkActionServiceImpl @Autowired constructor(
             iamActionService.updateAction(action.actionId, iamUpdateAction)
         }
         // 3. 维护系统新建关联yml（不存在添加，存在继续追击。 create类挂project级别，其他action挂对应资源子集）
-        createRelation(action)
+//        createRelation(action)
     }
 
     override fun extSystemUpdate(userId: String,actionId: String, action: UpdateActionDTO) {
@@ -150,7 +152,7 @@ class IamBkActionServiceImpl @Autowired constructor(
                 relatedInstanceSelections.id = "project_instance"
             } else {
                 // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
-                relatedInstanceSelections.id = "project_instance"
+                relatedInstanceSelections.id = "${action.resourceId}_instance"
             }
         }
         relationResources.add(relationResource)
