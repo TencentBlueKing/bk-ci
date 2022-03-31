@@ -61,8 +61,11 @@
             }
         },
         computed: {
+            isBuildEnv () {
+                return this.curEnvDetail.envType === 'BUILD'
+            },
             tabs () {
-                return [{
+                const tabs = [{
                     cls: 'node-list',
                     tabName: 'node',
                     label: 'node',
@@ -77,12 +80,16 @@
                     tabName: 'base',
                     label: 'basicInfo',
                     comp: baseTab
-                }, {
-                    cls: 'base-item',
-                    tabName: 'setting',
-                    label: 'setting',
-                    comp: settingTab
                 }]
+                if (this.isBuildEnv) {
+                    tabs.push({
+                        cls: 'base-item',
+                        tabName: 'setting',
+                        label: 'setting',
+                        comp: settingTab
+                    })
+                }
+                return tabs
             },
             activeTabComp () {
                 const activeTab = this.tabs.find(tab => tab.tabName === this.curItemTab)
