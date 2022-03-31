@@ -95,7 +95,7 @@ class PipelineBuildParamsService @Autowired constructor(
                             tag = VMUtils.genStartVMTaskId(vmSeqId),
                             jobId = vmSeqId,
                             executeCount = executeCount.toInt(),
-                            message = "Warning: setting built-in constant $it is not allowed, skip."
+                            message = "Warning: setting built-in constant $t is not allowed, skip."
                         )
                     }
                 }
