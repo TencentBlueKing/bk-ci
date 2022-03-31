@@ -34,6 +34,7 @@ import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -317,6 +318,29 @@ class ScmOauthService @Autowired constructor(
             event = null
         )
             .getMrReviewInfo(mrId = mrId)
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        ).getMrCommitList(mrId = mrId, page = page, size = size)
     }
 
     companion object {
