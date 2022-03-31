@@ -30,9 +30,9 @@ package com.tencent.devops.process.engine.control.lock
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class StageIdLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
+class StageMatrixLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:build:$buildId:stage:$stageId",
+        lockKey = "lock:build:$buildId:stage:matrix:$stageId",
         expiredTimeInSeconds = 60
     )

@@ -153,10 +153,12 @@ class ContainerControl @Autowired constructor(
         // 已按任务序号递增排序，如未排序要注意
         val containerTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerId)
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
+        val stageMatrixCount = pipelineContainerService.countStageContainers(projectId, buildId, stageId, true)
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
             mutexGroup = mutexGroup,
+            stageMatrixCount = stageMatrixCount,
             event = event,
             container = this,
             latestSummary = event.reason ?: "init",
