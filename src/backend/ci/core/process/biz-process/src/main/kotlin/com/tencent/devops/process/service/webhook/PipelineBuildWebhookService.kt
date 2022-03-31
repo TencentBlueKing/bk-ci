@@ -472,16 +472,16 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
 
         // 兼容从旧v1版本下发过来的请求携带旧的变量命名
         val params = mutableMapOf<String, Any>()
-        val startParamsWithType = mutableListOf<BuildParameters>()
+        val pipelineParamMap = HashMap<String, BuildParameters>(startParams.size, 1F)
         startParams.forEach {
             // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
                 params[it.key] = it.value
-                startParamsWithType.add(BuildParameters(it.key, it.value))
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value, readOnly = true)
             } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
                 params[newVarName] = it.value
-                startParamsWithType.add(BuildParameters(newVarName, it.value))
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value, readOnly = true)
             }
         }
 
@@ -489,9 +489,9 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
         try {
             val buildId = pipelineBuildService.startPipeline(
                 userId = userId,
-                readyToBuildPipelineInfo = pipelineInfo,
+                pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
-                startParamsWithType = startParamsWithType,
+                pipelineParamMap = pipelineParamMap,
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
@@ -505,7 +505,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 variables = webhookCommit.params
             )
             // #2958 webhook触发在触发原子上输出变量
-            buildLogPrinter.addLines(buildId = buildId, logMessages = startParamsWithType.map {
+            buildLogPrinter.addLines(buildId = buildId, logMessages = pipelineParamMap.map {
                 LogMessage(
                     message = "${it.key}=${it.value}",
                     timestamp = System.currentTimeMillis(),

@@ -114,9 +114,24 @@ class BuildVariableService @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                variables = variables.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
+                variables = variables.map { va ->
+                    va.key to BuildParameters(key = va.key, value = va.value, valueType = BuildFormPropertyType.STRING)
+                }.toMap()
             )
         }
+    }
+
+    /**
+     * will delete the [buildId] 's all writable vars
+     */
+    fun deleteWritableVars(dslContext: DSLContext, projectId: String, buildId: String) {
+        pipelineBuildVarDao.deleteBuildVar(
+            dslContext = commonDslContext,
+            projectId = projectId,
+            buildId = buildId,
+            varName = null,
+            readOnly = false
+        )
     }
 
     fun deletePipelineBuildVar(projectId: String, pipelineId: String) {
@@ -169,23 +184,30 @@ class BuildVariableService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        variables: List<BuildParameters>
+        variables: Map<String, BuildParameters>
     ) {
         val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
         watch.start("replaceOldByNewVar")
-        val varMaps = variables.associate {
-            it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
-        }.toMutableMap()
-        PipelineVarUtil.replaceOldByNewVar(varMaps)
 
-        val pipelineBuildParameters = mutableListOf<BuildParameters>()
+        val varMaps = variables.map {
+            it.key to Pair(it.value.value.toString(), it.value.valueType ?: BuildFormPropertyType.STRING)
+        }.toMap().toMutableMap()
+        // tip： 移除掉旧变量，旧变量不入库
+        PipelineVarUtil.replaceOldByNewVar(varMaps) // varMaps <= variables
+
+        val pipelineBuildParameters = ArrayList<BuildParameters>(varMaps.size)
         varMaps.forEach { (key, valueAndType) ->
-            pipelineBuildParameters.add(BuildParameters(
-                key = key,
-                value = valueAndType.first,
-                valueType = valueAndType.second,
-                readOnly = getReadOnly(key, variables)
-            ))
+            // 不持久化的类型不保存
+            if (valueAndType.second != BuildFormPropertyType.TEMPORARY) {
+                pipelineBuildParameters.add(
+                    BuildParameters(
+                        key = key,
+                        value = valueAndType.first,
+                        valueType = valueAndType.second,
+                        readOnly = variables[key]?.readOnly ?: false
+                    )
+                )
+            }
         }
 
         val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId", 60)
@@ -223,14 +245,5 @@ class BuildVariableService @Autowired constructor(
             redisLock.unlock()
             LogUtils.printCostTimeWE(watch)
         }
-    }
-
-    private fun getReadOnly(key: String, variables: List<BuildParameters>): Boolean? {
-        variables.forEach {
-            if (key == it.key) {
-                return it.readOnly
-            }
-        }
-        return false
     }
 }

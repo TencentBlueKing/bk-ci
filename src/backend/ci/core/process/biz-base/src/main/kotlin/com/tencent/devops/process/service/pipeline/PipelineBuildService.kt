@@ -40,12 +40,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
-import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -53,8 +51,8 @@ import com.tencent.devops.process.engine.service.PipelineBuildQualityService
 import com.tencent.devops.process.engine.service.PipelinePostElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.utils.QualityUtils
+import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
@@ -65,10 +63,6 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -76,6 +70,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -85,13 +81,12 @@ import javax.ws.rs.core.Response
 class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelineTaskService: PipelineTaskService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
     private val pipelineElementService: PipelinePostElementService,
-    private val buildParamCompatibilityTransformer: BuildParametersCompatibilityTransformer,
     private val templateService: TemplateService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val projectCacheService: ProjectCacheService,
     private val simpleRateLimiter: SimpleRateLimiter
 ) {
     companion object {
@@ -99,91 +94,11 @@ class PipelineBuildService(
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
     }
 
-    fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
-        )
-
-    fun subPipelineStartup(
-        userId: String,
-        startType: StartType = StartType.PIPELINE,
-        projectId: String,
-        parentProjectId: String,
-        parentPipelineId: String,
-        parentBuildId: String,
-        parentTaskId: String,
-        pipelineId: String,
-        channelCode: ChannelCode,
-        parameters: Map<String, Any>,
-        isMobile: Boolean = false,
-        triggerUser: String? = null
-    ): String {
-
-        val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在")
-
-        val startEpoch = System.currentTimeMillis()
-        try {
-
-            val model =
-                getModel(projectId = projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
-
-            val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-            val inputBuildParam = mutableListOf<BuildParameters>()
-            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId))
-            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId))
-            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId))
-            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId))
-            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId))
-            parameters.forEach {
-                inputBuildParam.add(BuildParameters(key = it.key, value = it.value))
-            }
-
-            val defaultParam = mutableListOf<BuildParameters>()
-            triggerContainer.params.forEach {
-                defaultParam.add(BuildParameters(
-                        key = it.id,
-                        value = it.defaultValue,
-                        valueType = it.type,
-                        readOnly = it.readOnly))
-            }
-            val startParamsWithType = buildParamCompatibilityTransformer.transform(inputBuildParam, defaultParam)
-
-            // 子流水线的调用不受频率限制
-            val subBuildId = startPipeline(
-                userId = readyToBuildPipelineInfo.lastModifyUser,
-                readyToBuildPipelineInfo = readyToBuildPipelineInfo,
-                startType = startType,
-                startParamsWithType = startParamsWithType,
-                channelCode = channelCode,
-                isMobile = isMobile,
-                model = model,
-                frequencyLimit = false
-            )
-            // 更新父流水线关联子流水线构建id
-            pipelineTaskService.updateSubBuildId(
-                projectId = parentProjectId,
-                buildId = parentBuildId,
-                taskId = parentTaskId,
-                subBuildId = subBuildId,
-                subProjectId = readyToBuildPipelineInfo.projectId
-            )
-            return subBuildId
-        } finally {
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to start sub-pipeline($pipelineId)")
-        }
-    }
-
     fun startPipeline(
         userId: String,
-        readyToBuildPipelineInfo: PipelineInfo,
+        pipeline: PipelineInfo,
         startType: StartType,
-        startParamsWithType: List<BuildParameters>,
+        pipelineParamMap: MutableMap<String, BuildParameters>,
         channelCode: ChannelCode,
         isMobile: Boolean,
         model: Model,
@@ -194,9 +109,9 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true
     ): String {
 
-        val pipelineId = readyToBuildPipelineInfo.pipelineId
+        val pipelineId = pipeline.pipelineId
         var acquire = false
-        val projectId = readyToBuildPipelineInfo.projectId
+        val projectId = pipeline.projectId
         val pipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val bucketSize = pipelineSetting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:$pipelineId"
@@ -213,25 +128,23 @@ class PipelineBuildService(
             }
 
             // 如果指定了版本号，则设置指定的版本号
-            readyToBuildPipelineInfo.version = signPipelineVersion ?: readyToBuildPipelineInfo.version
+            pipeline.version = signPipelineVersion ?: pipeline.version
 
-            val startParamsList = startParamsWithType.toMutableList()
-            val startParamMap = startParamsList.associate { it.key to it.value }.toMutableMap()
             // 只有新构建才需要填充Post插件与质量红线插件
-            if (!startParamMap.containsKey(PIPELINE_RETRY_COUNT)) {
-                fillElementWhenNew(
+            val isNewBuild = !pipelineParamMap.containsKey(PIPELINE_RETRY_COUNT)
+            if (isNewBuild) {
+                fillElementWhenNewBuild(
                     model = model,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     startValues = startValues,
-                    startParamsList = startParamsList,
-                    startParamsMap = startParamMap,
+                    startParamsMap = pipelineParamMap,
                     handlePostFlag = handlePostFlag
                 )
             }
 
             val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(pipelineInfo = readyToBuildPipelineInfo, model = model, startType = startType)
+                InterceptData(pipelineInfo = pipeline, model = model, startType = startType)
             )
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
@@ -243,57 +156,67 @@ class PipelineBuildService(
             }
 
             val userName = when (startType) {
-                StartType.PIPELINE -> ParameterUtils.getListValueByKey(
-                    list = startParamsList,
-                    key = PIPELINE_START_PIPELINE_USER_ID
-                )
-                StartType.WEB_HOOK -> ParameterUtils.getListValueByKey(
-                    list = startParamsList,
-                    key = PIPELINE_START_WEBHOOK_USER_ID
-                )
-                StartType.MANUAL -> userId
+                StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value ?: userId
+                StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value ?: userId
                 else -> userId
             }
-            val buildMsg = BuildMsgUtils.getBuildMsg(
-                buildMsg = ParameterUtils.getListValueByKey(
-                    list = startParamsWithType,
-                    key = PIPELINE_BUILD_MSG
-                ), startType = startType, channelCode = channelCode
+            // 维持原样，保证可修改
+            pipelineParamMap[PIPELINE_START_USER_ID] = BuildParameters(key = PIPELINE_START_USER_ID, value = userId)
+            pipelineParamMap[PIPELINE_START_USER_NAME] = BuildParameters(PIPELINE_START_USER_NAME, value = userName)
+            // 流水线名称有可能变
+            pipelineParamMap[PIPELINE_NAME] = BuildParameters(
+                key = PIPELINE_NAME,
+                value = startValues?.get(PIPELINE_NAME) ?: pipeline.pipelineName
             )
-            // 增加对containsKey(PIPELINE_NAME)的逻辑判断,如果有传值，默认使用。
-            val paramsWithType = startParamsList.asSequence().plus(
-                BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
-                .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
-                .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
-                .plus(BuildParameters(PIPELINE_START_CHANNEL, channelCode.name))
-                .plus(BuildParameters(PIPELINE_START_MOBILE, isMobile))
-                .plus(
-                    if (startValues?.containsKey(PIPELINE_NAME) == true) {
-                        BuildParameters(PIPELINE_NAME, startValues[PIPELINE_NAME].toString())
-                    } else {
-                        BuildParameters(PIPELINE_NAME, readyToBuildPipelineInfo.pipelineName)
-                    }
-                )
-                .plus(BuildParameters(PIPELINE_START_USER_NAME, userName ?: userId))
-                .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
-                .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))
-                .plus(BuildParameters(PIPELINE_UPDATE_USER, readyToBuildPipelineInfo.lastModifyUser))
-                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toList()
+            // 项目名称也是可能变化
+            pipelineParamMap[PROJECT_NAME_CHINESE] = BuildParameters(
+                key = PROJECT_NAME_CHINESE,
+                value = projectCacheService.getProjectName(projectId) ?: "",
+                valueType = BuildFormPropertyType.STRING
+            )
 
+            // 解析出定义的流水线变量
             val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
-            val buildId = pipelineRuntimeService.startBuild(
-                pipelineInfo = readyToBuildPipelineInfo,
+            val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
+            realStartParamKeys.forEach { key -> pipelineParamMap[key]?.let { param -> originStartParams.add(param) } }
+
+            pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+                key = PIPELINE_BUILD_MSG,
+                value = BuildMsgUtils.getBuildMsg(startValues?.get(PIPELINE_BUILD_MSG), startType, channelCode),
+                readOnly = true
+            )
+            pipelineParamMap[PIPELINE_START_TYPE] = BuildParameters(
+                key = PIPELINE_START_TYPE, value = startType.name, readOnly = true
+            )
+            pipelineParamMap[PIPELINE_START_CHANNEL] = BuildParameters(
+                key = PIPELINE_START_CHANNEL, value = channelCode.name, readOnly = true
+            )
+            pipelineParamMap[PIPELINE_START_MOBILE] = BuildParameters(
+                key = PIPELINE_START_MOBILE, value = isMobile, readOnly = true
+            )
+            pipelineParamMap[PIPELINE_CREATE_USER] = BuildParameters(
+                key = PIPELINE_CREATE_USER, value = pipeline.creator, readOnly = true
+            )
+            pipelineParamMap[PIPELINE_UPDATE_USER] = BuildParameters(
+                key = PIPELINE_UPDATE_USER, value = pipeline.lastModifyUser, readOnly = true
+            )
+            pipelineParamMap[PIPELINE_VERSION] = BuildParameters(PIPELINE_VERSION, pipeline.version, readOnly = true)
+            pipelineParamMap[PIPELINE_ID] = BuildParameters(PIPELINE_ID, pipeline.pipelineId, readOnly = true)
+            pipelineParamMap[PROJECT_NAME] = BuildParameters(PROJECT_NAME, projectId, readOnly = true)
+
+            pipelineParamMap[BUILD_NO]?.let { buildNoParam -> originStartParams.add(buildNoParam) }
+            pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
+            pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
+
+            return pipelineRuntimeService.startBuild(
+                pipelineInfo = pipeline,
                 fullModel = model,
                 // #5264 保留启动参数的原始值以及重试中需要用到的字段
-                originStartParams = startParamsWithType.filter {
-                    realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
-                        it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT
-                },
-                startParamsWithType = paramsWithType,
+                originStartParams = originStartParams,
+                pipelineParamMap = pipelineParamMap,
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule
             )
-            return buildId
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lockKey = lockKey)
@@ -301,13 +224,12 @@ class PipelineBuildService(
         }
     }
 
-    private fun fillElementWhenNew(
+    private fun fillElementWhenNewBuild(
         model: Model,
         projectId: String,
         pipelineId: String,
         startValues: Map<String, String>? = null,
-        startParamsList: MutableList<BuildParameters>,
-        startParamsMap: MutableMap<String, Any>,
+        startParamsMap: MutableMap<String, BuildParameters>,
         handlePostFlag: Boolean = true
     ) {
         val templateId = if (model.instanceFromTemplate == true) {
@@ -340,18 +262,15 @@ class PipelineBuildService(
                     if (element.getClassType() in qaSet) {
                         return@nextElement
                     }
+                    var skip = false
                     if (startValues != null) {
                         // 优化循环
                         val key = SkipElementUtils.getSkipElementVariableName(element.id)
                         if (startValues[key] == "true") {
-                            startParamsList.add(
-                                element = BuildParameters(
-                                    key = key,
-                                    value = "true",
-                                    valueType = BuildFormPropertyType.TEMPORARY
-                                )
+                            startParamsMap[key] = BuildParameters(
+                                key = key, value = "true", valueType = BuildFormPropertyType.TEMPORARY
                             )
-                            startParamsMap[key] = "true"
+                            skip = true
                             logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
                         }
                     }
@@ -359,9 +278,6 @@ class PipelineBuildService(
                     if (!qualityRuleFlag) {
                         finalElementList.add(element)
                     } else {
-                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
-                        val skip = startParamsMap[key] == "true"
-
                         if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
                             val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)
                             if (insertElement != null) finalElementList.add(insertElement)
@@ -386,13 +302,15 @@ class PipelineBuildService(
                             if (elementId == null) {
                                 elementId = modelTaskIdGenerator.getNextId()
                             }
-                            elementItemList.add(ElementBaseInfo(
-                                elementId = elementId,
-                                elementName = element.name,
-                                atomCode = atomCode,
-                                version = version,
-                                elementJobIndex = elementIndex
-                            ))
+                            elementItemList.add(
+                                ElementBaseInfo(
+                                    elementId = elementId,
+                                    elementName = element.name,
+                                    atomCode = atomCode,
+                                    version = version,
+                                    elementJobIndex = elementIndex
+                                )
+                            )
                         }
                     }
                 }
