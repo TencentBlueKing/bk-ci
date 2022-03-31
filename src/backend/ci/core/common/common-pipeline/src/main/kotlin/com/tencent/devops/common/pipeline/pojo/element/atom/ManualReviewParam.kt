@@ -68,11 +68,11 @@ data class ManualReviewParam(
         options = if (!variableOption.isNullOrBlank()) {
             EnvUtils.parseEnv(variableOption, variables).let {
                 val optionList = try {
-                    JsonUtil.to<List<String>>(it)
+                    JsonUtil.to<List<Any>>(it)
                 } catch (e: Throwable) {
                     emptyList()
                 }
-                optionList.map { item -> ManualReviewParamPair(item, item) }
+                optionList.map { item -> ManualReviewParamPair(item.toString(), item.toString()) }
             }
         } else options
     }
