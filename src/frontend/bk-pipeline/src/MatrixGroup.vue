@@ -23,7 +23,7 @@
                 :key="job.containerId"
                 :container="job"
                 :container-group-index="jobIndex"
-                v-bind="$props"
+                v-bind="restProps"
             >
             </Job>
         </section>
@@ -94,10 +94,15 @@
         },
         data () {
             return {
-                isMatrixOpen: true
+                isMatrixOpen: false
             }
         },
         computed: {
+            restProps () {
+                const { matrix, ...restProps } = this.$props
+                console.log(restProps)
+                return restProps
+            },
             matrixToggleCls () {
                 return `matrix-fold-icon devops-icon icon-angle-down ${this.isMatrixOpen ? 'open' : ''}`
             },
@@ -117,7 +122,7 @@
                     if (this.matrix.status === STATUS_MAP.RUNNING) {
                         const { matrixControlOption = {} } = this.matrix
                         const { finishCount = 0, totalCount } = matrixControlOption
-                        const progress = totalCount === 0 ? 0 : (finishCount / totalCount).toFixed(2) * 100
+                        const progress = totalCount === 0 ? 0 : Math.round((finishCount / totalCount) * 100)
                         return `${progress}% (${finishCount}/${totalCount})`
                     }
                     return ''

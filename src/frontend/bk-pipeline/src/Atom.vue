@@ -50,7 +50,7 @@
             <p class="atom-name">
                 <span
                     :title="atom.name"
-                    :class="{ 'skip-name': isSkip }"
+                    :class="skipSpanCls"
                 >
                     {{ atom.atomCode ? atom.name : t('pendingAtom') }}
                 </span>
@@ -61,24 +61,27 @@
                     @click.stop="reviewAtom"
                     class="atom-reviewing-tips atom-operate-area"
                     :disabled="!hasReviewPerm"
-                >{{ t('manualCheck') }}</span>
+                >
+                    {{ t('manualCheck') }}
+                </span>
                 <template slot="content">
-                    <p>{{ t('checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
+                    <p>
+                        {{ t('checkUser') }}{{ atom.computedReviewers.join(';') }}
+                    </p>
                 </template>
             </bk-popover>
             <bk-popover v-else-if="isReviewAbort" placement="top">
                 <span class="atom-review-diasbled-tips">{{ t('aborted') }}</span>
                 <template slot="content">
-                    <p>{{ t('abortTips') }}{{ t('checkUser') }}{{ cancelUserId }}</p>
+                    <p>
+                        {{ t('abortTips') }}{{ t('checkUser') }}{{ cancelUserId }}
+                    </p>
                 </template>
             </bk-popover>
             <template v-else-if="atom.status === 'PAUSE'">
                 <bk-popover placement="top" :disabled="!Array.isArray(atom.pauseReviewers)">
                     <span
-                        :class="[
-                            { 'disabled': isBusy || !hasExecPerm },
-                            'pause-button'
-                        ]"
+                        :class="resumeSpanCls"
                         @click.stop="atomExecute(true)"
                     >
                         {{ t('resume') }}
@@ -87,7 +90,10 @@
                         <p>{{ t('checkUser') }}{{ pauseReviewerStr }}</p>
                     </template>
                 </bk-popover>
-                <span @click.stop="atomExecute(false)" class="pause-button">
+                <span
+                    @click.stop="atomExecute(false)"
+                    class="pause-button"
+                >
                     <span>{{ t('stop') }}</span>
                 </span>
             </template>
@@ -224,6 +230,15 @@
             }
         },
         computed: {
+            skipSpanCls () {
+                return { 'skip-name': this.isSkip }
+            },
+            resumeSpanCls () {
+                return {
+                    disabled: this.isBusy || !this.hasExecPerm,
+                    'pause-button': true
+                }
+            },
             isReviewAbort () {
                 return this.atom.status === STATUS_MAP.REVIEW_ABORT
             },

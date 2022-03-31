@@ -3,7 +3,7 @@
         <h3 :class="jobTitleCls"
             @click.stop="showContainerPanel"
         >
-            <status-icon type="container" :editable="editable" :container-disabled="disabled" :status="container.status" :depend-on-value="dependOnValue">
+            <status-icon type="container" :editable="editable" :container-disabled="disabled" :status="containerStatus" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
@@ -14,7 +14,7 @@
                     {{ displayName }}
                 </span>
             </p>
-            <container-type :class="showCopyJob ? 'hover-hide' : ''" :container="container" v-if="!canSkipElement"></container-type>
+            <container-type :class="containerTypeCls" :container="container" v-if="!canSkipElement"></container-type>
             <Logo
                 v-if="showCopyJob && !container.isError"
                 :title="t('copyJob')"
@@ -39,7 +39,7 @@
                 name="angle-circle-down"
                 size="18"
                 @click.stop="toggleShowAtom"
-                :class="[showAtomList ? 'open' : '', container.status || 'readonly', 'fold-atom-icon']"
+                :class="matrixFoldLogoCls"
             >
             </Logo>
         </h3>
@@ -56,7 +56,7 @@
             :user-name="userName"
             :container-index="containerIndex"
             :container-group-index="containerGroupIndex"
-            :container-status="container.status"
+            :container-status="containerStatus"
             :match-rules="matchRules"
             :container-disabled="disabled"
         >
@@ -141,6 +141,7 @@
                 type: Array,
                 default: []
             },
+            stageLength: Number,
             updateCruveConnectHeight: Function
         },
         emits: [
@@ -157,18 +158,30 @@
             }
         },
         computed: {
+            containerStatus () {
+                return this.container && this.container.status ? this.container.status : ''
+            },
+            containerTypeCls () {
+                return { 'hover-hide': this.showCopyJob }
+            },
             jobTitleCls () {
-                const status = this.container && this.container.status ? this.container.status : ''
                 return {
                     'container-title': true,
                     'first-ctitle': this.containerIndex === 0,
                     DISABLED: this.disabled,
-                    [status]: true
+                    [this.containerStatus]: true
                 }
             },
             displayNameCls () {
                 return {
-                    'skip-name': this.disabled || this.container.status === STATUS_MAP.SKIP
+                    'skip-name': this.disabled || this.containerStatus === STATUS_MAP.SKIP
+                }
+            },
+            matrixFoldLogoCls () {
+                return {
+                    'fold-atom-icon': true,
+                    open: this.showAtomList,
+                    [this.containerStatus || 'readonly']: true
                 }
             },
             displayName () {
@@ -320,6 +333,9 @@
                 transition: all .3s ease;
                 &.open {
                     transform: rotate(-180deg);
+                }
+                &.readonly {
+                  color: $fontWeightColor;
                 }
             }
             .copyJob {

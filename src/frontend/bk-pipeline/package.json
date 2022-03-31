@@ -1,7 +1,7 @@
 {
-  "name": "@bkui/bk-pipeline",
-  "version": "0.0.2",
-  "description": "",
+  "name": "bkui-pipeline",
+  "version": "0.1.14",
+  "description": "devops pipeline",
   "main": "dist/bk-pipeline.min.js",
   "scripts": {
     "public": "webpack  --mode production",
@@ -54,5 +54,17 @@
   "dependencies": {
     "bk-magic-vue": "^2.3.10",
     "vuedraggable": "^2.24.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tencent/bk-ci.git"
+  },
+  "keywords": [
+    "pipeline",
+    "ci"
+  ],
+  "bugs": {
+    "url": "https://github.com/Tencent/bk-ci/issues"
+  },
+  "homepage": "https://github.com/Tencent/bk-ci#readme"
 }
