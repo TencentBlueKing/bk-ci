@@ -76,7 +76,13 @@ interface BuildCredentialResource {
         @ApiParam("Base64编码的加密公钥", required = true)
         @QueryParam("publicKey")
         @BkField(required = true)
-        publicKey: String
+        publicKey: String,
+        @ApiParam(value = "插件ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_CI_TASK_ID)
+        taskId: String?,
+        @ApiParam(value = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
+        @HeaderParam("X-DEVOPS-TASK-ID")
+        oldTaskId: String?,
     ): Result<CredentialInfo?>
 
     @ApiOperation("构建机获取跨项目凭据")

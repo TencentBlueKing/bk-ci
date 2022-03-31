@@ -81,7 +81,13 @@ interface CredentialService {
 
     fun userGet(userId: String, projectId: String, credentialId: String): CredentialWithPermission
 
-    fun buildGet(projectId: String, buildId: String, credentialId: String, publicKey: String): CredentialInfo?
+    fun buildGet(
+        projectId: String,
+        buildId: String,
+        credentialId: String,
+        publicKey: String,
+        taskId: String?
+    ): CredentialInfo?
 
     fun buildGetAcrossProject(
         projectId: String,
