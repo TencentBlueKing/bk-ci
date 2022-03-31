@@ -4,6 +4,7 @@
         header-position="left"
         :value="showProjectDialog"
         :mask-close="false"
+        :close-icon="false"
         @confirm="handleConfirm"
         @cancel="handleCancel"
     >
@@ -73,7 +74,7 @@
                 return throttle(this.getProjects, 500)
             },
             tableHieght () {
-                return window.screen.height * 0.4
+                return window.innerHeight * 0.4
             }
         },
         watch: {
