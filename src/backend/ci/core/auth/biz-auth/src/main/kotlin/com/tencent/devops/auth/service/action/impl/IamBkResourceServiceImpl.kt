@@ -29,12 +29,16 @@ package com.tencent.devops.auth.service.action.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
+import com.tencent.bk.sdk.iam.dto.SelectionDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
+import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
 import com.tencent.bk.sdk.iam.service.IamResourceService
 import com.tencent.devops.auth.dao.ResourceDao
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
+import com.tencent.devops.auth.pojo.resource.ResourceInfo
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -48,15 +52,62 @@ class IamBkResourceServiceImpl @Autowired constructor(
     val resourceService: IamResourceService
 ): BkResourceServiceImpl(dslContext, resourceDao) {
 
-    @Value("")
-    val projectCallbackPath = ""
+    @Value("\${iam.selector.project:#{null}}")
+    val projectCallbackPath = "project"
 
-    @Value("")
+    @Value("\${iam.selector.other:#{null}}")
     val otherResourceCallbackPath = ""
 
     override fun createExtSystem(resource: CreateResourceDTO) {
         logger.info("createExtSystem $resource")
+        val resourceInfo = ResourceInfo(
+            resourceId = resource.resourceId,
+            name = resource.name,
+            englishName = resource.englishName,
+            desc = resource.desc,
+            englishDes = resource.englishDes,
+            parent = resource.parent,
+            system = resource.system,
+            creator = "",
+            updator = null,
+            creatorTime = 0L,
+            updateTime = null
+        )
         // 1. 创建资源类型
+        createIamResource(resource)
+
+        // 2. 资源视图
+        buildIamResourceSelectorInstance(resourceInfo)
+    }
+
+    override fun updateExtSystem(resource: UpdateResourceDTO, resourceType: String) {
+        val updateResourceInfo = ResourceTypeDTO()
+        updateResourceInfo.id = resourceType
+        updateResourceInfo.name = resource.name
+        updateResourceInfo.englishName = resource.englishName
+        updateResourceInfo.description = resource.desc
+        updateResourceInfo.englishDescription = resource.englishDes
+        val result = resourceService.updateResource(updateResourceInfo, resourceType)
+        logger.info("updateExtSystem createResource:$result")
+
+        val resourceInfo = ResourceInfo(
+            resourceId = resourceType,
+            name = resource.name,
+            englishName = resource.englishName,
+            desc = resource.desc,
+            englishDes = resource.englishDes,
+            parent = resource.parent,
+            system = resource.system,
+            creator = "",
+            updator = null,
+            creatorTime = 0L,
+            updateTime = null
+        )
+        // 2. 资源视图
+        buildIamResourceSelectorInstance(resourceInfo)
+    }
+
+    private fun createIamResource(resource: CreateResourceDTO) {
         val resourceInfo = ResourceTypeDTO()
         resourceInfo.id = resource.resourceId
         resourceInfo.name = resource.name
@@ -70,7 +121,9 @@ class IamBkResourceServiceImpl @Autowired constructor(
             resourceInfo.providerConfig = path
         } else {
             val projectResource = ResourceDTO.builder()
-                .system(iamConfiguration.systemId)
+                // TODO: 系统id换回ci
+                .system(systemId)
+//                .system(iamConfiguration.systemId)
                 .id(AuthResourceType.PROJECT.value)
                 .build()
             resourceInfo.parent = arrayListOf(projectResource)
@@ -78,23 +131,64 @@ class IamBkResourceServiceImpl @Autowired constructor(
             path.path = otherResourceCallbackPath
             resourceInfo.providerConfig = path
         }
+        logger.info("createIamResource $resourceInfo")
         val result = resourceService.createResource(resourceInfo)
         logger.info("createExtSystem createResource:$result")
-        // 2. 资源视图
     }
 
-    override fun updateExtSystem(resource: UpdateResourceDTO, resourceType: String) {
-        val resourceInfo = ResourceTypeDTO()
-        resourceInfo.id = resourceType
-        resourceInfo.name = resource.name
-        resourceInfo.englishName = resource.englishName
-        resourceInfo.description = resource.desc
-        resourceInfo.englishDescription = resource.englishDes
-        val result = resourceService.updateResource(resourceInfo, resourceType)
-        logger.info("updateExtSystem createResource:$result")
+    private fun buildIamResourceSelectorInstance(resource: ResourceInfo) {
+        val selectInstance = resourceService.systemInstanceSelector
+        val resourceSelectId = resource.resourceId + INSTANCELABLE
+        val projectSelect = ResourceTypeChainDTO()
+        projectSelect.id = AuthResourceType.PROJECT.value
+        projectSelect.systemId = systemId
+
+        var create = true
+        // 如果存在视图做修改,不存在做新增
+        selectInstance.forEach {
+            if (it.id.equals(resourceSelectId)) {
+                create = false
+                return@forEach
+            }
+        }
+
+        if (create) {
+            val createSelectionDTO = buildResourceSelector(resource, projectSelect)
+            logger.info("buildIamResourceSelectorInstance create $createSelectionDTO")
+            resourceService.createResourceInstanceSelector(createSelectionDTO)
+        } else {
+            val updateSelectionDTO = buildResourceSelector(resource, projectSelect)
+            logger.info("buildIamResourceSelectorInstance update $updateSelectionDTO")
+            resourceService.updateResourceInstanceSelector(updateSelectionDTO)
+        }
+    }
+
+    private fun buildResourceSelector(
+        resource: ResourceInfo,
+        projectChain: ResourceTypeChainDTO
+    ): SelectionDTO {
+        val resourceTypeChains = mutableListOf<ResourceTypeChainDTO>()
+        // 所有的视图第一级都是project
+        resourceTypeChains.add(projectChain)
+        val selectionDTO = SelectionDTO()
+        selectionDTO.id = resource.resourceId
+        selectionDTO.name = resource.name
+        selectionDTO.englishName = resource.englishName
+        // 非project资源，追加对应资源的二级视图
+        if (resource.resourceId != AuthResourceType.PROJECT.value) {
+            val otherSelect = ResourceTypeChainDTO()
+            otherSelect.id = resource.resourceId
+            otherSelect.systemId = systemId
+            resourceTypeChains.add(otherSelect)
+        }
+        selectionDTO.resourceTypeChain = resourceTypeChains
+        logger.info("buildResourceSelector $selectionDTO")
+        return selectionDTO
     }
 
     companion object {
+        val systemId = "fitz_test"
+        val INSTANCELABLE = "_instance"
         val logger = LoggerFactory.getLogger(IamBkResourceServiceImpl::class.java)
     }
 }

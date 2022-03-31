@@ -61,12 +61,15 @@ class IamBkActionServiceImpl @Autowired constructor(
 
     override fun extSystemCreate(userId: String, action: CreateActionDTO) {
         logger.info("extSystemCreate $userId $action")
-        val systemInfo = systemService.getSystemFieldsInfo(iamConfiguration.systemId)
+        // TODO: 系统id换回ci
+//        val systemInfo = systemService.getSystemFieldsInfo(iamConfiguration.systemId)
+        val systemInfo = systemService.getSystemFieldsInfo(systemId)
         // 1. 优先判断action是否存在, 存在修改，不存在添加
         val iamActionInfo = systemInfo.actions
         if (iamActionInfo == null) {
             // action基本数据
             val iamCreateAction = buildAction(action)
+            logger.info("extSystemCreate create ${action.actionId} $iamCreateAction")
             // 新增action需要把新的action添加到对应actionGroup
             iamActionService.createAction(iamCreateAction)
         } else {
@@ -75,6 +78,7 @@ class IamBkActionServiceImpl @Autowired constructor(
             iamUpdateAction.englishName = action.actionEnglishName
             iamUpdateAction.description = action.desc
             iamUpdateAction.relatedAction = action.relationAction
+            logger.info("extSystemCreate update ${action.actionId} $iamUpdateAction")
             iamActionService.updateAction(action.actionId, iamUpdateAction)
         }
         // 3. 维护系统新建关联yml（不存在添加，存在继续追击。 create类挂project级别，其他action挂对应资源子集）
@@ -91,7 +95,8 @@ class IamBkActionServiceImpl @Autowired constructor(
     }
 
     private fun createRelation(action: CreateActionDTO) {
-        val systemId = iamConfiguration.systemId
+        // TODO
+//        val systemId = iamConfiguration.systemId
         val systemCreateRelationInfo = systemService.getSystemFieldsInfo(systemId).resourceCreatorActions
 
         // 如果资源是项目。或者其他资源但是操作类型是create。都需要加到项目的新建关联。
@@ -100,9 +105,11 @@ class IamBkActionServiceImpl @Autowired constructor(
                 logger.warn("first action must project,please create project resource before ${action.actionId}")
             }
             val resourceCreatorActions = buildCreateRelation(action, systemCreateRelationInfo)
+            logger.info("createRelation create ${action.actionId} $resourceCreatorActions")
             iamActionService.createResourceCreatorAction(resourceCreatorActions)
         } else {
             val resourceCreatorActions = buildCreateRelation(action, systemCreateRelationInfo)
+            logger.info("createRelation update ${action.actionId} $resourceCreatorActions")
             iamActionService.updateResourceCreatorAction(resourceCreatorActions)
         }
     }
@@ -121,17 +128,23 @@ class IamBkActionServiceImpl @Autowired constructor(
         // action关联资源数据
         val relationResources = mutableListOf<RelatedResourceTypeDTO>()
         val relationResource = RelatedResourceTypeDTO()
-        relationResource.systemId = iamConfiguration.systemId
+
+        val systemId = systemId
+        // TODO: systemID换回ci
+//        relationResource.systemId = iamConfiguration.systemId
+        relationResource.systemId = systemId
         if (action.resourceId == AuthResourceType.PROJECT.value) {
             val relatedInstanceSelections = ResourceTypeChainDTO()
-            relatedInstanceSelections.systemId = iamConfiguration.systemId
+
+//            relatedInstanceSelections.systemId = iamConfiguration.systemId
+            relatedInstanceSelections.systemId = systemId
             // TODO: 视图逻辑需优化
             relatedInstanceSelections.id = "project_instance"
             relationResource.id = AuthResourceType.PROJECT.value
         } else {
             relationResource.id = AuthResourceType.get(action.resourceId).value
             val relatedInstanceSelections = ResourceTypeChainDTO()
-            relatedInstanceSelections.systemId = iamConfiguration.systemId
+            relatedInstanceSelections.systemId = systemId
             if (action.actionType.contains("create")) {
                 // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
                 relatedInstanceSelections.id = "project_instance"
@@ -215,6 +228,7 @@ class IamBkActionServiceImpl @Autowired constructor(
     }
 
     companion object {
+        private val systemId = "fitz_test"
         private val logger = LoggerFactory.getLogger(IamBkActionServiceImpl::class.java)
     }
 }
