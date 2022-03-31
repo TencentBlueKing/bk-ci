@@ -41,10 +41,11 @@ class SampleProjectDataSourceAssignServiceImpl(
 
     /**
      * 获取可用数据源名称
+     * @param clusterName db集群名称
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
-    override fun getValidDataSourceName(dataSourceNames: List<String>): String {
+    override fun getValidDataSourceName(clusterName: String, dataSourceNames: List<String>): String {
         // 从可用的数据源中随机选择一个分配给该项目
         val maxSizeIndex = dataSourceNames.size - 1
         val randomIndex = (0..maxSizeIndex).random()

@@ -95,7 +95,7 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
                 throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_ASSIGN_DATASOURCE_FAIL)
             }
             // 获取可用数据源名称
-            val dataSourceName = getValidDataSourceName(dataSourceNames)
+            val dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
             val shardingRoutingRule = ShardingRoutingRule(projectId, dataSourceName)
             shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, shardingRoutingRule)
         }
@@ -104,8 +104,9 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
 
     /**
      * 获取可用数据源名称
+     * @param clusterName db集群名称
      * @param dataSourceNames 数据源名称集合
      * @return 可用数据源名称
      */
-    abstract fun getValidDataSourceName(dataSourceNames: List<String>): String
+    abstract fun getValidDataSourceName(clusterName: String, dataSourceNames: List<String>): String
 }
