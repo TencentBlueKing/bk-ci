@@ -60,7 +60,7 @@ class ExperienceDao {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(idSet))
                 .and(ONLINE.eq(true))
-                .and(UPDATE_TIME.eq(LocalDateTime.now()))
+                .and(END_DATE.gt(LocalDateTime.now()))
                 .fetch()
         }
     }
