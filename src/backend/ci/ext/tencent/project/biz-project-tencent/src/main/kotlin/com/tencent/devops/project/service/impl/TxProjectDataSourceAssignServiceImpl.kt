@@ -107,7 +107,6 @@ class TxProjectDataSourceAssignServiceImpl(
                 )?.toLong() ?: 0L
                 if (buildNum < minBuildNumDataSourceBuildNum) {
                     // 构建量小于当前最小构建量数据源的构建量，则需要重新赋值调整当前最小构建量数据源的数据
-                    minBuildNumDataSourceName = dataSourceName
                     minBuildNumDataSourceBuildNum = buildNum
                     changeFlag = true
                 }
@@ -123,6 +122,7 @@ class TxProjectDataSourceAssignServiceImpl(
                 )?.toLong() ?: 0L
                 if (changeFlag) {
                     // 最小构建量数据源构建项目数量需要重新赋值调整
+                    minBuildNumDataSourceName = dataSourceName
                     minBuildNumDataSourceBuildProjectNum = buildProjectNum
                 }
                 buildProjectNum
@@ -170,7 +170,7 @@ class TxProjectDataSourceAssignServiceImpl(
         )
         // 3、刷新redis中最小构建量数据源的总构建项目量（总构建项目量加上1）
         redisOperation.hset(
-            key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY, clusterName),
+            key = getKeyByClusterName(PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY, clusterName),
             hashKey = minBuildNumDataSourceName,
             values = (minBuildNumDataSourceBuildProjectNum + 1).toString()
         )
