@@ -46,7 +46,6 @@ dependencies {
     api("org.apache.commons:commons-exec")
     api("javax.servlet:javax.servlet-api")
     api("javax.validation:validation-api")
-    api("com.vdurmont:emoji-java")
     api("org.apache.lucene:lucene-core")
     api("org.apache.commons:commons-csv")
     api("com.github.ben-manes.caffeine:caffeine")

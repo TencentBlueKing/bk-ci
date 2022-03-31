@@ -355,11 +355,6 @@ thread:
 
 #### process
 
-# 流水线加密参数密钥
-parameter:
-  password:
-    pswKey: __BK_CI_PIPELINE_PARAMETER_ENCRYPT_PASSWORD__
-
 # 流水线引擎并发配置
 queueConcurrency:
   buildStart: __BK_CI_PROCESS_EVENT_CONCURRENT__    # 构建启动消息并发处理数量
