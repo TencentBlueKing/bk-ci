@@ -28,14 +28,10 @@
 package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildParametersResource
 import com.tencent.devops.process.engine.service.PipelineBuildParamsService
-import com.tencent.devops.process.utils.WORKSPACE
-import com.tencent.devops.store.pojo.app.BuildEnvParameters
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.stream.Collectors
 
 @RestResource
 class ServiceBuildParametersResourceImpl @Autowired constructor(
