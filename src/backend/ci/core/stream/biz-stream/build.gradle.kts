@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:stream:api-stream"))
+    api(project(":core:stream:model-stream"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
@@ -44,6 +45,8 @@ dependencies {
     api(project(":core:quality:api-quality"))
     api(project(":core:auth:api-auth"))
     api(project(":core:plugin:codecc-plugin:api-codecc"))
+    api(project(":core:process:common-pipeline-yaml"))
+    api(project(":core:notify:api-notify"))
 
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")

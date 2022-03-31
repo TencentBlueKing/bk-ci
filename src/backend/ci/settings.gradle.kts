@@ -187,6 +187,7 @@ include(":core:process:model-process")
 include(":core:process:plugin-load")
 include(":core:process:plugin-sdk")
 include(":core:process:plugin-trigger")
+include(":core:process:common-pipeline-yaml")
 
 include(":core:dispatch")
 include(":core:dispatch:api-dispatch")

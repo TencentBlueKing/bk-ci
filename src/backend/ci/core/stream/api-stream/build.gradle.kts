@@ -32,6 +32,8 @@ dependencies {
     api(project(":core:store:api-store"))
     api(project(":core:log:api-log"))
     api(project(":core:common:common-webhook:api-common-webhook"))
+    api(project(":core:process:api-process"))
+    api(project(":core:project:api-project"))
 }
 
 plugins {

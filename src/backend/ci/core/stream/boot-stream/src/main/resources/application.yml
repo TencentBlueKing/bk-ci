@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: stream
+    desc: DevOps Stream Service
+    version: 4.0.0
+    packageName: com.tencent.devops.stream
+
+server:
+  port: 21952

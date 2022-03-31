@@ -27,19 +27,34 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.devops.process.yaml.utils.StreamDispatchUtils
+import com.devops.process.yaml.pojo.StreamDispatchInfo
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component(value = "commonDispatchTypeParser")
 class DispatchTypeParserImpl @Autowired constructor(
-    private val storeImageHelper: StoreImageHelper
+    private val client: Client,
+    private val objectMapper: ObjectMapper,
+    private val storeImageHelper: StoreImageHelper,
+    private val buildVariableService: BuildVariableService,
+    private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService
 ) : DispatchTypeParser {
+
+    companion object {
+        private const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
+    }
 
     override fun parse(
         userId: String,
@@ -97,6 +112,40 @@ class DispatchTypeParserImpl @Autowired constructor(
         customInfo: DispatchInfo,
         context: Map<String, String>
     ): SampleDispatchInfo? {
-        return null
+        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
+        // 获取跨项目引用模板信息
+        val buildTemplateAcrossInfo =
+            if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null && customInfo is StreamDispatchInfo) {
+                templateAcrossInfoService.getAcrossInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    templateId = runVariables[TEMPLATE_ACROSS_INFO_ID]!!
+                ).firstOrNull {
+                    it.templateType == TemplateAcrossInfoType.JOB &&
+                        it.templateInstancesIds.contains(customInfo.job.id)
+                }
+            } else {
+                null
+            }
+        // 此处可以支持多种解析
+        return when (customInfo) {
+            is StreamDispatchInfo -> SampleDispatchInfo(
+                name = customInfo.name,
+                dispatchType = StreamDispatchUtils.getDispatchType(
+                    client = client,
+                    objectMapper = objectMapper,
+                    job = customInfo.job,
+                    projectCode = customInfo.projectCode,
+                    defaultImage = customInfo.defaultImage,
+                    resources = customInfo.resources,
+                    context = context,
+                    containsMatrix = true,
+                    buildTemplateAcrossInfo = buildTemplateAcrossInfo
+                ),
+                baseOS = StreamDispatchUtils.getBaseOs(customInfo.job, context),
+                buildEnv = StreamDispatchUtils.getBuildEnv(customInfo.job, context)
+            )
+            else -> null
+        }
     }
 }

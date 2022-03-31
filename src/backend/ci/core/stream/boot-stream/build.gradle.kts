@@ -27,6 +27,4 @@
 
 dependencies {
     api(project(":core:stream:biz-stream"))
-
-    testImplementation(project(":core:common:common-test"))
 }

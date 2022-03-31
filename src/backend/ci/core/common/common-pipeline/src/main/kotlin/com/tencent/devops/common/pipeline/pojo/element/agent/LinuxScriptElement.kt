@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo.element.agent
 
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.net.URLEncoder
@@ -54,7 +55,9 @@ data class LinuxScriptElement(
     @ApiModelProperty("启用脚本执行失败时归档的文件", required = false)
     val enableArchiveFile: Boolean? = false,
     @ApiModelProperty("脚本执行失败时归档的文件", required = false)
-    val archiveFile: String? = null
+    val archiveFile: String? = null,
+    @ApiModelProperty("附加参数", required = false)
+    override var additionalOptions: ElementAdditionalOptions? = null
 ) : Element(name, id, status) {
 
     companion object {

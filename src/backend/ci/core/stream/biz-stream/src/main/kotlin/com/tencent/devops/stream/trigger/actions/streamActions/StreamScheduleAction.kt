@@ -1,0 +1,158 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.stream.trigger.actions.streamActions
+
+import com.devops.process.yaml.v2.enums.StreamObjectKind
+import com.devops.process.yaml.v2.models.Variable
+import com.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.bk.sdk.iam.util.JsonUtil
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.data.ActionData
+import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleActionData
+import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleCommonData
+import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
+import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
+import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
+import com.tencent.devops.stream.trigger.pojo.enums.toGitState
+import com.tencent.devops.stream.trigger.service.GitCheckService
+
+class StreamScheduleAction(
+    private val gitCheckService: GitCheckService
+) : BaseAction {
+
+    override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.SCHEDULE)
+
+    override lateinit var data: ActionData
+    fun data() = data as StreamScheduleActionData
+
+    override lateinit var api: StreamGitApiService
+
+    override fun getProjectCode(gitProjectId: String?) = data().event.projectCode
+
+    override fun getGitCred(personToken: String?): StreamGitCred {
+        return when (data.setting.scmType) {
+            ScmType.CODE_GIT -> TGitCred(
+                userId = data().event.userId,
+                accessToken = personToken,
+                useAccessToken = personToken == null
+            )
+            else -> TODO()
+        }
+    }
+
+    fun initCommonData(): StreamScheduleAction {
+        this.data.eventCommon = StreamScheduleCommonData(data().event)
+        return this
+    }
+
+    override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
+        val data = data()
+        // 手动触发保存下自定的定时触发事件，方便构建结束后逻辑
+        return GitRequestEventHandle.createScheduleTriggerEvent(
+            event = data.event,
+            eventStr = JsonUtil.toJson(data.event)
+        )
+    }
+
+    override fun skipStream() = false
+
+    override fun checkProjectConfig() {}
+
+    override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>) = true
+
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+
+    override fun getYamlPathList(): List<YamlPathListEntry> {
+        return emptyList()
+    }
+
+    override fun getYamlContent(fileName: String): String {
+        return api.getFileContent(
+            cred = this.getGitCred(),
+            gitProjectId = data.getGitProjectId(),
+            fileName = fileName,
+            ref = data.eventCommon.branch,
+            retry = ApiRequestRetryInfo(true)
+        )
+    }
+
+    override fun isMatch(triggerOn: TriggerOn): TriggerResult {
+        return TriggerResult(
+            trigger = true,
+            startParams = emptyMap(),
+            timeTrigger = false,
+            deleteTrigger = false
+        )
+    }
+
+    override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? = null
+
+    override fun needSaveOrUpdateBranch() = false
+
+    override fun needSendCommitCheck() = true
+
+    override fun sendCommitCheck(
+        buildId: String,
+        gitProjectName: String,
+        state: StreamCommitCheckState,
+        block: Boolean,
+        context: String,
+        targetUrl: String,
+        description: String,
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+    ) {
+        gitCheckService.pushCommitCheck(
+            userId = data.eventCommon.userId,
+            projectCode = getProjectCode(),
+            buildId = buildId,
+            gitProjectId = data.eventCommon.gitProjectId,
+            gitProjectName = gitProjectName,
+            pipelineId = data.context.pipeline!!.pipelineId,
+            commitId = data.eventCommon.commit.commitId,
+            gitHttpUrl = data.setting.gitHttpUrl,
+            scmType = data.setting.scmType,
+            token = api.getToken(getGitCred()),
+            state = state.toGitState(data.setting.scmType),
+            block = block,
+            context = context,
+            targetUrl = targetUrl,
+            description = description,
+            mrId = null,
+            reportData = reportData
+        )
+    }
+}
