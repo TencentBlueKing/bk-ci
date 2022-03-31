@@ -136,24 +136,31 @@ class IamBkActionServiceImpl @Autowired constructor(
 //        relationResource.systemId = iamConfiguration.systemId
         relationResource.systemId = systemId
         if (action.resourceId == AuthResourceType.PROJECT.value) {
-            val relatedInstanceSelections = ResourceTypeChainDTO()
+            val relatedInstanceSelection = ResourceTypeChainDTO()
 
 //            relatedInstanceSelections.systemId = iamConfiguration.systemId
-            relatedInstanceSelections.systemId = systemId
+            relatedInstanceSelection.systemId = systemId
             // TODO: 视图逻辑需优化
-            relatedInstanceSelections.id = "project_instance"
+            relatedInstanceSelection.id = "project_instance"
             relationResource.id = AuthResourceType.PROJECT.value
+
+            val relatedInstanceSelections = mutableListOf<ResourceTypeChainDTO>()
+            relatedInstanceSelections.add(relatedInstanceSelection)
+            relationResource.relatedInstanceSelections = relatedInstanceSelections
         } else {
             relationResource.id = AuthResourceType.get(action.resourceId).value
-            val relatedInstanceSelections = ResourceTypeChainDTO()
-            relatedInstanceSelections.systemId = systemId
+            val relatedInstanceSelection = ResourceTypeChainDTO()
+            relatedInstanceSelection.systemId = systemId
             if (action.actionType.contains("create")) {
                 // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
-                relatedInstanceSelections.id = "project_instance"
+                relatedInstanceSelection.id = "project_instance"
             } else {
                 // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
-                relatedInstanceSelections.id = "${action.resourceId}_instance"
+                relatedInstanceSelection.id = "${action.resourceId}_instance"
             }
+            val relatedInstanceSelections = mutableListOf<ResourceTypeChainDTO>()
+            relatedInstanceSelections.add(relatedInstanceSelection)
+            relationResource.relatedInstanceSelections = relatedInstanceSelections
         }
         relationResources.add(relationResource)
         iamCreateAction.relatedResourceTypes = relationResources
