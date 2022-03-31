@@ -72,7 +72,7 @@ class ExperienceDownloadDetailDao {
             .where(p.ONLINE.eq(true))
             .and(p.END_DATE.gt(LocalDateTime.now()))
             .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
-            .orderBy(d.UPDATE_TIME.desc()).limit(limit)
+            .orderBy(p.UPDATE_TIME.desc()).limit(limit)
             .fetch(p.RECORD_ID)
     }
 
