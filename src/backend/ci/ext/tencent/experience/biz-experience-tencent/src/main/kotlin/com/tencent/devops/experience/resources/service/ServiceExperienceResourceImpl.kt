@@ -140,7 +140,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid experienceHashId")
         }
         if (userId != null && client.get(ServiceProjectResource::class)
-                .verifyUserProjectPermission(projectCode = projectId, userId = userId).result != true
+                .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
         ) {
             throw ErrorCodeException(
                 defaultMessage = "用户没有项目权限",
