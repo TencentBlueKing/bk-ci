@@ -64,6 +64,7 @@ import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
@@ -73,6 +74,7 @@ class StreamScmService @Autowired constructor(
     private val dslContext: DSLContext,
     private val oauthService: StreamOauthService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
+    @Lazy
     private val streamGitTokenService: StreamGitTokenService
 ) {
 
