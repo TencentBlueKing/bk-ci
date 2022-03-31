@@ -387,7 +387,11 @@ class InitializeMatrixGroupStageCmd(
                 stageId = parentContainer.stageId,
                 onlyMatrixGroup = false
             )
-            val count = currentCount - commandContext.stageMatrixCount
+            val count = currentCount + groupContainers.size - commandContext.stageMatrixCount
+            LOG.info("ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
+                 "|${event.stageId}|${modelContainer.id}|containerHashId=" +
+                 "${modelContainer.containerHashId}|currentCount=$currentCount|" +
+                 "countResult=$count")
             if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
                 throw InvalidParamException("The number of containers($count) in stage(${parentContainer.stageId})" +
                     " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]")
