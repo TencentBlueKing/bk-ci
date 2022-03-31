@@ -230,7 +230,13 @@ class ModelStage constructor(
                 },
                 chineseName = variable.label,
                 desc = variable.description,
-                options = variable.values?.map { ManualReviewParamPair(it, it) }
+                options = (variable.values.takeIf { it is List<*>? } as List<*>?)?.map {
+                    ManualReviewParamPair(
+                        it.toString(),
+                        it.toString()
+                    )
+                },
+                variableOption = variable.values.takeIf { it is String? } as String?
             ))
         }
         return params
@@ -267,7 +273,7 @@ class ModelStage constructor(
                 if (op.isBlank()) {
                     logger.warn(
                         "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId} " +
-                                "rule: $rule not find operations"
+                            "rule: $rule not find operations"
                     )
                     return@GateEach
                 }
@@ -328,7 +334,7 @@ class ModelStage constructor(
         }
         logger.info(
             "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId}" +
-                    " ruleList: $ruleList create gates"
+                " ruleList: $ruleList create gates"
         )
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
