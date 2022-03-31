@@ -133,6 +133,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
         }
         val resourceInfos = mutableListOf<ResourceTypeDTO>()
         logger.info("createIamResource $resourceInfo")
+        resourceInfos.add(resourceInfo)
         val result = resourceService.createResource(resourceInfos)
         logger.info("createExtSystem createResource:$result")
     }
