@@ -40,6 +40,7 @@ import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitCommit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -59,7 +60,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info("getLatestRevision|$projectName|$url|$type|$branchName|$additionalPath|$region|username=$userName)"
+        logger.info(
+            "getLatestRevision|$projectName|$url|$type|$branchName|$additionalPath|$region|username=$userName)"
         )
         return Result(
             scmService.getLatestRevision(
@@ -284,6 +286,28 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 type = type,
                 token = token,
                 mrId = mrId
+            )
+        )
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): Result<List<GitCommit>> {
+        return Result(
+            scmService.getMrCommitList(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
             )
         )
     }
