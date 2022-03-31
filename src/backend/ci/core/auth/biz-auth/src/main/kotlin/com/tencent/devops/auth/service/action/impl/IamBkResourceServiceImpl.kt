@@ -147,7 +147,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
 
         var create = true
         // 如果存在视图做修改,不存在做新增
-        selectInstance.forEach {
+        selectInstance?.forEach {
             if (it.id.equals(resourceSelectId)) {
                 create = false
                 return@forEach
