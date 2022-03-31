@@ -53,10 +53,10 @@ class IamBkResourceServiceImpl @Autowired constructor(
 ): BkResourceServiceImpl(dslContext, resourceDao) {
 
     @Value("\${iam.selector.project:#{null}}")
-    val projectCallbackPath = "project"
+    val projectCallbackPath = "/api/service/auth/resource/projects"
 
     @Value("\${iam.selector.other:#{null}}")
-    val otherResourceCallbackPath = ""
+    val otherResourceCallbackPath = "/api/service/auth/resource/instances/list"
 
     override fun createExtSystem(resource: CreateResourceDTO) {
         logger.info("createExtSystem $resource")
@@ -131,8 +131,9 @@ class IamBkResourceServiceImpl @Autowired constructor(
             path.path = otherResourceCallbackPath
             resourceInfo.providerConfig = path
         }
+        val resourceInfos = mutableListOf<ResourceTypeDTO>()
         logger.info("createIamResource $resourceInfo")
-        val result = resourceService.createResource(resourceInfo)
+        val result = resourceService.createResource(resourceInfos)
         logger.info("createExtSystem createResource:$result")
     }
 

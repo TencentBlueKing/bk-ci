@@ -94,7 +94,7 @@ class ActionDao {
         field: String
     ): ActionInfo? {
         with(TAuthAction.T_AUTH_ACTION) {
-            val record = dslContext.selectFrom(field)
+            val record = dslContext.selectFrom(this)
                 .where(ACTIONID.eq(actionId).and(DELETE.eq(false)))
                 .fetchAny() as TAuthActionRecord? ?: return null
             return convert(record)
@@ -106,7 +106,7 @@ class ActionDao {
         field: String
     ): List<ActionInfo>? {
         with(TAuthAction.T_AUTH_ACTION) {
-            val records = dslContext.selectFrom(field).where(DELETE.eq(false)).fetch()
+            val records = dslContext.selectFrom(this).where(DELETE.eq(false)).fetch()
             val actionInfos = mutableListOf<ActionInfo>()
             records.map {
                 actionInfos.add(convert(it as TAuthActionRecord))
@@ -121,7 +121,7 @@ class ActionDao {
         field: String
     ): List<ActionInfo>? {
         with(TAuthAction.T_AUTH_ACTION) {
-            val records = dslContext.selectFrom(field).where(RESOURCEID.eq(resourceId).and(DELETE.eq(false))).fetch()
+            val records = dslContext.selectFrom(this).where(RESOURCEID.eq(resourceId).and(DELETE.eq(false))).fetch()
             val actionInfos = mutableListOf<ActionInfo>()
             records.map {
                 actionInfos.add(convert(it as TAuthActionRecord))

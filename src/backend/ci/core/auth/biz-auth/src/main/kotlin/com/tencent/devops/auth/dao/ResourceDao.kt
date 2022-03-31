@@ -139,6 +139,7 @@ class ResourceDao {
             creatorTime = DateTimeUtil.convertLocalDateTimeToTimestamp(record.createtime),
             updator = record.updater,
             updateTime = DateTimeUtil.convertLocalDateTimeToTimestamp(record.updatetime),
+            englishName = record.englishname
         )
     }
 }

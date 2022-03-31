@@ -68,7 +68,7 @@ abstract class BkResourceServiceImpl @Autowired constructor(
 
         // 修改资源类数据
         resourceDao.updateResource(dslContext, userId, resourceId, resource)
-
+        updateExtSystem(resource, resourceId)
         return true
     }
 
