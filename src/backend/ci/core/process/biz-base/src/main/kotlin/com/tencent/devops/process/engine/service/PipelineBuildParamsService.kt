@@ -75,7 +75,7 @@ class PipelineBuildParamsService @Autowired constructor(
         vmSeqId: String,
         containerHashId: String?,
         executeCount: String,
-        customBuildEnv: Map<String, String>?,
+        customBuildEnv: Map<String, String>?
     ): Map<String, String>? {
         customBuildEnv?.let { key ->
             val commonBuildParams = getCommonBuildParams()

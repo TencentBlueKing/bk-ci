@@ -39,7 +39,7 @@ import java.util.stream.Collectors
 
 @RestResource
 class ServiceBuildParametersResourceImpl @Autowired constructor(
-    private val pipelineBuildParamsService: PipelineBuildParamsService,
+    private val pipelineBuildParamsService: PipelineBuildParamsService
 
 ) : ServiceBuildParametersResource {
 
