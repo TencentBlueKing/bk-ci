@@ -206,8 +206,7 @@
                 cruveHeight: 0,
                 failedContainer: false,
                 DELETE_EVENT_NAME,
-                COPY_EVENT_NAME,
-                isRunning: false
+                COPY_EVENT_NAME
             }
         },
         computed: {
@@ -256,8 +255,7 @@
                 return {
                     'stage-name-status-icon': true,
                     [this.stageStatusCls]: true,
-                    'spin-icon': this.isRunning
-
+                    'spin-icon': this.stageStatusCls === STATUS_MAP.RUNNING
                 }
             },
             pipelineStageCls () {
@@ -356,9 +354,6 @@
                 this.handleChange(this.stage, {
                     containers
                 })
-            },
-            stageStatusCls (newVal) {
-                this.isRunning = newVal === STATUS_MAP.RUNNING
             }
         },
         mounted () {
