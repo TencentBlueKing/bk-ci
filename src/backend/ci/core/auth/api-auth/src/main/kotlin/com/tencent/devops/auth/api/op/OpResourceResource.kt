@@ -84,16 +84,7 @@ interface OpResourceResource {
         @ApiParam("资源编码")
         @PathParam("resourceId")
         resourceId: String
-    ): Result<ResourceInfo>
-
-    @GET
-    @ApiOperation("获取资源信息")
-    @Path("/names/{resourceName}")
-    fun getSystemResourceByResourceName(
-        @ApiParam("资源编码")
-        @PathParam("resourceName")
-        resourceName: String
-    ): Result<List<ResourceInfo>>
+    ): Result<ResourceInfo?>
 
     @GET
     @ApiOperation("获取资源信息")
@@ -102,10 +93,10 @@ interface OpResourceResource {
         @ApiParam("系统")
         @PathParam("systemType")
         systemId: SystemType
-    ): Result<ResourceInfo>
+    ): Result<List<ResourceInfo>?>
 
     @GET
     @ApiOperation("获取资源列表")
     @Path("/")
-    fun listSystemResource(): Result<List<ResourceInfo>>
+    fun listSystemResource(): Result<List<ResourceInfo>?>
 }

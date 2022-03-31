@@ -33,7 +33,7 @@ import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 
 interface BkResourceService {
     fun createResource(userId: String, resource: CreateResourceDTO): Boolean
-    fun updateResource(userId: String, resource: UpdateResourceDTO): Boolean
+    fun updateResource(userId: String, resourceId: String, resource: UpdateResourceDTO): Boolean
 
     fun getResource(resourceType: String): ResourceInfo?
 

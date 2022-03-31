@@ -27,13 +27,16 @@
 
 package com.tencent.devops.auth.service.action.impl
 
+import com.tencent.devops.auth.dao.ResourceDao
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 class SimpleBkResourceServiceImpl @Autowired constructor(
-
-) : BkResourceServiceImpl() {
+    override val dslContext: DSLContext,
+    override val resourceDao: ResourceDao,
+) : BkResourceServiceImpl(dslContext, resourceDao) {
     override fun createExtSystem(resource: CreateResourceDTO) {
         return
     }

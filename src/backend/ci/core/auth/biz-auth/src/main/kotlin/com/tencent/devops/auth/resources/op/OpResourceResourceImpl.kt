@@ -32,35 +32,32 @@ import com.tencent.devops.auth.pojo.enum.SystemType
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.ResourceInfo
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
+import com.tencent.devops.auth.service.action.BkResourceService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpResourceResourceImpl @Autowired constructor(
-
+    val resourceService: BkResourceService
 ): OpResourceResource {
     override fun createSystemResource(userId: String, resourceInfo: CreateResourceDTO): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(resourceService.createResource(userId, resourceInfo))
     }
 
     override fun updateSystemResource(userId: String, resourceId: String, resourceInfo: UpdateResourceDTO): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(resourceService.updateResource(userId, resourceId, resourceInfo))
     }
 
-    override fun getSystemResource(resourceId: String): Result<ResourceInfo> {
-        TODO("Not yet implemented")
+    override fun getSystemResource(resourceId: String): Result<ResourceInfo?> {
+        return Result(resourceService.getResource(resourceId))
     }
 
-    override fun getSystemResourceByResourceName(resourceName: String): Result<List<ResourceInfo>> {
-        TODO("Not yet implemented")
+    override fun getSystemResourceBySystem(systemId: SystemType): Result<List<ResourceInfo>?> {
+        return Result(resourceService.getResourceBySystem(systemId.name))
     }
 
-    override fun getSystemResourceBySystem(systemId: SystemType): Result<ResourceInfo> {
-        TODO("Not yet implemented")
-    }
-
-    override fun listSystemResource(): Result<List<ResourceInfo>> {
-        TODO("Not yet implemented")
+    override fun listSystemResource(): Result<List<ResourceInfo>?> {
+        return Result(resourceService.resourceList())
     }
 }

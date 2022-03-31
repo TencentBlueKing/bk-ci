@@ -34,4 +34,13 @@ enum class SystemType(system: String, desc: String) {
     TURBO("turbo", "编译加速"),
     ALL("all", "所有系统")
     ;
+
+    companion object {
+        fun get(value: String): SystemType {
+            SystemType.values().forEach {
+                if (value == it.name) return it
+            }
+            throw IllegalArgumentException("No enum for constant $value")
+        }
+    }
 }

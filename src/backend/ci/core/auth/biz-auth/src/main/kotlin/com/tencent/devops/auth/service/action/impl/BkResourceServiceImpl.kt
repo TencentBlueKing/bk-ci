@@ -27,44 +27,73 @@
 
 package com.tencent.devops.auth.service.action.impl
 
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.ResourceDao
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.ResourceInfo
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 import com.tencent.devops.auth.service.action.BkResourceService
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class BkResourceServiceImpl @Autowired constructor(
-
+    open val dslContext: DSLContext,
+    open val resourceDao: ResourceDao
 ): BkResourceService{
     override fun createResource(userId: String, resource: CreateResourceDTO): Boolean {
-        // 判断此资源是否存在, 存在直接报错. 集合system
-
+        // 判断此资源是否存在, 存在直接报错
+        if (resourceDao.getResourceById(dslContext, resource.resourceId) != null) {
+            logger.warn("createResource $resource exist")
+        }
         // 添加资源类数据
+        resourceDao.createResource(dslContext, userId, resource)
 
         // 此处为扩展类,操作蓝盾外的其他系统
         createExtSystem(resource)
         return true
     }
 
-    override fun updateResource(userId: String, resource: UpdateResourceDTO): Boolean {
-        // 判断此资源是否存在, 存在直接报错. 集合system
+    override fun updateResource(
+        userId: String,
+        resourceId: String,
+        resource: UpdateResourceDTO
+    ): Boolean {
+        // 判断此资源是否存在
+        resourceDao.getResourceById(dslContext, resourceId)
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_NOT_EXSIT
+            )
 
         // 修改资源类数据
+        resourceDao.updateResource(dslContext, userId, resourceId, resource)
 
         return true
     }
 
     override fun getResource(resourceType: String): ResourceInfo? {
-        TODO("Not yet implemented")
+        return resourceDao.getResourceById(dslContext, resourceType)
     }
 
     override fun getResourceBySystem(systemId: String): List<ResourceInfo>? {
-        TODO("Not yet implemented")
+        val records = resourceDao.getResourceBySystemId(dslContext, systemId) ?: return emptyList()
+        val result = mutableListOf<ResourceInfo>()
+        records.map {
+            val resourceInfo = resourceDao.convert(it)
+            result.add(resourceInfo!!)
+        }
+        return result
     }
 
     override fun resourceList(): List<ResourceInfo>? {
-        TODO("Not yet implemented")
+        val records = resourceDao.getAllResource(dslContext) ?: return emptyList()
+        val result = mutableListOf<ResourceInfo>()
+        records.map {
+            val resourceInfo = resourceDao.convert(it)
+            result.add(resourceInfo!!)
+        }
+        return result
     }
 
     abstract fun createExtSystem(resource: CreateResourceDTO)
@@ -72,6 +101,6 @@ abstract class BkResourceServiceImpl @Autowired constructor(
     abstract fun updateExtSystem(resource: UpdateResourceDTO, resourceType: String)
 
     companion object {
-        private val BkResourceServiceImpl = LoggerFactory.getLogger(BkResourceServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(BkResourceServiceImpl::class.java)
     }
 }

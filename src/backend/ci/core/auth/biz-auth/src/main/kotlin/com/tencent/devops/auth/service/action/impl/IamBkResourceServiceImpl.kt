@@ -32,17 +32,21 @@ import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
 import com.tencent.bk.sdk.iam.service.IamResourceService
+import com.tencent.devops.auth.dao.ResourceDao
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 class IamBkResourceServiceImpl @Autowired constructor(
+    override val dslContext: DSLContext,
+    override val resourceDao: ResourceDao,
     val iamConfiguration: IamConfiguration,
     val resourceService: IamResourceService
-): BkResourceServiceImpl() {
+): BkResourceServiceImpl(dslContext, resourceDao) {
 
     @Value("")
     val projectCallbackPath = ""

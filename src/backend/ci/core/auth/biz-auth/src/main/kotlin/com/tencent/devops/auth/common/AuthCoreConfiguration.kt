@@ -29,6 +29,7 @@ package com.tencent.devops.auth.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.dao.ActionDao
+import com.tencent.devops.auth.dao.ResourceDao
 import com.tencent.devops.auth.filter.TokenCheckFilter
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.listener.AuthRefreshEventListener
@@ -161,5 +162,8 @@ class AuthCoreConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(BkResourceService::class)
-    fun simpleResourceService() = SimpleBkResourceServiceImpl()
+    fun simpleResourceService(
+        dslContext: DSLContext,
+        resourceDao: ResourceDao,
+    ) = SimpleBkResourceServiceImpl(dslContext, resourceDao)
 }
