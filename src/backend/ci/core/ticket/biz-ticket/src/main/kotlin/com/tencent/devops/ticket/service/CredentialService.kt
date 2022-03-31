@@ -86,7 +86,7 @@ interface CredentialService {
         buildId: String,
         credentialId: String,
         publicKey: String,
-        taskId: String?
+        taskId: String? = null
     ): CredentialInfo?
 
     fun buildGetAcrossProject(
