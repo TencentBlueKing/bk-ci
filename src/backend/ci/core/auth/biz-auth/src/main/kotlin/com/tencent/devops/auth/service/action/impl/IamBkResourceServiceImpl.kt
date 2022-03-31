@@ -142,7 +142,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
         val selectInstance = resourceService.systemInstanceSelector
         val resourceSelectId = resource.resourceId + INSTANCELABLE
         val projectSelect = ResourceTypeChainDTO()
-        projectSelect.id = AuthResourceType.PROJECT.value
+        projectSelect.id = AuthResourceType.PROJECT.value + INSTANCELABLE
         projectSelect.systemId = systemId
 
         var create = true
@@ -173,7 +173,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
         // 所有的视图第一级都是project
         resourceTypeChains.add(projectChain)
         val selectionDTO = SelectionDTO()
-        selectionDTO.id = resource.resourceId
+        selectionDTO.id = resource.resourceId + INSTANCELABLE
         selectionDTO.name = resource.name
         selectionDTO.englishName = resource.englishName
         // 非project资源，追加对应资源的二级视图
