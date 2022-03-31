@@ -77,34 +77,34 @@ class PipelineBuildParamsService @Autowired constructor(
         executeCount: String,
         customBuildEnv: Map<String, String>?
     ): Map<String, String>? {
-        customBuildEnv?.let { key ->
-            val commonBuildParams = getCommonBuildParams()
-                .stream()
-                .map(BuildEnvParameters::name)
-                .collect(Collectors.toList())
-
-            commonBuildParams.add(WORKSPACE)
-
-            val mutableMap = customBuildEnv.toMutableMap()
-            for ((t, _) in key) {
-                commonBuildParams?.let {
-                    if (commonBuildParams.contains(t)) {
-                        mutableMap.remove(t)
-                        buildLogPrinter.addYellowLine(
-                            buildId = buildId,
-                            tag = VMUtils.genStartVMTaskId(vmSeqId),
-                            jobId = vmSeqId,
-                            executeCount = executeCount.toInt(),
-                            message = "Warning: setting built-in constant $t is not allowed, skip."
-                        )
-                    }
-                }
-            }
-
-            return mutableMap
+        if (customBuildEnv == null) {
+            return null
         }
 
-        return customBuildEnv
+        val commonBuildParams = getCommonBuildParams()
+            .stream()
+            .map(BuildEnvParameters::name)
+            .collect(Collectors.toList())
+
+        commonBuildParams.add(WORKSPACE)
+
+        val mutableMap = customBuildEnv.toMutableMap()
+        for ((t, _) in customBuildEnv) {
+            commonBuildParams?.let {
+                if (commonBuildParams.contains(t)) {
+                    mutableMap.remove(t)
+                    buildLogPrinter.addYellowLine(
+                        buildId = buildId,
+                        tag = VMUtils.genStartVMTaskId(vmSeqId),
+                        jobId = vmSeqId,
+                        executeCount = executeCount.toInt(),
+                        message = "Warning: setting built-in constant $t is not allowed, skip."
+                    )
+                }
+            }
+        }
+
+        return mutableMap
     }
 
     companion object {
