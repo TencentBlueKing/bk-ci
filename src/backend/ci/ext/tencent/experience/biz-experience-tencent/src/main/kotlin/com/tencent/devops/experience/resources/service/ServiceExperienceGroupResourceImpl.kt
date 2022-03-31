@@ -50,7 +50,7 @@ class ServiceExperienceGroupResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
         if (client.get(ServiceProjectResource::class)
-                .verifyUserProjectPermission(projectCode = projectId, userId = userId).result != true
+                .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
         ) {
             throw ErrorCodeException(
                 defaultMessage = "用户没有权限",
