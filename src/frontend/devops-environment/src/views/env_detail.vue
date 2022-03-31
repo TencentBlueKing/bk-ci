@@ -62,7 +62,7 @@
         },
         computed: {
             isBuildEnv () {
-                return this.curEnvDetail.envType === 'BUILD'
+                return this.curEnvDetail && this.curEnvDetail.envType === 'BUILD'
             },
             tabs () {
                 const tabs = [{
