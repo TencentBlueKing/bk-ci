@@ -62,7 +62,7 @@ class GitPipelineResourceDao {
                 VERSION,
                 CREATE_TIME,
                 UPDATE_TIME,
-                DIR
+                DIRECTORY
             ).values(
                 pipeline.pipelineId,
                 gitProjectId,
@@ -129,7 +129,7 @@ class GitPipelineResourceDao {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
             if (!filePath.isNullOrBlank()) {
-                dsl.and(DIR.eq(filePath))
+                dsl.and(DIRECTORY.eq(filePath))
             }
             return dsl.orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .limit(limit).offset(offset)
@@ -143,7 +143,7 @@ class GitPipelineResourceDao {
         pipelineId: String?
     ): Result<Record2<String, String>> {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
-            val dsl = dslContext.select(DIR, PIPELINE_ID).from(this)
+            val dsl = dslContext.select(DIRECTORY, PIPELINE_ID).from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
             if (!pipelineId.isNullOrBlank()) {
                 dsl.and(PIPELINE_ID.eq(pipelineId))
