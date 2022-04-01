@@ -158,7 +158,10 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
-
+/**
+ * 流水线设置-流水线最大任务并发数量-最大值
+ */
+const val PIPELINE_CON_RUNNING_CONTAINER_SIZE_MAX = 30
 /**
  * 流水线设置-矩阵内最大并发数量-默认值
  */

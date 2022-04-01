@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCmdC
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
 import com.tencent.devops.process.engine.control.command.container.impl.CheckConditionalSkipContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckDependOnContainerCmd
+import com.tencent.devops.process.engine.control.command.container.impl.CheckDispatchQueueContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckMutexContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.CheckPauseContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.ContainerCmdLoop
@@ -180,6 +181,7 @@ class ContainerControl @Autowired constructor(
             commandCache.get(CheckConditionalSkipContainerCmd::class.java), // 检查条件跳过处理
             commandCache.get(CheckPauseContainerCmd::class.java), // 检查暂停处理
             commandCache.get(CheckMutexContainerCmd::class.java), // 检查Job互斥组处理
+            commandCache.get(CheckDispatchQueueContainerCmd::class.java), // 检查流水线全局Job并发队列
             commandCache.get(InitializeMatrixGroupStageCmd::class.java), // 执行matrix运算生成所有Container数据
             commandCache.get(MatrixExecuteContainerCmd::class.java), // 循环进行矩阵执行和状态刷新
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息
