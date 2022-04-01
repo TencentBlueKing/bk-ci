@@ -37,7 +37,7 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface EngineBuildSDKApi : WorkerRestApiSDK {
 
-    fun getRequestUrl(path: String, retryCount: Int = 0): String
+    fun getRequestUrl(path: String, retryCount: Int = 0, executeCount: Int = 1): String
 
     fun setStarted(retryCount: Int): Result<BuildVariables>
 
@@ -47,7 +47,7 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
 
     fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean>
 
-    fun heartbeat(): Result<HeartBeatInfo>
+    fun heartbeat(executeCount: Int = 1): Result<HeartBeatInfo>
 
     fun timeout(): Result<Boolean>
 

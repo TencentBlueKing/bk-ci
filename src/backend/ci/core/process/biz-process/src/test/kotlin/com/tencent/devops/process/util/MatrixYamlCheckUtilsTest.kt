@@ -4,8 +4,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
-import org.junit.Test
 import org.junit.Assert
+import org.junit.Test
 
 internal class MatrixYamlCheckUtilsTest {
 
@@ -131,5 +131,38 @@ internal class MatrixYamlCheckUtilsTest {
             "strategy" to "\${{fromJSON(asd)}}"
         ))
         MatrixContextUtils.schemaCheck(yamlstr)
+    }
+
+    @Test
+    fun checkYaml7() {
+        val yamlstr = MatrixPipelineInfo(
+            include = """
+                - a: s
+                  b: 2
+                - a: 2
+                  b: 4
+        """,
+            exclude = null,
+            strategy = null
+        )
+        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
+        Assert.assertTrue(result.include == null)
+        Assert.assertTrue(result.exclude == null)
+        Assert.assertTrue(result.strategy == null)
+    }
+
+    @Test
+    fun checkYaml8() {
+        val yamlstr = MatrixPipelineInfo(
+            include = """
+                ${'$'}{{fromJSON(xxx)}}
+        """,
+            exclude = null,
+            strategy = null
+        )
+        val result = MatrixYamlCheckUtils.checkYaml(yamlstr)
+        Assert.assertTrue(result.include == null)
+        Assert.assertTrue(result.exclude == null)
+        Assert.assertTrue(result.strategy == null)
     }
 }

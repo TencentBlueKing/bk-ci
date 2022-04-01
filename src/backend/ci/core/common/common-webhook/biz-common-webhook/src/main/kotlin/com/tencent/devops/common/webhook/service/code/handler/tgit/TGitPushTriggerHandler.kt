@@ -28,10 +28,32 @@
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
+import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -41,19 +63,14 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
-class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
+class TGitPushTriggerHandler(
+    private val gitScmService: GitScmService
+) : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TGitPushTriggerHandler::class.java)
@@ -88,7 +105,11 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
     }
 
     override fun getMessage(event: GitPushEvent): String {
-        return event.commits?.get(0)?.message ?: ""
+        return if (event.commits.isNullOrEmpty()) {
+            ""
+        } else {
+            event.commits!![0].message
+        }
     }
 
     override fun preMatch(event: GitPushEvent): ScmWebhookMatcher.MatchResult {
@@ -120,11 +141,22 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
                 triggerOnMessage = event.commits?.get(0)?.message ?: ""
             )
             val commits = event.commits
-            val eventPaths = mutableSetOf<String>()
-            commits?.forEach { commit ->
-                eventPaths.addAll(commit.added ?: listOf())
-                eventPaths.addAll(commit.removed ?: listOf())
-                eventPaths.addAll(commit.modified ?: listOf())
+            // 如果是强制提交,文件列表应该只获取强制提交变更的文件，而不是所有的
+            val eventPaths = if (event.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+                gitScmService.getChangeFileList(
+                    projectId = projectId,
+                    repo = repository,
+                    from = event.after,
+                    to = event.before
+                )
+            } else {
+                val eventPaths = mutableSetOf<String>()
+                commits?.forEach { commit ->
+                    eventPaths.addAll(commit.added ?: listOf())
+                    eventPaths.addAll(commit.removed ?: listOf())
+                    eventPaths.addAll(commit.modified ?: listOf())
+                }
+                eventPaths
             }
             val commitMessageFilter = CommitMessageFilter(
                 includeCommitMsg,
@@ -159,6 +191,23 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = event.operation_kind ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
         startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits ?: emptyList()))
+
+        // 兼容stream变量
+        startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url
+        startParams[PIPELINE_GIT_REF] = event.ref
+        startParams[CI_BRANCH] = getBranchName(event)
+        startParams[PIPELINE_GIT_EVENT] = if (event.isDeleteBranch()) {
+            DELETE_EVENT
+        } else {
+            GitPushEvent.classType
+        }
+        startParams[PIPELINE_GIT_COMMIT_AUTHOR] =
+            event.commits?.firstOrNull { it.id == event.after }?.author?.name ?: ""
+        startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
+        startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
+        startParams[PIPELINE_GIT_ACTION] =
+            if (event.isCreateBranch()) TGitPushActionType.NEW_BRANCH.value else TGitPushActionType.PUSH_FILE.value
+        startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
         return startParams
     }
 }

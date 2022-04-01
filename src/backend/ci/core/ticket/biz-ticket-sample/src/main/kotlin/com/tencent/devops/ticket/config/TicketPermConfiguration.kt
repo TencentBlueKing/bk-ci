@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CredentialDao
@@ -40,6 +41,8 @@ import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.MockCertPermissionService
 import com.tencent.devops.ticket.service.MockCredentialPermissionService
+import com.tencent.devops.ticket.service.StreamCertPermissionServiceImpl
+import com.tencent.devops.ticket.service.StreamCredentialPermissionServiceImpl
 import com.tencent.devops.ticket.service.V3CertPermissionService
 import com.tencent.devops.ticket.service.V3CredentialPermissionService
 import org.jooq.DSLContext
@@ -122,7 +125,7 @@ class TicketPermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun mockCertPermissionService(
+    fun githubStreamCertPermissionService(
         dslContext: DSLContext,
         certDao: CertDao,
         authResourceApi: AuthResourceApi,
@@ -150,5 +153,61 @@ class TicketPermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         ticketAuthServiceCode = ticketAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamCertPermissionService(
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ): CertPermissionService = StreamCertPermissionServiceImpl(
+        dslContext = dslContext,
+        certDao = certDao,
+        client = client,
+        tokenService = tokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
+    fun githubStreamCredentialPermissionService(
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ): CredentialPermissionService = StreamCredentialPermissionServiceImpl(
+        dslContext = dslContext,
+        credentialDao = credentialDao,
+        client = client,
+        tokenService = tokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamCertPermissionService(
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ): CertPermissionService = StreamCertPermissionServiceImpl(
+        dslContext = dslContext,
+        certDao = certDao,
+        client = client,
+        tokenService = tokenService
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitlab")
+    fun gitlabStreamCredentialPermissionService(
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
+    ): CredentialPermissionService = StreamCredentialPermissionServiceImpl(
+        dslContext = dslContext,
+        credentialDao = credentialDao,
+        client = client,
+        tokenService = tokenService
     )
 }

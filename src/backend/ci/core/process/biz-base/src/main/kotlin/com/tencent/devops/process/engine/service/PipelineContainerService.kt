@@ -52,11 +52,12 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
-import java.time.LocalDateTime
+import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -84,9 +85,20 @@ class PipelineContainerService @Autowired constructor(
         private const val ELEMENT_NAME_MAX_LENGTH = 128
     }
 
-    fun getContainer(buildId: String, stageId: String?, containerId: String): PipelineBuildContainer? {
+    fun getContainer(
+        projectId: String,
+        buildId: String,
+        stageId: String?,
+        containerId: String
+    ): PipelineBuildContainer? {
         // #4518 防止出错暂时保留两个字段的兼容查询
-        val result = pipelineBuildContainerDao.getByContainerId(dslContext, buildId, stageId, containerId)
+        val result = pipelineBuildContainerDao.getByContainerId(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId
+        )
         if (result != null) {
             return pipelineBuildContainerDao.convert(result)
         }
@@ -94,6 +106,7 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun listContainers(
+        projectId: String,
         buildId: String,
         stageId: String? = null,
         containsMatrix: Boolean? = true,
@@ -101,6 +114,7 @@ class PipelineContainerService @Autowired constructor(
     ): List<PipelineBuildContainer> {
         val list = pipelineBuildContainerDao.listByBuildId(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             containsMatrix = containsMatrix,
@@ -135,8 +149,12 @@ class PipelineContainerService @Autowired constructor(
         return result
     }
 
-    fun listByBuildId(buildId: String, stageId: String? = null): Collection<TPipelineBuildContainerRecord> {
-        return pipelineBuildContainerDao.listByBuildId(dslContext, buildId, stageId)
+    fun listByBuildId(
+        projectId: String,
+        buildId: String,
+        stageId: String? = null
+    ): Collection<TPipelineBuildContainerRecord> {
+        return pipelineBuildContainerDao.listByBuildId(dslContext, projectId, buildId, stageId)
     }
 
     fun batchSave(transactionContext: DSLContext?, containerList: Collection<PipelineBuildContainer>) {
@@ -148,6 +166,7 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun updateContainerStatus(
+        projectId: String,
         buildId: String,
         stageId: String,
         containerId: String,
@@ -155,10 +174,10 @@ class PipelineContainerService @Autowired constructor(
         endTime: LocalDateTime? = null,
         buildStatus: BuildStatus
     ) {
-        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|" +
-            "containerSeqId=$containerId|stageId=$stageId")
+        logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|containerSeqId=$containerId|s($stageId)")
         pipelineBuildContainerDao.updateStatus(
             dslContext = dslContext,
+            projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,
@@ -177,8 +196,7 @@ class PipelineContainerService @Autowired constructor(
         modelContainer: Container?,
         controlOption: PipelineBuildContainerControlOption
     ) {
-        logger.info("[$buildId]|updateMatrixGroupStatus|controlOption=$controlOption|" +
-            "matrixGroupId=$matrixGroupId|stageId=$stageId")
+        logger.info("[$buildId]|updateMatrixGroupStatus|option=$controlOption|matrixGroupId=$matrixGroupId|s($stageId)")
         pipelineBuildContainerDao.updateControlOption(
             dslContext = dslContext,
             projectId = projectId,
@@ -188,6 +206,7 @@ class PipelineContainerService @Autowired constructor(
             controlOption = controlOption
         )
         containerBuildDetailService.updateMatrixGroupContainer(
+            projectId = projectId,
             buildId = buildId,
             stageId = stageId,
             matrixGroupId = matrixGroupId,
@@ -237,8 +256,7 @@ class PipelineContainerService @Autowired constructor(
             buildId = buildId,
             matrixGroupId = matrixGroupId
         )
-        logger.info("[$buildId]|cleanContainersInMatrixGroup|deleteTaskCount=$taskCount|" +
-            "deleteContainerCount=$containerCount")
+        logger.info("[$buildId]|cleanContainersInMatrixGroup|deleteT=$taskCount|deleteC=$containerCount")
     }
 
     fun prepareMatrixBuildContainer(
@@ -481,14 +499,18 @@ class PipelineContainerService @Autowired constructor(
                         jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
-                        mutexGroup = container.mutexGroup,
+                        mutexGroup = container.mutexGroup?.also { s ->
+                            s.linkTip = "${pipelineId}_Pipeline[${startParamMap[PIPELINE_NAME]}]Job[${container.name}]"
+                        },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
                     is VMBuildContainer -> PipelineBuildContainerControlOption(
                         jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
-                        mutexGroup = container.mutexGroup,
+                        mutexGroup = container.mutexGroup?.also { s ->
+                            s.linkTip = "${pipelineId}_Pipeline[${startParamMap[PIPELINE_NAME]}]Job[${container.name}]"
+                        },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
                     else -> null

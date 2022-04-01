@@ -18,14 +18,13 @@
                     >
                         <atom-card v-for="atom in curTabList"
                             :key="atom.atomCode"
-                            :disabled="atom.disabled"
                             :atom="atom"
                             :container="container"
                             :element-index="elementIndex"
                             :atom-code="atomCode"
                             :active-atom-code="activeAtomCode"
                             @close="close"
-                            @click.native="activeAtom(atom.atomCode)"
+                            @click="activeAtom(atom.atomCode)"
                             :class="{
                                 selected: atom.atomCode === atomCode,
                                 [getAtomClass(atom.atomCode)]: true
@@ -56,7 +55,7 @@
                         :atom-code="atomCode"
                         :active-atom-code="activeAtomCode"
                         @close="close"
-                        @click.native="activeAtom(atom.atomCode)"
+                        @click="activeAtom(atom.atomCode)"
                         :class="{
                             selected: atom.atomCode === atomCode
                         }"
@@ -72,7 +71,7 @@
                         :atom-code="atomCode"
                         :active-atom-code="activeAtomCode"
                         @close="close"
-                        @click.native="activeAtom(atom.atomCode)"
+                        @click="activeAtom(atom.atomCode)"
                         :class="{
                             selected: atom.atomCode === atomCode
                         }"

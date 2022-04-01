@@ -22,7 +22,7 @@ var (
 func InitStorage() (err error) {
 	defaultManager = api.GetAPIResource().Manager
 	api.RegisterV2Action(api.Action{
-		Verb: "GET", Path: "/health", Params: nil, Handler: api.MasterRequired(Health),
+		Verb: "GET", Path: "/health", Params: nil, Handler: api.NoLimit(Health),
 	})
 	api.RegisterV2Action(api.Action{
 		Verb: "POST", Path: "/build/apply", Params: nil, Handler: api.MasterRequired(ApplyResource),

@@ -47,7 +47,7 @@ buildscript {
         commonsHttpclientVersion = "3.1"
         ciVersion = "1.5.8-RELEASE"
         jsonVersion = "20180130"
-        log4jVersion = "2.17.0"
+        log4jVersion = "2.17.1"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")

@@ -20,9 +20,10 @@ import (
 
 // define const vars
 const (
-	FlagLog            = "log"
-	FlagLogDir         = "log_dir"
-	FlagActionJSONFile = "actions_json_file"
+	FlagLog             = "log"
+	FlagLogDir          = "log_dir"
+	FlagActionJSONFile  = "actions_json_file"
+	FlagMostDependFirst = "most_depend_first"
 )
 
 // Run main entrance
@@ -57,6 +58,10 @@ func GetApp(ct ClientType) *commandCli.App {
 		commandCli.StringFlag{
 			Name:  "actions_json_file",
 			Usage: "json file to describe ue4 actions to execute",
+		},
+		commandCli.BoolFlag{
+			Name:  "most_depend_first",
+			Usage: "firstly execute actions which depend mostly",
 		},
 	}
 

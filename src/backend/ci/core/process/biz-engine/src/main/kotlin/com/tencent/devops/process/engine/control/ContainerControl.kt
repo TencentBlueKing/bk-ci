@@ -51,6 +51,7 @@ import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
@@ -64,6 +65,7 @@ import org.springframework.stereotype.Service
 @Service
 class ContainerControl @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
@@ -92,7 +94,15 @@ class ContainerControl @Autowired constructor(
                 containerIdLock.lock()
                 watcher.start("execute")
                 watcher.start("getContainer")
+                val projectId = event.projectId
+                // #5951 在已结束或不存在的stage下，不再受理，抛弃消息
+                val stage = pipelineStageService.getStage(projectId, buildId, stageId)
+                if (stage == null || stage.status.isFinish()) {
+                    LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad stage with status(${stage?.status})")
+                    return
+                }
                 val container = pipelineContainerService.getContainer(
+                    projectId = projectId,
                     buildId = buildId,
                     stageId = stageId,
                     containerId = containerId
@@ -119,7 +129,7 @@ class ContainerControl @Autowired constructor(
     private fun PipelineBuildContainer.execute(watcher: Watcher, event: PipelineBuildContainerEvent) {
 
         watcher.start("init_context")
-        val variables = buildVariableService.getAllVariable(buildId)
+        val variables = buildVariableService.getAllVariable(projectId, buildId)
         val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
 
         // 当build的状态是结束的时候，直接返回
@@ -130,7 +140,8 @@ class ContainerControl @Autowired constructor(
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                mutexGroup = controlOption?.mutexGroup
+                mutexGroup = controlOption?.mutexGroup,
+                executeCount = executeCount
             )
             return
         }
@@ -140,8 +151,8 @@ class ContainerControl @Autowired constructor(
         }
 
         // 已按任务序号递增排序，如未排序要注意
-        val containerTasks = pipelineTaskService.listContainerBuildTasks(buildId, containerId)
-        val executeCount = buildVariableService.getBuildExecuteCount(buildId)
+        val containerTasks = pipelineTaskService.listContainerBuildTasks(projectId, buildId, containerId)
+        val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态

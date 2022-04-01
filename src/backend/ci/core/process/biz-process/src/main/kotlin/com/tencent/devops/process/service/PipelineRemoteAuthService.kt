@@ -61,7 +61,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         val redisLock = RedisLock(redisOperation, "process_pipeline_remote_token_lock_key_$pipelineId", 10)
         try {
             redisLock.lock()
-            val record = pipelineRemoteAuthDao.getByPipelineId(dslContext, pipelineId)
+            val record = pipelineRemoteAuthDao.getByPipelineId(dslContext, projectId, pipelineId)
             return if (record == null) {
                 val auth = UUIDUtil.generate()
                 pipelineRemoteAuthDao.addAuth(dslContext, pipelineId, auth, projectId, userId)
@@ -87,7 +87,7 @@ class PipelineRemoteAuthService @Autowired constructor(
             logger.warn("The pipeline of auth $auth is not exist")
             throw OperationException("没有找到对应的流水线")
         }
-        var userId = pipelineReportService.getPipelineInfo(pipeline.pipelineId)?.lastModifyUser
+        var userId = pipelineReportService.getPipelineInfo(pipeline.projectId, pipeline.pipelineId)?.lastModifyUser
 
         if (userId.isNullOrBlank()) {
             logger.info("Fail to get the userId of the pipeline, use ${pipeline.createUser}")

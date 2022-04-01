@@ -135,7 +135,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1500,
+                pageSize: 2000,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword
@@ -189,10 +189,21 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch }, { projectId, pipelineId }) => {
+    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`)
-            dispatch('setPipeline', response.data)
+            const [pipelineRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
+            ])
+            const pipeline = pipelineRes.data
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(pipeline.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+            dispatch('setPipeline', pipeline)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -200,6 +211,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)

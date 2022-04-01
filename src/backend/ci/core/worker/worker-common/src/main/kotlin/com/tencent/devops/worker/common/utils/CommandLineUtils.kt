@@ -58,6 +58,7 @@ object CommandLineUtils {
         prefix: String = "",
         executeErrorMessage: String? = null,
         buildId: String? = null,
+        jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null
     ): String {
@@ -98,7 +99,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, stepId)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     appendGateToFile(tmpLine, executor.workingDirectory, ScriptEnvUtils.getQualityGatewayEnvFile())
                     LoggerService.addNormalLine(tmpLine)
                 } else {
@@ -119,7 +120,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, stepId)
+                    appendResultToFile(executor.workingDirectory, contextLogFile, tmpLine, jobId, stepId)
                     LoggerService.addErrorLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -155,13 +156,19 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String?,
         tmpLine: String,
+        jobId: String?,
         stepId: String?
     ) {
+        // 全局变量直接原key返回
         if (resultLogFile == null) {
             return
         }
         appendVariableToFile(tmpLine, workspace, resultLogFile)
-        appendOutputToFile(tmpLine, workspace, resultLogFile, stepId)
+        // 上下文返回给全局时追加jobs前缀
+        if (jobId.isNullOrBlank() || stepId.isNullOrBlank()) {
+            return
+        }
+        appendOutputToFile(tmpLine, workspace, resultLogFile, jobId, stepId)
     }
 
     private fun appendVariableToFile(
@@ -186,14 +193,15 @@ object CommandLineUtils {
         tmpLine: String,
         workspace: File?,
         resultLogFile: String,
-        stepId: String?
+        jobId: String,
+        stepId: String
     ) {
         val pattenOutput = "::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
             val value = tmpLine.removePrefix(prefixOutput)
             val keyValue = value.split("::")
-            val keyPrefix = stepId?.let { "steps.$stepId.outputs." }
+            val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
                     "$keyPrefix${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"

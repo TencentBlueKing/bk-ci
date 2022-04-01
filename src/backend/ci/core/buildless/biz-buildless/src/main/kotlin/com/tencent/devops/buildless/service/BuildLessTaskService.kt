@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.AsyncResult
 import org.springframework.stereotype.Service
+import org.springframework.web.context.request.async.DeferredResult
 import java.util.concurrent.Future
 
 /**
@@ -81,6 +82,43 @@ class BuildLessTaskService(
             }
 
             return AsyncResult(null)
+        }
+    }
+
+    fun claimBuildLessTaskDeferred(
+        containerId: String,
+        deferredResult: DeferredResult<BuildLessTask?>
+    ) {
+        synchronized(stringPool.intern(containerId)) {
+            var loopCount = 0
+            while (loopCount < 100) {
+                // 校验当前容器状态是否正常
+                val buildLessPoolInfo = containerPoolExecutor.getContainerStatus(containerId)
+                if (buildLessPoolInfo != null && buildLessPoolInfo.status == ContainerStatus.BUSY) {
+                    deferredResult.setResult(buildLessPoolInfo.buildLessTask)
+                    return
+                }
+
+                val buildLessTask = redisUtils.popBuildLessReadyTask()
+                if (buildLessTask != null) {
+                    logger.info("****> container: $containerId claim buildLessTask: $buildLessTask")
+                    dispatchClient.updateContainerId(
+                        buildLessTask = buildLessTask,
+                        containerId = containerId
+                    )
+
+                    logger.info("****> claim task buildLessPoolKey hset $containerId ${ContainerStatus.BUSY.name}.")
+                    redisUtils.setBuildLessPoolContainer(containerId, ContainerStatus.BUSY, buildLessTask)
+
+                    deferredResult.setResult(buildLessTask)
+                    return
+                }
+
+                loopCount++
+                Thread.sleep(200)
+            }
+
+            deferredResult.setResult(null)
         }
     }
 

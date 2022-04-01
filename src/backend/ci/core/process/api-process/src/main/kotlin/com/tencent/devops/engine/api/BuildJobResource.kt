@@ -61,6 +61,9 @@ interface BuildJobResource {
     @PUT
     @Path("/started")
     fun jobStarted(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -79,6 +82,9 @@ interface BuildJobResource {
     @GET
     @Path("/claim")
     fun claimTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -94,6 +100,9 @@ interface BuildJobResource {
     @POST
     @Path("/complete")
     fun completeTask(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -111,6 +120,9 @@ interface BuildJobResource {
     @POST
     @Path("/end")
     fun jobEnd(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -170,7 +182,10 @@ interface BuildJobResource {
         vmSeqId: String,
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @ApiParam(value = "执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int? = null
     ): Result<HeartBeatInfo>
 
     @ApiOperation("job异常上报并停止构建") // #5046 增加启动时异常上报，并停止构建，如果网络通的话

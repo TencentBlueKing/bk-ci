@@ -49,5 +49,11 @@ interface DispatchTypeParser {
     /**
      * VMBuildContainer需要根据[customInfo]和上下文[context]计算调度类型
      */
-    fun parseInfo(customInfo: DispatchInfo, context: Map<String, String>): SampleDispatchInfo?
+    fun parseInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        customInfo: DispatchInfo,
+        context: Map<String, String>
+    ): SampleDispatchInfo?
 }

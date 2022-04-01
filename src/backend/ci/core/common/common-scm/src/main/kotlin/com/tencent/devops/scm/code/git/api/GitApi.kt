@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.exception.GitApiException
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
@@ -72,6 +73,7 @@ open class GitApi {
         private const val OPERATION_MR_CHANGE = "查询合并请求的代码变更"
         private const val OPERATION_MR_INFO = "查询项目合并请求"
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
+        private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
     }
 
     fun listBranches(
@@ -281,7 +283,7 @@ open class GitApi {
             }
         }
         if (!secret.isNullOrBlank()) {
-            params["token"] = secret!!
+            params["token"] = secret
         }
         params[CodeGitWebhookEvent.ENABLE_SSL_VERIFICATION.value] = false.toString()
         return JsonUtil.getObjectMapper().writeValueAsString(params)
@@ -346,11 +348,11 @@ open class GitApi {
     }
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
-        OkhttpUtils.doHttp(request).use { response ->
+        return OkhttpUtils.doRedirectHttp(request) { response ->
             if (!response.isSuccessful) {
                 handleApiException(operation, response.code(), response.body()?.string() ?: "")
             }
-            return JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
+            JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
         }
     }
 
@@ -439,6 +441,21 @@ open class GitApi {
         return callMethod(OPERATION_MR_INFO, request, GitMrReviewInfo::class.java)
     }
 
+    fun getChangeFileList(
+        host: String,
+        gitProjectId: String,
+        token: String,
+        from: String,
+        to: String,
+        straight: Boolean? = false,
+        page: Int,
+        pageSize: Int
+    ): List<ChangeFileInfo> {
+        val url = "projects/${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
+        val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
+        val request = get(host, token, url, queryParam)
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_CHANGE_FILE_LIST, request))
+    }
 //    private val OPERATION_BRANCH = "拉分支"
 //    private val OPERATION_TAG = "拉标签"
 //    private val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"

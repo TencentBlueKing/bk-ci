@@ -113,16 +113,18 @@ type ControllerConfig struct {
 	Port    int
 
 	// controller参数
-	Timeout      time.Duration
-	LogVerbosity int
-	LogDir       string
-	TotalSlots   int
-	PreSlots     int
-	ExeSlots     int
-	PostSlots    int
-	RemainTime   int
-	Sudo         bool
-	NoWait       bool
+	Timeout            time.Duration
+	LogVerbosity       int
+	LogDir             string
+	TotalSlots         int
+	PreSlots           int
+	ExeSlots           int
+	PostSlots          int
+	RemainTime         int
+	Sudo               bool
+	NoWait             bool
+	UseLocalCPUPercent int
+	DisableFileLock    bool
 }
 
 // Target return the server ip and port of controller
@@ -270,10 +272,12 @@ const (
 	ControllerBinary = "bk-dist-controller"
 )
 
+// define errors when launch controller
 var (
 	ErrControllerNotAvailable   = fmt.Errorf("controller not available")
 	ErrControllerNeedBeLaunched = fmt.Errorf("controller need be launched")
 	ErrControllerNotReady       = fmt.Errorf("controller not ready")
+	ErrControllerKilled         = fmt.Errorf("controller killed")
 )
 
 // WorkStatusDetail describe the work status

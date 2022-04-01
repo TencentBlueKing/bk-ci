@@ -2,7 +2,7 @@
     <li
         :key="atom.id"
         :class="atomCls"
-        @click.stop="handleAtomClick(index)"
+        @click.stop="handleAtomClick"
     >
         <template
             v-if="isQualityGateAtom"
@@ -37,13 +37,12 @@
             />
             
             <img
-                v-else-if="atom.atomIcon"
-                :src="atom.atomIcon"
+                v-else-if="atom.logoUrl"
+                :src="atom.logoUrl"
                 :class="logoCls"
             />
             <Logo v-else
                 :class="logoCls"
-                :is-atom-icon="true"
                 :name="svgAtomIcon"
                 size="18"
             />
@@ -111,7 +110,7 @@
                     {{ t('SKIP') }}
                 </span>
                 <bk-popover
-                    v-else-if="!isSkip && !isWaiting && atom.elapsed"
+                    v-if="!isSkip && !isWaiting && atom.elapsed && !atom.canSkip && !atom.canRetry"
                     placement="top"
                     :disabled="!atom.elapsed"
                 >
@@ -152,6 +151,7 @@
     import {
         eventBus,
         hashID,
+        isTriggerContainer,
         convertMStoString
     } from './util'
     import { localeMixins } from './locale'
@@ -221,7 +221,7 @@
             canSkipElement: Boolean,
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {
@@ -306,7 +306,7 @@
                 return {
                     readonly: !this.editable,
                     'bk-pipeline-atom': true,
-                    'trigger-atom': this.stageIndex === 0,
+                    'trigger-atom': isTriggerContainer(this.container),
                     [STATUS_MAP.REVIEWING]: this.atom.isReviewing,
                     [this.qualityStatus]: this.isQualityGateAtom && !!this.qualityStatus,
                     [this.atomStatusCls]: !!this.atomStatusCls,
@@ -326,7 +326,7 @@
                 if (!atomCode) {
                     return 'placeholder'
                 }
-                return document.getElementById(atomCode) ? atomCode : 'order'
+                return atomCode
             },
             hasReviewPerm () {
                 return this.atom.computedReviewers.includes(this.userName)
@@ -376,12 +376,13 @@
                 })
             },
             copyAtom () {
-                const { id, ...restAttr } = this.atom
+                const { id, stepId, ...restAttr } = this.atom
                 this.$emit(COPY_EVENT_NAME, {
                     elementIndex: this.atomIndex,
                     element: JSON.parse(JSON.stringify({
                         ...restAttr,
-                        id: `e-${hashID(32)}`
+                        stepId: hashID(3),
+                        id: `e-${hashID()}`
                     }))
                 })
             },
@@ -461,8 +462,8 @@
 </script>
 
 <style lang="scss">
-@import "./index";
-.bk-pipeline-atom {
+    @import "./conf";
+    .bk-pipeline .bk-pipeline-atom {
     cursor: pointer;
     position: relative;
     display: flex;
@@ -609,6 +610,7 @@
     .atom-operate-area {
         margin: 0 8px 0 2px;
         color: $primaryColor;
+        font-size: 12px;
     }
 
     .atom-reviewing-tips {

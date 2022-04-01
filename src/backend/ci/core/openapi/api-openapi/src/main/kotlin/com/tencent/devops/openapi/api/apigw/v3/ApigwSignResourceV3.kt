@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwSignResourceV3 {
 
-    @ApiOperation("获取签名接口token")
+    @ApiOperation("获取签名任务历史", tags = ["v3_app_sign_history_list", "v3_user_sign_history_list"])
     @GET
     @Path("/history")
     fun getHistorySign(
@@ -67,12 +67,12 @@ interface ApigwSignResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("起始时间", required = true)
+        @ApiParam("起始时间戳（毫秒）", required = false)
         @QueryParam("startTime")
-        startTime: Long,
-        @ApiParam("截止时间", required = true)
+        startTime: Long?,
+        @ApiParam("截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
-        endTime: Long,
+        endTime: Long?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
@@ -81,7 +81,7 @@ interface ApigwSignResourceV3 {
         pageSize: Int?
     ): Result<Page<SignHistory>>
 
-    @ApiOperation("获取签名接口token")
+    @ApiOperation("获取签名接口token", tags = ["v3_app_sign_token", "v3_user_sign_token"])
     @GET
     @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/getSignToken")
     fun getSignToken(
@@ -105,7 +105,7 @@ interface ApigwSignResourceV3 {
         buildId: String
     ): Result<IpaUploadInfo>
 
-    @ApiOperation("查看签名任务状态信息")
+    @ApiOperation("查看签名任务状态信息", tags = ["v3_app_sign_status", "v3_user_sign_status"])
     @GET
     @Path("/{resignId}/status")
     fun getStatus(
@@ -123,7 +123,7 @@ interface ApigwSignResourceV3 {
         resignId: String
     ): Result<String>
 
-    @ApiOperation("签名任务详情")
+    @ApiOperation("签名任务详情", tags = ["v3_app_sign_detail", "v3_user_sign_detail"])
     @GET
     @Path("/{resignId}/detail")
     fun getDetail(
@@ -141,7 +141,7 @@ interface ApigwSignResourceV3 {
         resignId: String
     ): Result<SignDetail>
 
-    @ApiOperation("获取签后IPA文件下载路径")
+    @ApiOperation("获取签后IPA文件下载路径", tags = ["v3_app_sign_downloadUrl", "v3_user_sign_downloadUrl"])
     @GET
     @Path("/{resignId}/downloadUrl/")
     fun getDownloadUrl(

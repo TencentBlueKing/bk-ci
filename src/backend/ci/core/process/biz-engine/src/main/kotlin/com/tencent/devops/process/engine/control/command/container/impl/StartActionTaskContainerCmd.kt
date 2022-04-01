@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
@@ -46,10 +47,10 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
-import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -157,8 +158,18 @@ class StartActionTaskContainerCmd(
      * 如遇到[BuildStatus.isReadyToRun]待执行任务，则检查是否可以执行，
      *  包括「是否条件跳过」「当前是否构建机启动失败」「Post Action检查」等等，通过方能成为待执行的任务
      */
-    @Suppress("ComplexMethod", "NestedBlockDepth")
+    @Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod")
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
+        val contextMap: Map<String, String> by lazy {
+            pipelineContextService.buildContext(
+                projectId = containerContext.container.projectId,
+                buildId = containerContext.container.buildId,
+                stageId = containerContext.container.stageId,
+                containerId = containerContext.container.containerId,
+                taskId = null,
+                variables = containerContext.variables
+            )
+        }
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续
         var needTerminate = isTerminate(containerContext) // 是否终止类型
@@ -195,7 +206,8 @@ class StartActionTaskContainerCmd(
                     index = index,
                     hasFailedTaskInSuccessContainer = continueWhenFailure,
                     containerContext = containerContext,
-                    needTerminate = needTerminate
+                    needTerminate = needTerminate,
+                    contextMap = contextMap
                 )
             } else if (t.status == BuildStatus.SKIP && t.endTime == null) { // 手动跳过功能，暂时没有好的解决办法，可改进
                 buildLogPrinter.addRedLine(
@@ -213,9 +225,11 @@ class StartActionTaskContainerCmd(
             }
         }
 
-        LOG.info("ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
-            "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
-            "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate")
+        LOG.info(
+            "ENGINE|${containerContext.event.buildId}|${containerContext.event.source}|CONTAINER_FIND_TASK|" +
+                "${containerContext.event.stageId}|j(${containerContext.event.containerId})|" +
+                "${toDoTask?.taskId}|break=$breakFlag|needTerminate=$needTerminate"
+        )
 
         if (!needTerminate && breakFlag) {
             // #3400 暂停场景下，Job超时引起的终止，以及FastKill 等对于要求终止的，未必有后续执行，需要结束而不是中断
@@ -260,19 +274,16 @@ class StartActionTaskContainerCmd(
         index: Int,
         hasFailedTaskInSuccessContainer: Boolean,
         containerContext: ContainerContext,
-        needTerminate: Boolean
+        needTerminate: Boolean,
+        contextMap: Map<String, String>
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val contextMap = pipelineContextService.buildContext(
-            buildId = buildId,
-            containerId = containerId,
-            variables = containerContext.variables
-        )
         if (containerContext.event.actionType == ActionType.END) {
             containerContext.buildStatus = BuildStatus.CANCELED
         }
         val containerTasks = containerContext.containerTasks
+        val message = StringBuilder()
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(
@@ -285,7 +296,7 @@ class StartActionTaskContainerCmd(
                 LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|${toDoTask?.taskId}")
             }
             needTerminate -> { // 构建环境启动失败或者是启动成功但后续Agent挂掉导致心跳超时
-                LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
+                LOG.warn("ENGINE|$buildId|$source|TERM_NOT_EXEC|$stageId|j($containerId)|$taskId|$status")
                 val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为取消
                     BuildStatus.CANCELED
                 } else {
@@ -293,10 +304,7 @@ class StartActionTaskContainerCmd(
                 }
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
-                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
-                    jobId = containerHashId
-                )
+                message.append("终止构建，跳过(UnExecute Task)[$taskName] cause: ${containerContext.latestSummary}!")
             }
             ControlUtils.checkTaskSkip(
                 buildId = buildId,
@@ -304,27 +312,33 @@ class StartActionTaskContainerCmd(
                 containerFinalStatus = containerContext.buildStatus,
                 variables = containerContext.variables.plus(contextMap),
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
-                buildLogPrinter = buildLogPrinter
+                message = message
             ) -> { // 检查条件跳过
                 val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus)
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                val updateTaskStatusInfo = taskBuildDetailService.taskEnd(
+                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
+                    projectId = projectId,
                     buildId = buildId,
                     taskId = taskId,
                     buildStatus = taskStatus
                 )
-                refreshTaskStatus(updateTaskStatusInfo, index, containerTasks)
-                // 打印构建日志
-                buildLogPrinter.addLine(executeCount = containerContext.executeCount, tag = taskId,
-                    buildId = buildId, message = "Skip Plugin [$taskName]: ${containerContext.latestSummary}",
-                    jobId = containerHashId
-                )
+                refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
+                message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             else -> {
                 toDoTask = this // 当前排队的任务晋级为下一个执行任务
             }
+        }
+
+        if (message.isNotBlank()) {
+            // #6366 增加日志明确展示跳过的原因
+            // 打印构建日志--DEBUG级别日志，平时隐藏
+            buildLogPrinter.addDebugLine(
+                executeCount = containerContext.executeCount, tag = taskId, buildId = buildId, jobId = containerHashId,
+                message = "$message"
+            )
         }
 
         if (toDoTask != null) {
@@ -376,8 +390,10 @@ class StartActionTaskContainerCmd(
 
         if (pipelineBuildTask?.status?.isFinish() == false) { // 如果未执行过，则取该任务作为后续执行任务
             toDoTask = pipelineBuildTask
-            LOG.info("ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
-                "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}")
+            LOG.info(
+                "ENGINE|${currentTask.buildId}|findNextTaskAfterPause|PAUSE|${currentTask.stageId}|" +
+                    "j(${currentTask.containerId})|${currentTask.taskId}|NextTask=${toDoTask.taskId}"
+            )
             val endTask = containerContext.containerTasks
                 .filter { it.taskId.startsWith(VMUtils.getEndLabel()) } // 获取end插件
                 .getOrNull(0)
@@ -409,15 +425,6 @@ class StartActionTaskContainerCmd(
                 containerContext.event.actionType = ActionType.REFRESH
             }
         }
-//        else if (toDoTask == null) { // #5244 仅当没有后续关机任务，预置状态为暂停
-//            containerContext.buildStatus = BuildStatus.PAUSE
-//        } else { // #5244 若领到stop任务, container状态需要维持在running状态,否则流水线会直接结束
-//            containerContext.buildStatus = BuildStatus.RUNNING
-//            if (containerContext.event.actionType.isEnd()) {
-//                // #5244 若领到stop任务,碰到ActionType == end,需要变为刷新, 供TaskControl可以跑stopVm
-//                containerContext.event.actionType = ActionType.REFRESH
-//            }
-//        }
 
         return toDoTask
     }
@@ -429,12 +436,21 @@ class StartActionTaskContainerCmd(
         isContainerFailed: Boolean,
         hasFailedTaskInSuccessContainer: Boolean
     ): PipelineBuildTask? {
-        // 终止情况下，[post action]只适用于stopVM-关机任务
-        if (isTerminate && currentTask.taskId != VMUtils.genStopVMTaskId(currentTask.taskSeq)) {
-            return null
-        }
         // 添加Post action标识打印
         addPostTipLog(currentTask)
+        // 终止情况下，[post action]只适用于stopVM-关机任务, 其他的设置为未执行,并打印日志
+        // #5806 解决构建worker进程异常结束退出时，可能PostAction还会被startVM-xxxx任务捡起来，因此需要对其状态进行设置
+        if (isTerminate && currentTask.taskId != VMUtils.genStopVMTaskId(currentTask.taskSeq)) {
+            pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, BuildStatus.UNEXEC)
+            buildLogPrinter.addYellowLine(
+                buildId = currentTask.buildId,
+                message = "[SystemLog]收到终止指令(UnExecute PostAction Task) [${currentTask.taskName}]",
+                tag = currentTask.taskId,
+                jobId = currentTask.containerHashId,
+                executeCount = currentTask.executeCount ?: 1
+            )
+            return null
+        }
 
         // 查询父任务及是否允许当前的post action 任务执行标识
         val (parentTask, postExecuteFlag) = TaskUtils.getPostTaskAndExecuteFlag(
@@ -453,13 +469,17 @@ class StartActionTaskContainerCmd(
             else "Post action execution conditions (expectation: $postCondition), not executed"
             // 更新排队中的post任务的构建状态
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
-            taskBuildDetailService.updateTaskStatus(
-                buildId = currentTask.buildId,
-                taskId = currentTask.taskId,
-                taskStatus = taskStatus,
-                buildStatus = BuildStatus.RUNNING,
-                operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
-            )
+            // 系统控制类插件不涉及到Detail编排状态修改
+            if (EnvControlTaskType.parse(currentTask.taskType) == null) {
+                taskBuildDetailService.updateTaskStatus(
+                    projectId = currentTask.projectId,
+                    buildId = currentTask.buildId,
+                    taskId = currentTask.taskId,
+                    taskStatus = taskStatus,
+                    buildStatus = BuildStatus.RUNNING,
+                    operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
+                )
+            }
             buildLogPrinter.addLine(
                 buildId = currentTask.buildId,
                 message = message,

@@ -30,8 +30,10 @@ package com.tencent.devops.common.webhook.service.code.param
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_INCLUDE_USERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_SVN_WEBHOOK_RELATIVE_PATH
+import com.tencent.devops.common.webhook.pojo.code.MATCH_PATHS
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
@@ -58,6 +60,7 @@ class SvnWebHookStartParam : ScmWebhookStartParams<CodeSVNWebHookTriggerElement>
         startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS] = element.excludePaths ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_INCLUDE_USERS] = element.includeUsers?.joinToString(",") ?: ""
         startParams[BK_REPO_SVN_WEBHOOK_EXCLUDE_USERS] = element.excludeUsers?.joinToString(",") ?: ""
+        startParams[BK_REPO_SVN_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
         startParams.putAll(matcher.retrieveParams())
         return startParams
     }

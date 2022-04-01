@@ -16,14 +16,18 @@
                 type: [String, Number],
                 default: 18
             },
-            isAtomIcon: Boolean,
             title: {
                 type: String
             }
         },
         computed: {
             svgHref () {
-                return this.isAtomIcon ? `/svg-sprites/pipeline_sprite.svg#${this.name}` : `#bk-pipeine-${this.name}`
+                const defaultId = '#bk-pipeline-order'
+                if (typeof this.name !== 'string') {
+                    return defaultId
+                }
+                const id = `bk-pipeline-${this.name.toLowerCase()}`
+                return document.getElementById(id) ? `#${id}` : defaultId
             }
             
         }

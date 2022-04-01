@@ -167,7 +167,12 @@ export default {
             let manualTriggerCount = 0
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
-            
+
+
+            if (pipelineSetting && !pipelineSetting.pipelineName) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
+            }
+           
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -186,6 +191,16 @@ export default {
 
             const allContainers = getters.getAllContainers(stages)
 
+            // 当前所有插件element
+            const elementsMap = allContainers.reduce(function (prev, cur) {
+                prev.push(...cur.elements)
+                return prev
+            }, [])
+
+            if (elementsMap.some(element => !element.atomCode)) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+            }
+
             if (allContainers.some(container => container.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
@@ -197,11 +212,15 @@ export default {
             const allElements = getters.getAllElements(stages)
 
             const elementValid = allElements.some(ele => {
-                ele['@type'] === 'linuxPaasCodeCCScript' && codeccCount++
-                ele.atomCode === 'CodeccCheckAtom' && codeccCount++
-                ele['@type'] === 'manualTrigger' && manualTriggerCount++
-                ele['@type'] === 'timerTrigger' && timerTriggerCount++
-                ele['@type'] === 'remoteTrigger' && remoteTriggerCount++
+                const atomCode = ele.atomCode || ele['@type']
+                if (!atomCode) {
+                    throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+                }
+                atomCode === 'linuxPaasCodeCCScript' && codeccCount++
+                atomCode === 'CodeccCheckAtom' && codeccCount++
+                atomCode === 'manualTrigger' && manualTriggerCount++
+                atomCode === 'timerTrigger' && timerTriggerCount++
+                atomCode === 'remoteTrigger' && remoteTriggerCount++
 
                 return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })

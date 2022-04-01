@@ -83,7 +83,7 @@ class BuildLessClient @Autowired constructor(
         with(event) {
             val secretKey = ApiUtil.randomSecretKey()
 
-            val id = pipelineDockerBuildDao.startBuild(
+            val id = pipelineDockerBuildDao.saveBuildHistory(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,

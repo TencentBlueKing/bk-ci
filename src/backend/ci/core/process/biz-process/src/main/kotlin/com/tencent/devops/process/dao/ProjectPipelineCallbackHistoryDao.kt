@@ -96,11 +96,12 @@ class ProjectPipelineCallbackHistoryDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ): TProjectPipelineCallbackHistoryRecord? {
         with(TProjectPipelineCallbackHistory.T_PROJECT_PIPELINE_CALLBACK_HISTORY) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }

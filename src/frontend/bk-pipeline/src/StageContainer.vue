@@ -4,18 +4,19 @@
         :class="{
             'devops-stage-container': true,
             'first-stage-container': stageIndex === 0,
+            'last-stage-container': stageIndex === stageLength - 1,
             'readonly': !editable || containerDisabled,
             'editing': editable
         }"
     >
         <Logo v-if="stageIndex !== 0" size="12" name="right-shape" class="container-connect-triangle" />
         <template v-if="containerIndex === 0">
-            <cruveLine v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="58" :height="60"></cruveLine>
-            <cruve-line class="first-connect-line connect-line right" style="margin-left: 2px" :width="58" :direction="false" :height="60"></cruve-line>
+            <cruve-line v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="58" :height="60" />
+            <cruve-line v-if="showLastCruveLine" class="first-connect-line connect-line right" style="margin-left: 2px" :width="58" :direction="false" :height="60" />
         </template>
         <template v-if="containerIndex !== containerLength - 1">
-            <cruve-line :straight="true" :width="58" :height="cruveHeight" class="connect-line left" />
-            <cruve-line :straight="true" :width="58" :height="cruveHeight" :direction="false" class="connect-line right" />
+            <cruve-line v-if="stageIndex !== 0" :straight="true" :width="58" :height="cruveHeight" class="connect-line left" />
+            <cruve-line v-if="showLastCruveLine" :straight="true" :width="58" :height="cruveHeight" :direction="false" class="connect-line right" />
         </template>
         <Component
             :is="jobComponentName"
@@ -63,6 +64,14 @@
                 type: Boolean,
                 default: false
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
+            isFinallyStage: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -85,7 +94,7 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {
@@ -99,6 +108,9 @@
             },
             isMatrix () {
                 return this.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
+            },
+            showLastCruveLine () {
+                return (this.stageIndex !== this.stageLength - 1 || this.editable) && !this.isFinallyStage
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job
@@ -147,23 +159,26 @@
 
 <style lang="scss">
     @use "sass:math";
-    @import "./index";
+    @import "./conf";
     .devops-stage-container {
         text-align: left;
         margin: 16px 20px 0 20px;
         position: relative;
 
         // 实心圆点
-        &:after {
+        &:not(.last-stage-container):after {
             content: '';
             width: $smalldotR;
             height: $smalldotR;
             position: absolute;
             right: math.div(-$smalldotR, 2);
             top: math.div($itemHeight, 2) - (math.div($smalldotR, 2) - 1);
-            background: $primaryColor;
+            &:not(.readonly) {
+                background: $primaryColor;
+            }
             border-radius: 50%;
         }
+        
         // 三角箭头
         .container-connect-triangle {
             position: absolute;

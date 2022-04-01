@@ -54,9 +54,9 @@ export const getOuterHeight = (selector, parent) => {
     return parseFloat(marginTop) + parseFloat(height) + parseFloat(marginBottom)
 }
 
-export const hashID = () => {
+export const hashID = (len = 32) => {
     const uuid = uuidv4().replace(/-/g, '')
-    return uuid
+    return uuid.substring(0, len)
 }
 
 export const randomString = (len) => {

@@ -14,6 +14,7 @@
             :user-name="userName"
             :cancel-user-id="cancelUserId"
             :handle-change="updatePipeline"
+            :is-latest-build="isLatestBuild"
             :stage-length="computedStage.length"
             :containers="stage.containers"
             :match-rules="matchRules"
@@ -42,7 +43,8 @@
         ATOM_ADD_EVENT_NAME,
         ADD_STAGE,
         STAGE_CHECK,
-        STAGE_RETRY
+        STAGE_RETRY,
+        DEBUG_CONTAINER
     } from './constants'
 
     const customEvents = [
@@ -55,7 +57,8 @@
         ATOM_ADD_EVENT_NAME,
         ADD_STAGE,
         STAGE_CHECK,
-        STAGE_RETRY
+        STAGE_RETRY,
+        DEBUG_CONTAINER
     ]
     
     export default {
@@ -77,6 +80,10 @@
                 type: Boolean,
                 default: false
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
             canSkipElement: {
                 type: Boolean,
                 default: false
@@ -95,7 +102,7 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         data () {
@@ -208,14 +215,17 @@
 </script>
 
 <style lang="scss">
-    @import './index';
     .bk-pipeline {
         display: flex;
         padding-right: 120px;
         width: fit-content;
         position: relative;
         align-items: flex-start;
-        padding-top: $StagepaddingTop;
+        ul,
+        li {
+            margin: 0;
+            padding: 0;
+        }
     }
 
     .list-item {

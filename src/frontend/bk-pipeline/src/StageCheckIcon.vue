@@ -96,6 +96,7 @@
                             return 'quality-check'
                         case this.stageStatus === STATUS_MAP.SKIP:
                         case !this.stageStatus && this.isExecDetail:
+                        case stageCheck.status === undefined && this.isExecDetail && !this.stageStatus:
                             return stageCheck.manualTrigger || this.hasRuleId ? 'review-pause' : 'review-auto-gray'
                         case !!this.stageStatus:
                             return 'review-auto-pass'
@@ -121,7 +122,7 @@
 
 <style lang="scss">
   @use "sass:math";
-    @import './index';
+    @import './conf';
 
   .stage-check-icon {
     border-radius: 100px;

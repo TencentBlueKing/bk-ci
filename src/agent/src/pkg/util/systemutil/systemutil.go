@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,16 +30,16 @@ package systemutil
 import (
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/astaxie/beego/logs"
+	"github.com/gofrs/flock"
 	"net"
 	"net/url"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/astaxie/beego/logs"
-	"github.com/gofrs/flock"
 )
 
 var GExecutableDir string
@@ -88,6 +89,18 @@ func GetWorkDir() string {
 
 func GetUpgradeDir() string {
 	return GetWorkDir() + "/tmp"
+}
+
+// GetBuildTmpDir 创建构建提供的临时目录
+func GetBuildTmpDir() (string, error) {
+	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
+	err := os.MkdirAll(tmpDir, os.ModePerm)
+	return tmpDir, err
+}
+
+// GetWorkerErrorMsgFile 获取worker执行错误信息的日志文件
+func GetWorkerErrorMsgFile(buildId string) string {
+	return fmt.Sprintf("%s/%s_build_msg.log", fmt.Sprintf("%s/build_tmp", GetWorkDir()), buildId)
 }
 
 func GetLogDir() string {

@@ -68,6 +68,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
+import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -98,8 +99,8 @@ class PipelineBuildService(
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
     }
 
-    fun getModel(pipelineId: String, version: Int? = null) =
-        pipelineRepositoryService.getModel(pipelineId, version) ?: throw ErrorCodeException(
+    fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
+        pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
             defaultMessage = "流水线编排不存在"
@@ -109,6 +110,7 @@ class PipelineBuildService(
         userId: String,
         startType: StartType = StartType.PIPELINE,
         projectId: String,
+        parentProjectId: String,
         parentPipelineId: String,
         parentBuildId: String,
         parentTaskId: String,
@@ -128,11 +130,13 @@ class PipelineBuildService(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val model = getModel(pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
+            val model =
+                getModel(projectId = projectId, pipelineId = pipelineId, version = readyToBuildPipelineInfo.version)
 
             val triggerContainer = model.stages[0].containers[0] as TriggerContainer
             val inputBuildParam = mutableListOf<BuildParameters>()
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PIPELINE_USER_ID, value = triggerUser ?: userId))
+            inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_PROJECT_ID, value = parentProjectId))
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_PIPELINE_ID, value = parentPipelineId))
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_ID, value = parentBuildId))
             inputBuildParam.add(BuildParameters(key = PIPELINE_START_PARENT_BUILD_TASK_ID, value = parentTaskId))
@@ -163,6 +167,7 @@ class PipelineBuildService(
             )
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
+                projectId = parentProjectId,
                 buildId = parentBuildId,
                 taskId = parentTaskId,
                 subBuildId = subBuildId,
@@ -192,7 +197,7 @@ class PipelineBuildService(
         val pipelineId = readyToBuildPipelineInfo.pipelineId
         var acquire = false
         val projectId = readyToBuildPipelineInfo.projectId
-        val pipelineSetting = pipelineRepositoryService.getSetting(pipelineId)
+        val pipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val bucketSize = pipelineSetting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:$pipelineId"
         try {
@@ -306,7 +311,7 @@ class PipelineBuildService(
         handlePostFlag: Boolean = true
     ) {
         val templateId = if (model.instanceFromTemplate == true) {
-            templateService.getTemplateIdByPipeline(pipelineId)
+            templateService.getTemplateIdByPipeline(projectId, pipelineId)
         } else {
             null
         }

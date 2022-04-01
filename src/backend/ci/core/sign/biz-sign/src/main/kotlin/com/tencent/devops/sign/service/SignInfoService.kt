@@ -88,7 +88,12 @@ class SignInfoService(
         return SQLPage(
             count,
             records.map {
-                signHistoryDao.convert(it)
+                val history = signHistoryDao.convert(it)
+                val content = signIpaInfoDao.getSignInfoRecord(dslContext, history.resignId)
+                content?.let { info ->
+                    history.ipaSignInfoStr = String(Base64Util.decode(info.requestContent))
+                }
+                history
             }
         )
     }

@@ -513,9 +513,11 @@ func (o *tcpManager) dealBufferedCmd(cmd *buffedcmd) error {
 
 		blog.Infof("ready to close tcp connection after deal this cmd")
 		_ = cmd.client.Close()
-		// remove basedir here
-		_ = os.RemoveAll(cmd.basedir)
-		blog.Infof("deal cmd out, removed base dir:%s", cmd.basedir)
+		if o.conf.CleanTempFiles {
+			// remove basedir here
+			_ = os.RemoveAll(cmd.basedir)
+			blog.Infof("deal cmd out, removed base dir:%s", cmd.basedir)
+		}
 
 		debug.FreeOSMemory() // free memory anyway
 	}()

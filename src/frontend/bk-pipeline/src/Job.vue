@@ -28,7 +28,7 @@
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="disabled"></bk-checkbox>
             </span>
             <Logo
-                v-if="editable && container.matrixGroupFlag"
+                v-if="(editable || isPreview) && container.matrixGroupFlag"
                 name="matrix"
                 size="16"
                 class="matrix-flag-icon"
@@ -42,6 +42,7 @@
                 :class="matrixFoldLogoCls"
             >
             </Logo>
+            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
         </h3>
         <atom-list
             v-if="showAtomList || !showMatrixFold"
@@ -79,7 +80,10 @@
         DELETE_EVENT_NAME,
         COPY_EVENT_NAME,
         CLICK_EVENT_NAME,
-        STATUS_MAP
+        DEBUG_CONTAINER,
+        STATUS_MAP,
+        DOCKER_BUILD_TYPE,
+        PUBLIC_DEVCLOUD_BUILD_TYPE
     } from './constants'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
@@ -113,6 +117,10 @@
                 type: Boolean,
                 default: true
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
             isExecDetail: {
                 type: Boolean,
                 default: false
@@ -139,15 +147,14 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             },
             stageLength: Number,
             updateCruveConnectHeight: Function
         },
         emits: [
             DELETE_EVENT_NAME,
-            COPY_EVENT_NAME,
-            CLICK_EVENT_NAME
+            COPY_EVENT_NAME
         ],
         data () {
             return {
@@ -214,6 +221,18 @@
             },
             showMatrixFold () {
                 return this.isExecDetail && this.containerGroupIndex !== undefined
+            },
+            buildResourceType () {
+                try {
+                    return this.container.dispatchType.buildType
+                } catch (e) {
+                    return DOCKER_BUILD_TYPE
+                }
+            },
+            showDebugBtn () {
+                const { isLatestBuild, isExecDetail, container: { baseOS, status } } = this
+                const isDockerOrDevcloud = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE].includes(this.buildResourceType)
+                return baseOS === 'LINUX' && isDockerOrDevcloud && isExecDetail && isLatestBuild && status === STATUS_MAP.FAILED
             }
         },
         watch: {
@@ -249,19 +268,21 @@
                 eventBus.$emit(CLICK_EVENT_NAME, {
                     stageIndex: this.stageIndex,
                     containerIndex: this.containerIndex,
-                    containerGroupIndex: this.containerGroupIndex
+                    containerGroupIndex: this.containerGroupIndex,
+                    container: this.container
                 })
             },
+            
             handleCopyContainer () {
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
                     const container = {
                         ...copyContainer,
-                        containerId: `c-${hashID(32)}`,
+                        containerId: `c-${hashID()}`,
                         jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map(element => ({
                             ...element,
-                            id: `e-${hashID(32)}`
+                            id: `e-${hashID()}`
                         })),
                         jobControlOption: copyContainer.jobControlOption
                             ? {
@@ -282,6 +303,16 @@
                         message: this.t('copyJobFail')
                     })
                 }
+            },
+            debugDocker () {
+                eventBus.$emit(DEBUG_CONTAINER, {
+                    stageIndex: this.stageIndex,
+                    containerIndex: this.containerIndex,
+                    containerGroupIndex: this.containerGroupIndex,
+                    container: this.container,
+                    isDocker: this.buildResourceType === DOCKER_BUILD_TYPE,
+                    isPubDevcloud: this.buildResourceType === PUBLIC_DEVCLOUD_BUILD_TYPE
+                })
             }
         }
     }
@@ -289,7 +320,7 @@
 
 <style lang="scss">
     @use "sass:math";
-    @import "./index";
+    @import "./conf";
     .devops-stage-container {
         .container-title {
             display: flex;
@@ -359,6 +390,11 @@
                     left: 7px;
                     top: 4px;
                 }
+            }
+            .debug-btn {
+                position: absolute;
+                height: 100%;
+                right: 0;
             }
 
             &:hover {

@@ -88,6 +88,19 @@ class EnvShareProjectDao {
         }
     }
 
+    fun list(
+        dslContext: DSLContext,
+        envName: String,
+        mainProjectId: String
+    ): List<TEnvShareProjectRecord> {
+        with(TEnvShareProject.T_ENV_SHARE_PROJECT) {
+            return dslContext.selectFrom(this)
+                .where(ENV_NAME.eq(envName))
+                .and(MAIN_PROJECT_ID.eq(mainProjectId))
+                .fetch()
+        }
+    }
+
     @SuppressWarnings("LongParameterList")
     fun batchSave(
         dslContext: DSLContext,

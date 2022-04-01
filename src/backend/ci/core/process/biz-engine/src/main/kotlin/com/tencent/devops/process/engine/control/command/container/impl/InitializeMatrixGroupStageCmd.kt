@@ -58,11 +58,11 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
-import kotlin.math.min
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 /**
  * Stage计算构建矩阵事件命令处理
@@ -147,6 +147,7 @@ class InitializeMatrixGroupStageCmd(
         val event = commandContext.event
         val variables = commandContext.variables
         val modelStage = containerBuildDetailService.getBuildModel(
+            projectId = parentContainer.projectId,
             buildId = parentContainer.buildId
         )?.getStage(parentContainer.stageId) ?: throw DependNotFoundException(
             "stage(${parentContainer.stageId}) cannot be found in model"
@@ -207,7 +208,13 @@ class InitializeMatrixGroupStageCmd(
                     // 对自定义构建环境的做特殊解析
                     // customDispatchType决定customBaseOS是否计算，请勿填充默认值
                     val parsedInfo = matrixOption.customDispatchInfo?.let { self ->
-                        dispatchTypeParser.parseInfo(self, allContext)
+                        dispatchTypeParser.parseInfo(
+                            projectId = parentContainer.projectId,
+                            pipelineId = parentContainer.pipelineId,
+                            buildId = parentContainer.buildId,
+                            customInfo = self,
+                            context = allContext
+                        )
                     }
                     val customDispatchType = parsedInfo?.dispatchType
                     val customBaseOS = parsedInfo?.baseOS
@@ -358,7 +365,7 @@ class InitializeMatrixGroupStageCmd(
         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
             "|${event.stageId}|${modelContainer.id}|containerHashId=" +
             "${modelContainer.containerHashId}|context=$context|" +
-            "groupContainers=$groupContainers|buildTaskList=$buildTaskList")
+            "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}")
 
         // 在表中增加所有分裂的矩阵和插件
         dslContext.transaction { configuration ->
@@ -438,6 +445,7 @@ class InitializeMatrixGroupStageCmd(
             MatrixStatusElement(
                 name = e.name,
                 id = e.id,
+                stepId = e.stepId,
                 executeCount = executeCount,
                 originClassType = e.getClassType(),
                 interceptTask = interceptTask,

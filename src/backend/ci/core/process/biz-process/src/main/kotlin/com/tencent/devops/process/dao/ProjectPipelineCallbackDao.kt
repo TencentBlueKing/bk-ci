@@ -125,21 +125,23 @@ class ProjectPipelineCallbackDao {
 
     fun get(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ): TProjectPipelineCallbackRecord? {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
-                .where(ID.eq(id))
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .fetchOne()
         }
     }
 
     fun deleteById(
         dslContext: DSLContext,
+        projectId: String,
         id: Long
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.deleteFrom(this).where(ID.eq(id)).execute()
+            dslContext.deleteFrom(this).where(ID.eq(id).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
 

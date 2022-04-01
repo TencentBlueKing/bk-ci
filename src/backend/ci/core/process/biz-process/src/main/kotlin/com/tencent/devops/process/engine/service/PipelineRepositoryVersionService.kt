@@ -42,16 +42,17 @@ class PipelineRepositoryVersionService constructor(
     private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
-    fun deletePipelineVer(pipelineId: String, version: Int) {
+    fun deletePipelineVer(projectId: String, pipelineId: String, version: Int) {
         dslContext.transaction { t ->
             val transactionContext = DSL.using(t)
-            pipelineResVersionDao.deleteByVer(transactionContext, pipelineId, version)
-            pipelineSettingVersionDao.deleteByVer(transactionContext, pipelineId, version)
+            pipelineResVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
+            pipelineSettingVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)
         }
     }
 
     fun listPipelineVersion(
         pipelineInfo: PipelineInfo?,
+        projectId: String,
         pipelineId: String,
         offset: Int,
         limit: Int
@@ -60,8 +61,14 @@ class PipelineRepositoryVersionService constructor(
             return Pair(0, emptyList())
         }
 
-        val count = pipelineResVersionDao.count(dslContext, pipelineId)
-        val result = pipelineResVersionDao.listPipelineVersion(dslContext, pipelineId, offset, limit)
+        val count = pipelineResVersionDao.count(dslContext, projectId, pipelineId)
+        val result = pipelineResVersionDao.listPipelineVersion(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            offset = offset,
+            limit = limit
+        )
         val list = mutableListOf<PipelineInfo>()
 
         result.forEach {

@@ -97,6 +97,7 @@ func (s *sdk) SetConfig(config *dcSDK.CommonControllerConfig) error {
 
 func (s *sdk) ensureServer() (int, error) {
 	launched := false
+	var launchedtime int64
 	timeout := time.After(serverEnsureTime)
 
 	for ; ; time.Sleep(100 * time.Millisecond) {
@@ -104,16 +105,13 @@ func (s *sdk) ensureServer() (int, error) {
 		case <-timeout:
 			return 0, fmt.Errorf("ensure server timeout")
 		default:
-			pid, err := s.checkServer()
+			pid, err := s.checkServer(launchedtime)
 
 			switch err {
 			case nil:
 				return pid, nil
 
 			case dcSDK.ErrControllerNotReady:
-				continue
-
-			case dcSDK.ErrControllerNeedBeLaunched:
 				if launched {
 					continue
 				}
@@ -123,6 +121,16 @@ func (s *sdk) ensureServer() (int, error) {
 					return 0, err
 				}
 				launched = true
+				launchedtime = time.Now().Unix()
+				continue
+
+			case dcSDK.ErrControllerKilled:
+				err = s.launchServer()
+				if err != nil {
+					return 0, err
+				}
+				launched = true
+				launchedtime = time.Now().Unix()
 				continue
 
 			default:
@@ -132,51 +140,43 @@ func (s *sdk) ensureServer() (int, error) {
 	}
 }
 
-func (s *sdk) checkServer() (int, error) {
-	blog.Infof("sdk: ready checkServer...")
+func (s *sdk) checkServer(launchedtime int64) (int, error) {
+	blog.Infof("sdk: check server...")
 
-	// 检测进程名, 若controller进程不存在, 直接启动
-	if !dcUtil.ProcessExist(controllerTarget(dcSDK.ControllerBinary)) {
-		blog.Infof("sdk: checkServer not exist")
-
-		if s.config.NoLocal {
-			return 0, fmt.Errorf("sdk: %s, local controller not speficied", s.config.Target())
+	// ProcessExistTimeoutAndKill(windows.EnumProcesses) maybe block, call it carefully
+	// kill launched process if not succeed after 30 seconds
+	if launchedtime > 0 {
+		nowsecs := time.Now().Unix()
+		if nowsecs-launchedtime > 30 {
+			blog.Infof("sdk: try kill existed server for unavailable after long time")
+			_ = dcUtil.ProcessExistTimeoutAndKill(controllerTarget(dcSDK.ControllerBinary), 1*time.Minute)
+			return 0, dcSDK.ErrControllerKilled
 		}
-
-		return 0, dcSDK.ErrControllerNeedBeLaunched
 	}
 
-	// 检测端口连通性, 若端口不通, 则等待下次检测; 若进程up time超过了1分钟, 端口还不通, 就主动杀掉进程(防止历史僵死进程存在)
+	// check tcp port
 	conn, err := net.DialTimeout("tcp", s.config.Target(), 1*time.Second)
 	if err != nil {
-		_ = dcUtil.ProcessExistTimeoutAndKill(controllerTarget(dcSDK.ControllerBinary), 1*time.Minute)
-
+		blog.Infof("sdk: check tcp port, error: %v", err)
 		return 0, dcSDK.ErrControllerNotReady
 	}
 	_ = conn.Close()
 
-	// 若端口通, 则可以继续检测接口连通性
-	tmp, ok, err := s.request("GET", availableURI, nil, false)
+	// check http api
+	tmp, _, err := s.request("GET", availableURI, nil, false)
 	if err != nil {
-		blog.Warnf("sdk: checkServer error: %v", err)
-
-		if !ok {
-			return 0, dcSDK.ErrControllerNotReady
-		}
-
-		// return 0, fmt.Errorf("check controller failed: %v", err)
-		_ = dcUtil.ProcessExistTimeoutAndKill(controllerTarget(dcSDK.ControllerBinary), 1*time.Minute)
+		blog.Infof("sdk: check http api, error: %v", err)
 		return 0, dcSDK.ErrControllerNotReady
 	}
 
+	// decode http response
 	var resp AvailableResp
 	if err = codec.DecJSON(tmp, &resp); err != nil {
-		blog.Errorf("sdk: checkServer error: %v", err)
-
+		blog.Warnf("sdk: decode http response, error: %v", err)
 		return 0, dcSDK.ErrControllerNotReady
 	}
 
-	blog.Infof("sdk: controller service available now")
+	blog.Infof("sdk: service available now, process pid is %d", resp.Pid)
 	return resp.Pid, nil
 }
 
@@ -185,12 +185,12 @@ func (s *sdk) launchServer() error {
 
 	ctrlPath, err := dcUtil.CheckExecutable(dcSDK.ControllerBinary)
 	if err != nil {
-		blog.Errorf("sdk: launchServer error: %v", err)
+		blog.Infof("sdk: not found exe file with default path, info: %v", err)
 
 		target := controllerTarget(dcSDK.ControllerBinary)
 		ctrlPath, err = dcUtil.CheckFileWithCallerPath(target)
 		if err != nil {
-			blog.Errorf("sdk: launchServer error: %v", err)
+			blog.Errorf("sdk: not found exe file with error: %v", err)
 			return err
 		}
 	}
@@ -198,7 +198,7 @@ func (s *sdk) launchServer() error {
 	if err == nil {
 		ctrlPath = absPath
 	}
-	blog.Infof("sdk: got controller full path: %s", ctrlPath)
+	blog.Infof("sdk: got exe file full path: %s", ctrlPath)
 
 	sudo := ""
 	if s.config.Sudo && runtime.GOOS != "windows" {
@@ -210,13 +210,14 @@ func (s *sdk) launchServer() error {
 		nowait = "--no_wait"
 	}
 
-	// remaintime := 120
-	// if s.config.RemainTime > 0 {
-	// 	remaintime = s.config.RemainTime
-	// }
+	disablefilelock := ""
+	if s.config.DisableFileLock {
+		disablefilelock = "--disable_file_lock"
+	}
 
 	return dcSyscall.RunServer(fmt.Sprintf("%s%s -a=%s -p=%d --log-dir=%s --v=%d --local_slots=%d "+
-		"--local_pre_slots=%d --local_exe_slots=%d --local_post_slots=%d --async_flush %s --remain_time=%d",
+		"--local_pre_slots=%d --local_exe_slots=%d --local_post_slots=%d --async_flush %s --remain_time=%d "+
+		"--use_local_cpu_percent=%d %s",
 		sudo,
 		ctrlPath,
 		s.config.IP,
@@ -229,6 +230,8 @@ func (s *sdk) launchServer() error {
 		s.config.PostSlots,
 		nowait,
 		s.config.RemainTime,
+		s.config.UseLocalCPUPercent,
+		disablefilelock,
 	))
 }
 

@@ -29,6 +29,8 @@ package com.tencent.devops.dispatch.service.dispatcher.agent
 
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -59,7 +61,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("ALL")
+@Suppress("NestedBlockDepth")
 class ThirdPartyAgentDispatcher @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
@@ -149,7 +151,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = "获取第三方构建机信息失败 - ${agentResult.message}"
+                errorMsg = "获取第三方构建机信息失败(System Error) - ${agentResult.message}"
             )
             return
         }
@@ -160,8 +162,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = "第三方构建机状态异常，请在环境管理中检查第三方构建机状态 - ${dispatchType.displayName}" +
-                        "| status: (${agentResult.agentStatus?.name})"
+                errorMsg = "第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline) " +
+                    "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
         }
@@ -172,7 +174,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = "获取第三方构建机信息失败 - $dispatchType agent为空"
+                errorMsg = "获取第三方构建机信息失败(System Error) - $dispatchType agent is null"
             )
             return
         }
@@ -210,74 +212,26 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
     }
 
-    private fun buildByAgentId(
-        event: PipelineAgentStartupEvent,
-        agent: ThirdPartyAgent,
-        workspace: String?
-    ): Boolean {
-        val agentId = agent.agentId
-        val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agentId)
+    private fun buildByAgentId(event: PipelineAgentStartupEvent, agent: ThirdPartyAgent, workspace: String?): Boolean {
+        val redisLock = ThirdPartyAgentLock(redisOperation, event.projectId, agent.agentId)
         try {
-
             if (redisLock.tryLock()) {
-                if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agentId)) {
-                    logger.warn("The agent($agentId) of project(${event.projectId}) is upgrading")
-                    buildLogPrinter.addLine(
-                        buildId = event.buildId,
-                        message = "The agent($agentId) of project(${event.projectId}) is upgrading",
-                        tag = VMUtils.genStartVMTaskId(event.containerId),
-                        jobId = event.containerHashId,
-                        executeCount = event.executeCount ?: 1
-                    )
-
+                if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agent.agentId)) {
+                    logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
+                    log(event, "构建机升级中，重新调度(Agent is upgrading) - ${agent.hostname}/${agent.ip}")
                     return false
                 }
 
-                thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
-                    agent.secretKey,
-                    ThirdPartyRedisBuild(
-                        projectId = event.projectId,
-                        pipelineId = event.pipelineId,
-                        buildId = event.buildId,
-                        agentId = agentId,
-                        vmSeqId = event.vmSeqId,
-                        vmName = agent.hostname,
-                        channelCode = event.channelCode,
-                        atoms = event.atoms
-                    )
-                )
-                thirdPartyAgentBuildService.queueBuild(
-                    projectId = event.projectId,
-                    agentId = agentId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId,
-                    thirdPartyAgentWorkspace = workspace ?: "",
-                    pipelineName = event.pipelineName,
-                    buildNo = event.buildNo,
-                    taskName = event.taskName
-                )
-                saveAgentInfoToBuildDetail(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId,
-                    agent = agent
-                )
-                logger.info(
-                    "${event.buildId}|START_AGENT_BY_ID|" +
-                        "j(${event.vmSeqId})|agent=$agentId"
-                )
-                buildLogPrinter.addLine(
-                    buildId = event.buildId,
-                    message = "Start up the agent ${agent.hostname}/${agent.ip} [${event.buildId}]",
-                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                    jobId = event.containerHashId,
-                    executeCount = event.executeCount ?: 1
-                )
+                // #5806 入库失败就不再写Redis
+                inQueue(agent = agent, event = event, agentId = agent.agentId, workspace = workspace)
+                // 保存构建详情
+                saveAgentInfoToBuildDetail(event = event, agent = agent)
+
+                logger.info("${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|agent=${agent.agentId}")
+                log(event, "调度构建机(Scheduling selected Agent): ${agent.hostname}/${agent.ip}")
                 return true
             } else {
-                logger.warn("Fail to lock third party agent($agentId)")
+                log(event, "构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
         } finally {
@@ -285,35 +239,82 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
         }
     }
 
-    private fun saveAgentInfoToBuildDetail(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        agent: ThirdPartyAgent
-
-    ) {
-        client.get(ServiceBuildResource::class).saveBuildVmInfo(
-            projectId,
-            pipelineId,
-            buildId,
-            vmSeqId,
-            VmInfo(agent.ip, agent.ip)
+    private fun log(event: PipelineAgentStartupEvent, logMessage: String) {
+        buildLogPrinter.addLine(
+            buildId = event.buildId,
+            message = logMessage,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
         )
     }
 
-    private fun buildByEnvId(
-        event: PipelineAgentStartupEvent,
-        dispatchType: ThirdPartyAgentEnvDispatchType
-    ) {
+    private fun inQueue(agent: ThirdPartyAgent, event: PipelineAgentStartupEvent, agentId: String, workspace: String?) {
+
+        thirdPartyAgentBuildService.queueBuild(
+            projectId = event.projectId,
+            agentId = agentId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            thirdPartyAgentWorkspace = workspace ?: "",
+            pipelineName = event.pipelineName,
+            buildNo = event.buildNo,
+            taskName = event.taskName
+        )
+
+        thirdPartyAgentBuildRedisUtils.setThirdPartyBuild(
+            agent.secretKey,
+            ThirdPartyRedisBuild(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                agentId = agentId,
+                vmSeqId = event.vmSeqId,
+                vmName = agent.hostname,
+                channelCode = event.channelCode,
+                atoms = event.atoms
+            )
+        )
+    }
+
+    private fun saveAgentInfoToBuildDetail(event: PipelineAgentStartupEvent, agent: ThirdPartyAgent) {
+        client.get(ServiceBuildResource::class).saveBuildVmInfo(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            buildId = event.buildId,
+            vmSeqId = event.vmSeqId,
+            vmInfo = VmInfo(ip = agent.ip, name = agent.ip)
+        )
+    }
+
+    @Suppress("ComplexMethod", "LongMethod")
+    private fun buildByEnvId(event: PipelineAgentStartupEvent, dispatchType: ThirdPartyAgentEnvDispatchType) {
+
         val agentsResult = when (dispatchType.agentType) {
             AgentType.ID -> {
                 client.get(ServiceThirdPartyAgentResource::class)
                     .getAgentsByEnvId(event.projectId, dispatchType.envName)
             }
             AgentType.NAME -> {
-                client.get(ServiceThirdPartyAgentResource::class)
-                    .getAgentsByEnvName(event.projectId, dispatchType.envName)
+                try {
+                    client.get(ServiceThirdPartyAgentResource::class)
+                        .getAgentsByEnvName(event.projectId, dispatchType.envName)
+                } catch (e: Exception) {
+                    onFailBuild(
+                        client = client,
+                        buildLogPrinter = buildLogPrinter,
+                        event = event,
+                        errorType = ErrorCodeEnum.GET_VM_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.GET_VM_ERROR.errorCode,
+                        errorMsg = if (e is RemoteServiceException) {
+                            e.errorMessage
+                        } else {
+                            e.message ?: "${ErrorCodeEnum.GET_VM_ERROR.formatErrorMessage}(${dispatchType.envName})"
+                        }
+                    )
+                    Result(data = null)
+                }
             }
         }
 
@@ -326,172 +327,192 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机信息失败 - " +
-                        "${dispatchType.envName}: ${agentsResult.message}"
+                errorMessage = "获取第三方构建机信息失败(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
         }
 
         if (agentsResult.data == null) {
-            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=null agents")
+            logger.warn(
+                "${event.buildId}|START_AGENT_FAILED|j(${event.vmSeqId})|dispatchType=$dispatchType|err=null agents"
+            )
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机信息失败 - " +
-                        "${dispatchType.envName}: agent为空"
+                errorMessage = "获取第三方构建机信息失败(System Error) - ${dispatchType.envName}: agent is null"
             )
             return
         }
 
         if (agentsResult.data!!.isEmpty()) {
-            logger.warn("${event.buildId}|START_AGENT_FAILED|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|err=empty agents")
+            logger.warn(
+                "${event.buildId}|START_AGENT_FAILED|j(${event.vmSeqId})|dispatchType=$dispatchType|err=empty agents"
+            )
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
-                        "构建集群： ${dispatchType.envName}"
+                errorMessage = "构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
+                    "构建集群： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )
             return
         }
 
-        val redisLock =
-            ThirdPartyAgentEnvLock(redisOperation, event.projectId, dispatchType.envName)
-        redisLock.lock()
+        val redisLock = ThirdPartyAgentEnvLock(redisOperation, event.projectId, dispatchType.envName)
         try {
-            /**
-             * 1. 现获取当前正常的agent列表
-             * 2. 获取可用的agent列表
-             * 3. 优先调用可用的agent执行任务
-             * 4. 如果启动可用的agent失败再调用有任务的agent
-             */
-            val activeAgents = agentsResult.data!!.filter {
-                it.status == AgentStatus.IMPORT_OK &&
-                    (event.os == it.os || event.os == VMBaseOS.ALL.name)
-            }.toHashSet()
-            val agentMaps = activeAgents.map { it.agentId to it }.toMap()
+            val lock = redisLock.tryLock(timeout = 5000) // # 超时尝试锁定，防止环境过热锁定时间过长，影响其他环境构建
+            if (lock) {
+                /**
+                 * 1. 现获取当前正常的agent列表
+                 * 2. 获取可用的agent列表
+                 * 3. 优先调用可用的agent执行任务
+                 * 4. 如果启动可用的agent失败再调用有任务的agent
+                 */
+                val activeAgents = agentsResult.data!!.filter {
+                    it.status == AgentStatus.IMPORT_OK &&
+                        (event.os == it.os || event.os == VMBaseOS.ALL.name)
+                }.toHashSet()
+                val agentMaps = activeAgents.associateBy { it.agentId }
 
-            val preBuildAgents = HashSet<ThirdPartyAgent>()
-            thirdPartyAgentBuildService.getPreBuildAgents(
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
-                vmSeqId = event.vmSeqId
-            ).forEach {
-                val agent = agentMaps[it.agentId]
-                if (agent != null) {
-                    preBuildAgents.add(agent)
+                val preBuildAgents = HashSet<ThirdPartyAgent>()
+                thirdPartyAgentBuildService.getPreBuildAgents(
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    vmSeqId = event.vmSeqId
+                ).forEach {
+                    val agent = agentMaps[it.agentId]
+                    if (agent != null) {
+                        preBuildAgents.add(agent)
+                    }
                 }
-            }
 
-            val hasTryAgents = HashSet<String>()
-            val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
+                val hasTryAgents = HashSet<String>()
+                val runningBuildsMapper = HashMap<String/*AgentId*/, Int/*running builds*/>()
 
-            /**
-             * 1. 最高优先级的agent:
-             *     a. 最近构建机中使用过这个构建机
-             *     b. 当前没有任何构建机任务
-             * 2. 次高优先级的agent:
-             *     a. 最近构建机中使用过这个构建机
-             *     b. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
-             * 3. 第三优先级的agent:
-             *     a. 当前没有任何构建机任务
-             * 4. 第四优先级的agent:
-             *     a. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
-             * 5. 最低优先级：
-             *     a. 都没有满足以上条件的
-             *
-             */
+                /**
+                 * 1. 最高优先级的agent:
+                 *     a. 最近构建机中使用过这个构建机
+                 *     b. 当前没有任何构建机任务
+                 * 2. 次高优先级的agent:
+                 *     a. 最近构建机中使用过这个构建机
+                 *     b. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
+                 * 3. 第三优先级的agent:
+                 *     a. 当前没有任何构建机任务
+                 * 4. 第四优先级的agent:
+                 *     a. 当前有构建任务，但是构建任务数量没有达到当前构建机的最大并发数
+                 * 5. 最低优先级：
+                 *     a. 都没有满足以上条件的
+                 *
+                 */
 
-            /**
-             * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
-             */
-            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
-                    "开始查找最近构建使用过并且当前没有任何任务的空闲构建机...")
-            if (startEmptyAgents(
-                    event = event,
-                    dispatchType = dispatchType,
-                    agents = preBuildAgents,
-                    hasTryAgents = hasTryAgents,
-                    runningBuildsMapper = runningBuildsMapper
+                /**
+                 * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
+                 */
+                logDebug(
+                    buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
+                    "开始查找最近使用过并且当前没有任何任务的空闲构建机...(Searching Agent: Most recently used and idle)"
                 )
-            ) {
-                logger.info("${event.buildId}|START_AGENT|" +
-                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get preBuildAgents")
-                return
+                if (startEmptyAgents(
+                        event = event,
+                        dispatchType = dispatchType,
+                        agents = preBuildAgents,
+                        hasTryAgents = hasTryAgents,
+                        runningBuildsMapper = runningBuildsMapper
+                    )
+                ) {
+                    logger.info(
+                        "${event.buildId}|START_AGENT|" +
+                            "j(${event.vmSeqId})|dispatchType=$dispatchType|get preBuildAgents"
+                    )
+                    return
+                }
+
+                logger.info(
+                    "[${event.projectId}|${event.pipelineId}|" +
+                        "${event.buildId}|${event.vmSeqId}]" +
+                        " Start to check the available task agents of pre build agents"
+                )
+                logDebug(
+                    buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
+                    "查找最近使用过并且未达到最大构建数的构建机...(Searching Agent: Recently used and parallel available)"
+                )
+                /**
+                 * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
+                 */
+                if (startAvailableAgents(
+                        event = event,
+                        dispatchType = dispatchType,
+                        agents = preBuildAgents,
+                        hasTryAgents = hasTryAgents,
+                        runningBuildsMapper = runningBuildsMapper
+                    )
+                ) {
+                    logger.info(
+                        "${event.buildId}|START_AGENT|" +
+                            "j(${event.vmSeqId})|dispatchType=$dispatchType|get Available preBuildAgents"
+                    )
+                    return
+                }
+
+                logDebug(
+                    buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
+                    "开始查找没有任何任务的空闲构建机...(Searching Agent: Most idle)"
+                )
+                /**
+                 * 根据哪些agent没有任何任务
+                 */
+                if (startEmptyAgents(
+                        event = event,
+                        dispatchType = dispatchType,
+                        agents = activeAgents,
+                        hasTryAgents = hasTryAgents,
+                        runningBuildsMapper = runningBuildsMapper
+                    )
+                ) {
+                    logger.info(
+                        "${event.buildId}|START_AGENT|" +
+                            "j(${event.vmSeqId})|dispatchType=$dispatchType|get activeAgents"
+                    )
+                    return
+                }
+
+                logDebug(
+                    buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
+                    "开始查找当前构建任务还没到达最大并行数构建机...(Searching Agent: Parallel available)"
+                )
+                /**
+                 * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
+                 */
+                if (startAvailableAgents(
+                        event = event,
+                        dispatchType = dispatchType,
+                        agents = activeAgents,
+                        hasTryAgents = hasTryAgents,
+                        runningBuildsMapper = runningBuildsMapper
+                    )
+                ) {
+                    logger.info(
+                        "${event.buildId}|START_AGENT|" +
+                            "j(${event.vmSeqId})|dispatchType=$dispatchType|get Available activeAgents"
+                    )
+                    return
+                }
+
+                if (event.retryTime == 1) {
+                    log(buildLogPrinter, event, message = "没有可用Agent，等待Agent释放...(No Agent available, wait)")
+                }
+            } else {
+                log(buildLogPrinter, event, message = "构建环境并发保护，稍后重试...(Env busy, wait)")
             }
 
             logger.info(
-                "[${event.projectId}|${event.pipelineId}|" +
-                    "${event.buildId}|${event.vmSeqId}]" +
-                    " Start to check the available task agents of pre build agents"
+                "${event.buildId}|START_AGENT|j(${event.vmSeqId})|dispatchType=$dispatchType|Not Found, Retry!"
             )
-            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
-                    "开始查找最近构建使用过的并且当前构建任务没有达到最大构建数的空闲构建机...")
-            /**
-             * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
-             */
-            if (startAvailableAgents(
-                    event = event,
-                    dispatchType = dispatchType,
-                    agents = preBuildAgents,
-                    hasTryAgents = hasTryAgents,
-                    runningBuildsMapper = runningBuildsMapper
-                )
-            ) {
-                logger.info("${event.buildId}|START_AGENT|" +
-                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get Available preBuildAgents")
-                return
-            }
-
-            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
-                    "开始查找没有任何任务的空闲构建机...")
-            /**
-             * 根据哪些agent没有任何任务
-             */
-            if (startEmptyAgents(
-                    event = event,
-                    dispatchType = dispatchType,
-                    agents = activeAgents,
-                    hasTryAgents = hasTryAgents,
-                    runningBuildsMapper = runningBuildsMapper
-                )
-            ) {
-                logger.info("${event.buildId}|START_AGENT|" +
-                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get activeAgents")
-                return
-            }
-
-            logDebug(buildLogPrinter, event, "retry: ${event.retryTime} | " +
-                    "开始查找当前构建任务还没到达最大并行数构建机...")
-            /**
-             * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
-             */
-            if (startAvailableAgents(
-                    event = event,
-                    dispatchType = dispatchType,
-                    agents = activeAgents,
-                    hasTryAgents = hasTryAgents,
-                    runningBuildsMapper = runningBuildsMapper
-                )
-            ) {
-                logger.info("${event.buildId}|START_AGENT|" +
-                    "j(${event.vmSeqId})|dispatchType=$dispatchType|get Available activeAgents")
-                return
-            }
-
-            if (event.retryTime == 1) {
-                log(buildLogPrinter, event, "当前没有任何可用的agent，继续等待agent释放...")
-            }
-
-            logger.info("${event.buildId}|START_AGENT|" +
-                "j(${event.vmSeqId})|dispatchType=$dispatchType|Not Found, Retry!")
             retry(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
@@ -499,7 +520,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${event.buildId}|${event.vmSeqId} " +
-                        " 构建机繁忙，等待超时（queue-timeout-minutes=${event.queueTimeoutMinutes}）")
+                    " 构建环境无可分配构建机，等待超时（queue-timeout-minutes=${event.queueTimeoutMinutes}）"
+            )
         } finally {
             redisLock.unlock()
         }
@@ -530,7 +552,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             )
             return
         }
-        logDebug(buildLogPrinter, event, "retry: ${event.retryTime + 1} | 构建机繁忙，正在重试中")
+        logDebug(buildLogPrinter, event, "构建机繁忙，继续重试(Agent is busy) - retry: ${event.retryTime + 1}")
 
         event.retryTime += 1
         event.delayMills = 10000

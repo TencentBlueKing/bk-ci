@@ -32,7 +32,7 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-bkMonitorConfig:
+ServiceMonitor:
   enable: false
 
 bkLogConfig:
@@ -156,7 +156,7 @@ mariadb:
     ## MariaDB root password
     ## ref: https://github.com/bitnami/bitnami-docker-mariadb#setting-the-root-password-on-first-run
     ##
-    rootPassword: ''
+    rootPassword: ""
     ## MariaDB custom user and database
     ## ref: https://github.com/bitnami/bitnami-docker-mariadb/blob/master/README.md#creating-a-database-on-first-run
     ## ref: https://github.com/bitnami/bitnami-docker-mariadb/blob/master/README.md#creating-a-database-user-on-first-run
@@ -184,9 +184,9 @@ externalDatabase:
   ##
   # driver:
   # scheme:
-  usernmae: ''
-  password: ''
-  database: ''
+  usernmae: ""
+  password: ""
+  database: ""
 
 server:
   enabled: true
@@ -196,9 +196,9 @@ server:
 
   # image configuration
   image:
-    registry: mirrors.tencent.com/bkce
-    repository: bktbs/service/bktbs-server
-    tag: 1.0.5
+    registry: mirrors.tencent.com
+    repository: bkce/bktbs/service/bktbs-server
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -214,8 +214,8 @@ server:
 
   # bcs configuration
   bcs:
-    clusterID: ''
-    apiToken: ''
+    clusterID: ""
+    apiToken: ""
     apiAddress: https://127.0.0.1:8443
     cpuPerInstance: 8
     memPerInstance: 16384
@@ -269,9 +269,9 @@ gateway:
 
   # image configuration
   image:
-    registry: mirrors.tencent.com/bkce
-    repository: bktbs/service/bktbs-gateway
-    tag: 1.0.5
+    registry: mirrors.tencent.com
+    repository: bkce/bktbs/service/bktbs-gateway
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -317,9 +317,9 @@ dashboard:
 
   # image configuration
   image:
-    registry: mirrors.tencent.com/bkce
-    repository: bktbs/service/bktbs-dashboard
-    tag: 1.0.5
+    registry: mirrors.tencent.com
+    repository: bkce/bktbs/service/bktbs-dashboard
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -332,7 +332,7 @@ dashboard:
   service:
     type: ClusterIP
     port: 30114
-    nodePort: ''
+    nodePort: ""
 
   # k8s configuration
   replicaCount: 1
@@ -365,9 +365,9 @@ downloader:
 
   # image configuration
   image:
-    registry: mirrors.tencent.com/bkce
-    repository: bktbs/service/bktbs-downloader
-    tag: 1.0.5
+    registry: mirrors.tencent.com
+    repository: bkce/bktbs/service/bktbs-downloader
+    tag: 1.0.8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -375,7 +375,7 @@ downloader:
   service:
     type: ClusterIP
     port: 80
-    nodePort: ''
+    nodePort: ""
 
   # k8s configuration
   replicaCount: 1

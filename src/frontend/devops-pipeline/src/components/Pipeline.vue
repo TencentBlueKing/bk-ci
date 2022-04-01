@@ -287,7 +287,6 @@
                 return getStage(pipeline.stages, stageIndex)
             },
             handlePipelineChange (pipeline) {
-                console.log('handle pipeline change', pipeline)
                 this.setPipeline(pipeline)
                 this.setPipelineEditing(true)
             },
@@ -385,7 +384,7 @@
         }
         &:before {
             position: absolute;
-            top: 44px + $StagepaddingTop;
+            top: 44px;
             content: '';
             height: 0;
             left: 30px;

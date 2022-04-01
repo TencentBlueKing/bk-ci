@@ -61,12 +61,14 @@ open class BaseBuildDetailService constructor(
         private const val ExpiredTimeInSeconds: Long = 10
     }
 
-    fun getBuildModel(buildId: String): Model? {
-        val record = buildDetailDao.get(dslContext, buildId) ?: return null
+    fun getBuildModel(projectId: String, buildId: String): Model? {
+        val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
     }
 
+    @Suppress("LongParameterList")
     protected fun update(
+        projectId: String,
         buildId: String,
         modelInterface: ModelInterface,
         buildStatus: BuildStatus,
@@ -82,7 +84,7 @@ open class BaseBuildDetailService constructor(
             lock.lock()
 
             watcher.start("getDetail")
-            val record = buildDetailDao.get(dslContext, buildId)
+            val record = buildDetailDao.get(dslContext, projectId, buildId)
             Preconditions.checkArgument(record != null, "The build detail is not exist")
 
             watcher.start("model")
@@ -108,6 +110,7 @@ open class BaseBuildDetailService constructor(
             watcher.start("updateModel")
             buildDetailDao.update(
                 dslContext = dslContext,
+                projectId = projectId,
                 buildId = buildId,
                 model = modelStr,
                 buildStatus = finalStatus,
@@ -115,7 +118,7 @@ open class BaseBuildDetailService constructor(
             )
 
             watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(buildId)
+            pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
@@ -186,8 +189,8 @@ open class BaseBuildDetailService constructor(
         }
     }
 
-    protected fun pipelineDetailChangeEvent(buildId: String) {
-        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, buildId) ?: return
+    protected fun pipelineDetailChangeEvent(projectId: String, buildId: String) {
+        val pipelineBuildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId) ?: return
         // 异步转发，解耦核心
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(

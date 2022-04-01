@@ -92,8 +92,16 @@ class MeasureServiceImpl constructor(
                 return
             }
 
-            val parentPipelineId = buildVariableService.getVariable(buildId, PIPELINE_START_PARENT_PIPELINE_ID) ?: ""
-            val parentBuildId = buildVariableService.getVariable(buildId, PIPELINE_START_PARENT_BUILD_ID) ?: ""
+            val parentPipelineId = buildVariableService.getVariable(
+                projectId = projectId,
+                buildId = buildId,
+                varName = PIPELINE_START_PARENT_PIPELINE_ID
+            ) ?: ""
+            val parentBuildId = buildVariableService.getVariable(
+                projectId = projectId,
+                buildId = buildId,
+                varName = PIPELINE_START_PARENT_BUILD_ID
+            ) ?: ""
             val metaInfo = mapOf(
                 "parentPipelineId" to parentPipelineId,
                 "parentBuildId" to parentBuildId
@@ -102,7 +110,7 @@ class MeasureServiceImpl constructor(
             val data = PipelineBuildData(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                templateId = templateService.getTemplateIdByPipeline(pipelineId) ?: "",
+                templateId = templateService.getTemplateIdByPipeline(projectId, pipelineId) ?: "",
                 buildId = buildId,
                 beginTime = startTime,
                 endTime = System.currentTimeMillis(),
@@ -133,7 +141,7 @@ class MeasureServiceImpl constructor(
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {
         try {
-            val tasks = pipelineTaskService.getAllBuildTask(buildId)
+            val tasks = pipelineTaskService.getAllBuildTask(projectId, buildId)
             if (tasks.isEmpty()) {
                 return
             }

@@ -1,14 +1,7 @@
 <template>
     <div
         ref="stageRef"
-        :class="[
-            stageStatusCls,
-            {
-                'pipeline-drag': editable && !isTriggerStage,
-                'readonly': !editable || stageDisabled
-            },
-            'pipeline-stage'
-        ]">
+        :class="pipelineStageCls">
         <div
             @click.stop="stageEntryClick"
             class="pipeline-stage-entry"
@@ -28,12 +21,13 @@
                 :class="stageTitleCls"
             >
                 <Logo
+                    v-if="!!stageStatusIcon"
                     v-bk-tooltips="isStageSkip ? t('skipStageDesc') : { disabled: true }"
-                    :name="isStageSkip ? 'redo-arrow' : stageStatusIcon"
-                    :class="isRunning ? 'spin-icon' : ''"
-                    size="14"
+                    :name="stageStatusIcon"
+                    :class="stageNameStatusCls"
+                    size="20"
                 />
-                {{ stageTitle }}
+                <span class="stage-title-name">{{ stageTitle }}</span>
             </span>
             <Logo v-if="isStageError" name="exclamation-triangle-shape" size="14" class="stage-entry-error-icon" />
             <span @click.stop v-if="isShowCheckbox" class="check-total-stage">
@@ -42,13 +36,14 @@
             <span v-if="canStageRetry" @click.stop="triggerStageRetry" class="stage-single-retry">
                 {{ t('retry') }}
             </span>
-            <span v-if="!stage.isError && showCopyStage" class="stage-entry-btns">
+            <span v-if="!stage.isError" class="stage-entry-btns">
                 <Logo
+                    v-if="showCopyStage"
                     name="clipboard"
                     size="14"
                     :title="t('copyStage')"
                     @click.stop="copyStage" />
-                <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
+                <i v-if="showDeleteStage" @click.stop="deleteStageHandler" class="add-plus-icon close" />
             </span>
             <stage-check-icon
                 v-if="showStageCheck(stage.checkOut)"
@@ -61,6 +56,9 @@
                 :stage-status="stageStatusCls"
             />
         </div>
+        <span class="stage-connector">
+            <Logo size="14" name="right-shape" class="connector-angle" />
+        </span>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul">
             <stage-container v-for="(container, index) in computedContainer"
                 :key="container.containerId"
@@ -75,18 +73,18 @@
                 :stage-disabled="stageDisabled"
                 :container-length="computedContainer.length"
                 :container="container"
+                :is-finally-stage="isFinallyStage"
                 :stage="stage"
                 :user-name="userName"
                 :cancel-user-id="cancelUserId"
+                :is-latest-build="isLatestBuild"
                 :match-rules="matchRules"
                 @[COPY_EVENT_NAME]="handleCopyContainer"
                 @[DELETE_EVENT_NAME]="handleDeleteContainer"
             >
             </stage-container>
         </draggable>
-        <span class="stage-connector">
-            <Logo size="14" name="right-shape" class="connector-angle" />
-        </span>
+        
         <template v-if="editable">
             <span v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
@@ -102,8 +100,9 @@
                 </template>
             </span>
             <span v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleAddMenu(!lastAddMenuShow, true)" class="append-stage pointer">
+                <span class="add-plus-connector"></span>
                 <i class="add-plus-icon" />
-                <insert-stage-menu v-if="lastAddMenuShow" :disabled="disableFinally" :is-last="true" :edit-stage="editStage"></insert-stage-menu>
+                <insert-stage-menu v-if="lastAddMenuShow" :disable-finally="disableFinally" :is-last="true" :edit-stage="editStage"></insert-stage-menu>
             </span>
         </template>
     </div>
@@ -164,6 +163,10 @@
                 type: Boolean,
                 default: false
             },
+            isLatestBuild: {
+                type: Boolean,
+                default: false
+            },
             isPreview: {
                 type: Boolean,
                 default: false
@@ -187,7 +190,7 @@
             },
             matchRules: {
                 type: Array,
-                default: []
+                default: () => []
             }
         },
         emits: [
@@ -203,8 +206,7 @@
                 cruveHeight: 0,
                 failedContainer: false,
                 DELETE_EVENT_NAME,
-                COPY_EVENT_NAME,
-                isRunning: false
+                COPY_EVENT_NAME
             }
         },
         computed: {
@@ -222,6 +224,9 @@
             showCopyStage () {
                 return this.isMiddleStage && this.editable
             },
+            showDeleteStage () {
+                return this.editable && !this.isTriggerStage
+            },
             isFirstStage () {
                 return this.stageIndex === 0
             },
@@ -235,7 +240,7 @@
                 return this.stage.finally === true
             },
             isMiddleStage () {
-                return !this.isTriggerStage && !this.isFinallyStage
+                return !(this.isTriggerStage || this.isFinallyStage || this.isFirstStage)
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -245,6 +250,24 @@
                     'stage-entry-name': true,
                     'skip-name': this.stageDisabled || this.stage.status === STATUS_MAP.SKIP
                 }
+            },
+            stageNameStatusCls () {
+                return {
+                    'stage-name-status-icon': true,
+                    [this.stageStatusCls]: true,
+                    'spin-icon': this.stageStatusCls === STATUS_MAP.RUNNING
+                }
+            },
+            pipelineStageCls () {
+                return [
+                    this.stageStatusCls,
+                    'pipeline-stage',
+                    {
+                        'is-final-stage': this.isFinallyStage,
+                        'pipeline-drag': this.editable && !this.isTriggerStage,
+                        readonly: !this.editable || this.stageDisabled
+                    }
+                ]
             },
             isShowCheckbox () {
                 return !this.isTriggerStage && this.canSkipElement
@@ -303,6 +326,7 @@
                 return this.stage.status === STATUS_MAP.SKIP
             },
             stageStatusIcon () {
+                if (this.isStageSkip) return 'redo-arrow'
                 switch (this.stageStatusCls) {
                     case STATUS_MAP.SUCCEED:
                         return 'check-circle'
@@ -311,7 +335,6 @@
                     case STATUS_MAP.SKIP:
                         return 'redo-arrow'
                     case STATUS_MAP.RUNNING:
-                        this.isRunning = true
                         return 'circle-2-1'
                     default:
                         return ''
@@ -433,14 +456,14 @@
                     const copyStage = JSON.parse(JSON.stringify(this.stage))
                     const stage = {
                         ...copyStage,
-                        id: `s-${hashID(32)}`,
+                        id: `s-${hashID()}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
                             jobId: `job_${randomString(3)}`,
-                            containerId: `c-${hashID(32)}`,
+                            containerId: `c-${hashID()}`,
                             elements: container.elements.map(element => ({
                                 ...element,
-                                id: `e-${hashID(32)}`
+                                id: `e-${hashID()}`
                             })),
                             jobControlOption: container.jobControlOption
                                 ? {
@@ -470,7 +493,7 @@
 
 <style lang='scss'>
     @use "sass:math";
-    @import './index';
+    @import './conf';
     $addIconTop: math.div($stageEntryHeight, 2) - math.div($addBtnSize, 2);
     $entryBtnWidth: 80px;
 
@@ -485,8 +508,10 @@
         padding: 0 0 24px 0;
         background: $stageBGColor;
         margin: 0 $StageMargin 0 0;
+        z-index: 1;
 
         .pipeline-stage-entry {
+            position: relative;
             cursor: pointer;
             display: flex;
             width: 100%;
@@ -516,11 +541,16 @@
 
             .stage-entry-name {
                 flex: 1;
-                text-align: center;
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 margin: 0 $entryBtnWidth;
+                overflow: hidden;
+                .stage-title-name {
+                    @include ellipsis();
+                    margin-left: 6px;
+                }
+                
             }
 
             .stage-single-retry {
@@ -543,11 +573,12 @@
 
             .stage-entry-btns {
                 position: absolute;
-                right: -10px;
+                right: 0;
                 top: 16px;
                 display: none;
                 width: $entryBtnWidth;
                 align-items: center;
+                justify-content: flex-end;
                 color: white;
                 fill: white;
                 
@@ -638,6 +669,14 @@
                 top: -46px;
                 left: -16px;
             }
+            .add-plus-connector {
+                position: absolute;
+                width: 40px;
+                height: 2px;
+                left: -26px;
+                top: 8px;
+                background-color: $primaryColor;
+            }
         }
 
         .add-menu {
@@ -661,20 +700,22 @@
             }
         }
 
-        &:last-child {
+        &:first-child {
             .stage-connector {
-                width: math.div($StageMargin, 2);
-                right: math.div(-$StageMargin, 2);
-                .connector-angle {
-                    display: none;
-                }
+                display: none;
+            }
+        }
+
+        &.is-final-stage {
+            .stage-connector {
+                width: $StageMargin;
             }
         }
         .stage-connector {
             position: absolute;
             width: $StageMargin - math.div($reviewIconSize, 2);
             height: $stageConnectorSize;
-            right: - $StageMargin + math.div($reviewIconSize, 2);
+            left: - $StageMargin;
             top: math.div($stageEntryHeight, 2) - 1;
             color: $primaryColor;
             background-color: $primaryColor;

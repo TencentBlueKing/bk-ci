@@ -142,7 +142,6 @@ export default {
     },
     [SET_PIPELINE_EDITING]: (state, editing) => {
         if (state.pipeline && state.pipeline.editing !== editing) {
-            debugger
             Vue.set(state.pipeline, 'editing', editing)
         }
         return state
@@ -234,6 +233,7 @@ export default {
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
+            console.log(atomModal)
             atom = {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
@@ -250,7 +250,12 @@ export default {
         this.atomVersionChangedCleanId = setTimeout(() => {
             state.atomVersionChangedKeys = []
         }, 5000)
-        container.elements.splice(atomIndex, 1, atom)
+        container.elements.splice(atomIndex, 1, {
+            ...atom,
+            os: atomModal.os,
+            buildLessRunFlag: atomModal.buildLessRunFlag,
+            logoUrl: atomModal.logoUrl
+        })
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {
         for (const key in newParam) {
@@ -329,7 +334,8 @@ export default {
     },
     [INSERT_ATOM]: (state, { elements, insertIndex }) => {
         elements.splice(insertIndex, 0, {
-            data: {}
+            data: {},
+            isError: true
         })
     },
     [DELETE_ATOM]: (state, { elements, atomIndex }) => {

@@ -75,6 +75,7 @@ func sysSignalHandler(cancel context.CancelFunc, handle *pkg.UBTTool) {
 func newCustomProcess(c *commandCli.Context) *pkg.UBTTool {
 	return pkg.NewUBTTool(&common.Flags{
 		ActionChainFile: c.String(FlagActionJSONFile),
+		MostDepentFirst: c.Bool(FlagMostDependFirst),
 	}, sdk.ControllerConfig{
 		NoLocal: false,
 		Scheme:  ControllerScheme,
@@ -117,10 +118,11 @@ func setLogLevel(level string) {
 
 func initialLogDir(dir string) {
 	blog.InitLogs(conf.LogConfig{
-		LogDir:       dir,
-		LogMaxNum:    10,
-		LogMaxSize:   500,
-		AlsoToStdErr: false,
+		LogDir:          dir,
+		LogMaxNum:       10,
+		LogMaxSize:      500,
+		AlsoToStdErr:    false,
+		StdErrThreshold: "3", //fatalLog
 	})
 }
 

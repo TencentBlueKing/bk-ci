@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -40,6 +41,7 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -173,6 +175,84 @@ class GitScmService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
             null
+        }
+    }
+
+    fun getChangeFileList(
+        projectId: String,
+        repo: Repository,
+        from: String,
+        to: String
+    ): Set<String> {
+        val type = getType(repo) ?: return emptySet()
+        val changeSet = mutableSetOf<String>()
+        try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            for (i in 1..10) {
+                // 反向进行三点比较可以比较出rebase的真实提交
+                val result = client.get(ServiceGitResource::class).getChangeFileList(
+                    token = token,
+                    tokenType = tokenType,
+                    gitProjectId = repo.projectName,
+                    from = from,
+                    to = to,
+                    straight = false,
+                    page = i,
+                    pageSize = 100
+                ).data ?: emptyList()
+                changeSet.addAll(result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else {
+                        it.newPath
+                    }
+                }
+                )
+                if (result.size < 100) {
+                    break
+                }
+            }
+        } catch (ignore: Exception) {
+            logger.error("fail to get change file list", ignore)
+        }
+        return changeSet
+    }
+
+    fun getDefaultBranchLatestCommitInfo(
+        projectId: String,
+        repo: Repository
+    ): Pair<String?, GitCommit?> {
+        val type = getType(repo) ?: return Pair(null, null)
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            val serviceGitResource = client.get(ServiceGitResource::class)
+            val defaultBranch = serviceGitResource.getProjectInfo(
+                token = token,
+                tokenType = tokenType,
+                gitProjectId = repo.projectName
+            ).data?.defaultBranch ?: return Pair(null, null)
+            val commitInfo = serviceGitResource.getRepoRecentCommitInfo(
+                repoName = repo.projectName,
+                sha = defaultBranch,
+                token = token,
+                tokenType = tokenType
+            ).data
+            Pair(defaultBranch, commitInfo)
+        } catch (ignore: Exception) {
+            logger.error("fail to get default branch latest commit info", ignore)
+            Pair(null, null)
         }
     }
 

@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceIpaResource {
 
-    @ApiOperation("获取流水线构建历史")
+    @ApiOperation("获取签名任务历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
     @Path("/sign/history")
@@ -62,12 +62,12 @@ interface ServiceIpaResource {
         @ApiParam("用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("起始时间", required = true)
+        @ApiParam("起始时间戳（毫秒）", required = false)
         @QueryParam("startTime")
-        startTime: Long,
-        @ApiParam("截止时间", required = true)
+        startTime: Long?,
+        @ApiParam("截止时间戳（毫秒）", required = false)
         @QueryParam("endTime")
-        endTime: Long,
+        endTime: Long?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

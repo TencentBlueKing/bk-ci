@@ -101,7 +101,7 @@
 </script>
 
 <style lang="scss">
-@import "./index";
+@import "./conf";
 .stage-status {
     position: relative;
     text-align: center;
