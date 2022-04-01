@@ -46,7 +46,6 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.util.Base64Utils
 
 /**
  * deng
@@ -83,7 +82,7 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
             projectId = projectId,
             userId = userId,
             templateId = templateId,
-            versionName = String(Base64Utils.decodeFromString(versionName))
+            versionName = versionName
         ))
     }
 

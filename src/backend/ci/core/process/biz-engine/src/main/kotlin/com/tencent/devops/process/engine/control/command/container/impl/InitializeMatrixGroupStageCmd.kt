@@ -58,11 +58,11 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
-import kotlin.math.min
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 /**
  * Stage计算构建矩阵事件命令处理
@@ -365,7 +365,7 @@ class InitializeMatrixGroupStageCmd(
         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
             "|${event.stageId}|${modelContainer.id}|containerHashId=" +
             "${modelContainer.containerHashId}|context=$context|" +
-            "groupContainers=$groupContainers|buildTaskList=$buildTaskList")
+            "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}")
 
         // 在表中增加所有分裂的矩阵和插件
         dslContext.transaction { configuration ->

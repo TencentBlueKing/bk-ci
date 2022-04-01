@@ -198,4 +198,13 @@ interface ServiceRepositoryResource {
         @ApiParam(value = "代码库模型", required = true)
         repository: Repository
     ): Result<Boolean>
+
+    @ApiOperation("通过hashId来获取SVN仓库信息")
+    @GET
+    @Path("/listByRepoHashIds")
+    fun listRepoByIds(
+        @ApiParam("仓库hashIdSet", required = true)
+        @QueryParam("repositoryIds")
+        repositoryIds: Set<String>
+    ): Result<List<Repository>>
 }

@@ -444,11 +444,18 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getUserInfoByToken(token: String): GitUserInfo {
+    fun getUserInfoByToken(
+        token: String,
+        useAccessToken: Boolean = true
+    ): GitUserInfo {
         logger.info("[$token] Start to get the user info by token")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "${gitConfig.gitApiUrl}/user?access_token=$token"
+            val url = "${gitConfig.gitApiUrl}/user?" + if (useAccessToken) {
+                "access_token=$token"
+            } else {
+                "private_token=$token"
+            }
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -469,12 +476,21 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun checkUserGitAuth(userId: String, gitProjectId: String): Boolean {
+    fun checkUserGitAuth(
+        userId: String,
+        gitProjectId: String,
+        accessLevel: Int,
+        privateToken: String? = null,
+        useAccessToken: Boolean = true
+    ): Boolean {
         try {
-            val token = getToken(gitProjectId)
+            val superToken = getToken(gitProjectId)
             val url =
-                "$gitCIUrl/api/v3/projects/$gitProjectId/members/all/$userId?access_token=${token.accessToken}"
-
+                "$gitCIUrl/api/v3/projects/$gitProjectId/members/all/$userId?" + if (useAccessToken) {
+                    "access_token=${superToken.accessToken}"
+                } else {
+                    "private_token=$privateToken"
+                }
             logger.info("[$userId]|[$gitProjectId]| Get git project member utl: $url")
             val request = Request.Builder()
                 .url(url)
@@ -484,7 +500,7 @@ class GitService @Autowired constructor(
                 val body = response.body()!!.string()
                 logger.info("[$userId]|[$gitProjectId]| Get git project member response body: $body")
                 val ownerInfo = JsonUtil.to(body, OwnerInfo::class.java)
-                if (ownerInfo.accessLevel!! >= 30) {
+                if (ownerInfo.accessLevel!! >= accessLevel) {
                     return true
                 }
             }

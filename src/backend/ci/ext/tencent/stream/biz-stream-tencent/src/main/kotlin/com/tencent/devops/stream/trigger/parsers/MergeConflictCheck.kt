@@ -35,11 +35,11 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.mq.streamMrConflict.GitCIMrConflictCheckDispatcher
 import com.tencent.devops.stream.mq.streamMrConflict.GitCIMrConflictCheckEvent
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.GitCiMergeStatus
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
@@ -72,7 +72,8 @@ class MergeConflictCheck @Autowired constructor(
      */
     @Throws(TriggerException::class, TriggerThirdException::class)
     fun checkMrConflict(
-        gitRequestEvent: GitRequestEvent,
+        projectId: Long,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting,
@@ -80,11 +81,10 @@ class MergeConflictCheck @Autowired constructor(
     ): Boolean {
         logger.info("get token form scm, token: $gitToken")
 
-        val projectId = gitRequestEvent.gitProjectId
         val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
 
         val mrInfo = triggerExceptionService.handleErrorCode(
-            request = gitRequestEvent,
+            request = gitRequestEventForHandle,
             action = {
                 streamScmService.getMergeInfo(
                     gitProjectId = projectId,
@@ -98,18 +98,18 @@ class MergeConflictCheck @Autowired constructor(
             GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
                 // 第一次未检查完则改变状态为正在检查供用户查看
                 val recordId = gitCIEventService.saveTriggerNotBuildEvent(
-                    userId = gitRequestEvent.userId,
-                    eventId = gitRequestEvent.id!!,
+                    userId = gitRequestEventForHandle.userId,
+                    eventId = gitRequestEventForHandle.id!!,
                     reason = TriggerReason.CI_MERGE_CHECKING.name,
                     reasonDetail = TriggerReason.CI_MERGE_CHECKING.detail,
-                    gitProjectId = gitRequestEvent.gitProjectId,
-                    branch = gitRequestEvent.branch
+                    gitProjectId = gitRequestEventForHandle.gitProjectId,
+                    branch = gitRequestEventForHandle.branch
                 )
 
                 dispatchMrConflictCheck(
                     GitCIMrConflictCheckEvent(
                         token = gitToken,
-                        gitRequestEvent = gitRequestEvent,
+                        gitRequestEventForHandle = gitRequestEventForHandle,
                         event = event,
                         path2PipelineExists = path2PipelineExists,
                         gitProjectConf = gitProjectConf,
@@ -121,7 +121,7 @@ class MergeConflictCheck @Autowired constructor(
             GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
                 logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
                 TriggerException.triggerError(
-                    request = gitRequestEvent,
+                    request = gitRequestEventForHandle,
                     reason = TriggerReason.CI_MERGE_CONFLICT
                 )
             }
@@ -134,7 +134,7 @@ class MergeConflictCheck @Autowired constructor(
     // todo: 由于是update所以先不用handle做异常统一处理，后续优化
     fun checkMrConflictByListener(
         token: String,
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting,
@@ -144,7 +144,7 @@ class MergeConflictCheck @Autowired constructor(
     ): Pair<Boolean, Boolean> {
         var isFinish: Boolean
         var isTrigger: Boolean
-        val projectId = gitRequestEvent.gitProjectId
+        val projectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId
         val mrRequestId = (event as GitMergeRequestEvent).object_attributes.id
         val mrInfo = try {
             streamScmService.getMergeInfo(

@@ -202,7 +202,10 @@ interface ServiceGitResource {
     fun getUserInfoByToken(
         @ApiParam("用户id", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam("是否使用access token", required = true)
+        @QueryParam("useAccessToken")
+        useAccessToken: Boolean = true
     ): Result<GitUserInfo>
 
     @ApiOperation("获取项目的token")

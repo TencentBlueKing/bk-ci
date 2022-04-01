@@ -36,6 +36,8 @@ object CodeccUtils {
 
     const val BK_CI_CODECC_V3_ATOM = "CodeccCheckAtomDebug"
 
+    const val BK_CI_CODECC_V2_ATOM = "CodeccCheckAtom"
+
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
     }
@@ -50,7 +52,7 @@ object CodeccUtils {
     }
 
     fun isCodeccV2Atom(atomName: String?): Boolean {
-        return atomName == "CodeccCheckAtom"
+        return atomName.equals(BK_CI_CODECC_V2_ATOM, ignoreCase = true)
     }
 
     fun isCodeccV3Atom(atomName: String?): Boolean {

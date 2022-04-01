@@ -15,7 +15,7 @@ bk-ci removes all the tedious tasks in R&D process and enables you to focus on c
 - Running test cases to find bugs in time
 - Deployment and release
 
-bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket, Environment and Store. They can be combined in multiple ways to meet business needs in different scenarios.
+bk-ci provides seven core services, namely Process, CodeCheck, Repository, Ticket, Environment, Store and Turbo. They can be combined in multiple ways to meet business needs in different scenarios.
 
 - **Process**: It visualizes current R&D process of the team. One pipeline can handle compilation, testing and deployment.
 - **CodeCheck**：Provide professional code-check solutions to check multiple dimensions of code issues such as defects, security vulnerabilities, code styles, etc., to promote product quality.
@@ -23,6 +23,7 @@ bk-ci provides six core services, namely Process, CodeCheck, Repository, Ticket,
 - **Ticket**: It provides the management of various kinds of tickets and certificates for services like Repository and Process.
 - **Environment**: It can host the internal agents of the enterprise on bk-ci.
 - **Store**: It consists of pipeline plugins and pipeline templates. Plugins are used to integrate with various third-party services of the enterprise and templates help to standardize its internal R&D process.
+- **Turbo**: Based on self-developed acceleration engine, it supports acceleration in multiple scenarios such as C/C++ compilation, UE4 code compilation, and UE4 Shader compilation, making construction tasks faster
 
 
 ## Overview

@@ -27,6 +27,9 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.AppNotifyMessageWithOperation
@@ -36,15 +39,15 @@ import com.tencent.devops.notify.QUEUE_NOTIFY_PUSH
 import com.tencent.devops.notify.ROUTE_PUSH
 import com.tencent.xinge.XingeApp
 import com.tencent.xinge.bean.AudienceType
+import com.tencent.xinge.bean.ClickAction
 import com.tencent.xinge.bean.Environment
+import com.tencent.xinge.bean.Message
+import com.tencent.xinge.bean.MessageAndroid
 import com.tencent.xinge.bean.MessageIOS
 import com.tencent.xinge.bean.MessageType
-import com.tencent.xinge.bean.MessageAndroid
 import com.tencent.xinge.bean.ios.Alert
-import com.tencent.xinge.push.app.PushAppRequest
-import com.tencent.xinge.bean.Message
 import com.tencent.xinge.bean.ios.Aps
-import com.tencent.xinge.bean.ClickAction
+import com.tencent.xinge.push.app.PushAppRequest
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -60,7 +63,8 @@ import org.springframework.stereotype.Service
 class ExperienceNotifyService @Autowired constructor(
     private val dslContext: DSLContext,
     private val experiencePushHistoryDao: ExperiencePushHistoryDao,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val redisOperation: RedisOperation
 ) {
     private val logger = LoggerFactory.getLogger(ExperienceNotifyService::class.java)
 
@@ -112,11 +116,19 @@ class ExperienceNotifyService @Autowired constructor(
         }
         val isSuccess = sendXinge(appNotifyMessageWithOperation)
         when {
-            isSuccess -> experiencePushHistoryDao.updatePushHistoryStatus(
-                dslContext = dslContext,
-                id = appNotifyMessageWithOperation.messageId,
-                status = PushStatus.SUCCESS.status
-            )
+            isSuccess -> {
+                experiencePushHistoryDao.updatePushHistoryStatus(
+                    dslContext = dslContext,
+                    id = appNotifyMessageWithOperation.messageId,
+                    status = PushStatus.SUCCESS.status
+                )
+                redisOperation.sadd(
+                    ExperienceConstant.redPointKey(
+                        appNotifyMessageWithOperation.receiver
+                    ),
+                    HashUtil.decodeIdToLong(appNotifyMessageWithOperation.experienceHashId).toString()
+                )
+            }
             else -> experiencePushHistoryDao.updatePushHistoryStatus(
                 dslContext = dslContext,
                 id = appNotifyMessageWithOperation.messageId,
@@ -164,6 +176,7 @@ class ExperienceNotifyService @Autowired constructor(
         messageAndroid.action = ClickAction()
         messageAndroid.action.action_type = 3
         messageAndroid.action.intent = appNotifyMessageWithOperation.url
+        messageAndroid.badgeType = -2
         message.android = messageAndroid
         val tokenList: ArrayList<String?> = ArrayList()
         tokenList.add(appNotifyMessageWithOperation.token)
@@ -186,6 +199,7 @@ class ExperienceNotifyService @Autowired constructor(
         val aps = Aps()
         aps.category = appNotifyMessageWithOperation.url
         aps.alert = alert
+        aps.badge_type = -2
         messageIOS.aps = aps
         message.ios = messageIOS
         pushAppRequest.message = message

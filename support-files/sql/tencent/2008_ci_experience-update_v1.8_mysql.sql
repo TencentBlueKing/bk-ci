@@ -18,7 +18,7 @@ BEGIN
                         AND TABLE_NAME = 'T_EXPERIENCE'
                         AND COLUMN_NAME = 'PIPELINE_ID') THEN
         ALTER TABLE T_EXPERIENCE ADD COLUMN PIPELINE_ID varchar(34) NOT NULL DEFAULT '' COMMENT '流水线ID';
-    END IF;
+  END IF;
 
   IF NOT EXISTS(SELECT 1
                 FROM information_schema.statistics
@@ -34,7 +34,7 @@ BEGIN
                         AND TABLE_NAME = 'T_EXPERIENCE'
                         AND COLUMN_NAME = 'BUILD_ID') THEN
         ALTER TABLE T_EXPERIENCE ADD COLUMN BUILD_ID varchar(34) NOT NULL DEFAULT '' COMMENT '构建ID';
-    END IF;
+  END IF;
 
   IF NOT EXISTS(SELECT 1
                 FROM information_schema.statistics
@@ -42,6 +42,14 @@ BEGIN
                   AND TABLE_NAME = 'T_EXPERIENCE'
                   AND INDEX_NAME = 'IDX_BUILD_ID') THEN
       ALTER TABLE T_EXPERIENCE ADD INDEX IDX_BUILD_ID (`BUILD_ID`);
+  END IF;
+
+	IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_EXPERIENCE_PUBLIC'
+                        AND COLUMN_NAME = 'VERSION') THEN
+      ALTER TABLE `T_EXPERIENCE_PUBLIC` ADD COLUMN `VERSION` VARCHAR(20) DEFAULT '' COMMENT '体验版本号';
   END IF;
 
     COMMIT;

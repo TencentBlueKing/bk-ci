@@ -27,37 +27,48 @@
 
 package com.tencent.devops.common.environment.agent
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
+import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 class ThirdPartyAgentHeartbeatUtils constructor(
-    private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentHeartbeatUtils::class.java)
+        private val expiredInSecond = TimeUnit.HOURS.toSeconds(1)
+        private const val MAX_TASKS = 10
     }
 
-    fun saveNewHeartbeat(
-        projectId: String,
-        agentId: Long,
-        newHeartbeatInfo: NewHeartbeatInfo
-    ) {
+    fun saveNewHeartbeat(projectId: String, agentId: Long, newHeartbeatInfo: NewHeartbeatInfo) {
+        // #5806 设置数量
+        newHeartbeatInfo.busyTaskSize = newHeartbeatInfo.taskList.size
+
+        // #5806 防止被塞爆，数量过大就不支持展示
+        if (newHeartbeatInfo.taskList.size > MAX_TASKS) {
+            newHeartbeatInfo.taskList = newHeartbeatInfo.taskList.subList(0, MAX_TASKS)
+        }
         newHeartbeatInfo.projectId = projectId
         newHeartbeatInfo.agentId = agentId
         newHeartbeatInfo.heartbeatTime = System.currentTimeMillis()
-        redisOperation.set(getNewHeartbeatKey(projectId, agentId), objectMapper.writeValueAsString(newHeartbeatInfo))
+        redisOperation.set(
+            key = getNewHeartbeatKey(projectId = projectId, agentId = agentId),
+            value = JsonUtil.toJson(newHeartbeatInfo, false),
+            expired = true,
+            expiredInSecond = expiredInSecond
+        )
     }
 
     fun getNewHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo? {
         val build = redisOperation.get(getNewHeartbeatKey(projectId, agentId)) ?: return null
         try {
-            return objectMapper.readValue(build, NewHeartbeatInfo::class.java)
-        } catch (t: Throwable) {
-            logger.warn("parse newHeartbeatInfo failed", t)
+            return JsonUtil.to(build, NewHeartbeatInfo::class.java)
+        } catch (ignored: Throwable) {
+            logger.warn("parse newHeartbeatInfo failed", ignored)
         }
         return null
     }
@@ -66,22 +77,23 @@ class ThirdPartyAgentHeartbeatUtils constructor(
         return "environment.thirdparty.new.agent.heartbeat_${projectId}_$agentId"
     }
 
-    fun heartbeat(
-        projectId: String,
-        agentId: String
-    ) {
-        redisOperation.set(getHeartbeatKey(projectId, agentId), System.currentTimeMillis().toString())
+    // tip: 此个需要删除，目前还有旧的Agent心跳逻辑，需要兼容此Key
+    fun heartbeat(projectId: String, agentId: String) {
+        redisOperation.set(
+            key = getHeartbeatKey(projectId = projectId, agentId = agentId),
+            value = System.currentTimeMillis().toString(),
+            expired = true,
+            expiredInSecond = expiredInSecond
+        )
     }
 
-    fun getHeartbeat(
-        projectId: String,
-        agentId: String
-    ): Long? {
+    // tip: 此个需要删除，目前还有旧的Agent心跳逻辑，需要兼容此Key
+    private fun getHeartbeat(projectId: String, agentId: String): Long? {
         return redisOperation.get(getHeartbeatKey(projectId, agentId))?.toLong()
     }
 
-    private fun getHeartbeatKey(projectId: String, agentId: String) =
-        "third-party-agent-heartbeat-$projectId-$agentId"
+    // tip: 此个需要删除，目前还有旧的Agent心跳逻辑，需要兼容此Key
+    private fun getHeartbeatKey(projectId: String, agentId: String) = "third-party-agent-heartbeat-$projectId-$agentId"
 
     fun getHeartbeatTime(id: Long, projectId: String): Long? {
         val agentId = HashUtil.encodeLongId(id)
@@ -95,14 +107,12 @@ class ThirdPartyAgentHeartbeatUtils constructor(
         val newHeartbeatTime = if (newHeartbeat != null) {
             newHeartbeat.heartbeatTime
         } else {
-            saveNewHeartbeat(projectId, id,
-                NewHeartbeatInfo.dummyHeartbeat(projectId, id)
-            )
+            saveNewHeartbeat(projectId, id, NewHeartbeatInfo.dummyHeartbeat(projectId, id))
             null
         }
 
         return if (oldHeartbeatTime != null && newHeartbeatTime != null) {
-            Math.max(oldHeartbeatTime, newHeartbeatTime)
+            max(oldHeartbeatTime, newHeartbeatTime)
         } else {
             newHeartbeatTime ?: oldHeartbeatTime
         }

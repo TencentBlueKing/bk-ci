@@ -40,6 +40,7 @@ import com.tencent.devops.stream.pojo.GitCIBuildBranch
 import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
 import com.tencent.devops.stream.pojo.v2.GitCIBuildHistorySearch
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import org.jooq.DSLContext
@@ -55,7 +56,9 @@ class StreamHistoryService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val eventMessageUtil: StreamTriggerMessageUtils
+    private val eventMessageUtil: StreamTriggerMessageUtils,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamHistoryService::class.java)
@@ -131,7 +134,29 @@ class StreamHistoryService @Autowired constructor(
                 id = it.eventId
             ) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
+            val realEvent =
+                if (gitProjectId == gitRequestEvent.gitProjectId) {
+                    val gitMrProjectInfoCache = gitRequestEvent.sourceGitProjectId?.let {
+                        lazy {
+                            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                                gitProjectId = it,
+                                useAccessToken = true,
+                                getProjectInfo = streamScmService::getProjectInfoRetry
+                            )
+                        }
+                    }
+                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitMrProjectInfoCache)
+                } else {
+                    // 当gitProjectId与event的不同时，说明是远程仓库触发的
+                    val gitProjectInfoCache = lazy {
+                        streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                            gitProjectId = gitRequestEvent.gitProjectId,
+                            useAccessToken = true,
+                            getProjectInfo = streamScmService::getProjectInfoRetry
+                        )
+                    }
+                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, gitProjectInfoCache.value)
+                }
             val pipeline =
                 pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(
@@ -140,7 +165,7 @@ class StreamHistoryService @Autowired constructor(
                     pipelineId = pipeline.pipelineId,
                     gitRequestEvent = GitRequestEventReq(realEvent),
                     buildHistory = buildHistory,
-                    reason = eventMessageUtil.getEventMessageTitle(realEvent, gitProjectId)
+                    reason = eventMessageUtil.getEventMessageTitle(realEvent)
                 )
             )
         }
@@ -189,18 +214,27 @@ class StreamHistoryService @Autowired constructor(
         val recordsMap = mutableMapOf<String, GitCIBuildBranch>()
         // 如果是来自fork库的分支，单独标识
         buildBranchList.subList(firstIndex, lastIndex).forEach {
+            val gitProjectInfoCache = it.sourceGitProjectId?.let { id ->
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = id,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
             val branchName = GitCommonUtils.checkAndGetForkBranchName(
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId,
                 branch = it.branch,
-                client = client
+                gitProjectCache = gitProjectInfoCache
             )
             recordsMap[branchName] = GitCIBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
                     sourceGitProjectId = it.sourceGitProjectId,
                     branch = it.branch,
-                    client = client
+                    gitProjectCache = gitProjectInfoCache
                 ),
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId

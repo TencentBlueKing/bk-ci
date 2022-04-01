@@ -25,32 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.experience.resources.app
 
-import com.tencent.devops.common.api.pojo.Zone
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.experience.api.app.OldAppExperienceGroupResource
+import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
+import com.tencent.devops.experience.service.GroupService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("")
-data class RedisAtomsBuild(
-    @ApiModelProperty("构建机名称标识，不唯一", required = false)
-    val vmName: String,
-    @ApiModelProperty("项目id", required = false)
-    val projectId: String,
-    @ApiModelProperty("流水线id", required = false)
-    val pipelineId: String,
-    @ApiModelProperty("构建号id", required = false)
-    val buildId: String,
-    @ApiModelProperty("Job序号，根据编排（忽略掉第1个触发Job）从左到右，从上到下，从1开始", required = false)
-    val vmSeqId: String,
-    @ApiModelProperty("流水线的来源，见ChannelCode枚举说明", required = false)
-    val channelCode: String?,
-    @ApiModelProperty("SVN代码库所在区域，作废字段", required = false)
-    val zone: Zone?,
-    @ApiModelProperty("用到的插件code和路径键值对", required = false)
-    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
-    @ApiModelProperty("执行次数，第1次执行为1，重试>1", required = false)
-    val executeCount: Int? = 1,
-    @ApiModelProperty("构建用户id", required = false)
-    val userId: String?
-)
+@RestResource
+@Deprecated("已废弃 , 以AppExperienceGroupResourceImpl为准")
+class OldAppExperienceGroupResourceImpl @Autowired constructor(
+    private val groupService: GroupService
+) : OldAppExperienceGroupResource {
+    override fun list(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        returnPublic: Boolean?
+    ): Result<Page<GroupSummaryWithPermission>> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val result = groupService.list(userId, projectId, sqlLimit.offset, sqlLimit.limit, returnPublic ?: false)
+        return Result(Page(sqlLimit.offset, sqlLimit.limit, result.first, result.second))
+    }
+}

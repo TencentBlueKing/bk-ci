@@ -32,6 +32,7 @@ import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.GitNotices
 import com.tencent.devops.common.ci.v2.MetaData
+import com.tencent.devops.common.ci.v2.Parameters
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
@@ -187,6 +188,19 @@ object YamlObjects {
                 remote = getNotNullValue("remote", "templateInfo", templateInfo).toBoolean(),
                 remoteTemplateProjectId = getNullValue("remoteTemplateProjectId", templateInfo)
             )
+        )
+    }
+
+    fun getParameter(fromPath: String, param: Map<String, Any>): Parameters {
+        return Parameters(
+            name = getNotNullValue(key = "name", mapName = TemplateType.PARAMETERS.text, map = param),
+            type = getNotNullValue(key = "type", mapName = TemplateType.PARAMETERS.text, map = param),
+            default = param["default"],
+            values = if (param["values"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "values", param["values"])
+            }
         )
     }
 

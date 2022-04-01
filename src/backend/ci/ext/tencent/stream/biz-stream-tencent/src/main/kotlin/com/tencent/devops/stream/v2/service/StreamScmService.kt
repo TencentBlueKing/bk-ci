@@ -56,7 +56,7 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
@@ -390,10 +390,10 @@ class StreamScmService @Autowired constructor(
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
-    fun getProjectId(isFork: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
-        with(gitRequestEvent) {
-            return if (isFork) {
-                sourceGitProjectId!!
+    fun getProjectId(isFork: Boolean = false, gitRequestEventForHandle: GitRequestEventForHandle): Long {
+        with(gitRequestEventForHandle) {
+            return if (isFork && !checkRepoTrigger) {
+                gitRequestEvent.sourceGitProjectId!!
             } else {
                 gitProjectId
             }
