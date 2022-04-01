@@ -163,7 +163,8 @@ class ExperienceBaseService @Autowired constructor(
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
                 expired = now.isAfter(it.endDate),
-                subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") || userId == it.creator,
+                subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}")
+                        || userId == it.creator,
                 redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
