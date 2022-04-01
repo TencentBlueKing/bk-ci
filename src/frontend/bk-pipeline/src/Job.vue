@@ -276,8 +276,9 @@
             handleCopyContainer () {
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
+                    const { containerHashId, containerId, ...resetContainerProps } = copyContainer
                     const container = {
-                        ...copyContainer,
+                        ...resetContainerProps,
                         containerId: `c-${hashID()}`,
                         jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map(element => ({

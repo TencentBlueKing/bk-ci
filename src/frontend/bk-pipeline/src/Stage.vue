@@ -461,6 +461,7 @@
                             ...container,
                             jobId: `job_${randomString(3)}`,
                             containerId: `c-${hashID()}`,
+                            containerHashId: undefined,
                             elements: container.elements.map(element => ({
                                 ...element,
                                 id: `e-${hashID()}`
