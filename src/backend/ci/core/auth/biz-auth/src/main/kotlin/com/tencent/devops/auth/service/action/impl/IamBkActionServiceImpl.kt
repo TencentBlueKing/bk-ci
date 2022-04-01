@@ -48,6 +48,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.annotation.PostConstruct
 
 class IamBkActionServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
@@ -58,6 +59,48 @@ class IamBkActionServiceImpl @Autowired constructor(
     val iamActionService: IamActionService,
     val iamResourceService: IamResourceService
 ): BKActionServiceImpl(dslContext, actionDao, resourceService) {
+
+    @PostConstruct
+    fun initAction() {
+        try {
+            // 获取本地所有action
+            val actionInfos = actionDao.getAllAction(dslContext, "*") ?: return
+            // 匹配iam内注册的action
+            val iamActions = systemService.getSystemFieldsInfo(systemId).actions.map {
+                it.id
+            }
+            val createActions = mutableListOf<CreateActionDTO>()
+            actionInfos?.forEach {
+                logger.info("ci action ${it.actionId}|${it.resourceId}")
+                if (!iamActions.contains(it.actionId)) {
+                    logger.info("ci action ${it.actionId} need syn iam")
+                    val iamCreateAction = CreateActionDTO(
+                        actionType = "",
+                        actionId = it.actionId,
+                        resourceId = it.resourceId,
+                        desc = it.actionName,
+                        actionEnglishName = it.actionEnglishName,
+                        actionName = it.actionName,
+                        relationAction = it.relationAction
+                    )
+                    createActions.add(iamCreateAction)
+                }
+            }
+            if (createActions.isEmpty()) {
+                logger.info("all ci action(${actionInfos.size}) in iam")
+                return
+            }
+            // 以本地action为源，补充iam内的action
+            createActions.forEach {
+                logger.info("action ${it.actionId} start syn iam")
+                extSystemCreate("system", it)
+                logger.info("action ${it.actionId} syn success")
+            }
+        } catch (e: Exception) {
+            logger.error("action init fail. $e")
+            throw e
+        }
+    }
 
     override fun extSystemCreate(userId: String, action: CreateActionDTO) {
         logger.info("extSystemCreate $userId $action")

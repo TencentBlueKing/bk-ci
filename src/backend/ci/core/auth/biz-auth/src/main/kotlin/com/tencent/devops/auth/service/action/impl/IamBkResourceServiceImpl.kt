@@ -34,7 +34,9 @@ import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
 import com.tencent.bk.sdk.iam.service.IamResourceService
+import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.devops.auth.dao.ResourceDao
+import com.tencent.devops.auth.pojo.enum.SystemType
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.ResourceInfo
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
@@ -44,12 +46,14 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import javax.annotation.PostConstruct
 
 class IamBkResourceServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
     override val resourceDao: ResourceDao,
     val iamConfiguration: IamConfiguration,
-    val resourceService: IamResourceService
+    val resourceService: IamResourceService,
+    val iamSystemService: SystemService
 ): BkResourceServiceImpl(dslContext, resourceDao) {
 
     @Value("\${iam.selector.project:#{null}}")
@@ -57,6 +61,48 @@ class IamBkResourceServiceImpl @Autowired constructor(
 
     @Value("\${iam.selector.other:#{null}}")
     val otherResourceCallbackPath = "/api/service/auth/resource/instances/list"
+
+    @PostConstruct
+    fun initResource() {
+        try {
+            // 获取蓝盾本地所有资源
+            val resourceInfos = resourceDao.getAllResource(dslContext) ?: return
+
+            // 获取iam侧有的资源类型
+            val iamResources = iamSystemService.getSystemFieldsInfo(systemId).resourceType.map {
+                it.id
+            }
+            val createResources = mutableListOf<CreateResourceDTO>()
+            // 以蓝盾的资源为源，同步置iam侧
+            resourceInfos.forEach {
+                if (!iamResources.contains(it.resourcetype)) {
+                    createResources.add(
+                        CreateResourceDTO(
+                            resourceId = it.resourcetype,
+                            name = it.name,
+                            englishName = it.englishname,
+                            desc = it.desc,
+                            englishDes = it.englishdesc,
+                            parent = it.parent,
+                            system = SystemType.get(it.system)
+                        )
+                    )
+                }
+            }
+            if (createResources.isEmpty()) {
+                logger.info("all ci resources(${resourceInfos.size}) in iam")
+                return
+            }
+            createResources.forEach {
+                logger.info("resources ${it.resourceId} start syn iam")
+                createExtSystem(it)
+                logger.info("resources ${it.resourceId} syn iam success")
+            }
+        } catch (e: Exception) {
+            logger.error("resources init fail. $e")
+            throw e
+        }
+    }
 
     override fun createExtSystem(resource: CreateResourceDTO) {
         logger.info("createExtSystem $resource")

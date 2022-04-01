@@ -149,6 +149,13 @@ class IamV3AuthConfiguration {
         dslContext: DSLContext,
         resourceDao: ResourceDao,
         iamConfiguration: IamConfiguration,
-        resourceService: IamResourceService
-    ) = IamBkResourceServiceImpl(dslContext, resourceDao, iamConfiguration, resourceService)
+        resourceService: IamResourceService,
+        iamSystemService: SystemService
+    ) = IamBkResourceServiceImpl(
+        dslContext = dslContext,
+        resourceDao = resourceDao,
+        iamConfiguration = iamConfiguration,
+        resourceService = resourceService,
+        iamSystemService = iamSystemService
+    )
 }

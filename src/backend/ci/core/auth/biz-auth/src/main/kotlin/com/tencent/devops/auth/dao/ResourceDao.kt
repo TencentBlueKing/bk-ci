@@ -116,7 +116,7 @@ class ResourceDao {
 
     fun getAllResource(
         dslContext: DSLContext
-    ): Result<TAuthResourceRecord?> {
+    ): Result<TAuthResourceRecord>? {
         with(TAuthResource.T_AUTH_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where((DELETE.eq(false)))
