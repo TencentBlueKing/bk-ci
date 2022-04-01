@@ -162,7 +162,7 @@ class TemplateInstanceCronService @Autowired constructor(
                             val message =
                                 if (!ignored.message.isNullOrBlank() && ignored.message!!.length > 36)
                                     ignored.message!!.substring(0, 36) + "......" else ignored.message
-                            failurePipelines.add("【${pipelineName}】ReasonFailure: $message")
+                            failurePipelines.add("【$pipelineName】ReasonFailure: $message")
                         }
                     }
                 }
