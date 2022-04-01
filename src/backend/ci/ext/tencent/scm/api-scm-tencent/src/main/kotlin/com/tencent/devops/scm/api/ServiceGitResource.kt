@@ -202,7 +202,10 @@ interface ServiceGitResource {
     fun getUserInfoByToken(
         @ApiParam("用户id", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam("是否使用access token", required = true)
+        @QueryParam("useAccessToken")
+        useAccessToken: Boolean = true
     ): Result<GitUserInfo>
 
     @ApiOperation("获取项目的token")
@@ -247,7 +250,10 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "提交id 或者 分支")
         @QueryParam("ref")
-        ref: String?
+        ref: String?,
+        @ApiParam(value = "是否支持递归目录结构")
+        @QueryParam("recursive")
+        recursive: Boolean? = false
     ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取mr请求的代码变更")

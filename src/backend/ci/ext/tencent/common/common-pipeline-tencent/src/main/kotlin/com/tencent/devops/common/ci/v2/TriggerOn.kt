@@ -29,6 +29,8 @@ package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 /**
  * model
@@ -43,7 +45,10 @@ data class TriggerOn(
     val delete: DeleteRule? = null,
     val issue: IssueRule? = null,
     val review: ReviewRule? = null,
-    val note: NoteRule? = null
+    val note: NoteRule? = null,
+    @ApiModelProperty(name = "repo_hook")
+    @JsonProperty("repo_hook")
+    val repoHook: RepositoryHook? = null
 )
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,5 +61,8 @@ data class PreTriggerOn(
     val delete: DeleteRule?,
     val issue: IssueRule? = null,
     val review: ReviewRule? = null,
-    val note: NoteRule? = null
+    val note: NoteRule? = null,
+    @ApiModelProperty(name = "repo_hook")
+    @JsonProperty("repo_hook")
+    val repoHook: List<Any>? = null
 )

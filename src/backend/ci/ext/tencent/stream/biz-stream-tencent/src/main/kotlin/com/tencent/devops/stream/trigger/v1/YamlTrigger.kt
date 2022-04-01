@@ -33,26 +33,26 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.GitCISettingDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.EnvironmentVariables
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.stream.service.GitRepositoryConfService
-import com.tencent.devops.stream.trigger.YamlTriggerInterface
-import com.tencent.devops.stream.utils.GitCIWebHookMatcher
 import com.tencent.devops.stream.trigger.GitCIEventService
+import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
+import com.tencent.devops.stream.utils.GitCIWebHookMatcher
+import java.io.BufferedReader
+import java.io.StringReader
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.io.BufferedReader
-import java.io.StringReader
-import javax.ws.rs.core.Response
 
 @Component
 class YamlTrigger @Autowired constructor(
@@ -69,10 +69,10 @@ class YamlTrigger @Autowired constructor(
         context: StreamTriggerContext
     ): Boolean {
         // TODO: 暂时先全部展开，后续函数全替换为上下文参数即可去掉
-        val (event, gitRequestEvent, _, gitProjectPipeline, originYaml, _) = context
+        val (event, gitRequestEventForHandle, _, gitProjectPipeline, originYaml, _) = context
 
         val yamlObject = prepareCIBuildYaml(
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = gitProjectPipeline.filePath,
@@ -84,49 +84,57 @@ class YamlTrigger @Autowired constructor(
         logger.info("normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-        gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
-            yamlObject.name!!
-        } else {
-            gitProjectPipeline.filePath.removeSuffix(
-                ".yml"
-            )
+        if (!gitRequestEventForHandle.checkRepoTrigger) {
+            gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) {
+                yamlObject.name!!
+            } else {
+                gitProjectPipeline.filePath.removeSuffix(
+                    ".yml"
+                )
+            }
         }
 
-        if (isMatch(event, gitRequestEvent, yamlObject).first) {
-            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
+        if (isMatch(event, gitRequestEventForHandle, yamlObject).first) {
+            logger.info(
+                "Matcher is true, display the event, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                    "eventId: ${gitRequestEventForHandle.id}, dispatched pipeline: $gitProjectPipeline"
+            )
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
+                eventId = gitRequestEventForHandle.id!!,
                 originYaml = originYaml,
                 parsedYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitProjectId = gitRequestEvent.gitProjectId,
-                branch = gitRequestEvent.branch,
-                objectKind = gitRequestEvent.objectKind,
-                commitMsg = gitRequestEvent.commitMsg,
-                triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
+                branch = gitRequestEventForHandle.branch,
+                objectKind = gitRequestEventForHandle.gitRequestEvent.objectKind,
+                commitMsg = gitRequestEventForHandle.gitRequestEvent.commitMsg,
+                triggerUser = gitRequestEventForHandle.userId,
+                sourceGitProjectId = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING,
                 version = null
             )
             try {
                 yamlBuild.gitStartBuild(
                     pipeline = gitProjectPipeline,
-                    event = gitRequestEvent,
+                    event = gitRequestEventForHandle.gitRequestEvent,
                     yaml = yamlObject,
                     gitBuildId = gitBuildId
                 )
             } catch (e: Throwable) {
-                logger.error("Fail to start the git ci build($gitRequestEvent)", e)
+                logger.error("Fail to start the git ci build($gitRequestEventForHandle)", e)
             }
-            repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
+            if (!gitRequestEventForHandle.checkRepoTrigger) {
+                repositoryConfService.updateGitCISetting(gitRequestEventForHandle.gitProjectId)
+            }
         } else {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}")
+            logger.warn(
+                "Matcher is false, return, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                    "eventId: ${gitRequestEventForHandle.id}"
+            )
             gitCIEventSaveService.saveBuildNotBuildEvent(
-                userId = gitRequestEvent.userId,
-                eventId = gitRequestEvent.id!!,
+                userId = gitRequestEventForHandle.userId,
+                eventId = gitRequestEventForHandle.id!!,
                 pipelineId = gitProjectPipeline.pipelineId.ifBlank { null },
                 pipelineName = gitProjectPipeline.displayName,
                 filePath = gitProjectPipeline.filePath,
@@ -134,11 +142,11 @@ class YamlTrigger @Autowired constructor(
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
-                gitProjectId = gitRequestEvent.gitProjectId,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
                 version = null,
-                branch = gitRequestEvent.branch
+                branch = gitRequestEventForHandle.branch
             )
         }
 
@@ -147,7 +155,7 @@ class YamlTrigger @Autowired constructor(
 
     fun isMatch(
         event: GitEvent,
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         ymlObject: CIBuildYaml
     ): Pair<Boolean, Boolean> {
         val matcher = GitCIWebHookMatcher(event)
@@ -155,7 +163,7 @@ class YamlTrigger @Autowired constructor(
     }
 
     fun prepareCIBuildYaml(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         isMr: Boolean,
         originYaml: String?,
         filePath: String,
@@ -168,12 +176,12 @@ class YamlTrigger @Autowired constructor(
         }
 
         val yamlObject = try {
-            createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
+            createCIBuildYaml(originYaml, gitRequestEventForHandle.gitProjectId)
         } catch (e: Throwable) {
             logger.warn("git ci yaml is invalid", e)
             gitCIEventSaveService.saveBuildNotBuildEvent(
-                userId = gitRequestEvent.userId,
-                eventId = gitRequestEvent.id!!,
+                userId = gitRequestEventForHandle.userId,
+                eventId = gitRequestEventForHandle.id!!,
                 pipelineId = pipelineId,
                 pipelineName = pipelineName,
                 filePath = filePath,
@@ -181,12 +189,12 @@ class YamlTrigger @Autowired constructor(
                 normalizedYaml = null,
                 reason = TriggerReason.CI_YAML_INVALID.name,
                 reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message.toString()),
-                gitProjectId = gitRequestEvent.gitProjectId,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
                 // V1不发送通知
                 sendCommitCheck = false,
                 commitCheckBlock = false,
                 version = null,
-                branch = gitRequestEvent.branch
+                branch = gitRequestEventForHandle.branch
             )
             return null
         }
@@ -211,8 +219,10 @@ class YamlTrigger @Autowired constructor(
                 // 判断镜像格式是否合法
                 val (imageName, imageTag) = it.parseImage()
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-                    ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-                        "Git CI没有此镜像版本记录. ${it.image}")
+                    ?: throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        "Git CI没有此镜像版本记录. ${it.image}"
+                    )
                 if (!record.enable) {
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
                 }

@@ -604,14 +604,19 @@ func (m *mgr) checkNet() {
 }
 
 func (m *mgr) setCommonConfig(config *types.CommonConfig) error {
-	blog.Debugf("mgr: try to set common config: %+v", *config)
+	blog.Infof("mgr: try to set common config: %+v", *config)
 
 	if err := m.saveCommonConfig(config); err != nil {
+		blog.Infof("mgr: failed to save common config with error: %v", err)
 		return err
 	}
+	blog.Infof("mgr: finished save common config")
 
 	// update workers with this config
-	_ = m.setWorkerConfig(config)
+	if err := m.setWorkerConfig(config); err != nil {
+		blog.Infof("mgr: failed to set worker config with error: %v", err)
+		return err
+	}
 
 	return nil
 }
@@ -716,7 +721,7 @@ func (m *mgr) getCommonSetting(projectID, scene string, batchMode bool) []*types
 }
 
 func (m *mgr) setWorkerConfig(config *types.CommonConfig) error {
-	blog.Debugf("mgr: ready set worker config with config:%+v", *config)
+	blog.Infof("mgr: ready set worker config")
 
 	works := []*types.Work{}
 	for _, work := range m.worksPool.all() {
@@ -725,20 +730,29 @@ func (m *mgr) setWorkerConfig(config *types.CommonConfig) error {
 			info.Scene() == config.WorkerKey.Scene &&
 			info.IsBatchMode() == config.WorkerKey.BatchMode {
 			works = append(works, work)
+			blog.Infof("mgr: ready set config to worker:%s", work.ID())
 		}
 	}
+	blog.Infof("mgr: got total %d workers", len(works))
 
 	if config.Configkey == dcSDK.CommonConfigKeyToolChain {
 		sdkToolChain, ok := config.Config.(dcSDK.OneToolChain)
 		if ok {
+			blog.Infof("mgr: got tool chain:%+v", sdkToolChain)
 			toolchain := sdkToolChain2Types(&sdkToolChain)
 			for _, work := range works {
 				work.Lock()
-				blog.Infof("mgr: ready set tool chain(%s) to worker(%s)", sdkToolChain.ToolKey, work.ID())
+				blog.Infof("mgr: ready set tool chain(%s) to worker(%s)", toolchain.ToolKey, work.ID())
 				_ = work.Basic().SetToolChain(toolchain)
 				work.Unlock()
 			}
+		} else {
+			blog.Warnf("mgr: failed cast to toolchain with config:%+v", *config)
+			return fmt.Errorf("failed cast to toolchain with config:%+v", *config)
 		}
+	} else {
+		blog.Warnf("mgr: got unknown common config key:%s", config.Configkey)
+		return fmt.Errorf("unknown common config key:%s", config.Configkey)
 	}
 
 	return nil

@@ -68,20 +68,20 @@ class StreamTriggerListener @Autowired constructor(
         val startTime = System.currentTimeMillis()
         // 针对每个流水线处理异常
         triggerExceptionService.handle(
-            requestEvent = event.gitRequestEvent,
+            requestEvent = event.gitRequestEventForHandle,
             gitEvent = event.event,
             basicSetting = event.gitCIBasicSetting
         ) {
             // ErrorCode都是系统错误，在最外面统一处理,都要发送无锁的commitCheck
             triggerExceptionService.handleErrorCode(
-                request = event.gitRequestEvent,
+                request = event.gitRequestEventForHandle,
                 event = event.event,
                 pipeline = event.gitProjectPipeline,
                 action = {
                     streamYamlTrigger.triggerBuild(
                         StreamTriggerContext(
                             gitEvent = event.event,
-                            requestEvent = event.gitRequestEvent,
+                            gitRequestEventForHandle = event.gitRequestEventForHandle,
                             streamSetting = event.gitCIBasicSetting,
                             pipeline = event.gitProjectPipeline,
                             originYaml = event.originYaml!!,
