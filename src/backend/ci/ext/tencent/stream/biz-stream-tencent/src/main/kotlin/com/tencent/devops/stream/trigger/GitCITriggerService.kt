@@ -42,6 +42,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrForkNotMergeEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
 import com.tencent.devops.stream.common.exception.TriggerThirdException
@@ -673,10 +674,19 @@ class GitCITriggerService @Autowired constructor(
             gitProjectId = gitProjectId,
             token = gitToken,
             filePath = ciFileDirectoryName,
-            ref = ref?.let { streamScmService.getTriggerBranch(it) }
-        ).filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
+            ref = ref?.let { streamScmService.getTriggerBranch(it) },
+            recursive = true
+        ).filter { checkStreamYamlFile(it) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toList()
     }
+
+    private fun checkStreamYamlFile(gitFileInfo: GitFileInfo): Boolean =
+        (gitFileInfo.name.endsWith(ciFileExtensionYml) ||
+                gitFileInfo.name.endsWith(ciFileExtensionYaml)) &&
+                (gitFileInfo.type == "blob") &&
+                !gitFileInfo.name.startsWith("templates/") &&
+                // 加以限制：最多仅限一级子目录
+                (gitFileInfo.name.count { it == '/' } <= 1)
 
     @Throws(TriggerThirdException::class)
     private fun isCIYamlExist(
@@ -688,7 +698,8 @@ class GitCITriggerService @Autowired constructor(
             gitProjectId = gitProjectId,
             token = gitToken,
             filePath = "",
-            ref = ref?.let { streamScmService.getTriggerBranch(it) }
+            ref = ref?.let { streamScmService.getTriggerBranch(it) },
+            recursive = false
         ).filter { it.name == ciFileName }
         return ciFileList.isNotEmpty()
     }
