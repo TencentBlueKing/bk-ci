@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.dto.SelectionDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.IamResourceService
 import com.tencent.bk.sdk.iam.service.SystemService
 import com.tencent.devops.auth.dao.ResourceDao
@@ -40,7 +41,6 @@ import com.tencent.devops.auth.pojo.enum.SystemType
 import com.tencent.devops.auth.pojo.resource.CreateResourceDTO
 import com.tencent.devops.auth.pojo.resource.ResourceInfo
 import com.tencent.devops.auth.pojo.resource.UpdateResourceDTO
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -133,24 +133,30 @@ class IamBkResourceServiceImpl @Autowired constructor(
         updateResourceInfo.englishName = resource.englishName
         updateResourceInfo.description = resource.desc
         updateResourceInfo.englishDescription = resource.englishDes
-        val result = resourceService.updateResource(updateResourceInfo, resourceType)
-        logger.info("updateExtSystem createResource:$result")
+        try {
+            val result = resourceService.updateResource(updateResourceInfo, resourceType)
+            logger.info("updateExtSystem createResource:$result")
 
-        val resourceInfo = ResourceInfo(
-            resourceId = resourceType,
-            name = resource.name,
-            englishName = resource.englishName,
-            desc = resource.desc,
-            englishDes = resource.englishDes,
-            parent = resource.parent,
-            system = resource.system,
-            creator = "",
-            updator = null,
-            creatorTime = 0L,
-            updateTime = null
-        )
-        // 2. 资源视图
-        buildIamResourceSelectorInstance(resourceInfo)
+            val resourceInfo = ResourceInfo(
+                resourceId = resourceType,
+                name = resource.name,
+                englishName = resource.englishName,
+                desc = resource.desc,
+                englishDes = resource.englishDes,
+                parent = resource.parent,
+                system = resource.system,
+                creator = "",
+                updator = null,
+                creatorTime = 0L,
+                updateTime = null
+            )
+            // 2. 资源视图
+            buildIamResourceSelectorInstance(resourceInfo)
+        } catch (iamException: IamException) {
+          logger.warn("updateExtSystem fail:$resource $iamException")
+        } catch (e: Exception) {
+            logger.warn("updateExtSystem fail:$resource $e")
+        }
     }
 
     private fun createIamResource(resource: CreateResourceDTO) {
@@ -188,7 +194,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
         val selectInstance = resourceService.systemInstanceSelector
         val resourceSelectId = resource.resourceId + INSTANCELABLE
         val projectSelect = ResourceTypeChainDTO()
-        projectSelect.id = AuthResourceType.PROJECT.value + INSTANCELABLE
+        projectSelect.id = AuthResourceType.PROJECT.value
         projectSelect.systemId = systemId
 
         var create = true

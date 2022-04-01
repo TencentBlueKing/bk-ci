@@ -80,6 +80,4 @@ object AuthMessageCode {
     const val RESOURCE_EXSIT = "2121302" // 权限系统：resource{0}已经存在
     const val RESOURCE_NOT_EXSIT = "2121303" // 权限系统：resource{0}不存在
     const val ACTION_CREATE_FAIL = "2121304" // 权限系统： action添加失败
-
-
 }
