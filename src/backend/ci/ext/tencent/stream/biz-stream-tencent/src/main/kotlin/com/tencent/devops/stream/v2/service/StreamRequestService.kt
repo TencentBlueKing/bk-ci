@@ -41,6 +41,7 @@ import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.pojo.GitRequestEventReq
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,7 +56,9 @@ class StreamRequestService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val streamBasicSettingService: StreamBasicSettingService
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamRequestService::class.java)
@@ -88,7 +91,16 @@ class StreamRequestService @Autowired constructor(
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
+            val gitProjectInfoCache = event.sourceGitProjectId?.let {
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = it,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
 
             val requestHistory = GitRequestHistory(
                 id = realEvent.id ?: return@forEach,

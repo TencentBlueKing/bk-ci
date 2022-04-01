@@ -28,12 +28,12 @@
 package com.tencent.devops.stream.trigger.parsers
 
 import com.tencent.devops.stream.common.exception.TriggerException
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import org.slf4j.LoggerFactory
 
@@ -43,17 +43,17 @@ object CheckStreamSetting {
 
     @Throws(TriggerException::class)
     fun checkGitProjectConf(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandel: GitRequestEventForHandle,
         event: GitEvent,
         gitProjectSetting: GitCIBasicSetting
     ): Boolean {
         if (!gitProjectSetting.enableCi) {
             logger.warn(
-                "git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, " +
+                "git ci is disabled, git project id: ${gitRequestEventForHandel.gitProjectId}, " +
                         "name: ${gitProjectSetting.name}"
             )
             TriggerException.triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandel,
                 reason = TriggerReason.CI_DISABLED
             )
         }
@@ -62,10 +62,10 @@ object CheckStreamSetting {
                 if (!gitProjectSetting.buildPushedBranches) {
                     logger.warn(
                         "git ci conf buildPushedBranches is false, git project id: " +
-                                "${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}"
+                                "${gitRequestEventForHandel.gitProjectId}, name: ${gitProjectSetting.name}"
                     )
                     TriggerException.triggerError(
-                        request = gitRequestEvent,
+                        request = gitRequestEventForHandel,
                         reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED
                     )
                 }
@@ -74,10 +74,10 @@ object CheckStreamSetting {
                 if (!gitProjectSetting.buildPushedBranches) {
                     logger.warn(
                         "git ci conf buildPushedBranches is false, git project id: " +
-                                "${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}"
+                                "${gitRequestEventForHandel.gitProjectId}, name: ${gitProjectSetting.name}"
                     )
                     TriggerException.triggerError(
-                        request = gitRequestEvent,
+                        request = gitRequestEventForHandel,
                         reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED
                     )
                 }
@@ -86,10 +86,10 @@ object CheckStreamSetting {
                 if (!gitProjectSetting.buildPushedPullRequest) {
                     logger.warn(
                         "git ci conf buildMergePullRequest is false, git project id: " +
-                                "${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}"
+                                "${gitRequestEventForHandel.gitProjectId}, name: ${gitProjectSetting.name}"
                     )
                     TriggerException.triggerError(
-                        request = gitRequestEvent,
+                        request = gitRequestEventForHandel,
                         reason = TriggerReason.BUILD_MERGE_REQUEST_DISABLED
                     )
                 }

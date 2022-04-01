@@ -9,9 +9,9 @@ import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.TriggerThirdException
 import com.tencent.devops.stream.common.exception.Yamls
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.GitCIEventService
 import org.slf4j.LoggerFactory
@@ -27,7 +27,7 @@ class TriggerExceptionService @Autowired constructor(
     }
 
     fun <T> handle(
-        requestEvent: GitRequestEvent,
+        requestEvent: GitRequestEventForHandle,
         gitEvent: GitEvent?,
         basicSetting: GitCIBasicSetting?,
         action: () -> T?
@@ -92,7 +92,7 @@ class TriggerExceptionService @Autowired constructor(
 
     // 针对错误码(多为GitApi)请求做异常处理
     fun <T> handleErrorCode(
-        request: GitRequestEvent,
+        request: GitRequestEventForHandle,
         messageParams: List<String>? = null,
         event: GitEvent? = null,
         basicSetting: GitCIBasicSetting? = null,

@@ -38,10 +38,17 @@ object ErrorMsgLogUtil {
 
     private val logger = LoggerFactory.getLogger(ErrorMsgLogUtil::class.java)
 
-    private val message = StringBuilder(CAPACITY)
+    private val message = StringBuilder(CAPACITY) // 不存在并发场景，也可忍受并发不保护
 
     // 旧版的Agent没有AGENT_ERROR_MSG_FILE参数，所以不默认创建了，否则无法被清理。
     private fun getErrorFile(): File? = System.getProperty(AGENT_ERROR_MSG_FILE)?.let { filePath -> File(filePath) }
+
+    fun init() {
+        getErrorFile()?.let { file ->
+            logger.info("initErrorMsgFile: ${file.absoluteFile}")
+            file.writeText("")
+        }
+    }
 
     fun resetErrorMsg() {
         logger.info("resetErrorMsg| $message")

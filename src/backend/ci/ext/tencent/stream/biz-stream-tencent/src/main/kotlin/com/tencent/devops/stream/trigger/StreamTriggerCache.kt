@@ -47,7 +47,7 @@ class StreamTriggerCache @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StreamTriggerCache::class.java)
 
         //  过期时间目前设为1小时
-        private const val STREAM_CACHE_EXPIRE_TIME = 60 * 60L
+        private const val STREAM_CACHE_EXPIRE_TIME = 10 * 60L
         private const val STREAM_REQUEST_KEY_PREFIX = "stream:request"
     }
 
@@ -74,7 +74,9 @@ class StreamTriggerCache @Autowired constructor(
         val cacheData = StreamGitProjectCache(
             gitProjectName = gitProjectId,
             gitProjectId = gitProjectInfo.gitProjectId,
-            defaultBranch = gitProjectInfo.defaultBranch
+            defaultBranch = gitProjectInfo.defaultBranch,
+            gitHttpUrl = gitProjectInfo.gitHttpUrl,
+            name = gitProjectInfo.name
         )
         saveRequestGitProjectInfo(
             gitRequestEventId = gitRequestEventId,

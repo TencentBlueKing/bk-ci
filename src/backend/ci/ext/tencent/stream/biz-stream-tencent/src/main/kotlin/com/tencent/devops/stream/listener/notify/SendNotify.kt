@@ -23,7 +23,9 @@ import com.tencent.devops.stream.listener.isSuccess
 import com.tencent.devops.stream.pojo.enums.GitCINotifyType
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.pojo.rtxCustom.ReceiverType
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -31,7 +33,9 @@ import org.springframework.stereotype.Component
 @Component
 class SendNotify @Autowired constructor(
     private val client: Client,
-    private val config: StreamBuildFinishConfig
+    private val config: StreamBuildFinishConfig,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendNotify::class.java)
@@ -100,11 +104,20 @@ class SendNotify @Autowired constructor(
         val content = replaceVar(notice.content, noticeVariables)
 
         val projectName = GitCommonUtils.getRepoName(context.streamSetting.gitHttpUrl, context.streamSetting.name)
+        val gitProjectInfoCache = context.requestEvent.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+        }
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = context.requestEvent.gitProjectId,
             sourceGitProjectId = context.requestEvent.sourceGitProjectId,
             branch = context.requestEvent.branch,
-            client = client
+            gitProjectCache = gitProjectInfoCache
         )
         val pipelineName = context.pipeline.displayName
         val requestId = if (context.requestEvent.isMr()) {
