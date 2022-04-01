@@ -631,7 +631,7 @@
     },
     "editPage": {
         "invalidValue": "Plugin's Input {0} Invalid",
-        "shareEnvInfo": "from {0} Project，By {1}",
+        "shareEnvInfo": "From {0} Project，shared By {1}",
         "environment": "Environment",
         "envProjectId": "ProjectId",
         "envProjectTips": "The default is the current project. Fill in the English name of the corresponding project",

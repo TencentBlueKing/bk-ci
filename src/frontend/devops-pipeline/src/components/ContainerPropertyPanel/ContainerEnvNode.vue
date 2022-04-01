@@ -294,7 +294,9 @@
         justify-content: space-between;
         align-items: center;
         span:first-child {
-            flex: 1
+            flex: 1;
+            @include ellipsis();
+            margin-right: 16px;
         }
         .env-info {
             margin-right: 12px;

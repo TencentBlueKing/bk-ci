@@ -61,7 +61,7 @@
                 pagination: {
                     current: 1,
                     count: 20,
-                    limit: 20
+                    limit: 10
                 },
                 selection: [],
                 projects: [],
