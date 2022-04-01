@@ -1536,7 +1536,7 @@ class TemplateFacadeService @Autowired constructor(
                     val message =
                         if (!t.message.isNullOrBlank() && t.message!!.length > 36)
                             t.message!!.substring(0, 36) + "......" else t.message
-                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】 失败原因: $message")
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】ReasonFailure：$message")
                 }
             }
             // 发送执行任务结果通知
