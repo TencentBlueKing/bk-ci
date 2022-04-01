@@ -77,7 +77,6 @@ spec:
             - name: JVM_XMX
               value: {{ .Values.artifactory.env.jvmXmx }}
           workingDir: /data/workspace/artifactory
-          {{ if .Values.entrypoint.override }}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
