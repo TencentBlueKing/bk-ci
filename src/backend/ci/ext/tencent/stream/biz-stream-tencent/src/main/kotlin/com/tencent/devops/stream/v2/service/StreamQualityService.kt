@@ -113,6 +113,7 @@ class StreamQualityService {
                                 interceptItem.logPrompt ?: ""
                             )
                         )
+                        logger.info("QUALITY|resultList is: $resultList")
                         resultMap[elementCnName] = resultList
                     }
                     ruleName.add(ruleIntercept.ruleName)

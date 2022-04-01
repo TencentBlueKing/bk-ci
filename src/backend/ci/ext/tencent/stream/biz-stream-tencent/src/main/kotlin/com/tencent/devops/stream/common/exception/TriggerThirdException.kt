@@ -1,12 +1,12 @@
 package com.tencent.devops.stream.common.exception
 
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 class TriggerThirdException(
-    requestEvent: GitRequestEvent,
+    requestEvent: GitRequestEventForHandle,
     gitEvent: GitEvent? = null,
     commitCheck: CommitCheck? = null,
     basicSetting: GitCIBasicSetting? = null,
@@ -30,7 +30,7 @@ class TriggerThirdException(
 ) {
     companion object {
         fun triggerThirdError(
-            request: GitRequestEvent,
+            request: GitRequestEventForHandle,
             messageParams: List<String>? = null,
             event: GitEvent? = null,
             basicSetting: GitCIBasicSetting? = null,

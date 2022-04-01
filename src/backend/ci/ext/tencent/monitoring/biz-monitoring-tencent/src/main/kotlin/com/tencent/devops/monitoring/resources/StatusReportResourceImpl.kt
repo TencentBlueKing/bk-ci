@@ -32,10 +32,14 @@ import com.tencent.devops.monitoring.api.service.StatusReportResource
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.monitoring.pojo.UsersStatus
 import com.tencent.devops.monitoring.services.StatusReportService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class StatusReportResourceImpl @Autowired constructor(private val statusReportService: StatusReportService) : StatusReportResource {
+class StatusReportResourceImpl @Autowired constructor(
+    private val statusReportService: StatusReportService
+) : StatusReportResource {
+    @Timed
     override fun scmCommitCheck(addCommitCheckStatus: AddCommitCheckStatus): Result<Boolean> {
         return Result(statusReportService.reportScmCommitCheck(addCommitCheckStatus))
     }

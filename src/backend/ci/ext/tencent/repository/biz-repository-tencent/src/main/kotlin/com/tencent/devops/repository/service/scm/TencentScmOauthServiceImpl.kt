@@ -32,6 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -197,6 +198,26 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             token = token,
             mrId = mrId
         ).data
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): List<GitCommit> {
+        return client.getScm(ServiceScmOauthResource::class).getMrCommitList(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId,
+            page = page,
+            size = size
+        ).data ?: emptyList()
     }
 
     override fun addCommitCheck(request: CommitCheckRequest) {

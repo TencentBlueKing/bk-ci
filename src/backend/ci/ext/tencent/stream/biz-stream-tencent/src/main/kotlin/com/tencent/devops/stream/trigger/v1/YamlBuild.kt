@@ -33,60 +33,41 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.ci.NORMAL_JOB
+import com.tencent.devops.common.ci.VM_JOB
+import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.MacOS
+import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
+import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
+import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.CodePullStrategy
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
-import com.tencent.devops.stream.dao.GitCISettingDao
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.dao.GitCIServicesConfDao
-import com.tencent.devops.stream.pojo.GitRepositoryConf
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
-import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
-import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
-import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.common.ci.image.Credential
-import com.tencent.devops.common.ci.image.Pool
-import com.tencent.devops.common.ci.CiBuildConfig
-import com.tencent.devops.common.ci.NORMAL_JOB
-import com.tencent.devops.common.ci.VM_JOB
-import com.tencent.devops.common.ci.image.MacOS
-import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
-import com.tencent.devops.common.ci.yaml.Job
-import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.enums.CodePullStrategy
-import com.tencent.devops.common.pipeline.enums.GitPullModeType
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.stream.client.ScmClient
-import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.pojo.BuildConfig
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.utils.GitCIParameterUtils
-import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
-import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REF
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPOSITORY
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPO_OWNER
@@ -104,8 +85,27 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.stream.client.ScmClient
+import com.tencent.devops.stream.dao.GitCIServicesConfDao
+import com.tencent.devops.stream.dao.GitCISettingDao
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.pojo.BuildConfig
+import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.GitRepositoryConf
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.trigger.GitCIEventService
+import com.tencent.devops.stream.utils.GitCIParameterUtils
+import com.tencent.devops.stream.utils.GitCIPipelineUtils
+import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -393,7 +393,8 @@ class YamlBuild @Autowired constructor(
                     hookSourceBranch = event.branch,
                     hookTargetBranch = event.targetBranch,
                     hookSourceUrl = if (event.sourceGitProjectId != null &&
-                        event.sourceGitProjectId != event.gitProjectId) {
+                        event.sourceGitProjectId != event.gitProjectId
+                    ) {
                         gitEvent.object_attributes.source.http_url
                     } else {
                         gitProjectConf.gitHttpUrl
@@ -565,7 +566,7 @@ class YamlBuild @Autowired constructor(
 //                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
                 startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.id.toString()
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
-                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
+                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url ?: ""
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()

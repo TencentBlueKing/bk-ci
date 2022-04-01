@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.between
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -52,9 +53,14 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import com.tencent.devops.stream.v2.service.StreamScmService
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -67,20 +73,22 @@ class SendCommitCheck @Autowired constructor(
     private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
     private val gitCheckService: GitCheckService,
-    private val triggerMessageUtil: StreamTriggerMessageUtils
+    private val streamGitTokenService: StreamGitTokenService,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
-        private const val BUILD_RUNNING_DESC = "Your pipeline「%s」is running."
+        private const val BUILD_RUNNING_DESC = "Running."
         private const val BUILD_STAGE_SUCCESS_DESC =
             "Warning: your pipeline「%s」 is stage succeed. Rejected by %s, reason is %s."
-        private const val BUILD_SUCCESS_DESC = "Your pipeline「%s」 is succeed."
+        private const val BUILD_SUCCESS_DESC = "Successful in %sm."
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
-        private const val BUILD_FAILED_DESC = "Your pipeline「%s」 is failed."
+        private const val BUILD_FAILED_DESC = "Failing after %sm."
         private const val BUILD_GATE_REVIEW_DESC =
-            "Pending: Gate access requirement is not met. Gatekeeper approval is needed."
+            "Pending: gate access requirement is not met, gatekeeper's approval is needed."
         private const val BUILD_MANUAL_REVIEW_DESC =
-            "Pending: Pipeline approval is needed."
+            "Stage success: pipeline approval is needed."
     }
 
     fun sendCommitCheck(
@@ -112,20 +120,22 @@ class SendCommitCheck @Autowired constructor(
     ) {
         with(context) {
             gitCheckService.pushCommitCheck(
-                commitId = requestEvent.commitId,
-                description = triggerMessageUtil.getCommitCheckDesc(
-                    prefix = getDescByBuildStatus(this),
-                    objectKind = requestEvent.objectKind,
-                    action = checkGitEventAndGetAction(requestEvent),
-                    userId = buildEvent.userId
+                streamGitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitRequestEventId = requestEvent.id!!,
+                    gitProjectId = requestEvent.gitProjectId.toString(),
+                    token = streamGitTokenService.getToken(requestEvent.gitProjectId),
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
                 ),
+                commitId = requestEvent.commitId,
+                description = getDescByBuildStatus(this),
                 // 由stage event红线评论发送
                 mergeRequestId = null,
+                projectId = pipeline.gitProjectId,
                 buildId = buildEvent.buildId,
                 userId = buildEvent.userId,
                 status = getGitCommitCheckState(),
                 context = "${pipeline.filePath}@${requestEvent.objectKind.toUpperCase()}",
-                gitCIBasicSetting = streamSetting,
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 targetUrl = getTargetUrl(context)
@@ -154,10 +164,10 @@ class SendCommitCheck @Autowired constructor(
         val pipelineName = context.pipeline.displayName
         return when (context.getBuildStatus()) {
             BuildStatus.REVIEWING -> {
-                getStageReviewDesc(context, pipelineName)
+                getStageReviewDesc(context)
             }
             BuildStatus.REVIEW_PROCESSED -> {
-                BUILD_RUNNING_DESC.format(pipelineName)
+                BUILD_RUNNING_DESC
             }
             else -> {
                 getFinishDesc(context, pipelineName)
@@ -166,11 +176,10 @@ class SendCommitCheck @Autowired constructor(
     }
 
     private fun getStageReviewDesc(
-        context: StreamBuildListenerContextV2,
-        pipelineName: String
+        context: StreamBuildListenerContextV2
     ): String {
         if (context !is StreamBuildStageListenerContextV2) {
-            return BUILD_RUNNING_DESC.format(pipelineName)
+            return BUILD_RUNNING_DESC
         }
         return when (context.reviewType) {
             BuildReviewType.STAGE_REVIEW -> {
@@ -182,7 +191,7 @@ class SendCommitCheck @Autowired constructor(
             // 这里先这么写，未来如果这么枚举扩展代码编译时可以第一时间感知，防止漏过事件
             BuildReviewType.TASK_REVIEW -> {
                 logger.warn("buildReviewListener event not match: ${context.reviewType}")
-                BUILD_RUNNING_DESC.format(pipelineName)
+                BUILD_RUNNING_DESC
             }
         }
     }
@@ -196,15 +205,21 @@ class SendCommitCheck @Autowired constructor(
                 val (name, reason) = getReviewInfo(context)
                 BUILD_STAGE_SUCCESS_DESC.format(pipelineName, name, reason)
             } else {
-                BUILD_SUCCESS_DESC.format(pipelineName)
+                BUILD_SUCCESS_DESC.format(getFinishTime(context.buildEvent.startTime).toString())
             }
         }
         context.getBuildStatus().isCancel() -> {
             BUILD_CANCEL_DESC.format(pipelineName)
         }
         else -> {
-            BUILD_FAILED_DESC.format(pipelineName)
+            BUILD_FAILED_DESC.format(getFinishTime(context.buildEvent.startTime).toString())
         }
+    }
+
+    private fun getFinishTime(startTimeTimeStamp: Long?): Long {
+        val zoneId = ZoneId.systemDefault()
+        val startTime = LocalDateTime.ofInstant(startTimeTimeStamp?.let { Instant.ofEpochMilli(it) }, zoneId)
+        return startTime.between(LocalDateTime.now()).toMinutes()
     }
 
     private fun getTargetUrl(

@@ -369,72 +369,79 @@ class LogServiceESImpl constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
+        val startEpoch = System.currentTimeMillis()
+        var success = false
+        try {
+            val index = indexService.getIndexName(buildId)
+            val query = getQuery(
+                buildId = buildId,
+                debug = false,
+                logType = null,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
 
-        val index = indexService.getIndexName(buildId)
-        val query = getQuery(
-            buildId = buildId,
-            debug = false,
-            logType = null,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
+            val scrollClient = logClient.hashClient(buildId)
+            val searchRequest = SearchRequest(index)
+                .source(
+                    SearchSourceBuilder()
+                        .query(query)
+                        .docValueField("lineNo")
+                        .docValueField("timestamp")
+                        .size(Constants.SCROLL_MAX_LINES)
+                        .sort("timestamp", SortOrder.ASC)
+                        .sort("lineNo", SortOrder.ASC)
+                ).scroll(TimeValue(1000 * 64))
 
-        val scrollClient = logClient.hashClient(buildId)
-        val searchRequest = SearchRequest(index)
-            .source(
-                SearchSourceBuilder()
-                    .query(query)
-                    .docValueField("lineNo")
-                    .docValueField("timestamp")
-                    .size(Constants.SCROLL_MAX_LINES)
-                    .sort("timestamp", SortOrder.ASC)
-                    .sort("lineNo", SortOrder.ASC)
-            ).scroll(TimeValue(1000 * 64))
+            var scrollResp = try {
+                scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
+            } catch (e: IOException) {
+                scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
+            }
 
-        var scrollResp = try {
-            scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
-        } catch (e: IOException) {
-            scrollClient.restClient.search(searchRequest, genLargeSearchOptions())
-        }
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
+            // 一边读一边流式下载
+            val fileStream = StreamingOutput { output ->
+                do {
+                    val sb = StringBuilder()
+                    scrollResp.hits.hits.forEach { searchHit ->
+                        val sourceMap = searchHit.sourceAsMap
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-        // 一边读一边流式下载
-        val fileStream = StreamingOutput { output ->
-            do {
-                val sb = StringBuilder()
-                scrollResp.hits.hits.forEach { searchHit ->
-                    val sourceMap = searchHit.sourceAsMap
-
-                    val logLine = LogLine(
-                        sourceMap["lineNo"].toString().toLong(),
-                        sourceMap["timestamp"].toString().toLong(),
-                        sourceMap["message"].toString().removePrefix("\u001b[31m").removePrefix("\u001b[1m").replace(
-                            "\u001B[m",
-                            ""
-                        ).removeSuffix("\u001b[m"),
-                        Constants.DEFAULT_PRIORITY_NOT_DELETED
+                        val logLine = LogLine(
+                            sourceMap["lineNo"].toString().toLong(),
+                            sourceMap["timestamp"].toString().toLong(),
+                            sourceMap["message"].toString().removePrefix("\u001b[31m")
+                                .removePrefix("\u001b[1m").replace(
+                                "\u001B[m",
+                                ""
+                            ).removeSuffix("\u001b[m"),
+                            Constants.DEFAULT_PRIORITY_NOT_DELETED
+                        )
+                        val dateTime = sdf.format(Date(logLine.timestamp))
+                        val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
+                        sb.append(str)
+                    }
+                    output.write(sb.toString().toByteArray())
+                    output.flush()
+                    scrollResp = scrollClient.restClient.scroll(
+                        SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
+                        RequestOptions.DEFAULT
                     )
-                    val dateTime = sdf.format(Date(logLine.timestamp))
-                    val str = "$dateTime : ${logLine.message}" + System.lineSeparator()
-                    sb.append(str)
-                }
-                output.write(sb.toString().toByteArray())
-                output.flush()
-                scrollResp = scrollClient.restClient.scroll(
-                    SearchScrollRequest(scrollResp.scrollId).scroll(TimeValue(1000 * 64)),
-                    RequestOptions.DEFAULT
-                )
-            } while (scrollResp.hits.hits.isNotEmpty())
-        }
+                } while (scrollResp.hits.hits.isNotEmpty())
+            }
 
-        val resultName = fileName ?: "$pipelineId-$buildId-log"
-        return Response
-            .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
-            .header("content-disposition", "attachment; filename = $resultName.log")
-            .header("Cache-Control", "no-cache")
-            .build()
+            val resultName = fileName ?: "$pipelineId-$buildId-log"
+            success = true
+            return Response
+                .ok(fileStream, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+                .header("content-disposition", "attachment; filename = \"$resultName.log\"")
+                .header("Cache-Control", "no-cache")
+                .build()
+        } finally {
+            logStorageBean.download(System.currentTimeMillis() - startEpoch, success)
+        }
     }
 
     override fun getEndLogsPage(

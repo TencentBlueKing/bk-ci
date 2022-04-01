@@ -28,24 +28,27 @@
 package com.tencent.devops.stream.mq.streamTrigger
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import org.slf4j.MDC
 
 @Event(MQ.EXCHANGE_STREAM_TRIGGER_PIPELINE_EVENT, MQ.ROUTE_STREAM_TRIGGER_PIPELINE_EVENT)
 data class StreamTriggerEvent(
     // TODO 为了保证消息生产消费兼容，下次发布再去掉event的token字段
     val gitToken: GitToken,
     val forkGitToken: GitToken?,
-    val gitRequestEvent: GitRequestEvent,
+    val gitRequestEventForHandle: GitRequestEventForHandle,
     val gitProjectPipeline: GitProjectPipeline,
     val event: GitEvent,
     val originYaml: String?,
     val filePath: String,
     val gitCIBasicSetting: GitCIBasicSetting,
     val changeSet: Set<String>? = null,
-    val forkGitProjectId: Long? = null
+    val forkGitProjectId: Long? = null,
+    val traceId: String? = MDC.get(TraceTag.BIZID)
 )

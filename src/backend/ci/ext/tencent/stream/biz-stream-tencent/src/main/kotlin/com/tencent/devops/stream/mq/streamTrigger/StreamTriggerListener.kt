@@ -27,12 +27,14 @@
 
 package com.tencent.devops.stream.mq.streamTrigger
 
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -47,23 +49,39 @@ class StreamTriggerListener @Autowired constructor(
     }
 
     fun listenStreamTriggerEvent(event: StreamTriggerEvent) {
+        try {
+            val traceId = MDC.get(TraceTag.BIZID)
+            if (traceId.isNullOrEmpty()) {
+                if (!event.traceId.isNullOrEmpty()) {
+                    MDC.put(TraceTag.BIZID, event.traceId)
+                } else {
+                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                }
+            }
+            run(event)
+        } finally {
+            MDC.remove(TraceTag.BIZID)
+        }
+    }
+
+    private fun run(event: StreamTriggerEvent) {
         val startTime = System.currentTimeMillis()
         // 针对每个流水线处理异常
         triggerExceptionService.handle(
-            requestEvent = event.gitRequestEvent,
+            requestEvent = event.gitRequestEventForHandle,
             gitEvent = event.event,
             basicSetting = event.gitCIBasicSetting
         ) {
             // ErrorCode都是系统错误，在最外面统一处理,都要发送无锁的commitCheck
             triggerExceptionService.handleErrorCode(
-                request = event.gitRequestEvent,
+                request = event.gitRequestEventForHandle,
                 event = event.event,
                 pipeline = event.gitProjectPipeline,
                 action = {
                     streamYamlTrigger.triggerBuild(
                         StreamTriggerContext(
                             gitEvent = event.event,
-                            requestEvent = event.gitRequestEvent,
+                            gitRequestEventForHandle = event.gitRequestEventForHandle,
                             streamSetting = event.gitCIBasicSetting,
                             pipeline = event.gitProjectPipeline,
                             originYaml = event.originYaml!!,
@@ -77,7 +95,9 @@ class StreamTriggerListener @Autowired constructor(
                 )
             )
         }
-        logger.info("stream pipeline: ${event.gitProjectPipeline.pipelineId} " +
-            "from trigger to build time：${System.currentTimeMillis() - startTime}")
+        logger.info(
+            "stream pipeline: ${event.gitProjectPipeline.pipelineId} " +
+                "from trigger to build time：${System.currentTimeMillis() - startTime}"
+        )
     }
 }

@@ -69,6 +69,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -519,7 +520,7 @@ class PipelineRuntimeService @Autowired constructor(
                     channelCode = ChannelCode.valueOf(channel)
                 ),
                 buildNumAlias = buildNumAlias,
-                updateTime = updateTime.timestampmilli()
+                updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L // 防止空异常
             )
         }
     }
@@ -633,9 +634,12 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        terminateFlag: Boolean = false
     ): Boolean {
-        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
+        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 发送取消事件
+        val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
@@ -644,14 +648,16 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                status = buildStatus
+                status = buildStatus,
+                actionType = actionType
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                buildId = buildId
+                buildId = buildId,
+                actionType = actionType
             )
         )
         // 给未结束的job发送心跳监控事件
@@ -728,6 +734,14 @@ class PipelineRuntimeService @Autowired constructor(
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
                 logger.info("[$buildId|EXECUTE|#${stage.id!!}|${stage.status}|NOT_EXECUTE_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
+                if (index == 0) {
+                    stage.containers.forEach {
+                        if (it is TriggerContainer) {
+                            it.status = BuildStatus.RUNNING.name
+                            ContainerUtils.setQueuingWaitName(it)
+                        }
+                    }
+                }
                 return@nextStage
             }
 
@@ -771,6 +785,8 @@ class PipelineRuntimeService @Autowired constructor(
                             buildNoLock?.unlock()
                         }
                     }
+                    container.status = BuildStatus.RUNNING.name
+                    ContainerUtils.setQueuingWaitName(container)
                     container.executeCount = context.executeCount
                     container.elements.forEach { atomElement ->
                         if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
@@ -1152,7 +1168,8 @@ class PipelineRuntimeService @Autowired constructor(
                     params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
-                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?,
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?
             ),
             formatted = false
         )

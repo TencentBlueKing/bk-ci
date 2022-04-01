@@ -43,5 +43,7 @@ data class DataSource(
     val dataSourceName: String,
     @ApiModelProperty("容量是否满标识")
     @field:BkField(patternStyle = BkStyleEnum.BOOLEAN_STYLE)
-    val fullFlag: Boolean = false
+    val fullFlag: Boolean = false,
+    @ApiModelProperty("数据源URL")
+    val dsUrl: String?
 )

@@ -30,12 +30,12 @@ package com.tencent.devops.stream.client
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.pojo.GitRepositoryConf
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -109,7 +109,6 @@ class ScmClient @Autowired constructor(
     ) = try {
         val titleData = mutableListOf<String>()
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
-
         val token = getAccessToken(gitCIBasicSetting.gitProjectId).first
         val request = CommitCheckRequest(
             projectName = gitCIBasicSetting.gitProjectId.toString(),

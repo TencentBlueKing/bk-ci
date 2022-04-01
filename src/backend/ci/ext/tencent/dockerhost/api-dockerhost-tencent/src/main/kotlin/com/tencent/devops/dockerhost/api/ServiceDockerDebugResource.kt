@@ -33,9 +33,11 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["DOCKER_DEBUG"], description = "docker debug")
@@ -50,6 +52,21 @@ interface ServiceDockerDebugResource {
     fun startDebug(
         @ApiParam("容器信息", required = true)
         dockerStartDebugInfo: ContainerInfo
+    ): Result<String>
+
+    @ApiOperation("获取调试url")
+    @GET
+    @Path("/debug/getWsUrl")
+    fun getWebSocketUrl(
+        @ApiParam("蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("蓝盾构建ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("容器ID", required = true)
+        @QueryParam("containerId")
+        containerId: String
     ): Result<String>
 
     @ApiOperation("终止流水线调试")

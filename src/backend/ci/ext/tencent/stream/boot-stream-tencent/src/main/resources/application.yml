@@ -4,9 +4,3 @@ spring:
     desc: DevOps Stream Service
     version: 4.0.0
     packageName: com.tencent.devops.stream
-  cloud:
-    config:
-      name: stream
-
-server:
-  port: 21940

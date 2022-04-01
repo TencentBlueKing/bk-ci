@@ -42,6 +42,7 @@ data class PipelineRestoreEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
+    val version: Int,
     override val userId: String,
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0

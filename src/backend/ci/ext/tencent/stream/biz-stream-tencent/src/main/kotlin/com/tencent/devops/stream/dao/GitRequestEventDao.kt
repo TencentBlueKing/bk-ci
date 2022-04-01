@@ -27,17 +27,19 @@
 
 package com.tencent.devops.stream.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.model.stream.tables.TGitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class GitRequestEventDao {
@@ -125,8 +127,13 @@ class GitRequestEventDao {
                         record.description
                     },
                     mrTitle = record.mrTitle,
-                    gitEvent = null,
-                    commitAuthorName = null
+                    gitEvent = try {
+                        JsonUtil.to(record.event, GitEvent::class.java)
+                    } catch (e: Exception) {
+                        null
+                    },
+                    commitAuthorName = null,
+                    gitProjectName = null
                 )
             }
         }
@@ -170,7 +177,8 @@ class GitRequestEventDao {
                     },
                     mrTitle = record.mrTitle,
                     gitEvent = null,
-                    commitAuthorName = null
+                    commitAuthorName = null,
+                    gitProjectName = null
                 )
             }
         }
@@ -214,7 +222,8 @@ class GitRequestEventDao {
                         },
                         mrTitle = it.mrTitle,
                         gitEvent = null,
-                        commitAuthorName = null
+                        commitAuthorName = null,
+                        gitProjectName = null
                     )
                 )
             }
@@ -261,7 +270,8 @@ class GitRequestEventDao {
                         },
                         mrTitle = it.mrTitle,
                         gitEvent = null,
-                        commitAuthorName = null
+                        commitAuthorName = null,
+                        gitProjectName = null
                     )
                 )
             }
@@ -348,7 +358,8 @@ class GitRequestEventDao {
                         },
                         mrTitle = it.mrTitle,
                         gitEvent = null,
-                        commitAuthorName = null
+                        commitAuthorName = null,
+                        gitProjectName = null
                     )
                 )
             }

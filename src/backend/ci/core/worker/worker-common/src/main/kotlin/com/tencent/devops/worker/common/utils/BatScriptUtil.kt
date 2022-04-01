@@ -74,6 +74,7 @@ object BatScriptUtil {
         errorMessage: String? = null,
         workspace: File = dir,
         print2Logger: Boolean = true,
+        jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null
     ): String {
@@ -96,6 +97,7 @@ object BatScriptUtil {
                 prefix = prefix,
                 executeErrorMessage = "",
                 buildId = buildId,
+                jobId = jobId,
                 stepId = stepId,
                 charsetType = charsetType
             )

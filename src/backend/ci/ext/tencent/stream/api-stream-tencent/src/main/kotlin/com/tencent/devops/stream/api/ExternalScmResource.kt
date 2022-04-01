@@ -30,6 +30,7 @@ package com.tencent.devops.stream.api
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -49,6 +50,9 @@ interface ExternalScmResource {
     fun webHookCodeGitCommit(
         @HeaderParam("X-Token")
         token: String,
+        @ApiParam("X-Event")
+        @HeaderParam("X-Event")
+        eventType: String,
         event: String
     ): Result<Boolean>
 }

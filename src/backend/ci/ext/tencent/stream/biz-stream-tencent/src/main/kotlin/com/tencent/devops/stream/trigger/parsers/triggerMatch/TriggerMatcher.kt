@@ -2,11 +2,16 @@ package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.DeleteRule
+import com.tencent.devops.common.ci.v2.PreRepositoryHook
+import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.check
 import com.tencent.devops.common.ci.v2.getTypesObjectKind
+import com.tencent.devops.common.ci.v2.parsers.template.models.NoReplaceTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
@@ -32,9 +37,16 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.BranchM
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.PathMatchUtils
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.matchUtils.UserMatchUtils
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
-import com.tencent.devops.stream.trigger.template.pojo.NoReplaceTemplate
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.v2.service.DeleteEventService
+import com.tencent.devops.stream.v2.service.RepoTriggerEventService
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,9 +55,12 @@ import org.springframework.stereotype.Component
 @Component
 @Suppress("ComplexCondition")
 class TriggerMatcher @Autowired constructor(
+    private val repoTriggerEventService: RepoTriggerEventService,
     private val streamScmService: StreamScmService,
     private val streamTimerService: StreamTimerService,
-    private val streamDeleteEventService: DeleteEventService
+    private val streamDeleteEventService: DeleteEventService,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitTokenService: StreamGitTokenService
 ) {
 
     companion object {
@@ -65,14 +80,14 @@ class TriggerMatcher @Autowired constructor(
             when (e) {
                 is JsonProcessingException, is TypeCastException -> {
                     TriggerException.triggerError(
-                        request = context.requestEvent,
+                        request = context.gitRequestEventForHandle,
                         event = context.gitEvent,
                         pipeline = context.pipeline,
                         reason = TriggerReason.CI_YAML_INVALID,
                         reasonParams = listOf(e.message ?: ""),
                         yamls = Yamls(context.originYaml, null, null),
                         commitCheck = CommitCheck(
-                            block = context.requestEvent.isMr(),
+                            block = context.gitRequestEventForHandle.gitRequestEvent.isMr(),
                             state = GitCICommitCheckState.FAILURE
                         )
                     )
@@ -82,22 +97,84 @@ class TriggerMatcher @Autowired constructor(
                 }
             }
         }
-
-        return if (context.gitEvent.isDeleteEvent()) {
-            deleteEventMatch(
-                context = context,
-                triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-                objectKind = context.requestEvent.objectKind
+        val repoTriggerPipelineList = context.gitRequestEventForHandle.gitRequestEvent.repoTriggerPipelineList
+        return if (context.gitRequestEventForHandle.checkRepoTrigger) {
+            val repoTriggerOn = ScriptYmlUtils.formatRepoHookTriggerOn(
+                newYaml.triggerOn,
+                repoTriggerPipelineList?.find { it.pipelineId == context.pipeline.pipelineId }?.sourceGitProjectPath
             )
+            if (repoTriggerOn == null) {
+                repoTriggerEventService.deleteRepoTriggerEvent(context.pipeline.pipelineId)
+                return TriggerResult(
+                    trigger = false,
+                    timeTrigger = false,
+                    startParams = emptyMap(),
+                    deleteTrigger = false
+                )
+            }
+            triggerResult(context, repoTriggerOn, defaultBranch)
         } else {
-            match(
-                context = context,
-                defaultBranch = defaultBranch,
-                triggerOn = ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn),
-                changeSet = getChangeSet(context),
-                pipelineFilePath = context.pipeline.filePath
-            )
+            triggerResult(context, ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn), defaultBranch).let {
+                return TriggerResult(
+                    trigger = it.trigger,
+                    timeTrigger = it.timeTrigger,
+                    startParams = it.startParams,
+                    deleteTrigger = it.deleteTrigger,
+                    repoHookName = checkRepoHook(
+                        preTriggerOn = newYaml.triggerOn
+                    )
+                )
+            }
         }
+    }
+
+    private fun checkRepoHook(
+        preTriggerOn: PreTriggerOn?
+    ): List<String> {
+        logger.info("checkRepoHook|preTriggerOn=$preTriggerOn")
+        if (preTriggerOn?.repoHook == null) {
+            return emptyList()
+        }
+        val repositoryHookList = try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(preTriggerOn.repoHook!!),
+                object : TypeReference<List<PreRepositoryHook>>() {}
+            )
+        } catch (e: MismatchedInputException) {
+            logger.error("Format triggerOn repoHook failed.", e)
+            return emptyList()
+        }
+        val repoHookList = mutableListOf<String>()
+        repositoryHookList.forEach {
+            it.name?.let { name ->
+                // TODO 可以添加其他条件，做预判断
+                // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
+                if (name.contains("/") && !name.startsWith("/")) {
+                    repoHookList.add(name)
+                }
+            }
+        }
+        return repoHookList
+    }
+
+    private fun triggerResult(
+        context: StreamTriggerContext,
+        triggerOn: TriggerOn,
+        defaultBranch: String?
+    ) = if (context.gitEvent.isDeleteEvent()) {
+        deleteEventMatch(
+            context = context,
+            triggerOn = triggerOn,
+            objectKind = context.gitRequestEventForHandle.gitRequestEvent.objectKind
+        )
+    } else {
+        match(
+            context = context,
+            defaultBranch = defaultBranch,
+            triggerOn = triggerOn,
+            changeSet = getChangeSet(context),
+            pipelineFilePath = context.pipeline.filePath
+        )
     }
 
     fun match(
@@ -109,11 +186,51 @@ class TriggerMatcher @Autowired constructor(
     ): TriggerResult {
         val (sourceBranch, targetBranch) = getBranch(context.gitEvent)
 
-        val gitRequestEvent = context.requestEvent
+        val gitRequestEvent = context.gitRequestEventForHandle.gitRequestEvent
+
+        val (repoTriggerCredentialsCheck, repoTriggerUserId) = try {
+            repoTriggerEventService.checkRepoTriggerCredentials(
+                gitRequestEventForHandle = context.gitRequestEventForHandle,
+                repoHook = triggerOn.repoHook
+            )
+        } catch (e: Exception) {
+            TriggerException.triggerError(
+                request = context.gitRequestEventForHandle,
+                event = context.gitEvent,
+                pipeline = context.pipeline,
+                reason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("请检查远程仓库(${triggerOn.repoHook?.name})鉴权信息是否正确,${e.message}"),
+                yamls = Yamls(context.originYaml, null, null),
+                commitCheck = CommitCheck(
+                    block = context.gitRequestEventForHandle.gitRequestEvent.isMr(),
+                    state = GitCICommitCheckState.FAILURE
+                )
+            )
+        }
+        if (!repoTriggerCredentialsCheck) {
+            logger.warn("repo trigger check credentials fail")
+            TriggerException.triggerError(
+                request = context.gitRequestEventForHandle,
+                event = context.gitEvent,
+                pipeline = context.pipeline,
+                reason = TriggerReason.REPO_TRIGGER_FAILED,
+                reasonParams = listOf("请检查远程仓库(${triggerOn.repoHook?.name})使用的权限是否大于等于MASTER"),
+                yamls = Yamls(context.originYaml, null, null),
+                commitCheck = CommitCheck(
+                    block = context.gitRequestEventForHandle.gitRequestEvent.isMr(),
+                    state = GitCICommitCheckState.FAILURE
+                )
+            )
+        }
 
         // 判断是否是默认分支上的push，来判断是否注册定时任务
         val isTime = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
-            isSchedulesMatch(triggerOn, targetBranch, gitRequestEvent, context.pipeline)
+            isSchedulesMatch(
+                triggerOn = triggerOn,
+                eventBranch = targetBranch,
+                gitRequestEvent = gitRequestEvent,
+                pipeline = context.pipeline
+            )
         } else {
             false
         }
@@ -121,18 +238,24 @@ class TriggerMatcher @Autowired constructor(
         val isDelete = if (gitRequestEvent.isDefaultBranchTrigger(defaultBranch)) {
             // 只有更改了delete相关流水线才做更新
             PathMatchUtils.isIncludePathMatch(listOf(pipelineFilePath), changeSet) &&
-                isDeleteMatch(triggerOn.delete, context.requestEvent, context.pipeline)
+                isDeleteMatch(triggerOn.delete, gitRequestEvent, context.pipeline)
         } else {
             false
         }
 
-        val isTrigger = when (context.gitEvent) {
+        val (isTrigger, startParams) = when (context.gitEvent) {
             is GitPushEvent -> {
-                isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId)
+                val isMatch = isPushMatch(triggerOn, targetBranch, changeSet, gitRequestEvent.userId, context.gitEvent)
+                val params = getStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
+                Pair(isMatch, params)
             }
             is GitMergeRequestEvent -> {
                 val mrAction = StreamMrEventAction.getActionValue(context.gitEvent) ?: false
-                isMrMatch(
+                val isMatch = isMrMatch(
                     triggerOn = triggerOn,
                     sourceBranch = sourceBranch,
                     targetBranch = targetBranch,
@@ -140,34 +263,49 @@ class TriggerMatcher @Autowired constructor(
                     userId = gitRequestEvent.userId,
                     mrAction = mrAction
                 )
+                val params = getStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
+                Pair(isMatch, params)
             }
             is GitTagPushEvent -> {
-                isTagPushMatch(
+                val isMatch = isTagPushMatch(
                     triggerOn,
                     getTag(context.gitEvent),
                     gitRequestEvent.userId,
                     context.gitEvent.create_from
                 )
+                val params = getStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
+                Pair(isMatch, params)
             }
             else -> {
-                false
+                matchAndStartParams(
+                    context = context,
+                    triggerOn = triggerOn,
+                    userId = repoTriggerUserId
+                )
             }
         }
 
-        val startParams = getStartParams(
-            context = context,
-            triggerOn = triggerOn,
-            isTrigger = isTrigger
-        ).map { entry -> entry.key to entry.value.toString() }.toMap()
-        return TriggerResult(isTrigger, isTime, startParams, isDelete)
+        return TriggerResult(
+            trigger = isTrigger,
+            timeTrigger = isTime,
+            startParams = startParams,
+            deleteTrigger = isDelete
+        )
     }
 
-    fun deleteEventMatch(
+    private fun deleteEventMatch(
         context: StreamTriggerContext,
         triggerOn: TriggerOn,
         objectKind: String
     ): TriggerResult {
-
         val deleteObjectKinds = triggerOn.delete?.getTypesObjectKind()?.map { it.value }?.toSet()
             ?: return TriggerResult(
                 trigger = false,
@@ -178,9 +316,8 @@ class TriggerMatcher @Autowired constructor(
         return if (objectKind in deleteObjectKinds) {
             val startParams = getStartParams(
                 context = context,
-                triggerOn = triggerOn,
-                isTrigger = true
-            ).map { entry -> entry.key to entry.value.toString() }.toMap()
+                triggerOn = triggerOn
+            )
             TriggerResult(trigger = true, timeTrigger = false, startParams = startParams, deleteTrigger = true)
         } else {
             TriggerResult(trigger = false, timeTrigger = false, startParams = emptyMap(), deleteTrigger = false)
@@ -240,7 +377,8 @@ class TriggerMatcher @Autowired constructor(
         triggerOn: TriggerOn,
         eventBranch: String,
         changeSet: Set<String>?,
-        userId: String
+        userId: String,
+        gitPushEvent: GitPushEvent
     ): Boolean {
         // 如果没有配置push，默认未匹配
         if (triggerOn.push == null) {
@@ -268,6 +406,10 @@ class TriggerMatcher @Autowired constructor(
             !PathMatchUtils.isIncludePathMatch(pushRule.paths, changeSet) ||
             !UserMatchUtils.isUserMatch(pushRule.users, userId)
         ) {
+            return false
+        }
+        // action
+        if (!checkActionMatch(pushRule.action, gitPushEvent.isCreateBranch())) {
             return false
         }
         logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
@@ -349,36 +491,89 @@ class TriggerMatcher @Autowired constructor(
         return true
     }
 
-    fun getStartParams(
+    fun matchAndStartParams(
         context: StreamTriggerContext,
         triggerOn: TriggerOn?,
-        isTrigger: Boolean
-    ): Map<String, Any> {
-        if (!isTrigger) {
-            return emptyMap()
-        }
+        needMatch: Boolean = true,
+        userId: String? = null
+    ): Pair<Boolean, Map<String, String>> {
         with(context) {
+            logger.info("match and start params|triggerOn:$triggerOn")
             val element = TriggerBuilder.buildCodeGitWebHookTriggerElement(
                 gitEvent = gitEvent,
                 triggerOn = triggerOn
-            ) ?: return emptyMap()
+            ) ?: return Pair(false, emptyMap())
             val webHookParams = WebhookElementParamsRegistrar.getService(element = element).getWebhookElementParams(
                 element = element,
                 variables = mapOf()
-            ) ?: return emptyMap()
-            logger.info("get start params, element:$element, webHookParams:$webHookParams")
+            )!!
+            logger.info("match and start params, element:$element, webHookParams:$webHookParams")
             val matcher = TriggerBuilder.buildGitWebHookMatcher(gitEvent)
-            val repository = TriggerBuilder.buildCodeGitRepository(streamSetting)
-            return WebhookStartParamsRegistrar.getService(element = element).getStartParams(
-                projectId = streamSetting.projectCode ?: "",
-                element = element,
-                repo = repository,
-                matcher = matcher,
-                variables = mapOf(),
-                params = webHookParams,
-                matchResult = ScmWebhookMatcher.MatchResult(isMatch = isTrigger)
-            )
+            val repository =
+                if (gitRequestEventForHandle.checkRepoTrigger) {
+                    streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                        gitRequestEventId = gitRequestEventForHandle.id!!,
+                        gitProjectId = gitRequestEventForHandle.gitRequestEvent.gitProjectId.toString(),
+                        token = streamGitTokenService.getToken(gitRequestEventForHandle.gitRequestEvent.gitProjectId),
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    ).let { info ->
+                        val projectName = GitUtils.getProjectName(info.gitHttpUrl)
+                        CodeGitRepository(
+                            aliasName = projectName,
+                            url = info.gitHttpUrl,
+                            credentialId = "",
+                            projectName = projectName,
+                            userName = userId ?: gitRequestEventForHandle.gitRequestEvent.userId,
+                            authType = RepoAuthType.OAUTH,
+                            projectId = "git_" + info.gitProjectId,
+                            repoHashId = null
+                        )
+                    }
+                } else TriggerBuilder.buildCodeGitRepository(streamSetting)
+            val isMatch = if (needMatch) {
+                matcher.isMatch(
+                    projectId = context.streamSetting.projectCode ?: "",
+                    // 如果是新的流水线,pipelineId还是为空,使用displayName
+                    pipelineId = if (context.pipeline.pipelineId.isEmpty()) {
+                        context.pipeline.displayName
+                    } else {
+                        context.pipeline.pipelineId
+                    },
+                    repository = repository,
+                    webHookParams = webHookParams
+                ).isMatch
+            } else {
+                true
+            }
+            val startParam = if (isMatch) {
+                WebhookStartParamsRegistrar.getService(element = element).getStartParams(
+                    projectId = streamSetting.projectCode ?: "",
+                    element = element,
+                    repo = repository,
+                    matcher = matcher,
+                    variables = mapOf(),
+                    params = webHookParams,
+                    matchResult = ScmWebhookMatcher.MatchResult(isMatch = isMatch)
+                ).map { entry -> entry.key to entry.value.toString() }.toMap()
+            } else {
+                emptyMap()
+            }
+            return Pair(isMatch, startParam)
         }
+    }
+
+    fun getStartParams(
+        context: StreamTriggerContext,
+        triggerOn: TriggerOn?,
+        userId: String? = null
+    ): Map<String, String> {
+        return matchAndStartParams(
+            context = context,
+            triggerOn = triggerOn,
+            needMatch = false,
+            userId = userId
+        ).second
     }
 
     private fun GitRequestEvent.isDefaultBranchTrigger(defaultBranch: String?) =
@@ -435,6 +630,22 @@ class TriggerMatcher @Autowired constructor(
             changeSet.addAll(commit.removed?.map { it }?.toSet() ?: emptySet())
         }
         return changeSet
+    }
+
+    private fun checkActionMatch(actionList: List<String>?, isCreateBranch: Boolean): Boolean {
+        if (actionList.isNullOrEmpty()) {
+            return true
+        }
+        actionList.forEach {
+            if (it == TGitPushActionType.NEW_BRANCH.value && isCreateBranch) {
+                return true
+            }
+            if (it == TGitPushActionType.PUSH_FILE.value && !isCreateBranch) {
+                return true
+            }
+        }
+
+        return false
     }
 
     private fun isMrActionMatch(actionList: List<String>?, mrAction: Any): Boolean {

@@ -28,17 +28,18 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REPO_URL
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_DESC
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_ID
@@ -74,6 +75,8 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_ISSUE_TITLE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
@@ -161,7 +164,6 @@ object PipelineVarUtil {
     private val contextVarMappingBuildVar = mapOf(
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
-        "ci.pipeline_name" to PIPELINE_NAME,
         "ci.actor" to PIPELINE_START_USER_ID,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
@@ -206,7 +208,10 @@ object PipelineVarUtil {
         "ci.review_iid" to BK_REPO_GIT_WEBHOOK_REVIEW_IID,
         "ci.review_owner" to BK_REPO_GIT_WEBHOOK_REVIEW_OWNER,
         "ci.review_state" to BK_REPO_GIT_WEBHOOK_REVIEW_STATE,
-        "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS
+        "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
+        "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
+        "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
+        "ci.action" to PIPELINE_GIT_ACTION
     )
 
     /**

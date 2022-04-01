@@ -41,4 +41,14 @@ data class GitCIModelDetail(
     val modelDetail: ModelDetail,
     @ApiModelProperty("构建历史-备注信息")
     val buildHistoryRemark: String? = null
-)
+) {
+    init {
+        modelDetail.model.stages.forEach {
+            it.containers.forEach { cit ->
+                cit.elements.forEach { eit ->
+                    eit.canRetry = false
+                }
+            }
+        }
+    }
+}

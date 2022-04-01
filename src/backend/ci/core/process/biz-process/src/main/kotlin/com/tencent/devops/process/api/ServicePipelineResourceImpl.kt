@@ -112,7 +112,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         pipeline: Model,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        updateLastModifyUser: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
         pipelineInfoFacadeService.editPipeline(
@@ -121,7 +122,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             model = pipeline,
             channelCode = channelCode,
-            checkPermission = ChannelCode.isNeedAuth(channelCode)
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateLastModifyUser = updateLastModifyUser
         )
         return Result(true)
     }

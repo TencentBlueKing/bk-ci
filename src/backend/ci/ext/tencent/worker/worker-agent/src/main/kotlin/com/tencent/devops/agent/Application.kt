@@ -29,10 +29,11 @@ package com.tencent.devops.agent
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.agent.runner.WorkRunner
 import com.tencent.devops.common.api.enums.EnumLoader
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.ElementSubTypeRegisterLoader
+import com.tencent.devops.worker.WorkRunner
 import com.tencent.devops.worker.common.AGENT_ID
 import com.tencent.devops.worker.common.AGENT_SECRET_KEY
 import com.tencent.devops.worker.common.BUILD_TYPE
@@ -50,13 +51,15 @@ import okhttp3.Response
 import java.io.File
 import java.time.LocalDateTime
 
+@Suppress("ComplexMethod", "NestedBlockDepth")
 fun main(args: Array<String>) {
+    // 调用 DHUtil 初始化 SecurityProvider
+    DHUtil
     EnumLoader.enumModified()
     ElementSubTypeRegisterLoader.registerElementForJsonUtil()
     ApiFactory.init()
     TaskFactory.init()
-    val buildType = System.getProperty(BUILD_TYPE)
-    when (buildType) {
+    when (val buildType = System.getProperty(BUILD_TYPE)) {
         BuildType.DOCKER.name -> {
             val jobPoolType = DockerEnv.getJobPool()
             // 无编译构建，轮询等待任务
@@ -79,6 +82,7 @@ fun main(args: Array<String>) {
                         File(workspace)
                     }
                     workspaceDir.mkdirs()
+
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
@@ -90,10 +94,7 @@ fun main(args: Array<String>) {
                     variables: Map<String, String>,
                     pipelineId: String
                 ): Pair<File, File> {
-                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(
-                        pipelineId = pipelineId,
-                        workspace = ""
-                    )
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, "")
                     if (workspaceDir.exists()) {
                         if (!workspaceDir.isDirectory) {
                             throw RuntimeException("Work space directory conflict: ${workspaceDir.canonicalPath}")
@@ -107,10 +108,10 @@ fun main(args: Array<String>) {
             })
         }
         BuildType.MACOS.name -> {
-            var startBuild: Boolean = false
+            var startBuild = false
             val gateyway = AgentEnv.getGateway()
             val url = "http://$gateyway/dispatch-macos/gw/build/macos/startBuild"
-            System.out.println("url:$url")
+            println("url:$url")
             val request = Request.Builder()
                 .url(url)
                 .header("Accept", "application/json")
@@ -124,7 +125,7 @@ fun main(args: Array<String>) {
                     OkhttpUtils.doHttp(request).use { resp ->
                         val resoCode = resp.code()
                         val responseStr = resp.body()!!.string()
-                        System.out.println("resoCode: $resoCode;responseStr:$responseStr")
+                        println("resoCode: $resoCode;responseStr:$responseStr")
                         if (resoCode == 200) {
                             val response: Map<String, String> = jacksonObjectMapper().readValue(responseStr)
 
@@ -135,24 +136,23 @@ fun main(args: Array<String>) {
                                     "secretKey" -> System.setProperty("devops.agent.secret.key", value)
                                     "projectId" -> System.setProperty("devops.project.id", value)
                                     "xcodeVersion" -> xcodeVersion = value
-                                    else -> null
                                 }
                             }
                             startBuild = true
                         } else {
-                            System.out.println("There is no build for this macos,sleep for 5s.")
+                            println("There is no build for this macos,sleep for 5s.")
                         }
                     }
                     if (!startBuild) {
                         Thread.sleep(5000)
                     }
                 } catch (e: Exception) {
-                    System.out.println("Failed to connect to devops server.")
+                    println("Failed to connect to devops server.")
                 }
             } while (!startBuild)
-            System.out.println("Start to run.")
+            println("Start to run.")
 
-            System.out.println("Start to select xcode.")
+            println("Start to select xcode.")
             // 选择XCODE版本
             val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
             val xcodeFile = File(xcodePath)
@@ -168,12 +168,12 @@ fun main(args: Array<String>) {
                     // 选择xcode
                     val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
                     runCommand(selectCommand, selectCommand)
-                    System.out.println("End to select xcode:select Xcode_$xcodeVersion.app.")
+                    println("End to select xcode:select Xcode_$xcodeVersion.app.")
                 } catch (e: Exception) {
-                    System.out.println("End to select xcode with error: $e")
+                    println("End to select xcode with error: $e")
                 }
             } else {
-                System.out.println("End to select xcode:nothing to do.")
+                println("End to select xcode:nothing to do.")
             }
 
             Runner.run(object : WorkspaceInterface {
@@ -182,7 +182,7 @@ fun main(args: Array<String>) {
                     pipelineId: String
                 ): Pair<File, File> {
                     val workspace = AgentEnv.getMacOSWorkspace()
-                    System.out.println("MacOS workspace: $workspace")
+                    println("MacOS workspace: $workspace")
                     val workspaceDir = File(workspace)
                     workspaceDir.mkdirs()
                     val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
@@ -215,11 +215,10 @@ private fun waitBuildLessJobStart() {
         .header("Accept", "application/json")
         .get()
         .build()
-
     do {
-        try {
-            println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
+        println("${LocalDateTime.now()} BuildLess loopUrl: $loopUrl")
 
+        try {
             OkhttpUtils.doHttp(request).use { resp ->
                 startFlag = doResponse(resp)
             }

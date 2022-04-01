@@ -81,6 +81,10 @@ class ServiceDockerDebugResourceImpl @Autowired constructor(
         return Result("")
     }
 
+    override fun getWebSocketUrl(projectId: String, pipelineId: String, containerId: String): Result<String> {
+        return Result(dockerHostDebugService.getWebSocketUrl(projectId, pipelineId, containerId))
+    }
+
     override fun endDebug(dockerEndDebugInfo: ContainerInfo): Result<Boolean> {
         return try {
             logger.warn("Stop the container, containerId: ${dockerEndDebugInfo.containerId}")

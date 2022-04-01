@@ -33,12 +33,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
-import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -53,12 +49,16 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
+import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
+import com.tencent.devops.stream.utils.RetryUtils
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -89,6 +89,17 @@ class StreamScmService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_TOKEN_ERROR,
             action = {
                 client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+            }
+        )
+    }
+
+    @Throws(ErrorCodeException::class)
+    fun refreshToken(projectId: String, refreshToken: String): GitToken {
+        return retryFun(
+            log = "$projectId refresh token fail",
+            apiErrorCode = ErrorCodeEnum.REFRESH_TOKEN_ERROR,
+            action = {
+                client.getScm(ServiceGitCiResource::class).refreshToken(projectId, refreshToken).data!!
             }
         )
     }
@@ -149,7 +160,7 @@ class StreamScmService @Autowired constructor(
         ref: String,
         useAccessToken: Boolean
     ): String {
-        logger.info("getYamlFromGit: [$gitProjectId|$fileName|$token|$ref|$useAccessToken]")
+        logger.info("getYamlFromGit: [$gitProjectId|$fileName|$ref|$useAccessToken]")
         return retryFun(
             log = "$gitProjectId get yaml $fileName fail",
             apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR,
@@ -170,7 +181,7 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo {
-        logger.info("getProjectInfoRetry: [$gitProjectId|$token]")
+        logger.info("getProjectInfoRetry: [$gitProjectId]")
         return retryFun(
             log = "$gitProjectId get project $gitProjectId fail",
             apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
@@ -189,7 +200,7 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
-        logger.info("GitCIProjectInfo: [$gitProjectId|$token|$useAccessToken]")
+        logger.info("GitCIProjectInfo: [$gitProjectId|$useAccessToken]")
         try {
             val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
                 accessToken = token,
@@ -242,7 +253,7 @@ class StreamScmService @Autowired constructor(
         page: Int?,
         perPage: Int?
     ): List<Commit>? {
-        logger.info("getCommits: [$gitProjectId|$filePath|$branch|$token|$since|$until|$page|$perPage]")
+        logger.info("getCommits: [$gitProjectId|$filePath|$branch|$since|$until|$page|$perPage]")
         return client.getScm(ServiceGitResource::class).getCommits(
             gitProjectId = gitProjectId,
             filePath = filePath,
@@ -261,7 +272,7 @@ class StreamScmService @Autowired constructor(
         gitProjectId: String,
         gitCICreateFile: GitCICreateFile
     ): Boolean {
-        logger.info("createNewFile: [$gitProjectId|$token|$gitCICreateFile]")
+        logger.info("createNewFile: [$gitProjectId|$gitCICreateFile]")
         try {
             return client.getScm(ServiceGitResource::class).gitCICreateFile(
                 gitProjectId = gitProjectId,
@@ -301,7 +312,7 @@ class StreamScmService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<GitMember>? {
-        logger.info("getProjectMembers: [$gitProjectId|$token|$page|$pageSize|$search]")
+        logger.info("getProjectMembers: [$gitProjectId|$page|$pageSize|$search]")
         return client.getScm(ServiceGitCiResource::class).getMembers(
             token = token,
             gitProjectId = gitProjectId,
@@ -365,7 +376,7 @@ class StreamScmService @Autowired constructor(
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): List<String>? {
-        logger.info("getProjectBranches: [$gitProjectId|$token|$page|$pageSize|$search|$orderBy|$sort]")
+        logger.info("getProjectBranches: [$gitProjectId|$page|$pageSize|$search|$orderBy|$sort]")
         return client.getScm(ServiceGitCiResource::class)
             .getBranches(
                 token = token,
@@ -379,10 +390,10 @@ class StreamScmService @Autowired constructor(
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
-    fun getProjectId(isFork: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
-        with(gitRequestEvent) {
-            return if (isFork) {
-                sourceGitProjectId!!
+    fun getProjectId(isFork: Boolean = false, gitRequestEventForHandle: GitRequestEventForHandle): Long {
+        with(gitRequestEventForHandle) {
+            return if (isFork && !checkRepoTrigger) {
+                gitRequestEvent.sourceGitProjectId!!
             } else {
                 gitProjectId
             }
@@ -424,7 +435,7 @@ class StreamScmService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<GitCodeProjectInfo>? {
-        logger.info("getProjectList: [$accessToken|$userId|$page|$pageSize|$search]")
+        logger.info("getProjectList: [$userId|$page|$pageSize|$search]")
         return client.getScm(ServiceGitCiResource::class).getProjectList(
             accessToken = accessToken,
             userId = userId,
@@ -463,7 +474,7 @@ class StreamScmService @Autowired constructor(
         mergeRequestId: Long,
         token: String
     ): GitCIMrInfo {
-        logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId][$token]")
+        logger.info("getMergeInfo: [$gitProjectId|$mergeRequestId]")
         return retryFun(
             log = "$gitProjectId get mr $mergeRequestId info error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO,
@@ -478,21 +489,20 @@ class StreamScmService @Autowired constructor(
     }
 
     fun getFileTreeFromGit(
-        gitToken: String,
-        gitRequestEvent: GitRequestEvent,
+        gitProjectId: Long,
+        token: String,
         filePath: String,
-        isMrEvent: Boolean = false
+        ref: String?
     ): List<GitFileInfo> {
-        val gitProjectId = getProjectId(isMrEvent, gitRequestEvent)
         return retryFun(
             log = "$gitProjectId get $filePath file tree error",
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
             action = {
                 client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                    gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
+                    gitProjectId = gitProjectId,
                     path = filePath,
-                    token = gitToken,
-                    ref = getTriggerBranch(gitRequestEvent.branch)
+                    token = token,
+                    ref = ref
                 ).data ?: emptyList()
             }
         )
@@ -514,7 +524,7 @@ class StreamScmService @Autowired constructor(
                         filePath.substring(0, filePath.lastIndexOf("/"))
                     } else {
                         filePath
-                        },
+                    },
                     token = gitToken,
                     ref = ""
                 ).data ?: emptyList()
@@ -628,7 +638,7 @@ class StreamScmService @Autowired constructor(
         ).data
     }
 
-    private fun getTriggerBranch(branch: String): String {
+    fun getTriggerBranch(branch: String): String {
         return when {
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")

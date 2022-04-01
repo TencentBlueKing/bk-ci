@@ -37,7 +37,7 @@ import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerBaseException
 import com.tencent.devops.stream.common.exception.TriggerException
 import com.tencent.devops.stream.common.exception.Yamls
-import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
@@ -51,7 +51,7 @@ object YamlFormat {
     @Throws(TriggerBaseException::class, ErrorCodeException::class)
     fun formatYaml(
         originYaml: String,
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         filePath: String,
         isMr: Boolean
     ): PreTemplateScriptBuildYaml {
@@ -61,7 +61,7 @@ object YamlFormat {
                 PreTemplateScriptBuildYaml::class.java
             )
         } catch (e: Throwable) {
-            logger.info("gitRequestEvent ${gitRequestEvent.id} git ci yaml is invalid", e)
+            logger.info("gitRequestEvent ${gitRequestEventForHandle.id} git ci yaml is invalid", e)
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
                     Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
@@ -74,12 +74,12 @@ object YamlFormat {
                     throw e
                 }
                 else -> {
-                    logger.warn("YamlFormat event: ${gitRequestEvent.id} unknow error: ${e.message}")
+                    logger.warn("YamlFormat event: ${gitRequestEventForHandle.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
             TriggerException.triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 filePath = filePath,
                 reason = reason,
                 reasonParams = listOf(message ?: ""),

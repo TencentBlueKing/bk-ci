@@ -33,6 +33,7 @@ dependencies {
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
+    api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":core:common:common-client"))
     api("io.jsonwebtoken:jjwt-api")
     runtimeOnly("io.jsonwebtoken:jjwt-impl")

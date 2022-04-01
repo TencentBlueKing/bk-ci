@@ -63,38 +63,40 @@ class SendQualityMrComment @Autowired constructor(
         with(context) {
             val token = tokenService.getToken(requestEvent.gitProjectId)
 
-            val reportData = streamQualityService.getQualityGitMrResult(
-                client = client,
-                gitProjectId = requestEvent.gitProjectId,
-                pipelineName = pipeline.displayName,
-                event = BuildEvent(
-                    projectId = buildEvent.projectId,
-                    pipelineId = pipeline.pipelineId,
-                    userId = buildEvent.userId,
-                    buildId = buildEvent.buildId,
-                    status = buildEvent.status,
-                    startTime = null
-                ),
-                ruleIds = ruleIds
-            )
-            if (reportData.first.isEmpty() || reportData.second.isEmpty()) {
-                logger.warn("qualityCheckListener ${buildEvent.buildId} reportData is null $reportData")
-                return
-            }
+            ruleIds.forEach { ruleId ->
+                val reportData = streamQualityService.getQualityGitMrResult(
+                    client = client,
+                    gitProjectId = requestEvent.gitProjectId,
+                    pipelineName = pipeline.displayName,
+                    event = BuildEvent(
+                        projectId = buildEvent.projectId,
+                        pipelineId = pipeline.pipelineId,
+                        userId = buildEvent.userId,
+                        buildId = buildEvent.buildId,
+                        status = buildEvent.status,
+                        startTime = null
+                    ),
+                    ruleIds = listOf(ruleId)
+                )
+                if (reportData.first.isEmpty() || reportData.second.isEmpty()) {
+                    logger.warn("qualityCheckListener ${buildEvent.buildId} reportData is null $reportData")
+                    return
+                }
 
-            val gitEvent = try {
-                objectMapper.readValue<GitEvent>(requestEvent.event) as GitMergeRequestEvent
-            } catch (e: Throwable) {
-                logger.error("qualityCheckListener get mergeId error ${e.message}")
-                return
-            }
+                val gitEvent = try {
+                    objectMapper.readValue<GitEvent>(requestEvent.event) as GitMergeRequestEvent
+                } catch (e: Throwable) {
+                    logger.error("qualityCheckListener get mergeId error ${e.message}")
+                    return
+                }
 
-            streamScmService.addMrComment(
-                token = token,
-                gitProjectId = requestEvent.gitProjectId.toString(),
-                mrId = gitEvent.object_attributes.id,
-                mrBody = MrCommentBody(reportData)
-            )
+                streamScmService.addMrComment(
+                    token = token,
+                    gitProjectId = requestEvent.gitProjectId.toString(),
+                    mrId = gitEvent.object_attributes.id,
+                    mrBody = MrCommentBody(reportData)
+                )
+            }
         }
     }
 

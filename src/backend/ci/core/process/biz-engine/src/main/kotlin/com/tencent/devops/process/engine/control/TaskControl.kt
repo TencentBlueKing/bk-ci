@@ -106,24 +106,8 @@ class TaskControl @Autowired constructor(
         // 检查构建状态,防止重复跑
         if (buildInfo?.status?.isFinish() == true || buildTask?.status?.isFinish() == true) {
             LOG.info("ENGINE|$buildId|$source|ATOM_$actionType|$stageId|j($containerId)|t($taskId)" +
-                "|status=${buildTask?.status ?: "not exists"}")
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildContainerEvent(
-                    source = "from_t($taskId)",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    stageId = stageId,
-                    containerId = containerId,
-                    containerHashId = containerHashId,
-                    containerType = containerType,
-                    actionType = actionType,
-                    errorCode = errorCode,
-                    errorTypeName = errorTypeName,
-                    reason = reason
-                )
-            )
+                "|build=${buildInfo?.status}|task=${buildTask?.status ?: "not exists"}")
+            // #5109 移除构建已经结束的，失效的消息，比如质量红线的延迟消息
             return
         }
 

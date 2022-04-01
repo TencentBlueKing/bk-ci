@@ -633,6 +633,7 @@
         }
     },
     "editPage": {
+        "invalidValue": "插件表单参数{0}非法 ",
         "tipError": "Tip组件返回值需要是字符串",
         "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
@@ -783,6 +784,8 @@
         "repoConflict": "当前流水线存在多个代码拉取插件，你需设置此字段以解决冲突问题",
         "svnVersionTips": "Svn拉取代码插件指定的版本号",
         "certInstallTips": "第三方构建机暂不支持IOS证书安装插件",
+        "stepIdPlaceholder": "非必填，不为空时需在当前Job下唯一",
+        "stepIdDesc": "由英文字母、数字、下划线组成（英文字母或下划线开头）",
         "atomOutput": "插件输出",
         "outputNamespace": "输出字段命名空间",
         "outputItemList": "输出字段列表",
@@ -895,6 +898,7 @@
         "jobLimit": "单个stage下的job数量不能大于",
         "atomLimit": "单个job下的插件数量不能大于",
         "correctPipeline": "请输入正确的流水线",
+        "PleaseSelectAtom": "请先选择插件",
         "oneCodecc": "只允许一个代码扫描插件",
         "oneManualTrigger": "流水线不允许超过一个手动触发插件",
         "oneTimerTrigger": "流水线不允许超过一个定时触发插件",

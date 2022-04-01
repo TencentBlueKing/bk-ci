@@ -29,14 +29,10 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
-import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,9 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxPermissionRoleMemberImpl @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
-    private val client: Client,
-    val groupService: AuthGroupService,
-    val deptService: DeptService
+    val groupService: AuthGroupService
 ) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService) {
     override fun createRoleMember(
         userId: String,
@@ -70,52 +64,51 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
     ) {
         super.deleteRoleMember(userId, projectId, roleId, id, type, managerGroup)
     }
-
-    override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
-        val watcher = Watcher("getUserGroup$projectId$userId")
-        watcher.start("callIamUserGroup")
-        try {
-            val userSimpleGroup = super.getUserGroups(projectId, userId)
-            if (userSimpleGroup != null && userSimpleGroup.isNotEmpty()) {
-                return userSimpleGroup
-            }
-            logger.info("find $userId join $projectId by dept")
-            val departmentGroup = mutableListOf<ManagerRoleGroupInfo>()
-            // 若用户组添加的为组织,则无法通过userId直接获取到与用户的关系,需要拿到项目下用户组内组织,匹配用户组织信息
-            // iam对管理类接口有频率限制,此处需添加缓存
-            watcher.start("getAllMemberAndDept")
-            val projectMemberInfos = getProjectAllMember(projectId, null, null)?.results
-                ?: return null
-            watcher.start("findGroupIndexInfo")
-            projectMemberInfos.forEach {
-                val userDeptIds by lazy { deptService.getUserDeptInfo(userId) }
-                // 如果是用户组下是组织,才匹配用户是否在该组织下
-                if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT) &&
-                    userDeptIds.contains(it.id)) {
-                    watcher.start("getUserDept")
-                    logger.info("$userId join $projectId by dept ${it.id} ")
-                    departmentGroup.add(
-                        ManagerRoleGroupInfo(
-                            it.name,
-                            "",
-                            it.id.toInt()
-                        )
-                    )
-                    return@forEach
-                }
-            }
-            return departmentGroup
-        } finally {
-            watcher.stop()
-            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 50)
-        }
-    }
+//
+//    override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
+//        val watcher = Watcher("getUserGroup$projectId$userId")
+//        watcher.start("callIamUserGroup")
+//        try {
+//            val userSimpleGroup = super.getUserGroups(projectId, userId)
+//            if (userSimpleGroup != null && userSimpleGroup.isNotEmpty()) {
+//                return userSimpleGroup
+//            }
+//            logger.info("find $userId join $projectId by dept")
+//            val departmentGroup = mutableListOf<ManagerRoleGroupInfo>()
+//            // 若用户组添加的为组织,则无法通过userId直接获取到与用户的关系,需要拿到项目下用户组内组织,匹配用户组织信息
+//            // iam对管理类接口有频率限制,此处需添加缓存
+//            watcher.start("getAllMemberAndDept")
+//            val projectMemberInfos = getProjectAllMember(projectId, null, null)?.results
+//                ?: return null
+//            watcher.start("findGroupIndexInfo")
+//            projectMemberInfos.forEach {
+//                val userDeptIds by lazy { deptService.getUserDeptInfo(userId) }
+//                // 如果是用户组下是组织,才匹配用户是否在该组织下
+//                if (it.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT) &&
+//                    userDeptIds.contains(it.id)) {
+//                    watcher.start("getUserDept")
+//                    logger.info("$userId join $projectId by dept ${it.id} ")
+//                    departmentGroup.add(
+//                        ManagerRoleGroupInfo(
+//                            it.name,
+//                            "",
+//                            it.id.toInt()
+//                        )
+//                    )
+//                    return@forEach
+//                }
+//            }
+//            return departmentGroup
+//        } finally {
+//            watcher.stop()
+//            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 50)
+//        }
+//    }
 
     override fun checkUser(userId: String) {
         return
     }
     companion object {
-        const val OUTMEMBERCOUNT = 5000
         val logger = LoggerFactory.getLogger(TxPermissionRoleMemberImpl::class.java)
     }
 }

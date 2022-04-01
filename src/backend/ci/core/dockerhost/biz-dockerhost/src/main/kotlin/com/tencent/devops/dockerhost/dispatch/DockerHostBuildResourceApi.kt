@@ -108,7 +108,7 @@ class DockerHostBuildResourceApi constructor(
         retryCount: Int = 3
     ): Result<List<String>>? {
         try {
-            val path = "/${getUrlPrefix()}/api/dockerhost//qpc/projects/$projectId/builds/$buildId/" +
+            val path = "/${getUrlPrefix()}/api/dockerhost/qpc/projects/$projectId/builds/$buildId/" +
                     "vmSeqs/$vmSeqId?poolNo=$poolNo"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
                 val responseContent = response.body()!!.string()

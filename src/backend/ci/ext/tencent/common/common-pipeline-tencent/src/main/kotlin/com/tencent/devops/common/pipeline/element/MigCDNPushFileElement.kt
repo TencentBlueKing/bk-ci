@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("作废，由其他团队负责")
 @ApiModel("MIG-CDN-推送文件", description = MigCDNPushFileElement.classType)
 data class MigCDNPushFileElement(
     @ApiModelProperty("任务名称", required = true)

@@ -63,5 +63,8 @@ data class WebHookParams(
     // issue事件action
     var includeIssueAction: String? = null,
     // mr事件action
-    var includeMrAction: String? = null
+    var includeMrAction: String? = null,
+    // note事件action
+    var includeNoteComment: String? = null,
+    var includeNoteTypes: String? = null
 )

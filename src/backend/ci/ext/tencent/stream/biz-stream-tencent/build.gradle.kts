@@ -26,8 +26,6 @@
  */
 
 dependencies {
-    api(project(":core:plugin:codecc-plugin:common-codecc"))
-    api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-client"))
@@ -36,34 +34,36 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-scm"))
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
+    api(project(":core:plugin:codecc-plugin:common-codecc"))
+    api(project(":core:common:common-websocket"))
+    api(project(":core:common:common-webhook:biz-common-webhook"))
+    api(project(":core:store:api-store"))
+    api(project(":core:project:api-project"))
+    api(project(":core:plugin:api-plugin"))
+    api(project(":core:quality:api-quality"))
+    api(project(":core:auth:api-auth"))
+    api(project(":core:plugin:codecc-plugin:api-codecc"))
+
+    api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api(project(":ext:tencent:common:common-wechatwork"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":ext:tencent:process:common-pipeline-yaml"))
+    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api(project(":ext:tencent:stream:api-stream-tencent"))
+    api(project(":ext:tencent:stream:model-stream-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:project:api-project-op"))
     api(project(":ext:tencent:environment:api-environment-tencent"))
-    api(project(":core:store:api-store"))
-    api(project(":core:project:api-project"))
-    api(project(":ext:tencent:stream:model-stream-tencent"))
-    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:repository:api-repository-tencent"))
-    api(project(":core:plugin:api-plugin"))
-    api(project(":core:quality:api-quality"))
     api(project(":ext:tencent:notify:api-notify-tencent"))
-
-    api(project(":core:auth:api-auth"))
-    api(project(":core:common:common-websocket"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":core:plugin:codecc-plugin:api-codecc"))
-
+    api(project(":ext:tencent:common:common-notify-tencent"))
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.apache.commons:commons-exec")
     api("org.quartz-scheduler:quartz:2.1.3")
-//    api("org.apache.poi:poi"
-//    api("org.apache.poi:poi-ooxml"
     api("org.springframework.boot:spring-boot-starter-websocket")
     api("com.github.ben-manes.caffeine:caffeine")
     api(group = "javax.websocket", name = "javax.websocket-api")
@@ -72,7 +72,6 @@ dependencies {
     api("com.vmware:vijava")
     api("org.json:json")
     api(group = "org.apache.ant", name = "ant")
-    api(project(":core:common:common-webhook:biz-common-webhook"))
 
     // jsonschema
     api("com.networknt:json-schema-validator")
