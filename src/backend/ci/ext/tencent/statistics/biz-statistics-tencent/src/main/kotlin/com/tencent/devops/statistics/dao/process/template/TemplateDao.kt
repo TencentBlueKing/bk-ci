@@ -127,7 +127,8 @@ class TemplateDao {
         if (projectId != null) {
             if (includePublicFlag != null && includePublicFlag) {
                 conditions.add(
-                    tTemplate.PROJECT_ID.eq(projectId).or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
+                    tTemplate.PROJECT_ID.eq(projectId)
+                        .or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
                 )
             } else {
                 conditions.add(tTemplate.PROJECT_ID.eq(projectId))
