@@ -96,24 +96,61 @@ install_codecc__ms_common (){
   # 检查安装java
   install_java || return $?
   # 增量复制.
-  rsync -ra "$BK_CODECC_SRC_DIR/$MS_NAME/" "$BK_CODECC_HOME/$MS_NAME"
+  rsync -ra --delete "$BK_CODECC_SRC_DIR/$MS_NAME/" "$BK_CODECC_HOME/$MS_NAME"
   for f in agent-package jars-public jars-private scripts VERSION; do
     [ -e "$BK_CODECC_SRC_DIR/$f" ] || continue
     echo "install $BK_CODECC_SRC_DIR/$f to $BK_CODECC_HOME."
-    rsync -ra "$BK_CODECC_SRC_DIR/${f%/}" "$BK_CODECC_HOME"
+    rsync -ra --delete "$BK_CODECC_SRC_DIR/${f%/}" "$BK_CODECC_HOME"
   done
   # 保持微服务部分子目录的强一致性.
-  rsync -ra --del "$BK_CODECC_SRC_DIR/$MS_NAME/lib" "$BK_CODECC_SRC_DIR/$MS_NAME/com" "$BK_CODECC_HOME/$MS_NAME"
+  rsync -ra --delete "$BK_CODECC_SRC_DIR/$MS_NAME/lib" "$BK_CODECC_SRC_DIR/$MS_NAME/com" "$BK_CODECC_HOME/$MS_NAME"
 }
 
 # 仅需复制frontend目录.
 install_codecc_gateway (){
   local proj=$1
   install_openresty || return $?
+  
+  # 特殊文件处理
+  if ! grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
+    > $BK_CODECC_SRC_DIR/support-files/templates/gateway\#core\#vhosts\#devops.bkrepo.upstream.conf
+  else
+    cat > $BK_CODECC_SRC_DIR/support-files/templates/gateway\#core\#vhosts\#devops.bkrepo.upstream.conf << EOF 
+upstream __BK_REPO_HOST__ {
+    server __BK_REPO_GATEWAY_IP__;
+}
+EOF
+  fi
+
+  cat > $BK_CODECC_SRC_DIR/support-files/templates/gateway\#core\#server.common.conf << EOF
+  client_max_body_size 0;
+
+  if ($time_iso8601 ~ '(\d{4}-\d{2}-\d{2})') {
+    set $log_date $1;
+  }
+
+  #dns指向本地的consul dns服务
+  resolver __BK_CODECC_GATEWAY_DNS_ADDR__;
+
+  #设置通用变量
+  include set.conf;
+
+  #将错误统一处理成json格式返回
+  include error/error.html.handler.conf;
+  include error/error.json.handler.conf;
+  include error/error.json.conf;
+
+  #状态监测
+  include nginx.status.conf;
+
+  #网关auth验证
+  include auth.conf;
+EOF
+
   rsync -ra "$BK_CODECC_SRC_DIR/gateway" "$BK_CODECC_HOME"  # gateway无需--del
-  rsync -ra --del "$BK_CODECC_SRC_DIR/frontend" "$BK_CODECC_HOME"  # frontend不必verbose.
+  rsync -ra --delete "$BK_CODECC_SRC_DIR/frontend" "$BK_CODECC_HOME"  # frontend不必verbose.
   if [ -d "$BK_CODECC_SRC_DIR/docs" ]; then
-    rsync -ra --del "$BK_CODECC_SRC_DIR/docs" "$BK_CODECC_HOME" || return $?  # 可选docs
+    rsync -ra --delete "$BK_CODECC_SRC_DIR/docs" "$BK_CODECC_HOME" || return $?  # 可选docs
   fi
 }
 
