@@ -98,6 +98,7 @@ class DispatchQueueControl @Autowired constructor(
                 canDequeue = false
             }
         }
+        LOG.info("ENGINE|${container.buildId}|TRY_TO_DEQUEUE|container(${container.containerId} rank=$rank}")
         buildLogPrinter.addLine(
             buildId = container.buildId,
             message = "[QUEUE] Rank of container(${container.containerId} is: $rank",
