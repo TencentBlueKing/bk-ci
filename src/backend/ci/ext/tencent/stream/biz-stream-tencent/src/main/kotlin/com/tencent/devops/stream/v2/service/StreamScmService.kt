@@ -235,7 +235,7 @@ class StreamScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.warn(
                 "getProjectInfo RemoteServiceException|" +
-                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+                    "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
@@ -322,7 +322,7 @@ class StreamScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.warn(
                 "createNewFile RemoteServiceException|" +
-                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+                    "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
                 error(
@@ -602,6 +602,7 @@ class StreamScmService @Autowired constructor(
         token: String,
         filePath: String,
         ref: String?,
+        recursive: Boolean?,
         isFirst: Boolean = true
     ): List<GitFileInfo> {
         return try {
@@ -613,7 +614,8 @@ class StreamScmService @Autowired constructor(
                         gitProjectId = gitProjectId,
                         path = filePath,
                         token = token,
-                        ref = ref
+                        ref = ref,
+                        recursive = recursive
                     ).data ?: emptyList()
                 }
             )
@@ -631,6 +633,7 @@ class StreamScmService @Autowired constructor(
         gitToken: String,
         gitProjectId: Long,
         filePath: String,
+        recursive: Boolean?,
         isFirst: Boolean = true
     ): List<GitFileInfo> {
         return try {
@@ -646,7 +649,8 @@ class StreamScmService @Autowired constructor(
                             filePath
                         },
                         token = gitToken,
-                        ref = ""
+                        ref = "",
+                        recursive = recursive
                     ).data ?: emptyList()
                 }
             )
