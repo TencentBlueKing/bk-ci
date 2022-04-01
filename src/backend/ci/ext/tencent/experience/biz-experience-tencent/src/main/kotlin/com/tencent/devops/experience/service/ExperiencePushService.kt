@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushTokenDao
 import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
+import com.tencent.devops.experience.dao.ExperiencePushTokenDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
@@ -272,7 +272,16 @@ class ExperiencePushService @Autowired constructor(
                 platform = platform
             )
         val message =
-            createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId, url)
+            createAppNotifyMessage(
+                messageId = messageId,
+                token = userTokenRecord.token,
+                content = content,
+                title = title,
+                platform = platform,
+                userId = userId,
+                url = url,
+                experienceHashId = appNotifyMessage.experienceHashId
+            )
         experienceNotifyService.sendMqMsg(message)
         return Result(true)
     }
@@ -284,7 +293,8 @@ class ExperiencePushService @Autowired constructor(
         title: String,
         platform: String,
         userId: String,
-        url: String
+        url: String,
+        experienceHashId: String
     ): AppNotifyMessage {
         val appNotifyMessage = AppNotifyMessage()
         appNotifyMessage.messageId = messageId
@@ -294,6 +304,7 @@ class ExperiencePushService @Autowired constructor(
         appNotifyMessage.platform = platform
         appNotifyMessage.receiver = userId
         appNotifyMessage.url = url
+        appNotifyMessage.experienceHashId = experienceHashId
         return appNotifyMessage
     }
 }

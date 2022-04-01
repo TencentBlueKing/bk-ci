@@ -53,14 +53,17 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
+import com.tencent.devops.stream.trigger.StreamTriggerCache
 import com.tencent.devops.stream.utils.CommitCheckUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.stream.v2.service.StreamGitTokenService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 @Suppress("NestedBlockDepth")
 @Component
@@ -69,7 +72,10 @@ class SendCommitCheck @Autowired constructor(
     private val client: Client,
     private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val streamGitTokenService: StreamGitTokenService,
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(SendCommitCheck::class.java)
@@ -114,15 +120,22 @@ class SendCommitCheck @Autowired constructor(
     ) {
         with(context) {
             gitCheckService.pushCommitCheck(
+                streamGitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitRequestEventId = requestEvent.id!!,
+                    gitProjectId = requestEvent.gitProjectId.toString(),
+                    token = streamGitTokenService.getToken(requestEvent.gitProjectId),
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                ),
                 commitId = requestEvent.commitId,
                 description = getDescByBuildStatus(this),
                 // 由stage event红线评论发送
                 mergeRequestId = null,
+                projectId = pipeline.gitProjectId,
                 buildId = buildEvent.buildId,
                 userId = buildEvent.userId,
                 status = getGitCommitCheckState(),
                 context = "${pipeline.filePath}@${requestEvent.objectKind.toUpperCase()}",
-                gitCIBasicSetting = streamSetting,
                 pipelineId = buildEvent.pipelineId,
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 targetUrl = getTargetUrl(context)

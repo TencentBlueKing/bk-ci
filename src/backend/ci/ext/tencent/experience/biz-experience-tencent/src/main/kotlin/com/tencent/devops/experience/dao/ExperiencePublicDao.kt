@@ -29,6 +29,7 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.model.experience.tables.TExperiencePublic
+import com.tencent.devops.model.experience.tables.TExperienceSubscribe
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
@@ -169,7 +170,8 @@ class ExperiencePublicDao {
         logoUrl: String,
         scheme: String,
         type: Int = ExperiencePublicType.FROM_BKCI.id,
-        externalUrl: String = ""
+        externalUrl: String = "",
+        version: String
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -190,7 +192,8 @@ class ExperiencePublicDao {
                 LOGO_URL,
                 SCHEME,
                 TYPE,
-                EXTERNAL_LINK
+                EXTERNAL_LINK,
+                VERSION
             ).values(
                 recordId,
                 projectId,
@@ -207,7 +210,8 @@ class ExperiencePublicDao {
                 logoUrl,
                 scheme,
                 type,
-                externalUrl
+                externalUrl,
+                version
             ).onDuplicateKeyUpdate()
                 .set(RECORD_ID, recordId)
                 .set(EXPERIENCE_NAME, experienceName)
@@ -218,6 +222,7 @@ class ExperiencePublicDao {
                 .set(SIZE, size)
                 .set(LOGO_URL, logoUrl)
                 .set(SCHEME, scheme)
+                .set(VERSION, version)
                 .execute()
         }
     }
@@ -268,7 +273,8 @@ class ExperiencePublicDao {
         necessaryIndex: Int? = null,
         bannerIndex: Int? = null,
         downloadTime: Int? = null,
-        updateTime: LocalDateTime? = LocalDateTime.now()
+        updateTime: LocalDateTime? = LocalDateTime.now(),
+        version: String? = null
     ) {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
@@ -279,6 +285,7 @@ class ExperiencePublicDao {
                 .let { if (null == necessaryIndex) it else it.set(NECESSARY_INDEX, necessaryIndex) }
                 .let { if (null == bannerIndex) it else it.set(BANNER_INDEX, bannerIndex) }
                 .let { if (null == downloadTime) it else it.set(DOWNLOAD_TIME, downloadTime) }
+                .let { if (null == version) it else it.set(VERSION, version) }
                 .where(ID.eq(id))
                 .execute()
         }
@@ -408,5 +415,25 @@ class ExperiencePublicDao {
                 .and(PLATFORM.eq(platform))
                 .fetchOne()?.recordId
         }
+    }
+
+    fun listSubcribeRecordIds(
+        dslContext: DSLContext,
+        userId: String,
+        limit: Int
+    ): List<Long> {
+        val p = TExperiencePublic.T_EXPERIENCE_PUBLIC
+        val s = TExperienceSubscribe.T_EXPERIENCE_SUBSCRIBE
+        val join = p.leftJoin(s).on(
+            p.BUNDLE_IDENTIFIER.eq(s.BUNDLE_IDENTIFIER)
+                .and(p.PLATFORM.eq(s.PLATFORM))
+                .and(p.PROJECT_ID.eq(s.PROJECT_ID))
+        )
+        return dslContext.select(p.RECORD_ID)
+            .from(join)
+            .where(s.USER_ID.eq(userId))
+            .orderBy(p.UPDATE_TIME.desc())
+            .limit(limit)
+            .fetch(p.RECORD_ID)
     }
 }

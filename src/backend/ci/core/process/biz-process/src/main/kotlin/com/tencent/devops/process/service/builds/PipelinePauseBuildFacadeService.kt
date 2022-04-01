@@ -156,6 +156,11 @@ class PipelinePauseBuildFacadeService(
         }
         val newInputData = ParameterUtils.getElementInput(newElement)
 
+        if (newInputData.isNullOrEmpty()) {
+            logger.info("newInputData is empty $buildId $taskId $newElement")
+            return isDiff
+        }
+
         // issues_6210 若原input为空,新input不为空。则直接返回有变化
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: emptyMap()
 

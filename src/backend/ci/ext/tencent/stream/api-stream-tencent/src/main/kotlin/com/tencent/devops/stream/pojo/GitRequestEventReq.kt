@@ -27,8 +27,15 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -83,7 +90,11 @@ data class GitRequestEventReq(
     @ApiModelProperty("评论Id")
     var noteId: Long?,
     @ApiModelProperty("评论连接")
-    var noteUrl: String?
+    var jumpUrl: String?,
+    @ApiModelProperty("构建标题")
+    var buildTitle: String?,
+    @ApiModelProperty("构建跳转显示信息")
+    var buildSource: String?
 ) {
     constructor(gitRequestEvent: GitRequestEvent) : this(
         id = gitRequestEvent.id,
@@ -107,15 +118,79 @@ data class GitRequestEventReq(
         deleteBranch = gitRequestEvent.isDeleteBranch(),
         deleteTag = gitRequestEvent.isDeleteTag(),
         noteId = null,
-        noteUrl = null
+        jumpUrl = null,
+        buildTitle = null,
+        buildSource = null
     ) {
+        // 组装信息：用于传给前端页面使用
         when (gitRequestEvent.gitEvent) {
             is GitNoteEvent -> {
-                val gitNoteEvent = gitRequestEvent.gitEvent as GitNoteEvent
-                noteId = gitNoteEvent.objectAttributes.id
-                noteUrl = gitNoteEvent.objectAttributes.url
+                val event = gitRequestEvent.gitEvent as GitNoteEvent
+                noteId = event.objectAttributes.id
+                jumpUrl = event.objectAttributes.url
+                buildTitle = commitMsg
+                buildSource = "[$noteId]"
             }
-            else -> {}
+            is GitPushEvent -> {
+                val event = gitRequestEvent.gitEvent as GitPushEvent
+                if (deleteBranch) {
+                    buildTitle = "Branch $branch deleted by $userId"
+                } else {
+                    jumpUrl = event.repository.homepage + "/commit/" + gitRequestEvent.commitId
+                    buildTitle = commitMsg
+                    buildSource = commitId.take(9)
+                }
+            }
+            is GitTagPushEvent -> {
+                val event = gitRequestEvent.gitEvent as GitTagPushEvent
+                if (deleteTag) {
+                    buildTitle = "Tag $branch deleted by $userId"
+                } else {
+                    jumpUrl = event.repository.homepage + "/-/tags/" + gitRequestEvent.branch
+                    buildTitle = commitMsg
+                    buildSource = branch
+                }
+            }
+            is GitMergeRequestEvent -> {
+                val event = gitRequestEvent.gitEvent as GitMergeRequestEvent
+                jumpUrl = event.object_attributes.target.web_url + "/merge_requests/" + gitRequestEvent.mergeRequestId
+                buildTitle = mrTitle
+                buildSource = "[!$mergeRequestId]"
+            }
+            is GitIssueEvent -> {
+                val event = gitRequestEvent.gitEvent as GitIssueEvent
+                jumpUrl = event.repository.homepage + "/issues/" + gitRequestEvent.mergeRequestId
+                buildTitle = commitMsg
+                buildSource = "[$mergeRequestId]"
+            }
+            is GitReviewEvent -> {
+                val event = gitRequestEvent.gitEvent as GitReviewEvent
+                jumpUrl = event.repository.homepage + "/reviews/" + gitRequestEvent.mergeRequestId
+                buildTitle = commitMsg
+                buildSource = "[$mergeRequestId]"
+            }
+            else -> {
+                when (objectKind) {
+                    TGitObjectKind.SCHEDULE.value -> {
+                        buildSource = commitId.take(9)
+                    }
+                    else -> {}
+                }
+                // 兼容给list接口有title数据。list接口并没有生成大对象，减少负担
+                when (operationKind) {
+                    TGitPushOperationKind.DELETE.value -> {
+                        if (objectKind == TGitObjectKind.PUSH.value) {
+                            buildTitle = "Branch $branch deleted by $userId"
+                        }
+                        if (objectKind == TGitObjectKind.TAG_PUSH.value) {
+                            buildTitle = "Tag $branch deleted by $userId"
+                        }
+                    }
+                    else -> {
+                        buildTitle = commitMsg
+                    }
+                }
+            }
         }
     }
 }

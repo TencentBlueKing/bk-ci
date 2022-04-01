@@ -42,6 +42,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.StringReader
 
+@Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
 
     val sampleDir = "samples"
@@ -82,6 +83,12 @@ class YamlTemplateTest {
         check("$sampleDir/$dir/longParametersTest.yml")
 
         check("$sampleDir/$dir/user.yml")
+    }
+
+    @Test
+    fun testParametersTemplate() {
+        val dir = "parameters"
+        check("$sampleDir/$dir/parameters.yml")
     }
 
     private fun check(file: String) {

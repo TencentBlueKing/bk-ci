@@ -45,6 +45,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -107,6 +108,8 @@ class ManualTriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
+        val gitRequestEventForHandle = manualChangeGitRequestEvent(gitRequestEvent)
+
         val existsPipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId)
                 ?: throw OperationException("stream pipeline: $pipelineId is not exist")
@@ -131,7 +134,7 @@ class ManualTriggerService @Autowired constructor(
         }
 
         val gitCIBasicSetting =
-            gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId) ?: throw CustomException(
+            gitCISettingDao.getSetting(dslContext, gitRequestEventForHandle.gitProjectId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
                 message = TriggerReason.CI_DISABLED.detail
             )
@@ -139,10 +142,10 @@ class ManualTriggerService @Autowired constructor(
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, event: ${gitRequestEvent.id} yaml is null")
+            logger.warn("Matcher is false, event: ${gitRequestEventForHandle.id} yaml is null")
             gitCIEventService.saveBuildNotBuildEvent(
-                userId = gitRequestEvent.userId,
-                eventId = gitRequestEvent.id!!,
+                userId = gitRequestEventForHandle.userId,
+                eventId = gitRequestEventForHandle.id!!,
                 pipelineId = buildPipeline.pipelineId.ifBlank { null },
                 pipelineName = buildPipeline.displayName,
                 filePath = buildPipeline.filePath,
@@ -150,23 +153,23 @@ class ManualTriggerService @Autowired constructor(
                 normalizedYaml = null,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL.name,
                 reasonDetail = TriggerReason.CI_YAML_CONTENT_NULL.detail,
-                gitProjectId = gitRequestEvent.gitProjectId,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
                 sendCommitCheck = false,
                 commitCheckBlock = false,
                 version = null,
-                branch = gitRequestEvent.branch
+                branch = gitRequestEventForHandle.branch
             )
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = TriggerReason.CI_YAML_CONTENT_NULL.name +
-                        "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
+                    "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
             )
         }
 
         if (!ScriptYmlUtils.isV2Version(originYaml)) {
             val (yamlObject, normalizedYaml) =
                 prepareCIBuildYaml(
-                    gitRequestEvent = gitRequestEvent,
+                    gitRequestEvent = gitRequestEventForHandle.gitRequestEvent,
                     originYaml = originYaml,
                     filePath = existsPipeline.filePath,
                     pipelineId = existsPipeline.pipelineId,
@@ -179,16 +182,16 @@ class ManualTriggerService @Autowired constructor(
 
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
+                eventId = gitRequestEventForHandle.id!!,
                 originYaml = originYaml,
                 parsedYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitProjectId = gitRequestEvent.gitProjectId,
-                branch = gitRequestEvent.branch,
-                objectKind = gitRequestEvent.objectKind,
+                gitProjectId = gitRequestEventForHandle.gitProjectId,
+                branch = gitRequestEventForHandle.branch,
+                objectKind = gitRequestEventForHandle.gitRequestEvent.objectKind,
                 commitMsg = triggerBuildReq.customCommitMsg,
-                triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                triggerUser = gitRequestEventForHandle.userId,
+                sourceGitProjectId = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId,
                 buildStatus = BuildStatus.RUNNING,
                 version = null
             )
@@ -218,7 +221,7 @@ class ManualTriggerService @Autowired constructor(
             )
         } else {
             val result = handleTrigger(
-                gitRequestEvent = gitRequestEvent,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 originYaml = originYaml,
                 buildPipeline = buildPipeline,
                 triggerBuildReq = triggerBuildReq,
@@ -243,6 +246,19 @@ class ManualTriggerService @Autowired constructor(
                 )
             )
         }
+    }
+
+    private fun manualChangeGitRequestEvent(
+        gitRequestEvent: GitRequestEvent
+    ): GitRequestEventForHandle {
+        return GitRequestEventForHandle(
+            id = gitRequestEvent.id,
+            gitProjectId = gitRequestEvent.gitProjectId,
+            branch = gitRequestEvent.branch,
+            userId = gitRequestEvent.userId,
+            checkRepoTrigger = false,
+            gitRequestEvent = gitRequestEvent
+        )
     }
 
     private fun mockWebhookTrigger(triggerBuildReq: TriggerBuildReq): GitRequestEvent {
@@ -277,7 +293,7 @@ class ManualTriggerService @Autowired constructor(
     }
 
     fun handleTrigger(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         originYaml: String,
         buildPipeline: GitProjectPipeline,
         triggerBuildReq: TriggerBuildReq,
@@ -285,65 +301,72 @@ class ManualTriggerService @Autowired constructor(
     ): BuildId? {
         var buildId: BuildId? = null
         triggerExceptionService.handleManualTrigger {
-            buildId = trigger(gitRequestEvent, originYaml, buildPipeline, triggerBuildReq, gitCIBasicSetting)
+            buildId = trigger(
+                gitRequestEventForHandle = gitRequestEventForHandle,
+                originYaml = originYaml,
+                buildPipeline = buildPipeline,
+                triggerBuildReq = triggerBuildReq,
+                gitCIBasicSetting = gitCIBasicSetting
+            )
         }
         return buildId
     }
 
     private fun trigger(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         originYaml: String,
         buildPipeline: GitProjectPipeline,
         triggerBuildReq: TriggerBuildReq,
         gitCIBasicSetting: GitCIBasicSetting
     ): BuildId? {
         val yamlReplaceResult = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             isMr = false,
             originYaml = originYaml,
             filePath = buildPipeline.filePath,
             pipelineId = buildPipeline.pipelineId,
             pipelineName = buildPipeline.displayName,
             event = null,
-            changeSet = null,
-            forkGitProjectId = null
+            changeSet = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
-            eventId = gitRequestEvent.id!!,
+            eventId = gitRequestEventForHandle.id!!,
             originYaml = originYaml,
             parsedYaml = parsedYaml,
             normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml),
-            gitProjectId = gitRequestEvent.gitProjectId,
-            branch = gitRequestEvent.branch,
-            objectKind = gitRequestEvent.objectKind,
+            gitProjectId = gitRequestEventForHandle.gitProjectId,
+            branch = gitRequestEventForHandle.branch,
+            objectKind = gitRequestEventForHandle.gitRequestEvent.objectKind,
             commitMsg = triggerBuildReq.customCommitMsg,
-            triggerUser = gitRequestEvent.userId,
-            sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+            triggerUser = gitRequestEventForHandle.userId,
+            sourceGitProjectId = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId,
             buildStatus = BuildStatus.RUNNING,
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        streamBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
+        streamBasicSettingService.refreshSetting(gitRequestEventForHandle.userId, gitRequestEventForHandle.gitProjectId)
 
         var params = emptyMap<String, String>()
-        if (gitRequestEvent.gitEvent != null) {
+        if (gitRequestEventForHandle.gitRequestEvent.gitEvent != null) {
             params = triggerMatcher.getStartParams(
                 context = StreamTriggerContext(
-                    gitEvent = gitRequestEvent.gitEvent!!,
-                    requestEvent = gitRequestEvent,
+                    gitEvent = gitRequestEventForHandle.gitRequestEvent.gitEvent!!,
+                    gitRequestEventForHandle = gitRequestEventForHandle,
                     streamSetting = gitCIBasicSetting,
                     pipeline = buildPipeline,
                     originYaml = originYaml,
                     mrChangeSet = null
                 ),
-                triggerOn = TriggerBuilder.buildManualTriggerOn(gitEvent = gitRequestEvent.gitEvent!!)
+                triggerOn = TriggerBuilder.buildManualTriggerOn(
+                    gitEvent = gitRequestEventForHandle.gitRequestEvent.gitEvent!!
+                )
             )
         }
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
-            event = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             yaml = yamlReplaceResult.normalYaml,
             parsedYaml = parsedYaml,
             originYaml = originYaml,
