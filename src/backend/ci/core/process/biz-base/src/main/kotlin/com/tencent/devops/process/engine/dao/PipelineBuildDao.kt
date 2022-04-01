@@ -478,6 +478,7 @@ class PipelineBuildDao {
                 status = BuildStatus.values()[t.status],
                 queueTime = t.queueTime?.timestampmilli() ?: 0L,
                 startUser = t.startUser,
+                triggerUser = t.triggerUser,
                 startTime = t.startTime?.timestampmilli() ?: 0L,
                 endTime = t.endTime?.timestampmilli() ?: 0L,
                 taskCount = t.taskCount,

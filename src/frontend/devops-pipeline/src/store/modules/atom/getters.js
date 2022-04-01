@@ -168,10 +168,11 @@ export default {
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
+
             if (pipelineSetting && !pipelineSetting.pipelineName) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
             }
-            
+           
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -189,6 +190,16 @@ export default {
             }
 
             const allContainers = getters.getAllContainers(stages)
+
+            // 当前所有插件element
+            const elementsMap = allContainers.reduce(function (prev, cur) {
+                prev.push(...cur.elements)
+                return prev
+            }, [])
+
+            if (elementsMap.some(element => !element.atomCode)) {
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+            }
 
             if (allContainers.some(container => container.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
