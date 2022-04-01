@@ -51,7 +51,8 @@ class StreamScmServiceTest {
     @Before
     fun init() {
         Mockito.`when`(client.getScm(ServiceGitCiResource::class)).thenReturn(serviceGitCiResource)
-        Mockito.`when`(streamGitTokenService.getToken(1)).thenReturn("1")
+        Mockito.`when`(streamGitTokenService.getToken(1, false)).thenReturn("1")
+        Mockito.`when`(streamGitTokenService.getToken(1, true)).thenReturn("1")
     }
 
     @Test
@@ -61,7 +62,7 @@ class StreamScmServiceTest {
         ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限")).thenReturn(Result("success"))
         val yamlFromGit = streamScmService.getYamlFromGit("1", "1", "1", "1", true)
         Mockito.verify(serviceGitCiResource, times(2)).getGitCIFileContent("1", "1", "1", "1", true)
-        Mockito.verify(streamGitTokenService).getToken(1)
+        Mockito.verify(streamGitTokenService).getToken(1, true)
         assertEquals(yamlFromGit, "success")
     }
 
@@ -77,7 +78,7 @@ class StreamScmServiceTest {
             flag = true
         }
         Mockito.verify(serviceGitCiResource, times(2)).getGitCIFileContent("1", "1", "1", "1", true)
-        Mockito.verify(streamGitTokenService).getToken(1)
+        Mockito.verify(streamGitTokenService).getToken(1, true)
         assertTrue(flag)
     }
 
@@ -89,7 +90,7 @@ class StreamScmServiceTest {
         ).thenThrow(CustomException(Response.Status.FORBIDDEN, "403 无权限")).thenReturn(Result(gitCIProjectInfoMock))
         val gitCIProjectInfo = streamScmService.getProjectInfo("1", "1", true)
         Mockito.verify(serviceGitCiResource, times(2)).getProjectInfo("1", "1", true)
-        Mockito.verify(streamGitTokenService).getToken(1)
+        Mockito.verify(streamGitTokenService).getToken(1, true)
         assertEquals(gitCIProjectInfoMock.gitProjectId, gitCIProjectInfo?.gitProjectId ?: 111)
     }
 
@@ -106,7 +107,22 @@ class StreamScmServiceTest {
             flag = true
         }
         Mockito.verify(serviceGitCiResource, times(2)).getProjectInfo("1", "1", true)
-        Mockito.verify(streamGitTokenService).getToken(1)
+        Mockito.verify(streamGitTokenService).getToken(1, true)
         assertTrue(flag)
     }
+
+
+//    @Test
+//    fun testGetTokenNotCache() {
+//        val redisMock: RedisOperation = mock()
+//        val scmMock: StreamScmService = mock()
+//        val streamGitTokenService = StreamGitTokenService(scmMock, redisMock)
+//        Mockito.`when`(redisMock.get(getGitTokenKey(1))).thenReturn("1")
+//        Mockito.`when`(scmMock.getToken("1")).thenReturn(GitToken("1"))
+//        Mockito.verify(scmMock).getToken("1")
+//        streamGitTokenService.getToken(1, true)
+//    }
+//
+//    private val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:"
+//    fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
 }

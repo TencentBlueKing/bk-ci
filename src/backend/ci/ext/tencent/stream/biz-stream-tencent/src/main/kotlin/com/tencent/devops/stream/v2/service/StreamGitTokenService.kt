@@ -51,9 +51,9 @@ class StreamGitTokenService @Autowired constructor(
         private val validTime = TimeUnit.MINUTES.toSeconds(30) + TimeUnit.HOURS.toSeconds(7)
     }
 
-    fun getToken(gitProjectId: Long): String {
+    fun getToken(gitProjectId: Long, notGetFromCache: Boolean = false): String {
         val token = redisOperation.get(getGitTokenKey(gitProjectId))
-        return if (token.isNullOrBlank()) {
+        return if (token.isNullOrBlank() || notGetFromCache) {
             val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
             updateLock.use {
                 updateLock.lock()

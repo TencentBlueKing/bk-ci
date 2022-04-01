@@ -183,7 +183,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getYamlFromGit(newToken, gitProjectId, fileName, ref, useAccessToken, false)
             }
             throw e
@@ -211,7 +211,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getProjectInfoRetry(newToken, gitProjectId, useAccessToken, false)
             }
             throw e
@@ -262,7 +262,7 @@ class StreamScmService @Autowired constructor(
             }
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getProjectInfo(newToken, gitProjectId, useAccessToken, false)
             }
             throw e
@@ -298,7 +298,7 @@ class StreamScmService @Autowired constructor(
             ).data
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId)
+                val newToken = streamGitTokenService.getToken(gitProjectId, true)
                 return getCommits(newToken, gitProjectId, filePath, branch, since, until, page, perPage, false)
             }
             throw e
@@ -340,7 +340,7 @@ class StreamScmService @Autowired constructor(
             }
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return createNewFile(userId, newToken, gitProjectId, gitCICreateFile, false)
             }
             throw e
@@ -370,7 +370,7 @@ class StreamScmService @Autowired constructor(
             ).data
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getProjectMembers(newToken, gitProjectId, page, pageSize, search, false)
             }
             throw e
@@ -401,7 +401,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getProjectMembersRetry(newToken, gitProjectId, page, pageSize, search, false)
             }
             throw e
@@ -433,7 +433,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getProjectBranchesRetry(newToken, gitProjectId, page, pageSize, false)
             }
             throw e
@@ -464,7 +464,7 @@ class StreamScmService @Autowired constructor(
                 ).data
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getProjectBranches(newToken, gitProjectId, page, pageSize, search, orderBy, sort, false)
             }
             throw e
@@ -508,7 +508,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId)
+                val newToken = streamGitTokenService.getToken(gitProjectId, true)
                 return getMergeRequestChangeInfo(userId, newToken, gitProjectId, mrId, false)
             }
             throw e
@@ -562,7 +562,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return getFileInfo(newToken, gitProjectId, filePath, ref, useAccessToken, false)
             }
             throw e
@@ -590,7 +590,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId)
+                val newToken = streamGitTokenService.getToken(gitProjectId, true)
                 return getMergeInfo(gitProjectId, mergeRequestId, newToken, false)
             }
             throw e
@@ -619,7 +619,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId)
+                val newToken = streamGitTokenService.getToken(gitProjectId, true)
                 return getFileTreeFromGit(gitProjectId, newToken, filePath, ref, false)
             }
             throw e
@@ -652,7 +652,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId)
+                val newToken = streamGitTokenService.getToken(gitProjectId, true)
                 return getFileTreeFromGitWithDefaultBranch(newToken, gitProjectId, filePath, false)
             }
             throw e
@@ -692,7 +692,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: ErrorCodeException) {
             if (e.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId)
+                val newToken = streamGitTokenService.getToken(gitProjectId, true)
                 return getCommitChangeFileListRetry(
                     newToken,
                     userId,
@@ -769,7 +769,7 @@ class StreamScmService @Autowired constructor(
             )
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
-                val newToken = streamGitTokenService.getToken(gitProjectId.toLong())
+                val newToken = streamGitTokenService.getToken(gitProjectId.toLong(), true)
                 return addMrComment(newToken, gitProjectId, mrId, mrBody, false)
             }
             throw e
