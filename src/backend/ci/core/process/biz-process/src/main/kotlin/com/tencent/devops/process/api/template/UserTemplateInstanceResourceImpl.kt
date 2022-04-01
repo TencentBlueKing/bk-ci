@@ -82,25 +82,6 @@ class UserTemplateInstanceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun updateTemplate(
-        userId: String,
-        projectId: String,
-        templateId: String,
-        versionName: String,
-        useTemplateSettings: Boolean,
-        instances: List<TemplateInstanceUpdate>
-    ): TemplateOperationRet {
-        return templateFacadeService.updateTemplateInstances(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            version = null,
-            versionName = versionName,
-            useTemplateSettings = useTemplateSettings,
-            instances = instances
-        )
-    }
-
     override fun asyncUpdateTemplateInstances(
         userId: String,
         projectId: String,
