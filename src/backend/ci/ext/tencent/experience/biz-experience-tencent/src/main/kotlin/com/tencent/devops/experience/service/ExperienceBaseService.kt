@@ -197,7 +197,7 @@ class ExperienceBaseService @Autowired constructor(
             recordIds.addAll(experienceOuterDao.listRecordIdsByOuter(dslContext, userId).map { it.value1() }.toSet())
         } else {
             recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
-            recordIds.addAll(experienceDao.listIdsByCreator(dslContext,userId))
+            recordIds.addAll(experienceDao.listIdsByCreator(dslContext, userId))
         }
         return recordIds
     }

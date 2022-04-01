@@ -3,8 +3,6 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import org.jooq.DSLContext
-import org.jooq.Record1
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 

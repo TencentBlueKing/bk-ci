@@ -29,7 +29,6 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.model.experience.tables.TExperience
-import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
