@@ -110,8 +110,6 @@ class StreamScmServiceTest {
         Mockito.verify(streamGitTokenService).getToken(1, true)
         assertTrue(flag)
     }
-
-
 //    @Test
 //    fun testGetTokenNotCache() {
 //        val redisMock: RedisOperation = mock()
