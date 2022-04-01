@@ -1377,7 +1377,7 @@ class TemplateFacadeService @Autowired constructor(
         projectId: String,
         userId: String,
         templateId: String,
-        version: Long?,
+        version: Long? = null,
         versionName: String? = null,
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
