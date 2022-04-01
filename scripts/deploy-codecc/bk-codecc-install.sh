@@ -125,12 +125,12 @@ EOF
   cat > $BK_CODECC_SRC_DIR/support-files/templates/gateway\#core\#server.common.conf << EOF
   client_max_body_size 0;
 
-  if ($time_iso8601 ~ '(\d{4}-\d{2}-\d{2})') {
-    set $log_date $1;
+  if (\$time_iso8601 ~ '(\d{4}-\d{2}-\d{2})') {
+    set \$log_date \$1;
   }
 
   #dns指向本地的consul dns服务
-  resolver __BK_CODECC_GATEWAY_DNS_ADDR__;
+  resolver __BK_CODECC_GATEWAY_DNS_ADDR__ valid=30s;
 
   #设置通用变量
   include set.conf;
