@@ -47,13 +47,15 @@ data class NewHeartbeatInfo(
     @ApiModelProperty("启动者")
     val startedUser: String,
     @ApiModelProperty("第三方构建信息列表")
-    val taskList: List<ThirdPartyBuildInfo>,
+    var taskList: List<ThirdPartyBuildInfo>,
     @ApiModelProperty("构建机id")
     var agentId: Long?,
     @ApiModelProperty("项目id")
     var projectId: String?,
     @ApiModelProperty("心跳时间戳")
-    var heartbeatTime: Long?
+    var heartbeatTime: Long?,
+    @ApiModelProperty("忙碌运行中任务数量")
+    var busyTaskSize: Int = 0
 ) {
     companion object {
         fun dummyHeartbeat(projectId: String, agentId: Long): NewHeartbeatInfo {

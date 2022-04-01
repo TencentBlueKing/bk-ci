@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
+import com.tencent.devops.common.api.pojo.agent.NewHeartbeatInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -73,15 +74,17 @@ data class ThirdPartyAgentDetail(
     @ApiModelProperty("最新心跳时间", required = true)
     val lastHeartbeatTime: String,
     @ApiModelProperty("CPU 核数", required = true)
-    val nCpus: String,
+    val ncpus: String, // nCpus 序列化JSON会变成 ncpus，但JSON反序列化对象时，nCpus字段不认ncpus
     @ApiModelProperty("内存", required = true)
     val memTotal: String,
     @ApiModelProperty("硬盘空间（最大盘）", required = true)
     val diskTotal: String,
     @ApiModelProperty("是否可以编辑", required = false)
-    val canEdit: Boolean?,
+    var canEdit: Boolean? = false,
     @ApiModelProperty("当前Agent版本", required = false)
     val currentAgentVersion: String? = "",
     @ApiModelProperty("当前Worker版本", required = false)
-    val currentWorkerVersion: String? = ""
+    val currentWorkerVersion: String? = "",
+    @ApiModelProperty("心跳信息", required = false)
+    var heartbeatInfo: NewHeartbeatInfo? = null
 )
