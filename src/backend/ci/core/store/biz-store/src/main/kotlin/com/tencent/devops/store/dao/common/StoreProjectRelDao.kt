@@ -54,7 +54,8 @@ class StoreProjectRelDao {
         storeType: Byte
     ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-           return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
@@ -62,19 +63,17 @@ class StoreProjectRelDao {
                 STORE_TYPE,
                 CREATOR,
                 MODIFIER
-            )
-                .values(
-                    UUIDUtil.generate(),
-                    storeCode,
-                    projectCode,
-                    type,
-                    storeType,
-                    userId,
-                    userId
-                )
-                .onDuplicateKeyUpdate()
-                .set(PROJECT_CODE,projectCode)
-                .set(MODIFIER,userId)
+            ).values(
+                UUIDUtil.generate(),
+                storeCode,
+                projectCode,
+                type,
+                storeType,
+                userId,
+                userId
+            ).onDuplicateKeyUpdate()
+                .set(PROJECT_CODE, projectCode)
+                .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }

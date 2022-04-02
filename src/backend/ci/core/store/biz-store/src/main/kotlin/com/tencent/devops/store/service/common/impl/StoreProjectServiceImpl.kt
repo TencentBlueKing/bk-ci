@@ -176,7 +176,6 @@ class StoreProjectServiceImpl @Autowired constructor(
                 if (result != 2) {
                     increment += 1
                 }
-
             }
             // 更新安装量
             if (increment > 0) {
