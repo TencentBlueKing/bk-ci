@@ -52,9 +52,9 @@ class StoreProjectRelDao {
         projectCode: String,
         type: Byte,
         storeType: Byte
-    ) {
+    ): Int {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            dslContext.insertInto(this,
+           return dslContext.insertInto(this,
                 ID,
                 STORE_CODE,
                 PROJECT_CODE,
@@ -72,6 +72,10 @@ class StoreProjectRelDao {
                     userId,
                     userId
                 )
+                .onDuplicateKeyUpdate()
+                .set(PROJECT_CODE,projectCode)
+                .set(MODIFIER,userId)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }

@@ -165,7 +165,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                     continue
                 }
                 // 未安装则入库
-                storeProjectRelDao.addStoreProjectRel(
+                val result = storeProjectRelDao.addStoreProjectRel(
                     dslContext = context,
                     userId = userId,
                     storeCode = storeCode,
@@ -173,7 +173,10 @@ class StoreProjectServiceImpl @Autowired constructor(
                     type = StoreProjectTypeEnum.COMMON.type.toByte(),
                     storeType = storeType.type.toByte()
                 )
-                increment += 1
+                if (result != 2) {
+                    increment += 1
+                }
+
             }
             // 更新安装量
             if (increment > 0) {
