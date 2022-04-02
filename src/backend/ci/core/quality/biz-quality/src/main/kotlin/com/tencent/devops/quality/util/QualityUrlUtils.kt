@@ -62,6 +62,7 @@ class QualityUrlUtils @Autowired constructor(private val codeccConfig: CodeccCon
             "http://$codeccHost/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
         } else {
             val detailValue = codeccConfig.getCodeccDetailUrl(detail)
+            logger.info("getDetailUrl: $detailValue")
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)
