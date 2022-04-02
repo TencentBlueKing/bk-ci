@@ -314,7 +314,7 @@ class TemplateDao {
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(CREATED_TIME.desc(),VERSION.desc())
+                .orderBy(CREATED_TIME.desc(), VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,

@@ -1399,7 +1399,7 @@ class TemplateFacadeService @Autowired constructor(
                 version = version
             )
         run {
-            instances.forEachIndexed {index, it ->
+            instances.forEachIndexed { index, it ->
                 if (index >100) return@run
                     try {
                         updateTemplateInstanceInfo(
