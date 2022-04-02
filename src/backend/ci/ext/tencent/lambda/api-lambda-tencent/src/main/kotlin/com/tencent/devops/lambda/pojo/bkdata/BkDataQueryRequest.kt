@@ -25,23 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.lambda.pojo.bkdata
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
-}
+/**
+ * 数据平台查询接口请求参数对象
+ */
+data class BkDataQueryRequest(
+    @JsonProperty("bkdata_authentication_method")
+    @ApiModelProperty("校验方法", required = true, name = "bkdata_authentication_method")
+    override val authenticationMethod: String,
+    @JsonProperty("bkdata_data_token")
+    @ApiModelProperty("token", required = true, name = "bkdata_data_token")
+    override val dataToken: String,
+    @JsonProperty("bk_app_code")
+    @ApiModelProperty("蓝鲸应用编码", required = true, name = "bk_app_code")
+    override val bkAppCode: String,
+    @JsonProperty("bk_app_secret")
+    @ApiModelProperty("蓝鲸应用私密key", required = true, name = "bk_app_secret")
+    override val bkAppSecret: String,
+    @JsonProperty("sql")
+    @ApiModelProperty("查询SQL", required = true, name = "sql")
+    val sql: String,
+    @JsonProperty("prefer_storage")
+    @ApiModelProperty("查询引擎", required = false, name = "prefer_storage")
+    var preferStorage: String? = null
+) : BkDataBaseRequest(authenticationMethod, dataToken, bkAppCode, bkAppSecret)

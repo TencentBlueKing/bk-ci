@@ -59,3 +59,6 @@ data class ResourcesPools(
     val from: String?,
     val name: String?
 )
+
+// 确定pool作为map的唯一性，修改pool对象时同步修改
+fun ResourcesPools.format() = "${this.from}+${this.name}"

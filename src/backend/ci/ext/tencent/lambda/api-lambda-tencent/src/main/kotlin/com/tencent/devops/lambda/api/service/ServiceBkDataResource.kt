@@ -24,24 +24,31 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.api.service
 
-package com.tencent.devops.project.service
+import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
+import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
+import com.tencent.devops.lambda.pojo.bkdata.BkDataResult
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+@Api(tags = ["SERVICE_LAMBDA_BKDATA"], description = "服务-lambda-数据平台")
+@Path("/service/lambda/bkdata")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceBkDataResource {
 
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
+    @ApiOperation("查询数据平台数据")
+    @POST
+    @Path("/data/query")
+    fun queryData(
+        @ApiParam("数据平台查询接口参数", required = true)
+        bkDataQueryParam: BkDataQueryParam
+    ): BkDataResult<BkDataQueryData>
 }

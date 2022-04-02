@@ -24,24 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.pojo.bkdata
 
-package com.tencent.devops.project.service
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
-}
+@ApiModel("数据平台查询接口结果对象模型")
+data class BkDataQueryData(
+    @ApiModelProperty("总记录数", required = true)
+    val totalRecords: Int,
+    @ApiModelProperty("耗费时间", required = true)
+    val timetaken: Double,
+    @ApiModelProperty("数据集合", required = false)
+    val list: List<Map<String, String>>?,
+    @JsonProperty("select_fields_order")
+    @ApiModelProperty("查询字段集合", required = true)
+    val selectFieldsOrder: List<String>
+)

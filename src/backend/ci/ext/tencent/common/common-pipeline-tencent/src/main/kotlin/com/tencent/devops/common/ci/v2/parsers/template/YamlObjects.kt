@@ -37,6 +37,7 @@ import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.ResourceExclusiveDeclaration
+import com.tencent.devops.common.ci.v2.ResourcesPools
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Strategy
@@ -204,6 +205,20 @@ object YamlObjects {
         )
     }
 
+    fun getResourcePools(fromPath: String, resources: Any): List<ResourcesPools> {
+        val resourcesD = transValue<Map<String, Any>>(fromPath, "resources", resources)
+        if (resourcesD["pools"] == null) {
+            return emptyList()
+        }
+        val poolList = transValue<List<Map<String, Any>>>(fromPath, "pools", resourcesD["pools"])
+        return poolList.map { poolD ->
+            ResourcesPools(
+                from = poolD["from"]?.toString(),
+                name = poolD["name"]?.toString()
+            )
+        }
+    }
+
     inline fun <reified T> getObjectFromYaml(path: String, template: String): T {
         return try {
             TemplateYamlMapper.getObjectMapper().readValue(template, object : TypeReference<T>() {})
@@ -353,10 +368,12 @@ fun <T> YamlTemplate<T>.getJob(fromPath: String, job: Map<String, Any>, deepTree
             YamlObjects.transValue<List<String>>(fromPath, "depend-on", job["depend-on"])
         },
         yamlMetaData = if (job["yamlMetaData"] == null) {
-            MetaData(templateInfo = TemplateInfo(
-                remote = repo != null,
-                remoteTemplateProjectId = repo?.repository
-            ))
+            MetaData(
+                templateInfo = TemplateInfo(
+                    remote = repo != null,
+                    remoteTemplateProjectId = repo?.repository
+                )
+            )
         } else {
             YamlObjects.getYamlMetaData(fromPath, job["yamlMetaData"]!!)
         }

@@ -25,23 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.process.pojo.constant
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
-}
+const val PROCESS_SHARDING_DB_BUILD_NUM_REDIS_KEY = "PROCESS_SHARDING_DB_BUILD_NUM"
+const val PROCESS_SHARDING_DB_BUILD_PROJECT_NUM_REDIS_KEY = "PROCESS_SHARDING_DB_BUILD_PROJECT_NUM"

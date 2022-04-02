@@ -25,23 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.lambda.pojo.bkdata
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
-}
+@ApiModel("数据平台结果对象模型")
+data class BkDataResult<out T>(
+    @ApiModelProperty("状态码", required = true)
+    val code: Int,
+    @ApiModelProperty("是否成功", required = true)
+    val result: Boolean,
+    @ApiModelProperty("返回信息", required = false)
+    val message: String? = null,
+    @ApiModelProperty("错误信息", required = false)
+    val errors: String? = null,
+    @ApiModelProperty("返回结果", required = false)
+    val data: T? = null
+)

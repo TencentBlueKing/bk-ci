@@ -24,24 +24,22 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.lambda.resource
 
-package com.tencent.devops.project.service
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.lambda.api.service.ServiceBkDataResource
+import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryData
+import com.tencent.devops.lambda.pojo.bkdata.BkDataQueryParam
+import com.tencent.devops.lambda.pojo.bkdata.BkDataResult
+import com.tencent.devops.lambda.service.bkdata.BkDataQueryDataService
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+@RestResource
+class ServiceBkDataResourceImpl @Autowired constructor(
+    private val bkDataQueryDataService: BkDataQueryDataService
+) : ServiceBkDataResource {
 
-interface ProjectDataSourceAssignService {
-
-    /**
-     * 为项目分配数据源
-     * @param channelCode 渠道代码
-     * @param projectId 项目ID
-     * @param moduleCodes 模块代码列表
-     * @return 布尔值
-     */
-    fun assignDataSource(
-        channelCode: ProjectChannelCode,
-        projectId: String,
-        moduleCodes: List<SystemModuleEnum>
-    ): Boolean
+    override fun queryData(bkDataQueryParam: BkDataQueryParam): BkDataResult<BkDataQueryData> {
+        return bkDataQueryDataService.queryData(bkDataQueryParam)
+    }
 }
