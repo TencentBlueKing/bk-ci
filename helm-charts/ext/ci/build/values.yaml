@@ -237,10 +237,10 @@ log:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -279,10 +279,10 @@ auth:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -321,10 +321,10 @@ agentless:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -363,10 +363,10 @@ dockerhost:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -405,10 +405,10 @@ artifactory:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -447,10 +447,10 @@ dispatch:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -489,10 +489,10 @@ dispatchDocker:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -531,10 +531,10 @@ dispatchDevcloud:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -573,10 +573,10 @@ dispatchStream:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -615,10 +615,10 @@ dispatchPcg:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -657,10 +657,10 @@ dispatchMacos:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -699,10 +699,10 @@ dispatchCodecc:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -741,10 +741,10 @@ dispatchKubernetes:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -783,10 +783,10 @@ environment:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -825,10 +825,10 @@ image:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -867,10 +867,10 @@ misc:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -909,10 +909,10 @@ monitoring:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -951,10 +951,10 @@ notify:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -993,10 +993,10 @@ openapi:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1035,10 +1035,10 @@ plugin:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1077,10 +1077,10 @@ process:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1119,10 +1119,10 @@ project:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1161,10 +1161,10 @@ quality:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1203,10 +1203,10 @@ repository:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1245,10 +1245,10 @@ sign:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1287,10 +1287,10 @@ store:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1329,10 +1329,10 @@ ticket:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1371,10 +1371,10 @@ websocket:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
+      memory: 2500Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false
@@ -1413,7 +1413,7 @@ angetless:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1540,7 +1540,7 @@ experience:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1582,7 +1582,7 @@ external:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1624,7 +1624,7 @@ lambda:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1666,7 +1666,7 @@ engine:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1708,7 +1708,7 @@ monitoring:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1750,7 +1750,7 @@ prebuild:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1792,7 +1792,7 @@ statistics:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
@@ -1834,7 +1834,7 @@ stream:
   resources:
     requests:
       cpu: 100m
-      memory: 1000Mi
+      memory: 2000Mi
     limits:
       cpu: 500m
       memory: 3000Mi
