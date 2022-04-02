@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class QualityUrlUtils @Autowired constructor(private val codeccConfig: CodeccConfig){
+class QualityUrlUtils @Autowired constructor(private val codeccConfig: CodeccConfig) {
 
     @Value("\${quality.codecc.host:}")
     private val codeccHost: String = ""
