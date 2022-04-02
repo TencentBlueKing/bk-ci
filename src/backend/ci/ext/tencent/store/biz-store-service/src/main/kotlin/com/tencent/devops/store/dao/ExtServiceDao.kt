@@ -148,9 +148,9 @@ class ExtServiceDao {
         }
     }
 
-    fun getExtServiceIds(dslContext: DSLContext, serviceCode: String): Record1<String>? {
+    fun getExtServiceIds(dslContext: DSLContext, serviceCode: String): Result<Record1<String>> {
         with(TExtensionService.T_EXTENSION_SERVICE) {
-            return dslContext.select(ID).from(this).where(SERVICE_CODE.eq(serviceCode)).fetchOne()
+            return dslContext.select(ID).from(this).where(SERVICE_CODE.eq(serviceCode)).fetch()
         }
     }
 
