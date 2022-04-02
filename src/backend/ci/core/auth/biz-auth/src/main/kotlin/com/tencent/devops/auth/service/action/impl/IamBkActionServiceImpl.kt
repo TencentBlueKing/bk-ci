@@ -168,7 +168,7 @@ class IamBkActionServiceImpl @Autowired constructor(
         iamCreateAction.englishName = action.actionEnglishName
         iamCreateAction.description = action.desc
         iamCreateAction.relatedAction = action.relationAction
-        iamCreateAction.type = ActionTypeEnum.parseType(action.actionType)
+        iamCreateAction.type = ActionTypeEnum.parseType(action.actionType.toUpperCase())
 
         // action关联资源数据
         val relationResources = mutableListOf<RelatedResourceTypeDTO>()
