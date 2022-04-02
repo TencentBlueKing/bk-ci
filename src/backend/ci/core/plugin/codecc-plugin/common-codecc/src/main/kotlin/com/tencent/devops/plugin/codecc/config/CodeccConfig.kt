@@ -59,4 +59,40 @@ class CodeccConfig {
 
     @Value("\${codeccGateway.api.getRuleSets:/blueShield/getRuleSetsPath}")
     val getRuleSetsPath = ""
+
+    /**
+     *  代码检查插件维度详情
+     */
+    @Value("\${quality.codecc.compileTool}")
+    val compileTool = ""
+
+    @Value("\${quality.codecc.ccnDupcTool}")
+    val ccnDupcTool = ""
+
+    @Value("\${quality.codecc.dimension}")
+    val dimension = ""
+
+    @Value("\${quality.codecc.compileUrl}")
+    val compileUrl = ""
+
+    @Value("\${quality.codecc.ccnDupcUrl}")
+    val ccnDupcUrl = ""
+
+    @Value("\${quality.codecc.lintUrl}")
+    val lintUrl = ""
+
+    @Value("\${quality.codecc.dimensionUrl}")
+    val dimensionUrl = ""
+
+    fun getCodeccDetailUrl(detail: String?): String {
+        val compileTool = compileTool.split(",")
+        val ccnDupcTool = ccnDupcTool.split(",")
+        val dimension = dimension.split(",")
+        return when (detail) {
+            in compileTool -> compileUrl
+            in ccnDupcTool -> ccnDupcUrl
+            in dimension -> dimensionUrl.replace("##dimension##", detail?.toUpperCase() ?: "")
+            else -> lintUrl
+        }
+    }
 }

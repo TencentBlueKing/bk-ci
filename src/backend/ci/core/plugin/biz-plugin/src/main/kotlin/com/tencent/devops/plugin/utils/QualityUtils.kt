@@ -37,15 +37,15 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
-import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
-import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 
 @Suppress("ALL")
 object QualityUtils {
     fun getQualityGitMrResult(
         client: Client,
-        event: GitCommitCheckEvent
+        event: GitCommitCheckEvent,
+        codeccConfig: CodeccConfig
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
@@ -82,7 +82,8 @@ object QualityUtils {
                             buildId = buildId,
                             detail = indicator?.elementDetail,
                             value = interceptItem.actualValue ?: "null",
-                            client = client
+                            client = client,
+                            config = codeccConfig
                         )
                     } else {
                         interceptItem.actualValue ?: "null"
@@ -110,7 +111,8 @@ object QualityUtils {
         buildId: String,
         detail: String?,
         value: String,
-        client: Client
+        client: Client,
+        config: CodeccConfig
     ): String {
         val variable = client.get(ServiceVarResource::class).getBuildVar(
             projectId = projectId,
@@ -122,7 +124,7 @@ object QualityUtils {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            val detailValue = config.getCodeccDetailUrl(detail)
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)

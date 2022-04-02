@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
@@ -62,7 +63,10 @@ import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
-class ScmCheckService @Autowired constructor(private val client: Client) {
+class ScmCheckService @Autowired constructor(
+    private val client: Client,
+    private val codeccConfig: CodeccConfig
+) {
     private val logger = LoggerFactory.getLogger(ScmCheckService::class.java)
 
     fun addGitCommitCheck(
@@ -113,7 +117,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 description = description,
                 block = block,
                 mrRequestId = event.mergeRequestId,
-                reportData = QualityUtils.getQualityGitMrResult(client, event)
+                reportData = QualityUtils.getQualityGitMrResult(client, event, codeccConfig)
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)

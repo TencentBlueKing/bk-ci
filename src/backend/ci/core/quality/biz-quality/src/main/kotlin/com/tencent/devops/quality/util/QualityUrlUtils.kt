@@ -29,15 +29,15 @@ package com.tencent.devops.quality.util
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.process.api.service.ServiceVarResource
-import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
-import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class QualityUrlUtils {
+class QualityUrlUtils @Autowired constructor(private val codeccConfig: CodeccConfig){
 
     @Value("\${quality.codecc.host:}")
     private val codeccHost: String = ""
@@ -61,7 +61,7 @@ class QualityUrlUtils {
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
             "http://$codeccHost/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            val detailValue = codeccConfig.getCodeccDetailUrl(detail)
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)

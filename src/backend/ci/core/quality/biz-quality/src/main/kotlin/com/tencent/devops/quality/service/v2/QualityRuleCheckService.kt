@@ -43,7 +43,9 @@ import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.plugin.codecc.CodeCCAutoConfiguration
 import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
@@ -57,8 +59,6 @@ import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.bean.QualityUrlBean
-import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
-import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
@@ -95,7 +95,8 @@ class QualityRuleCheckService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val qualityCacheService: QualityCacheService,
     private val qualityRuleBuildHisService: QualityRuleBuildHisService,
-    private val qualityUrlBean: QualityUrlBean
+    private val qualityUrlBean: QualityUrlBean,
+    private val codeccConfig: CodeccConfig
 ) {
     private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
@@ -658,6 +659,7 @@ class QualityRuleCheckService @Autowired constructor(
 
     private fun getDetailMsg(record: QualityRuleInterceptRecord, params: Map<String, String>): String {
         // codecc跳到独立入口页面
+        val detailUrl = codeccConfig.getCodeccDetailUrl(record.detail)
         return if (CodeccUtils.isCodeccAtom(record.indicatorType)) {
             val projectId = params["projectId"] ?: ""
             val pipelineId = params["pipelineId"] ?: ""
@@ -670,7 +672,6 @@ class QualityRuleCheckService @Autowired constructor(
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
                 val fillDetailUrl = detailUrl.replace("##projectId##", projectId)
                     .replace("##taskId##", taskId)
                     .replace("##buildId##", buildId)
