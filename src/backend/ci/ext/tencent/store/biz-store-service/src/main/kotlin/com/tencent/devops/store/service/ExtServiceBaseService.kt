@@ -650,7 +650,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun deleteExtensionService(userId: String, serviceCode: String): Result<Boolean> {
         logger.info("deleteService userId: $userId , serviceId: $serviceCode")
         val extServiceResource = extServiceDao.getExtServiceIds(dslContext, serviceCode)?.get(0)
-        val extServiceId = if (extServiceResource != null) extServiceResource[0] as String else ""
+        val extServiceId =
+            if (extServiceResource != null && extServiceResource.size() > 0) extServiceResource[0] as String else ""
         if (StringUtils.isEmpty(extServiceId)) {
             return MessageCodeUtil.generateResponseDataObject(
                 StoreMessageCode.USER_SERVICE_NOT_EXIST,
