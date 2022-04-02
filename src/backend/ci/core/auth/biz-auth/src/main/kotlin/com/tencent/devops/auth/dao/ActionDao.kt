@@ -53,7 +53,8 @@ class ActionDao {
                 RELATIONACTION,
                 CREATOR,
                 CREATETIME,
-                DELETE
+                DELETE,
+                ACTIONTYPE
             ).values(
                 actionInfo.actionId,
                 actionInfo.actionName,
@@ -61,7 +62,8 @@ class ActionDao {
                 actionInfo.relationAction.joinToString { "," },
                 userId,
                 LocalDateTime.now(),
-                false
+                false,
+                actionInfo.actionType
             ).execute()
         }
     }
