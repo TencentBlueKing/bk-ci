@@ -555,18 +555,22 @@ class GitCITriggerService @Autowired constructor(
         ).toSet()
 
         // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = streamScmService.getMergeRequestChangeInfo(
+        val changeSet = mutableSetOf<String>()
+        streamScmService.getMergeRequestChangeInfo(
             userId = null,
             token = gitToken,
             gitProjectId = gitRequestEventForHandle.gitProjectId,
             mrId = mrId
-        )?.files?.map {
+        )?.files?.forEach {
             if (it.deletedFile) {
-                it.oldPath
+                changeSet.add(it.oldPath)
+            } else if (it.renameFile) {
+                changeSet.add(it.oldPath)
+                changeSet.add(it.newPath)
             } else {
-                it.newPath
+                changeSet.add(it.newPath)
             }
-        }?.toSet() ?: emptySet()
+        }
 
         // 已经merged的直接返回目标分支的文件列表即可
         if (merged) {
