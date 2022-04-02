@@ -75,7 +75,7 @@ class IamBkActionServiceImpl @Autowired constructor(
                 if (!iamActions.contains(it.actionId)) {
                     logger.info("ci action ${it.actionId} need syn iam")
                     val iamCreateAction = CreateActionDTO(
-                        actionType = "",
+                        actionType = it.actionType,
                         actionId = it.actionId,
                         resourceId = it.resourceId,
                         desc = it.actionName,

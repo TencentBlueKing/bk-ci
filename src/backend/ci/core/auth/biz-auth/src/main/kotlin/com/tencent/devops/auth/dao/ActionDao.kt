@@ -140,7 +140,8 @@ class ActionDao {
             relationAction = record.relationaction.split(","),
             resourceId = record.resourceid,
             creator = record.creator,
-            creatorTime = DateTimeUtil.convertLocalDateTimeToTimestamp(record.createtime)
+            creatorTime = DateTimeUtil.convertLocalDateTimeToTimestamp(record.createtime),
+            actionType = record.actiontype
         )
     }
 }

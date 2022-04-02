@@ -42,6 +42,8 @@ data class ActionInfo(
     val relationAction: List<String>,
     @ApiModelProperty("操作所属资源")
     val resourceId: String,
+    @ApiModelProperty("操作类型")
+    val actionType: String,
     @ApiModelProperty("创建人")
     val creator: String,
     @ApiModelProperty("创建时间")
