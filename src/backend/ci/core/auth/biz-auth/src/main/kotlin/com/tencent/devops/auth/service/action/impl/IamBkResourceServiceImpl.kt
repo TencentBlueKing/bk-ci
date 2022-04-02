@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.action.impl
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
 import com.tencent.bk.sdk.iam.dto.SelectionDTO
+import com.tencent.bk.sdk.iam.dto.resource.ParentResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
@@ -167,18 +168,16 @@ class IamBkResourceServiceImpl @Autowired constructor(
         resourceInfo.description = resource.desc
         resourceInfo.englishDescription = resource.englishDes
         if (resource.resourceId == AuthResourceType.PROJECT.value) {
-            resourceInfo.parent = null
+            resourceInfo.parents = null
             val path = ProviderConfigDTO()
             path.path = projectCallbackPath
             resourceInfo.providerConfig = path
         } else {
-            val projectResource = ResourceDTO.builder()
-                // TODO: 系统id换回ci
-                .system(systemId)
-//                .system(iamConfiguration.systemId)
-                .id(AuthResourceType.PROJECT.value)
-                .build()
-            resourceInfo.parent = arrayListOf(projectResource)
+            val projectResource = ParentResourceDTO()
+            // TODO: 系统id换回ci
+            projectResource.systemId = systemId
+            projectResource.id = AuthResourceType.PROJECT.value
+            resourceInfo.parents = arrayListOf(projectResource)
             val path = ProviderConfigDTO()
             path.path = otherResourceCallbackPath
             resourceInfo.providerConfig = path
