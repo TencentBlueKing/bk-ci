@@ -1387,31 +1387,41 @@ class TemplateFacadeService @Autowired constructor(
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val messages = HashMap<String, String>()
-
-        val template =
-            if (versionName.isNullOrBlank()) templateDao.getTemplate(dslContext = dslContext, version = version!!)
-            else templateDao.getTemplateByVersionName(dslContext = dslContext, versionName = versionName)
-        instances.forEach {
-            try {
-                updateTemplateInstanceInfo(
-                    userId = userId,
-                    useTemplateSettings = useTemplateSettings,
-                    projectId = projectId,
-                    templateId = templateId,
-                    templateVersion = template.version,
-                    versionName = template.versionName,
-                    templateContent = template.template,
-                    templateInstanceUpdate = it
-                )
-                successPipelines.add(it.pipelineName)
-            } catch (t: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
-                failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = "流水线已经存在"
-            } catch (t: Throwable) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
-                failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = t.message ?: "更新流水线失败"
+        if (version == null && versionName.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_NEED_PARAM_,
+                params = arrayOf("version or versionName")
+            )
+        }
+        val template = templateDao.getTemplate(
+                dslContext = dslContext,
+                versionName = versionName,
+                version = version
+            )
+        run {
+            instances.forEachIndexed {index, it ->
+                if (index >100) return@run
+                    try {
+                        updateTemplateInstanceInfo(
+                            userId = userId,
+                            useTemplateSettings = useTemplateSettings,
+                            projectId = projectId,
+                            templateId = templateId,
+                            templateVersion = template.version,
+                            versionName = template.versionName,
+                            templateContent = template.template,
+                            templateInstanceUpdate = it
+                        )
+                        successPipelines.add(it.pipelineName)
+                    } catch (t: DuplicateKeyException) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                        failurePipelines.add(it.pipelineName)
+                        messages[it.pipelineName] = "流水线已经存在"
+                    } catch (t: Throwable) {
+                        logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", t)
+                        failurePipelines.add(it.pipelineName)
+                        messages[it.pipelineName] = t.message ?: "更新流水线失败"
+                    }
             }
         }
 

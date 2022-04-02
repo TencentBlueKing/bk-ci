@@ -295,20 +295,26 @@ class TemplateDao {
         }
     }
 
-    fun getTemplateByVersionName(
+    fun getTemplate(
         dslContext: DSLContext,
         projectId: String? = null,
-        versionName: String
+        versionName: String? = null,
+        version: Long? = null
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(VERSION_NAME.eq(versionName))
+            if (!versionName.isNullOrBlank()) {
+                conditions.add(VERSION_NAME.eq(versionName))
+            }
+            if (version != null) {
+                conditions.add(VERSION.eq(version))
+            }
             if (!projectId.isNullOrBlank()) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
-                .orderBy(CREATED_TIME.desc(), VERSION.desc())
+                .orderBy(CREATED_TIME.desc(),VERSION.desc())
                 .limit(1)
                 .fetchOne() ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
