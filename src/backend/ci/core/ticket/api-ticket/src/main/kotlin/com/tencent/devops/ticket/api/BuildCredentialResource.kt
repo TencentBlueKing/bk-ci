@@ -82,7 +82,7 @@ interface BuildCredentialResource {
         taskId: String?,
         @ApiParam(value = "插件ID(旧版本的，为了兼容旧版本插件不用更新sdk来使用)", required = true)
         @HeaderParam("X-DEVOPS-TASK-ID")
-        oldTaskId: String?,
+        oldTaskId: String?
     ): Result<CredentialInfo?>
 
     @ApiOperation("构建机获取跨项目凭据")
