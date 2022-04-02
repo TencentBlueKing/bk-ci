@@ -18,7 +18,6 @@ spec:
   {{- if not .Values.artifactory.autoscaling.enabled }}
   replicas: {{ .Values.artifactory.replicas }}
   {{- end }} 
-  serviceName: {{ include "common.names.fullname" . }}-artifactory
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
