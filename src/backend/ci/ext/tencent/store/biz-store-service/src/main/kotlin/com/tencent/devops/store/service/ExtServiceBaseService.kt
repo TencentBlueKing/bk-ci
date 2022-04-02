@@ -695,15 +695,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         // 删除代码库
         val extServiceRecord = extFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-        val deleteExtServiceRepositoryResult = deleteExtServiceRepository(
+        deleteExtServiceRepository(
             userId = userId,
             projectCode = initProjectCode,
             repositoryHashId = extServiceRecord!!.repositoryHashId,
             tokenType = TokenTypeEnum.PRIVATE_KEY
         )
-        if (deleteExtServiceRepositoryResult.isNotOk()) {
-            return deleteExtServiceRepositoryResult
-        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeCommonService.deleteStoreInfo(context, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
@@ -724,16 +721,20 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     ): Result<Boolean> {
         // 删除代码库信息
         if (!projectCode.isNullOrEmpty() && repositoryHashId.isNotBlank()) {
-            val delGitRepositoryResult =
-                client.get(ServiceGitRepositoryResource::class)
-                    .delete(
-                        userId = userId,
-                        projectId = projectCode!!,
-                        repositoryHashId = repositoryHashId,
-                        tokenType = tokenType
-                    )
-            logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
-            return delGitRepositoryResult
+            try {
+                val delGitRepositoryResult =
+                    client.get(ServiceGitRepositoryResource::class)
+                        .delete(
+                            userId = userId,
+                            projectId = projectCode!!,
+                            repositoryHashId = repositoryHashId,
+                            tokenType = tokenType
+                        )
+                logger.info("the delGitRepositoryResult is :$delGitRepositoryResult")
+                return delGitRepositoryResult
+            } catch (e: Exception) {
+                return Result(false)
+            }
         }
         return Result(true)
     }
