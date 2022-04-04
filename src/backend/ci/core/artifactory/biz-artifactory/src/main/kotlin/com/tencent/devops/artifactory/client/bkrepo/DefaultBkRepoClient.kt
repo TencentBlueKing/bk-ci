@@ -310,7 +310,7 @@ class DefaultBkRepoClient constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false,
         page: Int,
-        pageSize: Int,
+        pageSize: Int
     ): Page<NodeInfo> {
         val url = "${getBkRepoUrl()}/repository/api/node/page/$projectId/$repoName/$path" +
             "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize"
