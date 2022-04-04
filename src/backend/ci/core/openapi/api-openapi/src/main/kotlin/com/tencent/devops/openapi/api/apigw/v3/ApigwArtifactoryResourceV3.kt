@@ -135,4 +135,37 @@ interface ApigwArtifactoryResourceV3 {
         @PathParam("executeCount")
         executeCount: String
     ): Result<Url>
+
+    @ApiOperation("查询自定义仓库文件信息", tags = ["v3_app_artifactory_custom", "v3_user_artifactory_custom"])
+    @Path("/custom")
+    @GET
+    fun listCustomFiles(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("文件路径", required = true)
+        @QueryParam("fullPath")
+        fullPath: String,
+        @ApiParam("是否包含文件夹", required = false, defaultValue = "true")
+        @QueryParam("includeFolder")
+        includeFolder: Boolean?,
+        @ApiParam("是否深度查询文件", required = false, defaultValue = "false")
+        @QueryParam("deep")
+        deep: Boolean?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<FileInfo>>
 }
