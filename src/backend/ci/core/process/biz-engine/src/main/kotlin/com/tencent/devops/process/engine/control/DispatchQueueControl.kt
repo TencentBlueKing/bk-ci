@@ -44,8 +44,7 @@ import java.util.concurrent.TimeUnit
 @Component
 class DispatchQueueControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation,
-    private val pipelineContainerService: PipelineContainerService
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
