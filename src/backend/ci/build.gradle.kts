@@ -50,6 +50,7 @@ allprojects {
             dependency("org.elasticsearch.client:elasticsearch-rest-high-level-client:${Versions.Elasticsearch}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
+            dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
             dependencySet("io.swagger:${Versions.Swagger}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
