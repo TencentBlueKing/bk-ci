@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,8 +39,9 @@ import org.springframework.stereotype.Service
 class BkPermissionRoleMemberImpl @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
-    val groupService: AuthGroupService
-) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService) {
+    val groupService: AuthGroupService,
+    val iamCacheService: IamCacheService
+) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService, iamCacheService) {
     override fun checkUser(userId: String) {
         return
     }

@@ -34,6 +34,7 @@ import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import com.tencent.devops.common.client.Client
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Service
 @Service
 class BkIamPermissionRoleExtService @Autowired constructor(
     override val iamManagerService: ManagerService,
+    override val iamCacheService: IamCacheService,
     private val permissionGradeService: PermissionGradeService,
     private val iamConfiguration: IamConfiguration,
     private val groupService: AuthGroupService,
@@ -53,6 +55,7 @@ class BkIamPermissionRoleExtService @Autowired constructor(
     private val strategyService: StrategyService
 ) : IamPermissionRoleExtService(
     iamManagerService = iamManagerService,
+    iamCacheService = iamCacheService,
     permissionGradeService = permissionGradeService,
     iamConfiguration = iamConfiguration,
     groupService = groupService,
@@ -64,7 +67,7 @@ class BkIamPermissionRoleExtService @Autowired constructor(
     override fun groupCreateExt(
         roleId: Int,
         userId: String,
-        projectId: Int,
+        projectId: String,
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ) {
@@ -73,18 +76,18 @@ class BkIamPermissionRoleExtService @Autowired constructor(
 
     override fun renameRoleExt(
         userId: String,
-        projectId: Int,
-        realtionRoleId: Int,
+        projectId: String,
+        relationRoleId: Int,
         groupInfo: ProjectRoleDTO
     ) {
-        super.renameRoleExt(userId, projectId, realtionRoleId, groupInfo)
+        super.renameRoleExt(userId, projectId, relationRoleId, groupInfo)
     }
 
-    override fun deleteRoleExt(userId: String, projectId: Int, realtionRoleId: Int) {
-        super.deleteRoleExt(userId, projectId, realtionRoleId)
+    override fun deleteRoleExt(userId: String, projectId: String, relationRoleId: Int) {
+        super.deleteRoleExt(userId, projectId, relationRoleId)
     }
 
-    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
+    override fun getPermissionRole(projectId: String): List<GroupInfoVo> {
         return super.getPermissionRole(projectId)
     }
 

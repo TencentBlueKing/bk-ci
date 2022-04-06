@@ -63,7 +63,7 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -80,7 +80,7 @@ interface UserProjectMemberResource {
     fun getRoleMember(
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -98,7 +98,7 @@ interface UserProjectMemberResource {
     fun getProjectAllMember(
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "页数", required = true)
         @QueryParam("path")
         page: Int?,
@@ -116,7 +116,7 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -140,7 +140,7 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "待搜用户", required = true)
         searchUserId: String
     ): Result<List<ManagerRoleGroupInfo>?>

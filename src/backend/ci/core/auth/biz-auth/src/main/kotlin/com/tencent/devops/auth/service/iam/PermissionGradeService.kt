@@ -29,5 +29,5 @@
 package com.tencent.devops.auth.service.iam
 
 interface PermissionGradeService {
-    fun checkGradeManagerUser(userId: String, projectId: Int)
+    fun checkGradeManagerUser(userId: String, projectId: String)
 }

@@ -37,7 +37,7 @@ import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 interface PermissionRoleMemberService {
     fun createRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         members: List<RoleMemberDTO>,
         managerGroup: Boolean,
@@ -46,16 +46,16 @@ interface PermissionRoleMemberService {
 
     fun deleteRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         id: String,
         type: ManagerScopesEnum,
         managerGroup: Boolean
     )
 
-    fun getRoleMember(projectId: Int, roleId: Int, page: Int?, pageSize: Int?): ManagerGroupMemberVo
+    fun getRoleMember(projectId: String, roleId: Int, page: Int?, pageSize: Int?): ManagerGroupMemberVo
 
-    fun getProjectAllMember(projectId: Int, page: Int?, pageSize: Int?): ProjectMembersVO?
+    fun getProjectAllMember(projectId: String, page: Int?, pageSize: Int?): ProjectMembersVO?
 
-    fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>?
+    fun getUserGroups(projectId: String, userId: String): List<ManagerRoleGroupInfo>?
 }

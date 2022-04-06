@@ -33,13 +33,13 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 
 interface PermissionRoleService {
-    fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int
+    fun createPermissionRole(userId: String, projectId: String, projectCode: String, groupInfo: ProjectRoleDTO): Int
 
-    fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO)
+    fun renamePermissionRole(userId: String, projectId: String, roleId: Int, groupInfo: ProjectRoleDTO)
 
-    fun getPermissionRole(projectId: Int): List<GroupInfoVo>
+    fun getPermissionRole(projectId: String): List<GroupInfoVo>
 
-    fun deletePermissionRole(userId: String, projectId: Int, roleId: Int)
+    fun deletePermissionRole(userId: String, projectId: String, roleId: Int)
 
     fun getDefaultRole(): List<DefaultGroup>
 }

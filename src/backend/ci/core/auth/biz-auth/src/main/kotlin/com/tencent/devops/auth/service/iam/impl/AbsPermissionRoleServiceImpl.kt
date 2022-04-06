@@ -16,7 +16,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
 ) : PermissionRoleService {
     override fun createPermissionRole(
         userId: String,
-        projectId: Int,
+        projectId: String,
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ): Int {
@@ -66,7 +66,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     override fun renamePermissionRole(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         groupInfo: ProjectRoleDTO
     ) {
@@ -81,7 +81,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         )
     }
 
-    override fun deletePermissionRole(userId: String, projectId: Int, roleId: Int) {
+    override fun deletePermissionRole(userId: String, projectId: String, roleId: Int) {
         val iamId = groupService.getRelationId(roleId)
         if (iamId != null) {
             // 优先删除扩展系统内的数据,最后再删本地数据
@@ -93,21 +93,21 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
     abstract fun groupCreateExt(
         roleId: Int,
         userId: String,
-        projectId: Int,
+        projectId: String,
         projectCode: String,
         groupInfo: ProjectRoleDTO
     )
 
     abstract fun renameRoleExt(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         groupInfo: ProjectRoleDTO
     )
 
     abstract fun deleteRoleExt(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int
     )
 

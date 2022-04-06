@@ -31,6 +31,7 @@ package com.tencent.devops.auth.service.iam.impl
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -38,16 +39,18 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 open class AbsPermissionGradeServiceImpl @Autowired constructor(
-    open val iamManagerService: ManagerService
+    open val iamManagerService: ManagerService,
+    open val iamCacheService: IamCacheService
 ) : PermissionGradeService {
 
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
+    override fun checkGradeManagerUser(userId: String, projectId: String) {
+        val iamProject = iamCacheService.getProjectIamRelationId(projectId)
         val pageInfoDTO = PageInfoDTO()
         pageInfoDTO.limit = 0
         pageInfoDTO.offset = 500 // 一个用户最多可以加入500个项目
         val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)?.map { it.id }
 
-        if (managerProject == null || !managerProject.contains(projectId)) {
+        if (managerProject == null || !managerProject.contains(iamProject)) {
             logger.warn("checkGradeManagerUser $userId $projectId $managerProject")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
         }

@@ -44,6 +44,7 @@ import com.tencent.devops.auth.pojo.MemberInfo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.OperationException
@@ -57,7 +58,8 @@ import java.util.concurrent.TimeUnit
 abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     open val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService,
-    private val groupService: AuthGroupService
+    private val groupService: AuthGroupService,
+    private val iamCacheService: IamCacheService
 ) : PermissionRoleMemberService {
 
     private val projectMemberCache = CacheBuilder.newBuilder()
@@ -67,7 +69,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
 
     override fun createRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         members: List<RoleMemberDTO>,
         managerGroup: Boolean,
@@ -78,7 +80,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             logger.warn("$roleId can not find relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
-
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         // 页面操作需要校验分级管理员,服务间调用无需校验
         if (checkAGradeManager!!) {
             permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
@@ -118,14 +120,14 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         if (managerGroup) {
             if (userIds.isNotEmpty()) {
                 val gradeMembers = ManagerRoleMemberDTO.builder().members(userIds).build()
-                iamManagerService.batchCreateGradeManagerRoleMember(gradeMembers, projectId)
+                iamManagerService.batchCreateGradeManagerRoleMember(gradeMembers, iamProjectId)
             }
         }
     }
 
     override fun deleteRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         id: String,
         type: ManagerScopesEnum,
@@ -136,17 +138,18 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             logger.warn("$roleId can not find relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
         iamManagerService.deleteRoleGroupMember(iamId.toInt(), ManagerScopesEnum.getType(type), id)
         // 如果是删除用户,且用户是管理员需同步删除该用户分分级管理员权限
         if (managerGroup && type == ManagerScopesEnum.USER) {
-            iamManagerService.deleteGradeManagerRoleMember(id, projectId)
+            iamManagerService.deleteGradeManagerRoleMember(id, iamProjectId)
         }
     }
 
     override fun getRoleMember(
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         page: Int?,
         pageSiz: Int?
@@ -163,18 +166,18 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         return iamManagerService.getRoleGroupMember(iamId.toInt(), pageInfoDTO)
     }
 
-    override fun getProjectAllMember(projectId: Int, page: Int?, pageSiz: Int?): ProjectMembersVO? {
+    override fun getProjectAllMember(projectId: String, page: Int?, pageSiz: Int?): ProjectMembersVO? {
         if (projectMemberCache.getIfPresent(projectId.toString()) != null) {
             logger.info("getProjectAllMember $projectId get by cache")
             return projectMemberCache.getIfPresent(projectId.toString())!!
         }
-
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         val pageInfoDTO = PageInfoDTO()
         val pageInfo = PageUtil.convertPageSizeToSQLLimit(page ?: 0, pageSiz ?: 2000)
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
         // 获取项目下的用户组
-        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO)
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(iamProjectId, pageInfoDTO)
         if (groupInfos == null || groupInfos.count == 0) {
             return null
         }
@@ -199,10 +202,14 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         return result
     }
 
-    override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
+    override fun getUserGroups(projectId: String, userId: String): List<ManagerRoleGroupInfo>? {
         logger.info("getUserGroup: $projectId $userId")
-        val groupInfos = iamManagerService.getUserGroup(projectId, userId)
-        logger.info("getUserGroup: $projectId $userId $groupInfos")
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
+        val groupInfos = iamManagerService.getUserGroup(iamProjectId, userId)
+        groupInfos.forEach {
+
+        }
+        logger.info("getUserGroup: $projectId $iamProjectId $userId $groupInfos")
         return groupInfos
     }
 
