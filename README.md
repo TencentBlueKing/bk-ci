@@ -62,6 +62,6 @@ bk-ci提供了流水线、代码检查、代码库、凭证管理、环境管理
 
 
 ## License
-BK-CI 是基于 MIT 协议， 详细请参考 [LICENSE
+BK-CI 是基于 MIT 协议， 详细请参考 [LICENSE](LICENSE.txt)
 
 我们承诺未来不会更改适用于交付给任何人的当前项目版本的开源许可证（MIT 协议）。
