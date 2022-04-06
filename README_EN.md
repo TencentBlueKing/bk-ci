@@ -70,3 +70,4 @@ bk-ci provides seven core services, namely Process, CodeCheck, Repository, Ticke
 ## License
 BK-CI is based on the MIT license. Please refer to [LICENCE](LICENSE.txt) for details.
 
+We undertake not to change the open source license (MIT license) applicable to the current version of the project delivered to anyone in the future.
