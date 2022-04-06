@@ -264,6 +264,7 @@ class ExperiencePushService @Autowired constructor(
         val platform = userTokenRecord.platform
         if (platform != userTokenRecord.platform) {
             logger.warn("pushMessage , platform is not same")
+            return Result("绑定平台与包平台不一致", false)
         }
 
         // 创建推送消息记录，此时状态发送中
