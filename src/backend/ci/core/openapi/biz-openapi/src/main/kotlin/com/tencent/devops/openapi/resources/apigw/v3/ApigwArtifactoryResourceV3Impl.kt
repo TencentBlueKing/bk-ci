@@ -105,26 +105,4 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
             executeCount = executeCount
         )
     }
-
-    override fun listCustomFiles(
-        appCode: String?,
-        apigwType: String?,
-        userId: String,
-        projectId: String,
-        fullPath: String,
-        includeFolder: Boolean?,
-        deep: Boolean?,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<FileInfo>> {
-        return client.get(ServiceArtifactoryResource::class).listCustomFiles(
-            userId = userId,
-            projectId = projectId,
-            fullPath = fullPath,
-            includeFolder = includeFolder,
-            deep = deep,
-            page = page,
-            pageSize = pageSize
-        )
-    }
 }
