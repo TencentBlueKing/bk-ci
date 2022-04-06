@@ -29,6 +29,8 @@ package com.tencent.devops.auth.service.action.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ActionTypeEnum
+import com.tencent.bk.sdk.iam.constants.AuthTypeEnum
+import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionUpdateDTO
 import com.tencent.bk.sdk.iam.dto.resource.RelatedResourceTypeDTO
@@ -37,6 +39,8 @@ import com.tencent.bk.sdk.iam.dto.resource.ResourceCreateConfigAction
 import com.tencent.bk.sdk.iam.dto.resource.ResourceCreateConfigDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceCreatorActionsDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
+import com.tencent.bk.sdk.iam.dto.system.SystemDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.IamActionService
 import com.tencent.bk.sdk.iam.service.IamResourceService
 import com.tencent.bk.sdk.iam.service.SystemService
@@ -48,6 +52,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import javax.annotation.PostConstruct
 
 class IamBkActionServiceImpl @Autowired constructor(
@@ -60,9 +65,32 @@ class IamBkActionServiceImpl @Autowired constructor(
     val iamResourceService: IamResourceService
 ): BKActionServiceImpl(dslContext, actionDao, resourceService) {
 
+    @Value("\${iam.system.callback:#{null}}")
+    val iamSystemCallBack = "http://ci-auth.service.consul:21936"
+
+    @Value("\${iam.system.clients:#{null}}")
+    val iamClients = "bkci,bk_ci"
+
     @PostConstruct
     fun initAction() {
         try {
+            // 校验系统是否存在
+            try {
+                systemService.systemCheck(systemId)
+            } catch (iamE: IamException) {
+                // 报iam异常 说明系统不存在,需要优先创建系统
+                val systemInfo = SystemDTO()
+                systemInfo.id = systemId
+                systemInfo.name = SYSTEMNAME
+                systemInfo.client = iamClients
+                systemInfo.englishName = ENGLISHNAME
+                val providerConfigDTO = ProviderConfigDTO()
+                providerConfigDTO.path = iamSystemCallBack
+                providerConfigDTO.authType = AuthTypeEnum.BASIC
+                systemInfo.providerConfig = providerConfigDTO
+                systemService.createSystem(systemInfo)
+            }
+
             // 获取本地所有action
             val actionInfos = actionDao.getAllAction(dslContext, "*") ?: return
             // 匹配iam内注册的action
@@ -70,7 +98,7 @@ class IamBkActionServiceImpl @Autowired constructor(
                 it.id
             }
             val createActions = mutableListOf<CreateActionDTO>()
-            actionInfos?.forEach {
+            actionInfos.forEach {
                 logger.info("ci action ${it.actionId}|${it.resourceId}")
                 if (!iamActions.contains(it.actionId)) {
                     logger.info("ci action ${it.actionId} need syn iam")
@@ -107,6 +135,7 @@ class IamBkActionServiceImpl @Autowired constructor(
         // TODO: 系统id换回ci
 //        val systemInfo = systemService.getSystemFieldsInfo(iamConfiguration.systemId)
         val actionInfo = iamActionService.getAction(action.actionId)
+
         // 1. 优先判断action是否存在, 存在修改，不存在添加
         if (actionInfo == null) {
             // action基本数据
@@ -168,7 +197,7 @@ class IamBkActionServiceImpl @Autowired constructor(
         iamCreateAction.englishName = action.actionEnglishName
         iamCreateAction.description = action.desc
         iamCreateAction.relatedAction = action.relationAction
-        iamCreateAction.type = ActionTypeEnum.parseType(action.actionType.toUpperCase())
+        iamCreateAction.type = ActionTypeEnum.parseType(action.actionType)
 
         // action关联资源数据
         val relationResources = mutableListOf<RelatedResourceTypeDTO>()
@@ -191,15 +220,16 @@ class IamBkActionServiceImpl @Autowired constructor(
             relatedInstanceSelections.add(relatedInstanceSelection)
             relationResource.relatedInstanceSelections = relatedInstanceSelections
         } else {
-            relationResource.id = AuthResourceType.get(action.resourceId).value
             val relatedInstanceSelection = ResourceTypeChainDTO()
             relatedInstanceSelection.systemId = systemId
             if (action.actionType.contains("create")) {
                 // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
                 relatedInstanceSelection.id = "project_instance"
+                relationResource.id = AuthResourceType.PROJECT.value
             } else {
                 // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
                 relatedInstanceSelection.id = "${action.resourceId}_instance"
+                relationResource.id = AuthResourceType.get(action.resourceId).value
             }
             val relatedInstanceSelections = mutableListOf<ResourceTypeChainDTO>()
             relatedInstanceSelections.add(relatedInstanceSelection)
@@ -280,7 +310,9 @@ class IamBkActionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private val systemId = "fitz_test"
+        private const val systemId = "fitz_test"
+        private const val SYSTEMNAME = "持续集成平台"
+        private const val ENGLISHNAME = "bkci"
         private val logger = LoggerFactory.getLogger(IamBkActionServiceImpl::class.java)
     }
 }
