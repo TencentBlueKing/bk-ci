@@ -3,8 +3,6 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.model.experience.tables.TExperienceDownloadDetail
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import org.jooq.DSLContext
-import org.jooq.Record1
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -60,7 +58,7 @@ class ExperienceDownloadDetailDao {
         }
     }
 
-    fun listIdsForPublic(dslContext: DSLContext, platform: String?, limit: Int): Result<Record1<Long>> {
+    fun listIdsForPublic(dslContext: DSLContext, platform: String?, limit: Int): List<Long> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC.`as`("p")
         val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL.`as`("d")
         val join = p.leftJoin(d).on(
@@ -68,12 +66,12 @@ class ExperienceDownloadDetailDao {
                 .and(p.PROJECT_ID.eq(d.PROJECT_ID))
                 .and(p.BUNDLE_IDENTIFIER.eq(d.BUNDLE_IDENTIFIER))
         )
-        return dslContext.select(p.RECORD_ID).from(join)
+        return dslContext.selectDistinct(p.RECORD_ID).from(join)
             .where(p.ONLINE.eq(true))
             .and(p.END_DATE.gt(LocalDateTime.now()))
             .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
-            .orderBy(d.UPDATE_TIME.desc()).limit(limit)
-            .fetch()
+            .orderBy(p.UPDATE_TIME.desc()).limit(limit)
+            .fetch(p.RECORD_ID)
     }
 
     fun countDownloadHistory(

@@ -89,7 +89,8 @@ class AppExperienceResourceImpl @Autowired constructor(
         } else {
             emptyList()
         }
-        val redPointCount = publicExperiences.count { it.redPointEnabled }
+        val redPointCount = privateExperiences.count { it.redPointEnabled } +
+                publicExperiences.count { it.redPointEnabled }
         return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
     }
 
@@ -99,10 +100,11 @@ class AppExperienceResourceImpl @Autowired constructor(
         platform: Int,
         appVersion: String?,
         organization: String?,
-        experienceHashId: String
+        experienceHashId: String,
+        forceNew: Boolean
     ): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization)
+        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization, forceNew)
         return Result(result)
     }
 
