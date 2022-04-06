@@ -757,7 +757,8 @@ class ExperienceService @Autowired constructor(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
                 experienceName = experienceRecord.experienceName,
                 appVersion = experienceRecord.version,
-                receiver = it
+                receiver = it,
+                platform = experienceRecord.platform
             )
             experiencePushService.pushMessage(appMessage)
         }
@@ -775,7 +776,8 @@ class ExperienceService @Autowired constructor(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
                 experienceName = experienceRecord.experienceName,
                 appVersion = experienceRecord.version,
-                receiver = it
+                receiver = it,
+                platform = experienceRecord.platform
             )
             experiencePushService.pushMessage(appMessage)
         }
@@ -851,7 +853,8 @@ class ExperienceService @Autowired constructor(
                 experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
                 experienceName = experienceRecord.experienceName,
                 appVersion = experienceRecord.version,
-                receiver = it
+                receiver = it,
+                platform = experienceRecord.platform
             )
             experiencePushService.pushMessage(appMessage)
         }

@@ -412,7 +412,7 @@ class ExperienceAppService(
 
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
-            dslContext, platformStr, 100
+            dslContext, userId, platformStr, 100
         ).filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
 
