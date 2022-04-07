@@ -29,32 +29,26 @@ package com.tencent.devops.support.resources.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.service.ServiceImageManageResource
 import net.coobird.thumbnailator.Thumbnails
 import org.apache.commons.codec.binary.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.File
 import java.io.InputStream
 import java.net.URL
-import java.nio.charset.Charset
 import java.nio.file.Files
 
 @RestResource
 class ServiceImageManageResourceImpl @Autowired constructor(private val client: Client) : ServiceImageManageResource {
-
-    private val logger = LoggerFactory.getLogger(ServiceImageManageResourceImpl::class.java)
 
     /**
      * 按照规定大小压缩图片
@@ -73,7 +67,6 @@ class ServiceImageManageResourceImpl @Autowired constructor(private val client: 
             file.delete()
         }
         val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        logger.info("the compressImage base64 data is:$data")
         return Result(data)
     }
 
@@ -82,14 +75,17 @@ class ServiceImageManageResourceImpl @Autowired constructor(private val client: 
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        val fileName = String(disposition.fileName.toByteArray(Charset.forName("ISO8859-1")), Charset.forName("UTF-8"))
+        val fileName = disposition.fileName
+        val index = fileName.lastIndexOf(".")
+        val fileType = fileName.substring(index + 1).toLowerCase()
+        val uploadFileName = "${UUIDUtil.generate()}.$fileType"
         val tmpdir = System.getProperty("java.io.tmpdir")
-        val file = File(tmpdir, fileName)
+        val file = File(tmpdir, uploadFileName)
         file.outputStream().use {
             inputStream.copyTo(it)
         }
         val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
-        val destPath = "image/$fileName"
+        val destPath = "image/$uploadFileName"
         val serviceUrl =
             "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
