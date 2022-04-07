@@ -91,4 +91,12 @@ class ExperienceGroupDao {
                 .execute()
         }
     }
+
+    fun deleteByGroupId(dslContext: DSLContext, groupId: Long) {
+        with(TExperienceGroup.T_EXPERIENCE_GROUP) {
+            dslContext.delete(this)
+                .where(GROUP_ID.eq(groupId))
+                .execute()
+        }
+    }
 }
