@@ -23,40 +23,16 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.pojo
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
-import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
-import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
-import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
+import com.tencent.devops.auth.pojo.enum.ExpiredStatus
 
-interface PermissionRoleMemberService {
-    fun createRoleMember(
-        userId: String,
-        projectId: String,
-        roleId: Int,
-        members: List<RoleMemberDTO>,
-        managerGroup: Boolean,
-        checkAGradeManager: Boolean? = true
-    )
-
-    fun deleteRoleMember(
-        userId: String,
-        projectId: String,
-        roleId: Int,
-        id: String,
-        type: ManagerScopesEnum,
-        managerGroup: Boolean
-    )
-
-    fun getRoleMember(projectId: String, roleId: Int, page: Int?, pageSize: Int?): GroupMemberDTO
-
-    fun getProjectAllMember(projectId: String, page: Int?, pageSize: Int?): ProjectMembersVO?
-
-    fun getUserGroups(projectId: String, userId: String): List<ManagerRoleGroupInfo>?
-}
+data class GroupMember(
+    val id: String,
+    val type: String,
+    val createTime: Long,
+    val expiredAt: Long,
+    val expiredStatus: ExpiredStatus
+)

@@ -30,7 +30,7 @@ package com.tencent.devops.auth.api.user
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -90,7 +90,7 @@ interface UserProjectMemberResource {
         @ApiParam(name = "页面大小", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<ManagerGroupMemberVo>
+    ): Result<GroupMemberDTO>
 
     @GET
     @Path("projectIds/{projectId}/members/all")

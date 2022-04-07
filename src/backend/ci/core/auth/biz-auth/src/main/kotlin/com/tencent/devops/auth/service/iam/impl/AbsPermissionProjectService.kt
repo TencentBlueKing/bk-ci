@@ -58,7 +58,7 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         // 3. 获取用户组下的所有用户
         roleInfos.forEach {
-            val groupMemberInfos = permissionRoleMemberService.getRoleMember(iamProjectId, it.id, 0, 1000).results
+            val groupMemberInfos = permissionRoleMemberService.getRoleMember(iamProjectId, it.id, 0, 1000).result
             logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| users $groupMemberInfos")
             val members = mutableListOf<String>()
             groupMemberInfos.forEach { memberInfo ->

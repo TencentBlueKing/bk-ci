@@ -35,13 +35,15 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.CAN_NOT_FIND_RELATION
+import com.tencent.devops.auth.pojo.GroupMember
 import com.tencent.devops.auth.pojo.MemberInfo
+import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.enum.ExpiredStatus
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.IamCacheService
@@ -153,9 +155,9 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         roleId: Int,
         page: Int?,
         pageSiz: Int?
-    ): ManagerGroupMemberVo {
-        val iamId = groupService.getRelationId(roleId)
-        if (iamId == null) {
+    ): GroupMemberDTO {
+        val iamRoleId = groupService.getRelationId(roleId)
+        if (iamRoleId == null) {
             logger.warn("$roleId can not find relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
@@ -163,13 +165,31 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz ?: 1000)
         pageInfoDTO.limit = pageInfo.limit.toLong()
         pageInfoDTO.offset = pageInfo.offset.toLong()
-        return iamManagerService.getRoleGroupMember(iamId.toInt(), pageInfoDTO)
+        val iamGroupInfos = iamManagerService.getRoleGroupMember(iamRoleId.toInt(), pageInfoDTO)
+        val groupMember = mutableListOf<GroupMember>()
+        iamGroupInfos.results.forEach {
+            groupMember += GroupMember(
+                id = it.id,
+                type = it.type,
+                expiredAt = it.expiredAt,
+                expiredStatus = ExpiredStatus.buildExpiredStatus(
+                    expiredTime = it.expiredAt,
+                    expiredSize = TimeUnit.DAYS.toMillis(EXPIRED_TIMEOUT_SIZE.toLong())
+                ),
+                // TODO: iam未返回此字段
+                createTime = 0
+            )
+        }
+        return GroupMemberDTO(
+            count = iamGroupInfos.count,
+            result = groupMember
+        )
     }
 
     override fun getProjectAllMember(projectId: String, page: Int?, pageSiz: Int?): ProjectMembersVO? {
-        if (projectMemberCache.getIfPresent(projectId.toString()) != null) {
+        if (projectMemberCache.getIfPresent(projectId) != null) {
             logger.info("getProjectAllMember $projectId get by cache")
-            return projectMemberCache.getIfPresent(projectId.toString())!!
+            return projectMemberCache.getIfPresent(projectId)!!
         }
         val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         val pageInfoDTO = PageInfoDTO()
@@ -198,7 +218,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             count = count,
             results = members
         )
-        projectMemberCache.put(projectId.toString(), result)
+        projectMemberCache.put(projectId, result)
         return result
     }
 
@@ -218,5 +238,6 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
         const val expiredAt = 365L
+        private const val EXPIRED_TIMEOUT_SIZE = 5
     }
 }
