@@ -29,10 +29,9 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 
 interface PermissionRoleMemberService {
@@ -58,5 +57,5 @@ interface PermissionRoleMemberService {
 
     fun getProjectAllMember(projectId: String, page: Int?, pageSize: Int?): ProjectMembersVO?
 
-    fun getUserGroups(projectId: String, userId: String): List<ManagerRoleGroupInfo>?
+    fun getUserGroups(projectId: String, userId: String): List<UserGroupInfoDTO>?
 }

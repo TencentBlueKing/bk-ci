@@ -32,7 +32,6 @@ import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.exception.IamException
@@ -43,6 +42,7 @@ import com.tencent.devops.auth.pojo.GroupMember
 import com.tencent.devops.auth.pojo.MemberInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.enum.ExpiredStatus
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.AuthGroupService
@@ -52,6 +52,7 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -217,8 +218,8 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
                     memberInfos[member.id] = MemberInfo(
                         id = member.id,
                         type = member.type,
-                        name = member.type,
-                        groups = setOf(group.name) as MutableSet<String>
+                        name = member.name,
+                        groups = setOf(IamGroupUtils.buildCIGroup(group.name)) as MutableSet<String>
                     )
                 }
             }
@@ -232,15 +233,22 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         return result
     }
 
-    override fun getUserGroups(projectId: String, userId: String): List<ManagerRoleGroupInfo>? {
+    override fun getUserGroups(projectId: String, userId: String): List<UserGroupInfoDTO>? {
         logger.info("getUserGroup: $projectId $userId")
         val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         val groupInfos = iamManagerService.getUserGroup(iamProjectId, userId)
+        val userGroups = mutableListOf<UserGroupInfoDTO>()
         groupInfos.forEach {
-
+            userGroups.add(
+                UserGroupInfoDTO(
+                    groupName = IamGroupUtils.buildCIGroup(it.name),
+                    groupDesc = it.description,
+                    groupId = it.id.toString()
+                )
+            )
         }
-        logger.info("getUserGroup: $projectId $iamProjectId $userId $groupInfos")
-        return groupInfos
+        logger.info("getUserGroup: $projectId $iamProjectId $userId $userGroups")
+        return userGroups
     }
 
     abstract fun checkUser(userId: String)

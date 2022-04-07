@@ -23,44 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.common.auth.utils
+package com.tencent.devops.auth.pojo.dto
 
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import java.time.LocalDateTime
-
-object IamGroupUtils {
-
-    fun buildIamGroup(projectName: String, groupName: String): String {
-        return "$projectName-$groupName"
-    }
-
-    fun buildDefaultDescription(projectName: String, groupName: String, userId: String): String {
-        return "$projectName 用户组:$groupName,由$userId 创建于 " +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
-    }
-
-    fun buildManagerDescription(projectName: String, userId: String): String {
-        return "$projectName 分级管理员, 由$userId 创建于" +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
-    }
-
-    fun buildCIGroup(iamGroupName: String): String {
-        return iamGroupName.substringAfterLast("-")
-    }
-
-    fun renameSystemLable(groupName: String): String {
-        return groupName.substringAfterLast("-")
-    }
-
-    fun defaultRoleCheck(groupName: String): Boolean {
-        val name = renameSystemLable(groupName)
-        if (BkAuthGroup.contains(name)) {
-            return true
-        }
-        return false
-    }
-}
+data class UserGroupInfoDTO(
+    val groupName: String,
+    val groupDesc: String,
+    val groupId: String
+)

@@ -29,9 +29,9 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -93,7 +93,7 @@ interface UserProjectMemberResource {
     ): Result<GroupMemberDTO>
 
     @GET
-    @Path("projectIds/{projectId}/members/all")
+    @Path("/projectIds/{projectId}/members/all")
     @ApiOperation("获取项目下所有用户")
     fun getProjectAllMember(
         @ApiParam(name = "项目标识", required = true)
@@ -132,7 +132,7 @@ interface UserProjectMemberResource {
     ): Result<Boolean>
 
     @GET
-    @Path("projectIds/{projectId}/user/groups")
+    @Path("/projectIds/{projectId}/user/groups")
     @ApiOperation("获取指定用户指定项目下的用户组")
     fun getUserAllGroup(
         @ApiParam(name = "用户名", required = true)
@@ -143,5 +143,5 @@ interface UserProjectMemberResource {
         projectId: String,
         @ApiParam(name = "待搜用户", required = true)
         searchUserId: String
-    ): Result<List<ManagerRoleGroupInfo>?>
+    ): Result<List<UserGroupInfoDTO>?>
 }
