@@ -438,7 +438,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                     pipelineBuildCommitService.create(
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        buildId = buildId!!,
+                        buildId = buildId ?: "",
                         matcher = matcher,
                         repo = repo
                     )
