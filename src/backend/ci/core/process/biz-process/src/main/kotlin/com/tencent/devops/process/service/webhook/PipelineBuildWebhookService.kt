@@ -435,13 +435,15 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                             .generateSegmentId("PIPELINE_WEBHOOK_BUILD_LOG_DETAIL").data
                     )
                     logger.info("$pipelineId|$buildId|webhook trigger|(${element.name}|repo(${matcher.getRepoName()})")
-                    pipelineBuildCommitService.create(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId ?: "",
-                        matcher = matcher,
-                        repo = repo
-                    )
+                    if(buildId != null) {
+                        pipelineBuildCommitService.create(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            matcher = matcher,
+                            repo = repo
+                        )
+                    }
                 } catch (ignore: Exception) {
                     logger.warn("$pipelineId|webhook trigger|(${element.name})|repo(${matcher.getRepoName()})", ignore)
                 }
