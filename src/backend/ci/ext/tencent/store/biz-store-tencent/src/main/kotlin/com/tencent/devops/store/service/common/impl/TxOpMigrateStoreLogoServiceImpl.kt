@@ -29,17 +29,18 @@ package com.tencent.devops.store.service.common.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TIdeAtom
 import com.tencent.devops.model.store.tables.TImage
+import com.tencent.devops.model.store.tables.TLogo
+import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.dao.TxMigrateStoreLogoDao
 import com.tencent.devops.store.service.common.TxOpMigrateStoreLogoService
@@ -73,6 +74,12 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
         migrateImageLogo()
         // 迁移微扩展logo
         migrateExtServiceLogo()
+        // 迁移范畴logo
+        migrateCategoryLogo()
+        // 迁移公共logo
+        migrateLogo()
+        // 迁移媒体logo
+        migrateMediaLogo()
         return true
     }
 
@@ -236,30 +243,130 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
         }
     }
 
+    private fun migrateCategoryLogo() {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin migrateCategoryLogo!!")
+            var offset = 0
+            do {
+                // 查询范畴logo信息记录
+                val categoryLogoRecords = txMigrateStoreLogoDao.getCategoryLogos(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+                val tCategory = TCategory.T_CATEGORY
+                categoryLogoRecords?.forEach { categoryLogoRecord ->
+                    val logoUrl = categoryLogoRecord[tCategory.ICON_URL]
+                    if (logoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    val userId = categoryLogoRecord[tCategory.CREATOR]
+                    val bkRepoLogoUrl = getBkRepoLogoUrl(logoUrl, userId)
+                    if (bkRepoLogoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    // 更新范畴的logo
+                    val id = categoryLogoRecord[tCategory.ID]
+                    txMigrateStoreLogoDao.updateCategoryLogo(dslContext, id, bkRepoLogoUrl)
+                }
+                offset += DEFAULT_PAGE_SIZE
+            } while (categoryLogoRecords?.size == DEFAULT_PAGE_SIZE)
+            logger.info("end migrateCategoryLogo!!")
+        }
+    }
+
+    private fun migrateLogo() {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin migrateLogo!!")
+            var offset = 0
+            do {
+                // 查询商店logo信息记录
+                val storeLogoRecords = txMigrateStoreLogoDao.getStoreLogos(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+                val tLogo = TLogo.T_LOGO
+                storeLogoRecords?.forEach { storeLogoRecord ->
+                    val logoUrl = storeLogoRecord[tLogo.LOGO_URL]
+                    if (logoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    val userId = storeLogoRecord[tLogo.CREATOR]
+                    val bkRepoLogoUrl = getBkRepoLogoUrl(logoUrl, userId)
+                    if (bkRepoLogoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    // 更新商店的logo
+                    val id = storeLogoRecord[tLogo.ID]
+                    txMigrateStoreLogoDao.updateStoreLogo(dslContext, id, bkRepoLogoUrl)
+                }
+                offset += DEFAULT_PAGE_SIZE
+            } while (storeLogoRecords?.size == DEFAULT_PAGE_SIZE)
+            logger.info("end migrateLogo!!")
+        }
+    }
+
+    private fun migrateMediaLogo() {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin migrateMediaLogo!!")
+            var offset = 0
+            do {
+                // 查询媒体信息logo信息记录
+                val mediaLogoRecords = txMigrateStoreLogoDao.getMediaLogos(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+                val tStoreMediaInfo = TStoreMediaInfo.T_STORE_MEDIA_INFO
+                mediaLogoRecords?.forEach { mediaLogoRecord ->
+                    val logoUrl = mediaLogoRecord[tStoreMediaInfo.MEDIA_URL]
+                    if (logoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    val userId = mediaLogoRecord[tStoreMediaInfo.CREATOR]
+                    val bkRepoLogoUrl = getBkRepoLogoUrl(logoUrl, userId)
+                    if (bkRepoLogoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    // 更新媒体信息的logo
+                    val id = mediaLogoRecord[tStoreMediaInfo.ID]
+                    txMigrateStoreLogoDao.updateExtServiceLogo(dslContext, id, bkRepoLogoUrl)
+                }
+                offset += DEFAULT_PAGE_SIZE
+            } while (mediaLogoRecords?.size == DEFAULT_PAGE_SIZE)
+            logger.info("end migrateMediaLogo!!")
+        }
+    }
+
     private fun getBkRepoLogoUrl(logoUrl: String, userId: String): String? {
         val fileType = getFileType(logoUrl)
         val tmpFile = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
-        // 从s3下载插件logo
-        OkhttpUtils.downloadFile(logoUrl, tmpFile)
-        // 把logo上传至bkrepo
-        val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
-        val destPath = "image/${tmpFile.name}"
-        val serviceUrl =
-            "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
+        val fileName = tmpFile.name
         try {
+            // 从s3下载插件logo
+            OkhttpUtils.downloadFile(logoUrl, tmpFile)
+            // 把logo上传至bkrepo
+            val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)
+            val destPath = "file/$fileType/$fileName"
+            val serviceUrl =
+                "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
             OkhttpUtils.uploadFile(serviceUrl, tmpFile).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    throw ErrorCodeException(errorCode = CommonMessageCode.SYSTEM_ERROR)
+                    logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
                 }
                 val result = JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
                 logger.info("requestUrl:$serviceUrl,result:$result")
                 return result.data
             }
+        } catch (ignore: Throwable) {
+            logger.warn("$userId upload file:$fileName fail, error is:", ignore)
         } finally {
             // 删除临时文件
             tmpFile.delete()
         }
+        return null
     }
 
     private fun getFileType(logoUrl: String): String {

@@ -28,9 +28,12 @@
 package com.tencent.devops.store.dao
 
 import com.tencent.devops.model.store.tables.TAtom
+import com.tencent.devops.model.store.tables.TCategory
 import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TIdeAtom
 import com.tencent.devops.model.store.tables.TImage
+import com.tencent.devops.model.store.tables.TLogo
+import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.TTemplate
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -46,7 +49,7 @@ class TxMigrateStoreLogoDao {
         offset: Int
     ): Result<out Record>? {
         return with(TAtom.T_ATOM) {
-            dslContext.select(ID, ATOM_CODE, LOGO_URL).from(this)
+            dslContext.select(ID, ATOM_CODE, LOGO_URL, CREATOR).from(this)
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -72,7 +75,7 @@ class TxMigrateStoreLogoDao {
         offset: Int
     ): Result<out Record>? {
         return with(TTemplate.T_TEMPLATE) {
-            dslContext.select(ID, TEMPLATE_CODE, LOGO_URL).from(this)
+            dslContext.select(ID, TEMPLATE_CODE, LOGO_URL, CREATOR).from(this)
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -98,7 +101,7 @@ class TxMigrateStoreLogoDao {
         offset: Int
     ): Result<out Record>? {
         return with(TIdeAtom.T_IDE_ATOM) {
-            dslContext.select(ID, ATOM_CODE, LOGO_URL).from(this)
+            dslContext.select(ID, ATOM_CODE, LOGO_URL, CREATOR).from(this)
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -124,7 +127,7 @@ class TxMigrateStoreLogoDao {
         offset: Int
     ): Result<out Record>? {
         return with(TImage.T_IMAGE) {
-            dslContext.select(ID, IMAGE_CODE, LOGO_URL).from(this)
+            dslContext.select(ID, IMAGE_CODE, LOGO_URL, CREATOR).from(this)
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -150,7 +153,7 @@ class TxMigrateStoreLogoDao {
         offset: Int
     ): Result<out Record>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
-            dslContext.select(ID, SERVICE_CODE, LOGO_URL).from(this)
+            dslContext.select(ID, SERVICE_CODE, LOGO_URL, CREATOR).from(this)
                 .orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
@@ -165,6 +168,84 @@ class TxMigrateStoreLogoDao {
         with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.update(this)
                 .set(LOGO_URL, logoUrl)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun getCategoryLogos(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<out Record>? {
+        return with(TCategory.T_CATEGORY) {
+            dslContext.select(ID, CATEGORY_CODE, ICON_URL, CREATOR).from(this)
+                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateCategoryLogo(
+        dslContext: DSLContext,
+        id: String,
+        logoUrl: String
+    ) {
+        with(TCategory.T_CATEGORY) {
+            dslContext.update(this)
+                .set(ICON_URL, logoUrl)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun getStoreLogos(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<out Record>? {
+        return with(TLogo.T_LOGO) {
+            dslContext.select(ID, LOGO_URL, CREATOR).from(this)
+                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateStoreLogo(
+        dslContext: DSLContext,
+        id: String,
+        logoUrl: String
+    ) {
+        with(TLogo.T_LOGO) {
+            dslContext.update(this)
+                .set(LOGO_URL, logoUrl)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
+
+    fun getMediaLogos(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<out Record>? {
+        return with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
+            dslContext.select(ID, MEDIA_URL, CREATOR).from(this)
+                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateMediaLogo(
+        dslContext: DSLContext,
+        id: String,
+        logoUrl: String
+    ) {
+        with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
+            dslContext.update(this)
+                .set(MEDIA_URL, logoUrl)
                 .where(ID.eq(id))
                 .execute()
         }
