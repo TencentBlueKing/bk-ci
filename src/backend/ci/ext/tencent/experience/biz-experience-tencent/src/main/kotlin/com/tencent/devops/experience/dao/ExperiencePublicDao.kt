@@ -241,14 +241,14 @@ class ExperiencePublicDao {
         recordId: Long,
         online: Boolean = true,
         expireTime: LocalDateTime? = null
-    ): Record1<Int>? {
+    ): Int {
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.selectCount()
                 .from(this)
                 .where(RECORD_ID.eq(recordId))
                 .and(ONLINE.eq(online))
                 .let { if (expireTime == null) it else it.and(END_DATE.gt(expireTime)) }
-                .fetchOne()
+                .fetchOne()?.get(0, Int::class.java) ?: 0
         }
     }
 

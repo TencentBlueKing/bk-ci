@@ -361,12 +361,16 @@ class ExperienceService @Autowired constructor(
         }
 
         val encodePublicGroup = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP)
-        val experienceGroups = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
-            setOf(encodePublicGroup)
-        } else if (experience.groupScope == null) {
-            experience.experienceGroups
-        } else {
-            experience.experienceGroups.filterNot { it == encodePublicGroup }.toSet()
+        val experienceGroups = when (experience.groupScope) {
+            GroupScopeEnum.PUBLIC.id -> {
+                setOf(encodePublicGroup)
+            }
+            null -> {
+                experience.experienceGroups
+            }
+            else -> {
+                experience.experienceGroups.filterNot { it == encodePublicGroup }.toSet()
+            }
         }
         val experienceInnerUsers = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
             emptySet()
