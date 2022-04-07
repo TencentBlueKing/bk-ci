@@ -1,6 +1,5 @@
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.common.api.constant.URL
 import com.tencent.devops.model.process.tables.TPipelineBuildCommits
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
