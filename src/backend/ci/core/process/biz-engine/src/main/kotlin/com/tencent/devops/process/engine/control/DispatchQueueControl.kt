@@ -77,7 +77,7 @@ class DispatchQueueControl @Autowired constructor(
         val canDequeue: Boolean
         when {
             rank == null -> {
-                buildLogPrinter.addLine(
+                buildLogPrinter.addYellowLine(
                     buildId = container.buildId,
                     message = "[QUEUE] Dispatch queue add container(${container.containerId})",
                     tag = VMUtils.genStartVMTaskId(container.containerId),
@@ -97,7 +97,7 @@ class DispatchQueueControl @Autowired constructor(
             }
         }
         LOG.info("ENGINE|${container.buildId}|TRY_TO_DEQUEUE|container(${container.containerId} rank=$rank}")
-        buildLogPrinter.addLine(
+        buildLogPrinter.addYellowLine(
             buildId = container.buildId,
             message = "[QUEUE] Rank of container(${container.containerId}) is: $rank, " +
                 "if can dequeue: $canDequeue",
