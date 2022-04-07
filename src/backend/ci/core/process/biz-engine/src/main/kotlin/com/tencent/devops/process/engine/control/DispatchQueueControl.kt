@@ -99,7 +99,7 @@ class DispatchQueueControl @Autowired constructor(
         LOG.info("ENGINE|${container.buildId}|TRY_TO_DEQUEUE|container(${container.containerId} rank=$rank}")
         buildLogPrinter.addLine(
             buildId = container.buildId,
-            message = "[QUEUE] Rank of container(${container.containerId} is: $rank, " +
+            message = "[QUEUE] Rank of container(${container.containerId}) is: $rank, " +
                 "if can dequeue: $canDequeue",
             tag = VMUtils.genStartVMTaskId(container.containerId),
             jobId = null,
