@@ -41,6 +41,7 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -75,6 +76,7 @@ open class GitApi {
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
         private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
         private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
+        private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
     }
 
     fun listBranches(
@@ -465,6 +467,17 @@ open class GitApi {
         val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_CHANGE_FILE_LIST, request))
+    }
+
+    fun getRepoMemberInfo(
+        host: String,
+        token: String,
+        userId: String,
+        gitProjectId: String
+    ): GitMember {
+        val url = "projects/${urlEncode(gitProjectId)}/members/all/$userId"
+        val request = get(host, token, url, "")
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
     }
 //    private val OPERATION_BRANCH = "拉分支"
 //    private val OPERATION_TAG = "拉标签"

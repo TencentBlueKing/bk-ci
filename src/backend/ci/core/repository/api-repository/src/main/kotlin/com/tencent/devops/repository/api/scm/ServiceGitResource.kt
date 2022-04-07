@@ -34,6 +34,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -507,4 +508,22 @@ interface ServiceGitResource {
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitProjectInfo?>
+
+    @ApiOperation("获取某仓库某成员的信息")
+    @GET
+    @Path("/checkUserGitAuth")
+    fun getProjectUserInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitMember>
 }
