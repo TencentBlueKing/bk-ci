@@ -34,7 +34,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -196,7 +196,7 @@ interface ServiceGitResource {
         code: String
     ): Result<GitToken>
 
-    @ApiOperation("获取用户的token")
+    @ApiOperation("获取用户的基本信息")
     @GET
     @Path("/getUserInfoByToken")
     fun getUserInfoByToken(
@@ -210,16 +210,25 @@ interface ServiceGitResource {
 
     @ApiOperation("获取项目的token")
     @GET
-    @Path("/gitci/getToken")
+    @Path("/stream/getToken")
     fun getToken(
         @ApiParam("gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long
     ): Result<GitToken>
 
+    @ApiOperation("销毁项目的token")
+    @DELETE
+    @Path("/stream/clearToken")
+    fun clearToken(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<Boolean>
+
     @ApiOperation("获取git文件内容")
     @GET
-    @Path("/gitci/getGitCIFileContent")
+    @Path("/stream/getGitCIFileContent")
     fun getGitCIFileContent(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -237,7 +246,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取git文件目录列表")
     @GET
-    @Path("/gitci/getGitCIFileTree")
+    @Path("/stream/getGitCIFileTree")
     fun getGitCIFileTree(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -258,7 +267,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取mr请求的代码变更")
     @GET
-    @Path("/gitci/getGitCIMrChanges")
+    @Path("/stream/getGitCIMrChanges")
     fun getGitCIMrChanges(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -273,7 +282,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取mr请求的信息")
     @GET
-    @Path("/gitci/getGitCIMrInfo")
+    @Path("/stream/getGitCIMrInfo")
     fun getGitCIMrInfo(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -288,7 +297,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取当前文件的commit记录(用于差异比较)")
     @GET
-    @Path("/gitci/getFileCommits")
+    @Path("/stream/getFileCommits")
     fun getFileCommits(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -306,7 +315,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取仓库的所有提交记录")
     @GET
-    @Path("/gitci/commits")
+    @Path("/stream/commits")
     fun getCommits(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -336,7 +345,7 @@ interface ServiceGitResource {
 
     @ApiOperation("工蜂创建文件")
     @POST
-    @Path("/gitci/create/file")
+    @Path("/stream/create/file")
     fun gitCICreateFile(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -350,7 +359,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取当前commit记录所属")
     @GET
-    @Path("/gitci/commitRefs")
+    @Path("/stream/commitRefs")
     fun getCommitRefs(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
@@ -660,6 +669,24 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<List<GitMember>>
+
+    @ApiOperation("获取项目某成员信息")
+    @GET
+    @Path("/getRepoMemberInfo")
+    fun getRepoMemberInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitMember>
 
     @ApiOperation("获取所有项目成员信息")
     @GET

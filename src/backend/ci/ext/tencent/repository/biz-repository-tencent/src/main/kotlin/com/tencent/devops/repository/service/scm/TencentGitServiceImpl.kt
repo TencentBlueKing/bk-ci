@@ -34,7 +34,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -320,6 +320,20 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             token = token,
             tokenType = tokenType
         )
+    }
+
+    override fun getRepoMemberInfo(
+        accessToken: String,
+        userId: String,
+        repoName: String,
+        tokenType: TokenTypeEnum
+    ): GitMember {
+        return client.getScm(ServiceGitResource::class).getRepoMemberInfo(
+            token = accessToken,
+            userId = userId,
+            gitProjectId = repoName,
+            tokenType = tokenType
+        ).data!!
     }
 
     override fun getRepoAllMembers(accessToken: String, userId: String, repoName: String): List<GitMember> {

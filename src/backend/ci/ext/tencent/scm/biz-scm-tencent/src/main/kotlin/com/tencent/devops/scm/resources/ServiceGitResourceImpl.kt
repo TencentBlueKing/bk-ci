@@ -34,7 +34,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -290,13 +290,15 @@ class ServiceGitResourceImpl @Autowired constructor(
         ref: String?,
         recursive: Boolean?
     ): Result<List<GitFileInfo>> {
-        return Result(gitService.getGitCIFileTree(
-            gitProjectId = gitProjectId,
-            path = path,
-            token = token,
-            ref = ref,
-            recursive = recursive
-        ))
+        return Result(
+            gitService.getGitCIFileTree(
+                gitProjectId = gitProjectId,
+                path = path,
+                token = token,
+                ref = ref,
+                recursive = recursive
+            )
+        )
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): Result<String> {
@@ -407,6 +409,15 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getRepoMembers(repoName: String, tokenType: TokenTypeEnum, token: String): Result<List<GitMember>> {
         return Result(gitService.getRepoMembers(repoName, tokenType, token))
+    }
+
+    override fun getRepoMemberInfo(
+        token: String,
+        userId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitMember> {
+        return Result(gitService.getRepoMemberInfo(token, userId, gitProjectId, tokenType))
     }
 
     override fun getRepoAllMembers(repoName: String, tokenType: TokenTypeEnum, token: String): Result<List<GitMember>> {

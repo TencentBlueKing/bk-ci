@@ -49,7 +49,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -242,7 +242,7 @@ class GitService @Autowired constructor(
         logger.info("start to get the $userId's $repository branch by accessToken")
         val repoId = URLEncoder.encode(repository, "utf-8")
         val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/branches" +
-                "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitBranch>()
         val request = Request.Builder()
             .url(url)
@@ -287,7 +287,7 @@ class GitService @Autowired constructor(
         logger.info("start to get the $userId's $repository tag by page: $pageNotNull pageSize: $pageSizeNotNull")
         val repoId = URLEncoder.encode(repository, "utf-8")
         val url = "${gitConfig.gitApiUrl}/projects/$repoId/repository/tags?" +
-                "access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            "access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
         val res = mutableListOf<GitTag>()
         val request = Request.Builder()
             .url(url)
@@ -330,7 +330,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token?client_id=$clientId&client_secret=$clientSecret" +
-                    "&grant_type=refresh_token&refresh_token=${accessToken.refreshToken}&redirect_uri=$callbackUrl"
+                "&grant_type=refresh_token&refresh_token=${accessToken.refreshToken}&redirect_uri=$callbackUrl"
             val request = Request.Builder()
                 .url(url)
                 .post(
@@ -354,8 +354,8 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "${gitConfig.gitUrl}/oauth/token?client_id=$gitCIClientId&" +
-                    "client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
-                    "&grant_type=refresh_token&refresh_token=$refreshToken&redirect_uri=$callbackUrl"
+                "client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
+                "&grant_type=refresh_token&refresh_token=$refreshToken&redirect_uri=$callbackUrl"
             val request = Request.Builder()
                 .url(url)
                 .post(
@@ -383,7 +383,7 @@ class GitService @Autowired constructor(
 
     fun getAuthUrl(authParamJsonStr: String): String {
         return "${gitConfig.gitUrl}/oauth/authorize?" +
-                "client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
+            "client_id=$clientId&redirect_uri=$callbackUrl&response_type=code&state=$authParamJsonStr"
     }
 
     fun getToken(userId: String, code: String): GitToken {
@@ -392,8 +392,8 @@ class GitService @Autowired constructor(
         try {
             val tokenUrl =
                 "${gitConfig.gitUrl}/oauth/token?" +
-                        "client_id=$clientId&client_secret=$clientSecret&code=$code" +
-                        "&grant_type=authorization_code&redirect_uri=$redirectUrl"
+                    "client_id=$clientId&client_secret=$clientSecret&code=$code" +
+                    "&grant_type=authorization_code&redirect_uri=$redirectUrl"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
@@ -418,8 +418,8 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val tokenUrl = "${gitConfig.gitUrl}/oauth/token" +
-                    "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
-                    "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&expires_in=$tokenExpiresIn" +
+                "&grant_type=client_credentials&scope=project:${URLEncoder.encode(gitProjectId, "UTF8")}"
             val request = Request.Builder()
                 .url(tokenUrl)
                 .post(
@@ -544,8 +544,8 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
-                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
-                    "&access_token=$token"
+                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
+                "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -571,7 +571,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mergeRequestId/changes" +
-                    "?access_token=$token"
+                "?access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -597,7 +597,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mergeRequestId" +
-                    "?access_token=$token"
+                "?access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -623,8 +623,8 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files/" +
-                    "${URLEncoder.encode(filePath, "UTF-8")}/blame?ref=${URLEncoder.encode(branch, "UTF-8")}" +
-                    "&access_token=$token"
+                "${URLEncoder.encode(filePath, "UTF-8")}/blame?ref=${URLEncoder.encode(branch, "UTF-8")}" +
+                "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -659,27 +659,27 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits?access_token=$token" +
-                    if (branch != null) {
-                        "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
-                    } else {
-                        ""
-                    } +
-                    if (filePath != null) {
-                        "&path=${URLEncoder.encode(filePath, "UTF-8")}"
-                    } else {
-                        ""
-                    } +
-                    if (since != null) {
-                        "&since=${since.replace("+", "%2B")}"
-                    } else {
-                        ""
-                    } +
-                    if (until != null) {
-                        "&until=${until.replace("+", "%2B")}"
-                    } else {
-                        ""
-                    } +
-                    "&page=$page" + "&per_page=$perPage"
+                if (branch != null) {
+                    "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
+                } else {
+                    ""
+                } +
+                if (filePath != null) {
+                    "&path=${URLEncoder.encode(filePath, "UTF-8")}"
+                } else {
+                    ""
+                } +
+                if (since != null) {
+                    "&since=${since.replace("+", "%2B")}"
+                } else {
+                    ""
+                } +
+                if (until != null) {
+                    "&until=${until.replace("+", "%2B")}"
+                } else {
+                    ""
+                } +
+                "&page=$page" + "&per_page=$perPage"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -725,7 +725,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits/$commitId/refs?type=$type" +
-                    "&access_token=$token"
+                "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -757,13 +757,13 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
-                    "?path=${URLEncoder.encode(path, "UTF-8")}" +
-                    if (!ref.isNullOrBlank()) {
-                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
-                    } else {
-                        ""
-                    } + "&recursive=$recursive" +
-                    "&access_token=$token"
+                "?path=${URLEncoder.encode(path, "UTF-8")}" +
+                if (!ref.isNullOrBlank()) {
+                    "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                } else {
+                    ""
+                } + "&recursive=$recursive" +
+                "&access_token=$token"
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -820,7 +820,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             var url = "$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
-                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
+                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
             val request = if (authType == RepoAuthType.OAUTH) {
                 url += "&access_token=$token"
                 Request.Builder()
@@ -875,7 +875,7 @@ class GitService @Autowired constructor(
                     throw CustomException(
                         status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
                         message = "fail to get git file content with: " +
-                                "$projectFileUrl(${response.code()}): ${response.message()}"
+                            "$projectFileUrl(${response.code()}): ${response.message()}"
                     )
                 }
                 val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
@@ -905,8 +905,8 @@ class GitService @Autowired constructor(
     ): Result<GitRepositoryResp?> {
         logger.info(
             "createGitRepository userId is:$userId, repositoryName:$repositoryName, " +
-                    "sampleProjectPath:$sampleProjectPath, namespaceId:$namespaceId, " +
-                    "visibilityLevel:$visibilityLevel, tokenType:$tokenType"
+                "sampleProjectPath:$sampleProjectPath, namespaceId:$namespaceId, " +
+                "visibilityLevel:$visibilityLevel, tokenType:$tokenType"
         )
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects")
         setToken(tokenType, url, token)
@@ -974,8 +974,8 @@ class GitService @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "initRepositoryInfo userId:$userId,sampleProjectPath:$sampleProjectPath," +
-                    "repositoryUrl:$repositoryUrl, nameSpaceName:$nameSpaceName," +
-                    "tokenType:$tokenType,repositoryName:$repositoryName"
+                "repositoryUrl:$repositoryUrl, nameSpaceName:$nameSpaceName," +
+                "tokenType:$tokenType,repositoryName:$repositoryName"
         )
         val tmpWorkspace = Files.createTempDirectory(repositoryName).toFile()
         logger.info("initRepositoryInfo tmpWorkspace is:${tmpWorkspace.absolutePath}")
@@ -1056,7 +1056,7 @@ class GitService @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "addGitProjectMember userIdList:$userIdList," +
-                    "repoName:$repoName,gitAccessLevel:$gitAccessLevel,tokenType:$tokenType"
+                "repoName:$repoName,gitAccessLevel:$gitAccessLevel,tokenType:$tokenType"
         )
         var gitUserInfo: GitUserInfo?
         val encodeProjectName = URLEncoder.encode(repoName, "utf-8") // 为代码库名称字段encode
@@ -1333,7 +1333,7 @@ class GitService @Autowired constructor(
     ): Result<Boolean> {
         logger.info(
             "updateGitProjectInfo projectName:$projectName," +
-                    "updateGitProjectInfo:$updateGitProjectInfo,tokenType:$tokenType"
+                "updateGitProjectInfo:$updateGitProjectInfo,tokenType:$tokenType"
         )
         val encodeProjectName = URLEncoder.encode(projectName, "utf-8")
         val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName")
@@ -1580,6 +1580,37 @@ class GitService @Autowired constructor(
         return result
     }
 
+    fun getRepoMemberInfo(
+        token: String,
+        userId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum
+    ): GitMember {
+
+        val url = StringBuilder(
+            "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF-8")}" +
+                "/members/all/$userId"
+        )
+        setToken(tokenType, url, token)
+        logger.info("[$userId]|[$gitProjectId]| Get git project member utl: $url")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get Repo($gitProjectId) Member($userId) Info error for " +
+                        "$response: ${response.message()}"
+                )
+            }
+            val body = response.body()!!.string()
+            logger.info("[$userId]|[$gitProjectId]| Get git project member response body: $body")
+            return JsonUtil.to(body)
+        }
+    }
+
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
     fun getRepoAllMembers(repoName: String, tokenType: TokenTypeEnum, token: String): List<GitMember> {
         val url = StringBuilder(
@@ -1699,7 +1730,7 @@ class GitService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             val tokenUrl = "$gitCIUrl/oauth/token" +
-                    "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
             val request = Request.Builder()
                 .url(tokenUrl)
                 .delete(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
