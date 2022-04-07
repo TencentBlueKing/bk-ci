@@ -400,12 +400,12 @@ class ExperiencePublicDao {
         }
     }
 
-    fun getNewestRecordId(
+    fun getNewestRecord(
         dslContext: DSLContext,
         projectId: String,
         bundleIdentifier: String,
         platform: String
-    ): Long? {
+    ): TExperiencePublicRecord? {
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
@@ -413,13 +413,14 @@ class ExperiencePublicDao {
                 .and(ONLINE.eq(true))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
-                .fetchOne()?.recordId
+                .fetchOne()
         }
     }
 
-    fun listSubcribeRecordIds(
+    fun listSubscribeRecordIds(
         dslContext: DSLContext,
         userId: String,
+        platform: String?,
         limit: Int
     ): List<Long> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC
@@ -432,6 +433,7 @@ class ExperiencePublicDao {
         return dslContext.select(p.RECORD_ID)
             .from(join)
             .where(s.USER_ID.eq(userId))
+            .let { if (platform == null) it else it.and(s.PLATFORM.eq(platform)) }
             .orderBy(p.UPDATE_TIME.desc())
             .limit(limit)
             .fetch(p.RECORD_ID)

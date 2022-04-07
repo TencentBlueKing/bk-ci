@@ -111,22 +111,23 @@ class ExperienceAppService(
         experienceHashId: String,
         platform: Int,
         appVersion: String?,
-        organization: String?
+        organization: String?,
+        forceNew: Boolean
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         var experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
-        val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
+        val newestPublic = experienceBaseService.getNewestPublic(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val isPublic = !isOuter && newestRecordId != null
+        val isPublic = !isOuter && experiencePublicDao.getByRecordId(dslContext, experienceId) != null
         // 移除红点
         removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
-        if (newestRecordId != null && newestRecordId != experienceId) {
-            experienceId = newestRecordId
+        if (forceNew && newestPublic != null && newestPublic.recordId != experienceId) {
+            experienceId = newestPublic.recordId
             experience = experienceDao.get(dslContext, experienceId)
         }
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
@@ -151,7 +152,7 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
+        val isPrivate = experienceBaseService.isPrivate(experience, isOuter, userId)
         val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
@@ -402,19 +403,32 @@ class ExperienceAppService(
     }
 
     fun publicExperiences(userId: String, platform: Int, offset: Int, limit: Int): List<AppExperience> {
+        val platformStr = PlatformEnum.of(platform)?.name
         val recordIds = mutableListOf<Long>()
 
         // 订阅的需要置顶
-        val subcribeRecordIds = experiencePublicDao.listSubcribeRecordIds(dslContext, userId, 100)
-        recordIds.addAll(subcribeRecordIds)
+        val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, platformStr, 100)
+        recordIds.addAll(subscribeRecordIds)
 
         // 普通的公开体验
         val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
-            dslContext, PlatformEnum.of(platform)?.name, 100
-        ).map { it.value1() }.filterNot { subcribeRecordIds.contains(it) }
+            dslContext, platformStr, 100
+        ).filterNot { recordIds.contains(it) }
         recordIds.addAll(normalRecords)
 
-        val records = experienceDao.list(dslContext, recordIds)
+        // 过滤内部体验ID
+        val privateRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, false)
+        recordIds.removeAll(privateRecordIds)
+
+        // 找到结果
+        val recordMap = experienceDao.listOnline(dslContext, recordIds).map { it.id to it }.toMap()
+
+        // 排序
+        val records = mutableListOf<TExperienceRecord>()
+        for (recordId in recordIds) {
+            recordMap[recordId]?.let { records.add(it) }
+        }
+
         return experienceBaseService.toAppExperiences(userId, records)
     }
 }

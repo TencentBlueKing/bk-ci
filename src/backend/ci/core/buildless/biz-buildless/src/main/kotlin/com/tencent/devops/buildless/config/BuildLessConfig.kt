@@ -69,6 +69,9 @@ class BuildLessConfig {
     @Value("\${dockerCli.hostPathWorkspace:#{null}}")
     var hostPathWorkspace: String? = null
 
+    @Value("\${dockerCli.hostPathLinkDir}")
+    var hostPathLinkDir: String = "/tmp/bkci"
+
     @Value("\${dockerCli.memoryLimitBytes:34359738368}")
     var memory: Long = 34359738368L // 1024 * 1024 * 1024 * 32 Memory limit in bytes. 32G
 

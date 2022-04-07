@@ -43,13 +43,13 @@ open class TencentAgentUrlServiceImpl constructor(
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "http://$gw/external/agents/$agentHashId/install"
+        return "https://$gw/external/agents/$agentHashId/install"
     }
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "http://$gw/external/agents/$agentHashId/agent"
+        return "https://$gw/external/agents/$agentHashId/agent"
     }
 
     override fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
@@ -66,10 +66,11 @@ open class TencentAgentUrlServiceImpl constructor(
     }
 
     override fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        return if (agentRecord.fileGateway.isNullOrBlank())
+        return if (agentRecord.fileGateway.isNullOrBlank()) {
             genGateway(agentRecord)
-        else
+        } else {
             agentRecord.fileGateway.removePrefix("https://").removePrefix("http://").removeSuffix("/")
+        }
     }
 
     override fun fixGateway(gateway: String?): String {
