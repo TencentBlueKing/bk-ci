@@ -27,8 +27,20 @@
 
 package com.tencent.devops.auth.pojo.dto
 
+import com.tencent.devops.auth.pojo.enum.ExpiredStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("用户加入的用户组")
 data class UserGroupInfoDTO(
+    @ApiModelProperty("用户组名称")
     val groupName: String,
+    @ApiModelProperty("用户组描述")
     val groupDesc: String,
-    val groupId: String
+    @ApiModelProperty("用户组ID")
+    val groupId: String,
+    @ApiModelProperty("过期时间")
+    val expiredAt: Long,
+    @ApiModelProperty("权限过期状态")
+    val expiredStatus: ExpiredStatus
 )

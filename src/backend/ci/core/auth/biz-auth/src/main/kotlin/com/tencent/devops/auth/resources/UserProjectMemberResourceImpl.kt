@@ -89,10 +89,10 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         type: ManagerScopesEnum
     ): Result<Boolean> {
         Result(permissionRoleMemberService.deleteRoleMember(
-            userId = userId,
+            executeUserId = userId,
             projectId = projectId,
             roleId = roleId,
-            id = members,
+            deleteUserId = members,
             type = type,
             managerGroup = managerGroup
         ))

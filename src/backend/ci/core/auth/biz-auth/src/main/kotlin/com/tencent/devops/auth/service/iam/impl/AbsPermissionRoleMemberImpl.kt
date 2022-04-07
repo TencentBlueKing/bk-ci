@@ -51,6 +51,7 @@ import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -129,10 +130,10 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     }
 
     override fun deleteRoleMember(
-        userId: String,
+        executeUserId: String,
         projectId: String,
         roleId: Int,
-        id: String,
+        deleteUserId: String,
         type: ManagerScopesEnum,
         managerGroup: Boolean
     ) {
@@ -142,12 +143,18 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
         val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
-        permissionGradeService.checkGradeManagerUser(userId, projectId)
+        // 如果不是本人操作,需校验操作人是否为项目管理员。如果是本人操作是为主动退出用户组
+        if (executeUserId != deleteUserId && managerGroup) {
+            permissionGradeService.checkGradeManagerUser(executeUserId, projectId)
+        } else if (executeUserId != deleteUserId && !managerGroup) {
+            // 非管理员操作， 切操作目标为其他用户
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
+        }
 
-        iamManagerService.deleteRoleGroupMember(iamId.toInt(), ManagerScopesEnum.getType(type), id)
+        iamManagerService.deleteRoleGroupMember(iamId.toInt(), ManagerScopesEnum.getType(type), deleteUserId)
         // 如果是删除用户,且用户是管理员需同步删除该用户分分级管理员权限
         if (managerGroup && type == ManagerScopesEnum.USER) {
-            iamManagerService.deleteGradeManagerRoleMember(id, iamProjectId)
+            iamManagerService.deleteGradeManagerRoleMember(deleteUserId, iamProjectId)
         }
     }
 
@@ -243,7 +250,11 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
                 UserGroupInfoDTO(
                     groupName = IamGroupUtils.buildCIGroup(it.name),
                     groupDesc = it.description,
-                    groupId = it.id.toString()
+                    groupId = it.id.toString(),
+                    // TODO: 待iam接口提供此字段
+                    expiredAt = System.currentTimeMillis(),
+                    // TODO: 待iam接口提供此字段
+                    expiredStatus = ExpiredStatus.buildExpiredStatus(0, TimeUnit.DAYS.toMillis(EXPIRED_TIMEOUT_SIZE.toLong()))
                 )
             )
         }

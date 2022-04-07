@@ -45,10 +45,10 @@ interface PermissionRoleMemberService {
     )
 
     fun deleteRoleMember(
-        userId: String,
+        executeUserId: String,
         projectId: String,
         roleId: Int,
-        id: String,
+        deleteUserId: String,
         type: ManagerScopesEnum,
         managerGroup: Boolean
     )
