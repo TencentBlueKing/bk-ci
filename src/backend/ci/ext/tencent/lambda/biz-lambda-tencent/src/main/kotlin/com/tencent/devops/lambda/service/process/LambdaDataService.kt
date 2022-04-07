@@ -198,7 +198,7 @@ class LambdaDataService @Autowired constructor(
                         repoType = repositoryType,
                         commitTime = commitTime.format(dateTimeFormatter),
                         createTime = createTime.format(dateTimeFormatter),
-                        mrId = mrId,
+                        mrId = mergeRequestId,
                         url = url,
                         eventType = eventType
                     )
@@ -333,7 +333,7 @@ class LambdaDataService @Autowired constructor(
         try {
             logger.info(
                 "pushBuildHistory buildId=${historyRecord.buildId}" +
-                    "|${historyRecord.executeTime}|${historyRecord.buildNum}"
+                        "|${historyRecord.executeTime}|${historyRecord.buildNum}"
             )
             val history = genBuildHistory(projectInfo, historyRecord, BuildStatus.values(), System.currentTimeMillis())
             val buildHistoryTopic = checkParamBlank(lambdaKafkaTopicConfig.buildHistoryTopic, "buildHistoryTopic")
@@ -550,8 +550,8 @@ class LambdaDataService @Autowired constructor(
                 channelCode = ChannelCode.valueOf(t.channel),
                 errorInfoList = null,
                 executeTime = t.executeTime ?: 0,
-                buildParameters = t.buildParameters?.let {
-                    self -> JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
+                buildParameters = t.buildParameters?.let { self ->
+                    JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 }
             )
         }
