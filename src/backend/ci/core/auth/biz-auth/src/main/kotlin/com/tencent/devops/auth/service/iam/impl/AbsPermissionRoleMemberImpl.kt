@@ -202,21 +202,31 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
             return null
         }
 
-        val members = mutableSetOf<MemberInfo>()
+        val memberInfos = mutableMapOf<String, MemberInfo>()
+
         groupInfos.results.forEach { group ->
+            // 获取用户组下用户名单
             val membersInfos = iamManagerService.getRoleGroupMember(group.id, pageInfoDTO).results
             membersInfos.forEach { member ->
-                members.add(MemberInfo(
-                    id = member.id,
-                    name = member.name,
-                    type = member.type
-                ))
+                if (memberInfos.containsKey(member.id)) {
+                    val memberInfo = memberInfos[member.id]
+                    // 追加用户加入的用户组
+                    memberInfo?.groups?.add(group.name)
+                } else {
+                    // 添加用户加入的用户组
+                    memberInfos[member.id] = MemberInfo(
+                        id = member.id,
+                        type = member.type,
+                        name = member.type,
+                        groups = setOf(group.name) as MutableSet<String>
+                    )
+                }
             }
         }
-        val count = members.size
+        val count = memberInfos.size
         val result = ProjectMembersVO(
             count = count,
-            results = members
+            results = memberInfos
         )
         projectMemberCache.put(projectId, result)
         return result

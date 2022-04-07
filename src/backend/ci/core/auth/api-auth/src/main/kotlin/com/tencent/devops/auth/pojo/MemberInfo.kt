@@ -10,5 +10,7 @@ data class MemberInfo(
     @ApiModelProperty("成员名称")
     val name: String,
     @ApiModelProperty("成员类别")
-    val type: String
+    val type: String,
+    @ApiModelProperty("加入用户组")
+    var groups: MutableSet<String>
 )
