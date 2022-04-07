@@ -19,6 +19,8 @@ class PipelineBuildCommitDao {
         authorName: String,
         message: String,
         repoType: String,
+        url: String,
+        eventType: String,
         commitTime: LocalDateTime,
         mrId: String
     ) {
@@ -34,6 +36,8 @@ class PipelineBuildCommitDao {
                 AUTHOR_NAME,
                 MERGE_REQUEST_ID,
                 REPOSITORY_TYPE,
+                URL,
+                EVENT_TYPE,
                 COMMIT_TIME,
                 CREATE_TIME
             )
@@ -47,6 +51,8 @@ class PipelineBuildCommitDao {
                     authorName,
                     mrId,
                     repoType,
+                    url,
+                    eventType,
                     commitTime,
                     LocalDateTime.now()
                 ).execute()
