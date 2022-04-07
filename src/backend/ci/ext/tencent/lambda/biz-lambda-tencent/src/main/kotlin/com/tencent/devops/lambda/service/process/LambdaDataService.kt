@@ -197,7 +197,10 @@ class LambdaDataService @Autowired constructor(
                         message = message,
                         repoType = repositoryType,
                         commitTime = commitTime.format(dateTimeFormatter),
-                        createTime = createTime.format(dateTimeFormatter)
+                        createTime = createTime.format(dateTimeFormatter),
+                        mrId = mrId,
+                        url = url,
+                        eventType = eventType
                     )
                 }
                 checkParamBlank(lambdaKafkaTopicConfig.buildCommitsTopic, "buildCommitsTopic")
