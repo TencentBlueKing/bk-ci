@@ -69,7 +69,7 @@ class CheckDispatchQueueContainerCmd(
         } else {
             LOG.info("ENGINE|${container.buildId}|DEQUEUE_FAILED|${container.stageId}|j(${container.containerId})")
             commandContext.latestSummary = "dispatch_delay"
-            commandContext.cmdFlowState = CmdFlowState.BREAK // 丢弃事件等待下次启动
+            commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
         }
     }
 }
