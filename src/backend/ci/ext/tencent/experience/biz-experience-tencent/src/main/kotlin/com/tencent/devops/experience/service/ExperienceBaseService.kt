@@ -465,7 +465,3 @@ class ExperienceBaseService @Autowired constructor(
         return experiencePublicDao.getNewestRecord(dslContext, projectId, bundleIdentifier, platform)
     }
 }
-
-fun main() {
-    println(HashUtil.decodeIdToLong("ydpzdnqp"))
-}

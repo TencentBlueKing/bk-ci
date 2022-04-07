@@ -360,6 +360,25 @@ class ExperienceService @Autowired constructor(
             return -1L
         }
 
+        val encodePublicGroup = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP)
+        val experienceGroups = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
+            setOf(encodePublicGroup)
+        } else if (experience.groupScope == null) {
+            experience.experienceGroups
+        } else {
+            experience.experienceGroups.filterNot { it == encodePublicGroup }.toSet()
+        }
+        val experienceInnerUsers = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
+            emptySet()
+        } else {
+            experience.innerUsers
+        }
+        val experienceOuterUsers = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
+            emptySet()
+        } else {
+            experience.outerUsers
+        }
+
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val platform = if (experience.path.endsWith(".ipa")) PlatformEnum.IOS else PlatformEnum.ANDROID
@@ -420,13 +439,13 @@ class ExperienceService @Autowired constructor(
         )
 
         // 加上权限
-        experience.experienceGroups.forEach {
+        experienceGroups.forEach {
             experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
         }
-        experience.innerUsers.forEach {
+        experienceInnerUsers.forEach {
             experienceInnerDao.create(dslContext, experienceId, it)
         }
-        experience.outerUsers.forEach {
+        experienceOuterUsers.forEach {
             experienceOuterDao.create(dslContext, experienceId, it)
         }
 
