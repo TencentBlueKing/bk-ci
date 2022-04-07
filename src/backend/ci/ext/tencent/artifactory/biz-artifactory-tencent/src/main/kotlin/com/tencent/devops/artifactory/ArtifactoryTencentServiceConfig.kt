@@ -27,15 +27,16 @@
 
 package com.tencent.devops.artifactory
 
+import com.tencent.devops.artifactory.service.JFrogArchiveFileServiceImpl
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.service.bkrepo.GitCIBkRepoDownloadService
+import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.StreamArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
-import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -92,6 +93,10 @@ class ArtifactoryTencentServiceConfig {
         commonConfig = commonConfig,
         shortUrlService = shortUrlService
     )
+
+    @Bean
+    @Primary
+    fun archiveFileService() = JFrogArchiveFileServiceImpl()
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
