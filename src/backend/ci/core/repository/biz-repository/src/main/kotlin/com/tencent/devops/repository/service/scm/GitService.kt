@@ -47,7 +47,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -1115,6 +1115,29 @@ class GitService @Autowired constructor(
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data)
+        }
+    }
+
+    override fun getRepoMemberInfo(
+        accessToken: String,
+        userId: String,
+        repoName: String,
+        tokenType: TokenTypeEnum
+    ): GitMember {
+        return if (TokenTypeEnum.OAUTH == tokenType) {
+            GitOauthApi().getRepoMemberInfo(
+                host = gitConfig.gitApiUrl,
+                token = accessToken,
+                userId = userId,
+                gitProjectId = repoName
+            )
+        } else {
+            GitApi().getRepoMemberInfo(
+                host = gitConfig.gitApiUrl,
+                token = accessToken,
+                userId = userId,
+                gitProjectId = repoName
+            )
         }
     }
 
