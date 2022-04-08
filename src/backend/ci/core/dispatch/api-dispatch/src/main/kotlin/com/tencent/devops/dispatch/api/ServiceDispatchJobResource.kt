@@ -25,15 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.dispatch.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("密钥信息")
-data class SecretInfo(
-    @ApiModelProperty("hash id 值", required = false)
-    val hashId: String,
-    @ApiModelProperty("密钥", required = false)
-    val secretKey: String
-)
+@Api(tags = ["SERVICE_AGENT"], description = "服务-Agent")
+@Path("/service/dipsatch/jobs")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceDispatchJobResource {
+
+    @ApiOperation("监控")
+    @POST
+    @Path("/monitor")
+    fun monitor(
+        @ApiParam("agent 事件", required = true)
+        agentStartMonitor: AgentStartMonitor
+    )
+}

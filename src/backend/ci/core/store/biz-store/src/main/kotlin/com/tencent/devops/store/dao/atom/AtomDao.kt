@@ -442,7 +442,7 @@ class AtomDao : AtomBaseDao() {
             conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
             baseStep.join(tStoreProjectRel).on(tAtom.ATOM_CODE.eq(tStoreProjectRel.STORE_CODE))
                 .where(conditions)
-                .groupBy(tAtom.ATOM_CODE, tAtom.ATOM_STATUS)
+                .groupBy(tAtom.VERSION, tAtom.ATOM_STATUS)
         }
         val firstVersion = JooqUtils.subStr(
             str = t.field(KEY_VERSION) as Field<String>,

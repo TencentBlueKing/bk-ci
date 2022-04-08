@@ -201,19 +201,28 @@ class MatrixExecuteContainerCmd(
             )
         }
 
-        // 实时刷新数据库状态
-        matrixOption.finishCount = finishContainerNum
-        matrixOption.totalCount = groupContainers.size
+        // 实时刷新数据库状态, 无变化则不需要刷数据库
+        var dataChange = false
+        if (matrixOption.finishCount != finishContainerNum) {
+            matrixOption.finishCount = finishContainerNum
+            dataChange = true
+        }
+        if (matrixOption.totalCount != groupContainers.size) {
+            matrixOption.totalCount = groupContainers.size
+            dataChange = true
+        }
 
-        pipelineContainerService.updateMatrixGroupStatus(
-            projectId = parentContainer.projectId,
-            buildId = parentContainer.buildId,
-            stageId = parentContainer.stageId,
-            buildStatus = commandContext.buildStatus,
-            matrixGroupId = parentContainer.containerId,
-            controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
-            modelContainer = null
-        )
+        if (dataChange) {
+            pipelineContainerService.updateMatrixGroupStatus(
+                projectId = parentContainer.projectId,
+                buildId = parentContainer.buildId,
+                stageId = parentContainer.stageId,
+                buildStatus = commandContext.buildStatus,
+                matrixGroupId = parentContainer.containerId,
+                controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
+                modelContainer = null
+            )
+        }
 
         // 如果有运行态,否则返回失败，如无失败，则返回取消，最后成功
         return running ?: fail ?: cancel ?: BuildStatus.SUCCEED

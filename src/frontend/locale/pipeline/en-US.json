@@ -630,6 +630,7 @@
         }
     },
     "editPage": {
+        "invalidValue": "Plugin's Input {0} Invalid",
         "tipError": "Tip component return value needs to be a string",
         "atomPropChangedTip": "The current version has added new parameters or changed parameter types, please carefully confirm whether the corresponding settings of the parameters meet expectations (the changed fields have been highlighted)!",
         "checkResultTip": "The audit result is required",
@@ -894,6 +895,7 @@
         "jobLimit": "单个stage下的job数量不能大于",
         "atomLimit": "单个job下的插件数量不能大于",
         "correctPipeline": " Please enter the correct pipeline",
+        "PleaseSelectAtom": "Please select the Atom first",
         "oneCodecc": " Only one codecc plugin is allowed added to pipeline",
         "oneManualTrigger": " Only one manually-triggered plugin can exist in pipeline",
         "oneTimerTrigger": " Only one timer-triggered plugin can exist in pipeline ",
