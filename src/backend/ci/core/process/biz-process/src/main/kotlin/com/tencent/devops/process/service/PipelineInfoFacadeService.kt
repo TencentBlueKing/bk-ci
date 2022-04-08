@@ -153,7 +153,10 @@ class PipelineInfoFacadeService @Autowired constructor(
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {
-                throw OperationException(validateRet.message ?: "模版下存在无权限的组件")
+                throw ErrorCodeException(
+                    errorCode = validateRet.status.toString(),
+                    defaultMessage = validateRet.message
+                )
             }
         }
         val newPipelineId = createPipeline(
