@@ -173,10 +173,7 @@ class StoreProjectServiceImpl @Autowired constructor(
                     type = StoreProjectTypeEnum.COMMON.type.toByte(),
                     storeType = storeType.type.toByte()
                 )
-                /*
-                With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1
-                if the row is inserted as a new row and 2 if an existing row is updated.
-                 */
+                // 使用 ON DUPLICATE KEY UPDATE，如果将行作为新行插入，则每行的受影响行值为 1，如果更新现有行，则为 2
                 if (result == 1) {
                     increment += 1
                 }
