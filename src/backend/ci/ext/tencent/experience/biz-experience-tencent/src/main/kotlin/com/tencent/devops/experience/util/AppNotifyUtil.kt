@@ -40,7 +40,7 @@ object AppNotifyUtil {
         appVersion: String,
         experienceHashId: String,
         receiver: String,
-        platform: String,
+        platform: String
     ): AppNotifyMessage {
         val message = AppNotifyMessage()
         message.receiver = receiver
