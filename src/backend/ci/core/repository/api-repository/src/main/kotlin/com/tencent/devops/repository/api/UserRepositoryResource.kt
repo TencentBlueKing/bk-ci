@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -95,6 +96,7 @@ interface UserRepositoryResource {
     @ApiOperation("关联代码库")
     @POST
     @Path("/{projectId}/")
+    @BkTimed
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -109,6 +111,7 @@ interface UserRepositoryResource {
     @ApiOperation("获取代码库详情")
     @GET
     @Path("/{projectId}/{repositoryId}/")
+    @BkTimed
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -144,6 +147,7 @@ interface UserRepositoryResource {
     @ApiOperation("代码库列表")
     @GET
     @Path("/{projectId}/")
+    @BkTimed
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -189,6 +193,7 @@ interface UserRepositoryResource {
     @ApiOperation("代码库列表")
     @GET
     @Path("/{projectId}/hasPermissionList")
+    @BkTimed
     fun hasPermissionList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

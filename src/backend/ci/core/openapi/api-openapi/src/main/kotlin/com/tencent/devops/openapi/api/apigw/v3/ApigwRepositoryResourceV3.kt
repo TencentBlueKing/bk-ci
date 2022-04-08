@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -61,6 +62,7 @@ interface ApigwRepositoryResourceV3 {
     @ApiOperation("代码库列表", tags = ["v3_app_repository_list", "v3_user_repository_list"])
     @GET
     @Path("/{projectId}/hasPermissionList")
+    @BkTimed
     fun hasPermissionList(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -82,6 +84,7 @@ interface ApigwRepositoryResourceV3 {
     @ApiOperation("关联代码库", tags = ["v3_app_repository_create", "v3_user_repository_create"])
     @POST
     @Path("/{projectId}/")
+    @BkTimed
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
