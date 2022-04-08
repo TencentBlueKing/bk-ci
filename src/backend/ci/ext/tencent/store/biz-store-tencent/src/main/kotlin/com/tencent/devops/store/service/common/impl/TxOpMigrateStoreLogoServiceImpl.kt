@@ -97,7 +97,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tAtom = TAtom.T_ATOM
                 atomLogoRecords?.forEach { atomLogoRecord ->
                     val logoUrl = atomLogoRecord[tAtom.LOGO_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = atomLogoRecord[tAtom.CREATOR]
@@ -115,6 +115,9 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
         }
     }
 
+    private fun checkLogoUrlCondition(logoUrl: String?) =
+        logoUrl.isNullOrBlank() || logoUrl.contains("staticfile") || !logoUrl.startsWith("http")
+
     private fun migrateTemplateLogo() {
         Executors.newFixedThreadPool(1).submit {
             logger.info("begin migrateTemplateLogo!!")
@@ -129,7 +132,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tTemplate = TTemplate.T_TEMPLATE
                 templateLogoRecords?.forEach { templateLogoRecord ->
                     val logoUrl = templateLogoRecord[tTemplate.LOGO_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = templateLogoRecord[tTemplate.CREATOR]
@@ -161,7 +164,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tAtom = TIdeAtom.T_IDE_ATOM
                 atomLogoRecords?.forEach { atomLogoRecord ->
                     val logoUrl = atomLogoRecord[tAtom.LOGO_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = atomLogoRecord[tAtom.CREATOR]
@@ -193,7 +196,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tImage = TImage.T_IMAGE
                 imageLogoRecords?.forEach { imageLogoRecord ->
                     val logoUrl = imageLogoRecord[tImage.LOGO_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = imageLogoRecord[tImage.CREATOR]
@@ -225,7 +228,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tExtensionService = TExtensionService.T_EXTENSION_SERVICE
                 extServiceLogoRecords?.forEach { extServiceLogoRecord ->
                     val logoUrl = extServiceLogoRecord[tExtensionService.LOGO_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = extServiceLogoRecord[tExtensionService.CREATOR]
@@ -257,7 +260,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tCategory = TCategory.T_CATEGORY
                 categoryLogoRecords?.forEach { categoryLogoRecord ->
                     val logoUrl = categoryLogoRecord[tCategory.ICON_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = categoryLogoRecord[tCategory.CREATOR]
@@ -289,7 +292,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tLogo = TLogo.T_LOGO
                 storeLogoRecords?.forEach { storeLogoRecord ->
                     val logoUrl = storeLogoRecord[tLogo.LOGO_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = storeLogoRecord[tLogo.CREATOR]
@@ -321,7 +324,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                 val tStoreMediaInfo = TStoreMediaInfo.T_STORE_MEDIA_INFO
                 mediaLogoRecords?.forEach { mediaLogoRecord ->
                     val logoUrl = mediaLogoRecord[tStoreMediaInfo.MEDIA_URL]
-                    if (logoUrl.isNullOrBlank()) {
+                    if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
                     val userId = mediaLogoRecord[tStoreMediaInfo.CREATOR]
@@ -331,7 +334,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
                     }
                     // 更新媒体信息的logo
                     val id = mediaLogoRecord[tStoreMediaInfo.ID]
-                    txMigrateStoreLogoDao.updateExtServiceLogo(dslContext, id, bkRepoLogoUrl)
+                    txMigrateStoreLogoDao.updateMediaLogo(dslContext, id, bkRepoLogoUrl)
                 }
                 offset += DEFAULT_PAGE_SIZE
             } while (mediaLogoRecords?.size == DEFAULT_PAGE_SIZE)
@@ -370,7 +373,8 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
     }
 
     private fun getFileType(logoUrl: String): String {
-        val index = logoUrl.lastIndexOf(".")
-        return logoUrl.substring(index + 1).toLowerCase()
+        val url = logoUrl.substring(0, logoUrl.lastIndexOf("?"))
+        val index = url.lastIndexOf(".")
+        return url.substring(index + 1).toLowerCase()
     }
 }

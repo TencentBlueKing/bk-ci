@@ -50,7 +50,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TAtom.T_ATOM) {
             dslContext.select(ID, ATOM_CODE, LOGO_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -76,7 +76,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(ID, TEMPLATE_CODE, LOGO_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -102,7 +102,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TIdeAtom.T_IDE_ATOM) {
             dslContext.select(ID, ATOM_CODE, LOGO_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -128,7 +128,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TImage.T_IMAGE) {
             dslContext.select(ID, IMAGE_CODE, LOGO_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -154,7 +154,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.select(ID, SERVICE_CODE, LOGO_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -180,7 +180,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TCategory.T_CATEGORY) {
             dslContext.select(ID, CATEGORY_CODE, ICON_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -206,7 +206,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TLogo.T_LOGO) {
             dslContext.select(ID, LOGO_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -232,7 +232,7 @@ class TxMigrateStoreLogoDao {
     ): Result<out Record>? {
         return with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
             dslContext.select(ID, MEDIA_URL, CREATOR).from(this)
-                .orderBy(CREATE_TIME.desc(), ID.desc())
+                .orderBy(CREATE_TIME.asc(), ID.asc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
