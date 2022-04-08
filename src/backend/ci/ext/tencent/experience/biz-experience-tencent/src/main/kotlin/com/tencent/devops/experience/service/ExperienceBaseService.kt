@@ -214,8 +214,7 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun isPublic(experienceId: Long, isOuter: Boolean) = !isOuter &&
-            (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1()
-                ?: 0) > 0
+            (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())) > 0
 
     fun isPrivate(experience: TExperienceRecord, isOuter: Boolean = false, userId: String): Boolean {
         if (experience.creator == userId) {
@@ -464,8 +463,4 @@ class ExperienceBaseService @Autowired constructor(
     fun getNewestPublic(projectId: String, bundleIdentifier: String, platform: String): TExperiencePublicRecord? {
         return experiencePublicDao.getNewestRecord(dslContext, projectId, bundleIdentifier, platform)
     }
-}
-
-fun main() {
-    println(HashUtil.decodeIdToLong("ydpzdnqp"))
 }

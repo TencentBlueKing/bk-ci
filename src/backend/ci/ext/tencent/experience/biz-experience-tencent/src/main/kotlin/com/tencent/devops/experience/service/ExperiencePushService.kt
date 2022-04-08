@@ -39,6 +39,7 @@ import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -259,7 +260,12 @@ class ExperiencePushService @Autowired constructor(
             dslContext = dslContext,
             userId = userId
         ) ?: return Result("该用户未绑定设备", false)
+
         val platform = userTokenRecord.platform
+        if (platform != appNotifyMessage.platform) {
+            return Result("绑定平台与包平台不一致", false)
+        }
+
         // 创建推送消息记录，此时状态发送中
         val messageId =
             experiencePushHistoryDao.createPushHistory(
@@ -306,5 +312,9 @@ class ExperiencePushService @Autowired constructor(
         appNotifyMessage.url = url
         appNotifyMessage.experienceHashId = experienceHashId
         return appNotifyMessage
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceService::class.java)
     }
 }
