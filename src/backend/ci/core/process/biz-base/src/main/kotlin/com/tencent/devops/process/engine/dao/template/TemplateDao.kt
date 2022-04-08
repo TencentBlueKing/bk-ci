@@ -298,14 +298,14 @@ class TemplateDao {
     fun getTemplate(
         dslContext: DSLContext,
         projectId: String? = null,
-        versionName: String? = null,
+        templateId: String,
+        versionName: String,
         version: Long? = null
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-            if (!versionName.isNullOrBlank()) {
                 conditions.add(VERSION_NAME.eq(versionName))
-            }
+                conditions.add(ID.eq(templateId))
             if (version != null) {
                 conditions.add(VERSION.eq(version))
             }

@@ -1384,7 +1384,12 @@ class TemplateFacadeService @Autowired constructor(
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
         logger.info("UPDATE_TEMPLATE_INST[$projectId|$userId|$templateId|$version|$instances|$useTemplateSettings]")
-
+        if (instances.size>100) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG,
+                params = arrayOf("${instances.size}")
+            )
+        }
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val messages = HashMap<String, String>()
@@ -1394,14 +1399,23 @@ class TemplateFacadeService @Autowired constructor(
                 params = arrayOf("version or versionName")
             )
         }
-        val template = templateDao.getTemplate(
-                dslContext = dslContext,
-                versionName = versionName,
-                version = version
-            )
-        run {
-            instances.forEachIndexed { index, it ->
-                if (index >100) return@run
+        val template =
+            if (versionName.isNullOrBlank()) {
+                templateDao.getTemplate(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    version = version!!
+                )
+            } else {
+                templateDao.getTemplate(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    templateId = templateId,
+                    versionName = versionName,
+                    version = version
+                )
+            }
+            instances.forEach {
                     try {
                         updateTemplateInstanceInfo(
                             userId = userId,
@@ -1424,8 +1438,6 @@ class TemplateFacadeService @Autowired constructor(
                         messages[it.pipelineName] = t.message ?: "更新流水线失败"
                     }
             }
-        }
-
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
     }
 
