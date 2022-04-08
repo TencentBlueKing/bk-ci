@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.api.user.UserAuthUrlResource
-import com.tencent.devops.auth.pojo.PermissionUrlDTO
-import com.tencent.devops.auth.service.iam.PermissionUrlService
+import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
+import com.tencent.devops.auth.pojo.UserPermissionInfo
+import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserAuthUrlResourceImpl @Autowired constructor(
-    val urlService: PermissionUrlService
-) : UserAuthUrlResource {
-    override fun permissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
-        return urlService.getPermissionUrl(permissionUrlDTO)
-    }
-
-    override fun getRolePermissionUrl(projectId: String, roleId: String?): Result<String?> {
-        return Result(urlService.getRolePermissionUrl(projectId, roleId))
+class ServiceManagerUserResourceImpl @Autowired constructor(
+    val userPermissionService: UserPermissionService
+) : ServiceManagerUserResource {
+    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
+        return Result(userPermissionService.getUserPermission(userId))
     }
 }

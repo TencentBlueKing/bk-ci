@@ -25,20 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.api.manager.ServiceManagerUserResource
-import com.tencent.devops.auth.pojo.UserPermissionInfo
-import com.tencent.devops.auth.service.UserPermissionService
+import com.tencent.devops.auth.api.ServiceUserGroupResource
+import com.tencent.devops.auth.service.GroupUserService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.bind.annotation.RestController
 
-@RestResource
-class ServiceManagerUserResourceImpl @Autowired constructor(
-    val userPermissionService: UserPermissionService
-) : ServiceManagerUserResource {
-    override fun getManagerInfo(userId: String): Result<Map<String, UserPermissionInfo>?> {
-        return Result(userPermissionService.getUserPermission(userId))
+@RestController
+class ServiceUserGroupResourceImpl @Autowired constructor(
+    val groupUserService: GroupUserService
+) : ServiceUserGroupResource {
+
+    override fun addUser2Group(userId: String, groupId: Int): Result<Boolean> {
+        return groupUserService.addUser2Group(userId, groupId)
     }
 }

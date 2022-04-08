@@ -25,20 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.api.user.UserTokenResource
-import com.tencent.devops.auth.pojo.TokenInfo
-import com.tencent.devops.auth.service.ApiAccessTokenService
+import com.tencent.devops.auth.api.ServiceGroupResource
+import com.tencent.devops.auth.pojo.dto.GroupDTO
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserTokenResourceImpl @Autowired constructor(
-    val apiAccessTokenService: ApiAccessTokenService
-) : UserTokenResource {
-    override fun getAccessToken(userId: String): Result<TokenInfo> {
-        return Result(apiAccessTokenService.generateUserToken(userId))
+class ServiceGroupResourceImpl @Autowired constructor(
+    val authGroupService: AuthGroupService
+) : ServiceGroupResource {
+
+    override fun createGroup(
+        userId: String,
+        projectCode: String,
+        groupInfo: GroupDTO
+    ): Result<Boolean> {
+        authGroupService.createGroup(userId, projectCode, groupInfo)
+        return Result(true)
+    }
+
+    override fun batchCreateGroup(userId: String, projectCode: String, groupInfos: List<GroupDTO>): Result<Boolean> {
+        return authGroupService.batchCreate(userId, projectCode, groupInfos)
     }
 }

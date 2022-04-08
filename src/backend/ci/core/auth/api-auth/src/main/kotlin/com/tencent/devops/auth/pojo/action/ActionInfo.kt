@@ -38,8 +38,6 @@ data class ActionInfo(
     val actionName: String,
     @ApiModelProperty("操作名称-英文名")
     val actionEnglishName: String,
-    @ApiModelProperty("关联操作")
-    val relationAction: List<String>,
     @ApiModelProperty("操作所属资源")
     val resourceId: String,
     @ApiModelProperty("操作类型")

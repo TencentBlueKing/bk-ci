@@ -25,23 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.action
+package com.tencent.devops.auth.resources.user
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.auth.api.manager.UserManagerUserResource
+import com.tencent.devops.auth.service.ManagerUserService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("添加操作")
-data class CreateActionDTO(
-    @ApiModelProperty("操作ID, 要求加上resource做前缀。如查看流水线: pipeline_view")
-    val actionId: String,
-    @ApiModelProperty("操作名称")
-    val actionName: String,
-    @ApiModelProperty("操作描述")
-    val desc: String,
-    @ApiModelProperty("操作名称-英文名")
-    val actionEnglishName: String,
-    @ApiModelProperty("操作所属资源")
-    val resourceId: String,
-    @ApiModelProperty("操作类型")
-    val actionType: String
-)
+@RestResource
+class UserManagerUserResourceImpl @Autowired constructor(
+    val managerUserService: ManagerUserService
+) : UserManagerUserResource {
+    override fun grantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.createManagerUserByUrl(managerId, userId))
+    }
+
+    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<String> {
+        return Result(managerUserService.grantCancelManagerUserByUrl(managerId, userId))
+    }
+}

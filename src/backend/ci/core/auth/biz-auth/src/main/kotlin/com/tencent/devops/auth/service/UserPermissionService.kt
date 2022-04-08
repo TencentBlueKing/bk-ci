@@ -56,6 +56,9 @@ class UserPermissionService @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*userId*/, Map<String/*organizationId*/, UserPermissionInfo>>()
 
+    /**
+     * auth 启动时将所有管理员信息缓存置内存
+     */
     @PostConstruct
     fun init() {
         val watch = Watcher("authInit")
@@ -197,11 +200,14 @@ class UserPermissionService @Autowired constructor(
         userId: String? = null
     ) {
         logger.info("refreshByManagerId $managerOrganizationEntity $userId")
+        // 获取有效的管理员信息
         val aliveUserInManager = managerUserService.aliveManagerListByManagerId(managerOrganizationEntity.id!!)
         if (aliveUserInManager == null) {
             logger.info("managerId [${managerOrganizationEntity.id}] no user")
             return
         }
+
+        // 获取管理员对应的权限策略
         val strategyId = managerOrganizationEntity.strategyId
         val permissionMap = strategyService.getStrategy2Map(strategyId)
 
@@ -257,17 +263,17 @@ class UserPermissionService @Autowired constructor(
     }
 
     private fun mergePermission(
-        oldPermission: Map<AuthResourceType, List<AuthPermission>>,
-        newPermission: Map<AuthResourceType, List<AuthPermission>>
-    ): Map<AuthResourceType, List<AuthPermission>> {
+        oldPermission: Map<String, List<String>>,
+        newPermission: Map<String, List<String>>
+    ): Map<String, List<String>> {
         val oldPermissionTypes = oldPermission.keys
         val newPermissionTypes = newPermission.keys
-        val mergePermissionTypes = mutableSetOf<AuthResourceType>()
+        val mergePermissionTypes = mutableSetOf<String>()
         mergePermissionTypes.addAll(oldPermissionTypes)
         mergePermissionTypes.addAll(newPermissionTypes)
-        val mergePermissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
+        val mergePermissionMap = mutableMapOf<String, List<String>>()
         mergePermissionTypes.forEach {
-            val authPermissionSet = mutableSetOf<AuthPermission>()
+            val authPermissionSet = mutableSetOf<String>()
             if (oldPermission[it] != null) {
                 authPermissionSet.addAll(oldPermission[it]!!.toSet())
             }

@@ -25,44 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.devops.auth.api.user.UserDeptResource
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
-import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.api.user.UserAuthUrlResource
+import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-) : UserDeptResource {
-    override fun getDeptByLevel(userId: String, accessToken: String?, level: Int): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByLevel(level, accessToken, userId))
+class UserAuthUrlResourceImpl @Autowired constructor(
+    val urlService: PermissionUrlService
+) : UserAuthUrlResource {
+    override fun permissionUrl(permissionUrlDTO: List<PermissionUrlDTO>): Result<String?> {
+        return urlService.getPermissionUrl(permissionUrlDTO)
     }
 
-    override fun getDeptByParent(
-        userId: String,
-        accessToken: String?,
-        parentId: Int,
-        pageSize: Int?
-    ): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByParent(parentId, accessToken, userId, pageSize))
-    }
-
-    override fun getUserAndDeptByName(
-        userId: String,
-        accessToken: String?,
-        name: String,
-        type: ManagerScopesEnum
-    ): Result<List<UserAndDeptInfoVo?>> {
-        return Result(deptService.getUserAndDeptByName(name, accessToken, userId, type))
-    }
-
-    override fun getDeptUsers(userId: String, accessToken: String?, deptId: Int): Result<List<String>?> {
-        return Result(deptService.getDeptUser(deptId, accessToken))
+    override fun getRolePermissionUrl(projectId: String, roleId: String?): Result<String?> {
+        return Result(urlService.getRolePermissionUrl(projectId, roleId))
     }
 }

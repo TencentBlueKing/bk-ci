@@ -36,6 +36,8 @@ import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
+import com.tencent.devops.auth.service.action.ActionService
+import com.tencent.devops.auth.service.action.BkResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -57,7 +59,9 @@ class StrategyService @Autowired constructor(
     val dslContext: DSLContext,
     val strategyDao: StrategyDao,
     val objectMapper: ObjectMapper,
-    val refreshDispatch: AuthRefreshDispatch
+    val refreshDispatch: AuthRefreshDispatch,
+    val actionService: ActionService,
+    val resourceService: BkResourceService
 ) {
     private val strategyNameMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyName*/>()
 
@@ -157,17 +161,32 @@ class StrategyService @Autowired constructor(
     }
 
     private fun checkResourceType(strategyMap: Map<String, List<String>>) {
-        val resources = strategyMap.keys
         try {
-            resources.forEach {
-                AuthResourceType.get(it)
-                val actions = strategyMap[it]
-                    ?: throw ErrorCodeException(
+            val systemResource = resourceService.resourceList()?.map { it.resourceId }
+            val systemAction = actionService.actionList()?.map { it.actionId }
+            if (systemResource.isNullOrEmpty() || systemAction.isNullOrEmpty()) {
+                logger.warn("system resource or action is empty")
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.STRATEGT_CHECKOUT_FAIL,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.STRATEGT_CHECKOUT_FAIL)
+                )
+            }
+            strategyMap.forEach { resource, actions ->
+                if (!systemResource.contains(resource)) {
+                    logger.warn("$resource is inval resource")
+                    throw ErrorCodeException(
                         errorCode = AuthMessageCode.STRATEGT_CHECKOUT_FAIL,
-                        defaultMessage = "actions 为空"
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.STRATEGT_CHECKOUT_FAIL)
                     )
-                actions!!.forEach { action ->
-                    AuthPermission.get(action)
+                }
+                actions.forEach {
+                    if (!systemResource.contains(it)) {
+                        logger.warn("$it is inval action")
+                        throw ErrorCodeException(
+                            errorCode = AuthMessageCode.STRATEGT_CHECKOUT_FAIL,
+                            defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.STRATEGT_CHECKOUT_FAIL)
+                        )
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -195,23 +214,10 @@ class StrategyService @Autowired constructor(
         return refreshStrategy(strategyId.toString(), null)
     }
 
-    fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
+    fun getStrategy2Map(strategyId: Int): Map<String, List<String>> {
         // 从db获取源数据, 因update数据会导致cache数据差异
         val strategyStr = refreshStrategy(strategyId.toString(), null)
-        val strategyBody: Map<String, List<String>>
-        strategyBody = JsonUtil.to(strategyStr!!)
-        val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
-
-        strategyBody.keys.forEach {
-            val resourceType = AuthResourceType.get(it)
-            val authPermissions = strategyBody[it]
-            val permissionList = mutableListOf<AuthPermission>()
-            authPermissions?.forEach { permission ->
-                permissionList.add(AuthPermission.get(permission))
-            }
-            permissionMap[resourceType] = permissionList
-        }
-        return permissionMap
+        return JsonUtil.to(strategyStr!!)
     }
 
     fun deleteCache(strategyId: String) {

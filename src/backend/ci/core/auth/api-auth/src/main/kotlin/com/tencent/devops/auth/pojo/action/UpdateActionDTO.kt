@@ -38,8 +38,6 @@ data class UpdateActionDTO(
     val actionEnglishName: String,
     @ApiModelProperty("操作描述")
     val desc: String,
-    @ApiModelProperty("关联操作")
-    val relationAction: List<String>,
     @ApiModelProperty("操作所属资源")
     val resourceId: String
 )

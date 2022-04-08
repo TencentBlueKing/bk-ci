@@ -50,7 +50,6 @@ class ActionDao {
                 ACTIONID,
                 ACTIONNAME,
                 RESOURCEID,
-                RELATIONACTION,
                 CREATOR,
                 CREATETIME,
                 DELETE,
@@ -59,7 +58,6 @@ class ActionDao {
                 actionInfo.actionId,
                 actionInfo.actionName,
                 actionInfo.resourceId,
-                actionInfo.relationAction.joinToString { "," },
                 userId,
                 LocalDateTime.now(),
                 false,
@@ -76,7 +74,6 @@ class ActionDao {
     ) {
         with(TAuthAction.T_AUTH_ACTION) {
             dslContext.update(this).set(ACTIONNAME, actionInfo.actionName)
-                .set(RELATIONACTION, actionInfo.relationAction.joinToString { "," })
                 .where(ACTIONID.eq(actionId)).execute()
         }
     }
@@ -137,7 +134,6 @@ class ActionDao {
             actionId = record.actionid,
             actionName = record.actionname,
             actionEnglishName = record.actionname,
-            relationAction = record.relationaction.split(","),
             resourceId = record.resourceid,
             creator = record.creator,
             creatorTime = DateTimeUtil.convertLocalDateTimeToTimestamp(record.createtime),

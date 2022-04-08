@@ -25,30 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.op
 
-import com.tencent.devops.auth.api.ServiceGroupResource
-import com.tencent.devops.auth.pojo.dto.GroupDTO
-import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.api.callback.OpCallBackResource
+import com.tencent.devops.auth.pojo.IamCallBackInfo
+import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
+import com.tencent.devops.auth.service.CallBackService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceGroupResourceImpl @Autowired constructor(
-    val authGroupService: AuthGroupService
-) : ServiceGroupResource {
+class OpCallBackResourceImpl @Autowired constructor(
+    val callBackService: CallBackService
+) : OpCallBackResource {
 
-    override fun createGroup(
-        userId: String,
-        projectCode: String,
-        groupInfo: GroupDTO
-    ): Result<Boolean> {
-        authGroupService.createGroup(userId, projectCode, groupInfo)
-        return Result(true)
+    override fun create(resourceMap: Map<String, IamCallBackInterfaceDTO>): Result<Boolean> {
+        return Result(callBackService.createOrUpdate(resourceMap))
     }
 
-    override fun batchCreateGroup(userId: String, projectCode: String, groupInfos: List<GroupDTO>): Result<Boolean> {
-        return authGroupService.batchCreate(userId, projectCode, groupInfos)
+    override fun get(resourceId: String): Result<IamCallBackInfo?> {
+        return Result(callBackService.getResource(resourceId))
+    }
+
+    override fun list(): Result<List<IamCallBackInfo>?> {
+        return Result(callBackService.list())
+    }
+
+    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
+        return Result(callBackService.refreshGateway(oldToNewMap))
     }
 }

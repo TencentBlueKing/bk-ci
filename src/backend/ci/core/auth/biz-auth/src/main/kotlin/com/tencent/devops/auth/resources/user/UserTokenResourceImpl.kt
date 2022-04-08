@@ -25,45 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.auth.api.manager.OpManagerOrganizationResource
-import com.tencent.devops.auth.pojo.ManageOrganizationEntity
-import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
-import com.tencent.devops.auth.service.ManagerOrganizationService
+import com.tencent.devops.auth.api.user.UserTokenResource
+import com.tencent.devops.auth.pojo.TokenInfo
+import com.tencent.devops.auth.service.ApiAccessTokenService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpManagerOrganizationResourceImpl @Autowired constructor(
-    val managerOrganizationService: ManagerOrganizationService
-) : OpManagerOrganizationResource {
-
-    override fun createManagerOrganization(
-        userId: String,
-        managerOrganization: ManageOrganizationDTO
-    ): Result<String> {
-        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization).toString())
-    }
-
-    override fun updateManagerOrganization(
-        userId: String,
-        managerId: Int,
-        managerOrganization: ManageOrganizationDTO
-    ): Result<Boolean> {
-        return Result(managerOrganizationService.updateManagerOrganization(userId, managerOrganization, managerId))
-    }
-
-    override fun deleteManagerOrganization(userId: String, managerId: Int): Result<Boolean> {
-        return Result(managerOrganizationService.deleteManagerOrganization(userId, managerId))
-    }
-
-    override fun getManagerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
-        return Result(managerOrganizationService.getManagerOrganization(managerId))
-    }
-
-    override fun listManagerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
-        return Result(managerOrganizationService.listOrganization())
+class UserTokenResourceImpl @Autowired constructor(
+    val apiAccessTokenService: ApiAccessTokenService
+) : UserTokenResource {
+    override fun getAccessToken(userId: String): Result<TokenInfo> {
+        return Result(apiAccessTokenService.generateUserToken(userId))
     }
 }

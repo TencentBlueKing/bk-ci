@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.user
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo

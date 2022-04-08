@@ -25,34 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.op
 
-import com.tencent.devops.auth.api.callback.OpCallBackResource
-import com.tencent.devops.auth.pojo.IamCallBackInfo
-import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
-import com.tencent.devops.auth.service.CallBackService
+import com.tencent.devops.auth.api.manager.OpManagerOrganizationResource
+import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.auth.service.ManagerOrganizationService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpCallBackResourceImpl @Autowired constructor(
-    val callBackService: CallBackService
-) : OpCallBackResource {
+class OpManagerOrganizationResourceImpl @Autowired constructor(
+    val managerOrganizationService: ManagerOrganizationService
+) : OpManagerOrganizationResource {
 
-    override fun create(resourceMap: Map<String, IamCallBackInterfaceDTO>): Result<Boolean> {
-        return Result(callBackService.createOrUpdate(resourceMap))
+    override fun createManagerOrganization(
+        userId: String,
+        managerOrganization: ManageOrganizationDTO
+    ): Result<String> {
+        return Result(managerOrganizationService.createManagerOrganization(userId, managerOrganization).toString())
     }
 
-    override fun get(resourceId: String): Result<IamCallBackInfo?> {
-        return Result(callBackService.getResource(resourceId))
+    override fun updateManagerOrganization(
+        userId: String,
+        managerId: Int,
+        managerOrganization: ManageOrganizationDTO
+    ): Result<Boolean> {
+        return Result(managerOrganizationService.updateManagerOrganization(userId, managerOrganization, managerId))
     }
 
-    override fun list(): Result<List<IamCallBackInfo>?> {
-        return Result(callBackService.list())
+    override fun deleteManagerOrganization(userId: String, managerId: Int): Result<Boolean> {
+        return Result(managerOrganizationService.deleteManagerOrganization(userId, managerId))
     }
 
-    override fun refreshGateway(oldToNewMap: Map<String, String>): Result<Boolean> {
-        return Result(callBackService.refreshGateway(oldToNewMap))
+    override fun getManagerOrganization(userId: String, managerId: Int): Result<ManageOrganizationEntity?> {
+        return Result(managerOrganizationService.getManagerOrganization(managerId))
+    }
+
+    override fun listManagerOrganization(userId: String): Result<List<ManageOrganizationEntity>?> {
+        return Result(managerOrganizationService.listOrganization())
     }
 }

@@ -46,5 +46,7 @@ data class ProjectRoleDTO(
     @ApiModelProperty("是否为默认分组")
     val defaultGroup: Boolean? = true,
     @ApiModelProperty("项目名称")
-    val projectName: String
+    val projectName: String,
+    @ApiModelProperty("用户组权限")
+    val actionMap: Map<String /**资源类型*/, List<String> /**操作集合*/>
 )

@@ -48,6 +48,7 @@ import com.tencent.devops.auth.dao.ActionDao
 import com.tencent.devops.auth.pojo.action.CreateActionDTO
 import com.tencent.devops.auth.pojo.action.UpdateActionDTO
 import com.tencent.devops.auth.service.action.BkResourceService
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -99,17 +100,17 @@ class IamBkActionServiceImpl @Autowired constructor(
             }
             val createActions = mutableListOf<CreateActionDTO>()
             actionInfos.forEach {
+                val iamAction = it.actionId
                 logger.info("ci action ${it.actionId}|${it.resourceId}")
-                if (!iamActions.contains(it.actionId)) {
-                    logger.info("ci action ${it.actionId} need syn iam")
+                if (!iamActions.contains(iamAction)) {
+                    logger.info("ci action $iamAction need syn iam")
                     val iamCreateAction = CreateActionDTO(
                         actionType = it.actionType,
-                        actionId = it.actionId,
+                        actionId = iamAction,
                         resourceId = it.resourceId,
                         desc = it.actionName,
                         actionEnglishName = it.actionEnglishName,
-                        actionName = it.actionName,
-                        relationAction = it.relationAction
+                        actionName = it.actionName
                     )
                     createActions.add(iamCreateAction)
                 }
@@ -146,12 +147,11 @@ class IamBkActionServiceImpl @Autowired constructor(
             // 新增action需要把新的action添加到对应actionGroup
             iamActionService.createAction(iamActions)
         } else {
-
             val iamUpdateAction = ActionUpdateDTO()
             iamUpdateAction.name = action.actionName
             iamUpdateAction.englishName = action.actionEnglishName
             iamUpdateAction.description = action.desc
-            iamUpdateAction.relatedAction = action.relationAction
+            iamUpdateAction.relatedAction = buildRelationAction(action.resourceId, action.actionType)
             logger.info("extSystemCreate update ${action.actionId} $iamUpdateAction")
             iamActionService.updateAction(action.actionId, iamUpdateAction)
         }
@@ -159,12 +159,11 @@ class IamBkActionServiceImpl @Autowired constructor(
 //        createRelation(action)
     }
 
-    override fun extSystemUpdate(userId: String,actionId: String, action: UpdateActionDTO) {
+    override fun extSystemUpdate(userId: String, actionId: String, action: UpdateActionDTO) {
         val iamUpdateAction = ActionUpdateDTO()
         iamUpdateAction.name = action.actionName
         iamUpdateAction.englishName = action.actionEnglishName
         iamUpdateAction.description = action.desc
-        iamUpdateAction.relatedAction = action.relationAction
         iamActionService.updateAction(actionId, iamUpdateAction)
     }
 
@@ -188,6 +187,30 @@ class IamBkActionServiceImpl @Autowired constructor(
         }
     }
 
+    /**
+     * 示例：
+        [
+            {
+                "id":"pipeline_execute",
+                "name":"执行流水线",
+                "description":"执行流水线",
+                "name_en":"执行流水线",
+                "related_resource_types":[
+                    {
+                        "id":"pipeline",
+                        "system_id":"XXX",
+                        "related_instance_selections":[
+                            {
+                                "id":"pipeline_instance",
+                                "system_id":"XXX"
+                            }
+                        ]
+                    }
+                ],
+                "related_actions":["project_view","pipeline_view"]
+            }
+        ]
+     */
     private fun buildAction(action: CreateActionDTO): ActionDTO {
 
         // action基础数据
@@ -196,42 +219,42 @@ class IamBkActionServiceImpl @Autowired constructor(
         iamCreateAction.name = action.actionName
         iamCreateAction.englishName = action.actionEnglishName
         iamCreateAction.description = action.desc
-        iamCreateAction.relatedAction = action.relationAction
+        iamCreateAction.relatedAction = buildRelationAction(action.actionType, action.resourceId)
         iamCreateAction.type = ActionTypeEnum.parseType(action.actionType)
 
         // action关联资源数据
         val relationResources = mutableListOf<RelatedResourceTypeDTO>()
+        // 定义action关联资源
         val relationResource = RelatedResourceTypeDTO()
-
-        val systemId = systemId
-        // TODO: systemID换回ci
-//        relationResource.systemId = iamConfiguration.systemId
         relationResource.systemId = systemId
-        if (action.resourceId == AuthResourceType.PROJECT.value) {
-            val relatedInstanceSelection = ResourceTypeChainDTO()
 
-//            relatedInstanceSelections.systemId = iamConfiguration.systemId
-            relatedInstanceSelection.systemId = systemId
-            // TODO: 视图逻辑需优化
-            relatedInstanceSelection.id = "project_instance"
+        // TODO: systemID换回ci
+        val systemId = systemId
+//        relationResource.systemId = iamConfiguration.systemId
+
+        // 定义action关联资源视图列表
+        val relatedInstanceSelections = mutableListOf<ResourceTypeChainDTO>()
+        // 定义action关联资源视图
+        val relatedInstanceSelection = ResourceTypeChainDTO()
+        relatedInstanceSelection.systemId = systemId
+
+        // 项目相关的action。action关联资源都为project。
+        if (action.resourceId == AuthResourceType.PROJECT.value) {
+            // 视图绑定到project_instance
+            relatedInstanceSelection.id = PROJECT_SELECT_INSTANCE
             relationResource.id = AuthResourceType.PROJECT.value
 
-            val relatedInstanceSelections = mutableListOf<ResourceTypeChainDTO>()
             relatedInstanceSelections.add(relatedInstanceSelection)
             relationResource.relatedInstanceSelections = relatedInstanceSelections
         } else {
-            val relatedInstanceSelection = ResourceTypeChainDTO()
-            relatedInstanceSelection.systemId = systemId
+            // 如果是添加操作绑定项目失败，非create操作非项目资源则绑定资源本身的视图
             if (action.actionType.contains("create")) {
-                // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
-                relatedInstanceSelection.id = "project_instance"
+                relatedInstanceSelection.id = PROJECT_SELECT_INSTANCE
                 relationResource.id = AuthResourceType.PROJECT.value
             } else {
-                // TODO: 视图逻辑需优化 1. create相关的关联项目呢视图 2.其他action关联对应action视图,需从对应的resourceType里面拿视图
-                relatedInstanceSelection.id = "${action.resourceId}_instance"
-                relationResource.id = AuthResourceType.get(action.resourceId).value
+                relatedInstanceSelection.id = action.resourceId + RESOURCE_SELECT_INSTANCE
+                relationResource.id = action.resourceId
             }
-            val relatedInstanceSelections = mutableListOf<ResourceTypeChainDTO>()
             relatedInstanceSelections.add(relatedInstanceSelection)
             relationResource.relatedInstanceSelections = relatedInstanceSelections
         }
@@ -309,10 +332,37 @@ class IamBkActionServiceImpl @Autowired constructor(
         return resourceCreatorActions
     }
 
+    private fun buildIamAction(resourceType: String, ciAction: String): String {
+        return resourceType + "_" + ciAction
+    }
+
+    /**
+     * project_view为最基础的action，其他的action都需关联关联此action
+     * 其他资源需要额外关联改资源的view操作
+     */
+    private fun buildRelationAction(actionType: String, resourceType: String): List<String> {
+        if (resourceType == AuthResourceType.PROJECT.value && actionType == ActionTypeEnum.VIEW.type) {
+            return emptyList()
+        }
+        val relationActions = mutableListOf<String>()
+        // 除了project资源下，view类型的操作。都会关联project_view
+        val projectView = buildIamAction(AuthResourceType.PROJECT.value, AuthPermission.VIEW.value)
+        relationActions.add(projectView)
+
+        // 非project资源，且操作类型不为create。需关联改资源的view权限
+        if (resourceType != AuthResourceType.PROJECT.value) {
+            val resourceView = buildIamAction(resourceType, AuthPermission.VIEW.value)
+            relationActions.add(resourceView)
+        }
+        return relationActions
+    }
+
     companion object {
         private const val systemId = "fitz_test"
         private const val SYSTEMNAME = "持续集成平台"
         private const val ENGLISHNAME = "bkci"
+        private const val PROJECT_SELECT_INSTANCE = "project_instance"
+        private const val RESOURCE_SELECT_INSTANCE = "_instance"
         private val logger = LoggerFactory.getLogger(IamBkActionServiceImpl::class.java)
     }
 }

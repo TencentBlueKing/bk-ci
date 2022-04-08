@@ -100,9 +100,9 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val groups = ManagerRoleGroupDTO.builder().groups(roleGroups).build()
         val iamRoleId = iamManagerService.batchCreateRoleGroup(projectId, groups)
 
-        // 默认分组需要分配默认权限
-        if (defaultGroup) {
-            try {
+        try {
+            // 默认分组需要分配默认权限
+            if (defaultGroup) {
                 when (groupInfo.code) {
                     BkAuthGroup.DEVELOPER.value -> addDevelopPermission(iamRoleId, projectCode)
                     BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(iamRoleId, projectCode)
@@ -110,11 +110,15 @@ open class IamPermissionRoleExtService @Autowired constructor(
                     BkAuthGroup.QC.value -> addQCPermission(iamRoleId, projectCode)
                     BkAuthGroup.PM.value -> addPMPermission(iamRoleId, projectCode)
                 }
-            } catch (e: Exception) {
-                iamManagerService.deleteRoleGroup(iamRoleId)
-                logger.warn("create iam group permission fail $projectCode | $iamRoleId | $groupInfo")
-                throw e
+            } else {
+                // TODO: 添加自定义组权限。 待严格测试
+                val groupAction = buildGroupAction(groupInfo.actionMap)
+                addIamGroupPermission(groupAction, roleId, projectCode)
             }
+        } catch (e: Exception) {
+            iamManagerService.deleteRoleGroup(iamRoleId)
+            logger.warn("create iam group permission fail $projectCode | $iamRoleId | $groupInfo")
+            throw e
         }
         logger.info("create ext group success $projectCode $roleId $iamRoleId. start binding")
         // 绑定iamRoleId到本地group表内
@@ -239,6 +243,14 @@ open class IamPermissionRoleExtService @Autowired constructor(
         group: DefaultGroupType
     ) {
         val actions = getGroupStrategy(group)
+        addIamGroupPermission(actions, roleId, projectCode)
+    }
+
+    private fun addIamGroupPermission (
+        actions: Pair<List<String>, Map<String, List<String>>>,
+        roleId: Int,
+        projectCode: String
+    ) {
         if (actions.first.isNotEmpty()) {
             val authorizationScopes = buildCreateAuthorizationScopes(actions.first, projectCode)
             iamManagerService.createRolePermission(roleId, authorizationScopes)
@@ -260,9 +272,13 @@ open class IamPermissionRoleExtService @Autowired constructor(
                     params = arrayOf(defaultGroup.value)
                 ))
         logger.info("getGroupStrategy ${strategyInfo.strategy}")
+        return buildGroupAction(strategyInfo.strategy)
+    }
+
+    private fun buildGroupAction(actions: Map<String, List<String>>): Pair<List<String>, Map<String, List<String>>> {
         val projectStrategyList = mutableListOf<String>()
         val resourceStrategyMap = mutableMapOf<String, List<String>>()
-        strategyInfo.strategy.forEach { resource, list ->
+        actions.forEach { resource, list ->
             val actionData = buildAction(resource, list)
             projectStrategyList.addAll(actionData.first)
             resourceStrategyMap.putAll(actionData.second)

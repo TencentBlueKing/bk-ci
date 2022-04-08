@@ -25,20 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.auth.api.ServiceUserGroupResource
-import com.tencent.devops.auth.service.GroupUserService
+import com.tencent.devops.auth.pojo.action.ActionInfo
 import com.tencent.devops.common.api.pojo.Result
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestController
-class ServiceUserGroupResourceImpl @Autowired constructor(
-    val groupUserService: GroupUserService
-) : ServiceUserGroupResource {
+@Api(tags = ["USER_AUTH_MANAGER"], description = "权限管理")
+@Path("/user/auth/manager")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserManagerResource {
 
-    override fun addUser2Group(userId: String, groupId: Int): Result<Boolean> {
-        return groupUserService.addUser2Group(userId, groupId)
-    }
+    @ApiOperation("获取系统操作视图")
+    @Path("/actionMap")
+    fun getActions(): Result<Map<String, List<ActionInfo>>?>
 }

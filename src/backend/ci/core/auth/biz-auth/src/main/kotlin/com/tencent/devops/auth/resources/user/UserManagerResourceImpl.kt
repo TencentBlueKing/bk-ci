@@ -25,23 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.resources.user
 
-import com.tencent.devops.auth.api.manager.UserManagerUserResource
-import com.tencent.devops.auth.service.ManagerUserService
+import com.tencent.devops.auth.api.user.UserManagerResource
+import com.tencent.devops.auth.pojo.action.ActionInfo
+import com.tencent.devops.auth.service.action.ActionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserManagerUserResourceImpl @Autowired constructor(
-    val managerUserService: ManagerUserService
-) : UserManagerUserResource {
-    override fun grantManagerByUrl(userId: String, managerId: Int): Result<String> {
-        return Result(managerUserService.createManagerUserByUrl(managerId, userId))
-    }
-
-    override fun cancelGrantManagerByUrl(userId: String, managerId: Int): Result<String> {
-        return Result(managerUserService.grantCancelManagerUserByUrl(managerId, userId))
+class UserManagerResourceImpl @Autowired constructor(
+    val actionService: ActionService
+): UserManagerResource{
+    override fun getActions(): Result<Map<String, List<ActionInfo>>?> {
+        return Result(actionService.actionMap())
     }
 }
