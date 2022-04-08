@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api("net.coobird:thumbnailator")
-    api("com.github.xingePush:xinge")
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:experience:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+package com.tencent.devops.project.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.TxOpMigrateProjectLogoResource
+import com.tencent.devops.project.service.TxOpMigrateProjectLogoService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class TxOpMigrateProjectLogoResourceImpl @Autowired constructor(
+    private val txOpMigrateProjectLogoService: TxOpMigrateProjectLogoService
+) : TxOpMigrateProjectLogoResource {
+
+    override fun migrateProjectLogo(): Result<Boolean> {
+        return Result(txOpMigrateProjectLogoService.migrateProjectLogo())
+    }
 }

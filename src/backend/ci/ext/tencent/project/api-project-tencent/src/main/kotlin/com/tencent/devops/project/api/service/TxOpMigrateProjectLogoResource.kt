@@ -25,24 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":ext:tencent:common:common-digest-tencent"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-archive"))
-    api(project(":core:common:common-db"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api("net.coobird:thumbnailator")
-    api("com.github.xingePush:xinge")
-    api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
-    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    api(project(":ext:tencent:common:common-wechatwork"))
-    api(project(":ext:tencent:common:common-archive-tencent"))
-    api(project(":ext:tencent:process:api-process-tencent"))
-    api(project(":ext:tencent:experience:api-experience-tencent"))
-    api(project(":core:notify:api-notify"))
-    api(project(":ext:tencent:project:api-project-tencent"))
-    api(project(":ext:tencent:experience:model-experience-tencent"))
-    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
+package com.tencent.devops.project.api.service
+
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["OP_PROJECT_LOGO"], description = "OP-项目-logo")
+@Path("/op/project/logo")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpMigrateProjectLogoResource {
+
+    @ApiOperation("迁移logo")
+    @PUT
+    @Path("/migrate")
+    fun migrateProjectLogo(): Result<Boolean>
 }
