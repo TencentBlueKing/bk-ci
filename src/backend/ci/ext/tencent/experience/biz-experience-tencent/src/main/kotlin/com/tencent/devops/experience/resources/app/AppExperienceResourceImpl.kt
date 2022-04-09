@@ -40,12 +40,14 @@ import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
+import com.tencent.devops.experience.pojo.ExperienceList
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceAppService
 import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
 import com.tencent.devops.experience.service.GroupService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -79,15 +81,30 @@ class AppExperienceResourceImpl @Autowired constructor(
     }
 
     @AllowOuter
+    override fun listV3(userId: String, platform: Int, organization: String?): Result<ExperienceList> {
+        logger.debug("listV3 , userId:$userId , platform:$platform , organization:$organization")
+        val privateExperiences = experienceAppService.list(userId, 0, 100, true, platform, organization).records
+        val publicExperiences = if (null == organization) {
+            experienceAppService.publicExperiences(userId, platform, 0, 100)
+        } else {
+            emptyList()
+        }
+        val redPointCount = privateExperiences.count { it.redPointEnabled } +
+                publicExperiences.count { it.redPointEnabled }
+        return Result(ExperienceList(privateExperiences, publicExperiences, redPointCount))
+    }
+
+    @AllowOuter
     override fun detail(
         userId: String,
         platform: Int,
         appVersion: String?,
         organization: String?,
-        experienceHashId: String
+        experienceHashId: String,
+        forceNew: Boolean
     ): Result<AppExperienceDetail> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization)
+        val result = experienceAppService.detail(userId, experienceHashId, platform, appVersion, organization, forceNew)
         return Result(result)
     }
 
@@ -97,10 +114,11 @@ class AppExperienceResourceImpl @Autowired constructor(
         organization: String?,
         experienceHashId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        showAll: Boolean?
     ): Result<Pagination<ExperienceChangeLog>> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize, organization)
+        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize, organization, showAll)
         return Result(result)
     }
 
@@ -166,5 +184,9 @@ class AppExperienceResourceImpl @Autowired constructor(
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AppExperienceResourceImpl::class.java)
     }
 }

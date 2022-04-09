@@ -189,7 +189,7 @@ CREATE TABLE IF NOT EXISTS `T_AGENT_PIPELINE_REF`
     `VM_SEQ_ID` varchar(34) DEFAULT NULL COMMENT '构建序列号',
     `JOB_ID` varchar(34) DEFAULT NULL COMMENT 'JOB ID',
     `JOB_NAME` varchar(255) NOT NULL COMMENT 'JOB NAME',
-    `LAST_BUILD_TIME` datetime NOT NULL COMMENT '最近构建时间',
+    `LAST_BUILD_TIME` datetime DEFAULT NULL COMMENT '最近构建时间',
     PRIMARY KEY (`ID`),
     UNIQUE KEY `uindex_project_agent_pipeline_seq` (`PROJECT_ID`,`AGENT_ID`,`PIPELINE_ID`,`VM_SEQ_ID`),
     key `idx_agent_id` (`AGENT_ID`),

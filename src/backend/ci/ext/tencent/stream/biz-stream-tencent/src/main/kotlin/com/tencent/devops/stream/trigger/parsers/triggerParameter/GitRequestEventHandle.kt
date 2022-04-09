@@ -29,13 +29,10 @@ package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
-import com.tencent.devops.common.webhook.pojo.code.git.GitCommitAuthor
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
@@ -44,6 +41,9 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -89,7 +89,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = null,
-            gitEvent = gitPushEvent
+            gitEvent = gitPushEvent,
+            gitProjectName = GitUtils.getProjectName(gitPushEvent.repository.homepage)
         )
     }
 
@@ -119,7 +120,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = gitMrEvent.object_attributes.title,
-            gitEvent = gitMrEvent
+            gitEvent = gitMrEvent,
+            gitProjectName = GitUtils.getProjectName(gitMrEvent.object_attributes.target.http_url)
         )
     }
 
@@ -152,7 +154,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = null,
-            gitEvent = gitTagPushEvent
+            gitEvent = gitTagPushEvent,
+            gitProjectName = GitUtils.getProjectName(gitTagPushEvent.repository.homepage)
         )
     }
 
@@ -188,7 +191,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = gitIssueEvent.objectAttributes.title,
-            gitEvent = gitIssueEvent
+            gitEvent = gitIssueEvent,
+            gitProjectName = GitUtils.getProjectName(gitIssueEvent.repository.homepage)
         )
     }
 
@@ -218,13 +222,14 @@ class GitRequestEventHandle @Autowired constructor(
             commitMsg = gitNoteEvent.objectAttributes.note,
             commitTimeStamp = getCommitTimeStamp(latestCommit?.committed_date),
             commitAuthorName = latestCommit?.author_name,
-            userId = latestCommit?.author_name ?: "",
+            userId = gitNoteEvent.user.username,
             totalCommitCount = 1,
             mergeRequestId = null,
             event = e,
             description = "",
             mrTitle = null,
-            gitEvent = gitNoteEvent
+            gitEvent = gitNoteEvent,
+            gitProjectName = GitUtils.getProjectName(gitNoteEvent.repository.homepage)
         )
     }
 
@@ -268,40 +273,54 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = "",
-            gitEvent = gitReviewEvent
+            gitEvent = gitReviewEvent,
+            gitProjectName = GitUtils.getProjectName(gitReviewEvent.repository.homepage)
+        )
+    }
+
+    fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
+        if (triggerBuildReq.branch.isBlank()) {
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "branche cannot be empty"
+            )
+        }
+        val gitProjectId = triggerBuildReq.gitProjectId
+        val latestCommit = if (!triggerBuildReq.commitId.isNullOrEmpty()) {
+            // 选择历史提交时，无需重新获取latest commit 相关信息
+            null
+        } else {
+            streamScmService.getCommitInfo(
+                gitToken = streamGitTokenService.getToken(gitProjectId),
+                projectName = gitProjectId.toString(),
+                sha = triggerBuildReq.branch
+            )
+        }
+        return GitRequestEvent(
+            id = null,
+            objectKind = triggerBuildReq.objectKind,
+            operationKind = "",
+            extensionAction = null,
+            gitProjectId = triggerBuildReq.gitProjectId,
+            sourceGitProjectId = null,
+            branch = getBranchName(triggerBuildReq.branch),
+            targetBranch = null,
+            commitId = triggerBuildReq.commitId ?: (latestCommit?.id ?: ""),
+            commitMsg = triggerBuildReq.customCommitMsg,
+            commitTimeStamp = getCommitTimeStamp(null),
+            commitAuthorName = userId,
+            userId = userId,
+            totalCommitCount = 0,
+            mergeRequestId = null,
+            event = "",
+            description = triggerBuildReq.description,
+            mrTitle = "",
+            gitEvent = null,
+            gitProjectName = null
         )
     }
 
     companion object {
-        fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
-            if (triggerBuildReq.branch.isBlank()) {
-                throw CustomException(
-                    status = Response.Status.BAD_REQUEST,
-                    message = "branche cannot be empty"
-                )
-            }
-            return GitRequestEvent(
-                id = null,
-                objectKind = triggerBuildReq.objectKind,
-                operationKind = "",
-                extensionAction = null,
-                gitProjectId = triggerBuildReq.gitProjectId,
-                sourceGitProjectId = null,
-                branch = getBranchName(triggerBuildReq.branch!!),
-                targetBranch = null,
-                commitId = triggerBuildReq.commitId ?: "",
-                commitMsg = triggerBuildReq.customCommitMsg,
-                commitTimeStamp = getCommitTimeStamp(null),
-                commitAuthorName = userId,
-                userId = userId,
-                totalCommitCount = 0,
-                mergeRequestId = null,
-                event = "",
-                description = triggerBuildReq.description,
-                mrTitle = "",
-                gitEvent = null
-            )
-        }
 
         fun createScheduleTriggerEvent(
             streamTimerEvent: StreamTimerBuildEvent,
@@ -329,24 +348,9 @@ class GitRequestEventHandle @Autowired constructor(
                 event = "",
                 description = null,
                 mrTitle = null,
-                gitEvent = null
+                gitEvent = null,
+                gitProjectName = null
             )
-        }
-
-        private fun getLatestCommit(commitId: String?, commits: List<GitCommit>?): GitCommit? {
-            if (commitId == null) {
-                return if (commits.isNullOrEmpty()) {
-                    null
-                } else {
-                    commits.last()
-                }
-            }
-            commits?.forEach {
-                if (it.id == commitId) {
-                    return it
-                }
-            }
-            return null
         }
 
         private fun getCommitTimeStamp(commitTimeStamp: String?): String {
@@ -388,29 +392,5 @@ class GitRequestEventHandle @Autowired constructor(
             }
         }
         return null
-    }
-
-    private fun getLatestCommit(
-        commitId: String,
-        gitProjectId: Long
-    ): GitCommit? {
-        return streamScmService.getCommitInfo(
-            streamGitTokenService.getToken(gitProjectId),
-            gitProjectId.toString(),
-            commitId
-        )?.let {
-            GitCommit(
-                id = it.id,
-                message = it.message,
-                timestamp = it.committed_date,
-                author = GitCommitAuthor(
-                    name = it.author_name,
-                    email = it.author_email
-                ),
-                modified = null,
-                added = null,
-                removed = null
-            )
-        }
     }
 }

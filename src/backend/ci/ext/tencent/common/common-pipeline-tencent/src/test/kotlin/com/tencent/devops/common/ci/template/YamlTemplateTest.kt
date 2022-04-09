@@ -30,10 +30,11 @@ package com.tencent.devops.common.ci.template
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.ResourcesPools
+import com.tencent.devops.common.ci.v2.format
 import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.parsers.template.models.GetTemplateParam
-import com.tencent.devops.common.ci.v2.parsers.template.models.TemplateProjectData
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import org.junit.Test
 
@@ -43,6 +44,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.StringReader
 
+@Suppress("LoopWithTooManyJumpStatements")
 class YamlTemplateTest {
 
     val sampleDir = "samples"
@@ -83,6 +85,44 @@ class YamlTemplateTest {
         check("$sampleDir/$dir/longParametersTest.yml")
 
         check("$sampleDir/$dir/user.yml")
+
+        // resource
+        val resourceExt = mutableMapOf<String, ResourcesPools>()
+        replace("$sampleDir/$dir/resource/resources.yml", resourceExt)
+        assert(
+            resourceExt.keys.equalss(
+                mutableListOf(
+                    "lawrenzhang_testgroup/int/test_ci_temp@rezbuild+rezbuild",
+                    "xxxxx/int/test_ci_temp@rezbuild+rezbuild"
+                )
+            )
+        )
+        resourceExt.clear()
+        replace("$sampleDir/$dir/resource/resource-remote.yml", resourceExt)
+        assert(
+            resourceExt.keys.equalss(
+                mutableListOf(
+                    "xxxxx/int/test_ci_temp@rezbuild+rezbuild"
+                )
+            )
+        )
+        resourceExt.clear()
+        replace("$sampleDir/$dir/resource/resource-remote-mul.yml", resourceExt)
+        assert(
+            resourceExt.keys.equalss(
+                mutableListOf(
+                    "xxxxx/int/test_ci_temp@rezbuild1+rezbuild1",
+                    "xxxxx/int/test_ci_temp@rezbuild+rezbuild"
+                )
+            )
+        )
+        resourceExt.clear()
+    }
+
+    @Test
+    fun testParametersTemplate() {
+        val dir = "parameters"
+        check("$sampleDir/$dir/parameters.yml")
     }
 
     private fun check(file: String) {
@@ -117,28 +157,22 @@ class YamlTemplateTest {
         assert(flag)
     }
 
-    private fun replace(testYaml: String): String {
+    private fun replace(testYaml: String, resourceExt: MutableMap<String, ResourcesPools>? = null): String {
         val sb = getStrFromResource(testYaml)
 
         val yaml = ScriptYmlUtils.formatYaml(sb)
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+        preTemplateYamlObject.resources?.pools?.forEach { pool ->
+            resourceExt?.put(pool.format(), pool)
+        }
         val preScriptBuildYaml = YamlTemplate(
             filePath = testYaml,
             yamlObject = preTemplateYamlObject,
-            projectData = TemplateProjectData(
-                gitRequestEventId = 1,
-                triggerUserId = "ruotiantang",
-                triggerProjectId = 580280,
-                triggerToken = "",
-                triggerRef = "master",
-                sourceProjectId = 580280,
-                changeSet = null,
-                event = null,
-                forkGitToken = null
-            ),
+            extraParameters = null,
             getTemplateMethod = ::getTestTemplate,
             nowRepo = null,
-            repo = null
+            repo = null,
+            resourcePoolMapExt = resourceExt
         ).replace()
         val (normalOb, trans) = ScriptYmlUtils.normalizeGitCiYaml(preScriptBuildYaml, "")
         val yamls = YamlUtil.toYaml(normalOb)
@@ -151,12 +185,12 @@ class YamlTemplateTest {
     }
 
     private fun getTestTemplate(
-        param: GetTemplateParam
+        param: GetTemplateParam<Any?>
     ): String {
         val newPath = if (param.targetRepo == null) {
-            "templates/${param.fileName}"
+            "templates/${param.path}"
         } else {
-            "templates/${param.targetRepo}/templates/${param.fileName}"
+            "templates/${param.targetRepo!!.repository}/templates/${param.path}"
         }
         val sb = getStrFromResource(newPath)
         return ScriptYmlUtils.formatYaml(sb)
@@ -175,5 +209,17 @@ class YamlTemplateTest {
         }
         inputStream.close()
         return sb.toString()
+    }
+
+    private fun MutableSet<String>.equalss(new: MutableList<String>): Boolean {
+        if (this.size != new.size) {
+            return false
+        }
+        this.forEachIndexed { index, its ->
+            if (its != new[index]) {
+                return false
+            }
+        }
+        return true
     }
 }

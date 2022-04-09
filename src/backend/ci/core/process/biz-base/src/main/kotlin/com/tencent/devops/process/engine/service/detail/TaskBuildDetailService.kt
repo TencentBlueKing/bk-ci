@@ -49,7 +49,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -100,7 +100,7 @@ class TaskBuildDetailService(
             }
         },
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskPause"
+            operation = "taskPause#$taskId"
         )
     }
 
@@ -131,7 +131,7 @@ class TaskBuildDetailService(
                 }
             },
             buildStatus = buildStatus,
-            operation = operation
+            operation = "$operation#$taskId"
         )
     }
 
@@ -203,7 +203,7 @@ class TaskBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskStart"
+            operation = "taskStart#$taskId"
         )
     }
 
@@ -232,7 +232,7 @@ class TaskBuildDetailService(
             },
             buildStatus = BuildStatus.RUNNING,
             cancelUser = cancelUser,
-            operation = "taskCancel"
+            operation = "taskCancel#$taskId"
         )
     }
 
@@ -299,7 +299,7 @@ class TaskBuildDetailService(
             }
         },
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskEnd"
+            operation = "taskEnd#$taskId"
         )
         return updateTaskStatusInfos
     }
@@ -487,7 +487,7 @@ class TaskBuildDetailService(
                 override fun onFindContainer(container: Container, stage: Stage): Traverse {
                     val targetContainer = container.getContainerById(containerId)
                     if (targetContainer != null) {
-                        val newElement: ArrayList<Element> by lazy { ArrayList<Element>(targetContainer.elements.size) }
+                        val newElement: ArrayList<Element> by lazy { ArrayList(targetContainer.elements.size) }
                         targetContainer.elements.forEach { e ->
                             if (e.id.equals(taskId)) {
                                 // 设置插件状态为排队状态
@@ -519,17 +519,17 @@ class TaskBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING,
-            operation = "updateElementWhenPauseContinue"
+            operation = "updateElementWhenPauseContinue#$taskId"
         )
     }
 
     private val atomCache = Caffeine.newBuilder()
-        .maximumSize(2000)
-        .expireAfterAccess(30, TimeUnit.MINUTES)
+        .maximumSize(20000)
+        .expireAfterAccess(6, TimeUnit.HOURS)
         .build<String/*projectCode VS atomCode VS atomVersion*/, String/*true version*/> { mix ->
             val keys = mix.split(" VS ")
-            client.get(ServiceMarketAtomEnvResource::class)
-                .getAtomEnv(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data?.version
+            client.get(ServiceAtomResource::class)
+                .getAtomRealVersion(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data
         }
 
     fun findTaskVersion(

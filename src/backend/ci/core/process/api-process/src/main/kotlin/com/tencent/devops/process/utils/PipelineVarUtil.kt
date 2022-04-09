@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REPO_URL
@@ -163,7 +164,6 @@ object PipelineVarUtil {
     private val contextVarMappingBuildVar = mapOf(
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
-        "ci.pipeline_name" to PIPELINE_NAME,
         "ci.actor" to PIPELINE_START_USER_ID,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
@@ -210,7 +210,8 @@ object PipelineVarUtil {
         "ci.review_state" to BK_REPO_GIT_WEBHOOK_REVIEW_STATE,
         "ci.review_reviewers" to BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWERS,
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
-        "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID
+        "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
+        "ci.action" to PIPELINE_GIT_ACTION
     )
 
     /**

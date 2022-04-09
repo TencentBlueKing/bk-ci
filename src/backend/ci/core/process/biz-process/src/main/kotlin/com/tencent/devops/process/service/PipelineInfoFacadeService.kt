@@ -545,7 +545,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         model: Model,
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
-        checkTemplate: Boolean = true
+        checkTemplate: Boolean = true,
+        updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
@@ -617,7 +618,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 signPipelineId = pipelineId,
                 userId = userId,
                 channelCode = channelCode,
-                create = false
+                create = false,
+                updateLastModifyUser = updateLastModifyUser
             )
             if (checkPermission) {
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
@@ -791,7 +793,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 channelCode = channelCode ?: ChannelCode.BS
             )
-            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, existModel, param)
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, null, param)
 
             watcher.start("s_r_pipeline_del")
             val deletePipelineResult = pipelineRepositoryService.deletePipeline(

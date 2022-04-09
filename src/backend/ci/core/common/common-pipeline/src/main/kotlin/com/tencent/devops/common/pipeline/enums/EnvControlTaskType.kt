@@ -34,4 +34,13 @@ package com.tencent.devops.common.pipeline.enums
 enum class EnvControlTaskType {
     VM, // 构建机环境
     NORMAL // 无编译环境
+    ;
+
+    companion object {
+        fun parse(type: String) = try {
+            valueOf(type)
+        } catch (ignore: Exception) {
+            null
+        }
+    }
 }

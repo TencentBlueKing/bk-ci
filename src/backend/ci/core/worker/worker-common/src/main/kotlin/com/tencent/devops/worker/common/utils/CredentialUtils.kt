@@ -38,6 +38,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import org.slf4j.LoggerFactory
 import java.util.Base64
 import javax.ws.rs.NotFoundException
@@ -75,21 +76,8 @@ object CredentialUtils {
         try {
             val pair = DHUtil.initKey()
             val result = requestCredential(credentialId, pair, acrossProjectId)
-
             val credential = result.data!!
-            val list = ArrayList<String>()
-
-            list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
-            if (!credential.v2.isNullOrEmpty()) {
-                list.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))
-            }
-            if (!credential.v3.isNullOrEmpty()) {
-                list.add(decode(credential.v3!!, credential.publicKey, pair.privateKey))
-            }
-            if (!credential.v4.isNullOrEmpty()) {
-                list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
-            }
-            return Pair(list, credential.credentialType)
+            return Pair(getDecodedCredentialList(credential, pair), credential.credentialType)
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
@@ -136,7 +124,7 @@ object CredentialUtils {
         return try {
             val valueTypePair = getCredentialWithType(ticketId, false, acrossProjectId)
             val value = getCredentialValue(valueTypePair.first, valueTypePair.second, key)
-            logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId, value: $value")
+            logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId")
             value
         } catch (ignore: Exception) {
             logger.warn("凭证ID变量($ticketId)不存在", ignore.message)
@@ -283,6 +271,37 @@ object CredentialUtils {
     private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
+    }
+
+    private fun getDecodedCredentialList(
+        credential: CredentialInfo,
+        pair: DHKeyPair
+    ): List<String> {
+        val list = mutableListOf<String>()
+
+        list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+        credential.v2?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+        credential.v3?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+        credential.v4?.let { list.add(decode(it, credential.publicKey, pair.privateKey)) }
+
+        // #4732 日志脱敏，被请求过的凭据除用户名外统一过滤
+        val sensitiveList = mutableListOf<String>()
+        when (credential.credentialType) {
+            CredentialType.USERNAME_PASSWORD -> {
+                // 只获取密码，不获取v1用户名
+                credential.v2?.let { sensitiveList.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
+            CredentialType.TOKEN_USERNAME_PASSWORD -> {
+                // 只获取密码和token，不获取v2用户名
+                sensitiveList.add(decode(credential.v1, credential.publicKey, pair.privateKey))
+                credential.v3?.let { sensitiveList.add(decode(it, credential.publicKey, pair.privateKey)) }
+            }
+            else -> {
+                sensitiveList.addAll(list)
+            }
+        }
+        SensitiveValueService.addSensitiveValues(sensitiveList)
+        return list
     }
 
     private val logger = LoggerFactory.getLogger(CredentialUtils::class.java)

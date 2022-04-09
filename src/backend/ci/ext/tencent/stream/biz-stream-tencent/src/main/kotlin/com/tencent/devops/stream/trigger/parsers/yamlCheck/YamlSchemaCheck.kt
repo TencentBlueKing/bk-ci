@@ -139,26 +139,26 @@ class YamlSchemaCheck @Autowired constructor(
         try {
             action()
         } catch (e: Throwable) {
-            val gitRequestEvent = context.requestEvent
-            logger.info("gitRequestEvent ${gitRequestEvent.id} git ci yaml is invalid", e)
+            val gitRequestEventForHandle = context.gitRequestEventForHandle
+            logger.info("gitRequestEvent ${gitRequestEventForHandle.id} git ci yaml is invalid", e)
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
-                    Triple(gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
+                    Triple(gitRequestEventForHandle.gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 is IOException, is TypeCastException -> {
-                    Triple(gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
+                    Triple(gitRequestEventForHandle.gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 // 指定异常直接扔出在外面统一处理
                 is TriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
                 else -> {
-                    logger.warn("YamlSchemaCheck event: ${gitRequestEvent.id} unknow error: ${e.message}")
+                    logger.warn("YamlSchemaCheck event: ${gitRequestEventForHandle.id} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
             TriggerException.triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 filePath = context.pipeline.filePath,
                 reason = reason,
                 reasonParams = listOf(message ?: ""),

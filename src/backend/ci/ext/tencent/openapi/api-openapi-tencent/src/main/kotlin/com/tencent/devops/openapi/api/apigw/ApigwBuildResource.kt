@@ -32,9 +32,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -52,6 +49,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
+@Suppress("LongParameterList")
 @Api(tags = ["OPEN_API_BUILD"], description = "OPEN-API-构建资源")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/builds")
 @Produces(MediaType.APPLICATION_JSON)
@@ -176,34 +174,4 @@ interface ApigwBuildResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<BuildManualStartupInfo>
-
-    @ApiOperation("获取开源扫描流水线构建历史")
-    @GET
-    @Path("/history/scan")
-    fun getHistoryBuildScan(
-        @ApiParam("状态", required = false)
-        @QueryParam("status")
-        status: List<BuildStatus>?,
-        @ApiParam("触发方式", required = false)
-        @QueryParam("trigger")
-        trigger: List<StartType>?,
-        @ApiParam("排队于-开始时间(时间戳形式)", required = false)
-        @QueryParam("queueTimeStartTime")
-        queueTimeStartTime: Long?,
-        @ApiParam("排队于-结束时间(时间戳形式)", required = false)
-        @QueryParam("queueTimeEndTime")
-        queueTimeEndTime: Long?,
-        @ApiParam("开始于-开始时间(时间戳形式)", required = false)
-        @QueryParam("startTimeStartTime")
-        startTimeStartTime: Long?,
-        @ApiParam("开始于-结束时间(时间戳形式)", required = false)
-        @QueryParam("startTimeEndTime")
-        startTimeEndTime: Long?,
-        @ApiParam("结束于-开始时间(时间戳形式)", required = false)
-        @QueryParam("endTimeStartTime")
-        endTimeStartTime: Long?,
-        @ApiParam("结束于-结束时间(时间戳形式)", required = false)
-        @QueryParam("endTimeEndTime")
-        endTimeEndTime: Long?
-    ): Result<List<BuildBasicInfo>>
 }

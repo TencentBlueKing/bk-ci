@@ -27,11 +27,8 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -40,59 +37,32 @@ import java.util.concurrent.TimeUnit
 @Service
 class StreamGitTokenService @Autowired constructor(
     private val streamScmService: StreamScmService,
-    private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper
+    private val redisOperation: RedisOperation
 ) {
+
     companion object {
         private val logger = LoggerFactory.getLogger(StreamGitTokenService::class.java)
         private const val STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX = "stream:git:token:lock:key:"
-        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:v2:"
+        private const val STREAM_GIT_TOKEN_PROJECT_PREFIX = "stream:git:project:token:"
         fun getGitTokenKey(gitProjectId: Long) = STREAM_GIT_TOKEN_PROJECT_PREFIX + gitProjectId
         fun getGitTokenLockKey(gitProjectId: Long) = STREAM_GIT_TOKEN_UPDATE_LOCK_PREFIX + gitProjectId
+
+        // 工蜂超级token有效时间为8个小时，我们redis存7.5个小时，提前半个小时，这里token的使用都在初始化时间完成，不会超过30分钟
+        private val validTime = TimeUnit.MINUTES.toSeconds(30) + TimeUnit.HOURS.toSeconds(7)
     }
 
-    fun getToken(gitProjectId: Long): String {
-        val projectId = getGitTokenKey(gitProjectId)
-        val token: GitToken? = redisOperation.get(projectId)?.let { objectMapper.readValue(it, GitToken::class.java) }
-        val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
-        // 设置过期时间为24个小时
-        val validTime = TimeUnit.HOURS.toSeconds(24)
-        return if (token == null) {
+    fun getToken(gitProjectId: Long, notGetFromCache: Boolean = false): String {
+        val token = redisOperation.get(getGitTokenKey(gitProjectId))
+        return if (token.isNullOrBlank() || notGetFromCache) {
+            val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
             updateLock.use {
                 updateLock.lock()
-                val newToken = streamScmService.getToken(gitProjectId.toString())
-                setTokenCreateTime(newToken)
-                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=${newToken.accessToken}")
-                val objJsonStr = JsonUtil.toJson(newToken, false)
-                redisOperation.set(projectId, objJsonStr, validTime)
-                newToken.accessToken
+                val newToken = streamScmService.getToken(gitProjectId.toString()).accessToken
+                logger.info("STREAM|getToken|gitProjectId=$gitProjectId|newToken=$newToken")
+                redisOperation.set(getGitTokenKey(gitProjectId), newToken, validTime)
+                newToken
             }
-        } else {
-            // 如果过期，获取使用refreshToken去刷新token
-            if (isExpire(token)) {
-                updateLock.use {
-                    updateLock.lock()
-                    val refreshToken = streamScmService.refreshToken(gitProjectId.toString(), token.refreshToken)
-                    setTokenCreateTime(refreshToken)
-                    logger.info("STREAM|getToken|gitProjectId=$gitProjectId|refreshToken=${refreshToken.accessToken}")
-                    val objJsonStr = JsonUtil.toJson(refreshToken, false)
-                    redisOperation.set(projectId, objJsonStr, validTime)
-                    refreshToken.accessToken
-                }
-            } else {
-                // 未过期，直接返回token
-                token.accessToken
-            }
-        }
-    }
-
-    private fun setTokenCreateTime(newToken: GitToken) {
-        newToken.createTime = System.currentTimeMillis()
-    }
-
-    private fun isExpire(accessToken: GitToken): Boolean {
-        // 提前半个小时刷新token
-        return (accessToken.createTime ?: 0) + accessToken.expiresIn * 1000 - 1800 * 1000 <= System.currentTimeMillis()
+        } else token
     }
 
     // TODO 暂时不加入销毁逻辑
@@ -103,12 +73,10 @@ class StreamGitTokenService @Autowired constructor(
         logger.info("STREAM|clearToken|gitProjectId=$gitProjectId|token=$token cleared=$cleared")
         if (cleared) {
             val updateLock = RedisLock(redisOperation, getGitTokenLockKey(gitProjectId), 10)
-            updateLock.lock()
-            try {
+            updateLock.use {
+                updateLock.lock()
                 logger.info("STREAM|deleteTokenInRedis|gitProjectId=$gitProjectId|token=$token")
                 redisOperation.delete(getGitTokenKey(gitProjectId))
-            } finally {
-                updateLock.unlock()
             }
         }
         return cleared

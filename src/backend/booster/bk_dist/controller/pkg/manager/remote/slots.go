@@ -16,6 +16,7 @@ import (
 
 	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
+	"github.com/Tencent/bk-ci/src/booster/common/blog"
 )
 
 type lockWorkerMessage struct {
@@ -55,14 +56,10 @@ func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *reso
 	}
 
 	usageMap := make(map[dcSDK.JobUsage]*usageWorkerSet, 10)
-	for k, v := range usageLimit {
-		if v <= 0 {
-			v = total
-		}
-		usageMap[k] = &usageWorkerSet{
-			limit:    v,
-			occupied: 0,
-		}
+	// do not use usageLimit, we only need JobUsageRemoteExe, and it is always 0 by now
+	usageMap[dcSDK.JobUsageRemoteExe] = &usageWorkerSet{
+		limit:    total,
+		occupied: 0,
 	}
 	usageMap[dcSDK.JobUsageDefault] = &usageWorkerSet{
 		limit:    total,
@@ -150,18 +147,45 @@ func (wr *resource) Unlock(usage dcSDK.JobUsage, host *dcProtocol.Host) {
 	}
 }
 
+func (wr *resource) TotalSlots() int {
+	return wr.totalSlots
+}
+
 func (wr *resource) disableWorker(host *dcProtocol.Host) {
+	if host == nil {
+		return
+	}
+
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
+	invalidjobs := 0
 	for _, w := range wr.worker {
 		if !host.Equal(w.host) {
 			continue
 		}
 
+		if w.disabled {
+			blog.Infof("remote slot: host:%v disabled before,do nothing now", *host)
+			break
+		}
+
 		w.disabled = true
-		return
+		invalidjobs = w.totalSlots
+		break
 	}
+
+	// !!! wr.totalSlots and v.limit may be <= 0 !!!
+	if invalidjobs > 0 {
+		wr.totalSlots -= invalidjobs
+		for _, v := range wr.usageMap {
+			v.limit = wr.totalSlots
+			blog.Infof("remote slot: usage map:%v after disable host:%v", *v, *host)
+		}
+	}
+
+	blog.Infof("remote slot: total slot:%d after disable host:%v", wr.totalSlots, *host)
+	return
 }
 
 func (wr *resource) getWorkerWithMostFreeSlots() *worker {
@@ -239,7 +263,7 @@ func (wr *resource) isIdle(set *usageWorkerSet) bool {
 		return false
 	}
 
-	if set.occupied < set.limit {
+	if set.occupied < set.limit || set.limit <= 0 {
 		return true
 	}
 
@@ -249,7 +273,7 @@ func (wr *resource) isIdle(set *usageWorkerSet) bool {
 func (wr *resource) getSlot(msg lockWorkerMessage) {
 	satisfied := false
 	usage := msg.jobUsage
-	if wr.occupiedSlots < wr.totalSlots {
+	if wr.occupiedSlots < wr.totalSlots || wr.totalSlots <= 0 {
 		set := wr.getUsageSet(usage)
 		if wr.isIdle(set) {
 			set.occupied++

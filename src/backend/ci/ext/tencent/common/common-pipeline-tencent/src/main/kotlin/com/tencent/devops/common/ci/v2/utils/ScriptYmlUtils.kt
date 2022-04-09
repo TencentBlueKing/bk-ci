@@ -28,6 +28,7 @@
 package com.tencent.devops.common.ci.v2.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
@@ -51,11 +52,13 @@ import com.tencent.devops.common.ci.v2.MrRule
 import com.tencent.devops.common.ci.v2.NoteRule
 import com.tencent.devops.common.ci.v2.ParametersType
 import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreRepositoryHook
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.PushRule
+import com.tencent.devops.common.ci.v2.RepositoryHook
 import com.tencent.devops.common.ci.v2.ReviewRule
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.SchedulesRule
@@ -77,13 +80,13 @@ import com.tencent.devops.common.ci.v2.stageCheck.StageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.StageReviews
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {
@@ -190,8 +193,12 @@ object ScriptYmlUtils {
                 }
             }
         }
-        // 替换if中没有加括号的
-        val resultValue = replaceIfParameters(newValue, settingMap)
+        // 替换if中没有加括号的，只替换string
+        val resultValue = if (paramType == ParametersType.STRING) {
+            replaceIfParameters(newValue, settingMap)
+        } else {
+            newValue
+        }
         return resultValue.toString()
     }
 
@@ -380,9 +387,15 @@ object ScriptYmlUtils {
             } else {
                 runsOn
             }
-        } catch (e: Exception) {
-            return RunsOn(
-                poolName = preRunsOn.toString()
+        } catch (e: MismatchedInputException) {
+            if (preRunsOn is String || preRunsOn is List<*>) {
+                return RunsOn(
+                    poolName = preRunsOn.toString()
+                )
+            }
+            throw YamlFormatException(
+                "runs-on 中 ${e?.path[0]?.fieldName} 格式有误," +
+                    "应为 ${e?.targetType?.name}, error message:${e.message}"
             )
         }
     }
@@ -552,6 +565,68 @@ object ScriptYmlUtils {
         )
     }
 
+    fun formatRepoHookTriggerOn(preTriggerOn: PreTriggerOn?, name: String?): TriggerOn? {
+        if (preTriggerOn?.repoHook == null) {
+            logger.info("流水线已不存在远程触发配置，不做处理，返回null进行相关检查")
+            return null
+        }
+
+        val repositoryHookList = try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(preTriggerOn.repoHook),
+                object : TypeReference<List<PreRepositoryHook>>() {}
+            )
+        } catch (e: MismatchedInputException) {
+            logger.error("Format triggerOn repoHook failed.", e)
+            return null
+        }
+        repositoryHookList.find { it.name == name }?.let { repositoryHook ->
+            if (repositoryHook.events == null) {
+                return TriggerOn(
+                    push = PushRule(
+                        branches = listOf("*")
+                    ),
+                    tag = TagRule(
+                        tags = listOf("*")
+                    ),
+                    // TODO: 暂时使用工蜂的事件，等后续修改为Stream事件
+                    mr = MrRule(
+                        targetBranches = listOf("*"),
+                        action = listOf(
+                            TGitMergeActionKind.OPEN.value,
+                            TGitMergeActionKind.REOPEN.value,
+                            TGitMergeExtensionActionKind.PUSH_UPDATE.value
+                        )
+                    ),
+                    repoHook = repoHookRule(repositoryHook)
+                )
+            }
+            val repoPreTriggerOn = try {
+                YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(repositoryHook.events),
+                    PreTriggerOn::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn repoHook events failed.", e)
+                return null
+            }
+
+            return TriggerOn(
+                push = pushRule(repoPreTriggerOn),
+                tag = tagRule(repoPreTriggerOn),
+                mr = mrRule(repoPreTriggerOn),
+                schedules = schedulesRule(repoPreTriggerOn),
+                delete = deleteRule(repoPreTriggerOn),
+                issue = issueRule(repoPreTriggerOn),
+                review = reviewRule(repoPreTriggerOn),
+                note = noteRule(repoPreTriggerOn),
+                repoHook = repoHookRule(repositoryHook)
+            )
+        }
+        logger.warn("repo hook has none effective TriggerOn in ($repositoryHookList)")
+        return null
+    }
+
     fun formatTriggerOn(preTriggerOn: PreTriggerOn?): TriggerOn {
 
         if (preTriggerOn == null) {
@@ -584,6 +659,35 @@ object ScriptYmlUtils {
             review = reviewRule(preTriggerOn),
             note = noteRule(preTriggerOn)
         )
+    }
+
+    private fun repoHookRule(
+        preRepositoryHook: PreRepositoryHook
+    ): RepositoryHook {
+        with(preRepositoryHook) {
+            when {
+                credentials is String -> return RepositoryHook(
+                    name = name,
+                    credentialsForTicketId = credentials
+                )
+                credentials is Map<*, *> && credentials["username"] != null && credentials["password"] != null -> {
+                    return RepositoryHook(
+                        name = name,
+                        credentialsForUserName = credentials["username"].toString(),
+                        credentialsForPassword = credentials["password"].toString()
+                    )
+                }
+                credentials is Map<*, *> && credentials["token"] != null -> {
+                    return RepositoryHook(
+                        name = name,
+                        credentialsForToken = credentials["token"].toString()
+                    )
+                }
+                else -> return RepositoryHook(
+                    name = name
+                )
+            }
+        }
     }
 
     private fun noteRule(

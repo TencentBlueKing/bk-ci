@@ -123,10 +123,10 @@ stages:
           type: "SELECTOR"
           default: 1
           values:
-          - "1"
-          - "2"
-          - "3"
-          - "4"
+          - 1
+          - 2
+          - 3
+          - 4
           description: null
       description: "说明下如何审核\n参数var_1如何取值\n"
     gates:

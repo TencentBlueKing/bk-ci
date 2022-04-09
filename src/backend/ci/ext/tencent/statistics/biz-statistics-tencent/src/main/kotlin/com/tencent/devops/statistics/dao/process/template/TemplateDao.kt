@@ -118,16 +118,20 @@ class TemplateDao {
         templateIdList: Collection<String>?,
         storeFlag: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        queryModelFlag: Boolean = true
     ): Result<out Record>? {
-        val a = TTemplate.T_TEMPLATE.`as`("a")
+        val tTemplate = TTemplate.T_TEMPLATE
 
         val conditions = mutableListOf<Condition>()
         if (projectId != null) {
             if (includePublicFlag != null && includePublicFlag) {
-                conditions.add(a.PROJECT_ID.eq(projectId).or(a.TYPE.eq(TemplateType.PUBLIC.name)))
+                conditions.add(
+                    tTemplate.PROJECT_ID.eq(projectId)
+                        .or(tTemplate.PROJECT_ID.eq("").and(tTemplate.TYPE.eq(TemplateType.PUBLIC.name)))
+                )
             } else {
-                conditions.add(a.PROJECT_ID.eq(projectId))
+                conditions.add(tTemplate.PROJECT_ID.eq(projectId))
             }
         }
 
@@ -138,8 +142,9 @@ class TemplateDao {
             storeFlag = storeFlag,
             page = page,
             pageSize = pageSize,
-            a = a,
-            conditions = conditions
+            tTemplate = tTemplate,
+            conditions = conditions,
+            queryModelFlag = queryModelFlag
         )
     }
 
@@ -156,10 +161,10 @@ class TemplateDao {
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val a = TTemplate.T_TEMPLATE.`as`("a")
+        val tTemplate = TTemplate.T_TEMPLATE
 
         val conditions = mutableListOf<Condition>()
-        conditions.add(a.PROJECT_ID.`in`(projectIds))
+        conditions.add(tTemplate.PROJECT_ID.`in`(projectIds))
 
         return listTemplateByProjectCondition(
             dslContext = dslContext,
@@ -168,7 +173,7 @@ class TemplateDao {
             storeFlag = storeFlag,
             page = page,
             pageSize = pageSize,
-            a = a,
+            tTemplate = tTemplate,
             conditions = conditions
         )
     }
@@ -180,43 +185,49 @@ class TemplateDao {
         storeFlag: Boolean?,
         page: Int?,
         pageSize: Int?,
-        a: TTemplate,
-        conditions: MutableList<Condition>
+        tTemplate: TTemplate,
+        conditions: MutableList<Condition>,
+        queryModelFlag: Boolean = true
     ): Result<out Record>? {
         if (templateType != null) {
-            conditions.add(a.TYPE.eq(templateType.name))
+            conditions.add(tTemplate.TYPE.eq(templateType.name))
         }
         if (templateIdList != null && templateIdList.isNotEmpty()) {
-            conditions.add(a.ID.`in`(templateIdList))
+            conditions.add(tTemplate.ID.`in`(templateIdList))
         }
         if (storeFlag != null) {
-            conditions.add(a.STORE_FLAG.eq(storeFlag))
+            conditions.add(tTemplate.STORE_FLAG.eq(storeFlag))
         }
-        val t = dslContext.select(a.ID.`as`(KEY_ID), DSL.max(a.CREATED_TIME).`as`(KEY_CREATE_TIME))
-            .from(a)
+        val t = dslContext.select(tTemplate.ID.`as`(KEY_ID), DSL.max(tTemplate.CREATED_TIME).`as`(KEY_CREATE_TIME))
+            .from(tTemplate)
             .where(conditions)
-            .groupBy(a.ID)
+            .groupBy(tTemplate.ID)
 
-        val baseStep = dslContext.select(
-            a.ID.`as`("templateId"),
-            a.TEMPLATE_NAME.`as`("name"),
-            a.VERSION.`as`("version"),
-            a.VERSION_NAME.`as`("versionName"),
-            a.TYPE.`as`("templateType"),
-            a.LOGO_URL.`as`("logoUrl"),
-            a.STORE_FLAG.`as`("storeFlag"),
-            a.CREATOR.`as`("creator"),
-            a.CREATED_TIME.`as`("createdTime"),
-            a.SRC_TEMPLATE_ID.`as`("srcTemplateId"),
-            a.TEMPLATE.`as`("template"),
-            a.CATEGORY.`as`("category"),
-            a.PROJECT_ID.`as`("projectId")
+        val baseSelect = dslContext.select(
+            tTemplate.ID,
+            tTemplate.TEMPLATE_NAME,
+            tTemplate.VERSION,
+            tTemplate.VERSION_NAME,
+            tTemplate.TYPE,
+            tTemplate.LOGO_URL,
+            tTemplate.STORE_FLAG,
+            tTemplate.CREATOR,
+            tTemplate.CREATED_TIME,
+            tTemplate.UPDATE_TIME,
+            tTemplate.SRC_TEMPLATE_ID,
+            tTemplate.CATEGORY,
+            tTemplate.PROJECT_ID
         )
-            .from(a)
+        if (queryModelFlag) {
+            // 查询模板model内容
+            baseSelect.select(tTemplate.TEMPLATE)
+        }
+
+        val baseStep = baseSelect.from(tTemplate)
             .join(t)
             .on(
-                a.ID.eq(t.field(KEY_ID, String::class.java)).and(
-                    a.CREATED_TIME.eq(
+                tTemplate.ID.eq(t.field(KEY_ID, String::class.java)).and(
+                    tTemplate.CREATED_TIME.eq(
                         t.field(
                             KEY_CREATE_TIME,
                             LocalDateTime::class.java
@@ -225,7 +236,7 @@ class TemplateDao {
                 )
             )
             .where(conditions)
-            .orderBy(a.WEIGHT.desc(), a.CREATED_TIME.desc(), a.VERSION.desc())
+            .orderBy(tTemplate.WEIGHT.desc(), tTemplate.CREATED_TIME.desc(), tTemplate.VERSION.desc())
 
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()

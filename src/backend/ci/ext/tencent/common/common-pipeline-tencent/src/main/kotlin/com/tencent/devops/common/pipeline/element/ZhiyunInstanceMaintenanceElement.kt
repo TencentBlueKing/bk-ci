@@ -27,11 +27,12 @@
 
 package com.tencent.devops.common.pipeline.element
 
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.element.enums.ZhiyunOperation
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@Deprecated("作废，由其他团队负责")
 @ApiModel("织云-启动,停止,重启,热重启,卸载", description = ZhiyunInstanceMaintenanceElement.classType)
 data class ZhiyunInstanceMaintenanceElement(
     @ApiModelProperty("任务名称", required = true)

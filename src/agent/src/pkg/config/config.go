@@ -48,21 +48,22 @@ import (
 )
 
 const (
-	ConfigKeyProjectId         = "devops.project.id"
-	ConfigKeyAgentId           = "devops.agent.id"
-	ConfigKeySecretKey         = "devops.agent.secret.key"
-	ConfigKeyDevopsGateway     = "landun.gateway"
-	ConfigKeyDevopsFileGateway = "landun.fileGateway"
-	ConfigKeyTaskCount         = "devops.parallel.task.count"
-	ConfigKeyEnvType           = "landun.env"
-	ConfigKeySlaveUser         = "devops.slave.user"
-	ConfigKeyCollectorOn       = "devops.agent.collectorOn"
-	ConfigKeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
-	ConfigKeyDetectShell       = "devops.agent.detect.shell"
-	ConfigKeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
-	ConfigKeyBatchInstall      = "devops.agent.batch.install"
+	KeyProjectId         = "devops.project.id"
+	KeyAgentId           = "devops.agent.id"
+	KeySecretKey         = "devops.agent.secret.key"
+	KeyDevopsGateway     = "landun.gateway"
+	KeyDevopsFileGateway = "landun.fileGateway"
+	KeyTaskCount         = "devops.parallel.task.count"
+	KeyEnvType           = "landun.env"
+	KeySlaveUser         = "devops.slave.user"
+	KeyCollectorOn       = "devops.agent.collectorOn"
+	KeyRequestTimeoutSec = "devops.agent.request.timeout.sec"
+	KeyDetectShell       = "devops.agent.detect.shell"
+	KeyIgnoreLocalIps    = "devops.agent.ignoreLocalIps"
+	KeyBatchInstall      = "devops.agent.batch.install"
 )
 
+// AgentConfig Agent 配置
 type AgentConfig struct {
 	Gateway           string
 	FileGateway       string
@@ -80,6 +81,7 @@ type AgentConfig struct {
 	BatchInstallKey   string
 }
 
+// AgentEnv Agent 环境配置
 type AgentEnv struct {
 	OsName           string
 	AgentIp          string
@@ -92,10 +94,10 @@ type AgentEnv struct {
 var GAgentEnv *AgentEnv
 var GAgentConfig *AgentConfig
 var GIsAgentUpgrading = false
-var GWorkDir string
 var GEnvVars map[string]string
 var UseCert bool
 
+// Init 加载和初始化配置
 func Init() {
 	err := LoadAgentConfig()
 	if err != nil {
@@ -106,6 +108,7 @@ func Init() {
 	LoadAgentEnv()
 }
 
+// LoadAgentEnv 加载Agent环境
 func LoadAgentEnv() {
 	GAgentEnv = new(AgentEnv)
 
@@ -126,8 +129,13 @@ func LoadAgentEnv() {
 	GAgentEnv.AgentVersion = DetectAgentVersion()
 }
 
+// DetectAgentVersion 检测Agent版本
 func DetectAgentVersion() string {
-	workDir := systemutil.GetWorkDir()
+	return DetectAgentVersionByDir(systemutil.GetWorkDir())
+}
+
+// DetectAgentVersionByDir 检测指定目录下的Agent文件版本
+func DetectAgentVersionByDir(workDir string) string {
 	agentExecutable := workDir + "/" + GetClienAgentFile()
 
 	if systemutil.IsLinux() || systemutil.IsMacos() {
@@ -155,9 +163,17 @@ func DetectAgentVersion() string {
 	return strings.TrimSpace(agentVersion)
 }
 
+// DetectWorkerVersion 检查worker版本
 func DetectWorkerVersion() string {
+	return DetectWorkerVersionByDir(systemutil.GetWorkDir())
+}
+
+// DetectWorkerVersionByDir 检测指定目录下的Worker文件版本
+func DetectWorkerVersionByDir(workDir string) string {
+	jar := fmt.Sprintf("%s/%s", workDir, WorkAgentFile)
 	output, err := command.RunCommand(GetJava(),
-		[]string{"-cp", BuildAgentJarPath(), "com.tencent.devops.agent.AgentVersionKt"}, systemutil.GetWorkDir(), nil)
+		[]string{"-Xmx256m", "-cp", jar, "com.tencent.devops.agent.AgentVersionKt"},
+		workDir, nil)
 
 	if err != nil {
 		logs.Warn("detect worker version failed: ", err.Error())
@@ -169,6 +185,7 @@ func DetectWorkerVersion() string {
 	return parseWorkerVersion(string(output))
 }
 
+// parseWorkerVersion 解析worker版本
 func parseWorkerVersion(output string) string {
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
@@ -184,15 +201,12 @@ func parseWorkerVersion(output string) string {
 	return ""
 }
 
+// BuildAgentJarPath 生成jar寻址路径
 func BuildAgentJarPath() string {
-	path := fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "worker-agent.jar")
-	if !fileutil.Exists(path) {
-		logs.Warn("worker-agent.jar not exist, use agent.jar")
-		path = fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), "agent.jar")
-	}
-	return path
+	return fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), WorkAgentFile)
 }
 
+// LoadAgentConfig 加载 .agent.properties文件信息
 func LoadAgentConfig() error {
 	GAgentConfig = new(AgentConfig)
 
@@ -202,62 +216,62 @@ func LoadAgentConfig() error {
 		return errors.New("load agent config failed")
 	}
 
-	parallelTaskCount, err := conf.Int(ConfigKeyTaskCount)
+	parallelTaskCount, err := conf.Int(KeyTaskCount)
 	if err != nil || parallelTaskCount < 0 {
 		return errors.New("invalid parallelTaskCount")
 	}
 
-	projectId := strings.TrimSpace(conf.String(ConfigKeyProjectId))
+	projectId := strings.TrimSpace(conf.String(KeyProjectId))
 	if len(projectId) == 0 {
 		return errors.New("invalid projectId")
 	}
 
-	agentId := conf.String(ConfigKeyAgentId)
+	agentId := conf.String(KeyAgentId)
 	if len(agentId) == 0 {
 		return errors.New("invalid agentId")
 	}
 
-	secretKey := strings.TrimSpace(conf.String(ConfigKeySecretKey))
+	secretKey := strings.TrimSpace(conf.String(KeySecretKey))
 	if len(secretKey) == 0 {
 		return errors.New("invalid secretKey")
 	}
 
-	landunGateway := strings.TrimSpace(conf.String(ConfigKeyDevopsGateway))
+	landunGateway := strings.TrimSpace(conf.String(KeyDevopsGateway))
 	if len(landunGateway) == 0 {
 		return errors.New("invalid landunGateway")
 	}
 
-	landunFileGateway := strings.TrimSpace(conf.String(ConfigKeyDevopsFileGateway))
+	landunFileGateway := strings.TrimSpace(conf.String(KeyDevopsFileGateway))
 	if len(landunFileGateway) == 0 {
 		logs.Warn("fileGateway is empty")
 	}
 
-	envType := strings.TrimSpace(conf.String(ConfigKeyEnvType))
+	envType := strings.TrimSpace(conf.String(KeyEnvType))
 	if len(envType) == 0 {
 		return errors.New("invalid envType")
 	}
 
-	slaveUser := strings.TrimSpace(conf.String(ConfigKeySlaveUser))
+	slaveUser := strings.TrimSpace(conf.String(KeySlaveUser))
 	if len(slaveUser) == 0 {
 		slaveUser = systemutil.GetCurrentUser().Username
 	}
 
-	collectorOn, err := conf.Bool(ConfigKeyCollectorOn)
+	collectorOn, err := conf.Bool(KeyCollectorOn)
 	if err != nil {
 		collectorOn = true
 	}
-	timeout, err := conf.Int64(ConfigKeyRequestTimeoutSec)
+	timeout, err := conf.Int64(KeyRequestTimeoutSec)
 	if err != nil {
 		timeout = 5
 	}
-	detectShell := conf.DefaultBool(ConfigKeyDetectShell, false)
+	detectShell := conf.DefaultBool(KeyDetectShell, false)
 
-	ignoreLocalIps := strings.TrimSpace(conf.String(ConfigKeyIgnoreLocalIps))
+	ignoreLocalIps := strings.TrimSpace(conf.String(KeyIgnoreLocalIps))
 	if len(ignoreLocalIps) == 0 {
 		ignoreLocalIps = "127.0.0.1,192.168.10.255" // 临时代码，上线更新即移除
 	}
 
-	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.String(ConfigKeyBatchInstall))
+	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.String(KeyBatchInstall))
 
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
@@ -291,21 +305,22 @@ func LoadAgentConfig() error {
 	return GAgentConfig.SaveConfig()
 }
 
+// SaveConfig 将配置回写到agent.properties文件保存
 func (a *AgentConfig) SaveConfig() error {
 	filePath := systemutil.GetWorkDir() + "/.agent.properties"
 
 	content := bytes.Buffer{}
-	content.WriteString(ConfigKeyProjectId + "=" + GAgentConfig.ProjectId + "\n")
-	content.WriteString(ConfigKeyAgentId + "=" + GAgentConfig.AgentId + "\n")
-	content.WriteString(ConfigKeySecretKey + "=" + GAgentConfig.SecretKey + "\n")
-	content.WriteString(ConfigKeyDevopsGateway + "=" + GAgentConfig.Gateway + "\n")
-	content.WriteString(ConfigKeyDevopsFileGateway + "=" + GAgentConfig.FileGateway + "\n")
-	content.WriteString(ConfigKeyTaskCount + "=" + strconv.Itoa(GAgentConfig.ParallelTaskCount) + "\n")
-	content.WriteString(ConfigKeyEnvType + "=" + GAgentConfig.EnvType + "\n")
-	content.WriteString(ConfigKeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
-	content.WriteString(ConfigKeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
-	content.WriteString(ConfigKeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
-	content.WriteString(ConfigKeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
+	content.WriteString(KeyProjectId + "=" + GAgentConfig.ProjectId + "\n")
+	content.WriteString(KeyAgentId + "=" + GAgentConfig.AgentId + "\n")
+	content.WriteString(KeySecretKey + "=" + GAgentConfig.SecretKey + "\n")
+	content.WriteString(KeyDevopsGateway + "=" + GAgentConfig.Gateway + "\n")
+	content.WriteString(KeyDevopsFileGateway + "=" + GAgentConfig.FileGateway + "\n")
+	content.WriteString(KeyTaskCount + "=" + strconv.Itoa(GAgentConfig.ParallelTaskCount) + "\n")
+	content.WriteString(KeyEnvType + "=" + GAgentConfig.EnvType + "\n")
+	content.WriteString(KeySlaveUser + "=" + GAgentConfig.SlaveUser + "\n")
+	content.WriteString(KeyRequestTimeoutSec + "=" + strconv.FormatInt(GAgentConfig.TimeoutSec, 10) + "\n")
+	content.WriteString(KeyDetectShell + "=" + strconv.FormatBool(GAgentConfig.DetectShell) + "\n")
+	content.WriteString(KeyIgnoreLocalIps + "=" + GAgentConfig.IgnoreLocalIps + "\n")
 
 	err := ioutil.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
@@ -315,16 +330,17 @@ func (a *AgentConfig) SaveConfig() error {
 	return nil
 }
 
+// GetAuthHeaderMap 生成鉴权头部
 func (a *AgentConfig) GetAuthHeaderMap() map[string]string {
 	authHeaderMap := make(map[string]string)
 	authHeaderMap[AuthHeaderBuildType] = a.BuildType
-	authHeaderMap[AuthHeaderSodaProjectId] = a.ProjectId
 	authHeaderMap[AuthHeaderProjectId] = a.ProjectId
 	authHeaderMap[AuthHeaderAgentId] = a.AgentId
 	authHeaderMap[AuthHeaderSecretKey] = a.SecretKey
 	return authHeaderMap
 }
 
+// GetJava 获取本地java命令路径
 func GetJava() string {
 	workDir := systemutil.GetWorkDir()
 	if systemutil.IsMacos() {
@@ -334,6 +350,7 @@ func GetJava() string {
 	}
 }
 
+// initCert 初始化证书
 func initCert() {
 	AbsCertFilePath := systemutil.GetWorkDir() + "/" + CertFilePath
 	fileInfo, err := os.Stat(AbsCertFilePath)

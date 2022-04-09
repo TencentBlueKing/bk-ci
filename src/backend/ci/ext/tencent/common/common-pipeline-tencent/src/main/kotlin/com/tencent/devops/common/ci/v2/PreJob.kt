@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
-@JsonFilter(YamlMetaDataJsonFilter)
+@JsonFilter(YAME_META_DATA_JSON_FILTER)
 data class PreJob(
     // val job: JobDetail,
     val name: String?,

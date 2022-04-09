@@ -39,7 +39,10 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isMrForkNotMergeEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.TriggerException.Companion.triggerError
 import com.tencent.devops.stream.common.exception.TriggerThirdException
@@ -51,9 +54,9 @@ import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.isFork
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
@@ -67,6 +70,7 @@ import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.v2.service.RepoTriggerEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
@@ -86,6 +90,7 @@ class GitCITriggerService @Autowired constructor(
     private val gitCISettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val repoTriggerEventService: RepoTriggerEventService,
     private val rabbitTemplate: RabbitTemplate,
     private val yamlTriggerFactory: YamlTriggerFactory,
     private val streamScmService: StreamScmService,
@@ -97,7 +102,9 @@ class GitCITriggerService @Autowired constructor(
     private val tokenService: StreamGitTokenService,
     private val triggerParameter: TriggerParameter,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val gitCIEventService: GitCIEventService,
+    private val gitCITriggerRepoService: GitCITriggerRepoService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -118,6 +125,8 @@ class GitCITriggerService @Autowired constructor(
         }
 
         val gitRequestEvent = triggerParameter.getGitRequestEvent(eventObject, event) ?: return true
+        gitRequestEvent.repoTriggerPipelineList =
+            repoTriggerEventService.getTargetPipelines(gitRequestEvent.gitProjectName)
 
         // 做一些在接收到请求后做的预处理
         if (gitRequestEvent.objectKind == TGitObjectKind.PUSH.value) {
@@ -126,8 +135,10 @@ class GitCITriggerService @Autowired constructor(
 
         val gitCIBasicSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         // 没开启的就不存
-        if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
-            logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
+        if ((null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) &&
+            gitRequestEvent.repoTriggerPipelineList.isNullOrEmpty()
+        ) {
+            logger.info("git ci is not enabled and not repo trigger, git project id: ${gitRequestEvent.gitProjectId}")
             return null
         }
 
@@ -137,24 +148,69 @@ class GitCITriggerService @Autowired constructor(
 
         if (eventObject is GitPushEvent && preTrigger.skipStream(eventObject)) {
             logger.info("project: ${gitRequestEvent.gitProjectId} commit: ${gitRequestEvent.commitId} skip ci")
+            gitCIEventService.saveTriggerNotBuildEvent(
+                userId = gitRequestEvent.userId,
+                eventId = gitRequestEvent.id!!,
+                reason = TriggerReason.USER_SKIPED.name,
+                reasonDetail = TriggerReason.USER_SKIPED.detail,
+                gitProjectId = gitRequestEvent.gitProjectId,
+                branch = gitRequestEvent.branch
+            )
             return true
+        }
+
+        if (!gitRequestEvent.repoTriggerPipelineList.isNullOrEmpty()) {
+            try {
+                gitCITriggerRepoService.repoTriggerBuild(
+                    triggerPipelineList = gitRequestEvent.repoTriggerPipelineList,
+                    gitRequestEvent = gitRequestEvent,
+                    event = eventObject
+                )
+            } catch (ignore: Throwable) {
+                logger.error("Fail to start repo trigger (${gitRequestEvent.gitProjectName})", ignore)
+            }
+        }
+
+        val gitRequestEventForHandle = gitCiTriggerChangeGitRequestEvent(gitRequestEvent)
+
+        if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
+            logger.info(
+                "git ci is not enabled , but it has repo trigger , " +
+                        "git project id: ${gitRequestEvent.gitProjectId}"
+            )
+            return null
         }
 
         streamStorageBean.saveRequestTime(LocalDateTime.now().timestampmilli() - start)
 
-        return triggerExceptionService.handle(gitRequestEvent, eventObject, gitCIBasicSetting) {
-            checkRequest(gitRequestEvent, eventObject, gitCIBasicSetting)
+        return triggerExceptionService.handle(gitRequestEventForHandle, eventObject, gitCIBasicSetting) {
+            triggerExceptionService.handleErrorCode(request = gitRequestEventForHandle) {
+                checkRequest(gitRequestEventForHandle, eventObject, gitCIBasicSetting)
+            }
         }
     }
 
+    private fun gitCiTriggerChangeGitRequestEvent(
+        gitRequestEvent: GitRequestEvent
+    ): GitRequestEventForHandle {
+        return GitRequestEventForHandle(
+            id = gitRequestEvent.id,
+            gitProjectId = gitRequestEvent.gitProjectId,
+            branch = gitRequestEvent.branch,
+            userId = gitRequestEvent.userId,
+            checkRepoTrigger = false,
+            gitRequestEvent = gitRequestEvent
+        )
+    }
+
     private fun checkRequest(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         event: GitEvent,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
         val start = LocalDateTime.now().timestampmilli()
 
-        CheckStreamSetting.checkGitProjectConf(gitRequestEvent, event, gitProjectConf)
+        CheckStreamSetting.checkGitProjectConf(gitRequestEventForHandle, event, gitProjectConf)
 
         val path2PipelineExists = gitPipelineResourceDao.getAllByGitProjectId(dslContext, gitProjectConf.gitProjectId)
             .associate {
@@ -174,11 +230,12 @@ class GitCITriggerService @Autowired constructor(
         if (event is GitMergeRequestEvent &&
             event.object_attributes.action != TGitMergeActionKind.MERGE.value &&
             !mergeConflictCheck.checkMrConflict(
-                gitRequestEvent = gitRequestEvent,
+                projectId = gitRequestEventForHandle.gitProjectId,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 event = event,
                 path2PipelineExists = path2PipelineExists,
                 gitProjectConf = gitProjectConf,
-                gitToken = handleGetToken(gitRequestEvent)!!
+                gitToken = handleGetToken(gitRequestEventForHandle)!!
             )
         ) {
             return false
@@ -186,45 +243,43 @@ class GitCITriggerService @Autowired constructor(
 
         streamStorageBean.pipelineAndConflictTime(LocalDateTime.now().timestampmilli() - start)
 
-        return matchAndTriggerPipeline(gitRequestEvent, event, path2PipelineExists, gitProjectConf)
+        return matchAndTriggerPipeline(gitRequestEventForHandle, event, path2PipelineExists, gitProjectConf)
     }
 
     @Suppress("ALL")
     fun matchAndTriggerPipeline(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
         gitProjectConf: GitCIBasicSetting
     ): Boolean {
         val start = LocalDateTime.now().timestampmilli()
 
-        val mrEvent = event is GitMergeRequestEvent
-        val isMerged = if (mrEvent) {
-            val e = event as GitMergeRequestEvent
-            e.object_attributes.action == TGitMergeActionKind.MERGE.value
-        } else {
-            false
-        }
         val hookStartTime = LocalDateTime.now()
-        val gitToken = handleGetToken(gitRequestEvent)!!
-        logger.info("get token for gitProject[${gitRequestEvent.gitProjectId}] form scm, token: $gitToken")
+        val gitToken = handleGetToken(gitRequestEventForHandle)!!
+        logger.info("get token for gitProject[${gitRequestEventForHandle.gitProjectId}] form scm, token: $gitToken")
 
         // fork项目库的projectId与原项目不同
-        val isFork = !isMerged && gitRequestEvent.isFork()
-        var forkGitToken: String? = null
-        var forkGitProjectId: Long? = null
-        if (isFork) {
-            forkGitToken = handleGetToken(gitRequestEvent, true)!!
-            forkGitProjectId = getProjectId(mrEvent, gitRequestEvent)
+        val (forkGitToken, forkGitProjectId) = if (event.isMrForkNotMergeEvent() &&
+            !gitRequestEventForHandle.checkRepoTrigger
+        ) {
+            val forkGitToken = handleGetToken(gitRequestEventForHandle, true)!!
+            val forkGitProjectId = getProjectId(gitRequestEventForHandle)
             logger.info(
                 "get fork token for gitProject[$forkGitProjectId] form scm, token: $forkGitToken"
             )
-        }
+            Pair(forkGitToken, forkGitProjectId)
+        } else Pair(null, null)
 
         // 判断本次mr/push提交是否需要删除流水线, fork不用
-        if (event is GitPushEvent || event is GitMergeRequestEvent && !isFork) {
+        if (event is GitPushEvent ||
+            event is GitMergeRequestEvent &&
+            !event.isMrForkNotMergeEvent() &&
+            // 远程触发不存在删除流水线的情况
+            !gitRequestEventForHandle.checkRepoTrigger
+        ) {
             pipelineDelete.checkAndDeletePipeline(
-                gitRequestEvent = gitRequestEvent,
+                gitRequestEvent = gitRequestEventForHandle.gitRequestEvent,
                 event = event,
                 path2PipelineExists = path2PipelineExists,
                 gitProjectConf = gitProjectConf,
@@ -232,46 +287,37 @@ class GitCITriggerService @Autowired constructor(
             )
         }
 
-        val isDeleteEvent = event.isDeleteEvent()
-
         val gitProjectInfoCache = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            gitRequestEventId = gitRequestEvent.id!!,
-            gitProjectId = gitRequestEvent.gitProjectId.toString(),
+            gitRequestEventId = gitRequestEventForHandle.id!!,
+            gitProjectId = gitRequestEventForHandle.gitProjectId.toString(),
             token = gitToken,
             useAccessToken = true,
             getProjectInfo = streamScmService::getProjectInfoRetry
         )
 
-        val (yamlPathList, changeSet) = if (isDeleteEvent) {
-            Pair(
+        val (yamlPathList, changeSet) = when {
+            // 远程仓库触发是走
+            gitRequestEventForHandle.checkRepoTrigger || event.isDeleteEvent() -> Pair(
                 getYamlPathList(
-                    isFork = false,
-                    forkGitToken = null,
-                    gitRequestEvent = gitRequestEvent.copy(branch = gitProjectInfoCache.defaultBranch ?: ""),
-                    mrEvent = false,
+                    gitProjectId = gitRequestEventForHandle.gitProjectId,
                     gitToken = gitToken,
                     ref = gitProjectInfoCache.defaultBranch
                 ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }, emptySet()
             )
-        } else if (event is GitMergeRequestEvent) {
-            getMrYamlPathList(
-                isFork = isFork,
+            event is GitMergeRequestEvent -> getMrYamlPathList(
+                isFork = event.isMrForkNotMergeEvent(),
                 forkGitToken = forkGitToken,
-                gitRequestEvent = gitRequestEvent,
+                gitRequestEventForHandle = gitRequestEventForHandle,
                 gitToken = gitToken,
                 targetBranch = event.object_attributes.target_branch,
                 mrId = event.object_attributes.id,
-                merged = isMerged
+                merged = event.isMrMergeEvent()
             )
-        } else {
-            Pair(
+            else -> Pair(
                 getYamlPathList(
-                    isFork = isFork,
-                    forkGitToken = forkGitToken,
-                    gitRequestEvent = gitRequestEvent,
-                    mrEvent = mrEvent,
+                    gitProjectId = gitRequestEventForHandle.gitProjectId,
                     gitToken = gitToken,
-                    ref = gitRequestEvent.branch
+                    ref = gitRequestEventForHandle.gitRequestEvent.branch
                 ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }, emptySet()
             )
         }
@@ -279,16 +325,16 @@ class GitCITriggerService @Autowired constructor(
         logger.info(
             "matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
                     "$yamlPathList, path2PipelineExists: $path2PipelineExists, " +
-                    "commitTime:${gitRequestEvent.commitTimeStamp}, " +
+                    "commitTime:${gitRequestEventForHandle.gitRequestEvent.commitTimeStamp}, " +
                     "hookStartTime:${DateTimeUtil.toDateTime(hookStartTime)}, " +
                     "yamlCheckedTime:${DateTimeUtil.toDateTime(LocalDateTime.now())}"
         )
 
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
-            logger.warn("event: ${gitRequestEvent.id} cannot found ci yaml from git")
+            logger.warn("event: ${gitRequestEventForHandle.id} cannot found ci yaml from git")
             triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 reason = TriggerReason.CI_YAML_NOT_FOUND
             )
         }
@@ -304,16 +350,20 @@ class GitCITriggerService @Autowired constructor(
                 pipelineId = "", // 留空用于是否创建判断
                 filePath = filePath,
                 enabled = true,
-                creator = gitRequestEvent.userId,
+                creator = gitRequestEventForHandle.userId,
                 latestBuildInfo = null,
                 latestBuildBranch = null
             )
+            // 远程仓库触发不需要新建流水线
+            if (buildPipeline.pipelineId.isBlank() && gitRequestEventForHandle.checkRepoTrigger) {
+                return@forEach
+            }
             // 针对每个流水线处理异常
-            triggerExceptionService.handle(gitRequestEvent, event, gitProjectConf) {
+            triggerExceptionService.handle(gitRequestEventForHandle, event, gitProjectConf) {
                 // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
                 if (checkType == CheckType.NO_TRIGGER) {
                     triggerError(
-                        request = gitRequestEvent,
+                        request = gitRequestEventForHandle,
                         reason = TriggerReason.MR_BRANCH_FILE_ERROR,
                         reasonParams = listOf(filePath)
                     )
@@ -321,20 +371,17 @@ class GitCITriggerService @Autowired constructor(
 
                 // ErrorCode都是系统错误，在最外面统一处理,都要发送无锁的commitCheck
                 triggerExceptionService.handleErrorCode(
-                    request = gitRequestEvent,
+                    request = gitRequestEventForHandle,
                     event = event,
                     pipeline = buildPipeline,
                     action = {
                         checkAndTrigger(
                             buildPipeline = buildPipeline,
-                            gitRequestEvent = gitRequestEvent,
+                            gitRequestEventForHandle = gitRequestEventForHandle,
                             event = event,
                             forkGitToken = forkGitToken,
                             gitToken = gitToken,
                             changeSet = changeSet,
-                            displayName = filePath,
-                            mrEvent = mrEvent,
-                            isMerged = isMerged,
                             gitProjectConf = gitProjectConf,
                             forkGitProjectId = forkGitProjectId,
                             defaultBranch = gitProjectInfoCache.defaultBranch
@@ -353,14 +400,11 @@ class GitCITriggerService @Autowired constructor(
     @Throws(ErrorCodeException::class)
     private fun checkAndTrigger(
         buildPipeline: GitProjectPipeline,
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         event: GitEvent,
         forkGitToken: String?,
         gitToken: String,
         changeSet: Set<String>,
-        displayName: String,
-        mrEvent: Boolean,
-        isMerged: Boolean,
         gitProjectConf: GitCIBasicSetting,
         forkGitProjectId: Long?,
         defaultBranch: String?
@@ -371,65 +415,71 @@ class GitCITriggerService @Autowired constructor(
         // 流水线未启用则跳过
         if (!buildPipeline.enabled) {
             logger.warn(
-                "Pipeline is not enabled, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                "Pipeline is not enabled, gitProjectId: ${gitRequestEventForHandle.gitProjectId}, " +
+                        "eventId: ${gitRequestEventForHandle.id}"
             )
             triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 event = event,
                 pipeline = buildPipeline,
                 reason = TriggerReason.PIPELINE_DISABLE
             )
         }
 
-        // 检查版本落后信息和真正要触发的文件，Merged事件不用检查版本
-        val originYaml = if (mrEvent && !isMerged) {
-            val (result, orgYaml) =
-                yamlVersion.checkYmlVersion(
-                    mrEvent = event as GitMergeRequestEvent,
-                    sourceGitToken = forkGitToken,
-                    targetGitToken = gitToken,
-                    filePath = filePath,
-                    changeSet = changeSet
-                )
-            logger.info("origin yamlStr: $orgYaml")
-            if (!result) {
-                triggerError(
-                    request = gitRequestEvent,
-                    event = event,
-                    pipeline = buildPipeline,
-                    reason = TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE,
-                    reasonParams = listOf(filePath),
-                    commitCheck = CommitCheck(
-                        block = mrEvent,
-                        state = GitCICommitCheckState.FAILURE
+        val originYaml = when {
+            gitRequestEventForHandle.checkRepoTrigger -> streamScmService.getYamlFromGit(
+                token = gitToken,
+                ref = gitRequestEventForHandle.branch,
+                fileName = filePath,
+                gitProjectId = getProjectId(gitRequestEventForHandle).toString(),
+                useAccessToken = true
+            )
+            // 检查版本落后信息和真正要触发的文件，Merged事件不用检查版本
+            event is GitMergeRequestEvent && !event.isMrMergeEvent() -> {
+                val (result, orgYaml) =
+                    yamlVersion.checkYmlVersion(
+                        mrEvent = event,
+                        sourceGitToken = forkGitToken,
+                        targetGitToken = gitToken,
+                        filePath = filePath,
+                        changeSet = changeSet
                     )
-                )
+                logger.info("origin yamlStr: $orgYaml")
+                if (!result) {
+                    triggerError(
+                        request = gitRequestEventForHandle,
+                        event = event,
+                        pipeline = buildPipeline,
+                        reason = TriggerReason.CI_YAML_NEED_MERGE_OR_REBASE,
+                        reasonParams = listOf(filePath),
+                        commitCheck = CommitCheck(
+                            block = true,
+                            state = GitCICommitCheckState.FAILURE
+                        )
+                    )
+                }
+                orgYaml
             }
-            orgYaml
-        } else {
-            if (event.isDeleteEvent()) {
-                streamScmService.getYamlFromGit(
-                    token = forkGitToken ?: gitToken,
-                    ref = defaultBranch ?: "",
-                    fileName = filePath,
-                    gitProjectId = getProjectId(mrEvent, gitRequestEvent).toString(),
-                    useAccessToken = true
-                )
-            } else {
-                streamScmService.getYamlFromGit(
-                    token = forkGitToken ?: gitToken,
-                    ref = gitRequestEvent.branch,
-                    fileName = filePath,
-                    gitProjectId = getProjectId(mrEvent, gitRequestEvent).toString(),
-                    useAccessToken = true
-                )
-            }
+            event.isDeleteEvent() -> streamScmService.getYamlFromGit(
+                token = gitToken,
+                ref = defaultBranch ?: "",
+                fileName = filePath,
+                gitProjectId = getProjectId(gitRequestEventForHandle).toString(),
+                useAccessToken = true
+            )
+            else -> streamScmService.getYamlFromGit(
+                token = gitToken,
+                ref = gitRequestEventForHandle.branch,
+                fileName = filePath,
+                gitProjectId = getProjectId(gitRequestEventForHandle).toString(),
+                useAccessToken = true
+            )
         }
 
         // 组装上下文参数
         val context = StreamTriggerContext(
             gitEvent = event,
-            requestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             streamSetting = gitProjectConf,
             pipeline = buildPipeline,
             originYaml = originYaml,
@@ -439,10 +489,11 @@ class GitCITriggerService @Autowired constructor(
         // 如果当前文件没有内容直接不触发
         if (originYaml.isBlank()) {
             logger.warn(
-                "Matcher is false,gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                "Matcher is false,gitProjectId: ${gitRequestEventForHandle.gitProjectId}," +
+                        " eventId: ${gitRequestEventForHandle.id}"
             )
             triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 event = event,
                 pipeline = buildPipeline,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL,
@@ -452,7 +503,7 @@ class GitCITriggerService @Autowired constructor(
                     normalYaml = null
                 ),
                 commitCheck = CommitCheck(
-                    block = mrEvent,
+                    block = event is GitMergeRequestEvent,
                     state = GitCICommitCheckState.FAILURE
                 )
             )
@@ -460,16 +511,13 @@ class GitCITriggerService @Autowired constructor(
 
         yamlSchemaCheck.check(context = context, templateType = null, isCiFile = true)
 
-        // 为已存在的流水线设置名称
-        buildPipeline.displayName = displayName
-
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
         val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
         if (ymlVersion?.version == "v2.0") {
             dispatchStreamTrigger(
                 StreamTriggerEvent(
-                    gitRequestEvent = gitRequestEvent,
+                    gitRequestEventForHandle = gitRequestEventForHandle,
                     gitProjectPipeline = buildPipeline,
                     event = event,
                     originYaml = originYaml,
@@ -494,34 +542,35 @@ class GitCITriggerService @Autowired constructor(
         isFork: Boolean,
         forkGitToken: String?,
         targetBranch: String,
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         gitToken: String,
         mrId: Long,
         merged: Boolean
     ): Pair<List<YamlPathListEntry>, Set<String>> {
         // 获取目标分支的文件列表
         val targetBranchYamlPathList = getYamlPathList(
-            isFork = isFork,
-            forkGitToken = forkGitToken,
-            gitRequestEvent = gitRequestEvent,
-            mrEvent = true,
+            gitProjectId = gitRequestEventForHandle.gitProjectId,
             gitToken = gitToken,
             ref = streamScmService.getTriggerBranch(targetBranch)
         ).toSet()
 
         // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = streamScmService.getMergeRequestChangeInfo(
+        val changeSet = mutableSetOf<String>()
+        streamScmService.getMergeRequestChangeInfo(
             userId = null,
             token = gitToken,
-            gitProjectId = gitRequestEvent.gitProjectId,
+            gitProjectId = gitRequestEventForHandle.gitProjectId,
             mrId = mrId
-        )?.files?.map {
+        )?.files?.forEach {
             if (it.deletedFile) {
-                it.oldPath
+                changeSet.add(it.oldPath)
+            } else if (it.renameFile) {
+                changeSet.add(it.oldPath)
+                changeSet.add(it.newPath)
             } else {
-                it.newPath
+                changeSet.add(it.newPath)
             }
-        }?.toSet() ?: emptySet()
+        }
 
         // 已经merged的直接返回目标分支的文件列表即可
         if (merged) {
@@ -530,12 +579,13 @@ class GitCITriggerService @Autowired constructor(
 
         // 获取源分支文件列表
         val sourceBranchYamlPathList = getYamlPathList(
-            isFork = isFork,
-            forkGitToken = forkGitToken,
-            gitRequestEvent = gitRequestEvent,
-            mrEvent = true,
-            gitToken = gitToken,
-            ref = gitRequestEvent.commitId
+            gitProjectId = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId!!,
+            gitToken = if (isFork) {
+                forkGitToken!!
+            } else {
+                gitToken
+            },
+            ref = gitRequestEventForHandle.gitRequestEvent.commitId
         ).toSet()
 
         val comparedMap = checkMrYamlPathList(sourceBranchYamlPathList, targetBranchYamlPathList, changeSet)
@@ -588,25 +638,16 @@ class GitCITriggerService @Autowired constructor(
     }
 
     private fun getYamlPathList(
-        isFork: Boolean,
-        forkGitToken: String?,
-        gitRequestEvent: GitRequestEvent,
-        mrEvent: Boolean,
+        gitProjectId: Long,
         gitToken: String,
         ref: String?
     ): MutableList<String> {
         // 获取指定目录下所有yml文件
-        val yamlPathList = if (isFork) {
-            getCIYamlList(forkGitToken!!, gitRequestEvent, mrEvent, ref)
-        } else {
-            getCIYamlList(gitToken, gitRequestEvent, mrEvent, ref)
-        }.toMutableList()
+        val yamlPathList = getCIYamlList(gitProjectId, gitToken, ref).toMutableList()
+
         // 兼容旧的根目录yml文件
-        val isCIYamlExist = if (isFork) {
-            isCIYamlExist(forkGitToken!!, gitRequestEvent, mrEvent, ref)
-        } else {
-            isCIYamlExist(gitToken, gitRequestEvent, mrEvent, ref)
-        }
+        val isCIYamlExist = isCIYamlExist(gitProjectId, gitToken, ref)
+
         if (isCIYamlExist) {
             yamlPathList.add(ciFileName)
         }
@@ -617,62 +658,65 @@ class GitCITriggerService @Autowired constructor(
         StreamTriggerDispatch.dispatch(rabbitTemplate, event)
     }
 
-    private fun handleGetToken(gitRequestEvent: GitRequestEvent, isMrEvent: Boolean = false): String? {
+    private fun handleGetToken(
+        gitRequestEventForHandle: GitRequestEventForHandle,
+        isMrEvent: Boolean = false
+    ): String? {
         return triggerExceptionService.handleErrorCode(
-            request = gitRequestEvent,
-            action = { tokenService.getToken(getProjectId(isMrEvent, gitRequestEvent)) }
+            request = gitRequestEventForHandle,
+            action = { tokenService.getToken(getProjectId(gitRequestEventForHandle, isMrEvent)) }
         )
     }
 
     @Throws(TriggerThirdException::class)
     private fun getCIYamlList(
+        gitProjectId: Long,
         gitToken: String,
-        gitRequestEvent: GitRequestEvent,
-        isMrEvent: Boolean = false,
         ref: String?
     ): List<String> {
-        val ciFileList =
-            triggerExceptionService.handleErrorCode(request = gitRequestEvent,
-                action = {
-                    streamScmService.getFileTreeFromGit(
-                        gitToken = gitToken,
-                        gitRequestEvent = gitRequestEvent,
-                        filePath = ciFileDirectoryName,
-                        isMrEvent = isMrEvent,
-                        ref = ref?.let { streamScmService.getTriggerBranch(it) }
-                    )
-                }
-            )?.filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
-        return ciFileList?.map { ciFileDirectoryName + File.separator + it.name }?.toList() ?: emptyList()
+        val ciFileList = streamScmService.getFileTreeFromGit(
+            gitProjectId = gitProjectId,
+            token = gitToken,
+            filePath = ciFileDirectoryName,
+            ref = ref?.let { streamScmService.getTriggerBranch(it) },
+            recursive = true
+        ).filter { checkStreamYamlFile(it) }
+        return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toList()
     }
+
+    private fun checkStreamYamlFile(gitFileInfo: GitFileInfo): Boolean =
+        (gitFileInfo.name.endsWith(ciFileExtensionYml) ||
+                gitFileInfo.name.endsWith(ciFileExtensionYaml)) &&
+                (gitFileInfo.type == "blob") &&
+                !gitFileInfo.name.startsWith("templates/") &&
+                // 加以限制：最多仅限一级子目录
+                (gitFileInfo.name.count { it == '/' } <= 1)
 
     @Throws(TriggerThirdException::class)
     private fun isCIYamlExist(
+        gitProjectId: Long,
         gitToken: String,
-        gitRequestEvent: GitRequestEvent,
-        isMrEvent: Boolean = false,
         ref: String?
     ): Boolean {
-        val ciFileList =
-            triggerExceptionService.handleErrorCode(request = gitRequestEvent,
-                action = {
-                    streamScmService.getFileTreeFromGit(
-                        gitToken = gitToken,
-                        gitRequestEvent = gitRequestEvent,
-                        filePath = "",
-                        isMrEvent = isMrEvent,
-                        ref = ref?.let { streamScmService.getTriggerBranch(it) }
-                    )
-                }
-            )?.filter { it.name == ciFileName } ?: emptyList()
+        val ciFileList = streamScmService.getFileTreeFromGit(
+            gitProjectId = gitProjectId,
+            token = gitToken,
+            filePath = "",
+            ref = ref?.let { streamScmService.getTriggerBranch(it) },
+            recursive = false
+        ).filter { it.name == ciFileName }
         return ciFileList.isNotEmpty()
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
-    private fun getProjectId(isMrEvent: Boolean = false, gitRequestEvent: GitRequestEvent): Long {
-        with(gitRequestEvent) {
-            return if (isMrEvent && sourceGitProjectId != null && sourceGitProjectId != gitProjectId) {
-                sourceGitProjectId!!
+    private fun getProjectId(gitRequestEventForHandle: GitRequestEventForHandle, isMrEvent: Boolean = false): Long {
+        with(gitRequestEventForHandle) {
+            return if (isMrEvent &&
+                gitRequestEvent.sourceGitProjectId != null &&
+                gitRequestEvent.sourceGitProjectId != gitProjectId &&
+                !checkRepoTrigger
+            ) {
+                gitRequestEvent.sourceGitProjectId!!
             } else {
                 gitProjectId
             }

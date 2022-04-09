@@ -102,15 +102,14 @@ class StreamBuildFinishListener @Autowired constructor(
                 buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
             )
 
-            val gitProjectId = requestEvent.gitProjectId
-            val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-            val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+            val pipeline = streamPipelineService.getPipelineById(pipelineId)
+                ?: throw OperationException("git ci pipeline not exist")
+            // 改为利用pipeline信息反查projectId 保证流水线和项目是绑定的
+            val gitProjectConf = gitCISettingDao.getSetting(dslContext, pipeline.gitProjectId)
+            val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, pipeline.gitProjectId)
             if (gitProjectConf == null && v2GitSetting == null) {
                 throw OperationException("git ci all projectCode not exist")
             }
-
-            val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
-                ?: throw OperationException("git ci pipeline not exist")
 
             val newBuildEvent = BuildEvent(
                 projectId = buildFinishEvent.projectId,
@@ -158,8 +157,7 @@ class StreamBuildFinishListener @Autowired constructor(
                     CIInfo(
                         enableCI = v2GitSetting.enableCi,
                         lastBuildMessage = triggerMessageUtil.getEventMessageTitle(
-                            requestEvent,
-                            gitProjectId
+                            requestEvent
                         ),
                         lastBuildStatus = context.getBuildStatus(),
                         lastBuildPipelineId = buildFinishEvent.pipelineId,

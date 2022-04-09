@@ -73,7 +73,11 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return if (expired == false) {
             redisTemplate.opsForValue().set(finalKey, value)
         } else {
-            redisTemplate.opsForValue().set(finalKey, value, expiredInSecond ?: maxExpireTime, TimeUnit.SECONDS)
+            var timeout = expiredInSecond ?: maxExpireTime
+            if (timeout <= 0) { // #5901 不合法值清理，设置默认为超时时间，防止出错。
+                timeout = maxExpireTime
+            }
+            redisTemplate.opsForValue().set(finalKey, value, timeout, TimeUnit.SECONDS)
         }
     }
 

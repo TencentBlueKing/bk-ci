@@ -34,6 +34,7 @@ import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -206,6 +207,8 @@ class CodeGitScmImpl constructor(
                 description = description,
                 block = block
             )
+        } catch (e: GitApiException) {
+            throw e
         } catch (ignored: Throwable) {
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
