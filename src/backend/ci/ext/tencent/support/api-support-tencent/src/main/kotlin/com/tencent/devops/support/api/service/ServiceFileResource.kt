@@ -27,7 +27,6 @@
 
 package com.tencent.devops.support.api.service
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -36,10 +35,10 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_FILE"], description = "文件管理")
@@ -54,7 +53,7 @@ interface ServiceFileResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadFile(
         @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
+        @QueryParam("userId")
         userId: String,
         @ApiParam("文件", required = true)
         @FormDataParam("file")

@@ -122,7 +122,8 @@ class TxOpMigrateProjectLogoService @Autowired constructor(
     }
 
     private fun getFileType(logoUrl: String): String {
-        val url = logoUrl.substring(0, logoUrl.lastIndexOf("?"))
+        val paramIndex = logoUrl.lastIndexOf("?")
+        val url = if (paramIndex > 0) logoUrl.substring(0, paramIndex) else logoUrl
         val index = url.lastIndexOf(".")
         return url.substring(index + 1).toLowerCase()
     }
