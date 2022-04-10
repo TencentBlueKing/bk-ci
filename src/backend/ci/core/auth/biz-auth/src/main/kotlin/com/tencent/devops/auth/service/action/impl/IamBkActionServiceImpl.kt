@@ -350,7 +350,7 @@ class IamBkActionServiceImpl @Autowired constructor(
         relationActions.add(projectView)
 
         // 非project资源，且操作类型不为create。需关联改资源的view权限
-        if (resourceType != AuthResourceType.PROJECT.value) {
+        if (resourceType != AuthResourceType.PROJECT.value && actionType != AuthPermission.VIEW.value) {
             val resourceView = buildIamAction(resourceType, AuthPermission.VIEW.value)
             relationActions.add(resourceView)
         }

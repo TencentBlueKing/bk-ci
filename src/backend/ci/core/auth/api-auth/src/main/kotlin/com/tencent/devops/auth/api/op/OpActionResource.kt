@@ -76,7 +76,7 @@ interface OpActionResource {
     ): Result<Boolean>
 
     @GET
-    @ApiOperation("获取资源信息")
+    @ApiOperation("按ID获取资源信息")
     @Path("/{actionId}")
     fun getAction(
         @ApiParam("操作编码")
@@ -90,12 +90,12 @@ interface OpActionResource {
     fun listAllAction(): Result<List<ActionInfo>?>
 
     @GET
-    @ApiOperation("获取操作列表")
+    @ApiOperation("获取系统操作列表")
     @Path("/resource")
     fun listActionResource(): Result<Map<String, List<ActionInfo>>?>
 
     @GET
-    @ApiOperation("获取操作列表")
+    @ApiOperation("按资源获取操作列表")
     @Path("/resources/{resourceId}")
     fun listActionByResource(
         @ApiParam("资源编码")

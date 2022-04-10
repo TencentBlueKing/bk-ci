@@ -87,7 +87,7 @@ interface OpResourceResource {
     ): Result<ResourceInfo?>
 
     @GET
-    @ApiOperation("获取资源信息")
+    @ApiOperation("按系统获取资源信息")
     @Path("/systems/{systemType}")
     fun getSystemResourceBySystem(
         @ApiParam("系统")
@@ -96,7 +96,7 @@ interface OpResourceResource {
     ): Result<List<ResourceInfo>?>
 
     @GET
-    @ApiOperation("获取资源列表")
+    @ApiOperation("获取所有资源列表")
     @Path("/")
     fun listSystemResource(): Result<List<ResourceInfo>?>
 }
