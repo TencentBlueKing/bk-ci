@@ -6,7 +6,7 @@
         </header>
         <div slot="content" class="bk-form bk-form-vertical">
             <template v-for="(obj, key) in optionModel">
-                <form-field :key="key" v-if="!isHidden(obj, jobOption)" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+                <form-field :key="key" v-if="!isHidden(obj, container)" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
                     <component :is="obj.component" :set-parent-validate="setKeyValueValidate" :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: !!obj.required })" :handle-change="handleUpdateJobOption" :value="jobOption[key]" :disabled="disabled" v-bind="obj"></component>
                 </form-field>
             </template>
@@ -46,6 +46,9 @@
         computed: {
             optionModel () {
                 return this.JOB_OPTION || {}
+            },
+            container () {
+                return this.stage.containers[this.containerIndex] || {}
             }
         },
         created () {

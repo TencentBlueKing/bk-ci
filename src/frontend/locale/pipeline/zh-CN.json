@@ -941,6 +941,7 @@
         "dependOnNamePlaceholder": "多个Job ID之間请用英文逗号分隔",
         "enableJob": "启用本Job",
         "jobTimeout": "Job执行超时时间(单位分钟)",
+        "prepareTimeout": "Job排队超时时间(单位分钟)",
         "jobRunCondition": "何时运行本Job",
         "stageRunning": "Stage开始运行时",
         "strategy": "矩阵",
