@@ -44,13 +44,13 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
 @Service
-class GitCILogService @Autowired constructor(
+class StreamLogService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(GitCILogService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamLogService::class.java)
     }
 
     @Value("\${gateway.url}")

@@ -60,7 +60,7 @@ class StreamRequestListener @Autowired constructor(
                 )
         ]
     )
-    fun listenGitCIRequestEvent(streamRequestEvent: StreamRequestEvent) {
+    fun listenStreamRequestEvent(streamRequestEvent: StreamRequestEvent) {
         val traceId = MDC.get(TraceTag.BIZID)
         if (traceId.isNullOrEmpty()) {
             if (!streamRequestEvent.traceId.isNullOrEmpty()) {

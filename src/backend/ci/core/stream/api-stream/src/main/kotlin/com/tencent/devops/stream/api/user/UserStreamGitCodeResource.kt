@@ -128,7 +128,7 @@ interface UserStreamGitCodeResource {
         @QueryParam("projectId")
         projectId: String,
         @ApiParam(value = "创建文件内容")
-        gitCICreateFile: StreamCreateFileInfo
+        streamCreateFile: StreamCreateFileInfo
     ): Result<Boolean>
 
     @ApiOperation("获取项目中的所有分支")

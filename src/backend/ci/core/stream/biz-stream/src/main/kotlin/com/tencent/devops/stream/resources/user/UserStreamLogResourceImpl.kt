@@ -33,14 +33,14 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.stream.api.user.UserStreamLogResource
 import com.tencent.devops.stream.permission.StreamPermissionService
-import com.tencent.devops.stream.service.GitCILogService
+import com.tencent.devops.stream.service.StreamLogService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 class UserStreamLogResourceImpl @Autowired constructor(
-    private val streamLogService: GitCILogService,
+    private val streamLogService: StreamLogService,
     private val permissionService: StreamPermissionService
 ) : UserStreamLogResource {
     override fun getInitLogs(
