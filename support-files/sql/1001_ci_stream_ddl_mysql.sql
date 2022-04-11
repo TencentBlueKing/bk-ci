@@ -81,19 +81,6 @@ CREATE TABLE IF NOT EXISTS `T_GIT_PIPELINE_RESOURCE` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT='GIT流水线资源表-存储流水线相关信息';
 
 -- ----------------------------
--- Table structure for T_GIT_PROJECT_CONF
--- ----------------------------
-CREATE TABLE IF NOT EXISTS `T_GIT_PROJECT_CONF` (
-    `ID` bigint(11) NOT NULL COMMENT 'GIT项目ID',
-    `NAME` varchar(128) NOT NULL COMMENT 'GIT项目名',
-    `URL` varchar(1024) NOT NULL COMMENT 'GIT项目URL',
-    `ENABLE` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否可以开启CI功能，默认false',
-    `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
-    PRIMARY KEY (`ID`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='STREAM GIT项目灰度配置';
-
--- ----------------------------
 -- Table structure for T_GIT_REQUEST_EVENT
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_GIT_REQUEST_EVENT` (

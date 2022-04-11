@@ -31,9 +31,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工蜂和Stream项目详细信息")
+@ApiModel("Git和Stream项目详细信息")
 data class ProjectCIInfo(
-    @ApiModelProperty("工蜂项目ID")
+    @ApiModelProperty("Git项目ID")
     val id: Long,
     @ApiModelProperty("蓝盾项目id")
     val projectCode: String?,

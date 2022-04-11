@@ -45,17 +45,17 @@ import org.springframework.stereotype.Service
 
 @Suppress("ComplexCondition")
 @Service
-class StreamRequestRepoService @Autowired constructor(
+class StreamTriggerRequestRepoService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamTriggerCache: StreamTriggerCache,
     private val exHandler: StreamTriggerExceptionHandler,
     @org.springframework.context.annotation.Lazy
-    private val streamRequestService: StreamRequestService
+    private val streamTriggerRequestService: StreamTriggerRequestService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamRequestRepoService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamTriggerRequestRepoService::class.java)
     }
 
     // 通用不区分projectId，多流水线触发
@@ -123,7 +123,7 @@ class StreamRequestRepoService @Autowired constructor(
                 return false
             }
 
-            return streamRequestService.matchAndTriggerPipeline(
+            return streamTriggerRequestService.matchAndTriggerPipeline(
                 action = action,
                 path2PipelineExists = mapOf(pipeline.filePath to pipeline)
             )

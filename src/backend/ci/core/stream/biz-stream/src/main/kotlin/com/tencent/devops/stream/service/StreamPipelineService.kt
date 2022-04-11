@@ -39,6 +39,7 @@ import com.tencent.devops.stream.constant.GitCIConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.pojo.GitPipelineDir
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

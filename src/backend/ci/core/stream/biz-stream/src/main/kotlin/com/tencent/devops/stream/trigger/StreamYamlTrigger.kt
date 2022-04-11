@@ -37,7 +37,6 @@ import com.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -272,15 +271,5 @@ class StreamYamlTrigger @Autowired constructor(
                         .contains(action.data.context.pipeline!!.filePath) &&
                     action.data.context.repoTrigger != null
                 )
-    }
-
-    fun checkYamlSchema(userId: String, yaml: String): Result<String> {
-        return try {
-            yamlSchemaCheck.check(yaml, null, true)
-            Result("OK")
-        } catch (e: Exception) {
-            logger.error("Check yaml schema failed.", e)
-            Result(1, "Invalid yaml: ${e.message}")
-        }
     }
 }

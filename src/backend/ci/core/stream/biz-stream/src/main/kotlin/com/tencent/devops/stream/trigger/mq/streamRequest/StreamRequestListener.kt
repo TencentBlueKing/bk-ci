@@ -29,7 +29,7 @@ package com.tencent.devops.stream.trigger.mq.streamRequest
 
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.constant.MQ
-import com.tencent.devops.stream.trigger.StreamRequestService
+import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.amqp.core.ExchangeTypes
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class StreamRequestListener @Autowired constructor(
-    private val steamRequestService: StreamRequestService
+    private val steamRequestService: StreamTriggerRequestService
 ) {
     @RabbitListener(
         bindings = [

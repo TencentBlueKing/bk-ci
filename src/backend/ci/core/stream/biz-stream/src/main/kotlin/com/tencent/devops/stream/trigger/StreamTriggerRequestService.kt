@@ -58,7 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class StreamRequestService @Autowired constructor(
+class StreamTriggerRequestService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val rabbitTemplate: RabbitTemplate,
@@ -67,13 +67,13 @@ class StreamRequestService @Autowired constructor(
     private val yamlSchemaCheck: YamlSchemaCheck,
     private val exHandler: StreamTriggerExceptionHandler,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamRequestRepoService: StreamRequestRepoService,
+    private val streamTriggerRequestRepoService: StreamTriggerRequestRepoService,
     private val streamSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamRequestService::class.java)
+        private val logger = LoggerFactory.getLogger(StreamTriggerRequestService::class.java)
     }
 
     fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
@@ -121,7 +121,7 @@ class StreamRequestService @Autowired constructor(
             }
 
             try {
-                streamRequestRepoService.repoTriggerBuild(
+                streamTriggerRequestRepoService.repoTriggerBuild(
                     triggerPipelineList = repoTriggerPipelineList,
                     action = action
                 )

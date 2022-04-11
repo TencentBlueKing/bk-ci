@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.trigger.mq.streamMrConflict
 
 import com.tencent.devops.stream.constant.MQ
-import com.tencent.devops.stream.trigger.StreamRequestService
+import com.tencent.devops.stream.trigger.StreamTriggerRequestService
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import org.slf4j.LoggerFactory
@@ -45,7 +45,7 @@ import org.springframework.stereotype.Service
 class StreamMrConflictCheckListener @Autowired
 constructor(
     private val mergeConflictCheck: MergeConflictCheck,
-    private val streamRequestService: StreamRequestService,
+    private val streamTriggerRequestService: StreamTriggerRequestService,
     private val rabbitTemplate: RabbitTemplate,
     private val exHandler: StreamTriggerExceptionHandler
 ) {
@@ -86,7 +86,7 @@ constructor(
         } else {
             if (isTrigger) {
                 exHandler.handle(checkEvent.action) {
-                    streamRequestService.matchAndTriggerPipeline(
+                    streamTriggerRequestService.matchAndTriggerPipeline(
                         action = checkEvent.action,
                         path2PipelineExists = checkEvent.path2PipelineExists
                     )
