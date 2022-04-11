@@ -28,7 +28,7 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.annotation.StreamEvent
 import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
@@ -63,8 +63,8 @@ class BuildLogPrintService @Autowired constructor(
 
     fun dispatchEvent(event: ILogEvent) {
         try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            bridge.send(eventType.exchange, eventType.routeKey, event.streamMessage(eventType.delayMills))
+            val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
+            bridge.send(eventType.bindingName, event.streamMessage(eventType.delayMills))
         } catch (ignored: Throwable) {
             logger.error("Fail to dispatch the event($event)", ignored)
         }

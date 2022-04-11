@@ -29,7 +29,6 @@ dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-event"))
-    api("com.tencent.devops:devops-boot-starter-stream")
 }
 
 plugins {

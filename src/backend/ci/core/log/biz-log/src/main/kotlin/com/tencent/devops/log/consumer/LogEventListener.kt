@@ -25,34 +25,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.log.consumer
 
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.LogService
+import java.util.function.Consumer
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
-import org.springframework.messaging.support.MessageBuilder
+import org.springframework.stereotype.Component
 
-open class ILogEvent(
-    open val buildId: String,
-    open val retryTime: Int,
-    open val delayMills: Int
-) {
+@Component("logEventListener")
+class LogEventListener @Autowired constructor(
+    private val logService: LogService,
+    private val buildLogPrintService: BuildLogPrintService
+) : Consumer<Message<LogEvent>> {
+
     companion object {
-        private const val DELAY_DURATION_MILLS = 3 * 1000
+        private val logger = LoggerFactory.getLogger(LogEventListener::class.java)
     }
 
-    fun streamMessage(defaultMills: Int = 0): Message<ILogEvent> {
-        val builder = MessageBuilder
-            .withPayload(this)
-        // 事件中的变量指定
-        if (delayMills > 0) {
-            builder.setHeader("x-delay", delayMills)
-        } else if (defaultMills > 0) {
-            // 事件类型固化默认值
-            builder.setHeader("x-delay", defaultMills)
+    override fun accept(message: Message<LogEvent>) {
+        logEvent(message.payload)
+    }
+
+    fun logEvent(event: LogEvent) {
+        var result = false
+        try {
+            logService.addLogEvent(event)
+            result = true
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
+        } finally {
+            if (!result && event.retryTime >= 0) {
+                logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
+                with(event) {
+                    buildLogPrintService.dispatchEvent(LogEvent(
+                        buildId = buildId,
+                        logs = logs,
+                        retryTime = retryTime - 1,
+                        delayMills = getNextDelayMills(retryTime)
+                    ))
+                }
+            }
         }
-        return builder.build()
-    }
-
-    fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (3 - retryTime)
     }
 }

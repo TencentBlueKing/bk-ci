@@ -27,5 +27,6 @@
 
 dependencies {
     api(project(":core:common:common-service"))
+    api("com.tencent.devops:devops-boot-starter-stream")
     compileOnly("org.springframework.boot:spring-boot-starter-amqp")
 }

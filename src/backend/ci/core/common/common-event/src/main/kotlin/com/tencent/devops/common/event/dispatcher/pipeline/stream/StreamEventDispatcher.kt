@@ -25,38 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.common.event.dispatcher.pipeline.stream
 
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.service.trace.TraceTag
-import org.slf4j.MDC
-import org.springframework.messaging.Message
-import org.springframework.messaging.support.MessageBuilder
+import com.tencent.devops.common.event.annotation.StreamEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 
 /**
- * 流水线事件
+ * 基于Stream MQ实现的流水线事件下发器
+ *
+ * @version 1.0
  */
-@Suppress("LongParameterList")
-open class IPipelineEvent(
-    open var actionType: ActionType,
-    open val source: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val userId: String,
-    open var delayMills: Int,
-    open var retryTime: Int = 1,
-    open var traceId: String? = MDC.get(TraceTag.BIZID)
-) {
-    fun streamMessage(defaultMills: Int = 0): Message<IPipelineEvent> {
-        val builder = MessageBuilder
-            .withPayload(this)
-        // 事件中的变量指定
-        if (delayMills > 0) {
-            builder.setHeader("x-delay", delayMills)
-        } else if (defaultMills > 0) {
-            // 事件类型固化默认值
-            builder.setHeader("x-delay", defaultMills)
+class StreamEventDispatcher constructor(
+    private val bridge: StreamBridge
+) : PipelineEventDispatcher {
+
+    override fun dispatch(vararg events: IPipelineEvent) {
+        events.forEach { event ->
+            try {
+                val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
+                bridge.send(eventType.bindingName, event.streamMessage(eventType.delayMills))
+            } catch (ignored: Exception) {
+                logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+            }
         }
-        return builder.build()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StreamEventDispatcher::class.java)
     }
 }
