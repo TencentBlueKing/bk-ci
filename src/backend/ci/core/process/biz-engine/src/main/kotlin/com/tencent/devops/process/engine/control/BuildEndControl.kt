@@ -81,8 +81,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineRedisService: PipelineRedisService,
-    private val dispatchQueueControl: DispatchQueueControl
+    private val pipelineRedisService: PipelineRedisService
 ) {
 
     companion object {
