@@ -32,5 +32,5 @@ dependencies {
     api("io.github.openfeign:feign-jackson")
     api("io.github.openfeign.form:feign-form")
     api("io.github.openfeign.form:feign-form-spring")
-    api("io.github.openfeign:feign-spring4:11.8")
+    api("io.github.openfeign:feign-spring4")
 }
