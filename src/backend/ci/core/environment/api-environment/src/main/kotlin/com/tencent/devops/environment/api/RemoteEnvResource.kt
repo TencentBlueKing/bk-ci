@@ -29,6 +29,7 @@ package com.tencent.devops.environment.api
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -50,6 +51,7 @@ interface RemoteEnvResource {
     @ApiOperation("分页获取环境列表")
     @GET
     @Path("/projects/{projectId}/list/")
+    @BkTimed
     fun listEnvForAuth(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -65,6 +67,7 @@ interface RemoteEnvResource {
     @ApiOperation("获取环境信息")
     @GET
     @Path("/infos")
+    @BkTimed
     fun getEnvInfos(
         @ApiParam("节点Id串", required = true)
         @QueryParam("envIds")
@@ -74,6 +77,7 @@ interface RemoteEnvResource {
     @ApiOperation("分页获取环境列表(名称模糊匹配)")
     @GET
     @Path("/projects/{projectId}/searchByName/")
+    @BkTimed
     fun searchByName(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")

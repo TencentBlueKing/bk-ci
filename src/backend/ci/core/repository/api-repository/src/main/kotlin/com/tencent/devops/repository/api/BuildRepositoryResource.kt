@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.repository.pojo.Repository
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -55,6 +56,7 @@ interface BuildRepositoryResource {
     @ApiOperation("构建机获取代码库详情")
     @Path("/")
     @GET
+    @BkTimed
     fun getByType(
         @ApiParam(value = "项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)

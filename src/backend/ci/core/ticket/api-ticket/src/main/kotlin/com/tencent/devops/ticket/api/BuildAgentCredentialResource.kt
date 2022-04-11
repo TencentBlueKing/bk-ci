@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -54,6 +55,7 @@ interface BuildAgentCredentialResource {
     @ApiOperation("构建机获取凭据")
     @Path("/{credentialId}/")
     @GET
+    @BkTimed
     fun get(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)

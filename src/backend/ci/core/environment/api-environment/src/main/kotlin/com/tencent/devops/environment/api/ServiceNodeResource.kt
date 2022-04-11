@@ -30,6 +30,7 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
@@ -53,6 +54,7 @@ interface ServiceNodeResource {
     @ApiOperation("获取用户有权限使用的服务器列表")
     @GET
     @Path("/projects/{projectId}/listUsableServerNodes")
+    @BkTimed
     fun listUsableServerNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -65,6 +67,7 @@ interface ServiceNodeResource {
     @ApiOperation("根据hashId获取项目节点列表")
     @POST
     @Path("/projects/{projectId}/listByHashIds")
+    @BkTimed
     fun listByHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -79,6 +82,7 @@ interface ServiceNodeResource {
     @ApiOperation("根据hashId获取项目节点列表(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByHashIds")
+    @BkTimed
     fun listRawByHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -93,6 +97,7 @@ interface ServiceNodeResource {
     @ApiOperation("根据环境hashId获取项目节点列表(不校验权限)")
     @POST
     @Path("/projects/{projectId}/listRawByEnvHashIds")
+    @BkTimed
     fun listRawByEnvHashIds(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -107,6 +112,7 @@ interface ServiceNodeResource {
     @ApiOperation("根据类型查询node")
     @GET
     @Path("/projects/{projectId}/listNodeByType/{type}")
+    @BkTimed
     fun listNodeByType(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -122,6 +128,7 @@ interface ServiceNodeResource {
     @ApiOperation("根据机器类型查询node")
     @GET
     @Path("/projects/{projectId}/listNodeByNodeType/{nodeType}")
+    @BkTimed
     fun listNodeByNodeType(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -134,6 +141,7 @@ interface ServiceNodeResource {
     @ApiOperation("获取项目构建节点列表")
     @GET
     @Path("projects/{projectId}/extListNodes")
+    @BkTimed
     fun extListNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
@@ -60,6 +61,7 @@ interface ServiceCredentialResource {
     @ApiOperation("新增凭据")
     @Path("/{projectId}/")
     @POST
+    @BkTimed
     fun create(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -74,6 +76,7 @@ interface ServiceCredentialResource {
     @ApiOperation("其他服务获取凭据")
     @Path("/{projectId}/{credentialId}/")
     @GET
+    @BkTimed
     fun get(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -101,6 +104,7 @@ interface ServiceCredentialResource {
     @ApiOperation("其他服务获取凭据列表")
     @Path("/{projectId}/")
     @GET
+    @BkTimed
     fun list(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -116,6 +120,7 @@ interface ServiceCredentialResource {
     @ApiOperation("获取拥有对应权限凭据列表")
     @Path("/{projectId}/hasPermissionList")
     @GET
+    @BkTimed
     fun hasPermissionList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

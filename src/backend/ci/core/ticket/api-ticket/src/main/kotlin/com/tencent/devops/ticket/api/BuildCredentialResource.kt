@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_CI_TASK_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import io.swagger.annotations.Api
@@ -57,6 +58,7 @@ interface BuildCredentialResource {
     @ApiOperation("构建机获取凭据")
     @Path("/{credentialId}/")
     @GET
+    @BkTimed
     fun get(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
@@ -88,6 +90,7 @@ interface BuildCredentialResource {
     @ApiOperation("构建机获取跨项目凭据")
     @Path("/{credentialId}/across/")
     @GET
+    @BkTimed
     fun getAcrossProject(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
@@ -116,6 +119,7 @@ interface BuildCredentialResource {
     @ApiOperation("插件获取凭据")
     @Path("/{credentialId}/detail")
     @GET
+    @BkTimed
     fun getDetail(
         @ApiParam("项目ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
