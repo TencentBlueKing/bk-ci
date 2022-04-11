@@ -165,7 +165,7 @@ class Client @Autowired constructor(
         }
     }
 
-    fun <T : Any> getSpringMvc(clz: KClass<T>) : T{
+    fun <T : Any> getSpringMvc(clz: KClass<T>): T {
         return get(clz, "", springContract)
     }
 

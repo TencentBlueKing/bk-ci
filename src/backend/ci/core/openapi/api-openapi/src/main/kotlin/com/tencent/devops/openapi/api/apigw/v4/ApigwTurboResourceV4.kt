@@ -50,7 +50,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-
 @Api(tags = ["OPENAPI_TURBO_V4"], description = "编译加速open api接口")
 @Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/turbo")
 @Produces(MediaType.APPLICATION_JSON)
@@ -108,7 +107,6 @@ interface ApigwTurboResourceV4 {
         @ApiParam(value = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
-
     ): Response<Page<TurboRecordHistoryVO>>
 
     @GET

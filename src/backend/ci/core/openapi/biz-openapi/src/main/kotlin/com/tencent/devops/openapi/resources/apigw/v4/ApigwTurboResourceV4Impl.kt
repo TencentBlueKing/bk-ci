@@ -85,7 +85,7 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
             sortType = sortType,
             turboRecordModel = turboRecordModel,
             projectId = projectId,
-            user=userId
+            user = userId
         )
     }
 
