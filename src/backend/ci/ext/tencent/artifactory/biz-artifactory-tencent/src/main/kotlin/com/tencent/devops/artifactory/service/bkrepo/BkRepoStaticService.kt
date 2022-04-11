@@ -79,6 +79,6 @@ class BkRepoStaticService constructor(
         } finally {
             file.delete()
         }
-        return "${bkRepoConfig.bkrepoStaticRepoPrefixUrl}/$destPath"
+        return "${bkRepoConfig.bkrepoStaticRepoPrefixUrl}/$destPath?v=${System.currentTimeMillis() / 1000}"
     }
 }
