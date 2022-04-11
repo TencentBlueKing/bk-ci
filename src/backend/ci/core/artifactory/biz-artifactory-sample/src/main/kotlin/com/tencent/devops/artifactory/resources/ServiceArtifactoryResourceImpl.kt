@@ -241,4 +241,25 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         )
         return Result(fileList)
     }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        fullPath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<FileInfo>> {
+        val fileList = archiveFileService.listCustomFiles(
+            userId = userId,
+            projectId = projectId,
+            filePath = fullPath,
+            includeFolder = includeFolder,
+            deep = deep,
+            page = page,
+            pageSize = pageSize
+        )
+        return Result(fileList)
+    }
 }

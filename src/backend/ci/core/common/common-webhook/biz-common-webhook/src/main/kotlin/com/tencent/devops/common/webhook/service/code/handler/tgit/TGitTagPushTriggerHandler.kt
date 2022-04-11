@@ -164,17 +164,13 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers)
             )
-            val filters = mutableListOf(urlFilter, eventTypeFilter, branchFilter, userFilter)
-            if (event.create_from != null) {
-                val fromBranchFilter = BranchFilter(
-                    pipelineId = pipelineId,
-                    triggerOnBranchName = event.create_from!!,
-                    includedBranches = WebhookUtils.convert(fromBranches),
-                    excludedBranches = emptyList()
-                )
-                filters.add(fromBranchFilter)
-            }
-            return filters
+            val fromBranchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = event.create_from ?: "",
+                includedBranches = WebhookUtils.convert(fromBranches),
+                excludedBranches = emptyList()
+            )
+            return listOf(urlFilter, eventTypeFilter, branchFilter, userFilter, fromBranchFilter)
         }
     }
 }
