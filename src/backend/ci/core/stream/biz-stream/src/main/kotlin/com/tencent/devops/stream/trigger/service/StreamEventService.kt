@@ -105,9 +105,9 @@ class StreamEventService @Autowired constructor(
                     gitProjectId = eventCommon.gitProjectId,
                     commitId = eventCommon.commit.commitId,
                     gitHttpUrl = setting.gitHttpUrl,
-                    scmType = setting.scmType,
+                    scmType = streamGitConfig.getScmType(),
                     token = action.api.getToken(action.getGitCred()),
-                    state = StreamCommitCheckState.FAILURE.toGitState(setting.scmType),
+                    state = StreamCommitCheckState.FAILURE.toGitState(streamGitConfig.getScmType()),
                     block = setting.enableMrBlock && commitCheckBlock,
                     targetUrl = StreamPipelineUtils.genStreamV2NotificationsUrl(
                         streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamGitConfig"),

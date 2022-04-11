@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.trigger.parsers.yamlCheck
 
 import com.devops.process.yaml.v2.enums.TemplateType
+import com.devops.process.yaml.v2.exception.YamlFormatException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
@@ -36,22 +37,22 @@ import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.v2.enums.TemplateType
-import com.tencent.devops.common.ci.v2.exception.YamlFormatException
-import com.tencent.devops.stream.common.exception.CommitCheck
-import com.tencent.devops.stream.common.exception.TriggerBaseException
-import com.tencent.devops.stream.common.exception.TriggerException
-import com.tencent.devops.stream.common.exception.Yamls
-import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
+import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.exception.CommitCheck
+import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
+import com.tencent.devops.stream.trigger.exception.StreamTriggerException
+import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Component
 import org.yaml.snakeyaml.Yaml
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
 @Component
 class YamlSchemaCheck @Autowired constructor() {
@@ -131,43 +132,37 @@ class YamlSchemaCheck @Autowired constructor() {
         try {
             f()
         } catch (e: Throwable) {
-            val gitRequestEventForHandle = context.gitRequestEventForHandle
-            logger.info("gitRequestEvent ${gitRequestEventForHandle.id} git ci yaml is invalid", e)
+            logger.info("gitRequestEvent ${action.data.context.requestEventId} git ci yaml is invalid", e)
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
-                    Triple(gitRequestEventForHandle.gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
+                    Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 is IOException, is TypeCastException -> {
-                    Triple(gitRequestEventForHandle.gitRequestEvent.isMr(), e.message, TriggerReason.CI_YAML_INVALID)
+                    Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 // 指定异常直接扔出在外面统一处理
-                is TriggerBaseException, is ErrorCodeException -> {
+                is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
                 else -> {
-                    logger.warn("YamlSchemaCheck event: ${gitRequestEventForHandle.id} unknow error: ${e.message}")
+                    logger.warn("YamlSchemaCheck event: ${action.data.context.requestEventId} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
-            TriggerException.triggerError(
-                request = gitRequestEventForHandle,
-                filePath = context.pipeline.filePath,
-                reason = reason,
+            throw StreamTriggerException(
+                action = action,
+                triggerReason = reason,
                 reasonParams = listOf(message ?: ""),
-                yamls = Yamls(context.originYaml, null, null),
-                version = StreamYamlTrigger.ymlVersion,
                 commitCheck = CommitCheck(
                     block = block,
-                    state = GitCICommitCheckState.FAILURE
+                    state = StreamCommitCheckState.FAILURE
                 )
             )
         }
     }
 
     private fun getSchema(file: String): JsonSchema {
-        // 先去取下redis看看有没有变量，没有拿代码里初始化好的变量
-        val str = redisOperation.get("$REDIS_STREAM_YAML_SCHEMA:$file") ?: return getSchemaFromGit(file)
-        return schemaFactory.getSchema(str)
+        return getSchemaFromGit(file)
     }
 
     private fun getSchemaFromGit(file: String): JsonSchema {
@@ -175,18 +170,27 @@ class YamlSchemaCheck @Autowired constructor() {
             return schemaMap[file]!!
         }
         val schema = schemaFactory.getSchema(
-            scmService.getYamlFromGit(
-                token = streamGitTokenService.getToken(streamGitConfig.schemaGitProjectId!!),
-                gitProjectId = streamGitConfig.schemaGitProjectId!!.toString(),
-                fileName = "${streamGitConfig.schemaGitPath}/$file.json",
-                ref = streamGitConfig.schemaGitRef!!,
-                useAccessToken = true
-            ).ifBlank {
+            getStrFromResource("schema/$file.json").ifBlank {
                 throw RuntimeException("init yaml schema for git error: yaml blank")
             }
         )
         schemaMap[file] = schema
         return schema
+    }
+
+    private fun getStrFromResource(path: String): String {
+        val classPathResource = ClassPathResource(path)
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+        inputStream.close()
+        return sb.toString()
     }
 }
 

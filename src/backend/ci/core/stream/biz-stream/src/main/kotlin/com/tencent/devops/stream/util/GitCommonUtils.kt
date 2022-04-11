@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.util
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.isFork
@@ -39,7 +40,11 @@ object GitCommonUtils {
 
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
 
-    private const val projectPrefix = "git_"
+    private const val tGitProjectPrefix = "git_"
+
+    private const val githubProjectPrefix = "github_"
+
+    private const val gitlabProjectPrefix = "gitlab_"
 
     private const val httpPrefix = "http://"
 
@@ -147,18 +152,43 @@ object GitCommonUtils {
         return branch
     }
 
+    // 获取git项目名
     fun getGitProjectId(projectId: String): Long {
-        if (projectId.startsWith(projectPrefix)) {
-            try {
-                return projectId.removePrefix(projectPrefix).toLong()
-            } catch (e: Exception) {
-                throw OperationException("蓝盾项目ID不正确")
+        try {
+            if (projectId.startsWith(tGitProjectPrefix)) {
+                return projectId.removePrefix(tGitProjectPrefix).toLong()
+            } else if (projectId.startsWith(githubProjectPrefix)) {
+                return projectId.removePrefix(githubProjectPrefix).toLong()
+            } else if (projectId.startsWith(gitlabProjectPrefix)) {
+                return projectId.removePrefix(gitlabProjectPrefix).toLong()
             }
-        } else {
-            throw OperationException("蓝盾项目ID不正确")
+        } catch (e: Exception) {
+            throw OperationException("蓝盾项目ID $projectId 不正确")
         }
+        throw OperationException("蓝盾项目ID $projectId 不正确")
+    }
+
+    // 获取git项目名和git平台
+    fun getGitProjectIdAndScmType(projectId: String): Pair<Long, ScmType> {
+        try {
+            if (projectId.startsWith(tGitProjectPrefix)) {
+                return Pair(projectId.removePrefix(tGitProjectPrefix).toLong(), ScmType.CODE_GIT)
+            } else if (projectId.startsWith(githubProjectPrefix)) {
+                return Pair(projectId.removePrefix(githubProjectPrefix).toLong(), ScmType.GITHUB)
+            } else if (projectId.startsWith(gitlabProjectPrefix)) {
+                return Pair(projectId.removePrefix(gitlabProjectPrefix).toLong(), ScmType.CODE_GITLAB)
+            }
+        } catch (e: Exception) {
+            throw OperationException("蓝盾项目ID $projectId 不正确")
+        }
+        throw OperationException("蓝盾项目ID $projectId 不正确")
     }
 
     // 获取蓝盾项目名称
-    fun getCiProjectId(gitProjectId: Long) = "${projectPrefix}$gitProjectId"
+    fun getCiProjectId(gitProjectId: Long, scmType: ScmType) = when (scmType) {
+        ScmType.CODE_GIT -> "${tGitProjectPrefix}$gitProjectId"
+        ScmType.GITHUB -> "${githubProjectPrefix}$gitProjectId"
+        ScmType.CODE_GITLAB -> "${gitlabProjectPrefix}$gitProjectId"
+        else -> TODO()
+    }
 }

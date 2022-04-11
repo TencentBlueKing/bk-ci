@@ -68,8 +68,8 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
 
     override fun isMatch(triggerOn: TriggerOn) = action.isMatch(triggerOn)
 
-    fun getStartParams(triggerOn: TriggerOn?): Map<String, String> {
-        return when (action.data.setting.scmType) {
+    fun getStartParams(triggerOn: TriggerOn?, scmType: ScmType): Map<String, String> {
+        return when (scmType) {
             ScmType.CODE_GIT -> {
                 TGitActionCommon.getStartParams(action, triggerOn)
             }

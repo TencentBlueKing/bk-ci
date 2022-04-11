@@ -32,16 +32,19 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.trigger.ScheduleTriggerService
+import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerBranchService
-import com.tencent.devops.stream.v2.service.StreamScmService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -50,49 +53,51 @@ import org.springframework.stereotype.Component
  *
  * @version 1.0
  */
+@Suppress("ALL")
 @Component
 class StreamTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
+    private val dslContext: DSLContext,
     private val streamTimerBranchService: StreamTimerBranchService,
     private val client: Client,
     private val scheduleTriggerService: ScheduleTriggerService,
-    private val scmService: StreamScmService
+    private val streamBasicSettingDao: StreamBasicSettingDao,
+    private val streamGitConfig: StreamGitConfig,
+    private val tGitApiService: TGitApiService
 ) : BaseListener<StreamTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: StreamTimerBuildEvent) {
         with(event) {
             try {
-                val gitCIConfResult = client.get(ServiceGitBasicSettingResource::class)
-                    .getGitCIConf(userId = userId, projectId = projectId)
-                if (gitCIConfResult.isNotOk() || gitCIConfResult.data == null) {
+                val record = streamBasicSettingDao.getSettingByProjectCode(dslContext, projectId)
+                if (record == null) {
                     logger.warn("[$pipelineId]|git config not exist")
                     return
                 }
-                val gitTokenResult = client.get(ServiceOauthResource::class).gitGet(gitCIConfResult.data!!.enableUserId)
-                if (gitTokenResult.isNotOk() || gitTokenResult.data == null) {
-                    logger.warn("[$pipelineId]|get git token failed")
-                    return
-                }
 
-                val token = gitTokenResult.data!!
                 // 如果分支不存在，每次获取最新的默认分支
                 val realBranches = if (branchs.isNullOrEmpty()) {
-                    listOf(
-                        scmService.getProjectInfoRetry(
-                            token = token.accessToken,
-                            gitProjectId = event.gitProjectId.toString(),
-                            useAccessToken = true
-                        ).defaultBranch!!
-                    )
+                    when (streamGitConfig.getScmType()) {
+                        ScmType.CODE_GIT -> {
+                            listOf(
+                                tGitApiService.getGitProjectInfo(
+                                    cred = TGitCred(record.enableUserId),
+                                    gitProjectId = event.gitProjectId.toString(),
+                                    retry = ApiRequestRetryInfo(true)
+                                )!!.defaultBranch!!
+                            )
+                        }
+                        else -> TODO()
+                    }
                 } else {
                     branchs
                 }
 
                 realBranches.forEach { branch ->
                     timerTrigger(
-                        gitCIConf = gitCIConfResult.data!!,
-                        branch = branch,
-                        token = token.accessToken
+                        gitUrl = record.url,
+                        enableUserId = record.enableUserId,
+                        branch = branch
                     )
                 }
             } catch (t: OperationException) {
@@ -104,20 +109,27 @@ class StreamTimerBuildListener @Autowired constructor(
     }
 
     private fun StreamTimerBuildEvent.timerTrigger(
-        gitCIConf: GitCIBasicSetting,
-        branch: String,
-        token: String
+        gitUrl: String,
+        enableUserId: String,
+        branch: String
     ) {
         try {
-            val latestRevisionInfo = scmService.getLatestRevisionRetry(
-                pipelineId = pipelineId,
-                gitToken = token,
-                projectName = GitUtils.getProjectName(gitCIConf.url),
-                url = gitCIConf.url,
-                type = ScmType.CODE_GIT,
-                branchName = branch,
-                userName = userId
-            ) ?: return
+            val latestRevisionInfo = when (streamGitConfig.getScmType()) {
+                ScmType.CODE_GIT -> client.get(ServiceScmOauthResource::class)
+                    .getLatestRevision(
+                        token = tGitApiService.getToken(TGitCred(enableUserId)),
+                        projectName = GitUtils.getProjectName(gitUrl),
+                        url = gitUrl,
+                        type = ScmType.CODE_GIT,
+                        branchName = branch,
+                        userName = userId,
+                        region = null,
+                        privateKey = null,
+                        passPhrase = null,
+                        additionalPath = null
+                    ).data
+                else -> TODO()
+            } ?: return
 
             if (!always) {
                 branchChangeTimerTrigger(branch = branch, latestRevisionInfo = latestRevisionInfo)

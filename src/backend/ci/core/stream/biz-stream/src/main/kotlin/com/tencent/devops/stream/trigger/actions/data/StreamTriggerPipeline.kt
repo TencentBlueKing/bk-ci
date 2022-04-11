@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.data
 
+import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 
 /**
@@ -46,6 +47,15 @@ data class StreamTriggerPipeline(
     val creator: String?
 ) {
     constructor(pipeline: GitProjectPipeline) : this(
+        gitProjectId = pipeline.gitProjectId.toString(),
+        pipelineId = pipeline.pipelineId,
+        filePath = pipeline.filePath,
+        displayName = pipeline.displayName,
+        enabled = pipeline.enabled,
+        creator = pipeline.creator
+    )
+
+    constructor(pipeline: TGitPipelineResourceRecord) : this(
         gitProjectId = pipeline.gitProjectId.toString(),
         pipelineId = pipeline.pipelineId,
         filePath = pipeline.filePath,

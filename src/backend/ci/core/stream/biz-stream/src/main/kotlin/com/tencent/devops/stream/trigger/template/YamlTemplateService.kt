@@ -94,7 +94,7 @@ class YamlTemplateService @Autowired constructor(
                         action = extraParameters,
                         getProjectInfo = extraParameters.api::getGitProjectInfo
                     ).defaultBranch!!,
-                    retry = com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo(true)
+                    retry = ApiRequestRetryInfo(true)
                 ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
 
                 schemaCheck(templateDirectory + path, content, templateType)
@@ -128,7 +128,7 @@ class YamlTemplateService @Autowired constructor(
                     getProjectInfo = extraParameters.api::getGitProjectInfo,
                     cred = extraParameters.getGitCred(personToken)
                 ).defaultBranch,
-                com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo(true)
+                ApiRequestRetryInfo(true)
             ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
 
             // 针对模板替换时，如果类型为空就不校验

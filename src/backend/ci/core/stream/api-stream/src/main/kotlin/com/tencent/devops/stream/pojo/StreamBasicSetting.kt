@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -80,9 +79,7 @@ data class StreamBasicSetting(
     @ApiModelProperty("项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
     @ApiModelProperty("项目下构建是否发送mrComment")
-    val enableMrComment: Boolean = true,
-    @ApiModelProperty("Git仓库类型")
-    val scmType: ScmType
+    val enableMrComment: Boolean = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
 @ApiModel("蓝盾工蜂页面修改配置")

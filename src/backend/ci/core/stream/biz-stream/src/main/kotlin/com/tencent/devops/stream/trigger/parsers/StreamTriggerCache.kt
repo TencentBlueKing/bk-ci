@@ -62,11 +62,11 @@ class StreamTriggerCache @Autowired constructor(
         gitProjectKey: String,
         action: BaseAction,
         getProjectInfo: (
-            cred: com.tencent.devops.stream.trigger.git.pojo.StreamGitCred,
+            cred: StreamGitCred,
             gitProjectId: String,
-            retry: com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
-        ) -> com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo?,
-        cred: com.tencent.devops.stream.trigger.git.pojo.StreamGitCred? = null
+            retry: ApiRequestRetryInfo
+        ) -> StreamGitProjectInfo?,
+        cred: StreamGitCred? = null
     ): StreamGitProjectCache {
         val cache = getRequestGitProjectInfo(
             gitRequestEventId = action.data.context.requestEventId!!,
@@ -78,7 +78,7 @@ class StreamTriggerCache @Autowired constructor(
         val gitProjectInfo = getProjectInfo(
             action.getGitCred(),
             gitProjectKey,
-            com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo(true)
+            ApiRequestRetryInfo(true)
         )!!
         val cacheData = StreamGitProjectCache(
             gitProjectId = gitProjectInfo.gitProjectId,

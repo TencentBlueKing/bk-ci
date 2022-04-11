@@ -61,6 +61,7 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -104,7 +105,6 @@ class ManualTriggerService @Autowired constructor(
                 projectCode = it.projectCode,
                 enableCommitCheck = it.enableCommitCheck,
                 enableMrBlock = it.enableMrBlock,
-                scmType = ScmType.valueOf(it.scmType),
                 name = it.name,
                 enableMrComment = it.enableMrComment
             )
@@ -193,12 +193,11 @@ class ManualTriggerService @Autowired constructor(
         userId: String,
         triggerBuildReq: TriggerBuildReq
     ): StreamManualAction {
-        val scmType = streamTriggerSetting.scmType
         val action = actionFactory.loadManualAction(
             setting = streamTriggerSetting,
             event = StreamManualEvent(
                 userId = userId,
-                gitProjectId = triggerBuildReq.toGitProjectId(scmType),
+                gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId).toString(),
                 triggerBuildReq = triggerBuildReq
             )
         )
@@ -216,9 +215,8 @@ class ManualTriggerService @Autowired constructor(
         streamTriggerSetting: StreamTriggerSetting,
         triggerBuildReq: TriggerBuildReq
     ): StreamOpenApiAction {
-        val scmType = streamTriggerSetting.scmType
 
-        val event = mockWebhookTrigger(triggerBuildReq, scmType)
+        val event = mockWebhookTrigger(triggerBuildReq)
         val action = StreamOpenApiAction(
             actionFactory.load(event) ?: throw CustomException(
                 status = Response.Status.BAD_REQUEST,
@@ -227,7 +225,7 @@ class ManualTriggerService @Autowired constructor(
         )
 
         // 仅支持当前仓库下的 event
-        if (action.data.getGitProjectId() != triggerBuildReq.toGitProjectId(scmType)) {
+        if (action.data.getGitProjectId() != GitCommonUtils.getGitProjectId(triggerBuildReq.projectId).toString()) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = "Only events in the current repository [${triggerBuildReq.projectId}] are supported"
@@ -246,7 +244,7 @@ class ManualTriggerService @Autowired constructor(
         return action
     }
 
-    private fun mockWebhookTrigger(triggerBuildReq: TriggerBuildReq, scmType: ScmType): CodeWebhookEvent {
+    private fun mockWebhookTrigger(triggerBuildReq: TriggerBuildReq): CodeWebhookEvent {
         // 这里使用eventType做判断，防止有些事件无法直接通过mapper得到，例如工蜂的review
         if (triggerBuildReq.eventType.isNullOrBlank()) {
             throw CustomException(
@@ -255,7 +253,7 @@ class ManualTriggerService @Autowired constructor(
             )
         }
 
-        return when (scmType) {
+        return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> try {
                 objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
             } catch (ignore: Exception) {
@@ -301,7 +299,7 @@ class ManualTriggerService @Autowired constructor(
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
             action.data.getGitProjectId(),
-            com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo(true)
+            ApiRequestRetryInfo(true)
         )!!
         streamBasicSettingService.updateProjectInfo(action.data.eventCommon.userId, gitProjectInfo)
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
@@ -310,7 +308,8 @@ class ManualTriggerService @Autowired constructor(
         // open api 模拟真实git触发
         if (action.metaData.streamObjectKind == StreamObjectKind.OPENAPI) {
             params = (action as StreamOpenApiAction).getStartParams(
-                triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind)
+                triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind),
+                scmType = streamGitConfig.getScmType()
             )
         }
 
@@ -342,12 +341,5 @@ class ManualTriggerService @Autowired constructor(
             onlySavePipeline = false,
             yamlTransferData = yamlReplaceResult.yamlTransferData
         )
-    }
-}
-
-private fun TriggerBuildReq.toGitProjectId(scmType: ScmType): String {
-    return when (scmType) {
-        ScmType.CODE_GIT -> this.projectId.removePrefix("git_")
-        else -> this.projectId.removePrefix("git_")
     }
 }

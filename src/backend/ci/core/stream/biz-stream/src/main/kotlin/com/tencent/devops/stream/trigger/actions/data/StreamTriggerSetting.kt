@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.trigger.actions.data
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 
 /**
@@ -40,7 +39,6 @@ import com.tencent.devops.stream.pojo.StreamBasicSetting
  * @param projectCode 蓝盾项目id
  * @param enableCommitCheck 当前项目是否发送commit check
  * @param enableMrBlock 合并请求的commit check是否锁定不让合并
- * @param scmType Git仓库类型
  * @param name 项目名称
  */
 data class StreamTriggerSetting(
@@ -52,7 +50,6 @@ data class StreamTriggerSetting(
     val projectCode: String?,
     val enableCommitCheck: Boolean,
     val enableMrBlock: Boolean,
-    val scmType: ScmType,
     val name: String,
     val enableMrComment: Boolean
 ) {
@@ -65,7 +62,6 @@ data class StreamTriggerSetting(
         projectCode = projectSetting.projectCode,
         enableCommitCheck = projectSetting.enableCommitCheck,
         enableMrBlock = projectSetting.enableMrBlock,
-        scmType = projectSetting.scmType,
         name = projectSetting.name,
         enableMrComment = projectSetting.enableMrComment
     )

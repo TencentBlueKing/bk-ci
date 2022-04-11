@@ -11,7 +11,8 @@ server:
 
 stream:
   url: __BK_CI_STREAM_URL__
+  scmType: __BK_CI_STREAM_SCM_TYPE__
 
 git:
-  githubUrl: __BK_CI_GIT_GITHUB_URL__
-  gitCodeUrl: __BK_CI_GIT_GITCODE_URL__
+  gitUrl: __BK_CI_STREAM_GIT_URL__
+  

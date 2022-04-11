@@ -52,8 +52,6 @@ class StreamPipelineService @Autowired constructor(
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val streamScmService: StreamScmService,
-    private val tokenService: StreamGitTokenService,
     private val redisOperation: RedisOperation,
     private val websocketService: StreamWebsocketService
 ) {

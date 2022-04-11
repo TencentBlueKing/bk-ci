@@ -157,7 +157,7 @@ object GitRequestEventHandle {
         gitIssueEvent: GitIssueEvent,
         e: String,
         defaultBranch: String,
-        latestCommit: com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitInfo?
+        latestCommit: TGitCommitInfo?
     ): GitRequestEvent {
         val gitProjectId = gitIssueEvent.objectAttributes.projectId
         return GitRequestEvent(
@@ -188,7 +188,7 @@ object GitRequestEventHandle {
         gitNoteEvent: GitNoteEvent,
         e: String,
         defaultBranch: String,
-        latestCommit: com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitInfo?
+        latestCommit: TGitCommitInfo?
     ): GitRequestEvent {
         val gitProjectId = gitNoteEvent.objectAttributes.projectId
         return GitRequestEvent(
@@ -219,7 +219,7 @@ object GitRequestEventHandle {
         gitReviewEvent: GitReviewEvent,
         e: String,
         defaultBranch: String,
-        latestCommit: com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitInfo?
+        latestCommit: TGitCommitInfo?
     ): GitRequestEvent {
         val gitProjectId = gitReviewEvent.projectId
         return GitRequestEvent(
@@ -256,7 +256,7 @@ object GitRequestEventHandle {
 
     fun createManualTriggerEvent(
         event: StreamManualEvent,
-        latestCommit: com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo?,
+        latestCommit: StreamGitCommitInfo?,
         eventStr: String
     ): GitRequestEvent {
         if (event.branch.isBlank()) {

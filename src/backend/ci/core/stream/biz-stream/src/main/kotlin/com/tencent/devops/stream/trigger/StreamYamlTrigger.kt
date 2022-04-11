@@ -93,7 +93,7 @@ class StreamYamlTrigger @Autowired constructor(
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
             action.data.getGitProjectId(),
-            com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo(true)
+            ApiRequestRetryInfo(true)
         )!!
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 

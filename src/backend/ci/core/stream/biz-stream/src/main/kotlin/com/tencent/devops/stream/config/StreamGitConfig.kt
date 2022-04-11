@@ -36,17 +36,11 @@ class StreamGitConfig {
     @Value("\${stream.url:#{null}}")
     val streamUrl: String? = null
 
-    @Value("\${git.githubUrl:#{null}}")
-    val githubUrl: String = "https://github.com"
+    @Value("\${stream.scmType:#{null}}")
+    val scmType: String? = null
 
-    @Value("\${git.gitCodeUrl:#{null}}")
-    val gitCodeUrl: String? = null
+    @Value("\${git.gitUrl:#{null}}")
+    val gitUrl: String? = null
 
-    fun getGitUrl(scmType: ScmType): String {
-        return when (scmType) {
-            ScmType.CODE_GIT -> gitCodeUrl!!
-            ScmType.GITHUB -> githubUrl
-            else -> TODO()
-        }
-    }
+    fun getScmType() = ScmType.valueOf(scmType!!)
 }

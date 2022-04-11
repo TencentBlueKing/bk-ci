@@ -33,14 +33,13 @@ import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.stream.common.exception.CommitCheck
-import com.tencent.devops.stream.common.exception.TriggerException
-import com.tencent.devops.stream.common.exception.Yamls
-import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
-import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
+import com.tencent.devops.stream.trigger.exception.StreamTriggerException
+import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import io.jsonwebtoken.io.IOException
 import org.slf4j.LoggerFactory
 
@@ -54,37 +53,34 @@ object YamlFormat {
     ): PreTemplateScriptBuildYaml {
         return try {
             YamlUtil.getObjectMapper().readValue(
-                ScriptYmlUtils.formatYaml(originYaml),
+                ScriptYmlUtils.formatYaml(action.data.context.originYaml!!),
                 PreTemplateScriptBuildYaml::class.java
             )
         } catch (e: Throwable) {
-            logger.info("gitRequestEvent ${gitRequestEventForHandle.id} git ci yaml is invalid", e)
+            logger.info("gitRequestEvent ${action.data.context.requestEventId} git ci yaml is invalid", e)
             val (block, message, reason) = when (e) {
                 is YamlFormatException, is CustomException -> {
-                    Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
+                    Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 is IOException, is TypeCastException -> {
-                    Triple(isMr, e.message, TriggerReason.CI_YAML_INVALID)
+                    Triple(action.metaData.isStreamMr(), e.message, TriggerReason.CI_YAML_INVALID)
                 }
                 // 指定异常直接扔出在外面统一处理
                 is StreamTriggerBaseException, is ErrorCodeException -> {
                     throw e
                 }
                 else -> {
-                    logger.warn("YamlFormat event: ${gitRequestEventForHandle.id} unknow error: ${e.message}")
+                    logger.warn("YamlFormat event: ${action.data.context.requestEventId} unknow error: ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
-            TriggerException.triggerError(
-                request = gitRequestEventForHandle,
-                filePath = filePath,
-                reason = reason,
-                reasonParams = listOf(message ?: ""),
-                yamls = Yamls(originYaml, null, null),
-                version = StreamYamlTrigger.ymlVersion,
+            throw StreamTriggerException(
+                action,
+                reason,
+                listOf(message ?: ""),
                 commitCheck = CommitCheck(
                     block = block,
-                    state = GitCICommitCheckState.FAILURE
+                    state = StreamCommitCheckState.FAILURE
                 )
             )
         }

@@ -27,9 +27,7 @@
 
 package com.tencent.devops.stream.service
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
@@ -41,13 +39,14 @@ import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.common.exception.GitCINoEnableException
+import com.tencent.devops.stream.common.exception.StreamNoEnableException
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.GitCIConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -59,6 +58,7 @@ import org.springframework.stereotype.Service
 class StreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val streamGitConfig: StreamGitConfig,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao
 ) {
@@ -160,11 +160,10 @@ class StreamBasicSettingService @Autowired constructor(
 
     // 更新项目组织架构信息
     fun updateProjectOrganizationInfo(
-        projectId: String,
+        gitProjectId: String,
         userId: String
     ): UserDeptDetail? {
-        val userResult =
-            client.get(ServiceTxUserResource::class).get(userId)
+        val userResult = client.get(ServiceTxUserResource::class).get(userId)
         val userUpdateInfo = if (userResult.isNotOk()) {
             logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
             // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
@@ -177,7 +176,7 @@ class StreamBasicSettingService @Autowired constructor(
         // 更新项目的组织架构信息
         updateProjectInfo(
             userId = userId,
-            projectId = GitCIUtils.GITLABLE + projectId,
+            projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
             userDeptDetail = userUpdateInfo
         )
         return userUpdateInfo
@@ -192,28 +191,27 @@ class StreamBasicSettingService @Autowired constructor(
         )
     }
 
-    fun getGitCIConf(gitProjectId: Long): GitCIBasicSetting? {
+    fun getGitCIConf(gitProjectId: Long): StreamBasicSetting? {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
     }
 
-    fun getGitCIBasicSettingAndCheck(gitProjectId: Long): GitCIBasicSetting {
+    fun getGitCIBasicSettingAndCheck(gitProjectId: Long): StreamBasicSetting {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
-            ?: throw GitCINoEnableException(gitProjectId.toString())
+            ?: throw StreamNoEnableException(gitProjectId.toString())
     }
 
     fun initGitCIConf(
         userId: String,
         projectId: String,
         gitProjectId: Long,
-        enabled: Boolean,
-        scmType: ScmType
+        enabled: Boolean
     ): Boolean {
         val projectInfo = requestGitProjectInfo(gitProjectId)
 
         run back@{
             return saveGitCIConf(
-                userId,
-                StreamBasicSetting(
+                userId = userId,
+                setting = StreamBasicSetting(
                     gitProjectId = gitProjectId,
                     name = projectInfo?.name ?: return@back,
                     url = projectInfo.gitSshUrl ?: return@back,
@@ -235,8 +233,7 @@ class StreamBasicSettingService @Autowired constructor(
                     gitProjectAvatar = projectInfo.avatarUrl,
                     lastCiInfo = null,
                     pathWithNamespace = projectInfo.pathWithNamespace,
-                    nameWithNamespace = projectInfo.nameWithNamespace,
-                    scmType = scmType
+                    nameWithNamespace = projectInfo.nameWithNamespace
                 )
             )
         }
@@ -330,7 +327,10 @@ class StreamBasicSettingService @Autowired constructor(
         return updateProjectInfo(userId, projectInfo)
     }
 
-    fun updateProjectInfo(userId: String, projectInfo: com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo): Boolean {
+    fun updateProjectInfo(
+        userId: String,
+        projectInfo: StreamGitProjectInfo
+    ): Boolean {
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId.toLong()) ?: return false
 
         streamBasicSettingDao.updateInfoSetting(

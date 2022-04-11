@@ -32,7 +32,7 @@ abstract class TGitActionGit(
     override fun getGitCred(personToken: String?): TGitCred {
         if (personToken != null) {
             return TGitCred(
-                userId = "",
+                userId = null,
                 accessToken = personToken,
                 useAccessToken = false
             )

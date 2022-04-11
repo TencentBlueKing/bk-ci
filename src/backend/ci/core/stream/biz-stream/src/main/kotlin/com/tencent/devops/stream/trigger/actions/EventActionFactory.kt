@@ -36,6 +36,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
@@ -83,7 +84,8 @@ class EventActionFactory @Autowired constructor(
     private val pipelineDelete: PipelineDelete,
     private val gitCheckService: GitCheckService,
     private val mrConflictCheck: MergeConflictCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     fun load(event: CodeWebhookEvent): BaseAction? {
@@ -171,9 +173,9 @@ class EventActionFactory @Autowired constructor(
         setting: StreamTriggerSetting,
         event: StreamManualEvent
     ): StreamManualAction {
-        val streamManualAction = StreamManualAction(streamTriggerCache)
+        val streamManualAction = StreamManualAction(streamGitConfig, streamTriggerCache)
         streamManualAction.data = StreamManualActionData(event)
-        streamManualAction.api = when (setting.scmType) {
+        streamManualAction.api = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO()
         }
@@ -187,10 +189,10 @@ class EventActionFactory @Autowired constructor(
         setting: StreamTriggerSetting,
         event: StreamScheduleEvent
     ): StreamScheduleAction {
-        val streamScheduleAction = StreamScheduleAction(gitCheckService)
+        val streamScheduleAction = StreamScheduleAction(streamGitConfig, gitCheckService)
         streamScheduleAction.data = StreamScheduleActionData(event)
 
-        streamScheduleAction.api = when (setting.scmType) {
+        streamScheduleAction.api = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> tGitApiService
             else -> TODO()
         }

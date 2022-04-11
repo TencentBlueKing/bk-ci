@@ -32,11 +32,14 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +52,7 @@ class PipelineDelete @Autowired constructor(
     private val client: Client,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
+    private val streamGitConfig: StreamGitConfig,
     private val streamEventService: StreamEventService
 ) {
     companion object {
@@ -74,12 +78,13 @@ class PipelineDelete @Autowired constructor(
         deleteYamlFiles.forEach { filePath ->
             val existPipeline = path2PipelineExists[filePath] ?: return@forEach
             val pipelineId = existPipeline.pipelineId
-            delete(action, pipelineId, filePath)
+            delete(action, pipelineId, existPipeline.gitProjectId, filePath)
         }
     }
 
     fun delete(
         action: BaseAction,
+        gitProjectId: String,
         pipelineId: String,
         filePath: String?
     ) {
@@ -93,38 +98,40 @@ class PipelineDelete @Autowired constructor(
         try {
             redisLock.lock()
             streamPipelineBranchService.deleteBranch(
-                gitRequestEvent.gitProjectId,
-                pipelineId,
-                gitRequestEvent.branch
+                gitProjectId = gitProjectId.toLong(),
+                pipelineId = pipelineId,
+                branch = action.data.eventCommon.branch
             )
 
             val isFileEmpty = if (null != filePath) {
                 checkFileEmpty(
-                    gitToken = gitToken,
-                    gitProjectId = gitRequestEvent.gitProjectId,
+                    action,
+                    gitProjectId = gitProjectId,
                     filePath = filePath
                 )
             } else {
                 true
             }
             if (isFileEmpty &&
-                !streamPipelineBranchService.hasBranchExist(gitRequestEvent.gitProjectId, pipelineId)
+                !streamPipelineBranchService.hasBranchExist(gitProjectId.toLong(), pipelineId)
             ) {
-                logger.info("event: ${gitRequestEvent.id} delete file: $filePath with pipeline: $pipelineId ")
+                logger.info("event: ${action.data.context.requestEventId} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val pipelineInfoResult = processClient.getPipelineInfo(
-                    projectId = gitProjectConf.projectCode!!,
+                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
                     pipelineId = pipelineId,
                     channelCode = channelCode
                 )
                 if (pipelineInfoResult.data != null) {
                     processClient.delete(
-                        gitRequestEvent.userId, gitProjectConf.projectCode!!, pipelineId,
-                        channelCode
+                        userId = action.data.eventCommon.userId,
+                        projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
+                        pipelineId = pipelineId,
+                        channelCode = channelCode
                     )
                 }
                 // 删除相关的构建记录
-                gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
+                streamEventService.deletePipelineBuildHistory(setOf(pipelineId))
             }
         } finally {
             redisLock.unlock()
@@ -132,15 +139,21 @@ class PipelineDelete @Autowired constructor(
     }
 
     private fun checkFileEmpty(
-        gitToken: String,
-        gitProjectId: Long,
+        action: BaseAction,
+        gitProjectId: String,
         filePath: String
     ): Boolean {
-        val fileList = scmService.getFileTreeFromGitWithDefaultBranch(
-            gitToken = gitToken,
+        val fileList = action.api.getFileTree(
+            cred = action.getGitCred(),
             gitProjectId = gitProjectId,
-            filePath = filePath,
-            recursive = true
+            path = if (filePath.contains("/")) {
+                filePath.substring(0, filePath.lastIndexOf("/"))
+            } else {
+                filePath
+            },
+            ref = "",
+            recursive = true,
+            retry = ApiRequestRetryInfo(true)
         )
 
         fileList.forEach {

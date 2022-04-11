@@ -165,11 +165,11 @@ class SendNotify @Autowired constructor(
                     requestId = requestId,
                     openUser = build.userId,
                     buildTime = build.totalTime,
-                    gitUrl = streamGitConfig.getGitUrl(action.data.setting.scmType),
+                    gitUrl = streamGitConfig.gitUrl!!,
                     streamUrl = streamGitConfig.streamUrl!!,
                     content = content,
                     gitProjectId = action.data.eventCommon.gitProjectId,
-                    scmType = action.data.setting.scmType
+                    scmType = streamGitConfig.getScmType()
                 )
             }
             else -> {

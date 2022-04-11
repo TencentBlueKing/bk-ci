@@ -153,7 +153,12 @@ class TGitPushActionGit(
                     gitProjectId = this.data.getGitProjectId().toLong(),
                     pipelineId = it
                 )
-                pipelineDelete.delete(this, it, gitPipelineResourceRecord?.filePath)
+                pipelineDelete.delete(
+                    action = this,
+                    gitProjectId = it,
+                    pipelineId = gitPipelineResourceRecord?.gitProjectId.toString(),
+                    filePath = gitPipelineResourceRecord?.filePath
+                )
             }
             return
         }

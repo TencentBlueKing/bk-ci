@@ -51,9 +51,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
-import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
@@ -71,6 +71,7 @@ import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.util.StreamPipelineUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -79,15 +80,16 @@ import org.springframework.stereotype.Service
 class StreamYamlBuild @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
+    private val dslContext: DSLContext,
     private val streamYamlBaseBuild: StreamYamlBaseBuild,
-    private val pipelineService: StreamPipelineService,
     private val redisOperation: RedisOperation,
     private val modelCreateInnerImpl: InnerModelCreatorImpl,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamGitConfig: StreamGitConfig
+    private val streamGitConfig: StreamGitConfig,
+    private val pipelineResourceDao: GitPipelineResourceDao
 ) {
     private val modelCreate = ModelCreate(
         client = client,
@@ -124,7 +126,8 @@ class StreamYamlBuild @Autowired constructor(
             // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
             try {
                 triggerLock.lock()
-                realPipeline = pipelineService.getPipelineByFile(
+                realPipeline = pipelineResourceDao.getPipelineByFile(
+                    dslContext = dslContext,
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     filePath = pipeline.filePath
                 )?.let {

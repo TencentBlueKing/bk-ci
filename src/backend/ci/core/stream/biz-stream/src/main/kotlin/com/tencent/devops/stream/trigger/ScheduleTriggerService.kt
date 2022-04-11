@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger
 
 import com.devops.process.yaml.v2.utils.YamlCommonUtils
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -95,7 +94,6 @@ class ScheduleTriggerService @Autowired constructor(
                 projectCode = it.projectCode,
                 enableCommitCheck = it.enableCommitCheck,
                 enableMrBlock = it.enableMrBlock,
-                scmType = ScmType.valueOf(it.scmType),
                 name = it.name,
                 enableMrComment = it.enableMrComment
             )
@@ -212,7 +210,7 @@ class ScheduleTriggerService @Autowired constructor(
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
             action.data.getGitProjectId(),
-            com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo(true)
+            ApiRequestRetryInfo(true)
         )!!
         streamBasicSettingService.updateProjectInfo(action.data.eventCommon.userId, gitProjectInfo)
 

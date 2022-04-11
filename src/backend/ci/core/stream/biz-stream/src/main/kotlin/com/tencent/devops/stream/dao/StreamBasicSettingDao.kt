@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.stream.tables.TGitBasicSetting
@@ -281,8 +280,7 @@ class StreamBasicSettingDao {
                     enableCommitCheck = conf.enableCommitCheck,
                     nameWithNamespace = conf.nameWithNameSpace ?: "",
                     pathWithNamespace = conf.pathWithNameSpace,
-                    enableMrComment = conf.enableMrComment,
-                    scmType = ScmType.valueOf(conf.scmType)
+                    enableMrComment = conf.enableMrComment
                 )
             }
         }
@@ -326,8 +324,7 @@ class StreamBasicSettingDao {
                         null
                     },
                     nameWithNamespace = conf.nameWithNameSpace ?: "",
-                    pathWithNamespace = conf.pathWithNameSpace,
-                    scmType = ScmType.valueOf(conf.scmType)
+                    pathWithNamespace = conf.pathWithNameSpace
                 )
             }
         }
@@ -407,7 +404,12 @@ class StreamBasicSettingDao {
         }
     }
 
-    fun updateOauthSetting(dslContext: DSLContext, gitProjectId: Long, userId: String, oauthUserId: String) {
+    fun updateOauthSetting(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        userId: String,
+        oauthUserId: String
+    ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             dslContext.update(this)
                 .set(ENABLE_USER_ID, oauthUserId)

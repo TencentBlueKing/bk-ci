@@ -25,24 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.pojo
+package com.tencent.devops.stream.common.exception
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
-
-/**
- * 保存Git源项目信息，内容同
- * @see com.tencent.devops.stream.git.pojo.StreamGitProjectInfo
- */
-data class StreamGitProjectCache(
-    override val gitProjectId: String,
-    override val defaultBranch: String?,
-    override val gitHttpUrl: String,
-    override val name: String,
-    override val gitSshUrl: String?,
-    override val homepage: String?,
-    override val gitHttpsUrl: String?,
-    override val description: String?,
-    override val avatarUrl: String?,
-    override val pathWithNamespace: String?,
-    override val nameWithNamespace: String
-) : StreamGitProjectInfo
+class StreamNoEnableException(project: String) : StreamCustomException(
+    status = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.errorCode,
+    message = ErrorCodeEnum.STREAM_NOT_ENABLE_ERROR.formatErrorMessage.format(project)
+)

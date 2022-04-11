@@ -32,6 +32,7 @@ import com.devops.process.yaml.v2.models.Variable
 import com.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
@@ -51,6 +52,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 
 class StreamScheduleAction(
+    private val streamGitConfig: StreamGitConfig,
     private val gitCheckService: GitCheckService
 ) : BaseAction {
 
@@ -64,7 +66,7 @@ class StreamScheduleAction(
     override fun getProjectCode(gitProjectId: String?) = data().event.projectCode
 
     override fun getGitCred(personToken: String?): StreamGitCred {
-        return when (data.setting.scmType) {
+        return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> TGitCred(
                 userId = data().event.userId,
                 accessToken = personToken,
@@ -144,9 +146,9 @@ class StreamScheduleAction(
             pipelineId = data.context.pipeline!!.pipelineId,
             commitId = data.eventCommon.commit.commitId,
             gitHttpUrl = data.setting.gitHttpUrl,
-            scmType = data.setting.scmType,
+            scmType = streamGitConfig.getScmType(),
             token = api.getToken(getGitCred()),
-            state = state.toGitState(data.setting.scmType),
+            state = state.toGitState(streamGitConfig.getScmType()),
             block = block,
             context = context,
             targetUrl = targetUrl,
