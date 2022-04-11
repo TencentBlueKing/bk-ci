@@ -1479,7 +1479,10 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelines.add(templateInstanceUpdate.pipelineName)
                 } catch (t: Throwable) {
                     logger.warn("FailUpdateTemplate|${templateInstanceUpdate.pipelineName}|$projectId|$userId", t)
-                    failurePipelines.add(templateInstanceUpdate.pipelineName)
+                    val message =
+                        if (!t.message.isNullOrBlank() && t.message!!.length > 36)
+                            t.message!!.substring(0, 36) + "......" else t.message
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                 }
             }
             // 发送执行任务结果通知
