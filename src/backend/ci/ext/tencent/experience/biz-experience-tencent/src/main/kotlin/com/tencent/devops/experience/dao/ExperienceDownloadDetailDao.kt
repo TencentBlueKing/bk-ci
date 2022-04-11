@@ -58,7 +58,7 @@ class ExperienceDownloadDetailDao {
         }
     }
 
-    fun listIdsForPublic(dslContext: DSLContext, platform: String?, limit: Int): List<Long> {
+    fun listIdsForPublic(dslContext: DSLContext, userId: String, platform: String?, limit: Int): List<Long> {
         val p = TExperiencePublic.T_EXPERIENCE_PUBLIC.`as`("p")
         val d = TExperienceDownloadDetail.T_EXPERIENCE_DOWNLOAD_DETAIL.`as`("d")
         val join = p.leftJoin(d).on(
@@ -69,6 +69,7 @@ class ExperienceDownloadDetailDao {
         return dslContext.selectDistinct(p.RECORD_ID).from(join)
             .where(p.ONLINE.eq(true))
             .and(p.END_DATE.gt(LocalDateTime.now()))
+            .and(d.USER_ID.eq(userId))
             .let { if (null == platform) it else it.and(p.PLATFORM.eq(platform)) }
             .orderBy(p.UPDATE_TIME.desc()).limit(limit)
             .fetch(p.RECORD_ID)

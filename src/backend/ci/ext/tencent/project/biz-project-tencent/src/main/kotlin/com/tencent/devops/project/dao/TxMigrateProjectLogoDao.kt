@@ -25,38 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.resources.service
+package com.tencent.devops.project.dao
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.service.ServiceImageManageResource
-import net.coobird.thumbnailator.Thumbnails
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Autowired
-import java.net.URL
-import java.nio.file.Files
+import com.tencent.devops.model.project.tables.TProject
+import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-@RestResource
-class ServiceImageManageResourceImpl @Autowired constructor() : ServiceImageManageResource {
+@Repository
+class TxMigrateProjectLogoDao {
 
-    /**
-     * 按照规定大小压缩图片
-     */
-    override fun compressImage(imageUrl: String, compressWidth: Int, compressHeight: Int): Result<String> {
-        val file = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()
-        val url = URL(imageUrl)
-        val bytes: ByteArray?
-        try {
-            Thumbnails.of(url)
-                .size(compressWidth, compressHeight)
-                .outputFormat("png")
-                .toFile(file)
-            bytes = Files.readAllBytes(file.toPath())
-        } finally {
-            file.delete()
+    fun getProjectLogos(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<out Record>? {
+        return with(TProject.T_PROJECT) {
+            dslContext.select(ID, ENGLISH_NAME, LOGO_ADDR, CREATOR).from(this)
+                .orderBy(ID.asc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
-        val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        return Result(data)
+    }
+
+    fun updateProjectLogo(
+        dslContext: DSLContext,
+        id: Long,
+        logoUrl: String
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(LOGO_ADDR, logoUrl)
+                .where(ID.eq(id))
+                .execute()
+        }
     }
 }

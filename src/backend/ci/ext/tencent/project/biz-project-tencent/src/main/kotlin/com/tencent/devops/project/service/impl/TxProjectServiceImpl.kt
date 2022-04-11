@@ -27,11 +27,14 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -66,10 +69,10 @@ import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
-import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
+import com.tencent.devops.support.api.service.ServiceFileResource
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -84,7 +87,6 @@ class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
-    private val s3Service: S3Service,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
@@ -227,7 +229,26 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
-        return s3Service.saveLogo(logoFile, projectCode)
+        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
+        val serviceUrl =
+            "$serviceUrlPrefix/service/file/upload?userId=$userId"
+        OkhttpUtils.uploadFile(serviceUrl, logoFile).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.warn("$userId upload file:${logoFile.name} fail,responseContent:$responseContent")
+                throw ErrorCodeException(errorCode = ProjectMessageCode.SAVE_LOGO_FAIL)
+            }
+            val result = JsonUtil.to(
+                json = responseContent,
+                typeReference = object : TypeReference<com.tencent.devops.common.api.pojo.Result<String?>>() {}
+            )
+            val logoAddress = result.data
+            if (logoAddress.isNullOrBlank()) {
+                logger.warn("$userId upload file:${logoFile.name} fail,result:$result")
+                throw ErrorCodeException(errorCode = ProjectMessageCode.SAVE_LOGO_FAIL)
+            }
+            return logoAddress
+        }
     }
 
     override fun deleteAuth(projectId: String, accessToken: String?) {
