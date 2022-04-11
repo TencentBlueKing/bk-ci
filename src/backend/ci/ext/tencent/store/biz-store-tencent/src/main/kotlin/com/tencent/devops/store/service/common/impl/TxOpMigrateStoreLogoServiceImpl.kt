@@ -347,7 +347,7 @@ class TxOpMigrateStoreLogoServiceImpl @Autowired constructor(
         val tmpFile = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         val fileName = tmpFile.name
         try {
-            // 从s3下载插件logo
+            // 从s3下载logo
             OkhttpUtils.downloadFile(logoUrl, tmpFile)
             // 把logo上传至bkrepo
             val serviceUrlPrefix = client.getServiceUrl(ServiceBkRepoResource::class)

@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.experience.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.model.project.tables.TProject
-import com.tencent.devops.project.dao.TxMigrateProjectLogoDao
+import com.tencent.devops.experience.dao.TxMigrateExperienceLogoDao
+import com.tencent.devops.model.experience.tables.TExperience
+import com.tencent.devops.model.experience.tables.TExperiencePublic
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,46 +46,74 @@ import java.nio.file.Files
 import java.util.concurrent.Executors
 
 @Service
-class TxOpMigrateProjectLogoService @Autowired constructor(
+class TxOpMigrateExperienceLogoService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val txMigrateProjectLogoDao: TxMigrateProjectLogoDao,
+    private val txMigrateExperienceLogoDao: TxMigrateExperienceLogoDao,
     private val client: Client
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(TxOpMigrateProjectLogoService::class.java)
+        private val logger = LoggerFactory.getLogger(TxOpMigrateExperienceLogoService::class.java)
         private const val DEFAULT_PAGE_SIZE = 100
     }
 
-    fun migrateProjectLogo(): Boolean {
+    fun migrateExperienceLogo(): Boolean {
         Executors.newFixedThreadPool(1).submit {
-            logger.info("begin migrateProjectLogo!!")
+            logger.info("begin migrateExperienceLogo!!")
             var offset = 0
             do {
-                // 查询项目logo信息记录
-                val projectLogoRecords = txMigrateProjectLogoDao.getProjectLogos(
+                // 查询体验logo信息记录
+                val experienceLogoRecords = txMigrateExperienceLogoDao.getExperienceLogos(
                     dslContext = dslContext,
                     offset = offset,
                     limit = DEFAULT_PAGE_SIZE
                 )
-                val tProject = TProject.T_PROJECT
-                projectLogoRecords?.forEach { projectLogoRecord ->
-                    val logoUrl = projectLogoRecord[tProject.LOGO_ADDR]
+                val tExperience = TExperience.T_EXPERIENCE
+                experienceLogoRecords?.forEach { experienceLogoRecord ->
+                    val logoUrl = experienceLogoRecord[tExperience.LOGO_URL]
                     if (checkLogoUrlCondition(logoUrl)) {
                         return@forEach
                     }
-                    val userId = projectLogoRecord[tProject.CREATOR]
+                    val userId = experienceLogoRecord[tExperience.CREATOR]
                     val bkRepoLogoUrl = getBkRepoLogoUrl(logoUrl, userId)
                     if (bkRepoLogoUrl.isNullOrBlank()) {
                         return@forEach
                     }
-                    // 更新项目的logo
-                    val id = projectLogoRecord[tProject.ID]
-                    txMigrateProjectLogoDao.updateProjectLogo(dslContext, id, bkRepoLogoUrl)
+                    // 更新体验的logo
+                    val id = experienceLogoRecord[tExperience.ID]
+                    txMigrateExperienceLogoDao.updateExperienceLogo(dslContext, id, bkRepoLogoUrl)
                 }
                 offset += DEFAULT_PAGE_SIZE
-            } while (projectLogoRecords?.size == DEFAULT_PAGE_SIZE)
-            logger.info("end migrateProjectLogo!!")
+            } while (experienceLogoRecords?.size == DEFAULT_PAGE_SIZE)
+            logger.info("end migrateExperienceLogo!!")
+        }
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin migrateExperiencePublicLogo!!")
+            var offset = 0
+            do {
+                // 查询公开体验logo信息记录
+                val experienceLogoRecords = txMigrateExperienceLogoDao.getExperiencePublicLogos(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+                val tExperiencePublic = TExperiencePublic.T_EXPERIENCE_PUBLIC
+                experienceLogoRecords?.forEach { experienceLogoRecord ->
+                    val logoUrl = experienceLogoRecord[tExperiencePublic.LOGO_URL]
+                    if (checkLogoUrlCondition(logoUrl)) {
+                        return@forEach
+                    }
+                    val bkRepoLogoUrl = getBkRepoLogoUrl(logoUrl, SYSTEM)
+                    if (bkRepoLogoUrl.isNullOrBlank()) {
+                        return@forEach
+                    }
+                    // 更新公开体验的logo
+                    val id = experienceLogoRecord[tExperiencePublic.ID]
+                    txMigrateExperienceLogoDao.updateExperiencePublicLogo(dslContext, id, bkRepoLogoUrl)
+                }
+                offset += DEFAULT_PAGE_SIZE
+            } while (experienceLogoRecords?.size == DEFAULT_PAGE_SIZE)
+            logger.info("end migrateExperiencePublicLogo!!")
         }
         return true
     }
