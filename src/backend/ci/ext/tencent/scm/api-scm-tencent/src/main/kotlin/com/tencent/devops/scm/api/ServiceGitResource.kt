@@ -851,4 +851,28 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitCodeGroup>>
+
+    @ApiOperation("获取GitCode项目成员信息")
+    @GET
+    @Path("/getMembers")
+    fun getMembers( //搬到repository ,iGitService 中已经存在
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = false)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>>
 }

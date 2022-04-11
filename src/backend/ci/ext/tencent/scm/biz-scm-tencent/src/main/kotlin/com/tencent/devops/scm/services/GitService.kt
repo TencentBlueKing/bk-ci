@@ -1871,4 +1871,42 @@ class GitService @Autowired constructor(
             )
         }
     }
+
+    fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>> {
+        val url = StringBuilder(
+            "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(gitProjectId, "UTF-8")}/members"
+        )
+        logger.info("get repo member url: $url")
+        setToken(tokenType, url, token)
+        url.append(
+            if (search != null) {
+                "&query=$search"
+            } else {
+                ""
+            }
+        )
+        url.append("&page=$page&per_page=$pageSize")
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) {
+                throw CustomException(
+                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo member error for $gitProjectId(${it.code()}): ${it.message()}"
+                )
+            }
+            return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
+        }
+    }
 }

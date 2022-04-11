@@ -540,4 +540,23 @@ class ServiceGitResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>> {
+        TODO("Not yet implemented")
+        return gitService.getMembers(
+            token = token,
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            tokenType = tokenType
+        )
+    }
 }

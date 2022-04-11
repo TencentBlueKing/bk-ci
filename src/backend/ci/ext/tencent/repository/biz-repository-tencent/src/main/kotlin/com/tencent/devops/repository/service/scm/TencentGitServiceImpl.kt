@@ -435,4 +435,23 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             tokenType
         ).data!!
     }
+
+    override fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>> {
+        //        TODO("Not yet implemented")
+        return client.getScm(ServiceGitResource::class).getMembers(
+            token = token,
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            tokenType = tokenType
+        )
+    }
 }
