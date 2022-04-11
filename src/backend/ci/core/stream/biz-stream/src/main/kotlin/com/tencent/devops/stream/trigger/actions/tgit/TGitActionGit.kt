@@ -12,7 +12,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 
 /**
- * 对于工蜂平台级功能的具体实现，不需要下放到具体的event
+ * 对于stream 平台级功能的具体实现，不需要下放到具体的event
  * 对于只有一两个事件实现的，也可在平台级实现一个通用的，一两个再自己重写
  */
 abstract class TGitActionGit(

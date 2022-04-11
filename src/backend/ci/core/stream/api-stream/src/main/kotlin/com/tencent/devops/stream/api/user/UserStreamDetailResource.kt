@@ -27,12 +27,15 @@
 
 package com.tencent.devops.stream.api.user
 
+import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.FileInfoPage
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.pojo.StreamGitPipelineDir
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamModelDetail
+import com.tencent.devops.process.pojo.Report
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,72 +49,80 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_PIPELINE"], description = "user-pipeline页面")
-@Path("/user/pipelines")
+@Api(tags = ["USER_STREAM_CURRENT"], description = "user-BuildDetail页面")
+@Path("/user/current/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserStreamPipelineResource {
+interface UserStreamDetailResource {
 
-    @ApiOperation("项目下所有流水线概览")
+    @ApiOperation("查看指定的构建详情")
     @GET
-    @Path("/{projectId}/list")
-    fun getPipelineList(
+    @Path("/detail/{projectId}")
+    fun getLatestBuildDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("搜索关键字", required = false)
-        @QueryParam("keyword")
-        keyword: String?,
+        @ApiParam(value = "pipelineId", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam(value = "buildId", required = false)
+        @QueryParam("buildId")
+        buildId: String?
+    ): Result<StreamModelDetail?>
+
+    @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
+    @Path("/artifactories/projects/{projectId}/search")
+    @GET
+    fun search(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipelineId", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("buildId", required = true)
+        @QueryParam("buildId")
+        buildId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
+        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("目录", required = false)
-        @QueryParam("filePath")
-        filePath: String?
-    ): Result<Page<GitProjectPipeline>>
+        pageSize: Int?
+    ): Result<FileInfoPage<FileInfo>>
 
-    @ApiOperation("项目下所有流水线文件路径目录")
-    @GET
-    @Path("/{projectId}/dir_list")
-    fun getPipelineDirList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "蓝盾流水线ID", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?
-    ): Result<StreamGitPipelineDir>
-
-    @ApiOperation("获取指定流水线信息")
-    @GET
-    @Path("/{projectId}/{pipelineId}/info")
-    fun getPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String
-    ): Result<GitProjectPipeline?>
-
-    @ApiOperation("开启或关闭流水线")
+    @ApiOperation("创建下载链接")
+    @Path("/artifactories/projects/{projectId}/artifactoryType/{artifactoryType}/downloadUrl")
     @POST
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
-    @Path("/{projectId}/{pipelineId}/enable")
-    fun enablePipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    fun downloadUrl(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("stream 用户ID", required = true, defaultValue = "0")
+        @HeaderParam("X-GIT-UID")
+        gitUserId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @PathParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
+
+    @ApiOperation("获取构建报告列表")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/report")
+    @GET
+    fun getReports(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
@@ -120,29 +131,8 @@ interface UserStreamPipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "是否启用该流水线", required = true)
-        @QueryParam("enabled")
-        enabled: Boolean
-    ): Result<Boolean>
-
-    @ApiOperation("获取流水线列表")
-    @GET
-    @Path("/{projectId}/listInfo")
-    fun listPipelineNames(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("搜索关键字", required = false)
-        @QueryParam("keyword")
-        keyword: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<List<GitProjectPipeline>>
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<List<Report>>
 }

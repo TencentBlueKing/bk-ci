@@ -39,7 +39,7 @@ enum class ErrorCodeEnum(
     //    SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "stream系统错误"),
     NO_REPORT_AUTH(ErrorType.SYSTEM, 2129002, "无权限查看报告"),
 
-    // 工蜂接口请求错误
+    // stream 接口请求错误
     DEVNET_TIMEOUT_ERROR(ErrorType.THIRD_PARTY, 2129003, "request DEVNET gateway timeout"),
     GET_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129026, "get token from git error %s"),
     REFRESH_TOKEN_ERROR(ErrorType.THIRD_PARTY, 2129005, "refresh token from git error %s"),
@@ -47,7 +47,7 @@ enum class ErrorCodeEnum(
     GET_YAML_CONTENT_ERROR(
         errorType = ErrorType.THIRD_PARTY,
         errorCode = 2129004,
-        formatErrorMessage = "获取工蜂仓库文件内容失败"
+        formatErrorMessage = "获取stream 仓库文件内容失败"
     ),
     PROJECT_NOT_FOUND(
         errorType = ErrorType.USER,

@@ -25,24 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.constant
 
-import com.tencent.devops.process.pojo.BuildHistory
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("历史构建模型-对应history页面")
-data class GitCIBuildHistory(
-    @ApiModelProperty("流水线名称", required = true)
-    val displayName: String?,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
-    var pipelineId: String?,
-    @ApiModelProperty("git request Event事件", required = true)
-    val gitRequestEvent: GitRequestEventReq,
-    @ApiModelProperty("历史构建模型", required = false)
-    val buildHistory: BuildHistory?,
-    @ApiModelProperty("原因", required = true)
-    val reason: String? = null,
-    @ApiModelProperty("原因详情", required = true)
-    var reasonDetail: String? = null
-)
+object StreamConstant {
+    // 蓝盾的stream项目前缀
+    const val DEVOPS_PROJECT_PREFIX = "git_"
+    // Stream的文件目录
+    const val STREAM_CI_FILE_DIR = ".ci"
+    // StreamYaml文件后缀
+    const val STREAM_FILE_SUFFIX = ".yml"
+    // Stream t_project表中保存的项目名称字段长度
+    const val STREAM_MAX_PROJECT_NAME_LENGTH = 64
+}

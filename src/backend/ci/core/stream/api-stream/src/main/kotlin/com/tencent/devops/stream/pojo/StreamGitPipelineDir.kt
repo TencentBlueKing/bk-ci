@@ -30,19 +30,10 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@Suppress("UnnecessaryAbstractClass")
-@ApiModel("工蜂项目基类")
-abstract class Repository(
-    @ApiModelProperty("工蜂项目ID")
-    open val gitProjectId: Long?,
-    @ApiModelProperty("工蜂项目名")
-    open val name: String?,
-    @ApiModelProperty("工蜂项目url")
-    open val url: String?,
-    @ApiModelProperty("homepage")
-    open val homepage: String?,
-    @ApiModelProperty("gitHttpUrl")
-    open val gitHttpUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    open val gitSshUrl: String?
+@ApiModel("流水线文件路径模型")
+data class StreamGitPipelineDir(
+    @ApiModelProperty("当前流水线文件子路径", required = true)
+    val currentPath: String?,
+    @ApiModelProperty("所有子路径", required = true)
+    var allPath: List<String>?
 )

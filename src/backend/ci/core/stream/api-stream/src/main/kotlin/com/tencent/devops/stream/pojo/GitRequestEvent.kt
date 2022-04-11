@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 // 将git event统一处理方便前端展示
-@ApiModel("工蜂触发请求")
+@ApiModel("stream 触发请求")
 data class GitRequestEvent(
     @ApiModelProperty("ID")
     var id: Long?,
@@ -46,9 +46,9 @@ data class GitRequestEvent(
     // 对于Push是action对于Mr是extension
     @ApiModelProperty("拓展操作")
     val extensionAction: String?,
-    @ApiModelProperty("工蜂项目ID")
+    @ApiModelProperty("stream 项目ID")
     val gitProjectId: Long,
-    @ApiModelProperty("源工蜂项目ID")
+    @ApiModelProperty("源stream 项目ID")
     val sourceGitProjectId: Long?,
     @ApiModelProperty("分支名")
     val branch: String,

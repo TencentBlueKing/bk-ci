@@ -230,6 +230,21 @@ class GitPipelineResourceDao {
         }
     }
 
+    fun getDirListByGitProjectId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String?
+    ): Result<Record2<String, String>> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            val dsl = dslContext.select(DIRECTORY, PIPELINE_ID).from(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            return dsl.fetch()
+        }
+    }
+
     fun getAllPipeline(
         dslContext: DSLContext
     ): List<TGitPipelineResourceRecord> {

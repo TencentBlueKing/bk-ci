@@ -30,13 +30,13 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("蓝盾Stream项目配置V2")
+@ApiModel("蓝盾stream 项目配置V2")
 data class StreamBasicSetting(
-    @ApiModelProperty("工蜂项目ID")
+    @ApiModelProperty("stream 项目ID")
     override val gitProjectId: Long,
-    @ApiModelProperty("工蜂项目名")
+    @ApiModelProperty("stream 项目名")
     override val name: String,
-    @ApiModelProperty("工蜂项目url")
+    @ApiModelProperty("stream 项目url")
     override val url: String,
     @ApiModelProperty("homepage")
     override val homepage: String,
@@ -75,14 +75,14 @@ data class StreamBasicSetting(
     @ApiModelProperty("带有名空间的项目路径")
     val pathWithNamespace: String?,
     @ApiModelProperty("项目最后一次构建的CI信息")
-    val lastCiInfo: CIInfo?,
+    val lastStreamCiInfo: StreamCIInfo?,
     @ApiModelProperty("项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
     @ApiModelProperty("项目下构建是否发送mrComment")
     val enableMrComment: Boolean = true
-) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
+) : StreamBaseRepository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
 
-@ApiModel("蓝盾工蜂页面修改配置")
+@ApiModel("蓝盾stream 页面修改配置")
 data class StreamUpdateSetting(
     @ApiModelProperty("Build pushed branches")
     val buildPushedBranches: Boolean,

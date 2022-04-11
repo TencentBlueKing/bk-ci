@@ -35,8 +35,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.CIInfo
-import com.tencent.devops.stream.pojo.ProjectCIInfo
+import com.tencent.devops.stream.pojo.StreamCIInfo
+import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.StreamProjectSimpleInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
@@ -53,7 +53,8 @@ import java.util.concurrent.TimeUnit
 class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val streamBasicSettingDao: StreamBasicSettingDao
+    private val streamBasicSettingDao: StreamBasicSettingDao,
+    private val oauthService: StreamOauthService
 ) {
 
     companion object {
@@ -75,7 +76,7 @@ class StreamProjectService @Autowired constructor(
         pageSize: Int?,
         orderBy: StreamProjectsOrder?,
         sort: StreamBranchesSort?
-    ): Pagination<ProjectCIInfo> {
+    ): Pagination<StreamProjectCIInfo> {
         val realPage = if (page == null || page <= 0) {
             1
         } else {
@@ -107,8 +108,8 @@ class StreamProjectService @Autowired constructor(
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
             // 针对创建流水线异常时，现有代码会创建event记录
-            val ciInfo = if (project?.lastCiInfo == null) {
-                CIInfo(
+            val streamCiInfo = if (project?.lastCiInfo == null) {
+                StreamCIInfo(
                     enableCI = project?.enableCi ?: false,
                     lastBuildId = null,
                     lastBuildStatus = null,
@@ -116,9 +117,9 @@ class StreamProjectService @Autowired constructor(
                     lastBuildMessage = null
                 )
             } else {
-                JsonUtil.to(project.lastCiInfo, object : TypeReference<CIInfo>() {})
+                JsonUtil.to(project.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
             }
-            ProjectCIInfo(
+            StreamProjectCIInfo(
                 id = it.id!!,
                 projectCode = project?.projectCode,
                 public = it.public,
@@ -133,7 +134,7 @@ class StreamProjectService @Autowired constructor(
                 buildPushedPullRequest = project?.buildPushedPullRequest,
                 enableMrBlock = project?.enableMrBlock,
                 authUserId = project?.enableUserId,
-                ciInfo = ciInfo
+                streamCiInfo = streamCiInfo
             )
         }
         return Pagination(
@@ -180,7 +181,7 @@ class StreamProjectService @Autowired constructor(
             }
             return JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
         } ?: return null
-        // 每次成功访问工蜂接口就刷新redis
+        // 每次成功访问stream 接口就刷新redis
         val updateLock = RedisLock(redisOperation, getProjectListLockKey("$userId-$realPage-$realPageSize"), 10)
         updateLock.lock()
         try {
@@ -220,7 +221,7 @@ class StreamProjectService @Autowired constructor(
     fun getUserProjectHistory(
         userId: String,
         size: Long
-    ): List<ProjectCIInfo>? {
+    ): List<StreamProjectCIInfo>? {
         val key = "$STREAM_USER_PROJECT_HISTORY_SET:$userId"
         // 先清理3个月前过期数据
         val expiredTime = LocalDateTime.now().timestamp() - TimeUnit.DAYS.toSeconds(MAX_STREAM_USER_HISTORY_DAYS)
@@ -241,11 +242,11 @@ class StreamProjectService @Autowired constructor(
         }
         val settings = streamBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
             .associateBy { it.id }
-        val result = mutableListOf<ProjectCIInfo>()
+        val result = mutableListOf<StreamProjectCIInfo>()
         gitProjectIds.forEach {
             val setting = settings[it] ?: return@forEach
             result.add(
-                ProjectCIInfo(
+                StreamProjectCIInfo(
                     id = setting.id,
                     projectCode = setting.projectCode,
                     public = null,
@@ -260,8 +261,8 @@ class StreamProjectService @Autowired constructor(
                     buildPushedPullRequest = setting.buildPushedPullRequest,
                     enableMrBlock = setting.enableMrBlock,
                     authUserId = setting.enableUserId,
-                    ciInfo = if (setting.lastCiInfo == null) {
-                        CIInfo(
+                    streamCiInfo = if (setting.lastCiInfo == null) {
+                        StreamCIInfo(
                             enableCI = setting.enableCi ?: false,
                             lastBuildId = null,
                             lastBuildStatus = null,
@@ -269,7 +270,7 @@ class StreamProjectService @Autowired constructor(
                             lastBuildMessage = null
                         )
                     } else {
-                        JsonUtil.to(setting.lastCiInfo, object : TypeReference<CIInfo>() {})
+                        JsonUtil.to(setting.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
                     }
                 )
             )

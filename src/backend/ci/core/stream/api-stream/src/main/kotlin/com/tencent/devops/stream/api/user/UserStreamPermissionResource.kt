@@ -25,15 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.constant
+package com.tencent.devops.stream.api.user
 
-object GitCIConstant {
-    // 蓝盾的stream项目前缀
-    const val DEVOPS_PROJECT_PREFIX = "git_"
-    // Stream的文件目录
-    const val STREAM_CI_FILE_DIR = ".ci"
-    // StreamYaml文件后缀
-    const val STREAM_FILE_SUFFIX = ".yml"
-    // Stream t_project表中保存的项目名称字段长度
-    const val STREAM_MAX_PROJECT_NAME_LENGTH = 64
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["USER_STREAM_BUILD"], description = "user-permission资源")
+@Path("/user/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStreamPermissionResource {
+
+    @GET
+    @Path("/projects/{projectId}/resource/validate")
+    @ApiOperation("校验用户是否有action的权限，忽略oatuh验证")
+    fun validateUserResourcePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @PathParam("projectId")
+        @ApiParam("项目编码", required = true)
+        projectId: String
+    ): Result<Boolean>
 }

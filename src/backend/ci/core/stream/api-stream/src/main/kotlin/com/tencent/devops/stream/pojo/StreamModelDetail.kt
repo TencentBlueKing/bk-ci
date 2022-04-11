@@ -25,31 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.stream.pojo
 
-object StreamPipelineUtils {
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
-
-    fun genStreamV2BuildUrl(
-        homePage: String,
-        gitProjectId: String,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
+@ApiModel("stream 构建详情模型")
+data class StreamModelDetail(
+    @ApiModelProperty("Stream流水线信息", required = true)
+    val gitProjectPipeline: GitProjectPipeline?,
+    @ApiModelProperty("stream Event事件", required = true)
+    val gitRequestEvent: StreamGitRequestEventReq,
+    @ApiModelProperty("构建详情-构建信息", required = true)
+    val modelDetail: ModelDetail,
+    @ApiModelProperty("构建历史-备注信息")
+    val buildHistoryRemark: String? = null
+) {
+    init {
+        modelDetail.model.stages.forEach {
+            it.containers.forEach { cit ->
+                cit.elements.forEach { eit ->
+                    eit.canRetry = false
+                }
+            }
         }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
     }
-
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
 }

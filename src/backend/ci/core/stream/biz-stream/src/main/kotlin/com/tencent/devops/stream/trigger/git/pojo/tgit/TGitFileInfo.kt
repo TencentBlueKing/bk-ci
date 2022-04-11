@@ -30,7 +30,7 @@ package com.tencent.devops.stream.trigger.git.pojo.tgit
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitFileInfo
 
 data class TGitFileInfo(
-    // 工蜂的内容经过base64加码，需要解码
+    // stream 的内容经过base64加码，需要解码
     override val content: String,
     override val blobId: String
 ) : StreamGitFileInfo

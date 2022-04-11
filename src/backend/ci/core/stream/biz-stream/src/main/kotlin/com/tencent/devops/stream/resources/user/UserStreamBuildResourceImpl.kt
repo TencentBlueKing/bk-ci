@@ -28,51 +28,72 @@
 package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.stream.api.user.UserStreamRequestResource
-import com.tencent.devops.stream.pojo.EventTypeConf
-import com.tencent.devops.stream.pojo.StreamGitRequestHistory
-import com.tencent.devops.stream.service.StreamRequestService
+import com.tencent.devops.stream.api.user.UserStreamBuildResource
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.service.StreamTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStreamRequestResourceImpl @Autowired constructor(
-    private val streamRequestService: StreamRequestService
-) : UserStreamRequestResource {
-    override fun getMergeBuildList(
+class UserStreamBuildResourceImpl @Autowired constructor(
+    private val streamTriggerService: StreamTriggerService,
+    private val permissionService: StreamPermissionService
+) : UserStreamBuildResource {
+
+    override fun retry(
         userId: String,
         projectId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<StreamGitRequestHistory>> {
+        pipelineId: String,
+        buildId: String,
+        taskId: String?,
+        failedContainer: Boolean?
+    ): Result<BuildId> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId)
-        return Result(streamRequestService.getRequestList(userId, gitProjectId, page, pageSize))
+        checkParam(userId, pipelineId, buildId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        return Result(
+            streamTriggerService.retry(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer
+            )
+        )
     }
 
-    private fun checkParam(userId: String) {
+    override fun manualShutdown(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId, pipelineId, buildId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        return Result(
+            streamTriggerService.manualShutdown(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        )
+    }
+
+    private fun checkParam(userId: String, pipelineId: String, buildId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-    }
-
-    override fun getEventTypeConf(userId: String): Result<List<EventTypeConf>> {
-        val eventTypeList = mutableListOf<EventTypeConf>()
-        eventTypeList.let { e ->
-            TGitObjectKind.values().forEach {
-                e.add(
-                    EventTypeConf(
-                        id = it.name,
-                        name = it.value.capitalize()
-                    )
-                )
-            }
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid pipelineId")
         }
-
-        return Result(eventTypeList)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
     }
 }

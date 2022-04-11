@@ -33,14 +33,14 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamPipelineResource
 import com.tencent.devops.stream.permission.StreamPermissionService
-import com.tencent.devops.stream.pojo.GitPipelineDir
+import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserGitCIPipelineResourceImpl @Autowired constructor(
+class UserStreamPipelineResourceImpl @Autowired constructor(
     private val pipelineService: StreamPipelineService,
     private val permissionService: StreamPermissionService
 ) : UserStreamPipelineResource {
@@ -71,7 +71,7 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String?
-    ): Result<GitPipelineDir> {
+    ): Result<StreamGitPipelineDir> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
@@ -107,7 +107,7 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
             pipelineService.enablePipeline(
                 userId = userId,

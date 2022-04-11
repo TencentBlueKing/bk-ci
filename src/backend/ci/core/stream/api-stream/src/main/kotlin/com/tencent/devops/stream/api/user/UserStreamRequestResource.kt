@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.EventTypeConf
-import com.tencent.devops.stream.pojo.GitRequestHistory
+import com.tencent.devops.stream.pojo.StreamGitRequestHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -67,7 +67,7 @@ interface UserStreamRequestResource {
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<GitRequestHistory>>
+    ): Result<Page<StreamGitRequestHistory>>
 
     @ApiOperation("获取Git事件类型枚举数据")
     @GET

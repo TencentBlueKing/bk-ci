@@ -25,44 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources.user
+package com.tencent.devops.stream.service
 
-import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.user.UserStreamProjectResource
-import com.tencent.devops.stream.pojo.StreamProjectCIInfo
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
-import com.tencent.devops.stream.pojo.enums.StreamProjectType
-import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
-import com.tencent.devops.stream.service.StreamProjectService
+import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.lang.RuntimeException
+import org.jooq.DSLContext
 
-@RestResource
-class UserStreamProjectResourceImpl @Autowired constructor(
-    private val streamProjectService: StreamProjectService
-) : UserStreamProjectResource {
-    override fun getProjects(
-        userId: String,
-        type: StreamProjectType?,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
-        orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?
-    ): Pagination<StreamProjectCIInfo> {
-        return streamProjectService.getProjectList(
-            userId = userId,
-            type = type,
-            search = search,
-            page = page,
-            pageSize = pageSize,
-            orderBy = orderBy,
-            sort = sort
+@Service
+class StreamOauthService @Autowired constructor(
+    private val client: Client
+) {
+
+    fun getAndCheckOauthToken(
+        userId: String
+    ): GitToken {
+        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
+            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
         )
-    }
-
-    override fun getProjectsHistory(userId: String, size: Long?): Result<List<StreamProjectCIInfo>> {
-        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
     }
 }

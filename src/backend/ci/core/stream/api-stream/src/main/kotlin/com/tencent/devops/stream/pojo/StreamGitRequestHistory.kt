@@ -25,31 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.stream.pojo
 
-object StreamPipelineUtils {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
-
-    fun genStreamV2BuildUrl(
-        homePage: String,
-        gitProjectId: String,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
-}
+@ApiModel("stream 历史构建模型-对应history页面")
+data class StreamGitRequestHistory(
+    @ApiModelProperty("ID")
+    var id: Long?,
+    @ApiModelProperty("OBJECT_KIND")
+    val objectKind: String,
+    @ApiModelProperty("OPERATION_KIND")
+    val operationKind: String?,
+    @ApiModelProperty("GIT_PROJECT_ID")
+    val gitProjectId: Long,
+    @ApiModelProperty("BRANCH")
+    val branch: String,
+    @ApiModelProperty("COMMIT_ID")
+    val commitId: String,
+    @ApiModelProperty("COMMIT_MESSAGE")
+    val commitMsg: String?,
+    @ApiModelProperty("COMMIT_TIMESTAMP")
+    val commitTimeStamp: String?,
+    @ApiModelProperty("用户")
+    val userId: String,
+    @ApiModelProperty("TOTAL_COMMIT_COUNT")
+    val totalCommitCount: Long,
+    @ApiModelProperty("MR_TITLE")
+    var mrTitle: String?,
+    @ApiModelProperty("MERGE_REQUEST_ID")
+    val mergeRequestId: Long?,
+    @ApiModelProperty("TARGET_BRANCH")
+    val targetBranch: String?,
+    @ApiModelProperty("DESCRIPTION")
+    var description: String?,
+    @ApiModelProperty("历史构建模型", required = false)
+    val buildRecords: MutableList<StreamBuildHistory>
+)

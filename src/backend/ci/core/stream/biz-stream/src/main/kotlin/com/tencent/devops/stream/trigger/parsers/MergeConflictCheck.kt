@@ -77,7 +77,7 @@ class MergeConflictCheck @Autowired constructor(
         )!!
 
         // 通过查询当前merge请求的状态，unchecked说明未检查完，进入延迟队列
-        // TODO: 其他源接入时再看检查冲突的逻辑，目前按照工蜂逻辑
+        // TODO: 其他源接入时再看检查冲突的逻辑，目前按照stream 逻辑
         when (mrInfo.mergeStatus) {
             TGitMrStatus.MERGE_STATUS_UNCHECKED.value -> {
                 // 第一次未检查完则改变状态为正在检查供用户查看

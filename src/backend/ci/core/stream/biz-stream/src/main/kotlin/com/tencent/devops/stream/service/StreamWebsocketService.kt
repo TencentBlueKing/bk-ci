@@ -42,7 +42,7 @@ class StreamWebsocketService @Autowired constructor(
                 )
             )
         } catch (e: Exception) {
-            logger.warn("GitCIV2WebsocketService pushNotifyWebsocket fail $userId $gitProjectId $e")
+            logger.warn("Stream V2WebsocketService pushNotifyWebsocket fail $userId $gitProjectId $e")
         }
     }
 
@@ -69,7 +69,7 @@ class StreamWebsocketService @Autowired constructor(
                 )
             )
         } catch (e: Exception) {
-            logger.warn("GitCIV2WebsocketService pushPipelineWebSocket fail $userId $projectCode $e")
+            logger.warn("Stream V2WebsocketService pushPipelineWebSocket fail $userId $projectCode $e")
         }
     }
 

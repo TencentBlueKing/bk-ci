@@ -39,9 +39,10 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
-import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
+import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -54,22 +55,27 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val client: Client
 ) : UserGitBasicSettingResource {
 
-    override fun enableGitCI(
+    override fun enableStream(
         userId: String,
         enabled: Boolean,
-        projectInfo: GitCIProjectInfo
+        projectInfo: StreamGitProjectInfoWithProject
     ): Result<Boolean> {
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkGitCIAndOAuth(
+        permissionService.checkStreamAndOAuth(
             userId = userId,
             projectId = projectId
         )
-        val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = streamBasicSettingService.getStreamConf(gitProjectId)
         val result = if (setting == null) {
-            streamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
+            streamBasicSettingService.initStreamConf(
+                userId = userId,
+                projectId = projectId,
+                gitProjectId = gitProjectId,
+                enabled = enabled
+            )
         } else {
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
@@ -79,28 +85,28 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun getGitCIConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
+    override fun getStreamConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
         val (gitProjectId, scmType) = GitCommonUtils.getGitProjectIdAndScmType(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId, projectId)
-        return Result(streamBasicSettingService.getGitCIConf(gitProjectId))
+        permissionService.checkStreamPermission(userId, projectId)
+        return Result(streamBasicSettingService.getStreamConf(gitProjectId))
     }
 
-    override fun saveGitCIConf(
+    override fun saveStreamConf(
         userId: String,
         projectId: String,
-        gitCIUpdateSetting: StreamUpdateSetting
+        streamUpdateSetting: StreamUpdateSetting
     ): Result<Boolean> {
         val (gitProjectId, scmType) = GitCommonUtils.getGitProjectIdAndScmType(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId = userId, projectId = projectId)
-        permissionService.checkEnableGitCI(gitProjectId)
+        permissionService.checkStreamPermission(userId = userId, projectId = projectId)
+        permissionService.checkEnableStream(gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                buildPushedPullRequest = gitCIUpdateSetting.buildPushedPullRequest,
-                buildPushedBranches = gitCIUpdateSetting.buildPushedBranches,
-                enableMrBlock = gitCIUpdateSetting.enableMrBlock,
+                buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
+                buildPushedBranches = streamUpdateSetting.buildPushedBranches,
+                enableMrBlock = streamUpdateSetting.enableMrBlock,
                 scmType = scmType
             )
         )
@@ -114,8 +120,8 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val (gitProjectId, scmType) = GitCommonUtils.getGitProjectIdAndScmType(projectId)
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
-        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,

@@ -25,31 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.resources.user
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.stream.api.user.UserStreamPermissionResource
+import com.tencent.devops.stream.permission.StreamPermissionService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("蓝盾stream流水线列表")
-data class GitProjectPipeline(
-    @ApiModelProperty("git项目ID", required = true)
-    val gitProjectId: Long,
-    @ApiModelProperty("流水线名称", required = true)
-    var displayName: String,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
-    var pipelineId: String,
-    @ApiModelProperty("文件路径", required = true)
-    val filePath: String,
-    @ApiModelProperty("是否启用", required = true)
-    val enabled: Boolean,
-    @ApiModelProperty("创建人", required = false)
-    val creator: String?,
-    @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: GitCIBuildHistory?,
-    @ApiModelProperty("自己一次构建分支", required = false)
-    val latestBuildBranch: String?
-)
+@RestResource
+class UserStreamPermissionResourceImpl @Autowired constructor(
+    private val permissionService: StreamPermissionService
+) : UserStreamPermissionResource {
 
-fun GitProjectPipeline.isExist(): Boolean {
-    return pipelineId.isNotBlank()
+    override fun validateUserResourcePermission(userId: String, projectId: String): Result<Boolean> {
+        return Result(permissionService.checkWebPermission(userId, projectId))
+    }
 }

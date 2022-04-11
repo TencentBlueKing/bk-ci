@@ -40,7 +40,7 @@ import javax.ws.rs.core.Response
 @Service
 class StreamYamlService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val gitCISettingDao: StreamBasicSettingDao,
+    private val streamSettingDao: StreamBasicSettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) {
 
@@ -50,7 +50,7 @@ class StreamYamlService @Autowired constructor(
 
     fun getYamlV2(gitProjectId: Long, buildId: String): V2BuildYaml? {
         logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
-        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+        streamSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启Stream，无法查询"
         )

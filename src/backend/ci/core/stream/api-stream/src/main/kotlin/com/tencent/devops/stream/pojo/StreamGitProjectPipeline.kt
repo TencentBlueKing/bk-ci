@@ -30,36 +30,26 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("工蜂历史构建模型-对应history页面")
-data class GitRequestHistory(
-    @ApiModelProperty("ID")
-    var id: Long?,
-    @ApiModelProperty("OBJECT_KIND")
-    val objectKind: String,
-    @ApiModelProperty("OPERATION_KIND")
-    val operationKind: String?,
-    @ApiModelProperty("GIT_PROJECT_ID")
+@ApiModel("蓝盾stream流水线列表")
+data class GitProjectPipeline(
+    @ApiModelProperty("git项目ID", required = true)
     val gitProjectId: Long,
-    @ApiModelProperty("BRANCH")
-    val branch: String,
-    @ApiModelProperty("COMMIT_ID")
-    val commitId: String,
-    @ApiModelProperty("COMMIT_MESSAGE")
-    val commitMsg: String?,
-    @ApiModelProperty("COMMIT_TIMESTAMP")
-    val commitTimeStamp: String?,
-    @ApiModelProperty("用户")
-    val userId: String,
-    @ApiModelProperty("TOTAL_COMMIT_COUNT")
-    val totalCommitCount: Long,
-    @ApiModelProperty("MR_TITLE")
-    var mrTitle: String?,
-    @ApiModelProperty("MERGE_REQUEST_ID")
-    val mergeRequestId: Long?,
-    @ApiModelProperty("TARGET_BRANCH")
-    val targetBranch: String?,
-    @ApiModelProperty("DESCRIPTION")
-    var description: String?,
-    @ApiModelProperty("历史构建模型", required = false)
-    val buildRecords: MutableList<GitCIBuildHistory>
+    @ApiModelProperty("流水线名称", required = true)
+    var displayName: String,
+    @ApiModelProperty("蓝盾流水线ID", required = true)
+    var pipelineId: String,
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
+    @ApiModelProperty("是否启用", required = true)
+    val enabled: Boolean,
+    @ApiModelProperty("创建人", required = false)
+    val creator: String?,
+    @ApiModelProperty("最近一次构建详情", required = false)
+    val latestBuildInfo: StreamBuildHistory?,
+    @ApiModelProperty("自己一次构建分支", required = false)
+    val latestBuildBranch: String?
 )
+
+fun GitProjectPipeline.isExist(): Boolean {
+    return pipelineId.isNotBlank()
+}

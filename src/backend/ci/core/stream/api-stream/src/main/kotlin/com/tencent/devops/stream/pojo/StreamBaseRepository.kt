@@ -30,8 +30,19 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("Yaml内容")
-data class GitYamlString(
-    @ApiModelProperty("YAML文件内容")
-    val yaml: String
+@Suppress("UnnecessaryAbstractClass")
+@ApiModel("stream 项目基类")
+abstract class StreamBaseRepository(
+    @ApiModelProperty("stream 项目ID")
+    open val gitProjectId: Long?,
+    @ApiModelProperty("stream 项目名")
+    open val name: String?,
+    @ApiModelProperty("stream 项目url")
+    open val url: String?,
+    @ApiModelProperty("homepage")
+    open val homepage: String?,
+    @ApiModelProperty("gitHttpUrl")
+    open val gitHttpUrl: String?,
+    @ApiModelProperty("gitSshUrl")
+    open val gitSshUrl: String?
 )
