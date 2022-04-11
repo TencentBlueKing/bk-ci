@@ -48,13 +48,13 @@ class CheckDispatchQueueContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            !commandContext.buildStatus.isFinish() &&
+            commandContext.container.status.isReadyToRun() &&
             commandContext.container.matrixGroupFlag != true &&
             commandContext.stageMatrixCount > 1 // 存在矩阵才进行并发队列判断
     }
 
     override fun execute(commandContext: ContainerContext) {
-        // 终止或者结束事件不做互斥判断
+        // 终止或者结束事件不做队列判断
         if (!commandContext.event.actionType.isEnd()) {
             dispatchQueueCheck(commandContext)
         }
@@ -69,7 +69,7 @@ class CheckDispatchQueueContainerCmd(
         } else {
             LOG.info("ENGINE|${container.buildId}|DEQUEUE_FAILED|${container.stageId}|j(${container.containerId})")
             commandContext.latestSummary = "dispatch_delay"
-            commandContext.cmdFlowState = CmdFlowState.BREAK // 丢弃事件等待下次启动
+            commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
         }
     }
 }

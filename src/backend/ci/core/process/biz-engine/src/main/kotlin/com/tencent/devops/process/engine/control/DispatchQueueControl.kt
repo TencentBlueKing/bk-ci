@@ -33,7 +33,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.utils.PIPELINE_CON_RUNNING_CONTAINER_SIZE_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -78,7 +77,7 @@ class DispatchQueueControl @Autowired constructor(
         val canDequeue: Boolean
         when {
             rank == null -> {
-                buildLogPrinter.addLine(
+                buildLogPrinter.addYellowLine(
                     buildId = container.buildId,
                     message = "[QUEUE] Dispatch queue add container(${container.containerId})",
                     tag = VMUtils.genStartVMTaskId(container.containerId),
@@ -98,9 +97,10 @@ class DispatchQueueControl @Autowired constructor(
             }
         }
         LOG.info("ENGINE|${container.buildId}|TRY_TO_DEQUEUE|container(${container.containerId} rank=$rank}")
-        buildLogPrinter.addLine(
+        buildLogPrinter.addYellowLine(
             buildId = container.buildId,
-            message = "[QUEUE] Rank of container(${container.containerId} is: $rank",
+            message = "[QUEUE] Rank of container(${container.containerId}) is: $rank, " +
+                "if can dequeue: $canDequeue",
             tag = VMUtils.genStartVMTaskId(container.containerId),
             jobId = null,
             executeCount = container.executeCount
