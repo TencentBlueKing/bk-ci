@@ -27,6 +27,16 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
+import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
@@ -39,11 +49,19 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
+import com.tencent.devops.stream.util.RetryUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TGitApiService @Autowired constructor() : StreamGitApiService {
+class TGitApiService @Autowired constructor(
+    private val client: Client
+) : StreamGitApiService {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TGitApiService::class.java)
+    }
 
     /**
      * 通过凭据获取可以直接使用的token
@@ -51,7 +69,7 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
     override fun getToken(
         cred: StreamGitCred,
     ): String {
-        TODO("Not yet implemented")
+        return cred.toToken()
     }
 
     override fun getGitProjectInfo(
@@ -59,8 +77,19 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         gitProjectId: String,
         retry: ApiRequestRetryInfo
     ): TGitProjectInfo? {
-        cred as TGitCred
-        TODO("Not yet implemented")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get project $gitProjectId fail",
+            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
+        ) {
+            client.get(ServiceGitResource::class).getProjectInfo(
+                token = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId
+            ).data
+        }?.let {
+            TGitProjectInfo(it)
+        }
     }
 
     override fun getGitCommitInfo(
@@ -81,7 +110,14 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         userId: String,
         gitProjectId: String
     ): TGitProjectUserInfo {
-        TODO("Not yet implemented")
+        return client.get(ServiceGitResource::class).getProjectUserInfo(
+            token = cred.toToken(),
+            tokenType = cred.toTokenType(),
+            gitProjectId = gitProjectId,
+            userId = userId
+        ).data!!.let {
+            TGitProjectUserInfo(it.accessLevel)
+        }
     }
 
     override fun getMrInfo(
@@ -90,7 +126,23 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         mrId: String,
         retry: ApiRequestRetryInfo
     ): TGitMrInfo? {
-        TODO("Not yet implemented")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get mr $mrId info error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_INFO
+        ) {
+            client.get(ServiceGitResource::class).getMergeRequestInfo(
+                token = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                repoName = gitProjectId,
+                mrId = mrId.toLong()
+            ).data
+        }?.let {
+            TGitMrInfo(
+                mergeStatus = it.mergeStatus,
+                baseCommit = it.baseCommit
+            )
+        }
     }
 
     override fun getMrChangeInfo(
@@ -99,7 +151,24 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         mrId: String,
         retry: ApiRequestRetryInfo
     ): TGitMrChangeInfo? {
-        TODO("Not yet implemented")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get mr $mrId changeInfo error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_MERGE_CHANGE_INFO
+        ) {
+            client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
+                token = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                repoName = gitProjectId,
+                mrId = mrId.toLong()
+            ).data
+        }?.let {
+            TGitMrChangeInfo(
+                files = it.files.map { f ->
+                    TGitChangeFileInfo(f)
+                }
+            )
+        }
     }
 
     override fun getFileTree(
@@ -117,10 +186,27 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         cred: StreamGitCred,
         gitProjectId: String,
         fileName: String,
-        ref: String?,
+        ref: String,
         retry: ApiRequestRetryInfo
     ): String {
-        TODO("Not yet implemented")
+        cred as TGitCred
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get yaml $fileName fail",
+            apiErrorCode = ErrorCodeEnum.GET_YAML_CONTENT_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getGitFileContent(
+                token = cred.toToken(),
+                authType = if (cred.useAccessToken) {
+                    RepoAuthType.OAUTH
+                } else {
+                    RepoAuthType.SSH
+                },
+                repoName = gitProjectId,
+                ref = ref,
+                filePath = fileName
+            ).data!!
+        }
     }
 
     override fun getFileInfo(
@@ -149,7 +235,22 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         pageSize: Int,
         retry: ApiRequestRetryInfo
     ): List<TGitChangeFileInfo> {
-        TODO("Not yet implemented")
+        return doRetryFun(
+            retry = retry,
+            log = "getCommitChangeFileListRetry from: $from to: $to error",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR,
+        ) {
+            client.get(ServiceGitResource::class).getChangeFileList(
+                cred.toToken(),
+                cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                from = from,
+                to = to,
+                straight = straight,
+                page = page,
+                pageSize = pageSize
+            ).data ?: emptyList()
+        }.map { TGitChangeFileInfo(it) }
     }
 
     /**
@@ -162,5 +263,87 @@ class TGitApiService @Autowired constructor() : StreamGitApiService {
         mrBody: String
     ) {
         TODO()
+    }
+
+    private fun StreamGitCred.toToken(): String {
+        this as TGitCred
+        if (this.accessToken != null) {
+            return this.accessToken
+        }
+        return client.get(ServiceOauthResource::class).gitGet(this.userId!!).data!!.accessToken
+    }
+
+    private fun StreamGitCred.toTokenType(): TokenTypeEnum {
+        this as TGitCred
+        return if (this.useAccessToken) {
+            TokenTypeEnum.OAUTH
+        } else {
+            TokenTypeEnum.PRIVATE_KEY
+        }
+    }
+
+    private fun <T> doRetryFun(
+        retry: ApiRequestRetryInfo,
+        log: String,
+        apiErrorCode: ErrorCodeEnum,
+        action: () -> T
+    ): T {
+        return if (retry.retry) {
+            retryFun(
+                retry = retry,
+                log = log,
+                apiErrorCode = apiErrorCode
+            ) {
+                action()
+            }
+        } else {
+            action()
+        }
+    }
+
+    private fun <T> retryFun(
+        retry: ApiRequestRetryInfo,
+        log: String,
+        apiErrorCode: ErrorCodeEnum,
+        action: () -> T
+    ): T {
+        try {
+            return RetryUtils.clientRetry(
+                retry.retryTimes,
+                retry.retryPeriodMills
+            ) {
+                action()
+            }
+        } catch (e: ClientException) {
+            logger.warn("retry 5 times $log: ${e.message} ")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
+                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
+            )
+        } catch (e: RemoteServiceException) {
+            logger.warn("GIT_API_ERROR $log: ${e.message} ")
+            throw ErrorCodeException(
+                statusCode = e.httpStatus,
+                errorCode = apiErrorCode.errorCode.toString(),
+                defaultMessage = "$log: ${e.errorMessage}"
+            )
+        } catch (e: CustomException) {
+            logger.warn("GIT_SCM_ERROR $log: ${e.message} ")
+            throw ErrorCodeException(
+                statusCode = e.status.statusCode,
+                errorCode = apiErrorCode.errorCode.toString(),
+                defaultMessage = "$log: ${e.message}"
+            )
+        } catch (e: Throwable) {
+            logger.error("retryFun error $log: ${e.message} ")
+            throw ErrorCodeException(
+                errorCode = apiErrorCode.errorCode.toString(),
+                defaultMessage = if (e.message.isNullOrBlank()) {
+                    "$log: ${apiErrorCode.formatErrorMessage}"
+                } else {
+                    "$log: ${e.message}"
+                }
+            )
+        }
     }
 }

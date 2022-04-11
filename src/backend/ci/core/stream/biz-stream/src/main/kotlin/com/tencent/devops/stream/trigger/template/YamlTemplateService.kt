@@ -119,16 +119,16 @@ class YamlTemplateService @Autowired constructor(
                 key
             }
             val content = extraParameters.api.getFileContent(
-                extraParameters.getGitCred(personToken = personToken),
-                targetRepo?.repository!!,
-                templateDirectory + path,
-                targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                cred = extraParameters.getGitCred(personToken = personToken),
+                gitProjectId = targetRepo?.repository!!,
+                fileName = templateDirectory + path,
+                ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                     gitProjectKey = targetRepo?.repository!!,
                     action = extraParameters,
                     getProjectInfo = extraParameters.api::getGitProjectInfo,
                     cred = extraParameters.getGitCred(personToken)
-                ).defaultBranch,
-                ApiRequestRetryInfo(true)
+                ).defaultBranch!!,
+                retry = ApiRequestRetryInfo(true)
             ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
 
             // 针对模板替换时，如果类型为空就不校验

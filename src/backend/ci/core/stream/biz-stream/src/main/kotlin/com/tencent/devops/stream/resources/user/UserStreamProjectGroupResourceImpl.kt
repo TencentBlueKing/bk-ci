@@ -27,16 +27,25 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.api.ServiceOauthResource
+import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.api.user.UserStreamProjectGroupResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.StreamGitGroup
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStreamProjectGroupResourceImpl @Autowired constructor() : UserStreamProjectGroupResource {
+class UserStreamProjectGroupResourceImpl @Autowired constructor(
+    private val client: Client,
+    private val streamGitConfig: StreamGitConfig
+) : UserStreamProjectGroupResource {
     override fun getProjects(userId: String, page: Int?, pageSize: Int?): Result<Pagination<StreamGitGroup>> {
         val realPage = page.let {
             if (it == null || it <= 0) {
@@ -52,18 +61,26 @@ class UserStreamProjectGroupResourceImpl @Autowired constructor() : UserStreamPr
                 pageSize!!
             }
         }
-        val data = streamScmService.getProjectGroupList(
-            accessToken = streamOauthService.getAndCheckOauthToken(userId).accessToken,
-            page = realPage,
-            pageSize = realPageSize,
-            owned = false,
-            minAccessLevel = GitAccessLevelEnum.DEVELOPER
-        )?.ifEmpty { null } ?: return Result(
-            Pagination(
-                hasNext = false,
-                records = emptyList()
-            )
-        )
+        val data = when (streamGitConfig.getScmType()) {
+            ScmType.CODE_GIT -> {
+                client.get(ServiceGitResource::class).getProjectGroupsList(
+                    client.get(ServiceOauthResource::class).gitGet(userId).data!!.accessToken,
+                    page = realPage,
+                    pageSize = realPageSize,
+                    owned = false,
+                    minAccessLevel = GitAccessLevelEnum.DEVELOPER,
+                    tokenType = TokenTypeEnum.OAUTH
+                ).data?.ifEmpty { null }?.map {
+                    StreamGitGroup(it)
+                } ?: return Result(
+                    Pagination(
+                        hasNext = false,
+                        records = emptyList()
+                    )
+                )
+            }
+            else -> TODO()
+        }
 
         val hasNext = data.size >= realPageSize
         return Result(

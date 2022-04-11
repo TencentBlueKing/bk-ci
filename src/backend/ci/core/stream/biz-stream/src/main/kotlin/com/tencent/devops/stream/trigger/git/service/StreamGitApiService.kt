@@ -140,7 +140,7 @@ interface StreamGitApiService {
         cred: StreamGitCred,
         gitProjectId: String,
         fileName: String,
-        ref: String?,
+        ref: String,
         retry: ApiRequestRetryInfo
     ): String
 

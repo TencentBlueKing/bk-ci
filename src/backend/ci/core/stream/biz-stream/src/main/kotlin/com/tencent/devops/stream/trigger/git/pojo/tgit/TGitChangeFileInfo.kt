@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
+import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitChangeFileInfo
 
 data class TGitChangeFileInfo(
@@ -34,4 +36,19 @@ data class TGitChangeFileInfo(
     override val newPath: String,
     override val renameFile: Boolean,
     override val deletedFile: Boolean
-) : StreamGitChangeFileInfo
+) : StreamGitChangeFileInfo {
+
+    constructor(c: ChangeFileInfo) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+
+    constructor(c: GitMrChangeInfo.GitMrFile) : this(
+        oldPath = c.oldPath,
+        newPath = c.newPath,
+        renameFile = c.renameFile,
+        deletedFile = c.deletedFile
+    )
+}

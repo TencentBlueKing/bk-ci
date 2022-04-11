@@ -29,6 +29,7 @@ package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import io.swagger.annotations.ApiModel
 
 @ApiModel("Git项目组列表信息")
@@ -48,4 +49,16 @@ data class StreamGitGroup(
     val webUrl: String?,
     @JsonProperty("parent_id")
     val parentId: Long?
-)
+) {
+    constructor(g: GitCodeGroup) : this(
+        id = g.id,
+        name = g.name,
+        path = g.path,
+        description = g.description,
+        avatarUrl = g.avatarUrl,
+        fullName = g.fullName,
+        fullPath = g.fullPath,
+        webUrl = g.webUrl,
+        parentId = g.parentId
+    )
+}

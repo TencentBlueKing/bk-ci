@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
+import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
 data class TGitProjectInfo(
@@ -41,4 +42,18 @@ data class TGitProjectInfo(
     override val avatarUrl: String?,
     override val pathWithNamespace: String?,
     override val nameWithNamespace: String,
-) : StreamGitProjectInfo
+) : StreamGitProjectInfo {
+    constructor(g: GitProjectInfo) : this(
+        gitProjectId = g.id.toString(),
+        defaultBranch = g.defaultBranch,
+        gitHttpUrl = g.repositoryUrl,
+        name = g.name,
+        gitSshUrl = g.gitSshUrl,
+        homepage = g.homepage,
+        gitHttpsUrl = g.gitHttpsUrl,
+        description = g.description,
+        avatarUrl = g.avatarUrl,
+        pathWithNamespace = g.pathWithNamespace,
+        nameWithNamespace = g.namespaceName
+    )
+}

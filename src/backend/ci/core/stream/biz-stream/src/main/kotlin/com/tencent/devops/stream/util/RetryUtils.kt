@@ -25,19 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.git.pojo.tgit
+package com.tencent.devops.stream.util
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitMrInfo
+import com.tencent.devops.common.api.exception.ClientException
 
-data class TGitMrInfo(
-    override val mergeStatus: String,
-    val baseCommit: String?,
-) : StreamGitMrInfo
+object RetryUtils {
 
-enum class TGitMrStatus(val value: String) {
-    MERGE_STATUS_UNCHECKED("unchecked"),
-    MERGE_STATUS_CAN_BE_MERGED("can_be_merged"),
-    MERGE_STATUS_CAN_NOT_BE_MERGED("cannot_be_merged"),
-    // 项目有配置 mr hook，当创建mr后，发送mr hook前，这个状态是hook_intercept,与stream无关
-    // MERGE_STATUS_HOOK_INTERCEPT("hook_intercept")
+    @Throws(ClientException::class)
+    fun <T> clientRetry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
+        return try {
+            action()
+        } catch (re: ClientException) {
+            if (retryTime - 1 < 0) {
+                throw re
+            }
+            if (retryPeriodMills > 0) {
+                Thread.sleep(retryPeriodMills)
+            }
+            clientRetry(action = action, retryTime = retryTime - 1, retryPeriodMills = retryPeriodMills)
+        }
+    }
 }

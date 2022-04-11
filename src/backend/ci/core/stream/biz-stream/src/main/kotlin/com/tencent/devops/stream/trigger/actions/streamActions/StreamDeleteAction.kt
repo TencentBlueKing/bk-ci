@@ -57,7 +57,7 @@ class StreamDeleteAction(
             cred = gitAction.getGitCred(),
             gitProjectId = data.getGitProjectId(),
             fileName = fileName,
-            ref = data.context.defaultBranch,
+            ref = data.context.defaultBranch!!,
             retry = ApiRequestRetryInfo(true)
         )
     }
