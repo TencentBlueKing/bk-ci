@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.stream.pojo.GitCodeBranchesOrder
 import com.tencent.devops.stream.pojo.GitCodeBranchesSort
-import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

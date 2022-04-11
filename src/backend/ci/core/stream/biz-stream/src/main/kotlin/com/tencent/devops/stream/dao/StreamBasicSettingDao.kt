@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.stream.tables.TGitBasicSetting
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
-import com.tencent.devops.stream.pojo.StreamCIInfo
 import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.stream.pojo.StreamCIInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

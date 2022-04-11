@@ -32,17 +32,18 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.stream.api.user.UserStreamGitCodeResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_FILE_SUFFIX
-import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.GitCodeBranchesOrder
 import com.tencent.devops.stream.pojo.GitCodeBranchesSort
-import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamOauthService
 import com.tencent.devops.stream.service.StreamProjectService
@@ -55,6 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserStreamGitCodeResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val streamGitConfig: StreamGitConfig,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val oauthService: StreamOauthService,
     private val permissionService: StreamPermissionService,
@@ -74,7 +76,7 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
             userId = userId,
             projectId = GitCommonUtils.getCiProjectId(
                 gitProjectId = projectInfo.gitProjectId,
-                scmType =
+                scmType = streamGitConfig.getScmType()
             )
         )
         val routerTag = client.get(ServiceProjectResource::class).get(

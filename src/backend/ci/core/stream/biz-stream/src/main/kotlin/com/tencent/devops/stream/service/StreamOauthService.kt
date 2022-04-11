@@ -31,11 +31,8 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
-import org.jooq.DSLContext
 
 @Service
 class StreamOauthService @Autowired constructor(

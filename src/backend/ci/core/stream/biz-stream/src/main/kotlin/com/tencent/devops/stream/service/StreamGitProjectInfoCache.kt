@@ -31,8 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.stream.pojo.StreamProjectInfo
 import com.tencent.devops.stream.pojo.StreamGitProjectBaseInfoCache
+import com.tencent.devops.stream.pojo.StreamProjectInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component

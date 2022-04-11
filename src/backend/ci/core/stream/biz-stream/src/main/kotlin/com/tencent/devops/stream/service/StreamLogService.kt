@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext

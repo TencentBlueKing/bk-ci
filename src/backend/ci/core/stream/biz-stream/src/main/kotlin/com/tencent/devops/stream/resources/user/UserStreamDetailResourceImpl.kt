@@ -34,11 +34,11 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.user.UserStreamDetailResource
-import com.tencent.devops.stream.pojo.StreamModelDetail
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.stream.api.user.UserStreamDetailResource
+import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.StreamModelDetail
 import com.tencent.devops.stream.service.StreamDetailService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,14 +75,16 @@ class UserStreamDetailResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkStreamPermission(userId, projectId)
-        return Result(streamDetailService.search(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            page = page,
-            pageSize = pageSize
-        ))
+        return Result(
+            streamDetailService.search(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun downloadUrl(
@@ -96,13 +98,15 @@ class UserStreamDetailResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkStreamPermission(userId, projectId)
         permissionService.checkEnableStream(gitProjectId)
-        return Result(streamDetailService.downloadUrl(
-            userId = userId,
-            gitUserId = gitUserId,
-            gitProjectId = gitProjectId,
-            artifactoryType = artifactoryType,
-            path = path
-        ))
+        return Result(
+            streamDetailService.downloadUrl(
+                userId = userId,
+                gitUserId = gitUserId,
+                gitProjectId = gitProjectId,
+                artifactoryType = artifactoryType,
+                path = path
+            )
+        )
     }
 
     override fun getReports(

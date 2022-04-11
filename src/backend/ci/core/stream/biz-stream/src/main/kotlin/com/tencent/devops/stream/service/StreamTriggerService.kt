@@ -35,12 +35,12 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.util.StreamPipelineUtils
-import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service

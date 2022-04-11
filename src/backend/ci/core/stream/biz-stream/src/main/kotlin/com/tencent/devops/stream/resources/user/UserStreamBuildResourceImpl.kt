@@ -30,8 +30,8 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.user.UserStreamBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.stream.api.user.UserStreamBuildResource
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.service.StreamTriggerService
 import com.tencent.devops.stream.util.GitCommonUtils
