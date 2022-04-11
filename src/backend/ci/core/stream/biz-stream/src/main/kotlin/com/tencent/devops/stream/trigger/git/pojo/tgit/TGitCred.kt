@@ -30,10 +30,10 @@ package com.tencent.devops.stream.trigger.git.pojo.tgit
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 
 data class TGitCred(
-    // 获取工蜂OAUTH时用户的唯一凭证
+    // 获取stream OAUTH时用户的唯一凭证
     val userId: String?,
     // 具体的accessToken有时优先使用
     val accessToken: String? = null,
-    // 工蜂分为oauth和private key的token，private的请求方式不同
+    // stream 分为oauth和private key的token，private的请求方式不同
     val useAccessToken: Boolean = true
 ) : StreamGitCred

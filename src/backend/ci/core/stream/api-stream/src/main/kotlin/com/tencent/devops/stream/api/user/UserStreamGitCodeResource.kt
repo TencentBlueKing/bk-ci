@@ -29,14 +29,13 @@ package com.tencent.devops.stream.api.user
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.stream.pojo.StreamUpdateSetting
-import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.stream.pojo.GitCodeBranchesOrder
+import com.tencent.devops.stream.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.pojo.StreamCommitInfo
+import com.tencent.devops.stream.pojo.StreamCreateFileInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -45,111 +44,117 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STREAM_SETTING"], description = "user-setting页面")
-@Path("/user/basic/setting")
+@Api(tags = ["USER_STREAM_GIT_CODE"], description = "user-stream 接口访问")
+@Path("/user/gitcode")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserGitBasicSettingResource {
+interface UserStreamGitCodeResource {
 
-    @ApiOperation("开启，关闭，初始化呢Stream")
-    @POST
-    @Path("/enable")
-    fun enableStream(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("开启或关闭", required = true)
-        @QueryParam("enabled")
-        enabled: Boolean,
-        @ApiParam("stream 项目信息(初始化时用)", required = false)
-        projectInfo: StreamGitProjectInfoWithProject
-    ): Result<Boolean>
-
-    @ApiOperation("查询Stream项目配置")
+    @ApiOperation("获取stream 项目信息")
     @GET
-    @Path("/{projectId}")
-    fun getStreamConf(
+    @Path("/projects/info")
+    fun getGitCodeProjectInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<StreamBasicSetting?>
-
-    @ApiOperation("保存Stream配置")
-    @POST
-    @Path("/{projectId}/save")
-    fun saveStreamConf(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("stream 项目配置", required = true)
-        streamUpdateSetting: StreamUpdateSetting
-    ): Result<Boolean>
-
-    @ApiOperation("修改项目启动人")
-    @POST
-    @Path("/{projectId}/reset/oauth")
-    fun updateEnableUser(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam(value = "目标授权人", required = true)
-        @QueryParam("authUserId")
-        authUserId: String
-    ): Result<Boolean>
-
-    @ApiOperation("根据用户ID判断用户是否已经oauth认证")
-    @GET
-    @Path("/isOauth")
-    fun isOAuth(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("重定向url类型", required = false)
-        @QueryParam("redirectUrlType")
-        redirectUrlType: RedirectUrlTypeEnum?,
-        @ApiParam(value = "oauth认证成功后重定向到前端的地址", required = false)
-        @QueryParam("redirectUrl")
-        redirectUrl: String?,
-        @ApiParam(value = "stream 项目Id", required = false)
+        @ApiParam(value = "stream 项目路径/id", required = true)
         @QueryParam("gitProjectId")
-        gitProjectId: Long? = null,
-        @ApiParam(value = "是否刷新token", required = false)
-        @QueryParam("refreshToken")
-        refreshToken: Boolean? = false
-    ): Result<AuthorizeResult>
+        gitProjectId: String
+    ): Result<StreamGitProjectInfoWithProject?>
 
-    @ApiOperation("获取第三方构建机任务")
+    @ApiOperation("获取stream 项目下所有触发人信息")
     @GET
-    @Path("/projects/{projectId}/nodes/{nodeHashId}/listAgentBuilds")
-    fun listAgentBuilds(
+    @Path("/projects/members")
+    fun getGitCodeProjectMembers(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
         projectId: String,
-        @ApiParam("Node Hash ID", required = true)
-        @PathParam("nodeHashId")
-        nodeHashId: String,
-        @ApiParam("第几页", required = false)
+        @ApiParam(value = "页码", defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页条数", required = false)
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "搜索用户关键字", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<GitMember>?>
+
+    @ApiOperation("获取stream 项目所有提交信息")
+    @GET
+    @Path("/projects/commits")
+    fun getGitCodeCommits(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam(value = "分支名称")
+        @QueryParam("branch")
+        branch: String?,
+        @ApiParam(value = "在这之后的时间的提交")
+        @QueryParam("since")
+        since: String?,
+        @ApiParam(value = "在这之前的时间的提交")
+        @QueryParam("until")
+        until: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<AgentBuildDetail>>
+    ): Result<List<StreamCommitInfo>?>
+
+    @ApiOperation("向stream 项目中创建新文件")
+    @POST
+    @Path("/projects/repository/files")
+    fun gitCodeCreateFile(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "创建文件内容")
+        gitCICreateFile: StreamCreateFileInfo
+    ): Result<Boolean>
+
+    @ApiOperation("获取项目中的所有分支")
+    @GET
+    @Path("/projects/repository/branches")
+    fun getGitCodeBranches(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "搜索条件，模糊匹配分支名")
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("orderBy")
+        orderBy: GitCodeBranchesOrder?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>?>
 }

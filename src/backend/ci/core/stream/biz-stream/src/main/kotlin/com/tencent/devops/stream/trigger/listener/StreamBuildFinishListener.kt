@@ -38,7 +38,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.CIInfo
+import com.tencent.devops.stream.pojo.StreamCIInfo
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
@@ -161,7 +161,7 @@ class StreamBuildFinishListener @Autowired constructor(
             streamBasicSettingDao.updateSettingLastCiInfo(
                 dslContext,
                 action.data.getGitProjectId().toLong(),
-                CIInfo(
+                StreamCIInfo(
                     enableCI = setting.enableCi,
                     lastBuildMessage = StreamTriggerMessageUtils.getEventMessageTitle(
                         requestEvent

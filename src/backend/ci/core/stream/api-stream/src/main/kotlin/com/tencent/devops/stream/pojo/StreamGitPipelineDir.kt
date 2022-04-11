@@ -25,15 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.constant
+package com.tencent.devops.stream.pojo
 
-object GitCIConstant {
-    // 蓝盾的stream项目前缀
-    const val DEVOPS_PROJECT_PREFIX = "git_"
-    // Stream的文件目录
-    const val STREAM_CI_FILE_DIR = ".ci"
-    // StreamYaml文件后缀
-    const val STREAM_FILE_SUFFIX = ".yml"
-    // Stream t_project表中保存的项目名称字段长度
-    const val STREAM_MAX_PROJECT_NAME_LENGTH = 64
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("流水线文件路径模型")
+data class StreamGitPipelineDir(
+    @ApiModelProperty("当前流水线文件子路径", required = true)
+    val currentPath: String?,
+    @ApiModelProperty("所有子路径", required = true)
+    var allPath: List<String>?
+)

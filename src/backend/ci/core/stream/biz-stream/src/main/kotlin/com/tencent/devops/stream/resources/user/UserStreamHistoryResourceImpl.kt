@@ -27,42 +27,61 @@
 
 package com.tencent.devops.stream.resources.user
 
-import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.user.UserStreamProjectResource
-import com.tencent.devops.stream.pojo.StreamProjectCIInfo
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
-import com.tencent.devops.stream.pojo.enums.StreamProjectType
-import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
-import com.tencent.devops.stream.service.StreamProjectService
+import com.tencent.devops.stream.api.user.UserStreamHistoryResource
+import com.tencent.devops.stream.pojo.StreamBuildBranch
+import com.tencent.devops.stream.pojo.StreamBuildHistory
+import com.tencent.devops.stream.pojo.StreamBuildHistorySearch
+import com.tencent.devops.stream.service.StreamHistoryService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStreamProjectResourceImpl @Autowired constructor(
-    private val streamProjectService: StreamProjectService
-) : UserStreamProjectResource {
-    override fun getProjects(
+class UserStreamHistoryResourceImpl @Autowired constructor(
+    private val streamHistoryService: StreamHistoryService
+) : UserStreamHistoryResource {
+    override fun getHistoryBuildList(
         userId: String,
-        type: StreamProjectType?,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
-        orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?
-    ): Pagination<StreamProjectCIInfo> {
-        return streamProjectService.getProjectList(
-            userId = userId,
-            type = type,
-            search = search,
-            page = page,
-            pageSize = pageSize,
-            orderBy = orderBy,
-            sort = sort
+        projectId: String,
+        search: StreamBuildHistorySearch?
+    ): Result<Page<StreamBuildHistory>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        return Result(
+            streamHistoryService.getHistoryBuildList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                search = search
+            )
         )
     }
 
-    override fun getProjectsHistory(userId: String, size: Long?): Result<List<StreamProjectCIInfo>> {
-        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
+    override fun getAllBuildBranchList(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        keyword: String?
+    ): Result<Page<StreamBuildBranch>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        return Result(
+            streamHistoryService.getAllBuildBranchList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                keyword = keyword
+            )
+        )
+    }
+
+    private fun checkParam(userId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
     }
 }

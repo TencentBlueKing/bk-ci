@@ -291,7 +291,7 @@ class TGitPushActionGit(
             repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
             else -> return Pair(false, null)
         }
-        // 工蜂侧需要的是user 数字id 而不是 rtx
+        // stream 侧需要的是user 数字id 而不是 rtx
         val userInfo = action.api.getUserInfoByToken(
             TGitCred(
                 userId = action.data.eventCommon.userId,

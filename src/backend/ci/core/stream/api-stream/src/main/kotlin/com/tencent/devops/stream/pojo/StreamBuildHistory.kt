@@ -25,31 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.stream.pojo
 
-object StreamPipelineUtils {
+import com.tencent.devops.process.pojo.BuildHistory
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
-
-    fun genStreamV2BuildUrl(
-        homePage: String,
-        gitProjectId: String,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
-}
+@ApiModel("历史构建模型-对应history页面")
+data class StreamBuildHistory(
+    @ApiModelProperty("流水线名称", required = true)
+    val displayName: String?,
+    @ApiModelProperty("蓝盾流水线ID", required = true)
+    var pipelineId: String?,
+    @ApiModelProperty("git request Event事件", required = true)
+    val gitRequestEvent: StreamGitRequestEventReq,
+    @ApiModelProperty("历史构建模型", required = false)
+    val buildHistory: BuildHistory?,
+    @ApiModelProperty("原因", required = true)
+    val reason: String? = null,
+    @ApiModelProperty("原因详情", required = true)
+    var reasonDetail: String? = null
+)

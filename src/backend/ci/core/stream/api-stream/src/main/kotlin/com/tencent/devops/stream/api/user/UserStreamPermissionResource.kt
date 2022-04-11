@@ -25,44 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.resources.user
+package com.tencent.devops.stream.api.user
 
-import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.user.UserStreamProjectResource
-import com.tencent.devops.stream.pojo.StreamProjectCIInfo
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
-import com.tencent.devops.stream.pojo.enums.StreamProjectType
-import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
-import com.tencent.devops.stream.service.StreamProjectService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class UserStreamProjectResourceImpl @Autowired constructor(
-    private val streamProjectService: StreamProjectService
-) : UserStreamProjectResource {
-    override fun getProjects(
+@Api(tags = ["USER_STREAM_BUILD"], description = "user-permission资源")
+@Path("/user/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStreamPermissionResource {
+
+    @GET
+    @Path("/projects/{projectId}/resource/validate")
+    @ApiOperation("校验用户是否有action的权限，忽略oatuh验证")
+    fun validateUserResourcePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
         userId: String,
-        type: StreamProjectType?,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
-        orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?
-    ): Pagination<StreamProjectCIInfo> {
-        return streamProjectService.getProjectList(
-            userId = userId,
-            type = type,
-            search = search,
-            page = page,
-            pageSize = pageSize,
-            orderBy = orderBy,
-            sort = sort
-        )
-    }
-
-    override fun getProjectsHistory(userId: String, size: Long?): Result<List<StreamProjectCIInfo>> {
-        return Result(streamProjectService.getUserProjectHistory(userId, size ?: 4L) ?: emptyList())
-    }
+        @PathParam("projectId")
+        @ApiParam("项目编码", required = true)
+        projectId: String
+    ): Result<Boolean>
 }

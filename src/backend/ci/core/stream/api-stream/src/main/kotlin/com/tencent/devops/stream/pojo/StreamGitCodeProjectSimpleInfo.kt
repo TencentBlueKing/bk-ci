@@ -25,31 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.stream.pojo
 
-object StreamPipelineUtils {
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
-
-    fun genStreamV2BuildUrl(
-        homePage: String,
-        gitProjectId: String,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
-}
+data class StreamProjectSimpleInfo(
+    @JsonProperty("id")
+    @ApiModelProperty(name = "id")
+    val id: Long?,
+    @JsonProperty("path_with_namespace")
+    @ApiModelProperty(name = "path_with_namespace")
+    val pathWithNamespace: String?,
+    @JsonProperty("description")
+    @ApiModelProperty(name = "description")
+    val description: String?,
+    @JsonProperty("avatar_url")
+    @ApiModelProperty(name = "avatar_url")
+    val avatarUrl: String?
+)

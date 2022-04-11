@@ -35,11 +35,11 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.stream.constant.GitCIConstant
+import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.stream.pojo.GitPipelineDir
+import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -115,13 +115,13 @@ class StreamPipelineService @Autowired constructor(
         userId: String,
         gitProjectId: Long,
         pipelineId: String?
-    ): GitPipelineDir {
+    ): StreamGitPipelineDir {
         val allPipeline = pipelineResourceDao.getDirListByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             pipelineId = null
         )
-        return GitPipelineDir(
+        return StreamGitPipelineDir(
             currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
             allPath = allPipeline.map { it.value1() }.distinct().filterNot { it == CIDir }
         )
@@ -283,7 +283,7 @@ class StreamPipelineService @Autowired constructor(
     private fun getLock(gitProjectId: Long, pipelineId: String): RedisLock {
         return RedisLock(
             redisOperation = redisOperation,
-            lockKey = "GITCI_PIPELINE_ENABLE_LOCK_${gitProjectId}_$pipelineId",
+            lockKey = "STREAM_PIPELINE_ENABLE_LOCK_${gitProjectId}_$pipelineId",
             expiredTimeInSeconds = 60L
         )
     }
@@ -296,7 +296,7 @@ class StreamPipelineService @Autowired constructor(
     ): Model? {
         try {
             val response =
-                processClient.get(userId, "${GitCIConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId", pipelineId, channelCode)
+                processClient.get(userId, "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId", pipelineId, channelCode)
             if (response.isNotOk()) {
                 logger.error("get pipeline failed, msg: ${response.message}")
                 return null
@@ -321,7 +321,7 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.edit(
                 userId = userId,
-                projectId = "${GitCIConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
                 pipelineId = pipelineId,
                 pipeline = model,
                 channelCode = channelCode

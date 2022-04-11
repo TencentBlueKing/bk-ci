@@ -30,26 +30,19 @@ package com.tencent.devops.stream.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("蓝盾stream流水线列表")
-data class GitProjectPipeline(
-    @ApiModelProperty("git项目ID", required = true)
-    val gitProjectId: Long,
-    @ApiModelProperty("流水线名称", required = true)
-    var displayName: String,
-    @ApiModelProperty("蓝盾流水线ID", required = true)
-    var pipelineId: String,
-    @ApiModelProperty("文件路径", required = true)
-    val filePath: String,
-    @ApiModelProperty("是否启用", required = true)
-    val enabled: Boolean,
-    @ApiModelProperty("创建人", required = false)
-    val creator: String?,
-    @ApiModelProperty("最近一次构建详情", required = false)
-    val latestBuildInfo: GitCIBuildHistory?,
-    @ApiModelProperty("自己一次构建分支", required = false)
-    val latestBuildBranch: String?
+@Suppress("UnnecessaryAbstractClass")
+@ApiModel("stream 项目基类")
+abstract class StreamBaseRepository(
+    @ApiModelProperty("stream 项目ID")
+    open val gitProjectId: Long?,
+    @ApiModelProperty("stream 项目名")
+    open val name: String?,
+    @ApiModelProperty("stream 项目url")
+    open val url: String?,
+    @ApiModelProperty("homepage")
+    open val homepage: String?,
+    @ApiModelProperty("gitHttpUrl")
+    open val gitHttpUrl: String?,
+    @ApiModelProperty("gitSshUrl")
+    open val gitSshUrl: String?
 )
-
-fun GitProjectPipeline.isExist(): Boolean {
-    return pipelineId.isNotBlank()
-}

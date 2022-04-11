@@ -25,24 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.stream.constant
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@Suppress("UnnecessaryAbstractClass")
-@ApiModel("工蜂项目基类")
-abstract class Repository(
-    @ApiModelProperty("工蜂项目ID")
-    open val gitProjectId: Long?,
-    @ApiModelProperty("工蜂项目名")
-    open val name: String?,
-    @ApiModelProperty("工蜂项目url")
-    open val url: String?,
-    @ApiModelProperty("homepage")
-    open val homepage: String?,
-    @ApiModelProperty("gitHttpUrl")
-    open val gitHttpUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    open val gitSshUrl: String?
-)
+object StreamConstant {
+    // 蓝盾的stream项目前缀
+    const val DEVOPS_PROJECT_PREFIX = "git_"
+    // Stream的文件目录
+    const val STREAM_CI_FILE_DIR = ".ci"
+    // StreamYaml文件后缀
+    const val STREAM_FILE_SUFFIX = ".yml"
+    // Stream t_project表中保存的项目名称字段长度
+    const val STREAM_MAX_PROJECT_NAME_LENGTH = 64
+}

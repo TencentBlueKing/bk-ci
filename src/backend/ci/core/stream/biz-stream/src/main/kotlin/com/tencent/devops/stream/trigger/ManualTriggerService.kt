@@ -245,7 +245,7 @@ class ManualTriggerService @Autowired constructor(
     }
 
     private fun mockWebhookTrigger(triggerBuildReq: TriggerBuildReq): CodeWebhookEvent {
-        // 这里使用eventType做判断，防止有些事件无法直接通过mapper得到，例如工蜂的review
+        // 这里使用eventType做判断，防止有些事件无法直接通过mapper得到，例如stream 的review
         if (triggerBuildReq.eventType.isNullOrBlank()) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,

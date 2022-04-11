@@ -25,31 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.stream.pojo
 
-object StreamPipelineUtils {
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
-
-    fun genStreamV2BuildUrl(
-        homePage: String,
-        gitProjectId: String,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
-
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
-}
+@ApiModel("Yaml内容")
+data class StreamGitYamlString(
+    @ApiModelProperty("YAML文件内容")
+    val yaml: String
+)

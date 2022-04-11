@@ -34,7 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
-import com.tencent.devops.stream.pojo.GitYamlString
+import com.tencent.devops.stream.pojo.StreamGitYamlString
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V2BuildYaml
@@ -66,11 +66,11 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     ): Result<TriggerBuildResult> {
         val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
         checkParam(userId)
-        permissionService.checkGitCIAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
         return Result(manualTriggerService.triggerBuild(userId, pipelineId, triggerBuildReq))
     }
 
-    override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
+    override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
         when {

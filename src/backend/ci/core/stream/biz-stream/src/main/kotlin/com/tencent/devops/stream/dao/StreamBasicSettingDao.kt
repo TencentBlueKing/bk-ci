@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.model.stream.tables.TGitBasicSetting
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
-import com.tencent.devops.stream.pojo.CIInfo
+import com.tencent.devops.stream.pojo.StreamCIInfo
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -100,10 +100,10 @@ class StreamBasicSettingDao {
                         conf.creatorCenterName,
                         conf.gitProjectDesc,
                         conf.gitProjectAvatar,
-                        if (conf.lastCiInfo == null) {
+                        if (conf.lastStreamCiInfo == null) {
                             null
                         } else {
-                            JsonUtil.toJson(conf.lastCiInfo!!)
+                            JsonUtil.toJson(conf.lastStreamCiInfo!!)
                         },
                         conf.nameWithNamespace,
                         conf.pathWithNamespace
@@ -168,11 +168,11 @@ class StreamBasicSettingDao {
     fun updateSettingLastCiInfo(
         dslContext: DSLContext,
         gitProjectId: Long,
-        ciInfo: CIInfo
+        streamCiInfo: StreamCIInfo
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             dslContext.update(this)
-                .set(LAST_CI_INFO, JsonUtil.toJson(ciInfo))
+                .set(LAST_CI_INFO, JsonUtil.toJson(streamCiInfo))
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
@@ -272,8 +272,8 @@ class StreamBasicSettingDao {
                     creatorCenterName = conf.creatorCenterName,
                     gitProjectDesc = conf.gitProjectDesc,
                     gitProjectAvatar = conf.gitProjectAvatar,
-                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
-                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
+                    lastStreamCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
+                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
                     } else {
                         null
                     },
@@ -318,8 +318,8 @@ class StreamBasicSettingDao {
                     creatorCenterName = conf.creatorCenterName,
                     gitProjectDesc = conf.gitProjectDesc,
                     gitProjectAvatar = conf.gitProjectAvatar,
-                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
-                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<CIInfo>() {})
+                    lastStreamCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
+                        JsonUtil.to(conf.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
                     } else {
                         null
                     },

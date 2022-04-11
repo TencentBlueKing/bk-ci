@@ -33,22 +33,17 @@ import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentRes
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.GitCIConstant
+import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 import com.tencent.devops.stream.util.GitCommonUtils
-import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -191,16 +186,16 @@ class StreamBasicSettingService @Autowired constructor(
         )
     }
 
-    fun getGitCIConf(gitProjectId: Long): StreamBasicSetting? {
+    fun getStreamConf(gitProjectId: Long): StreamBasicSetting? {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
     }
 
-    fun getGitCIBasicSettingAndCheck(gitProjectId: Long): StreamBasicSetting {
+    fun getStreamBasicSettingAndCheck(gitProjectId: Long): StreamBasicSetting {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
             ?: throw StreamNoEnableException(gitProjectId.toString())
     }
 
-    fun initGitCIConf(
+    fun initStreamConf(
         userId: String,
         projectId: String,
         gitProjectId: Long,
@@ -209,7 +204,7 @@ class StreamBasicSettingService @Autowired constructor(
         val projectInfo = requestGitProjectInfo(gitProjectId)
 
         run back@{
-            return saveGitCIConf(
+            return saveStreamConf(
                 userId = userId,
                 setting = StreamBasicSetting(
                     gitProjectId = gitProjectId,
@@ -231,17 +226,17 @@ class StreamBasicSettingService @Autowired constructor(
                     creatorBgName = null,
                     gitProjectDesc = projectInfo.description,
                     gitProjectAvatar = projectInfo.avatarUrl,
-                    lastCiInfo = null,
+                    lastStreamCiInfo = null,
                     pathWithNamespace = projectInfo.pathWithNamespace,
                     nameWithNamespace = projectInfo.nameWithNamespace
                 )
             )
         }
-        logger.warn("initGitCIConf: $gitProjectId  info: $projectInfo")
+        logger.warn("init stream Conf: $gitProjectId  info: $projectInfo")
         throw RuntimeException("Create git ci project in devops failed, msg: get project info from git error")
     }
 
-    fun saveGitCIConf(userId: String, setting: StreamBasicSetting): Boolean {
+    fun saveStreamConf(userId: String, setting: StreamBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $setting")
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
@@ -250,18 +245,18 @@ class StreamBasicSettingService @Autowired constructor(
             var gitProjectName = GitUtils.getDomainAndRepoName(setting.gitHttpUrl).second
 
             // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
-            if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+            if (gitProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
                     gitProjectName.length
                 )
             }
 
-            // 增加判断可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
+            // 增加判断可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
             val projectResult =
-                client.get(ServiceTxProjectResource::class).createGitCIProject(
+                client.get(ServiceTxProjectResource::class).createStreamProject(
                     gitProjectId = setting.gitProjectId,
                     userId = userId,
                     gitProjectName = gitProjectName
@@ -403,7 +398,7 @@ class StreamBasicSettingService @Autowired constructor(
                     nameWithNamespace = projectResult.nameWithNamespace
                 )
             } else {
-                // 说明存量数据在工蜂处已丢失
+                // 说明存量数据在stream 处已丢失
                 streamBasicSettingDao.fixProjectNameSpace(
                     dslContext = dslContext,
                     gitProjectId = it.id,
@@ -436,7 +431,7 @@ class StreamBasicSettingService @Autowired constructor(
         }
     }
 
-    private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
+    private fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
         return try {
             val accessToken = tokenService.getToken(gitProjectId)
             streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
@@ -446,11 +441,11 @@ class StreamBasicSettingService @Autowired constructor(
         }
     }
 
-    /**可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
-     * 根据传入项目gitProjectName查询t_project表，获取projectId，调用StreamScmService::getProjectInfo获取工蜂项目信息：
+    /**可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
+     * 根据传入项目gitProjectName查询t_project表，获取projectId，调用StreamScmService::getProjectInfo获取stream 项目信息：
      * case:项目存在，并且项目group/project跟入参不一致，说明该projectId的项目信息已修改，需更新同步到t_projec表；
-     * case:项目存在，并且项目group/project跟入参一致(工蜂侧做项目group/名称唯一性保障,理论不会出现);
-     * case:项目不存在，说明该项目ID已经在工蜂侧删除，则更改该projectID对应的project_name为xxx_时间戳_delete;
+     * case:项目存在，并且项目group/project跟入参一致(stream 侧做项目group/名称唯一性保障,理论不会出现);
+     * case:项目不存在，说明该项目ID已经在stream 侧删除，则更改该projectID对应的project_name为xxx_时间戳_delete;
      */
     fun checkSameGitProjectName(userId: String, projectName: String) {
 
@@ -463,7 +458,7 @@ class StreamBasicSettingService @Autowired constructor(
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
         val projectId = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
         val gitProjectResult = requestGitProjectInfo(projectId.toLong())
-        // 如果工蜂存在该项目信息
+        // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
             val projectNameFromGit = gitProjectResult.name
@@ -478,14 +473,14 @@ class StreamBasicSettingService @Autowired constructor(
             return
         }
 
-        // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
+        // stream 不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
         try {
             val timeStamp = System.currentTimeMillis().toString()
             var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
-            if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+            if (deletedProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 deletedProjectName = deletedProjectName.substring(
                     deletedProjectName.length -
-                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
+                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH
                 )
             }
             client.get(ServiceTxProjectResource::class).updateProjectName(

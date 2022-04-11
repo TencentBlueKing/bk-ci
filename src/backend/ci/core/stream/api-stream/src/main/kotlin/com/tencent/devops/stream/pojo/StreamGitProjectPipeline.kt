@@ -27,22 +27,29 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.process.pojo.BuildHistory
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("历史构建模型-对应history页面")
-data class GitCIBuildHistory(
+@ApiModel("蓝盾stream流水线列表")
+data class GitProjectPipeline(
+    @ApiModelProperty("git项目ID", required = true)
+    val gitProjectId: Long,
     @ApiModelProperty("流水线名称", required = true)
-    val displayName: String?,
+    var displayName: String,
     @ApiModelProperty("蓝盾流水线ID", required = true)
-    var pipelineId: String?,
-    @ApiModelProperty("git request Event事件", required = true)
-    val gitRequestEvent: GitRequestEventReq,
-    @ApiModelProperty("历史构建模型", required = false)
-    val buildHistory: BuildHistory?,
-    @ApiModelProperty("原因", required = true)
-    val reason: String? = null,
-    @ApiModelProperty("原因详情", required = true)
-    var reasonDetail: String? = null
+    var pipelineId: String,
+    @ApiModelProperty("文件路径", required = true)
+    val filePath: String,
+    @ApiModelProperty("是否启用", required = true)
+    val enabled: Boolean,
+    @ApiModelProperty("创建人", required = false)
+    val creator: String?,
+    @ApiModelProperty("最近一次构建详情", required = false)
+    val latestBuildInfo: StreamBuildHistory?,
+    @ApiModelProperty("自己一次构建分支", required = false)
+    val latestBuildBranch: String?
 )
+
+fun GitProjectPipeline.isExist(): Boolean {
+    return pipelineId.isNotBlank()
+}

@@ -25,31 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.util
+package com.tencent.devops.stream.pojo
 
-object StreamPipelineUtils {
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
+data class StreamCreateFileInfo(
+    @JsonProperty("file_path")
+    @ApiModelProperty(name = "file_path")
+    val filePath: String,
+    @JsonProperty("branch_name")
+    @ApiModelProperty(name = "branch_name")
+    val branch: String,
+    @JsonProperty("encoding")
+    @ApiModelProperty(name = "encoding")
+    val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
+    @JsonProperty("content")
+    @ApiModelProperty(name = "content")
+    val content: String,
+    @JsonProperty("commit_message")
+    @ApiModelProperty(name = "commit_message")
+    val commitMessage: String
+)
 
-    fun genBKPipelineName(projectCode: String) = projectCode + "_" + System.currentTimeMillis()
+enum class GitCodeFileEncoding {
+    @JsonProperty("text")
+    TEXT,
+    @JsonProperty("base64")
+    BASE64
+}
 
-    fun genStreamV2BuildUrl(
-        homePage: String,
-        gitProjectId: String,
-        pipelineId: String,
-        buildId: String,
-        openCheckInId: String? = null,
-        openCheckOutId: String? = null
-    ): String {
-        val url = "$homePage/pipeline/$pipelineId/detail/$buildId"
-        if (!openCheckInId.isNullOrBlank()) {
-            return url.plus("?checkIn=$openCheckInId#$gitProjectId")
-        }
-        if (!openCheckOutId.isNullOrBlank()) {
-            return url.plus("?checkOut=$openCheckOutId#$gitProjectId")
-        }
-        return "$url/#$gitProjectId"
-    }
+enum class GitCodeBranchesOrder(val value: String) {
+    NAME("name"),
+    UPDATE("update")
+}
 
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+enum class GitCodeBranchesSort(val value: String) {
+    ASC("asc"),
+    DESC("desc")
 }

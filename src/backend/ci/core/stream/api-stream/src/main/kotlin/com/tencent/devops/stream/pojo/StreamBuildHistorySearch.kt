@@ -28,53 +28,30 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("Git和Stream项目详细信息")
-data class ProjectCIInfo(
-    @ApiModelProperty("Git项目ID")
-    val id: Long,
-    @ApiModelProperty("蓝盾项目id")
-    val projectCode: String?,
-    @ApiModelProperty("是否为工蜂公共项目")
-    val public: Boolean?,
-    @ApiModelProperty("工蜂项目名称")
-    val name: String?,
-    @ApiModelProperty("工蜂项目名称带有路径")
-    val nameWithNamespace: String?,
-    @ApiModelProperty("https-git链接")
-    val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
-    val webUrl: String?,
-    @ApiModelProperty("项目头像")
-    val avatarUrl: String?,
-    @ApiModelProperty("项目描述")
-    val description: String?,
-    @ApiModelProperty("是否开启CI功能")
-    val enableCI: Boolean?,
-    @ApiModelProperty("Build pushed branches")
-    val buildPushedBranches: Boolean?,
-    @ApiModelProperty("Build pushed pull request")
-    val buildPushedPullRequest: Boolean?,
-    @ApiModelProperty("是否开启Mr锁定")
-    val enableMrBlock: Boolean?,
-    @ApiModelProperty("当前授权人")
-    val authUserId: String?,
-    @ApiModelProperty("CI相关信息")
-    val ciInfo: CIInfo?
-)
-
-@ApiModel("CI相关信息")
-data class CIInfo(
-    @ApiModelProperty("是否开启STREAM")
-    val enableCI: Boolean,
-    @ApiModelProperty("最后一次构建信息")
-    val lastBuildMessage: String?,
-    @ApiModelProperty("最后一次构建状态")
-    val lastBuildStatus: BuildStatus?,
-    @ApiModelProperty("流水线ID")
-    val lastBuildPipelineId: String?,
-    @ApiModelProperty("构建ID")
-    val lastBuildId: String?
+@ApiModel("V2版本多选搜索过滤历史参数")
+data class StreamBuildHistorySearch(
+    @ApiModelProperty("第几页", required = false)
+    val page: Int?,
+    @ApiModelProperty("每页多少条", required = false)
+    val pageSize: Int?,
+    @ApiModelProperty("分支", required = false)
+    val branch: Set<String>?,
+    @ApiModelProperty("fork库分支", required = false)
+    val sourceGitProjectId: Set<String>?,
+    @ApiModelProperty("触发人", required = false)
+    val triggerUser: Set<String>?,
+    @ApiModelProperty("流水线ID", required = false)
+    val pipelineId: String?,
+    @ApiModelProperty("Commit Msg", required = false)
+    val commitMsg: String?,
+    @ApiModelProperty("Event", required = false)
+    val event: Set<TGitObjectKind>?,
+    @ApiModelProperty("构建状态", required = false)
+    val status: Set<BuildStatus>?,
+    @ApiModelProperty("流水线列表", required = false)
+    val pipelineIds: Set<String>?
 )
