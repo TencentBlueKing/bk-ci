@@ -27,11 +27,11 @@
 
 package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.annotation.StreamEvent
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.pojo.message.LogMessage
 
-@Event(MQ.EXCHANGE_LOG_BUILD_EVENT, MQ.ROUTE_LOG_BUILD_EVENT)
+@StreamEvent(MQ.EXCHANGE_LOG_BUILD_EVENT)
 data class LogEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
