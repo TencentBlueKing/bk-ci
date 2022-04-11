@@ -236,4 +236,11 @@ interface IGitService {
         search: String?,
         tokenType: TokenTypeEnum
     ): Result<List<GitMember>>
+
+    fun getGitUserId(
+        rtxUserId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<String?>
 }
