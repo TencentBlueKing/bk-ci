@@ -41,7 +41,6 @@ dependencies {
     api(project(":ext:tencent:common:common-kafka-tencent"))
     api("dom4j:dom4j")
     api("commons-codec:commons-codec")
-    api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
     api("com.github.ben-manes.caffeine:caffeine")
 }
