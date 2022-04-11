@@ -634,6 +634,11 @@
     },
     "editPage": {
         "invalidValue": "插件表单参数{0}非法 ",
+        "shareEnvInfo": "来自{0}项目，由{1}分享",
+        "environment": "环境",
+        "envProjectId": "所属项目英文名",
+        "envProjectTips": "默认为当前项目，当跨项目引用环境时填写对应的项目英文名",
+        "envProjectPlaceholder": "默认为当前项目",
         "tipError": "Tip组件返回值需要是字符串",
         "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
