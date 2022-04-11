@@ -27,8 +27,25 @@
 
 package com.tencent.devops.common.log.pojo
 
+import com.tencent.devops.common.api.util.JsonUtil
+import org.springframework.messaging.Message
+import org.springframework.messaging.support.MessageBuilder
+
 open class ILogEvent(
     open val buildId: String,
     open val retryTime: Int,
     open val delayMills: Int
-)
+) {
+    fun streamMessage(defaultMills: Int = 0): Message<String> {
+        val builder = MessageBuilder
+            .withPayload(JsonUtil.toJson(this, false))
+        // 事件中的变量指定
+        if (delayMills > 0) {
+            builder.setHeader("x-delay", delayMills)
+        } else if (defaultMills > 0) {
+            // 事件类型固化默认值
+            builder.setHeader("x-delay", defaultMills)
+        }
+        return builder.build()
+    }
+}
