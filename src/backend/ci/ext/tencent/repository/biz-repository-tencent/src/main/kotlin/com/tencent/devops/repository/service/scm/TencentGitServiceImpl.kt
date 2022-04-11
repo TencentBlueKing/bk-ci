@@ -454,4 +454,18 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             tokenType = tokenType
         )
     }
+
+    override fun getGitUserId(
+        rtxUserId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<String?> {
+        return client.getScm(ServiceGitResource::class).getGitUserId(
+            rtxUserId = rtxUserId,
+            gitProjectId = gitProjectId,
+            tokenType = tokenType,
+            token = token
+        )
+    }
 }

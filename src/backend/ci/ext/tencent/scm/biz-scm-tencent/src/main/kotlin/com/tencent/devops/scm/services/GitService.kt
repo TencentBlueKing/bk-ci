@@ -1909,4 +1909,30 @@ class GitService @Autowired constructor(
             return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
         }
     }
+
+    fun getGitUserId(
+        rtxUserId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<String?> {
+        try {
+            val url = StringBuilder("$gitCIUrl/api/v3/users/$rtxUserId")
+            setToken(tokenType, url, token)
+            logger.info("[$rtxUserId]|[$gitProjectId]| Get gitUserId: $url")
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val body = response.body()!!.string()
+                logger.info("[$rtxUserId]|[$gitProjectId]| Get gitUserId response body: $body")
+                val userInfo = JsonUtil.to(body, Map::class.java)
+                return Result(userInfo["id"].toString())
+            }
+        } catch (ignore: Exception) {
+            logger.error("get git project member fail! gitProjectId: $gitProjectId", ignore)
+            return Result(null)
+        }
+    }
 }

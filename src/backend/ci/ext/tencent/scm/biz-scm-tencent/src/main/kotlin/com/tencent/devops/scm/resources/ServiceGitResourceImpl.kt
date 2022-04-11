@@ -559,4 +559,19 @@ class ServiceGitResourceImpl @Autowired constructor(
             tokenType = tokenType
         )
     }
+
+    override fun getGitUserId(
+        rtxUserId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<String?> {
+        TODO("Not yet implemented")
+        return gitService.getGitUserId(
+            rtxUserId = rtxUserId,
+            gitProjectId = gitProjectId,
+            tokenType = tokenType,
+            token = token
+        )
+    }
 }
