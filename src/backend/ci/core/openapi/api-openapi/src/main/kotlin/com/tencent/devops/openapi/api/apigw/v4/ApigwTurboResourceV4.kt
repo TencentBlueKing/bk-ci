@@ -26,23 +26,28 @@
  */
 package com.tencent.devops.openapi.api.apigw.v4
 
+import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.turbo.pojo.TurboRecordModel
+import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
+import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import org.springframework.format.annotation.DateTimeFormat
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestParam
 import java.time.LocalDate
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 
@@ -53,29 +58,71 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwTurboResourceV4 {
 
-    @ApiOperation("获取方案列表")
     @GET
+    @ApiOperation("获取方案列表")
     @Path("/projectId/{projectId}/turboPlan/list/")
     fun getTurboPlanByProjectIdAndCreatedDate(
         @ApiParam(value = "项目id", required = true)
-        @PathVariable("projectId")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "开始时间", required = false)
-        @RequestParam("startTime")
+        @QueryParam("startTime")
         @DateTimeFormat(pattern = "yyyy-MM-dd")
         startTime: LocalDate?,
         @ApiParam(value = "结束时间", required = false)
-        @RequestParam("endTime")
+        @QueryParam("endTime")
         @DateTimeFormat(pattern = "yyyy-MM-dd")
         endTime: LocalDate?,
         @ApiParam(value = "页数", required = false)
-        @RequestParam(value = "pageNum")
+        @QueryParam(value = "pageNum")
         pageNum: Int?,
         @ApiParam(value = "每页多少条", required = false)
-        @RequestParam("pageSize")
+        @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam(value = "用户信息", required = true)
-        @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Response<Page<TurboPlanStatRowVO>>
+
+    @POST
+    @ApiOperation("获取加速历史列表")
+    @Path("/history/list")
+    fun getTurboRecordHistoryList(
+        @ApiParam(value = "页数", required = false)
+        @QueryParam(value = "pageNum")
+        pageNum: Int?,
+        @ApiParam(value = "每页多少条", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "排序字段", required = false)
+        @QueryParam("sortField")
+        sortField: String?,
+        @ApiParam(value = "排序类型", required = false)
+        @QueryParam("sortType")
+        sortType: String?,
+        @ApiParam(value = "编译加速历史请求数据信息", required = true) @Valid
+        turboRecordModel: TurboRecordModel,
+        @ApiParam(value = "蓝盾项目id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+
+    ): Response<Page<TurboRecordHistoryVO>>
+
+    @GET
+    @ApiOperation("获取加速方案详情")
+    @Path("/turboPlan/detail/planId/{planId}")
+    fun getTurboPlanDetailByPlanId(
+        @ApiParam(value = "方案id", required = true)
+        @PathParam("planId")
+        planId: String,
+        @ApiParam(value = "蓝盾项目id", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Response<TurboPlanDetailVO>
 }

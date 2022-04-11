@@ -32,7 +32,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTurboResourceV4
 import com.tencent.devops.turbo.api.IOpenApiTurboController
+import com.tencent.devops.turbo.pojo.TurboRecordModel
+import com.tencent.devops.turbo.vo.TurboPlanDetailVO
 import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
+import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
@@ -50,7 +53,8 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         projectId: String,
         startTime: LocalDate?,
         endTime: LocalDate?,
-        pageNum: Int?, pageSize: Int?,
+        pageNum: Int?,
+        pageSize: Int?,
         userId: String
     ): Response<Page<TurboPlanStatRowVO>> {
         logger.info("getTurboPlan: userId[$userId] projectId[$projectId]")
@@ -60,6 +64,40 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
             endTime = endTime,
             pageNum = pageNum,
             pageSize = pageSize,
+            user = userId
+        )
+    }
+
+    override fun getTurboRecordHistoryList(
+        pageNum: Int?,
+        pageSize: Int?,
+        sortField: String?,
+        sortType: String?,
+        turboRecordModel: TurboRecordModel,
+        projectId: String,
+        userId: String
+    ): Response<Page<TurboRecordHistoryVO>> {
+        logger.info("getTurboRecordHistoryList: userId[$userId] projectId[$projectId] reqModel: $turboRecordModel")
+        return client.getSpringMvc(IOpenApiTurboController::class).getTurboRecordHistoryList(
+            pageNum = pageNum,
+            pageSize = pageSize,
+            sortField = sortField,
+            sortType = sortType,
+            turboRecordModel = turboRecordModel,
+            projectId = projectId,
+            user=userId
+        )
+    }
+
+    override fun getTurboPlanDetailByPlanId(
+        planId: String,
+        projectId: String,
+        userId: String
+    ): Response<TurboPlanDetailVO> {
+        logger.info("getTurboPlanDetail: userId[$userId] projectId[$projectId] planId[$planId]")
+        return client.getSpringMvc(IOpenApiTurboController::class).getTurboPlanDetailByPlanId(
+            planId = planId,
+            projectId = projectId,
             user = userId
         )
     }
