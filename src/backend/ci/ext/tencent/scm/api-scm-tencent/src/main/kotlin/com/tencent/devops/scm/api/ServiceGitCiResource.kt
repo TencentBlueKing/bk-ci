@@ -29,7 +29,6 @@ package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -39,6 +38,7 @@ import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import io.swagger.annotations.Api
@@ -113,7 +113,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取GitCode项目成员信息")
     @GET
     @Path("/getMembers")
-    fun getMembers( //搬到repository ,iGitService 中已经存在
+    fun getMembers( //搬到repository ,迁移至ServiceGitResource.getMembers
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String,
@@ -134,7 +134,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取项目分支信息")
     @GET
     @Path("/getBranches")
-    fun getBranches( // 已存在于ServiceScmResource.listBranches,需要优化一下参数，把没有的参数补齐
+    fun getBranches( // 迁移至ServiceScmResource::listBranches,需要优化一下参数，把没有的参数补齐
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String,
@@ -349,7 +349,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取用户所有项目组列表，分页获取")
     @GET
     @Path("/getProjectGroupsList")
-    fun getProjectGroupsList( // 需要迁移到ServiceGitResource
+    fun getProjectGroupsList( // 需要迁移到ServiceGitResource 迁移至ServiceGitResource::getProjectGroupsList
         @ApiParam("oauth accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
