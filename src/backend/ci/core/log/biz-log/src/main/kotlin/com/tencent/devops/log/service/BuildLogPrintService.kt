@@ -41,6 +41,7 @@ import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -51,6 +52,7 @@ import javax.annotation.Resource
 class BuildLogPrintService @Autowired constructor(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate,
+    private val bridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
     private val logServiceConfig: LogServiceConfig
@@ -67,6 +69,7 @@ class BuildLogPrintService @Autowired constructor(
     fun dispatchEvent(event: ILogEvent) {
         try {
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            bridge.send()
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定
                 if (event.delayMills > 0) {
