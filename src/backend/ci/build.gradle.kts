@@ -12,6 +12,10 @@ allprojects {
     version = (System.getProperty("ci_version") ?: "1.7.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
+    repositories {
+        maven(url = "https://mirrors.tencent.com/repository/maven/bkdevops_maven")
+    }
+
     // 版本管理
     dependencyManagement {
         setApplyMavenExclusions(false)
