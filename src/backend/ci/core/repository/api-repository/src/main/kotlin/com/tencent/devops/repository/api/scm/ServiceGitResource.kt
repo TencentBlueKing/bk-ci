@@ -575,4 +575,22 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     ): Result<List<GitMember>>
+
+    @ApiOperation("校验用户git项目权限")
+    @GET
+    @Path("/getUserId")
+    fun getGitUserId( // auth 迁移至ServiceGitResource
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        rtxUserId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<String?>
 }
