@@ -37,8 +37,10 @@ import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMember
@@ -487,4 +489,34 @@ open class GitApi {
 //    private val OPERATION_ADD_MR_COMMENT = "添加MR COMMENT"
 
     private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
+
+    fun getProjectGroupsList(
+        host: String,
+        token: String,
+        page: Int,
+        pageSize: Int,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<GitCodeGroup> {
+        val url = "api/v3/groups"
+        val queryParam = "page=$page&per_page=$pageSize"
+            .addParams(
+                mapOf(
+                    "owned" to owned,
+                    "min_access_level" to minAccessLevel?.level
+                )
+            )
+        val request = get(host, token, url, queryParam)
+        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+    }
+
+    private fun String.addParams(args: Map<String, Any?>): String {
+        val sb = StringBuilder(this)
+        args.forEach { (name, value) ->
+            if (value != null) {
+                sb.append("&$name=$value")
+            }
+        }
+        return sb.toString()
+    }
 }
