@@ -37,4 +37,5 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":core:project:api-project"))
     api(project(":core:sign:api-sign"))
+    api(project(":core:dispatch-docker:api-dispatch-docker"))
 }
