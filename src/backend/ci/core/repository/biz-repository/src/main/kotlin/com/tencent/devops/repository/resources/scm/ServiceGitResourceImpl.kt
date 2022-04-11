@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
-import com.tencent.devops.scm.pojo.Project
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -45,10 +43,14 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import com.tencent.devops.scm.pojo.Project
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletResponse
 
@@ -338,6 +340,76 @@ class ServiceGitResourceImpl @Autowired constructor(
             id = gitProjectId,
             token = token,
             tokenType = tokenType
+        )
+    }
+
+    override fun getProjectUserInfo(
+        token: String,
+        userId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitMember> {
+        return Result(
+            gitService.getRepoMemberInfo(
+                accessToken = token,
+                userId = userId,
+                repoName = gitProjectId,
+                tokenType = tokenType
+            )
+        )
+    }
+
+    override fun getProjectGroupsList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitCodeGroup>> {
+        return Result(
+            gitService.getProjectGroupList(
+                accessToken = accessToken,
+                page = page,
+                pageSize = pageSize,
+                owned = owned,
+                minAccessLevel = minAccessLevel,
+                tokenType = tokenType
+            )
+        )
+    }
+
+    override fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitMember>> {
+        TODO("Not yet implemented")
+        return gitService.getMembers(
+            token = token,
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getGitUserId(
+        rtxUserId: String,
+        gitProjectId: String,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<String?> {
+        TODO("Not yet implemented")
+        return gitService.getGitUserId(
+            rtxUserId = rtxUserId,
+            gitProjectId = gitProjectId,
+            tokenType = tokenType,
+            token = token
         )
     }
 }

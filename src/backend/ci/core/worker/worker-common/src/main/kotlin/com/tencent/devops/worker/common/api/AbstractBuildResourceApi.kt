@@ -182,47 +182,52 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         destPath: File,
         connectTimeoutInSec: Long? = null,
         readTimeoutInSec: Long? = null,
-        writeTimeoutInSec: Long? = null
+        writeTimeoutInSec: Long? = null,
+        retryCount: Int = DEFAULT_RETRY_TIME
     ) {
+
         requestForResponse(
             request = request,
             connectTimeoutInSec = connectTimeoutInSec,
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            download(response, destPath)
-        }
-    }
-
-    private fun download(response: Response, destPath: File, retryCount: Int = DEFAULT_RETRY_TIME) {
-        if (response.code() == StatusCodes.NOT_FOUND) {
-            throw RemoteServiceException("文件不存在")
-        }
-        if (!response.isSuccessful) {
-            LoggerService.addNormalLine(response.body()!!.string())
-            throw RemoteServiceException("获取文件失败")
-        }
-        val dest = destPath.toPath()
-        if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
-        LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
-        val body = response.body() ?: return
-        val contentLength = body.contentLength()
-        if (contentLength != -1L) {
-            LoggerService.addNormalLine("download ${dest.fileName} " +
-                ArchiveUtils.humanReadableByteCountBin(contentLength))
-        }
-
-        // body copy时可能会出现readTimeout，即便http请求已正常响应
-        try {
-            body.byteStream().use { bs ->
-                Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+            if (response.code() == StatusCodes.NOT_FOUND) {
+                throw RemoteServiceException("file does not exist")
             }
-        } catch (e: Exception) {
-            logger.warn("Failed to copy download body, try to retry.")
-            if (retryCount > 0) {
-                download(response, destPath, retryCount - 1)
-            } else {
-                throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
+            if (!response.isSuccessful) {
+                LoggerService.addNormalLine(response.body()!!.string())
+                throw RemoteServiceException("Failed to get file")
+            }
+            val dest = destPath.toPath()
+            if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
+            LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
+            val body = response.body() ?: return
+            val contentLength = body.contentLength()
+            if (contentLength != -1L) {
+                LoggerService.addNormalLine("download ${dest.fileName} " +
+                        ArchiveUtils.humanReadableByteCountBin(contentLength))
+            }
+
+            // body copy时可能会出现readTimeout，即便http请求已正常响应
+            try {
+                body.byteStream().use { bs ->
+                    Files.copy(bs, dest, StandardCopyOption.REPLACE_EXISTING)
+                }
+            } catch (e: Exception) {
+                logger.warn("Failed to copy download body, try to retry.")
+                if (retryCount > 0) {
+                    download(
+                        request = request,
+                        destPath = destPath,
+                        connectTimeoutInSec = connectTimeoutInSec,
+                        readTimeoutInSec = readTimeoutInSec,
+                        writeTimeoutInSec = writeTimeoutInSec,
+                        retryCount = retryCount - 1
+                    )
+                } else {
+                    throw HttpRetryException("Failed to copy download body, try to retry $DEFAULT_RETRY_TIME", 999)
+                }
             }
         }
     }

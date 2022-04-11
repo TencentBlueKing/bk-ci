@@ -168,7 +168,6 @@ export default {
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
-
             if (pipelineSetting && !pipelineSetting.pipelineName) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
             }

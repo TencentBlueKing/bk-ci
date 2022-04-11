@@ -450,14 +450,24 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    override fun buildGet(projectId: String, buildId: String, credentialId: String, publicKey: String): CredentialInfo? {
+    override fun buildGet(
+        projectId: String,
+        buildId: String,
+        credentialId: String,
+        publicKey: String,
+        taskId: String?
+    ): CredentialInfo? {
         val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
         if (buildBasicInfoResult.isNotOk()) {
             throw RemoteServiceException("Failed to build the basic information based on the buildId")
         }
         val buildBasicInfo = buildBasicInfoResult.data
             ?: throw RemoteServiceException("Failed to build the basic information based on the buildId")
-        return serviceGet(buildBasicInfo.projectId, credentialId, publicKey)
+        return serviceGet(buildBasicInfo.projectId, credentialId, publicKey) ?: run {
+            // 获取跨项目凭证
+            val acrossInfo = getAcrossInfo(projectId, buildId, taskId) ?: return null
+            serviceGet(acrossInfo.targetProjectId, credentialId, publicKey)
+        }
     }
 
     override fun buildGetAcrossProject(

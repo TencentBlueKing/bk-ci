@@ -45,14 +45,28 @@ object BkShardingRoutingCacheUtil {
         .expireAfterWrite(1000, TimeUnit.DAYS)
         .build<String, String>()
 
+    /**
+     * 删除路由规则缓存
+     * @param routingName 路由规则名称
+     */
     fun invalidate(routingName: String) {
         shardingRoutingCache.invalidate(routingName)
     }
 
+    /**
+     * 保存路由规则缓存
+     * @param routingName 路由规则名称
+     * @param routingRule 路由规则值
+     */
     fun put(routingName: String, routingRule: String) {
         shardingRoutingCache.put(routingName, routingRule)
     }
 
+    /**
+     * 从缓存中获取路由规则值
+     * @param routingName 路由规则名称
+     * @return 路由规则值
+     */
     fun getIfPresent(routingName: String): String? {
         return shardingRoutingCache.getIfPresent(routingName)
     }

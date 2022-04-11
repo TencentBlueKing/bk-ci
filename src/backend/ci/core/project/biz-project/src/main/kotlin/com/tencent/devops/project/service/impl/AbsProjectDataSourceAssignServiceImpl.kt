@@ -27,23 +27,27 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.project.dao.DataSourceDao
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.DataSourceDao
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service
-class ProjectDataSourceRandomAssignServiceImpl @Autowired constructor(
+abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val dataSourceDao: DataSourceDao,
     private val shardingRoutingRuleService: ShardingRoutingRuleService
 ) : ProjectDataSourceAssignService {
+
+    private val logger = LoggerFactory.getLogger(AbsProjectDataSourceAssignServiceImpl::class.java)
 
     @Value("\${tag.prod:prod}")
     private val prodTag: String = "prod"
@@ -54,6 +58,13 @@ class ProjectDataSourceRandomAssignServiceImpl @Autowired constructor(
     @Value("\${tag.stream:stream}")
     private val streamTag: String = "stream"
 
+    /**
+     * 为项目分配数据源
+     * @param channelCode 渠道代码
+     * @param projectId 项目ID
+     * @param moduleCodes 模块代码列表
+     * @return 布尔值
+     */
     override fun assignDataSource(
         channelCode: ProjectChannelCode,
         projectId: String,
@@ -72,22 +83,30 @@ class ProjectDataSourceRandomAssignServiceImpl @Autowired constructor(
         }
         moduleCodes.forEach { moduleCode ->
             // 根据模块查找还有还有空余容量的数据源
-            val dataSources = dataSourceDao.listByModule(
+            val dataSourceNames = dataSourceDao.listByModule(
                 dslContext = dslContext,
                 clusterName = clusterName,
                 moduleCode = moduleCode.name,
                 fullFlag = false
-            )
-            if (dataSources.isNullOrEmpty()) {
-                return@forEach
+            )?.map { it.dataSourceName }
+            if (dataSourceNames.isNullOrEmpty()) {
+                // 没有可用的数据源则报错
+                logger.warn("[$clusterName]$moduleCode has no dataSource available")
+                throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_ASSIGN_DATASOURCE_FAIL)
             }
-            // 从可用的数据源中随机选择一个分配给该项目
-            val maxSizeIndex = dataSources.size - 1
-            val randomIndex = (0..maxSizeIndex).random()
-            val dataSource = dataSources[randomIndex]
-            val shardingRoutingRule = ShardingRoutingRule(projectId, dataSource.dataSourceName)
-            shardingRoutingRuleService.addShardingRoutingRule("system", shardingRoutingRule)
+            // 获取可用数据源名称
+            val dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
+            val shardingRoutingRule = ShardingRoutingRule(projectId, dataSourceName)
+            shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, shardingRoutingRule)
         }
         return true
     }
+
+    /**
+     * 获取可用数据源名称
+     * @param clusterName db集群名称
+     * @param dataSourceNames 数据源名称集合
+     * @return 可用数据源名称
+     */
+    abstract fun getValidDataSourceName(clusterName: String, dataSourceNames: List<String>): String
 }

@@ -533,7 +533,7 @@ export default {
                 const responses = await saveAction()
 
                 if (responses.code === 403) {
-                    throw HttpError(403)
+                    throw new HttpError(403, responses.message)
                 }
                 this.setPipelineEditing(false)
                 this.$showTips({
