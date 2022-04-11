@@ -85,10 +85,12 @@ open class GitApi {
         host: String,
         token: String,
         projectName: String,
-        search: String? = null
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
     ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
-        var searchReq = "page=1&per_page=100"
+        var searchReq = "page=$page&per_page=$pageSize"
         if (!search.isNullOrBlank()) {
             searchReq = "$searchReq&search=$search"
         }
