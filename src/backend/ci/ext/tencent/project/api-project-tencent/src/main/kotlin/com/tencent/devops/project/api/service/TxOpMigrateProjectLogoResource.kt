@@ -25,38 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.support.resources.service
+package com.tencent.devops.project.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.support.api.service.ServiceImageManageResource
-import net.coobird.thumbnailator.Thumbnails
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Autowired
-import java.net.URL
-import java.nio.file.Files
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceImageManageResourceImpl @Autowired constructor() : ServiceImageManageResource {
+@Api(tags = ["OP_PROJECT_LOGO"], description = "OP-项目-logo")
+@Path("/op/project/logo")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface TxOpMigrateProjectLogoResource {
 
-    /**
-     * 按照规定大小压缩图片
-     */
-    override fun compressImage(imageUrl: String, compressWidth: Int, compressHeight: Int): Result<String> {
-        val file = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()
-        val url = URL(imageUrl)
-        val bytes: ByteArray?
-        try {
-            Thumbnails.of(url)
-                .size(compressWidth, compressHeight)
-                .outputFormat("png")
-                .toFile(file)
-            bytes = Files.readAllBytes(file.toPath())
-        } finally {
-            file.delete()
-        }
-        val data = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-        return Result(data)
-    }
+    @ApiOperation("迁移logo")
+    @PUT
+    @Path("/migrate")
+    fun migrateProjectLogo(): Result<Boolean>
 }
