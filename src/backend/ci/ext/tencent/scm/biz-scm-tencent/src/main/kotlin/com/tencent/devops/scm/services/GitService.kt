@@ -44,12 +44,10 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -67,6 +65,7 @@ import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
@@ -76,8 +75,10 @@ import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -814,7 +815,7 @@ class GitService @Autowired constructor(
         val apiUrl = if (repoUrl.isNullOrBlank()) {
             gitConfig.gitApiUrl
         } else {
-            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
         }
         logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
@@ -858,7 +859,7 @@ class GitService @Autowired constructor(
         val apiUrl = if (repoUrl.isNullOrBlank()) {
             gitConfig.gitlabApiUrl
         } else {
-            GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl!!)
+            GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl)
         }
         logger.info("[$repoName|$filePath|$ref|$accessToken] Start to get the gitlab file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
@@ -949,7 +950,7 @@ class GitService @Autowired constructor(
                     initRepositoryInfo(
                         userId = userId,
                         nameSpaceName = nameSpaceName,
-                        sampleProjectPath = sampleProjectPath!!,
+                        sampleProjectPath = sampleProjectPath,
                         token = token,
                         tokenType = tokenType,
                         repositoryName = repositoryName,
@@ -1509,7 +1510,7 @@ class GitService @Autowired constructor(
         return if (repoUrl.isNullOrBlank()) {
             gitConfig.gitApiUrl
         } else {
-            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl)
         }
     }
 
@@ -1817,6 +1818,56 @@ class GitService @Autowired constructor(
                 straight = straight,
                 page = page,
                 pageSize = pageSize
+            )
+        }
+    }
+
+    fun getProjectGroupsList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?,
+        tokenType: TokenTypeEnum,
+    ): List<GitCodeGroup> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+//        val url = "$gitCIUrl/api/v3/groups?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+//            .addParams(
+//                mapOf(
+//                    "owned" to owned,
+//                    "min_access_level" to minAccessLevel?.level
+//                )
+//            )
+//        val request = Request.Builder()
+//            .url(url)
+//            .get()
+//            .build()
+//        OkhttpUtils.doHttp(request).use { response ->
+//            logger.info("[url=$url]|getProjectGroupList with response=$response")
+//            if (!response.isSuccessful) {
+//                throw GitCodeUtils.handleErrorMessage(response)
+//            }
+//            val data = response.body()?.string()?.ifBlank { null } ?: return emptyList()
+//            return JsonUtil.to(data, object : TypeReference<List<GitCodeGroup>>() {})
+//        }
+        return if (TokenTypeEnum.OAUTH == tokenType) {
+            GitOauthApi().getProjectGroupsList(
+                host = gitCIUrl,
+                token = accessToken,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                owned = owned,
+                minAccessLevel = minAccessLevel,
+            )
+        } else {
+            GitApi().getProjectGroupsList(
+                host = gitCIUrl,
+                token = accessToken,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                owned = owned,
+                minAccessLevel = minAccessLevel,
             )
         }
     }
