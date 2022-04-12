@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.dao
 
 import com.tencent.devops.environment.pojo.AddSharedProjectInfo
+import com.tencent.devops.environment.pojo.TEnvShareProjectInfo
 import com.tencent.devops.model.environment.tables.TEnv
 import com.tencent.devops.model.environment.tables.TEnvShareProject
 import com.tencent.devops.model.environment.tables.records.TEnvShareProjectRecord
@@ -44,7 +45,7 @@ class EnvShareProjectDao {
         name: String?,
         offset: Int,
         limit: Int
-    ): List<TEnvShareProjectRecord> {
+    ): List<TEnvShareProjectInfo> {
         val a = TEnvShareProject.T_ENV_SHARE_PROJECT.`as`("a")
         val b = TEnv.T_ENV.`as`("b")
         val dsl = dslContext.select(
@@ -65,16 +66,16 @@ class EnvShareProjectDao {
         }
         return dsl.orderBy(a.UPDATE_TIME.desc()).limit(limit).offset(offset)
             .fetch().map {
-                TEnvShareProjectRecord(
-                    it.value1(),
-                    it.value2(),
-                    it.value3(),
-                    it.value4(),
-                    it.value5(),
-                    it.value6(),
-                    it.value7(),
-                    it.value8(),
-                    it.value9()
+                TEnvShareProjectInfo(
+                    envId = it.value1(),
+                    envName = it.value2(),
+                    mainProjectId = it.value3(),
+                    sharedProjectId = it.value4(),
+                    sharedProjectName = it.value5(),
+                    type = it.value6(),
+                    creator = it.value7(),
+                    createTime = it.value8(),
+                    updateTime = it.value9()
                 )
             }
     }
