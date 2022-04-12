@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -572,7 +573,7 @@ interface ServiceGitResource {
     @ApiOperation("获取GitCode项目成员信息")
     @GET
     @Path("/getMembers")
-    fun getMembers( //搬到repository ,iGitService 中已经存在
+    fun getMembers( // 搬到repository ,iGitService 中已经存在
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String,
@@ -634,4 +635,25 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<List<GitMember>>
+
+    @ApiOperation("文件内容和一些文件信息")
+    @GET
+    @Path("/getGitFileInfo")
+    fun getGitFileInfo( // 需要搬到 ServiceGitResource
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String?,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCodeFileInfo>
 }
