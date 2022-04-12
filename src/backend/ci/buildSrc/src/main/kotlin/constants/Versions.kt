@@ -37,4 +37,6 @@ object Versions {
     const val Leaf = "1.0.1-RELEASE"
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
+    const val CloudStream = "3.0.11.RELEASE"
+    const val Pulsar = "2.8.1"
 }
