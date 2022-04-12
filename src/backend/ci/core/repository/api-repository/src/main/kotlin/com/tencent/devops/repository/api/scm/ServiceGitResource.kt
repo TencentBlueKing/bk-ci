@@ -42,6 +42,8 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
@@ -99,7 +101,22 @@ interface ServiceGitResource {
         page: Int?,
         @ApiParam("每页数据条数", required = true)
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("搜索条件，模糊匹配path,name")
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitProjectsOrderBy? = null,
+        @ApiParam("排序方式")
+        @QueryParam("sort")
+        sort: GitSortAscOrDesc? = null,
+        @ApiParam("若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean? = null,
+        @ApiParam("指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum? = null
     ): Result<List<Project>>
 
     @ApiOperation("获取用户所有git分支")

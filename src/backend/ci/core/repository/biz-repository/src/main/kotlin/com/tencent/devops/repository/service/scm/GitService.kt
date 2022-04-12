@@ -64,6 +64,8 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
@@ -169,11 +171,30 @@ class GitService @Autowired constructor(
         }
     }
 
-    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project> {
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitProjectsOrderBy?,
+        sort: GitSortAscOrDesc?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<Project> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val url = "${gitConfig.gitApiUrl}/projects" +
             "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+                .addParams(
+                    mapOf(
+                        "search" to search,
+                        "order_by" to orderBy?.value,
+                        "sort" to sort?.value,
+                        "owned" to owned,
+                        "min_access_level" to minAccessLevel?.level
+                    )
+                )
         val res = mutableListOf<Project>()
         val request = Request.Builder()
             .url(url)
