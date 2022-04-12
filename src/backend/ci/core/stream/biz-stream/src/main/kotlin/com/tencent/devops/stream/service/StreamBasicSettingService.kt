@@ -36,13 +36,11 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,9 +51,9 @@ import org.springframework.stereotype.Service
 class StreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val streamGitConfig: StreamGitConfig,
     private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitTransferService: StreamGitTransferService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
@@ -276,7 +274,7 @@ class StreamBasicSettingService @Autowired constructor(
 
     fun updateProjectInfo(
         userId: String,
-        projectInfo: StreamGitProjectInfo
+        projectInfo: StreamGitProjectInfoWithProject
     ): Boolean {
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId.toLong()) ?: return false
 
@@ -372,8 +370,7 @@ class StreamBasicSettingService @Autowired constructor(
 
     private fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
         return try {
-            val accessToken = tokenService.getToken(gitProjectId)
-            streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
+            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
@@ -389,10 +386,11 @@ class StreamBasicSettingService @Autowired constructor(
     fun checkSameGitProjectName(userId: String, projectName: String) {
 
         // sp1:根据gitProjectName调用project接口获取t_project信息  --先注释预留调用
-    /*   val bkProjectResult = client.get(ServiceProjectResource::class).getProjectInfoByProjectName(
-            userId = userId,
-            projectName = projectName
-        ) ?: return*/
+        TODO("等待接口完成")
+        /*   val bkProjectResult = client.get(ServiceProjectResource::class).getProjectInfoByProjectName(
+                userId = userId,
+                projectName = projectName
+            ) ?: return*/
 
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
         val projectId = "" // bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
@@ -423,11 +421,11 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             }
             // 预留调用
-          /*  client.get(ServiceTxProjectResource::class).updateProjectName(
-                userId = userId,
-                projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                projectName = deletedProjectName
-            )*/
+            /*  client.get(ServiceTxProjectResource::class).updateProjectName(
+                  userId = userId,
+                  projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
+                  projectName = deletedProjectName
+              )*/
         } catch (e: Throwable) {
             logger.error("update bkci project name error :${e.message}")
         }

@@ -38,6 +38,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
 import com.tencent.devops.stream.pojo.StreamGitGroup
@@ -48,6 +49,7 @@ import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -56,7 +58,9 @@ import org.springframework.stereotype.Service
 @Service
 @ConditionalOnProperty(prefix = "stream", value = ["scmType"], havingValue = "CODE_GIT")
 class StreamTGitTransferService @Autowired constructor(
-    private val client: Client
+    private val dslContext: DSLContext,
+    private val client: Client,
+    private val streamBasicSettingDao: StreamBasicSettingDao
 ) : StreamGitTransferService {
 
     companion object {
@@ -98,10 +102,15 @@ class StreamTGitTransferService @Autowired constructor(
 
     override fun getGitProjectInfo(
         gitProjectId: String,
-        userId: String
-    ): StreamGitProjectInfoWithProject {
+        userId: String?
+    ): StreamGitProjectInfoWithProject? {
+        val realUserId = userId ?: try {
+            streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())?.enableUserId ?: return null
+        } catch (e: NumberFormatException) {
+            streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)?.enableUserId ?: return null
+        }
         return client.get(ServiceGitResource::class).getProjectInfo(
-            token = getAndCheckOauthToken(userId).accessToken,
+            token = getAndCheckOauthToken(realUserId).accessToken,
             tokenType = TokenTypeEnum.OAUTH,
             gitProjectId = gitProjectId
         ).data!!.let {

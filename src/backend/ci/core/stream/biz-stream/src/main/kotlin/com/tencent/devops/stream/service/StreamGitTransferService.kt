@@ -63,8 +63,8 @@ interface StreamGitTransferService {
      */
     fun getGitProjectInfo(
         gitProjectId: String,
-        userId: String
-    ): StreamGitProjectInfoWithProject
+        userId: String?
+    ): StreamGitProjectInfoWithProject?
 
     /**
      * 获取yaml的具体内容

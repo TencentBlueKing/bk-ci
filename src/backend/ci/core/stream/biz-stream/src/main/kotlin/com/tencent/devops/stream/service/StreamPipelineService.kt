@@ -269,7 +269,7 @@ class StreamPipelineService @Autowired constructor(
                 branch = streamGitTransferService.getGitProjectInfo(
                     gitProjectId = gitProjectId.toString(),
                     userId = conf.enableUserId
-                ).defaultBranch ?: "master"
+                )?.defaultBranch ?: "master"
                 result[pipelineId] = branch!!
             } else {
                 result[pipelineId] = branch!!
