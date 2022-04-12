@@ -28,29 +28,26 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.annotation.StreamEvent
 import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.RejectedExecutionException
-import javax.annotation.Resource
 
 class BuildLogPrintService @Autowired constructor(
-    @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
-    private val rabbitTemplate: RabbitTemplate,
+    private val bridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
     private val logServiceConfig: LogServiceConfig
@@ -66,17 +63,8 @@ class BuildLogPrintService @Autowired constructor(
 
     fun dispatchEvent(event: ILogEvent) {
         try {
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
-                // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) {
-                    // 事件类型固化默认值
-                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                }
-                message
-            }
+            val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
+            bridge.send(eventType.bindingName, event.streamMessage(eventType.delayMills))
         } catch (ignored: Throwable) {
             logger.error("Fail to dispatch the event($event)", ignored)
         }

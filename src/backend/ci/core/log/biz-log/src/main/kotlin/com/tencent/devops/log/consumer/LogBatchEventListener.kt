@@ -25,43 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.mq
+package com.tencent.devops.log.consumer
 
 import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
-import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.LogService
+import java.util.function.Consumer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
-@Component
-class LogListener @Autowired constructor(
+@Component("logBatchEventListener")
+class LogBatchEventListener @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService
-) {
+) : Consumer<Message<LogBatchEvent>> {
 
-    fun logEvent(event: LogEvent) {
-        var result = false
-        try {
-            logService.addLogEvent(event)
-            result = true
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to add the log event [${event.buildId}|${event.retryTime}]", ignored)
-        } finally {
-            if (!result && event.retryTime >= 0) {
-                logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
-                with(event) {
-                    buildLogPrintService.dispatchEvent(LogEvent(
-                        buildId = buildId,
-                        logs = logs,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
-                }
-            }
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(LogBatchEventListener::class.java)
+    }
+
+    override fun accept(message: Message<LogBatchEvent>) {
+        logBatchEvent(message.payload)
     }
 
     fun logBatchEvent(event: LogBatchEvent) {
@@ -84,41 +70,5 @@ class LogListener @Autowired constructor(
                 }
             }
         }
-    }
-
-    fun logStatusEvent(event: LogStatusEvent) {
-        var result = false
-        try {
-            logService.updateLogStatus(event)
-            result = true
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
-        } finally {
-            if (!result && event.retryTime >= 0) {
-                logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
-                with(event) {
-                    buildLogPrintService.dispatchEvent(LogStatusEvent(
-                        buildId = buildId,
-                        finished = finished,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        logStorageMode = logStorageMode,
-                        executeCount = executeCount,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
-                }
-            }
-        }
-    }
-
-    private fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (3 - retryTime)
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(LogListener::class.java)
-        private const val DELAY_DURATION_MILLS = 3 * 1000
     }
 }

@@ -27,8 +27,11 @@
 
 package com.tencent.devops.log.configuration
 
+import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -50,6 +53,14 @@ class LogCommonConfiguration {
         }
         return StorageProperties()
     }
+
+    @Bean
+    fun buildLogPrintService(
+        bridge: StreamBridge,
+        logPrintBean: LogPrintBean,
+        storageProperties: StorageProperties,
+        logServiceConfig: LogServiceConfig
+    ) = BuildLogPrintService(bridge, logPrintBean, storageProperties, logServiceConfig)
 
     @Bean
     fun defaultKeywords() = listOf(

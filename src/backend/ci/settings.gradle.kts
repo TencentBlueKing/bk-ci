@@ -30,6 +30,10 @@ rootProject.name = "bk-ci-backend"
 // 适用于project的plugins
 pluginManagement {
     repositories {
+        maven {
+            name = "MavenSnapshot"
+            url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/")
+        }
         mavenLocal()
         if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
