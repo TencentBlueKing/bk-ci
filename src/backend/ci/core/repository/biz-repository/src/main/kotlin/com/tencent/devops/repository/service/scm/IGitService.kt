@@ -257,5 +257,12 @@ interface IGitService {
         token: String
     ): Result<String?>
 
-
+    fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>>
 }
