@@ -32,6 +32,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerHostZoneRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -42,7 +43,8 @@ import org.springframework.stereotype.Service
 class DockerHostZoneTaskService @Autowired constructor(
     private val dockerHostZoneDao: PipelineDockerHostZoneDao,
     private val pipelineDockerHostDao: PipelineDockerHostDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisUtils: RedisUtils
 ) {
 
     companion object {
@@ -84,13 +86,23 @@ class DockerHostZoneTaskService @Autowired constructor(
         logger.info("$userId create specialDockerHost: $specialDockerHostVOs")
 
         try {
-            specialDockerHostVOs.forEach {
+            specialDockerHostVOs.forEach { specialDockerHostVO ->
                 pipelineDockerHostDao.insertHost(
                     dslContext = dslContext,
-                    projectId = it.projectId,
-                    hostIp = it.hostIp,
-                    remark = it.remark
+                    projectId = specialDockerHostVO.projectId,
+                    hostIp = specialDockerHostVO.hostIp,
+                    remark = specialDockerHostVO.remark
                 )
+
+                if (specialDockerHostVO.nfsShare != null && specialDockerHostVO.nfsShare!!) {
+                    redisUtils.getSpecialProjectListKey().let {
+                        val projectIdList = it?.split(",") ?: emptyList()
+                        if (!projectIdList.contains(specialDockerHostVO.projectId)) {
+                            redisUtils.setSpecialProjectList(it + "," + specialDockerHostVO.projectId)
+                        }
+                    }
+
+                }
             }
 
             return true
