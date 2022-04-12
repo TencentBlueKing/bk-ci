@@ -41,10 +41,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATU
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
-import com.tencent.devops.log.consumer.LogBatchEventListener
-import com.tencent.devops.log.consumer.LogEventListener
-import com.tencent.devops.log.consumer.LogStatusEventListener
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.mq.LogListener
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogService
 import org.slf4j.LoggerFactory
@@ -172,7 +170,7 @@ class LogMQConfiguration @Autowired constructor() {
         @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired logEventQueue: Queue,
-        @Autowired logListener: LogEventListener,
+        @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logEvent.name)
@@ -196,7 +194,7 @@ class LogMQConfiguration @Autowired constructor() {
         @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired logBatchEventQueue: Queue,
-        @Autowired logListener: LogBatchEventListener,
+        @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logBatchEvent.name)
@@ -220,7 +218,7 @@ class LogMQConfiguration @Autowired constructor() {
         @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired logStatusEventQueue: Queue,
-        @Autowired logListener: LogStatusEventListener,
+        @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
