@@ -32,8 +32,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -109,14 +109,6 @@ class StreamBasicSettingService @Autowired constructor(
             logger.info("git repo not exists.")
             return false
         }
-
-        val userUpdateInfo = updateProjectOrganizationInfo(gitProjectId.toString(), userId ?: setting.enableUserId)
-        userUpdateInfo?.let {
-            setting.creatorBgName = userUpdateInfo.bgName
-            setting.creatorDeptName = userUpdateInfo.deptName
-            setting.creatorCenterName = userUpdateInfo.centerName
-        }
-
         streamBasicSettingDao.updateProjectSetting(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -135,46 +127,6 @@ class StreamBasicSettingService @Autowired constructor(
             enableMrComment = enableMrComment
         )
         return true
-    }
-
-    // 更新项目信息
-    fun updateProjectInfo(userId: String, projectId: String, userDeptDetail: UserDeptDetail) {
-        client.get(ServiceTxProjectResource::class).bindProjectOrganization(
-            userId = userId,
-            projectCode = projectId,
-            projectDeptInfo = ProjectDeptInfo(
-                bgId = userDeptDetail.bgId,
-                bgName = userDeptDetail.bgName,
-                deptId = userDeptDetail.deptId,
-                deptName = userDeptDetail.deptName,
-                centerId = userDeptDetail.centerId,
-                centerName = userDeptDetail.centerName
-            )
-        )
-    }
-
-    // 更新项目组织架构信息
-    fun updateProjectOrganizationInfo(
-        gitProjectId: String,
-        userId: String
-    ): UserDeptDetail? {
-        val userResult = client.get(ServiceTxUserResource::class).get(userId)
-        val userUpdateInfo = if (userResult.isNotOk()) {
-            logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
-            // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
-            val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return null
-            userInfo
-        } else {
-            val userInfo = userResult.data!!
-            userInfo
-        }
-        // 更新项目的组织架构信息
-        updateProjectInfo(
-            userId = userId,
-            projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
-            userDeptDetail = userUpdateInfo
-        )
-        return userUpdateInfo
     }
 
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
@@ -256,7 +208,7 @@ class StreamBasicSettingService @Autowired constructor(
             // 增加判断可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
             val projectResult =
-                client.get(ServiceTxProjectResource::class).createStreamProject(
+                client.get(ServiceProjectResource::class).createStreamProject(
                     gitProjectId = setting.gitProjectId,
                     userId = userId,
                     gitProjectName = gitProjectName
@@ -270,7 +222,7 @@ class StreamBasicSettingService @Autowired constructor(
             setting.creatorCenterName = projectInfo.centerName
             streamBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
         } else {
-            val projectResult = client.get(ServiceTxUserResource::class).get(gitRepoConf.enableUserId)
+            val projectResult = client.get(ServiceUserResource::class).get(gitRepoConf.enableUserId)
             if (projectResult.isNotOk()) {
                 logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
                 return false
@@ -341,19 +293,6 @@ class StreamBasicSettingService @Autowired constructor(
             pathWithNamespace = projectInfo.pathWithNamespace,
             nameWithNamespace = projectInfo.nameWithNamespace
         )
-
-        if (oldData.name != projectInfo.name) {
-            try {
-                client.get(ServiceTxProjectResource::class).updateProjectName(
-                    userId = userId,
-                    projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
-                    projectName = projectInfo.name
-                )
-            } catch (e: Throwable) {
-                logger.error("update bkci project name error :${e.message}")
-                return false
-            }
-        }
         return true
     }
 
@@ -449,14 +388,14 @@ class StreamBasicSettingService @Autowired constructor(
      */
     fun checkSameGitProjectName(userId: String, projectName: String) {
 
-        // sp1:根据gitProjectName调用project接口获取t_project信息
-        val bkProjectResult = client.get(ServiceTxProjectResource::class).getProjectInfoByProjectName(
+        // sp1:根据gitProjectName调用project接口获取t_project信息  --先注释预留调用
+    /*   val bkProjectResult = client.get(ServiceProjectResource::class).getProjectInfoByProjectName(
             userId = userId,
             projectName = projectName
-        ) ?: return
+        ) ?: return*/
 
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
-        val projectId = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
+        val projectId = "" // bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
         val gitProjectResult = requestGitProjectInfo(projectId.toLong())
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
@@ -483,11 +422,12 @@ class StreamBasicSettingService @Autowired constructor(
                         StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH
                 )
             }
-            client.get(ServiceTxProjectResource::class).updateProjectName(
+            // 预留调用
+          /*  client.get(ServiceTxProjectResource::class).updateProjectName(
                 userId = userId,
                 projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
                 projectName = deletedProjectName
-            )
+            )*/
         } catch (e: Throwable) {
             logger.error("update bkci project name error :${e.message}")
         }
