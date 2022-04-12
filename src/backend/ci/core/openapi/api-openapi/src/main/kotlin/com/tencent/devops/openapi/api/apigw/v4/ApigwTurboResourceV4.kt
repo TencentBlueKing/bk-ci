@@ -26,6 +26,10 @@
  */
 package com.tencent.devops.openapi.api.apigw.v4
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -37,7 +41,6 @@ import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.springframework.format.annotation.DateTimeFormat
 import java.time.LocalDate
 import javax.validation.Valid
 import javax.ws.rs.Consumes
@@ -64,14 +67,19 @@ interface ApigwTurboResourceV4 {
         @ApiParam(value = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
+
         @ApiParam(value = "开始时间", required = false)
         @QueryParam("startTime")
-        @DateTimeFormat(pattern = "yyyy-MM-dd")
+        @JsonSerialize(using = LocalDateSerializer::class)
+        @JsonDeserialize(using = LocalDateDeserializer::class)
         startTime: LocalDate?,
+
         @ApiParam(value = "结束时间", required = false)
         @QueryParam("endTime")
-        @DateTimeFormat(pattern = "yyyy-MM-dd")
+        @JsonSerialize(using = LocalDateSerializer::class)
+        @JsonDeserialize(using = LocalDateDeserializer::class)
         endTime: LocalDate?,
+
         @ApiParam(value = "页数", required = false)
         @QueryParam(value = "pageNum")
         pageNum: Int?,
