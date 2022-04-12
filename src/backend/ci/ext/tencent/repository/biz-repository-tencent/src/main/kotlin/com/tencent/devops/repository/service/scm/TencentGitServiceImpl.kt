@@ -44,6 +44,8 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
@@ -65,16 +67,39 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         return client.getScm(ServiceGitResource::class).getProject(accessToken, userId).data ?: emptyList()
     }
 
-    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project> {
-        return client.getScm(ServiceGitResource::class).getProjectList(accessToken = accessToken, userId = userId, page = page, pageSize = pageSize).data ?: emptyList()
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitProjectsOrderBy?,
+        sort: GitSortAscOrDesc?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<Project> {
+        return client.getScm(ServiceGitResource::class).getProjectList(
+            accessToken = accessToken,
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            orderBy = orderBy,
+            sort = sort,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        ).data
+            ?: emptyList()
     }
 
     override fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch> {
-        return client.getScm(ServiceGitResource::class).getBranch(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data ?: emptyList()
+        return client.getScm(ServiceGitResource::class).getBranch(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data
+            ?: emptyList()
     }
 
     override fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag> {
-        return client.getScm(ServiceGitResource::class).getTag(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data ?: emptyList()
+        return client.getScm(ServiceGitResource::class).getTag(accessToken = accessToken, userId = userId, repository = repository, page = page, pageSize = pageSize).data
+            ?: emptyList()
     }
 
     override fun refreshToken(userId: String, accessToken: GitToken): GitToken {
