@@ -33,6 +33,7 @@ import com.devops.process.yaml.modelCreate.inner.GitData
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.PipelineInfo
 import com.devops.process.yaml.modelCreate.inner.StreamData
+import com.devops.process.yaml.v2.models.ResourcesPools
 import com.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.devops.process.yaml.v2.models.YamlTransferData
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -313,7 +314,7 @@ class StreamYamlBuild @Autowired constructor(
         val model = modelCreate.createPipelineModel(
             modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
             event = modelCreateEvent,
-            yaml = yaml,
+            yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
         )
         logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
@@ -348,7 +349,7 @@ class StreamYamlBuild @Autowired constructor(
         val model = modelCreate.createPipelineModel(
             modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
             event = modelCreateEvent,
-            yaml = yaml,
+            yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
         )
         logger.info("savePipeline pipeline:${action.data.context.pipeline}, model: $model")
@@ -375,9 +376,9 @@ class StreamYamlBuild @Autowired constructor(
         yamlTransferData: YamlTransferData?
     ): Pair<ModelCreateEvent, List<BuildFormProperty>> {
         val streamGitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            action.data.eventCommon.gitProjectId,
-            action,
-            action.api::getGitProjectInfo
+            gitProjectKey = action.data.eventCommon.gitProjectId,
+            action = action,
+            getProjectInfo = action.api::getGitProjectInfo
         )
 
         val modelParams = ModelParameters.createPipelineParams(
@@ -410,5 +411,48 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         return Pair(modelCreateEvent, modelParams)
+    }
+
+    // 替换跨项目第三方构建机
+    private fun replaceYamlPoolName(yaml: ScriptBuildYaml, action: BaseAction): ScriptBuildYaml {
+        yaml.stages.forEach { stage ->
+            stage.jobs.forEach { job ->
+                job.runsOn.poolName = getEnvName(action, job.runsOn.poolName, yaml.resource?.pools)
+            }
+        }
+        return yaml
+    }
+
+    private fun getEnvName(action: BaseAction, poolName: String, pools: List<ResourcesPools>?): String {
+        if (pools.isNullOrEmpty()) {
+            return poolName
+        }
+
+        pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
+            if (it.name == poolName) {
+                try {
+                    val repoNameAndPool = it.from!!.split("@")
+                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
+                        return@label
+                    }
+
+                    val gitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                        gitProjectKey = repoNameAndPool[0],
+                        action = action,
+                        getProjectInfo = action.api::getGitProjectInfo
+                    )
+
+                    val result = "git_${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}"
+
+                    logger.info("Get envName from Resource.pools success. envName: $result")
+                    return result
+                } catch (e: Exception) {
+                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
+                    return poolName
+                }
+            }
+        }
+        logger.info("Get envName from Resource.pools no match. envName: $poolName")
+        return poolName
     }
 }

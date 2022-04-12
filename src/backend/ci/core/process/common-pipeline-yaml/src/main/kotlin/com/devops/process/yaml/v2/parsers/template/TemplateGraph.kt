@@ -27,7 +27,6 @@
 
 package com.devops.process.yaml.v2.parsers.template
 
-
 import com.devops.process.yaml.v2.enums.TemplateType
 import com.devops.process.yaml.v2.models.Repositories
 import com.devops.process.yaml.v2.parsers.template.models.Graph

@@ -27,13 +27,12 @@
 
 package com.devops.process.yaml.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.utils.PathMatchUtils
 import com.devops.process.yaml.v2.models.IfType
 import com.devops.process.yaml.v2.models.job.Job
 import com.devops.process.yaml.v2.models.step.Step
-import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.BuildScriptType

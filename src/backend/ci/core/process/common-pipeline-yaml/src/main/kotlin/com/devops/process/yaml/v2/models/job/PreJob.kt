@@ -28,9 +28,9 @@
 package com.devops.process.yaml.v2.models.job
 
 import com.devops.process.yaml.v2.models.MetaData
-import com.devops.process.yaml.v2.models.step.PreStep
 import com.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
 import com.devops.process.yaml.v2.models.YamlMetaData
+import com.devops.process.yaml.v2.models.step.PreStep
 import com.fasterxml.jackson.annotation.JsonFilter
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModelProperty

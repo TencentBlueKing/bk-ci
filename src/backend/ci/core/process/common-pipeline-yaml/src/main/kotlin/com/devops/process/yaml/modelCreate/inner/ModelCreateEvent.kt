@@ -29,7 +29,6 @@ package com.devops.process.yaml.modelCreate.inner
 
 import com.devops.process.yaml.v2.enums.StreamObjectKind
 import com.devops.process.yaml.v2.models.YamlTransferData
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 
 /**
  * 将yaml转为蓝盾model需要的参数

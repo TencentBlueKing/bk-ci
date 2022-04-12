@@ -27,10 +27,10 @@
 
 package com.devops.process.yaml.v2.models
 
+import com.devops.process.yaml.v2.models.job.PreJob
+import com.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.devops.process.yaml.v2.models.stage.PreStage
 import com.devops.process.yaml.v2.models.step.PreStep
-import com.devops.process.yaml.v2.models.on.PreTriggerOn
-import com.devops.process.yaml.v2.models.job.PreJob
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 

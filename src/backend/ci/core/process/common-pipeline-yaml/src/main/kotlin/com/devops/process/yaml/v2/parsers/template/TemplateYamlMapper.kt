@@ -44,9 +44,11 @@ import org.yaml.snakeyaml.Yaml
 object TemplateYamlMapper {
     private val objectMapper = ObjectMapper(
         YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
-    ).registerKotlinModule().setFilterProvider(SimpleFilterProvider().addFilter(
-        YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAll()
-    ))
+    ).registerKotlinModule().setFilterProvider(
+        SimpleFilterProvider().addFilter(
+            YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAll()
+        )
+    )
 
     fun getObjectMapper() = objectMapper
 

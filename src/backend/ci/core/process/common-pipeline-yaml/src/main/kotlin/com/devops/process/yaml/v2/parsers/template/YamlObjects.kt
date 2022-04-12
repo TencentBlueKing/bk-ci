@@ -27,8 +27,6 @@
 
 package com.devops.process.yaml.v2.parsers.template
 
-import com.fasterxml.jackson.core.type.TypeReference
-
 import com.devops.process.yaml.v2.enums.TemplateType
 import com.devops.process.yaml.v2.exception.YamlFormatException
 import com.devops.process.yaml.v2.models.GitNotices
@@ -48,7 +46,7 @@ import com.devops.process.yaml.v2.models.step.PreStep
 import com.devops.process.yaml.v2.parameter.Parameters
 import com.devops.process.yaml.v2.parsers.template.models.TemplateDeepTreeNode
 import com.devops.process.yaml.v2.utils.StreamEnvUtils
-
+import com.fasterxml.jackson.core.type.TypeReference
 
 object YamlObjects {
 

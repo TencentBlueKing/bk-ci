@@ -27,9 +27,9 @@
 
 package com.devops.process.yaml.v2.models
 
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.devops.process.yaml.v2.enums.TemplateType
 import com.devops.process.yaml.v2.exception.YamlFormatException
+import com.tencent.devops.common.api.util.UUIDUtil
 
 /**
  * 从preYaml转向Yaml产生的内部使用而不暴露的中间数据

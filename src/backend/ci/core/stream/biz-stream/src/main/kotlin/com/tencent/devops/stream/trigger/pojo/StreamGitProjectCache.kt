@@ -31,7 +31,7 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
 /**
  * 保存Git源项目信息，内容同
- * @see com.tencent.devops.stream.git.pojo.StreamGitProjectInfo
+ * @see com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
  */
 data class StreamGitProjectCache(
     override val gitProjectId: String,

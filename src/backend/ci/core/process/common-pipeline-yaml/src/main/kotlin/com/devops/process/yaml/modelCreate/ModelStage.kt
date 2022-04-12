@@ -27,8 +27,18 @@
 
 package com.devops.process.yaml.modelCreate
 
+import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.devops.process.yaml.pojo.QualityElementInfo
+import com.devops.process.yaml.utils.PathMatchUtils
+import com.devops.process.yaml.v2.models.Resources
+import com.devops.process.yaml.v2.models.job.JobRunsOnType
+import com.devops.process.yaml.v2.stageCheck.ReviewVariable
+import com.devops.process.yaml.v2.stageCheck.StageCheck
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
@@ -46,26 +56,16 @@ import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import org.slf4j.LoggerFactory
-import com.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
-import com.devops.process.yaml.pojo.QualityElementInfo
-import com.devops.process.yaml.utils.PathMatchUtils
-import com.devops.process.yaml.v2.models.Resources
-import com.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.devops.process.yaml.v2.stageCheck.ReviewVariable
-import com.devops.process.yaml.v2.stageCheck.StageCheck
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.notify.enums.NotifyType
 import org.springframework.util.AntPathMatcher
+import com.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 open class ModelStage constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
     val inner: InnerModelCreator
 ) {
-    protected open val modelContainer = ModelContainer(client, objectMapper, inner)
-    protected open val modelElement = ModelElement(client, inner)
+    private val modelContainer = ModelContainer(client, objectMapper, inner)
+    private val modelElement = ModelElement(client, inner)
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
@@ -128,14 +128,19 @@ open class ModelStage constructor(
 
             // 添加红线指标判断需要的数据
             elementList.forEach { ele ->
-                elementNames?.add(QualityElementInfo(ele.name, ele.getAtomCode().let {
-                    // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
-                    if (it == inner.runPlugInAtomCode) {
-                        "run"
-                    } else {
-                        it
-                    }
-                }))
+                elementNames?.add(
+                    QualityElementInfo(
+                        ele.name,
+                        ele.getAtomCode().let {
+                            // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
+                            if (it == inner.runPlugInAtomCode) {
+                                "run"
+                            } else {
+                                it
+                            }
+                        }
+                    )
+                )
             }
         }
 
@@ -217,21 +222,29 @@ open class ModelStage constructor(
         if (variables.isNullOrEmpty()) return null
         val params = mutableListOf<ManualReviewParam>()
         variables.forEach { (key, variable) ->
-            params.add(ManualReviewParam(
-                key = "variables.$key",
-                value = variable.default,
-                required = true,
-                valueType = when (variable.type) {
-                    "TEXTAREA" -> ManualReviewParamType.TEXTAREA
-                    "SELECTOR" -> ManualReviewParamType.ENUM
-                    "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
-                    "BOOL" -> ManualReviewParamType.BOOLEAN
-                    else -> ManualReviewParamType.STRING
-                },
-                chineseName = variable.label,
-                desc = variable.description,
-                options = variable.values?.map { ManualReviewParamPair(it, it) }
-            ))
+            params.add(
+                ManualReviewParam(
+                    key = "variables.$key",
+                    value = variable.default,
+                    required = true,
+                    valueType = when (variable.type) {
+                        "TEXTAREA" -> ManualReviewParamType.TEXTAREA
+                        "SELECTOR" -> ManualReviewParamType.ENUM
+                        "SELECTOR-MULTIPLE" -> ManualReviewParamType.MULTIPLE
+                        "BOOL" -> ManualReviewParamType.BOOLEAN
+                        else -> ManualReviewParamType.STRING
+                    },
+                    chineseName = variable.label,
+                    desc = variable.description,
+                    options = (variable.values.takeIf { it is List<*>? } as List<*>?)?.map {
+                        ManualReviewParamPair(
+                            it.toString(),
+                            it.toString()
+                        )
+                    },
+                    variableOption = variable.values.takeIf { it is String? } as String?
+                )
+            )
         }
         return params
     }
@@ -267,7 +280,7 @@ open class ModelStage constructor(
                 if (op.isBlank()) {
                     logger.warn(
                         "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId} " +
-                                "rule: $rule not find operations"
+                            "rule: $rule not find operations"
                     )
                     return@GateEach
                 }
@@ -328,7 +341,7 @@ open class ModelStage constructor(
         }
         logger.info(
             "GitProject: ${event.projectCode} event: ${event.streamData?.requestEventId}" +
-                    " ruleList: $ruleList create gates"
+                " ruleList: $ruleList create gates"
         )
         try {
             val resultList = client.get(ServiceQualityRuleResource::class).create(
@@ -361,10 +374,11 @@ open class ModelStage constructor(
         if (op.isBlank()) {
             throw QualityRulesException("gates rules format error: no quality operations")
         }
-        return when (rule.split(op).first().toCharArray()
-            .filter { it == '.' }
-            .groupBy { it.toString() }
-            .ifEmpty { null }?.get(".")?.count()
+        return when (
+            rule.split(op).first().toCharArray()
+                .filter { it == '.' }
+                .groupBy { it.toString() }
+                .ifEmpty { null }?.get(".")?.count()
         ) {
             1 -> {
                 val index = rule.indexOfFirst { it == '.' }

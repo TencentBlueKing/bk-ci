@@ -106,7 +106,7 @@ data class RunsOn(
     val selfHosted: Boolean? = false,
     @ApiModelProperty(name = "pool-name")
     @JsonProperty("pool-name")
-    val poolName: String = JobRunsOnType.DOCKER.type,
+    var poolName: String = JobRunsOnType.DOCKER.type,
     val container: Any? = null,
     @ApiModelProperty(name = "agent-selector")
     @JsonProperty("agent-selector")

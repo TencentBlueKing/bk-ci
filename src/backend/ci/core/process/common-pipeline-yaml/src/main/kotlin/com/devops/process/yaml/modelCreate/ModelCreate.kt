@@ -27,8 +27,8 @@
 
 package com.devops.process.yaml.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
+import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.pojo.QualityElementInfo
 import com.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -44,8 +44,8 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
-import com.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 import org.slf4j.LoggerFactory
+import com.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 open class ModelCreate constructor(
     val client: Client,
@@ -58,7 +58,6 @@ open class ModelCreate constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ModelCreate::class.java)
     }
-
 
     open fun createPipelineModel(
         modelName: String,
@@ -171,7 +170,8 @@ open class ModelCreate constructor(
                 // 要设置的标签组不存在，新建标签组和标签（同名）
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
-                        event.userId, PipelineGroupCreate(
+                        event.userId,
+                        PipelineGroupCreate(
                             projectId = event.projectCode,
                             name = it
                         )

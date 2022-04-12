@@ -28,22 +28,21 @@
 package com.devops.process.yaml.utils
 
 import com.devops.process.yaml.v2.models.Resources
-import com.devops.process.yaml.v2.models.ResourcesPools
+import com.devops.process.yaml.v2.models.image.BuildType
+import com.devops.process.yaml.v2.models.image.Credential
+import com.devops.process.yaml.v2.models.image.Pool
+import com.devops.process.yaml.v2.models.job.Container
+import com.devops.process.yaml.v2.models.job.Container2
 import com.devops.process.yaml.v2.models.job.Job
 import com.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.devops.process.yaml.v2.models.image.BuildType
-import com.devops.process.yaml.v2.models.image.Credential
-import com.devops.process.yaml.v2.models.image.Pool
-import com.devops.process.yaml.v2.models.job.Container
-import com.devops.process.yaml.v2.models.job.Container2
-import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -116,9 +115,8 @@ object StreamDispatchUtils {
         // 第三方构建机
         logger.info("DEBUG|STREAM|RESOURCE: $resources")
         if (job.runsOn.selfHosted == true) {
-            val envName = getEnvName(client, poolName, resources?.pools)
             return ThirdPartyAgentEnvDispatchType(
-                envName = envName,
+                envName = poolName,
                 workspace = workspace,
                 agentType = AgentType.NAME
             )
@@ -221,35 +219,6 @@ object StreamDispatchUtils {
         return ticketsMap
     }
 
-    private fun getEnvName(client: Client, poolName: String, pools: List<ResourcesPools>?): String {
-        if (pools.isNullOrEmpty()) {
-            return poolName
-        }
-
-        pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
-            if (it.name == poolName) {
-                try {
-                    val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
-                        return@label
-                    }
-                    // TODO: 根据不同的git源拉取不同的项目信息
-//                    val gitProjectInfo =
-//                        client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(repoNameAndPool[0]).data
-//                    val result = "git_${gitProjectInfo!!.id}@${repoNameAndPool[1]}"
-                    val result = ""
-                    logger.info("Get envName from Resource.pools success. envName: $result")
-                    return result
-                } catch (e: Exception) {
-                    logger.error("Get projectInfo from git failed, envName: $poolName. exception:", e)
-                    return poolName
-                }
-            }
-        }
-        logger.info("Get envName from Resource.pools no match. envName: $poolName")
-        return poolName
-    }
-
     private fun getCredential(
         client: Client,
         projectId: String,
@@ -267,7 +236,7 @@ object StreamDispatchUtils {
         if (credentialResult.isNotOk() || credentialResult.data == null) {
             logger.error(
                 "Fail to get the credential($credentialId) of project($projectId) " +
-                        "because of ${credentialResult.message}"
+                    "because of ${credentialResult.message}"
             )
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }

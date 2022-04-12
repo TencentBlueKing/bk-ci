@@ -1,0 +1,63 @@
+# .ci/templates/codecc.yml 腾讯代码分析插件模版
+parameters:
+- name: id
+  type: string
+  default: ""
+- name: GOLANG_RULE
+  type: array
+  default:
+  - "codecc_default_go"
+- name: GOLANG_TOOL
+  type: array
+  default:
+  - toolList:
+    - CLOC
+    - SENSITIVE
+    - DUPC
+    - CCN
+  - toolList:
+    - GOML
+
+steps:
+  - name: "CCK-腾讯代码分析(最新)"
+    id: ${{parameters.id}}
+    uses: "CodeccCheckAtomDebug@4.*"
+    with:
+      languages:
+        - "GOLANG"
+      checkerSetType: "openScan"
+      tools:
+        - "GOML"
+      asyncTask: false
+      asyncTaskId: ""
+      goPath: ""
+      pyVersion: "py3"
+      scriptType: "SHELL"
+      script: "# Coverity/Klocwork将通过调用编译脚本来编译您的代码，以追踪深层次的缺陷\n# 请使用依赖的构建工具如maven/cmake等\
+    写一个编译脚本build.sh\n# 确保build.sh能够编译代码\n# cd path/to/build.sh\n# sh build.sh"
+      languageRuleSetMap:
+        GOLANG_RULE:
+          - "standard_go"
+      C_CPP_RULE: []
+      rtxReceiverType: "0"
+      rtxReceiverList: []
+      botWebhookUrl: ""
+      botRemindRange: "1"
+      botRemindSeverity: "7"
+      botRemaindTools: []
+      emailReceiverType: "0"
+      emailReceiverList: []
+      emailCCReceiverList: []
+      instantReportStatus: "2"
+      reportDate: []
+      reportTime: ""
+      reportTools: []
+      toolScanType: "1"
+      mrCommentEnable: true
+      newDefectJudgeFromDate: ""
+      transferAuthorList: []
+      path: []
+      customPath: []
+      openScanPrj: false
+      GOLANG_RULE: ${{parameters.GOLANG_RULE}}
+      GOLANG_TOOL: ${{parameters.GOLANG_TOOL}}

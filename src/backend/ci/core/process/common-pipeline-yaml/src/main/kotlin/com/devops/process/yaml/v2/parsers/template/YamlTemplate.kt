@@ -27,13 +27,10 @@
 
 package com.devops.process.yaml.v2.parsers.template
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import com.devops.process.yaml.v2.enums.TemplateType
 import com.devops.process.yaml.v2.exception.YamlFormatException
-import com.devops.process.yaml.v2.exception.YamlTemplateException
 import com.devops.process.yaml.v2.models.Extends
 import com.devops.process.yaml.v2.models.GitNotices
-import com.devops.process.yaml.v2.models.MetaData
 import com.devops.process.yaml.v2.models.PreScriptBuildYaml
 import com.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.devops.process.yaml.v2.models.Repositories
@@ -41,13 +38,7 @@ import com.devops.process.yaml.v2.models.ResourcesPools
 import com.devops.process.yaml.v2.models.TemplateInfo
 import com.devops.process.yaml.v2.models.Variable
 import com.devops.process.yaml.v2.models.format
-import com.devops.process.yaml.v2.models.job.Container
-import com.devops.process.yaml.v2.models.job.Credentials
 import com.devops.process.yaml.v2.models.job.PreJob
-import com.devops.process.yaml.v2.models.job.ResourceExclusiveDeclaration
-import com.devops.process.yaml.v2.models.job.Service
-import com.devops.process.yaml.v2.models.job.ServiceWith
-import com.devops.process.yaml.v2.models.job.Strategy
 import com.devops.process.yaml.v2.models.stage.PreStage
 import com.devops.process.yaml.v2.models.step.PreStep
 import com.devops.process.yaml.v2.parameter.Parameters
@@ -60,7 +51,7 @@ import com.devops.process.yaml.v2.stageCheck.Gate
 import com.devops.process.yaml.v2.stageCheck.GateTemplate
 import com.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.devops.process.yaml.v2.stageCheck.PreTemplateStageCheck
-import com.tencent.devops.common.api.exception.CustomException
+import com.fasterxml.jackson.core.JsonProcessingException
 
 @Suppress("ALL")
 class YamlTemplate<T>(

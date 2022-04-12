@@ -29,11 +29,11 @@ package com.devops.process.yaml.v2.models.export
 
 import com.devops.process.yaml.v2.models.Extends
 import com.devops.process.yaml.v2.models.GitNotices
+import com.devops.process.yaml.v2.models.Resources
 import com.devops.process.yaml.v2.models.job.PreJob
+import com.devops.process.yaml.v2.models.on.PreTriggerOn
 import com.devops.process.yaml.v2.models.stage.PreStage
 import com.devops.process.yaml.v2.models.step.PreStep
-import com.devops.process.yaml.v2.models.on.PreTriggerOn
-import com.devops.process.yaml.v2.models.Resources
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 

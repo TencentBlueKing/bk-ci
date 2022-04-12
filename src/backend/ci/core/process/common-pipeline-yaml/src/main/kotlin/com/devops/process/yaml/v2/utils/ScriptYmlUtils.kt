@@ -28,22 +28,6 @@
 package com.devops.process.yaml.v2.utils
 
 import com.devops.process.yaml.v2.enums.StreamMrEventAction
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.github.fge.jackson.JsonLoader
-import com.github.fge.jsonschema.core.report.LogLevel
-import com.github.fge.jsonschema.core.report.ProcessingMessage
-import com.github.fge.jsonschema.main.JsonSchemaFactory
-import com.tencent.devops.common.api.expression.ExpressionException
-import com.tencent.devops.common.api.expression.Lex
-import com.tencent.devops.common.api.expression.Word
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.api.util.YamlUtil
 import com.devops.process.yaml.v2.enums.TemplateType
 import com.devops.process.yaml.v2.exception.YamlFormatException
 import com.devops.process.yaml.v2.models.PreRepositoryHook
@@ -79,13 +63,29 @@ import com.devops.process.yaml.v2.stageCheck.Flow
 import com.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.devops.process.yaml.v2.stageCheck.StageCheck
 import com.devops.process.yaml.v2.stageCheck.StageReviews
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.github.fge.jackson.JsonLoader
+import com.github.fge.jsonschema.core.report.LogLevel
+import com.github.fge.jsonschema.core.report.ProcessingMessage
+import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.expression.ExpressionException
+import com.tencent.devops.common.api.expression.Lex
+import com.tencent.devops.common.api.expression.Word
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.api.util.YamlUtil
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
 import java.util.regex.Pattern
-import org.apache.commons.text.StringEscapeUtils
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 
 @Suppress("MaximumLineLength", "ComplexCondition")
 object ScriptYmlUtils {

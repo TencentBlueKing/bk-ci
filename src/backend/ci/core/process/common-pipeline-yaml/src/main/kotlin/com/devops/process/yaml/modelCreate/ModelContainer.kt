@@ -28,16 +28,13 @@
 package com.devops.process.yaml.modelCreate
 
 import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
-import com.devops.process.yaml.v2.models.IfType
-import com.devops.process.yaml.v2.models.Resources
-import com.devops.process.yaml.v2.models.ResourcesPools
 import com.devops.process.yaml.pojo.StreamDispatchInfo
 import com.devops.process.yaml.utils.StreamDispatchUtils
+import com.devops.process.yaml.v2.models.IfType
+import com.devops.process.yaml.v2.models.Resources
 import com.devops.process.yaml.v2.models.job.Job
-import com.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.devops.process.yaml.v2.models.job.ResourceExclusiveDeclaration
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -47,17 +44,11 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
-import com.tencent.devops.common.pipeline.type.stream.StreamDispatchType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 
 open class ModelContainer constructor(
