@@ -26,10 +26,6 @@
  */
 package com.tencent.devops.openapi.api.apigw.v4
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.databind.annotation.JsonSerialize
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -41,7 +37,6 @@ import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import java.time.LocalDate
 import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -61,25 +56,18 @@ import javax.ws.rs.core.MediaType
 interface ApigwTurboResourceV4 {
 
     @GET
-    @ApiOperation("获取方案列表")
-    @Path("/projectId/{projectId}/turboPlan/list/")
+    @ApiOperation("获取方案列表", tags = ["v4_app_turbo_plan_list", "v4_user_turbo_plan_list"])
+    @Path("/projectId/{projectId}/turboPlan/list")
     fun getTurboPlanByProjectIdAndCreatedDate(
         @ApiParam(value = "项目id", required = true)
         @PathParam("projectId")
         projectId: String,
-
-        @ApiParam(value = "开始时间", required = false)
+        @ApiParam(value = "开始日期", required = false)
         @QueryParam("startTime")
-        @JsonSerialize(using = LocalDateSerializer::class)
-        @JsonDeserialize(using = LocalDateDeserializer::class)
-        startTime: LocalDate?,
-
-        @ApiParam(value = "结束时间", required = false)
+        startTime: String?,
+        @ApiParam(value = "结束日期", required = false)
         @QueryParam("endTime")
-        @JsonSerialize(using = LocalDateSerializer::class)
-        @JsonDeserialize(using = LocalDateDeserializer::class)
-        endTime: LocalDate?,
-
+        endTime: String?,
         @ApiParam(value = "页数", required = false)
         @QueryParam(value = "pageNum")
         pageNum: Int?,
@@ -92,7 +80,7 @@ interface ApigwTurboResourceV4 {
     ): Response<Page<TurboPlanStatRowVO>>
 
     @POST
-    @ApiOperation("获取加速历史列表")
+    @ApiOperation("获取加速历史列表", tags = ["v4_app_turbo_history_list", "v4_user_turbo_history_list"])
     @Path("/history/list")
     fun getTurboRecordHistoryList(
         @ApiParam(value = "页数", required = false)
@@ -118,7 +106,7 @@ interface ApigwTurboResourceV4 {
     ): Response<Page<TurboRecordHistoryVO>>
 
     @GET
-    @ApiOperation("获取加速方案详情")
+    @ApiOperation("获取加速方案详情", tags = ["v4_app_turbo_plan_detail", "v4_user_turbo_plan_detail"])
     @Path("/turboPlan/detail/planId/{planId}")
     fun getTurboPlanDetailByPlanId(
         @ApiParam(value = "方案id", required = true)

@@ -26,8 +26,9 @@
  */
 package com.tencent.devops.openapi.resources.apigw.v4
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.api.pojo.Response
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwTurboResourceV4
@@ -38,7 +39,6 @@ import com.tencent.devops.turbo.vo.TurboPlanStatRowVO
 import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.time.LocalDate
 
 @RestResource
 class ApigwTurboResourceV4Impl @Autowired constructor(
@@ -51,8 +51,8 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
 
     override fun getTurboPlanByProjectIdAndCreatedDate(
         projectId: String,
-        startTime: LocalDate?,
-        endTime: LocalDate?,
+        startTime: String?,
+        endTime: String?,
         pageNum: Int?,
         pageSize: Int?,
         userId: String
@@ -60,8 +60,8 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         logger.info("getTurboPlan: userId[$userId] projectId[$projectId]")
         return client.getSpringMvc(IOpenApiTurboController::class).getTurboPlanByProjectIdAndCreatedDate(
             projectId = projectId,
-            startTime = startTime,
-            endTime = endTime,
+            startTime = DateTimeUtil.stringToLocalDate(startTime),
+            endTime = DateTimeUtil.stringToLocalDate(endTime),
             pageNum = pageNum,
             pageSize = pageSize,
             user = userId
