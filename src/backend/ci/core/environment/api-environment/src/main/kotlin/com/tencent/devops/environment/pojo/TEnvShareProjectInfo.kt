@@ -34,9 +34,9 @@ import java.time.LocalDateTime
 @ApiModel("T_ENV_SHARE_PROJECT POJO")
 data class TEnvShareProjectInfo(
     @ApiModelProperty("环境ID")
-    val envId: Long?,
+    val envId: Long,
     @ApiModelProperty("名称")
-    val envName: String?,
+    val envName: String,
     @ApiModelProperty("主项目ID")
     val mainProjectId: String,
     @ApiModelProperty("共享的目标项目ID")
