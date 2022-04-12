@@ -65,7 +65,6 @@ object SchemaUtils {
         return getGenericSchema(serialisation, temp as Class<Any>)
     }
 
-
     fun getParameterType(method: Method): Class<*>? {
         return method.parameterTypes[0]
     }

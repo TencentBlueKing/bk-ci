@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.event.pulsar.integration.outbound
 
-import com.tencent.devops.common.event.pulsar.integration.outbound.PulsarProducerFactory
 import com.tencent.devops.common.event.pulsar.properties.PulsarBinderConfigurationProperties
 import com.tencent.devops.common.event.pulsar.properties.PulsarProducerProperties
 import com.tencent.devops.common.event.pulsar.support.PulsarMessageConverterSupport
