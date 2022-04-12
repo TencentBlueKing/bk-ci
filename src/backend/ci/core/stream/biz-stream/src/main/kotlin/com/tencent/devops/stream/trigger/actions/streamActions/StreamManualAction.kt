@@ -71,7 +71,7 @@ class StreamManualAction(
                 accessToken = personToken,
                 useAccessToken = personToken == null
             )
-            else -> TODO()
+            else -> TODO("对接其他Git平台时需要补充")
         }
     }
 

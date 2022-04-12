@@ -30,12 +30,12 @@ package com.tencent.devops.stream.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.repository.pojo.git.GitMember
-import com.tencent.devops.stream.pojo.GitCodeBranchesOrder
-import com.tencent.devops.stream.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
+import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
+import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/gitcode")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserStreamGitCodeResource {
+interface UserStreamGitResource {
 
     @ApiOperation("获取stream 项目信息")
     @GET
@@ -85,7 +85,7 @@ interface UserStreamGitCodeResource {
         @ApiParam(value = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?
-    ): Result<List<GitMember>?>
+    ): Result<List<StreamGitMember>?>
 
     @ApiOperation("获取stream 项目所有提交信息")
     @GET
@@ -152,9 +152,9 @@ interface UserStreamGitCodeResource {
         pageSize: Int?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("orderBy")
-        orderBy: GitCodeBranchesOrder?,
+        orderBy: StreamBranchesOrder?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("sort")
-        sort: GitCodeBranchesSort?
+        sort: StreamBranchesSort?
     ): Result<List<String>?>
 }

@@ -25,25 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.service
+package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.common.api.exception.OauthForbiddenException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class StreamOauthService @Autowired constructor(
-    private val client: Client
-) {
-
-    fun getAndCheckOauthToken(
-        userId: String
-    ): GitToken {
-        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
-        )
-    }
-}
+@ApiModel("git成员模型")
+data class StreamGitMember(
+    @ApiModelProperty("成员id")
+    val id: Int,
+    @ApiModelProperty("用户名")
+    val username: String,
+    @ApiModelProperty("状态")
+    val state: String
+)

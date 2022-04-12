@@ -177,7 +177,7 @@ class EventActionFactory @Autowired constructor(
         streamManualAction.data = StreamManualActionData(event)
         streamManualAction.api = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> tGitApiService
-            else -> TODO()
+            else -> TODO("对接其他Git平台时需要补充")
         }
         streamManualAction.data.setting = setting
 
@@ -194,7 +194,7 @@ class EventActionFactory @Autowired constructor(
 
         streamScheduleAction.api = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> tGitApiService
-            else -> TODO()
+            else -> TODO("对接其他Git平台时需要补充")
         }
         streamScheduleAction.data.setting = setting
 

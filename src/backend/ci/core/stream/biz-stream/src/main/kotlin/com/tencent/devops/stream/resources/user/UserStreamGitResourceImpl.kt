@@ -32,20 +32,19 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.repository.pojo.git.GitMember
-import com.tencent.devops.stream.api.user.UserStreamGitCodeResource
-import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.api.user.UserStreamGitResource
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_FILE_SUFFIX
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.permission.StreamPermissionService
-import com.tencent.devops.stream.pojo.GitCodeBranchesOrder
-import com.tencent.devops.stream.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
+import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
+import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.service.StreamBasicSettingService
-import com.tencent.devops.stream.service.StreamOauthService
+import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.service.StreamProjectService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
@@ -53,19 +52,19 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStreamGitCodeResourceImpl @Autowired constructor(
+class UserStreamGitResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val streamGitConfig: StreamGitConfig,
     private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val oauthService: StreamOauthService,
     private val permissionService: StreamPermissionService,
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val streamProjectService: StreamProjectService
-) : UserStreamGitCodeResource {
+    private val streamProjectService: StreamProjectService,
+    private val streamGitTransferService: StreamGitTransferService
+) : UserStreamGitResource {
     companion object {
-        private val logger = LoggerFactory.getLogger(UserStreamGitCodeResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(UserStreamGitResourceImpl::class.java)
     }
+
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<StreamGitProjectInfoWithProject?> {
         if (gitProjectId.isBlank()) {
             return Result(data = null)
@@ -75,8 +74,7 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
         streamProjectService.addUserProjectHistory(
             userId = userId,
             projectId = GitCommonUtils.getCiProjectId(
-                gitProjectId = projectInfo.gitProjectId,
-                scmType = streamGitConfig.getScmType()
+                gitProjectId = projectInfo.gitProjectId
             )
         )
         val routerTag = client.get(ServiceProjectResource::class).get(
@@ -103,20 +101,20 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
     }
 
     private fun getProjectInfo(gitProjectId: String): StreamGitProjectInfoWithProject? {
+        logger.info("getGitCodeProjectInfo|get from DB|gitProjectId=$gitProjectId")
+        val setting = try {
+            streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
+        } catch (e: NumberFormatException) {
+            streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
+        } ?: return null
+
         return try {
-            streamScmService.getProjectInfo(
-                token = streamScmService.getTokenForProject(gitProjectId)!!.accessToken,
+            streamGitTransferService.getGitProjectInfo(
                 gitProjectId = gitProjectId,
-                useAccessToken = true
+                userId = setting.enableUserId
             )
         } catch (e: Exception) {
             logger.info("getGitCodeProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
-            val setting = try {
-                streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
-            } catch (e: NumberFormatException) {
-                streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
-            } ?: return null
-            logger.info("getGitCodeProjectInfo|get from DB|gitProjectId=$gitProjectId")
             StreamGitProjectInfoWithProject(
                 gitProjectId = setting.gitProjectId,
                 name = setting.name,
@@ -140,11 +138,11 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         search: String?
-    ): Result<List<GitMember>?> {
+    ): Result<List<StreamGitMember>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
-            streamScmService.getProjectMembers(
-                token = getOauthToken(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
+            streamGitTransferService.getProjectMember(
+                userId = getOauthUser(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
@@ -166,8 +164,8 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         permissionService.checkStreamPermission(userId, projectId)
         return Result(
-            streamScmService.getCommits(
-                token = getOauthToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
+            streamGitTransferService.getCommits(
+                userId = getOauthUser(userId = userId, isEnableUser = true, gitProjectId = gitProjectId),
                 gitProjectId = gitProjectId,
                 filePath = filePath,
                 branch = branch,
@@ -191,9 +189,8 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
             filePath = getFilePath(streamCreateFile.filePath)
         )
         return Result(
-            streamScmService.createNewFile(
-                userId = userId,
-                token = getOauthToken(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
+            streamGitTransferService.createNewFile(
+                userId = getOauthUser(userId = userId, isEnableUser = false, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 streamCreateFile = newFile
             )
@@ -218,13 +215,13 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
         search: String?,
         page: Int?,
         pageSize: Int?,
-        orderBy: GitCodeBranchesOrder?,
-        sort: GitCodeBranchesSort?
+        orderBy: StreamBranchesOrder?,
+        sort: StreamBranchesSort?
     ): Result<List<String>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
-            streamScmService.getProjectBranches(
-                token = getOauthToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
+            streamGitTransferService.getProjectBranches(
+                userId = getOauthUser(userId = userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
                 pageSize = pageSize,
@@ -235,13 +232,13 @@ class UserStreamGitCodeResourceImpl @Autowired constructor(
         )
     }
 
-    // 看是否使用stream 开启人的OAuth
-    private fun getOauthToken(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
+    // 看是否使用stream 开启人的id
+    private fun getOauthUser(userId: String, isEnableUser: Boolean, gitProjectId: Long): String {
         return if (isEnableUser) {
             val setting = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
-            oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
+            setting.enableUserId
         } else {
-            return oauthService.getAndCheckOauthToken(userId).accessToken
+            userId
         }
     }
 }

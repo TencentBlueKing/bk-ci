@@ -44,6 +44,6 @@ fun StreamCommitCheckState.toGitState(scmType: ScmType): String {
             StreamCommitCheckState.ERROR -> "error"
             StreamCommitCheckState.FAILURE -> "failure"
         }
-        else -> TODO()
+        else -> TODO("对接其他Git平台时需要补充")
     }
 }

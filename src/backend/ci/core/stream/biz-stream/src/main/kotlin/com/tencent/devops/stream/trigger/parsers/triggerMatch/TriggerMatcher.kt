@@ -105,7 +105,6 @@ class TriggerMatcher @Autowired constructor(
         val repoHookList = mutableListOf<String>()
         repositoryHookList.forEach {
             it.name?.let { name ->
-                // TODO 可以添加其他条件，做预判断
                 // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
                 if (name.contains("/") && !name.startsWith("/")) {
                     repoHookList.add(name)

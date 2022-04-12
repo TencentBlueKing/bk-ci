@@ -54,7 +54,9 @@ class StreamPipelineService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val redisOperation: RedisOperation,
-    private val websocketService: StreamWebsocketService
+    private val websocketService: StreamWebsocketService,
+    private val streamGitTransferService: StreamGitTransferService,
+    private val streamBasicSettingService: StreamBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamPipelineService::class.java)
@@ -223,20 +225,16 @@ class StreamPipelineService @Autowired constructor(
         ref: String
     ): String? {
         logger.info("get yaml by pipelineId:($pipelineId), ref: $ref")
+        val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+
         val filePath =
             pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
-        val token = try {
-            tokenService.getToken(gitProjectId)
-        } catch (e: Exception) {
-            logger.error("getYamlByPipeline $pipelineId $ref can't get token")
-            return null
-        }
-        return streamScmService.getYamlFromGit(
-            token = token,
+
+        return streamGitTransferService.getYamlContent(
             gitProjectId = gitProjectId.toString(),
             fileName = filePath,
             ref = ref,
-            useAccessToken = true
+            userId = conf.enableUserId
         )
     }
 
@@ -244,6 +242,7 @@ class StreamPipelineService @Autowired constructor(
         gitProjectId: Long,
         pipelineIds: Set<String>
     ): Map<String, String> {
+        val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         var branch: String? = null
         val result = mutableMapOf<String, String>()
         val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
@@ -267,11 +266,10 @@ class StreamPipelineService @Autowired constructor(
             }
             // 构建记录和未构建记录都没得，就去拿默认分支
             if (branch.isNullOrBlank()) {
-                branch = streamScmService.getProjectInfo(
-                    token = tokenService.getToken(gitProjectId),
+                branch = streamGitTransferService.getGitProjectInfo(
                     gitProjectId = gitProjectId.toString(),
-                    useAccessToken = true
-                )?.defaultBranch ?: "master"
+                    userId = conf.enableUserId
+                ).defaultBranch ?: "master"
                 result[pipelineId] = branch!!
             } else {
                 result[pipelineId] = branch!!
@@ -295,8 +293,12 @@ class StreamPipelineService @Autowired constructor(
         pipelineId: String
     ): Model? {
         try {
-            val response =
-                processClient.get(userId, "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId", pipelineId, channelCode)
+            val response = processClient.get(
+                userId = userId,
+                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            )
             if (response.isNotOk()) {
                 logger.error("get pipeline failed, msg: ${response.message}")
                 return null

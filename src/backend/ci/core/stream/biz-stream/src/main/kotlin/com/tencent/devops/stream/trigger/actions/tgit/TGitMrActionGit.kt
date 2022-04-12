@@ -98,8 +98,7 @@ class TGitMrActionGit(
         get() = apiService
 
     // 获取Fork库的凭证数据
-    // TODO:有待商榷
-    fun getForkGitCred() = TGitCred(data().event.user.username)
+    private fun getForkGitCred() = TGitCred(data().setting.enableUser)
 
     override fun initCommonData(): GitBaseAction {
         this.data.eventCommon = TGitMrEventCommonData(data().event)

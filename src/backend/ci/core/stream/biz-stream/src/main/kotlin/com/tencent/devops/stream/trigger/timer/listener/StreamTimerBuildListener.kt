@@ -87,7 +87,7 @@ class StreamTimerBuildListener @Autowired constructor(
                                 )!!.defaultBranch!!
                             )
                         }
-                        else -> TODO()
+                        else -> TODO("对接其他Git平台时需要补充")
                     }
                 } else {
                     branchs
@@ -128,7 +128,7 @@ class StreamTimerBuildListener @Autowired constructor(
                         passPhrase = null,
                         additionalPath = null
                     ).data
-                else -> TODO()
+                else -> TODO("对接其他Git平台时需要补充")
             } ?: return
 
             if (!always) {

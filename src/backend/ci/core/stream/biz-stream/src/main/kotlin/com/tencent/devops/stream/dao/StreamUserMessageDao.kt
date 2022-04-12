@@ -60,7 +60,7 @@ class StreamUserMessageDao {
                 projectId,
                 userId,
                 messageType.name,
-                // todo: 临时截断后续评估如何展示
+                // 临时截断后续评估如何展示
                 CommonUtils.interceptStringInLength(messageTitle, 250),
                 messageId,
                 haveRead

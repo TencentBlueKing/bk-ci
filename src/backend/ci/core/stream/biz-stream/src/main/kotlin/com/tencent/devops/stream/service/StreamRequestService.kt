@@ -40,6 +40,7 @@ import com.tencent.devops.stream.pojo.StreamBuildHistory
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
 import com.tencent.devops.stream.pojo.StreamGitRequestHistory
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -88,17 +89,14 @@ class StreamRequestService @Autowired constructor(
         val resultList = mutableListOf<StreamGitRequestHistory>()
         requestList.forEach { event ->
             // 如果是来自fork库的分支，单独标识
-            val gitProjectInfoCache = event.sourceGitProjectId?.let {
-                lazy {
-                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                        gitProjectId = it,
-                        useAccessToken = true,
-                        getProjectInfo = streamScmService::getProjectInfoRetry
-                    )
-                }
-            }
-//            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
-            val realEvent = event
+            val pathWithNamespace = event.sourceGitProjectId?.let {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    userId = conf.enableUserId
+                )
+            }?.pathWithNamespace
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, pathWithNamespace)
 
             val requestHistory = StreamGitRequestHistory(
                 id = realEvent.id ?: return@forEach,

@@ -39,7 +39,7 @@ data class StreamCreateFileInfo(
     val branch: String,
     @JsonProperty("encoding")
     @ApiModelProperty(name = "encoding")
-    val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
+    val encoding: StreamFileEncoding = StreamFileEncoding.TEXT,
     @JsonProperty("content")
     @ApiModelProperty(name = "content")
     val content: String,
@@ -48,19 +48,9 @@ data class StreamCreateFileInfo(
     val commitMessage: String
 )
 
-enum class GitCodeFileEncoding {
+enum class StreamFileEncoding {
     @JsonProperty("text")
     TEXT,
     @JsonProperty("base64")
     BASE64
-}
-
-enum class GitCodeBranchesOrder(val value: String) {
-    NAME("name"),
-    UPDATE("update")
-}
-
-enum class GitCodeBranchesSort(val value: String) {
-    ASC("asc"),
-    DESC("desc")
 }

@@ -55,7 +55,6 @@ class StreamHistoryService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val eventMessageUtil: StreamTriggerMessageUtils,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache
 ) {
     companion object {
@@ -134,26 +133,22 @@ class StreamHistoryService @Autowired constructor(
             // 如果是来自fork库的分支，单独标识
             val realEvent =
                 if (gitProjectId == gitRequestEvent.gitProjectId) {
-                    val gitMrProjectInfoCache = gitRequestEvent.sourceGitProjectId?.let {
-                        lazy {
-                            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                                gitProjectId = it,
-                                useAccessToken = true,
-                                getProjectInfo = streamScmService::getProjectInfoRetry
-                            )
-                        }
-                    }
-                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, gitMrProjectInfoCache)
+                    val pathWithNamespace = gitRequestEvent.sourceGitProjectId?.let {
+                        streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                            gitProjectId = it,
+                            useAccessToken = true,
+                            userId = conf.enableUserId
+                        )
+                    }?.pathWithNamespace
+                    GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, pathWithNamespace)
                 } else {
                     // 当gitProjectId与event的不同时，说明是远程仓库触发的
-                    val gitProjectInfoCache = lazy {
-                        streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                            gitProjectId = gitRequestEvent.gitProjectId,
-                            useAccessToken = true,
-                            getProjectInfo = streamScmService::getProjectInfoRetry
-                        )
-                    }
-                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, gitProjectInfoCache.value)
+                    val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = gitRequestEvent.gitProjectId,
+                        useAccessToken = true,
+                        userId = conf.enableUserId
+                    ).pathWithNamespace
+                    GitCommonUtils.checkAndGetRepoBranch(gitRequestEvent, pathWithNamespace)
                 }
             val pipeline =
                 pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
@@ -163,7 +158,7 @@ class StreamHistoryService @Autowired constructor(
                     pipelineId = pipeline.pipelineId,
                     gitRequestEvent = StreamGitRequestEventReq(realEvent),
                     buildHistory = buildHistory,
-                    reason = eventMessageUtil.getEventMessageTitle(realEvent)
+                    reason = StreamTriggerMessageUtils.getEventMessageTitle(realEvent)
                 )
             )
         }
@@ -183,6 +178,7 @@ class StreamHistoryService @Autowired constructor(
         keyword: String?
     ): Page<StreamBuildBranch> {
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
+        val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
@@ -212,27 +208,25 @@ class StreamHistoryService @Autowired constructor(
         val recordsMap = mutableMapOf<String, StreamBuildBranch>()
         // 如果是来自fork库的分支，单独标识
         buildBranchList.subList(firstIndex, lastIndex).forEach {
-            val gitProjectInfoCache = it.sourceGitProjectId?.let { id ->
-                lazy {
-                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                        gitProjectId = id,
-                        useAccessToken = true,
-                        getProjectInfo = streamScmService::getProjectInfoRetry
-                    )
-                }
-            }
+            val pathWithNamespace = it.sourceGitProjectId?.let { id ->
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = id,
+                    useAccessToken = true,
+                    userId = conf.enableUserId
+                )
+            }?.pathWithNamespace
             val branchName = GitCommonUtils.checkAndGetForkBranchName(
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId,
                 branch = it.branch,
-                pathWithNamespace = gitProjectInfoCache
+                pathWithNamespace = pathWithNamespace
             )
             recordsMap[branchName] = StreamBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
                     sourceGitProjectId = it.sourceGitProjectId,
                     branch = it.branch,
-                    pathWithNamespace = gitProjectInfoCache
+                    pathWithNamespace = pathWithNamespace
                 ),
                 gitProjectId = it.gitProjectId,
                 sourceGitProjectId = it.sourceGitProjectId

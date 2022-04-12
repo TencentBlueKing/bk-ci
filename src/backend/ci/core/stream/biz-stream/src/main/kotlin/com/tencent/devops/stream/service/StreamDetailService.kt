@@ -27,18 +27,16 @@
 
 package com.tencent.devops.stream.service
 
-import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.user.TXUserReportResource
+import com.tencent.devops.process.api.user.UserReportResource
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -47,12 +45,12 @@ import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
 import com.tencent.devops.stream.pojo.StreamModelDetail
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class StreamDetailService @Autowired constructor(
@@ -79,17 +77,15 @@ class StreamDetailService @Autowired constructor(
             gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
-            lazy {
-                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                    gitProjectId = it,
-                    useAccessToken = true,
-                    getProjectInfo = streamScmService::getProjectInfoRetry
-                )
-            }
-        }
-//        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
-        val realEvent = eventRecord
+        val pathWithNamespace = eventRecord.sourceGitProjectId?.let {
+            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                gitProjectId = it,
+                useAccessToken = true,
+                userId = conf.enableUserId
+            )
+        }?.pathWithNamespace
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, pathWithNamespace)
+
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -106,17 +102,15 @@ class StreamDetailService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
-            lazy {
-                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                    gitProjectId = it,
-                    useAccessToken = true,
-                    getProjectInfo = streamScmService::getProjectInfoRetry
-                )
-            }
-        }
-//        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
-        val realEvent = eventRecord
+        val pathWithNamespace = eventRecord.sourceGitProjectId?.let {
+            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                gitProjectId = it,
+                useAccessToken = true,
+                userId = conf.enableUserId
+            )
+        }?.pathWithNamespace
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, pathWithNamespace)
+
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -162,21 +156,7 @@ class StreamDetailService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
-        try {
-            val url = client.get(ServiceArtifactoryDownLoadResource::class).downloadIndexUrl(
-                projectId = conf.projectCode!!,
-                artifactoryType = artifactoryType,
-                userId = userId,
-                path = path,
-                ttl = 10,
-                directed = true
-            ).data!!
-            return Url(getUrl(url.url)!!, getUrl(url.url2))
-        } catch (e: Exception) {
-            logger.error("Artifactory download url failed. ${e.message}")
-            throw CustomException(Response.Status.BAD_REQUEST, "Artifactory download url failed. ${e.message}")
-        }
+        TODO("开源版根据用户需求自由实现")
     }
 
     private fun getUrl(url: String?): String? {
@@ -193,7 +173,7 @@ class StreamDetailService @Autowired constructor(
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
-        val reportList = client.get(TXUserReportResource::class)
+        val reportList = client.get(UserReportResource::class)
             .getStream(userId, conf.projectCode!!, pipelineId, buildId)
             .data!!.toMutableList()
         // 更换域名来支持stream 的页面

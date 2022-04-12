@@ -37,6 +37,7 @@ import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCIInfo
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
+import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.StreamProjectSimpleInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
@@ -54,7 +55,7 @@ class StreamProjectService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val oauthService: StreamOauthService
+    private val streamGitTransferService: StreamGitTransferService
 ) {
 
     companion object {
@@ -87,9 +88,9 @@ class StreamProjectService @Autowired constructor(
         } else {
             pageSize
         }
-        val token = oauthService.getAndCheckOauthToken(userId).accessToken
+
         val gitProjects = gitProjects(
-            token = token,
+
             userId = userId,
             type = type,
             realPage = realPage,
@@ -103,7 +104,7 @@ class StreamProjectService @Autowired constructor(
         }
         val projectIdMap = streamBasicSettingDao.searchProjectByIds(
             dslContext = dslContext,
-            projectIds = gitProjects.map { it.id!! }.toSet()
+            projectIds = gitProjects.map { it.id }.toSet()
         ).associateBy { it.id }
         val result = gitProjects.map {
             val project = projectIdMap[it.id]
@@ -120,7 +121,7 @@ class StreamProjectService @Autowired constructor(
                 JsonUtil.to(project.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
             }
             StreamProjectCIInfo(
-                id = it.id!!,
+                id = it.id,
                 projectCode = project?.projectCode,
                 public = it.public,
                 name = it.name,
@@ -144,7 +145,6 @@ class StreamProjectService @Autowired constructor(
     }
 
     private fun gitProjects(
-        token: String,
         userId: String,
         type: StreamProjectType?,
         search: String?,
@@ -152,10 +152,9 @@ class StreamProjectService @Autowired constructor(
         realPageSize: Int?,
         orderBy: StreamProjectsOrder?,
         sort: StreamBranchesSort?
-    ): List<GitCodeProjectInfo>? {
+    ): List<StreamProjectGitInfo>? {
         val gitProjects = try {
-            streamScmService.getProjectList(
-                accessToken = token,
+            streamGitTransferService.getProjectList(
                 userId = userId,
                 page = realPage,
                 pageSize = realPageSize,
@@ -179,7 +178,7 @@ class StreamProjectService @Autowired constructor(
                 logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
                 return null
             }
-            return JsonUtil.to(res, object : TypeReference<List<GitCodeProjectInfo>>() {})
+            return JsonUtil.to(res, object : TypeReference<List<StreamProjectGitInfo>>() {})
         } ?: return null
         // 每次成功访问stream 接口就刷新redis
         val updateLock = RedisLock(redisOperation, getProjectListLockKey("$userId-$realPage-$realPageSize"), 10)

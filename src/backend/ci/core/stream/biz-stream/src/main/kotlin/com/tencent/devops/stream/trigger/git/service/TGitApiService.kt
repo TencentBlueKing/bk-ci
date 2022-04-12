@@ -98,11 +98,11 @@ class TGitApiService @Autowired constructor(
         sha: String,
         retry: ApiRequestRetryInfo
     ): TGitCommitInfo? {
-        TODO("Not yet implemented")
+        TODO("等待接口完成")
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): TGitUserInfo? {
-        TODO("Not yet implemented")
+        TODO("等待接口完成")
     }
 
     override fun getProjectUserInfo(
@@ -179,7 +179,7 @@ class TGitApiService @Autowired constructor(
         recursive: Boolean,
         retry: ApiRequestRetryInfo
     ): List<TGitTreeFileInfo> {
-        TODO("Not yet implemented")
+        TODO("等待接口完成")
     }
 
     override fun getFileContent(
@@ -216,7 +216,7 @@ class TGitApiService @Autowired constructor(
         ref: String?,
         retry: ApiRequestRetryInfo
     ): TGitFileInfo? {
-        TODO("Not yet implemented")
+        TODO("等待接口完成")
     }
 
     /**
@@ -262,7 +262,7 @@ class TGitApiService @Autowired constructor(
         mrId: Long,
         mrBody: String
     ) {
-        TODO()
+        TODO("等待接口完成")
     }
 
     private fun StreamGitCred.toToken(): String {

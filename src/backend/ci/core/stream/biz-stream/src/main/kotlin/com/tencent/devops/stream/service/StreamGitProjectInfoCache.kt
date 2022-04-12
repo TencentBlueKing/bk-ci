@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.pojo.StreamGitProjectBaseInfoCache
-import com.tencent.devops.stream.pojo.StreamProjectInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -41,7 +40,7 @@ import org.springframework.stereotype.Component
 class StreamGitProjectInfoCache @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val redisOperation: RedisOperation,
-    private val streamGitTokenService: StreamGitTokenService
+    private val streamGitTransferService: StreamGitTransferService
 ) {
 
     companion object {
@@ -55,27 +54,21 @@ class StreamGitProjectInfoCache @Autowired constructor(
     fun getAndSaveGitProjectInfo(
         gitProjectId: Long,
         useAccessToken: Boolean,
-        getProjectInfo: (
-            token: String,
-            gitProjectId: String,
-            useAccessToken: Boolean
-        ) -> StreamProjectInfo
+        userId: String?,
+        accessToken: String? = null
     ): StreamGitProjectBaseInfoCache {
         val cache = getRequestGitProjectInfo(gitProjectName = gitProjectId.toString())
         if (cache != null) {
             return cache
         }
-        val gitProjectInfo = getProjectInfo(
-            streamGitTokenService.getToken(gitProjectId),
-            gitProjectId.toString(),
-            useAccessToken
+
+        val cacheData = streamGitTransferService.getGitProjectCache(
+            gitProjectId = gitProjectId.toString(),
+            useAccessToken = useAccessToken,
+            userId = userId,
+            accessToken = accessToken
         )
-        val cacheData = StreamGitProjectBaseInfoCache(
-            gitProjectId = gitProjectInfo.gitProjectId,
-            gitHttpUrl = gitProjectInfo.gitHttpUrl,
-            homepage = gitProjectInfo.homepage,
-            pathWithNamespace = gitProjectInfo.pathWithNamespace
-        )
+
         saveRequestGitProjectInfo(
             gitProjectName = gitProjectId.toString(),
             cache = cacheData

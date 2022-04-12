@@ -73,7 +73,7 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
             ScmType.CODE_GIT -> {
                 TGitActionCommon.getStartParams(action, triggerOn)
             }
-            else -> TODO()
+            else -> TODO("对接其他Git平台时需要补充")
         }
     }
 

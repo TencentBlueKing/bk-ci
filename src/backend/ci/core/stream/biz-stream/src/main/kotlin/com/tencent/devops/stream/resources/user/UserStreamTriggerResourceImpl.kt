@@ -30,7 +30,6 @@ package com.tencent.devops.stream.resources.user
 import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
@@ -52,7 +51,6 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     private val streamPipelineService: StreamPipelineService,
     private val permissionService: StreamPermissionService,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val redisOperation: RedisOperation,
     private val streamYamlService: StreamYamlService
 ) : UserStreamTriggerResource {
     companion object {

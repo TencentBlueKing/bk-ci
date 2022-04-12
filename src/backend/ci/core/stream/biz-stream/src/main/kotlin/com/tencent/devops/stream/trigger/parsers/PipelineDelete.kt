@@ -118,14 +118,14 @@ class PipelineDelete @Autowired constructor(
                 logger.info("event: ${action.data.context.requestEventId} delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val pipelineInfoResult = processClient.getPipelineInfo(
-                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
+                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
                     pipelineId = pipelineId,
                     channelCode = channelCode
                 )
                 if (pipelineInfoResult.data != null) {
                     processClient.delete(
                         userId = action.data.eventCommon.userId,
-                        projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
+                        projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
                         pipelineId = pipelineId,
                         channelCode = channelCode
                     )

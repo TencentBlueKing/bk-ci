@@ -32,19 +32,18 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
-import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -52,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamBasicSettingService: StreamBasicSettingService,
     private val permissionService: StreamPermissionService,
-    private val client: Client
+    private val streamGitTransferService: StreamGitTransferService
 ) : UserGitBasicSettingResource {
 
     override fun enableStream(
@@ -63,7 +62,6 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
-        checkCommonUser(userId)
         permissionService.checkStreamAndOAuth(
             userId = userId,
             projectId = projectId
@@ -86,7 +84,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     }
 
     override fun getStreamConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
-        val (gitProjectId, scmType) = GitCommonUtils.getGitProjectIdAndScmType(projectId)
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkStreamPermission(userId, projectId)
         return Result(streamBasicSettingService.getStreamConf(gitProjectId))
@@ -97,7 +95,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         projectId: String,
         streamUpdateSetting: StreamUpdateSetting
     ): Result<Boolean> {
-        val (gitProjectId, scmType) = GitCommonUtils.getGitProjectIdAndScmType(projectId)
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkStreamPermission(userId = userId, projectId = projectId)
         permissionService.checkEnableStream(gitProjectId)
@@ -106,8 +104,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = streamUpdateSetting.buildPushedBranches,
-                enableMrBlock = streamUpdateSetting.enableMrBlock,
-                scmType = scmType
+                enableMrBlock = streamUpdateSetting.enableMrBlock
             )
         )
     }
@@ -117,17 +114,15 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         projectId: String,
         authUserId: String
     ): Result<Boolean> {
-        val (gitProjectId, scmType) = GitCommonUtils.getGitProjectIdAndScmType(projectId)
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        checkCommonUser(userId)
         permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
         permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 userId = userId,
-                authUserId = authUserId,
-                scmType = scmType
+                authUserId = authUserId
             )
         )
     }
@@ -139,7 +134,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         gitProjectId: Long?,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        return client.get(ServiceGitOauthResource::class).isOAuth(
+        return streamGitTransferService.isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
@@ -176,19 +171,6 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
-        }
-    }
-
-    // 判断用户是否公共账号，并且存在，否则提示用户注册
-    private fun checkCommonUser(userId: String) {
-        // get接口先查本地，再查tof
-        val userResult =
-            client.get(ServiceTxUserResource::class).get(userId)
-        if (userResult.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.COMMON_USER_NOT_EXISTS.formatErrorMessage.format(userId)
-            )
         }
     }
 }

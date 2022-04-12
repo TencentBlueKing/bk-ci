@@ -32,7 +32,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
-import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
@@ -151,30 +150,6 @@ class StreamBasicSettingService @Autowired constructor(
                 centerName = userDeptDetail.centerName
             )
         )
-    }
-
-    // 更新项目组织架构信息
-    fun updateProjectOrganizationInfo(
-        gitProjectId: String,
-        userId: String
-    ): UserDeptDetail? {
-        val userResult = client.get(ServiceTxUserResource::class).get(userId)
-        val userUpdateInfo = if (userResult.isNotOk()) {
-            logger.error("Update git ci project in devops failed, msg: ${userResult.message}")
-            // 如果userId是公共账号则tof接口获取不到用户信息，需调用User服务获取信息
-            val userInfo = client.get(ServiceUserResource::class).getDetailFromCache(userId).data ?: return null
-            userInfo
-        } else {
-            val userInfo = userResult.data!!
-            userInfo
-        }
-        // 更新项目的组织架构信息
-        updateProjectInfo(
-            userId = userId,
-            projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
-            userDeptDetail = userUpdateInfo
-        )
-        return userUpdateInfo
     }
 
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {

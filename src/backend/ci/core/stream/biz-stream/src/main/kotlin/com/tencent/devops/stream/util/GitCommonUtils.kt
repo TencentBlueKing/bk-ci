@@ -42,10 +42,6 @@ object GitCommonUtils {
 
     private const val tGitProjectPrefix = "git_"
 
-    private const val githubProjectPrefix = "github_"
-
-    private const val gitlabProjectPrefix = "gitlab_"
-
     private const val httpPrefix = "http://"
 
     private const val httpsPrefix = "https://"
@@ -157,10 +153,6 @@ object GitCommonUtils {
         try {
             if (projectId.startsWith(tGitProjectPrefix)) {
                 return projectId.removePrefix(tGitProjectPrefix).toLong()
-            } else if (projectId.startsWith(githubProjectPrefix)) {
-                return projectId.removePrefix(githubProjectPrefix).toLong()
-            } else if (projectId.startsWith(gitlabProjectPrefix)) {
-                return projectId.removePrefix(gitlabProjectPrefix).toLong()
             }
         } catch (e: Exception) {
             throw OperationException("蓝盾项目ID $projectId 不正确")
@@ -173,10 +165,6 @@ object GitCommonUtils {
         try {
             if (projectId.startsWith(tGitProjectPrefix)) {
                 return Pair(projectId.removePrefix(tGitProjectPrefix).toLong(), ScmType.CODE_GIT)
-            } else if (projectId.startsWith(githubProjectPrefix)) {
-                return Pair(projectId.removePrefix(githubProjectPrefix).toLong(), ScmType.GITHUB)
-            } else if (projectId.startsWith(gitlabProjectPrefix)) {
-                return Pair(projectId.removePrefix(gitlabProjectPrefix).toLong(), ScmType.CODE_GITLAB)
             }
         } catch (e: Exception) {
             throw OperationException("蓝盾项目ID $projectId 不正确")
@@ -185,10 +173,5 @@ object GitCommonUtils {
     }
 
     // 获取蓝盾项目名称
-    fun getCiProjectId(gitProjectId: Long, scmType: ScmType) = when (scmType) {
-        ScmType.CODE_GIT -> "${tGitProjectPrefix}$gitProjectId"
-        ScmType.GITHUB -> "${githubProjectPrefix}$gitProjectId"
-        ScmType.CODE_GITLAB -> "${gitlabProjectPrefix}$gitProjectId"
-        else -> TODO()
-    }
+    fun getCiProjectId(gitProjectId: Long) = "${tGitProjectPrefix}$gitProjectId"
 }

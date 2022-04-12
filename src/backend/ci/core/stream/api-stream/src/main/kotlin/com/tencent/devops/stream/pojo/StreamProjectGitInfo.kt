@@ -27,10 +27,25 @@
 
 package com.tencent.devops.stream.pojo
 
-data class StreamGitProjectBaseInfoCache(
-    val gitProjectId: String,
-    val gitHttpUrl: String,
-    val homepage: String?,
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("Git拿到的项目信息")
+data class StreamProjectGitInfo(
+    @ApiModelProperty("Git项目ID")
+    val id: Long,
+    @ApiModelProperty("是否为stream 公共项目")
+    val public: Boolean?,
+    @ApiModelProperty("stream 项目名称")
+    val name: String?,
+    @ApiModelProperty("stream 项目名称带有路径")
     val pathWithNamespace: String?,
-    val defaultBranch: String?
+    @ApiModelProperty("https-git链接")
+    val httpsUrlToRepo: String?,
+    @ApiModelProperty("项目网页链接")
+    val webUrl: String?,
+    @ApiModelProperty("项目头像")
+    val avatarUrl: String?,
+    @ApiModelProperty("项目描述")
+    val description: String?,
 )
