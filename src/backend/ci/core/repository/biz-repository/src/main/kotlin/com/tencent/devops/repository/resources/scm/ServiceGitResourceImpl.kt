@@ -44,6 +44,8 @@ import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
@@ -86,9 +88,26 @@ class ServiceGitResourceImpl @Autowired constructor(
         accessToken: String,
         userId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitProjectsOrderBy?,
+        sort: GitSortAscOrDesc?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
     ): Result<List<Project>> {
-        return Result(gitService.getProjectList(accessToken, userId, page, pageSize))
+        return Result(
+            gitService.getProjectList(
+                accessToken = accessToken,
+                userId = userId,
+                page = page,
+                pageSize = pageSize,
+                search = search,
+                orderBy = orderBy,
+                sort = sort,
+                owned = owned,
+                minAccessLevel = minAccessLevel
+            )
+        )
     }
 
     override fun getBranch(

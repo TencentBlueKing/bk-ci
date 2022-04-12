@@ -42,6 +42,8 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
@@ -55,7 +57,6 @@ import javax.servlet.http.HttpServletResponse
 @Suppress("ALL")
 interface IGitService {
     fun getProject(accessToken: String, userId: String): List<Project>
-    fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project>
     fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>
     fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
     fun refreshToken(userId: String, accessToken: GitToken): GitToken
@@ -71,6 +72,18 @@ interface IGitService {
         token: String,
         ref: String
     ): String
+
+    fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitProjectsOrderBy?,
+        sort: GitSortAscOrDesc?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<Project>
 
     fun getGitlabFileContent(
         repoUrl: String,
@@ -243,4 +256,6 @@ interface IGitService {
         tokenType: TokenTypeEnum,
         token: String
     ): Result<String?>
+
+
 }
