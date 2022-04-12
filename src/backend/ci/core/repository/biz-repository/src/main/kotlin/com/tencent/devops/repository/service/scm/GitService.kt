@@ -1452,6 +1452,38 @@ class GitService @Autowired constructor(
         }
     }
 
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 1000) 1000 else pageSize
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all")
+        setToken(tokenType, url, token)
+        url.append(
+            if (search != null) {
+                "&query=$search"
+            } else {
+                ""
+            } +
+                "&page=$newPage" + "&per_page=$newPageSize"
+        )
+        logger.info("getGitCIAllMembers request url: $url")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+            return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
+        }
+    }
+
     private fun String.addParams(args: Map<String, Any?>): String {
         val sb = StringBuilder(this)
         args.forEach { (name, value) ->
