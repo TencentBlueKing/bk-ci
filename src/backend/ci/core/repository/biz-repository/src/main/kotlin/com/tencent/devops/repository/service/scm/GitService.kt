@@ -52,9 +52,11 @@ import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
+import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
@@ -67,6 +69,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
@@ -1537,6 +1540,41 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    override fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: MrCommentBody,
+        tokenType: TokenTypeEnum
+    ) {
+        logger.info("$gitProjectId|$mrId|addMrComment")
+        try {
+            val gitApi = if (TokenTypeEnum.OAUTH == tokenType) {
+                GitOauthApi()
+            } else {
+                GitApi()
+            }
+            gitApi.addMRComment(
+                host = "$gitCIUrl/api/v3",
+                token = token,
+                projectName = gitProjectId,
+                requestId = mrId,
+                message = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
+            )
+        } catch (e: Exception) {
+            logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")
+            val code = if (e is GitApiException) {
+                e.code
+            } else {
+                Response.Status.BAD_REQUEST.statusCode
+            }
+            throw CustomException(
+                status = Response.Status.fromStatusCode(code),
+                message = "($code)${e.message}"
+            )
         }
     }
 
