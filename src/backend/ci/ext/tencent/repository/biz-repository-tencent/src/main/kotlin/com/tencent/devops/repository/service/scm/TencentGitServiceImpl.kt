@@ -493,4 +493,22 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             token = token
         )
     }
+
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        return client.getScm(ServiceGitResource::class).getProjectMembersAll(
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            tokenType = tokenType,
+            token = token
+        )
+    }
 }

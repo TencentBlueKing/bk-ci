@@ -910,4 +910,28 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String
     ): Result<String?>
+
+    @ApiOperation("获取项目下具有权限的成员信息")
+    @GET
+    @Path("/projects/members/all")
+    fun getProjectMembersAll( // auth使用，搬到 ServiceGitResource ,iGitService 中已经存在
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<List<GitMember>>
 }

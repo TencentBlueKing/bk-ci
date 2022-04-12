@@ -547,7 +547,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?,
         tokenType: TokenTypeEnum
     ): Result<List<GitCodeGroup>> {
-//        TODO("Not yet implemented")
+        TODO("Not yet implemented")
         return Result(
             gitService.getProjectGroupsList(
                 accessToken = accessToken,
@@ -591,6 +591,25 @@ class ServiceGitResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             tokenType = tokenType,
             token = token
+        )
+    }
+
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        TODO("Not yet implemented")
+        return gitService.getProjectMembersAll(
+            gitProjectId = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            token = token,
+            tokenType = tokenType,
         )
     }
 }
