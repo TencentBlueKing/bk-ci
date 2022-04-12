@@ -126,6 +126,18 @@ interface UserProjectRoleResource {
         projectId: Int
     ): Result<Boolean>
 
+    @POST
+    @Path("/{roleId}/projectCodes/{projectCode}/permission/strategy")
+    fun setRolePermissionStrategy(
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam(name = "角色Id", required = true)
+        @PathParam("roleId")
+        roleId: Int,
+        strategy: Map<String, List<String>>
+    ): Result<Boolean>
+
     @GET
     @Path("/default/role")
     fun getDefaultRole(

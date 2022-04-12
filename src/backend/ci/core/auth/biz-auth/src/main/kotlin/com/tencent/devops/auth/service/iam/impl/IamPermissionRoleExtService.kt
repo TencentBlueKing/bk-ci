@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
@@ -45,6 +46,9 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.StrategyService
+import com.tencent.devops.auth.service.action.ActionService
+import com.tencent.devops.auth.service.action.BkResourceService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -60,14 +64,17 @@ import org.springframework.beans.factory.annotation.Autowired
 
 open class IamPermissionRoleExtService @Autowired constructor(
     open val iamManagerService: ManagerService,
+    open val resourceService: BkResourceService,
+    open val actionsService: ActionService,
     private val permissionGradeService: PermissionGradeService,
     private val iamConfiguration: IamConfiguration,
     private val groupService: AuthGroupService,
     private val groupDao: AuthGroupDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val strategyService: StrategyService
-) : AbsPermissionRoleServiceImpl(groupService) {
+    private val strategyService: StrategyService,
+    private val iamCacheService: IamCacheService
+) : AbsPermissionRoleServiceImpl(groupService, resourceService, actionsService) {
 
     override fun groupCreateExt(
         roleId: Int,
@@ -125,7 +132,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
         groupService.bindRelationId(roleId, iamRoleId.toString())
     }
 
-    override fun renameRoleExt(userId: String, projectId: Int, realtionRoleId: Int, groupInfo: ProjectRoleDTO) {
+    override fun updateGroupExt(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+        val iamGroupId = groupService.getRelationId(roleId) ?: return
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
         checkRoleName(groupInfo.name, false)
@@ -135,14 +143,15 @@ open class IamPermissionRoleExtService @Autowired constructor(
             groupInfo.description,
             groupInfo.defaultGroup
         )
-        iamManagerService.updateRoleGroup(realtionRoleId, newGroupInfo)
+        iamManagerService.updateRoleGroup(iamGroupId.toInt(), newGroupInfo)
     }
 
-    override fun deleteRoleExt(userId: String, projectId: Int, realtionRoleId: Int) {
+    override fun deleteRoleExt(userId: String, projectId: Int, roleId: Int) {
+        val iamGroupId = groupService.getRelationId(roleId) ?: return
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
         // iam侧会统一把用户组内用剔除后,再删除用户组
-        iamManagerService.deleteRoleGroup(realtionRoleId)
+        iamManagerService.deleteRoleGroup(iamGroupId.toInt())
     }
 
     override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
@@ -192,6 +201,30 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 )
             }
         }
+    }
+
+    override fun rolePermissionStrategyExt(
+        userId: String,
+        projectCode: String,
+        roleId: Int,
+        permissionStrategy: Map<String, List<String>>
+    ): Boolean {
+        val iamGroupId = groupService.getRelationId(roleId) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION,
+            defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.CAN_NOT_FIND_RELATION)
+        )
+        try {
+            // TODO: 添加自定义组权限。 待严格测试
+            val groupAction = buildGroupAction(permissionStrategy)
+            addIamGroupPermission(groupAction, iamGroupId.toInt(), projectCode)
+        } catch (iamE: IamException) {
+            logger.warn("$projectCode $roleId $permissionStrategy bind iam permission fail: $iamE")
+            return false
+        } catch (e: Exception) {
+            logger.warn("$projectCode $roleId $permissionStrategy bind iam permission fail: $e")
+            return false
+        }
+        return true
     }
 
     private fun checkRoleName(name: String, defaultGroup: Boolean) {

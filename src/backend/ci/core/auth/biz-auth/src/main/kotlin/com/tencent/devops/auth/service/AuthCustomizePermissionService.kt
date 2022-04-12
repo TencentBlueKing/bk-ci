@@ -25,43 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.auth.dao.AuthGroupCustomizePermissionDao
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-interface PermissionService {
-    fun validateUserActionPermission(
+@Service
+class AuthCustomizePermissionService @Autowired constructor(
+    val dslContext: DSLContext,
+    val authGroupCustomizePermissionDao: AuthGroupCustomizePermissionDao
+) {
+    fun createCustomizePermission(
         userId: String,
-        action: String
-    ): Boolean
-
-    fun validateUserResourcePermission(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resourceType: String?
-    ): Boolean
-
-    fun validateUserResourcePermissionByRelation(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resourceCode: String,
+        groupId: Int,
         resourceType: String,
-        relationResourceType: String?
-    ): Boolean
+        actions: List<String>
+    ) {
+        authGroupCustomizePermissionDao.createGroupPermission(
+            dslContext = dslContext,
+            groupId = groupId.toString(),
+            resourceType = resourceType,
+            actions = actions.joinToString { "," },
+            userId = userId
+        )
+    }
 
-    fun getUserResourceByAction(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resourceType: String
-    ): List<String>
-
-    fun getUserResourcesByActions(
-        userId: String,
-        actions: List<String>,
-        projectCode: String,
-        resourceType: String
-    ): Map<AuthPermission, List<String>>
+    companion object {
+        val logger = LoggerFactory.getLogger(AuthCustomizePermissionService::class.java)
+    }
 }

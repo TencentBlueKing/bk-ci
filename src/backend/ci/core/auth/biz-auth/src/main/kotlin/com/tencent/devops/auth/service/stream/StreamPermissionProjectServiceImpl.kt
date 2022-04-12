@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.service.stream
 
-import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.ci.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList

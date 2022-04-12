@@ -25,23 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service.ci
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 
-@ApiModel
-data class GroupDTO(
-    @ApiModelProperty("用户组编号, 内置用户组编号固定, 自定义组动态生成")
-    val groupCode: String,
-    @ApiModelProperty("默认分组类型 true:默认分组, false 非默认分组")
-    val groupType: Boolean,
-    @ApiModelProperty("用户组名称")
-    val groupName: String,
-    @ApiModelProperty("用户组别名")
-    val displayName: String?,
-    @ApiModelProperty("关联系统Id")
-    val relationId: String?,
-    @ApiModelProperty("用户组描述")
-    val desc: String?
-)
+interface PermissionProjectService {
+
+    fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
+
+    fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
+
+    fun getUserProjects(userId: String): List<String>
+
+    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
+
+    fun checkProjectManager(userId: String, projectCode: String): Boolean
+
+    fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean
+
+    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
+}

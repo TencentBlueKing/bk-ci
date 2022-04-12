@@ -25,23 +25,45 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service.ci
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 
-@ApiModel
-data class GroupDTO(
-    @ApiModelProperty("用户组编号, 内置用户组编号固定, 自定义组动态生成")
-    val groupCode: String,
-    @ApiModelProperty("默认分组类型 true:默认分组, false 非默认分组")
-    val groupType: Boolean,
-    @ApiModelProperty("用户组名称")
-    val groupName: String,
-    @ApiModelProperty("用户组别名")
-    val displayName: String?,
-    @ApiModelProperty("关联系统Id")
-    val relationId: String?,
-    @ApiModelProperty("用户组描述")
-    val desc: String?
-)
+interface PermissionRoleMemberService {
+    fun createRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        members: List<RoleMemberDTO>,
+        managerGroup: Boolean,
+        checkAGradeManager: Boolean? = true
+    )
+
+    fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        id: String,
+        type: ManagerScopesEnum,
+        managerGroup: Boolean
+    )
+
+    fun getRoleMember(
+        projectId: Int,
+        roleId: Int,
+        page: Int?,
+        pageSize: Int?
+    ): ManagerGroupMemberVo
+
+    fun getProjectAllMember(
+        projectId: Int,
+        page: Int?,
+        pageSize: Int?
+    ): ProjectMembersVO?
+
+    fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>?
+}

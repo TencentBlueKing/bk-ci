@@ -71,7 +71,8 @@ class AuthGroupService @Autowired constructor(
             projectCode = projectCode,
             relationId = groupInfo.relationId,
             displayName = groupInfo.displayName,
-            user = userId
+            userId = userId,
+            desc = groupInfo.desc
         )
         return groupDao.createGroup(dslContext, groupCreateInfo)
     }
@@ -101,7 +102,8 @@ class AuthGroupService @Autowired constructor(
                 projectCode = projectCode,
                 relationId = it.relationId,
                 displayName = it.displayName,
-                user = userId
+                userId = userId,
+                desc = it.desc
             )
             groupCreateInfos.add(groupCreateInfo)
         }
@@ -109,20 +111,21 @@ class AuthGroupService @Autowired constructor(
         return Result(true)
     }
 
-    fun updateGroupName(userId: String, groupId: Int, groupInfo: ProjectRoleDTO): Int {
+    fun updateGroup(userId: String, groupId: Int, groupInfo: ProjectRoleDTO): Int {
         val groupEntity = groupDao.getGroupById(dslContext, groupId)
             ?: throw ParamBlankException("group $groupId not exist")
 
         if (DefaultGroupType.contains(groupEntity.groupCode)) {
-            throw ParamBlankException(AuthMessageCode.DEFAULT_GROUP_UPDATE_NAME_ERROR)
+            throw ParamBlankException(AuthMessageCode.DEFAULT_GROUP_NOT_ALLOW_UPDATE)
         }
 
         return groupDao.update(
-            dslContext,
-            groupEntity.id,
-            groupInfo.name,
-            groupInfo.displayName ?: groupInfo.name,
-            userId
+            dslContext = dslContext,
+            id = groupEntity.id,
+            groupName = groupInfo.name,
+            displayName = groupInfo.displayName ?: groupInfo.name,
+            userId = userId,
+            desc = groupInfo.desc
         )
     }
 

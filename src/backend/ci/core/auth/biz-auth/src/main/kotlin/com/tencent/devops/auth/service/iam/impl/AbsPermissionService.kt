@@ -7,7 +7,7 @@ import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.AuthUtils

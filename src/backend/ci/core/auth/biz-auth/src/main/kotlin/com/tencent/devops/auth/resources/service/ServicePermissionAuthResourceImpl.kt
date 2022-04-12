@@ -31,7 +31,7 @@ import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGrantService
-import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource

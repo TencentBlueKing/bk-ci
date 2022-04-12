@@ -113,6 +113,16 @@ abstract class BKActionServiceImpl @Autowired constructor(
         return actionMap
     }
 
+    override fun checkSystemAction(actions: List<String>): Boolean {
+        val systemActions = actionDao.getAllAction(dslContext, "*")?.map {
+            it.actionId
+        } ?: return false
+        if (actions.intersect(systemActions).size < actions.size) {
+            return false
+        }
+        return true
+    }
+
     abstract fun extSystemCreate(userId: String, action: CreateActionDTO)
 
     abstract fun extSystemUpdate(userId: String,actionId: String, action: UpdateActionDTO)

@@ -23,53 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.action.ActionService
 import com.tencent.devops.auth.service.action.BkResourceService
-import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class BkIamPermissionRoleExtService @Autowired constructor(
-    override val iamManagerService: ManagerService,
-    override val resourceService: BkResourceService,
-    override val actionsService: ActionService,
-    private val permissionGradeService: PermissionGradeService,
-    private val iamConfiguration: IamConfiguration,
-    private val groupService: AuthGroupService,
-    private val authGroupDao: AuthGroupDao,
+/**
+ * 蓝盾开源内置权限实现
+ */
+class SimplePermissionRoleService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val client: Client,
-    private val strategyService: StrategyService,
-    private val iamCacheService: IamCacheService
-) : IamPermissionRoleExtService(
-    iamManagerService = iamManagerService,
-    permissionGradeService = permissionGradeService,
-    iamConfiguration = iamConfiguration,
-    groupService = groupService,
-    groupDao = authGroupDao,
-    dslContext = dslContext,
-    client = client,
-    strategyService = strategyService,
-    iamCacheService = iamCacheService,
-    resourceService = resourceService,
-    actionsService = actionsService
-) {
+    private val groupService: AuthGroupService,
+    private val resourceService: BkResourceService,
+    private val actionsService: ActionService,
+    private val authCustomizePermissionService: AuthCustomizePermissionService
+): AbsPermissionRoleServiceImpl(groupService, resourceService, actionsService) {
+
     override fun groupCreateExt(
         roleId: Int,
         userId: String,
@@ -77,28 +55,37 @@ class BkIamPermissionRoleExtService @Autowired constructor(
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ) {
-        super.groupCreateExt(roleId, userId, projectId, projectCode, groupInfo)
+        // 默认用户组权限模版统一存在Strategy表内，无需建立用户组与权限的映射数据
+        // 用户自定义用户组需将数据存入Customize表内建立用户组与权限的映射关系
+        if (groupInfo.defaultGroup == true) {
+            return
+        }
+        groupInfo.actionMap.forEach { resource, actions ->
+            authCustomizePermissionService.createCustomizePermission(
+                userId = userId,
+                groupId = roleId,
+                resourceType = resource,
+                actions = actions
+            )
+        }
+
     }
 
     override fun updateGroupExt(
         userId: String,
         projectId: Int,
-        realtionRoleId: Int,
+        roleId: Int,
         groupInfo: ProjectRoleDTO
     ) {
-        super.updateGroupExt(userId, projectId, realtionRoleId, groupInfo)
+        TODO("Not yet implemented")
     }
 
-    override fun deleteRoleExt(userId: String, projectId: Int, realtionRoleId: Int) {
-        super.deleteRoleExt(userId, projectId, realtionRoleId)
-    }
-
-    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
-        return super.getPermissionRole(projectId)
-    }
-
-    override fun getDefaultRole(): List<DefaultGroup> {
-        return emptyList()
+    override fun deleteRoleExt(
+        userId: String,
+        projectId: Int,
+        roleId: Int
+    ) {
+        TODO("Not yet implemented")
     }
 
     override fun rolePermissionStrategyExt(
@@ -107,6 +94,31 @@ class BkIamPermissionRoleExtService @Autowired constructor(
         roleId: Int,
         permissionStrategy: Map<String, List<String>>
     ): Boolean {
+        permissionStrategy.forEach { resource, actions ->
+            authCustomizePermissionService.createCustomizePermission(
+                userId = userId,
+                groupId = roleId,
+                resourceType = resource,
+                actions = actions
+            )
+        }
         return true
+    }
+
+    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getDefaultRole(): List<DefaultGroup> {
+        val groups = mutableListOf<DefaultGroup>()
+        val defaultGroup = DefaultGroupType.getAll()
+        defaultGroup.forEach {
+            DefaultGroup(
+                code = it.name,
+                name = it.name,
+                displayName = it.displayName
+            )
+        }
+        return groups
     }
 }

@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 

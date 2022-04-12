@@ -23,23 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.auth.pojo.DefaultGroup
-import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
-import com.tencent.devops.auth.pojo.vo.GroupInfoVo
-
-interface PermissionRoleService {
-    fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int
-
-    fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO)
-
-    fun getPermissionRole(projectId: Int): List<GroupInfoVo>
-
-    fun deletePermissionRole(userId: String, projectId: Int, roleId: Int)
-
-    fun getDefaultRole(): List<DefaultGroup>
-}
+data class GroupPermissionInfo(
+    val groupId: Int,
+    val resourceType: String,
+    val actions: List<String>
+)

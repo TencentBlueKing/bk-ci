@@ -44,4 +44,6 @@ interface ActionService {
      * 返回以resouce为key的actionMap
      */
     fun actionMap(): Map<String, List<ActionInfo>>?
+
+    fun checkSystemAction(actions: List<String>): Boolean
 }

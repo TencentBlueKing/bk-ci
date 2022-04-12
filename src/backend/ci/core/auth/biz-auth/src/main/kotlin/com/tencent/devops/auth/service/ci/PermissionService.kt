@@ -25,23 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service.ci
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.auth.api.AuthPermission
 
-@ApiModel
-data class GroupDTO(
-    @ApiModelProperty("用户组编号, 内置用户组编号固定, 自定义组动态生成")
-    val groupCode: String,
-    @ApiModelProperty("默认分组类型 true:默认分组, false 非默认分组")
-    val groupType: Boolean,
-    @ApiModelProperty("用户组名称")
-    val groupName: String,
-    @ApiModelProperty("用户组别名")
-    val displayName: String?,
-    @ApiModelProperty("关联系统Id")
-    val relationId: String?,
-    @ApiModelProperty("用户组描述")
-    val desc: String?
-)
+interface PermissionService {
+    fun validateUserActionPermission(
+        userId: String,
+        action: String
+    ): Boolean
+
+    fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean
+
+    fun validateUserResourcePermissionByRelation(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Boolean
+
+    fun getUserResourceByAction(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): List<String>
+
+    fun getUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String
+    ): Map<AuthPermission, List<String>>
+}

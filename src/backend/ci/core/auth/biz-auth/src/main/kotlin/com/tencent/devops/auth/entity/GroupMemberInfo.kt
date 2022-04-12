@@ -25,25 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-
-interface PermissionProjectService {
-
-    fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String>
-
-    fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList>
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
-
-    fun checkProjectManager(userId: String, projectCode: String): Boolean
-
-    fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean
-
-    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
-}
+data class GroupMemberInfo(
+    val userId: String,
+    val groupId: Int,
+    val userType: Boolean,
+    val expiredDay: Long,
+    val projectCode: String
+)

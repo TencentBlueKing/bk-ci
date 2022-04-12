@@ -34,5 +34,6 @@ data class GroupCreateInfo(
     val displayName: String?,
     val relationId: String?,
     val projectCode: String,
-    val user: String
+    val userId: String,
+    val desc: String?
 )

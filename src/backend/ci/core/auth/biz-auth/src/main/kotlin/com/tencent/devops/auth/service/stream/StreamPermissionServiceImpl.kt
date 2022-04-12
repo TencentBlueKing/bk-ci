@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.service.stream
 
-import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.ActionTypeUtils
 import org.slf4j.LoggerFactory

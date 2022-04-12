@@ -51,7 +51,8 @@ class AuthGroupDao {
                 CREATE_USER,
                 CREATE_TIME,
                 UPDATE_USER,
-                UPDATE_TIME
+                UPDATE_TIME,
+                DESC
             ).values(
                 groupCreateInfo.groupName,
                 groupCreateInfo.groupCode,
@@ -59,10 +60,11 @@ class AuthGroupDao {
                 groupCreateInfo.relationId,
                 groupCreateInfo.displayName,
                 groupCreateInfo.projectCode,
-                groupCreateInfo.user,
+                groupCreateInfo.userId,
                 LocalDateTime.now(),
                 null,
-                null
+                null,
+                groupCreateInfo.desc
             ).returning(ID).fetchOne()!!.id
         }
     }
@@ -135,7 +137,8 @@ class AuthGroupDao {
                     CREATE_USER,
                     CREATE_TIME,
                     UPDATE_USER,
-                    UPDATE_TIME
+                    UPDATE_TIME,
+                    DESC
                 ).values(
                     it.groupName,
                     it.groupCode,
@@ -143,10 +146,11 @@ class AuthGroupDao {
                     it.relationId,
                     it.displayName,
                     it.projectCode,
-                    it.user,
+                    it.userId,
                     LocalDateTime.now(),
                     null,
-                    null
+                    null,
+                    it.desc
                 )
             }
         }).execute()
@@ -157,13 +161,15 @@ class AuthGroupDao {
         id: Int,
         groupName: String,
         displayName: String,
-        userId: String
+        userId: String,
+        desc: String
     ): Int {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.update(this).set(GROUP_NAME, groupName)
                 .set(DISPLAY_NAME, displayName)
                 .set(UPDATE_USER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(DESC, desc)
                 .where(ID.eq(id)).execute()
         }
     }

@@ -1,18 +1,26 @@
 package com.tencent.devops.auth.service.iam.impl
 
 import com.tencent.bk.sdk.iam.exception.IamException
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.service.AuthCustomizePermissionService
 import com.tencent.devops.auth.service.AuthGroupService
-import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.auth.service.action.ActionService
+import com.tencent.devops.auth.service.action.BkResourceService
+import com.tencent.devops.auth.service.ci.PermissionRoleService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
-    private val groupService: AuthGroupService
+    private val groupService: AuthGroupService,
+    private val resourceService: BkResourceService,
+    private val actionsService: ActionService
 ) : PermissionRoleService {
     override fun createPermissionRole(
         userId: String,
@@ -40,10 +48,12 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
                 groupType = groupType,
                 groupName = groupName,
                 displayName = displayName,
-                relationId = null
+                relationId = null,
+                desc = groupInfo.desc
             )
         )
         try {
+            // 扩展系统添加用户组. 可根据自身情况做扩展
             groupCreateExt(
                 roleId = roleId,
                 userId = userId,
@@ -64,30 +74,64 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         return roleId
     }
 
-    override fun renamePermissionRole(
+    override fun updatePermissionRole(
         userId: String,
         projectId: Int,
         roleId: Int,
         groupInfo: ProjectRoleDTO
     ) {
-        groupService.updateGroupName(userId, roleId, groupInfo)
-        val iamId = groupService.getRelationId(roleId) ?: return
-        // 若没有关联id, 无需修改关联系统信息
-        renameRoleExt(
+        groupService.updateGroup(userId, roleId, groupInfo)
+        // 关联系统同步修改
+        updateGroupExt(
             userId = userId,
             projectId = projectId,
-            roleId = iamId!!.toInt(),
+            roleId = roleId,
             groupInfo = groupInfo
         )
     }
 
     override fun deletePermissionRole(userId: String, projectId: Int, roleId: Int) {
-        val iamId = groupService.getRelationId(roleId)
-        if (iamId != null) {
-            // 优先删除扩展系统内的数据,最后再删本地数据
-            deleteRoleExt(userId, projectId, iamId.toInt())
-        }
+        // 优先删除扩展系统内的数据,最后再删本地数据
+        deleteRoleExt(userId, projectId, roleId)
         groupService.deleteGroup(roleId)
+    }
+
+    override fun rolePermissionStrategy(
+        userId: String,
+        projectCode: String,
+        roleId: Int,
+        permissionStrategy: Map<String, List<String>>
+    ): Boolean {
+        val groupInfo = groupService.getGroupCode(roleId) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.GROUP_NOT_EXIST,
+            defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_EXIST)
+        )
+        // 默认用户组不能调整权限策略
+        if (!groupInfo.groupType) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GROUP_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_NOT_ALLOW_UPDATE)
+            )
+        }
+        permissionStrategy.forEach { resource, actions ->
+            // 校验资源和action是否存在
+            if (resourceService.getResource(resource) == null) {
+                AuthCustomizePermissionService.logger.info("createCustomizePermission $userId$roleId$resource not exist")
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.RESOURCE_NOT_EXSIT,
+                    defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.RESOURCE_NOT_EXSIT, arrayOf(resource))
+                )
+            }
+
+            if (!actionsService.checkSystemAction(actions)) {
+                AuthCustomizePermissionService.logger.info("createCustomizePermission $userId$roleId$actions not exist")
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.PERMISSION_MODEL_CHECK_FAIL,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.PERMISSION_MODEL_CHECK_FAIL)
+                )
+            }
+        }
+        return rolePermissionStrategyExt(userId, projectCode, roleId, permissionStrategy)
     }
 
     abstract fun groupCreateExt(
@@ -98,7 +142,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         groupInfo: ProjectRoleDTO
     )
 
-    abstract fun renameRoleExt(
+    abstract fun updateGroupExt(
         userId: String,
         projectId: Int,
         roleId: Int,
@@ -110,6 +154,13 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         projectId: Int,
         roleId: Int
     )
+
+    abstract fun rolePermissionStrategyExt(
+        userId: String,
+        projectCode: String,
+        roleId: Int,
+        permissionStrategy: Map<String, List<String>>
+    ): Boolean
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbsPermissionRoleServiceImpl::class.java)

@@ -52,7 +52,7 @@ object AuthMessageCode {
     const val GRADE_CHECK_FAIL = "2121007" // 权限系统：无分级管理员权限,不允许进行该操作
     const val DEFAULT_GROUP_ERROR = "2121008" // 权限系统：该分组为默认分组,不允许重复添加
     const val UN_DEFAULT_GROUP_ERROR = "2121009" // 权限系统：非默认分组与默认分组重名
-    const val DEFAULT_GROUP_UPDATE_NAME_ERROR = "2121010" // 权限系统：该分组为默认分组,不允许重命名
+    const val DEFAULT_GROUP_NOT_ALLOW_UPDATE = "2121010" // 权限系统：该分组为默认分组,不允许修改
     const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
     const val IAM_SYSTEM_ERROR = "2121012" // 权限系统：Iam权限中心异常。异常信息{0}
     const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
@@ -80,4 +80,6 @@ object AuthMessageCode {
     const val RESOURCE_EXSIT = "2121302" // 权限系统：resource{0}已经存在
     const val RESOURCE_NOT_EXSIT = "2121303" // 权限系统：resource{0}不存在
     const val ACTION_CREATE_FAIL = "2121304" // 权限系统： action添加失败
+    const val PERMISSION_MODEL_CHECK_FAIL = "2121305" // 权限系统： 权限模型校验失败
+
 }

@@ -45,7 +45,7 @@ import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PageUtil

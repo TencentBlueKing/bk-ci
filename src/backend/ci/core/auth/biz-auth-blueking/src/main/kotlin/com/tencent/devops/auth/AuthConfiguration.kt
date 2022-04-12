@@ -34,8 +34,8 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
-import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.ci.PermissionProjectService
+import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
