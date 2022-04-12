@@ -84,6 +84,30 @@ class GitUtilsTest {
     }
 
     @Test
+    fun getDomainAndRepoName() {
+        var url = "git@github.com:Tencent/bk-ci.git"
+        var domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "git@github.com:2244/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "ssh://git@github.com:2244/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "http://github.com/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "https://github.com/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+    }
+
+    @Test
     fun getProjectName() {
         var projectName = GitUtils.getProjectName("git@github.com:Tencent/bk-ci.git")
         assertEquals(repoName, projectName)
