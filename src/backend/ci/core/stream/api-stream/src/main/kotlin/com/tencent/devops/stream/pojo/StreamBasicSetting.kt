@@ -75,7 +75,7 @@ data class StreamBasicSetting(
     @ApiModelProperty("带有名空间的项目路径")
     val pathWithNamespace: String?,
     @ApiModelProperty("项目最后一次构建的CI信息")
-    val lastStreamCiInfo: StreamCIInfo?,
+    val lastCiInfo: StreamCIInfo?,
     @ApiModelProperty("项目下构建是否发送commitCheck")
     val enableCommitCheck: Boolean = true,
     @ApiModelProperty("项目下构建是否发送mrComment")

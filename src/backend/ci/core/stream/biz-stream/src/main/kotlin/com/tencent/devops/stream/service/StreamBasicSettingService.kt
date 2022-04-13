@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -127,15 +126,6 @@ class StreamBasicSettingService @Autowired constructor(
         return true
     }
 
-    fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
-        streamBasicSettingDao.updateOauthSetting(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            userId = userId,
-            oauthUserId = oauthUserId
-        )
-    }
-
     fun getStreamConf(gitProjectId: Long): StreamBasicSetting? {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
     }
@@ -176,7 +166,7 @@ class StreamBasicSettingService @Autowired constructor(
                     creatorBgName = null,
                     gitProjectDesc = projectInfo.description,
                     gitProjectAvatar = projectInfo.avatarUrl,
-                    lastStreamCiInfo = null,
+                    lastCiInfo = null,
                     pathWithNamespace = projectInfo.pathWithNamespace,
                     nameWithNamespace = projectInfo.nameWithNamespace
                 )
@@ -234,38 +224,6 @@ class StreamBasicSettingService @Autowired constructor(
         return true
     }
 
-    fun fixProjectInfo(): Int {
-        var count = 0
-        var currProjects = streamBasicSettingDao.getProjectNoHttpUrl(dslContext)
-        while (currProjects.isNotEmpty()) {
-            currProjects.forEach {
-                refresh(it)
-                count++
-            }
-            logger.info("fixProjectInfo project ${currProjects.map { it.id }.toList()}, fixed count: $count")
-            Thread.sleep(100)
-            currProjects = streamBasicSettingDao.getProjectNoHttpUrl(dslContext)
-        }
-        logger.info("fixProjectInfo finished count: $count")
-        return count
-    }
-
-    fun fixProjectNameSpace(): Int {
-        var count = 0
-        var currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
-        while (currProjects.isNotEmpty()) {
-            currProjects.forEach {
-                refreshNameSpace(it)
-                count++
-            }
-            logger.info("fixProjectNameSpace project ${currProjects.map { it.id }.toList()}, fixed count: $count")
-            Thread.sleep(100)
-            currProjects = streamBasicSettingDao.getProjectNoNameSpace(dslContext)
-        }
-        logger.info("fixProjectNameSpace finished count: $count")
-        return count
-    }
-
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
         val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
@@ -321,50 +279,6 @@ class StreamBasicSettingService @Autowired constructor(
                 )
             }
             idList
-        }
-    }
-
-    private fun refreshNameSpace(it: TGitBasicSettingRecord) {
-        try {
-            val projectResult = requestGitProjectInfo(it.id)
-            if (projectResult != null) {
-                streamBasicSettingDao.fixProjectNameSpace(
-                    dslContext = dslContext,
-                    gitProjectId = it.id,
-                    pathWithNamespace = projectResult.pathWithNamespace ?: "",
-                    nameWithNamespace = projectResult.nameWithNamespace
-                )
-            } else {
-                // 说明存量数据在stream 处已丢失
-                streamBasicSettingDao.fixProjectNameSpace(
-                    dslContext = dslContext,
-                    gitProjectId = it.id,
-                    pathWithNamespace = "",
-                    nameWithNamespace = ""
-                )
-            }
-        } catch (t: Throwable) {
-            logger.error("refreshNameSpace | Update git ci project in devops failed, msg: ${t.message}")
-        }
-    }
-
-    private fun refresh(it: TGitBasicSettingRecord) {
-        try {
-            val projectResult = requestGitProjectInfo(it.id)
-            if (projectResult != null) {
-                val httpUrl = if (!projectResult.gitHttpsUrl.isNullOrBlank()) {
-                    projectResult.gitHttpsUrl!!
-                } else {
-                    projectResult.gitHttpUrl
-                }
-                streamBasicSettingDao.fixProjectInfo(
-                    dslContext = dslContext,
-                    gitProjectId = it.id,
-                    httpUrl = httpUrl
-                )
-            }
-        } catch (t: Throwable) {
-            logger.error("Update git ci project in devops failed, msg: ${t.message}")
         }
     }
 

@@ -62,7 +62,7 @@ data class StreamProjectCIInfo(
     @ApiModelProperty("当前授权人")
     val authUserId: String?,
     @ApiModelProperty("CI相关信息")
-    val streamCiInfo: StreamCIInfo?
+    val ciInfo: StreamCIInfo?
 )
 
 @ApiModel("CI相关信息")
