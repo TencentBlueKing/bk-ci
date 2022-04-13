@@ -91,192 +91,192 @@ class LogMQConfiguration @Autowired constructor() {
         storageProperties: StorageProperties,
         logServiceConfig: LogServiceConfig
     ) = BuildLogPrintService(bridge, logPrintBean, storageProperties, logServiceConfig)
-
-    @Bean
-    fun rabbitAdmin(
-        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
-        connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun logEventExchange(): DirectExchange {
-        val directExchange = DirectExchange(EXCHANGE_LOG_BUILD_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun logBatchEventExchange(): DirectExchange {
-        val directExchange = DirectExchange(EXCHANGE_LOG_BATCH_BUILD_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun logStatusEventExchange(): DirectExchange {
-        val directExchange = DirectExchange(EXCHANGE_LOG_STATUS_BUILD_EVENT, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun logEventQueue(): Queue {
-        return Queue(QUEUE_LOG_BUILD_EVENT, true)
-    }
-
-    @Bean
-    fun logBatchEventQueue(): Queue {
-        return Queue(QUEUE_LOG_BATCH_BUILD_EVENT, true)
-    }
-
-    @Bean
-    fun logStatusEventQueue(): Queue {
-        return Queue(QUEUE_LOG_STATUS_BUILD_EVENT, true)
-    }
-
-    @Bean
-    fun logEventBind(
-        @Autowired logEventQueue: Queue,
-        @Autowired logEventExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(logEventQueue).to(logEventExchange).with(ROUTE_LOG_BUILD_EVENT)
-    }
-
-    @Bean
-    fun logBatchEventBind(
-        @Autowired logBatchEventQueue: Queue,
-        @Autowired logBatchEventExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(logBatchEventQueue).to(logBatchEventExchange).with(ROUTE_LOG_BATCH_BUILD_EVENT)
-    }
-
-    @Bean
-    fun logStatusEventBind(
-        @Autowired logStatusEventQueue: Queue,
-        @Autowired logStatusEventExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(logStatusEventQueue).to(logStatusEventExchange).with(ROUTE_LOG_STATUS_BUILD_EVENT)
-    }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    @Bean
-    fun logEventListener(
-        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
-        @Autowired connectionFactory: ConnectionFactory,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired logEventQueue: Queue,
-        @Autowired logListener: LogListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = logEventQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = messageListenerAdapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = preprocessConcurrency ?: 1,
-            maxConcurrency = preprocessMaxConcurrency ?: 1
-        )
-    }
-
-    @Bean
-    fun logBatchEventListener(
-        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
-        @Autowired connectionFactory: ConnectionFactory,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired logBatchEventQueue: Queue,
-        @Autowired logListener: LogListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logBatchEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = logBatchEventQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = messageListenerAdapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = storageConcurrency ?: 10,
-            maxConcurrency = storageMaxConcurrency ?: 100
-        )
-    }
-
-    @Bean
-    fun logStatusEventListener(
-        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
-        @Autowired connectionFactory: ConnectionFactory,
-        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired logStatusEventQueue: Queue,
-        @Autowired logListener: LogListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
-        messageListenerAdapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = logStatusEventQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = messageListenerAdapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 20,
-            maxConcurrency = 20
-        )
-    }
-
-    /**
-     * 构建结束广播交换机
-     */
-    @Bean
-    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun pipelineBuildFinishLogQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
-
-    @Bean
-    fun pipelineBuildFinishLogQueueBind(
-        @Autowired pipelineBuildFinishLogQueue: Queue,
-        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(pipelineBuildFinishLogQueue).to(pipelineBuildFinishFanoutExchange)
-    }
-
-    @Bean
-    fun pipelineBuildFinishLogListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired pipelineBuildFinishLogQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired logService: LogService,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(logService, logService::pipelineFinish.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = pipelineBuildFinishLogQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 1,
-            maxConcurrency = 1
-        )
-    }
+//
+//    @Bean
+//    fun rabbitAdmin(
+//        @Qualifier(EXTEND_CONNECTION_FACTORY_NAME)
+//        connectionFactory: ConnectionFactory
+//    ): RabbitAdmin {
+//        return RabbitAdmin(connectionFactory)
+//    }
+//
+//    @Bean
+//    fun logEventExchange(): DirectExchange {
+//        val directExchange = DirectExchange(EXCHANGE_LOG_BUILD_EVENT, true, false)
+//        directExchange.isDelayed = true
+//        return directExchange
+//    }
+//
+//    @Bean
+//    fun logBatchEventExchange(): DirectExchange {
+//        val directExchange = DirectExchange(EXCHANGE_LOG_BATCH_BUILD_EVENT, true, false)
+//        directExchange.isDelayed = true
+//        return directExchange
+//    }
+//
+//    @Bean
+//    fun logStatusEventExchange(): DirectExchange {
+//        val directExchange = DirectExchange(EXCHANGE_LOG_STATUS_BUILD_EVENT, true, false)
+//        directExchange.isDelayed = true
+//        return directExchange
+//    }
+//
+//    @Bean
+//    fun logEventQueue(): Queue {
+//        return Queue(QUEUE_LOG_BUILD_EVENT, true)
+//    }
+//
+//    @Bean
+//    fun logBatchEventQueue(): Queue {
+//        return Queue(QUEUE_LOG_BATCH_BUILD_EVENT, true)
+//    }
+//
+//    @Bean
+//    fun logStatusEventQueue(): Queue {
+//        return Queue(QUEUE_LOG_STATUS_BUILD_EVENT, true)
+//    }
+//
+//    @Bean
+//    fun logEventBind(
+//        @Autowired logEventQueue: Queue,
+//        @Autowired logEventExchange: DirectExchange
+//    ): Binding {
+//        return BindingBuilder.bind(logEventQueue).to(logEventExchange).with(ROUTE_LOG_BUILD_EVENT)
+//    }
+//
+//    @Bean
+//    fun logBatchEventBind(
+//        @Autowired logBatchEventQueue: Queue,
+//        @Autowired logBatchEventExchange: DirectExchange
+//    ): Binding {
+//        return BindingBuilder.bind(logBatchEventQueue).to(logBatchEventExchange).with(ROUTE_LOG_BATCH_BUILD_EVENT)
+//    }
+//
+//    @Bean
+//    fun logStatusEventBind(
+//        @Autowired logStatusEventQueue: Queue,
+//        @Autowired logStatusEventExchange: DirectExchange
+//    ): Binding {
+//        return BindingBuilder.bind(logStatusEventQueue).to(logStatusEventExchange).with(ROUTE_LOG_STATUS_BUILD_EVENT)
+//    }
+//
+//    @Bean
+//    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
+//
+//    @Bean
+//    fun logEventListener(
+//        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
+//        @Autowired connectionFactory: ConnectionFactory,
+//        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
+//        @Autowired rabbitAdmin: RabbitAdmin,
+//        @Autowired logEventQueue: Queue,
+//        @Autowired logListener: LogListener,
+//        @Autowired messageConverter: Jackson2JsonMessageConverter
+//    ): SimpleMessageListenerContainer {
+//        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logEvent.name)
+//        messageListenerAdapter.setMessageConverter(messageConverter)
+//        return Tools.createSimpleMessageListenerContainerByAdapter(
+//            connectionFactory = connectionFactory,
+//            queue = logEventQueue,
+//            rabbitAdmin = rabbitAdmin,
+//            adapter = messageListenerAdapter,
+//            startConsumerMinInterval = 5000,
+//            consecutiveActiveTrigger = 5,
+//            concurrency = preprocessConcurrency ?: 1,
+//            maxConcurrency = preprocessMaxConcurrency ?: 1
+//        )
+//    }
+//
+//    @Bean
+//    fun logBatchEventListener(
+//        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
+//        @Autowired connectionFactory: ConnectionFactory,
+//        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
+//        @Autowired rabbitAdmin: RabbitAdmin,
+//        @Autowired logBatchEventQueue: Queue,
+//        @Autowired logListener: LogListener,
+//        @Autowired messageConverter: Jackson2JsonMessageConverter
+//    ): SimpleMessageListenerContainer {
+//        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logBatchEvent.name)
+//        messageListenerAdapter.setMessageConverter(messageConverter)
+//        return Tools.createSimpleMessageListenerContainerByAdapter(
+//            connectionFactory = connectionFactory,
+//            queue = logBatchEventQueue,
+//            rabbitAdmin = rabbitAdmin,
+//            adapter = messageListenerAdapter,
+//            startConsumerMinInterval = 5000,
+//            consecutiveActiveTrigger = 5,
+//            concurrency = storageConcurrency ?: 10,
+//            maxConcurrency = storageMaxConcurrency ?: 100
+//        )
+//    }
+//
+//    @Bean
+//    fun logStatusEventListener(
+//        @Qualifier(value = EXTEND_CONNECTION_FACTORY_NAME)
+//        @Autowired connectionFactory: ConnectionFactory,
+//        @Qualifier(value = EXTEND_RABBIT_ADMIN_NAME)
+//        @Autowired rabbitAdmin: RabbitAdmin,
+//        @Autowired logStatusEventQueue: Queue,
+//        @Autowired logListener: LogListener,
+//        @Autowired messageConverter: Jackson2JsonMessageConverter
+//    ): SimpleMessageListenerContainer {
+//        val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
+//        messageListenerAdapter.setMessageConverter(messageConverter)
+//        return Tools.createSimpleMessageListenerContainerByAdapter(
+//            connectionFactory = connectionFactory,
+//            queue = logStatusEventQueue,
+//            rabbitAdmin = rabbitAdmin,
+//            adapter = messageListenerAdapter,
+//            startConsumerMinInterval = 5000,
+//            consecutiveActiveTrigger = 5,
+//            concurrency = 20,
+//            maxConcurrency = 20
+//        )
+//    }
+//
+//    /**
+//     * 构建结束广播交换机
+//     */
+//    @Bean
+//    fun pipelineBuildFinishFanoutExchange(): FanoutExchange {
+//        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, true, false)
+//        fanoutExchange.isDelayed = true
+//        return fanoutExchange
+//    }
+//
+//    @Bean
+//    fun pipelineBuildFinishLogQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_LOG)
+//
+//    @Bean
+//    fun pipelineBuildFinishLogQueueBind(
+//        @Autowired pipelineBuildFinishLogQueue: Queue,
+//        @Autowired pipelineBuildFinishFanoutExchange: FanoutExchange
+//    ): Binding {
+//        return BindingBuilder.bind(pipelineBuildFinishLogQueue).to(pipelineBuildFinishFanoutExchange)
+//    }
+//
+//    @Bean
+//    fun pipelineBuildFinishLogListenerContainer(
+//        @Autowired connectionFactory: ConnectionFactory,
+//        @Autowired pipelineBuildFinishLogQueue: Queue,
+//        @Autowired rabbitAdmin: RabbitAdmin,
+//        @Autowired logService: LogService,
+//        @Autowired messageConverter: Jackson2JsonMessageConverter
+//    ): SimpleMessageListenerContainer {
+//        val adapter = MessageListenerAdapter(logService, logService::pipelineFinish.name)
+//        adapter.setMessageConverter(messageConverter)
+//        return Tools.createSimpleMessageListenerContainerByAdapter(
+//            connectionFactory = connectionFactory,
+//            queue = pipelineBuildFinishLogQueue,
+//            rabbitAdmin = rabbitAdmin,
+//            adapter = adapter,
+//            startConsumerMinInterval = 5000,
+//            consecutiveActiveTrigger = 5,
+//            concurrency = 1,
+//            maxConcurrency = 1
+//        )
+//    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(LogMQConfiguration::class.java)
