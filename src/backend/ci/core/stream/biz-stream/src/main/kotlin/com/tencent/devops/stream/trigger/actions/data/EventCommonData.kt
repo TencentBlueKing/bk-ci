@@ -1,0 +1,66 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.stream.trigger.actions.data
+
+/**
+ * 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
+ */
+interface EventCommonData {
+    // Git平台项目唯一标识
+    val gitProjectId: String
+
+    // 当前event的触发branch
+    val branch: String
+
+    // 当前event的commitId
+    val commit: EventCommonDataCommit
+
+    // 当前event的触发人
+    val userId: String
+
+    // Git平台项目全称: namespace/name
+    val gitProjectName: String?
+
+    // mr触发时的源Git库
+    val sourceGitProjectId: String?
+        get() = null
+}
+
+/**
+ * 公共数据的commit数据
+ * @param commitId commit唯一标识
+ * @param commitMsg commit提交信息
+ * @param commitAuthorName commit提交作者
+ * @param commitTimeStamp commit提交时间点
+ */
+data class EventCommonDataCommit(
+    val commitId: String,
+    val commitMsg: String?,
+    val commitAuthorName: String?,
+    val commitTimeStamp: String?
+)
