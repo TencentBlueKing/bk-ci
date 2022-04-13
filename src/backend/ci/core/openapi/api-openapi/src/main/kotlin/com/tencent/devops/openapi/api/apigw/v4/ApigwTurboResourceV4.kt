@@ -27,7 +27,6 @@
 package com.tencent.devops.openapi.api.apigw.v4
 
 import com.tencent.devops.api.pojo.Response
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.turbo.pojo.TurboRecordModel
@@ -57,7 +56,7 @@ interface ApigwTurboResourceV4 {
 
     @GET
     @ApiOperation("获取方案列表", tags = ["v4_app_turbo_plan_list", "v4_user_turbo_plan_list"])
-    @Path("/projectId/{projectId}/turboPlan/list")
+    @Path("/projectId/{projectId}/turbo_plan_list")
     fun getTurboPlanByProjectIdAndCreatedDate(
         @ApiParam(value = "项目id", required = true)
         @PathParam("projectId")
@@ -81,7 +80,7 @@ interface ApigwTurboResourceV4 {
 
     @POST
     @ApiOperation("获取加速历史列表", tags = ["v4_app_turbo_history_list", "v4_user_turbo_history_list"])
-    @Path("/history/list")
+    @Path("/projectId/{projectId}/history_list")
     fun getTurboRecordHistoryList(
         @ApiParam(value = "页数", required = false)
         @QueryParam(value = "pageNum")
@@ -98,7 +97,7 @@ interface ApigwTurboResourceV4 {
         @ApiParam(value = "编译加速历史请求数据信息", required = true) @Valid
         turboRecordModel: TurboRecordModel,
         @ApiParam(value = "蓝盾项目id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
@@ -107,13 +106,13 @@ interface ApigwTurboResourceV4 {
 
     @GET
     @ApiOperation("获取加速方案详情", tags = ["v4_app_turbo_plan_detail", "v4_user_turbo_plan_detail"])
-    @Path("/turboPlan/detail/planId/{planId}")
+    @Path("/projectId/{projectId}/turbo_plan_detail")
     fun getTurboPlanDetailByPlanId(
         @ApiParam(value = "方案id", required = true)
-        @PathParam("planId")
+        @QueryParam("planId")
         planId: String,
         @ApiParam(value = "蓝盾项目id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "用户信息", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
