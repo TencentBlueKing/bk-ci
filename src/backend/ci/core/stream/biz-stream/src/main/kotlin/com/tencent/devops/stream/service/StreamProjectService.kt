@@ -135,7 +135,7 @@ class StreamProjectService @Autowired constructor(
                 buildPushedPullRequest = project?.buildPushedPullRequest,
                 enableMrBlock = project?.enableMrBlock,
                 authUserId = project?.enableUserId,
-                streamCiInfo = streamCiInfo
+                ciInfo = streamCiInfo
             )
         }
         return Pagination(
@@ -260,7 +260,7 @@ class StreamProjectService @Autowired constructor(
                     buildPushedPullRequest = setting.buildPushedPullRequest,
                     enableMrBlock = setting.enableMrBlock,
                     authUserId = setting.enableUserId,
-                    streamCiInfo = if (setting.lastCiInfo == null) {
+                    ciInfo = if (setting.lastCiInfo == null) {
                         StreamCIInfo(
                             enableCI = setting.enableCi ?: false,
                             lastBuildId = null,

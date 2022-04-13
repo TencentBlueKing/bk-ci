@@ -15,4 +15,10 @@ stream:
 
 git:
   gitUrl: __BK_CI_STREAM_GIT_URL__
-  
+
+# 定时清理任务相关配置
+cron:
+  clear:
+    maxThreadHandleProjectNum: 5
+    maxEveryProjectHandleNum: 15
+    maxKeepNum: 10000  

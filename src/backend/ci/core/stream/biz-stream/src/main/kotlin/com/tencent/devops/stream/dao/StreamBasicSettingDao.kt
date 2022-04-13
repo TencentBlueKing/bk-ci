@@ -100,10 +100,10 @@ class StreamBasicSettingDao {
                         conf.creatorCenterName,
                         conf.gitProjectDesc,
                         conf.gitProjectAvatar,
-                        if (conf.lastStreamCiInfo == null) {
+                        if (conf.lastCiInfo == null) {
                             null
                         } else {
-                            JsonUtil.toJson(conf.lastStreamCiInfo!!)
+                            JsonUtil.toJson(conf.lastCiInfo!!)
                         },
                         conf.nameWithNamespace,
                         conf.pathWithNamespace
@@ -272,7 +272,7 @@ class StreamBasicSettingDao {
                     creatorCenterName = conf.creatorCenterName,
                     gitProjectDesc = conf.gitProjectDesc,
                     gitProjectAvatar = conf.gitProjectAvatar,
-                    lastStreamCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
+                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
                         JsonUtil.to(conf.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
                     } else {
                         null
@@ -318,7 +318,7 @@ class StreamBasicSettingDao {
                     creatorCenterName = conf.creatorCenterName,
                     gitProjectDesc = conf.gitProjectDesc,
                     gitProjectAvatar = conf.gitProjectAvatar,
-                    lastStreamCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
+                    lastCiInfo = if (hasLastInfo && conf.lastCiInfo != null) {
                         JsonUtil.to(conf.lastCiInfo, object : TypeReference<StreamCIInfo>() {})
                     } else {
                         null
