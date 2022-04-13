@@ -66,7 +66,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private AnalyzeHostPoolDao analyzeHostPoolDao;
     @Autowired
     private ConcurrentAnalyzeConfigCache concurrentAnalyzeConfigCache;
-    @Value("${result.log.path}")
+    @Value("${result.log.path:#{null}}")
     private String resultLogPath;
 
     /**

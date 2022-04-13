@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -62,6 +63,7 @@ class GroupService @Autowired constructor(
     private val experienceServiceCode: ExperienceAuthServiceCode,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
+    private val experienceGroupDao: ExperienceGroupDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePermissionService: ExperiencePermissionService
 ) {
@@ -290,6 +292,8 @@ class GroupService @Autowired constructor(
 
         experiencePermissionService.deleteGroupResource(projectId, groupId)
         groupDao.delete(dslContext, groupId)
+        experienceGroupDao.deleteByGroupId(dslContext, groupId)
         experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
+        experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
     }
 }

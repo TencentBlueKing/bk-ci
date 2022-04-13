@@ -28,6 +28,7 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperienceGroup
+import com.tencent.devops.model.experience.tables.TGroup
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -76,12 +77,10 @@ class ExperienceGroupDao {
     }
 
     fun listGroupIdsByRecordId(dslContext: DSLContext, recordId: Long): Result<Record1<Long>> {
-        return with(TExperienceGroup.T_EXPERIENCE_GROUP) {
-            dslContext.select(GROUP_ID)
-                .from(this)
-                .where(RECORD_ID.eq(recordId))
-                .fetch()
-        }
+        val eg = TExperienceGroup.T_EXPERIENCE_GROUP
+        val g = TGroup.T_GROUP
+        val table = eg.rightJoin(g).on(eg.GROUP_ID.eq(g.ID))
+        return dslContext.select(g.ID).from(table).where(eg.RECORD_ID.eq(recordId)).fetch()
     }
 
     fun deleteByRecordId(dslContext: DSLContext, recordId: Long, excludeGroupIds: Set<Long>) {
@@ -89,6 +88,14 @@ class ExperienceGroupDao {
             dslContext.delete(this)
                 .where(RECORD_ID.eq(recordId))
                 .and(GROUP_ID.notIn(excludeGroupIds))
+                .execute()
+        }
+    }
+
+    fun deleteByGroupId(dslContext: DSLContext, groupId: Long) {
+        with(TExperienceGroup.T_EXPERIENCE_GROUP) {
+            dslContext.delete(this)
+                .where(GROUP_ID.eq(groupId))
                 .execute()
         }
     }

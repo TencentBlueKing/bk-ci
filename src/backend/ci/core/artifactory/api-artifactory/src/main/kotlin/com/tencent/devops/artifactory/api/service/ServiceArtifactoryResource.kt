@@ -435,4 +435,31 @@ interface ServiceArtifactoryResource {
         @ApiParam("元数据", required = true)
         searchProps: SearchProps
     ): Result<Page<FileInfo>>
+
+    @ApiOperation("获取匹配到的自定义仓库文件")
+    @Path("/{projectId}/listCustomFiles")
+    @POST
+    fun listCustomFiles(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("文件路径", required = true)
+        @QueryParam("fullPath")
+        fullPath: String,
+        @ApiParam("是否包含文件夹", required = false, defaultValue = "true")
+        @QueryParam("includeFolder")
+        includeFolder: Boolean?,
+        @ApiParam("是否深度查询文件", required = false, defaultValue = "false")
+        @QueryParam("deep")
+        deep: Boolean?,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<Page<FileInfo>>
 }

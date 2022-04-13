@@ -132,7 +132,10 @@ interface AppExperienceResource {
         organization: String? = null,
         @ApiParam("体验ID", required = true)
         @PathParam("experienceHashId")
-        experienceHashId: String
+        experienceHashId: String,
+        @ApiParam("强制最新版本", required = false)
+        @QueryParam("forceNew")
+        forceNew: Boolean = true
     ): Result<AppExperienceDetail>
 
     @ApiOperation("历史版本")

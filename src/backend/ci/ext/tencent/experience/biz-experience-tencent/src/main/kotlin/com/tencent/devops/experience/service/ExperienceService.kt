@@ -360,6 +360,29 @@ class ExperienceService @Autowired constructor(
             return -1L
         }
 
+        val encodePublicGroup = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP)
+        val experienceGroups = when (experience.groupScope) {
+            GroupScopeEnum.PUBLIC.id -> {
+                setOf(encodePublicGroup)
+            }
+            null -> {
+                experience.experienceGroups
+            }
+            else -> {
+                experience.experienceGroups.filterNot { it == encodePublicGroup }.toSet()
+            }
+        }
+        val experienceInnerUsers = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
+            emptySet()
+        } else {
+            experience.innerUsers
+        }
+        val experienceOuterUsers = if (experience.groupScope == GroupScopeEnum.PUBLIC.id) {
+            emptySet()
+        } else {
+            experience.outerUsers
+        }
+
         val appBundleIdentifier = propertyMap[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]!!
         val appVersion = propertyMap[ARCHIVE_PROPS_APP_VERSION]!!
         val platform = if (experience.path.endsWith(".ipa")) PlatformEnum.IOS else PlatformEnum.ANDROID
@@ -420,13 +443,13 @@ class ExperienceService @Autowired constructor(
         )
 
         // 加上权限
-        experience.experienceGroups.forEach {
+        experienceGroups.forEach {
             experienceGroupDao.create(dslContext, experienceId, HashUtil.decodeIdToLong(it))
         }
-        experience.innerUsers.forEach {
+        experienceInnerUsers.forEach {
             experienceInnerDao.create(dslContext, experienceId, it)
         }
-        experience.outerUsers.forEach {
+        experienceOuterUsers.forEach {
             experienceOuterDao.create(dslContext, experienceId, it)
         }
 
@@ -694,20 +717,14 @@ class ExperienceService @Autowired constructor(
                 return@submit
             }
 
-            val projectId = experienceRecord.projectId
-            val name = experienceRecord.name
-            val experienceName = experienceRecord.experienceName
-            val version = experienceRecord.version
-            val userId = experienceRecord.creator
-            val platform = experienceRecord.platform
-            val bundleIdentifier = experienceRecord.bundleIdentifier
             val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
             val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
 
             // 内部用户
             val innerReceivers = experienceBaseService.getInnerReceivers(
                 dslContext = dslContext,
-                experienceId = experienceId
+                experienceId = experienceId,
+                userId = experienceRecord.creator
             )
             // 外部用户
             val outerReceivers = experienceBaseService.getOuterReceivers(
@@ -718,9 +735,9 @@ class ExperienceService @Autowired constructor(
             // 订阅用户
             val subscribeUsers = experiencePushSubscribeDao.listSubscription(
                 dslContext = dslContext,
-                projectId = projectId,
-                bundle = bundleIdentifier,
-                platform = platform
+                projectId = experienceRecord.projectId,
+                bundle = experienceRecord.bundleIdentifier,
+                platform = experienceRecord.platform
             ).map { it.value2() }.toSet().subtract(innerReceivers)
                 .subtract(outerReceivers)
 
@@ -733,120 +750,144 @@ class ExperienceService @Autowired constructor(
                 return@submit
             }
 
-            val innerUrl = getInnerUrl(projectId, experienceId)
-            val outerUrl = getShortExternalUrl(experienceId)
-            val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
-
-            if (notifyTypeList.contains(NotifyType.EMAIL)) {
-                val message = EmailUtil.makeMessage(
-                    userId = userId,
-                    projectName = projectName,
-                    name = name,
-                    version = version,
-                    url = innerUrl,
-                    receivers = innerReceivers.toSet()
-                )
-                client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-            }
-            if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
-                val wechatGroupList = regex.split(experienceRecord.wechatGroups)
-                wechatGroupList.forEach {
-                    val message = WechatGroupUtil.makeRichtextMessage(
-                        projectName = projectName,
-                        name = name,
-                        version = version,
-                        innerUrl = innerUrl,
-                        outerUrl = outerUrl,
-                        groupId = it
-                    )
-                    wechatWorkService.sendRichText(message)
-                }
-            }
-
-            outerReceivers.forEach {
-                val appMessage = AppNotifyUtil.makeMessage(
-                    experienceHashId = HashUtil.encodeLongId(experienceId),
-                    experienceName = experienceName,
-                    appVersion = version,
-                    receiver = it
-                )
-                experiencePushService.pushMessage(appMessage)
-            }
-
-            innerReceivers.forEach {
-                sendMessageToInnerReceivers(
-                    notifyTypeList = notifyTypeList,
-                    projectName = projectName,
-                    name = name,
-                    experienceName = experienceName,
-                    version = version,
-                    innerUrl = innerUrl,
-                    outerUrl = outerUrl,
-                    receiver = it,
-                    experienceId = experienceId
-                )
-            }
-
-            subscribeUsers.forEach {
-                val appMessage = AppNotifyUtil.makeMessage(
-                    experienceHashId = HashUtil.encodeLongId(experienceId),
-                    experienceName = experienceName,
-                    appVersion = version,
-                    receiver = it
-                )
-                experiencePushService.pushMessage(appMessage)
-            }
+            // 开始发送
+            val pcUrl = getPcUrl(experienceRecord.projectId, experienceId)
+            val appUrl = getShortExternalUrl(experienceId)
+            val projectName =
+                client.get(ServiceProjectResource::class).get(experienceRecord.projectId).data!!.projectName
+            sendMessageToOuterReceivers(outerReceivers, experienceRecord)
+            sendMessageToInnerReceivers(
+                notifyTypeList = notifyTypeList,
+                projectName = projectName,
+                innerReceivers = innerReceivers,
+                experienceRecord = experienceRecord,
+                pcUrl = pcUrl,
+                appUrl = appUrl
+            )
+            sendMessageToSubscriber(subscribeUsers, experienceRecord)
         }
     }
 
+    /**
+     * 发给外部人员
+     */
+    private fun sendMessageToOuterReceivers(
+        outerReceivers: MutableSet<String>,
+        experienceRecord: TExperienceRecord
+    ) {
+        outerReceivers.forEach {
+            val appMessage = AppNotifyUtil.makeMessage(
+                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                experienceName = experienceRecord.experienceName,
+                appVersion = experienceRecord.version,
+                receiver = it,
+                platform = experienceRecord.platform
+            )
+            experiencePushService.pushMessage(appMessage)
+        }
+    }
+
+    /**
+     * 发给订阅人员
+     */
+    private fun sendMessageToSubscriber(
+        subscribeUsers: Set<String>,
+        experienceRecord: TExperienceRecord
+    ) {
+        subscribeUsers.forEach {
+            val appMessage = AppNotifyUtil.makeMessage(
+                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                experienceName = experienceRecord.experienceName,
+                appVersion = experienceRecord.version,
+                receiver = it,
+                platform = experienceRecord.platform
+            )
+            experiencePushService.pushMessage(appMessage)
+        }
+    }
+
+    /**
+     * 发给内部人员
+     */
     private fun sendMessageToInnerReceivers(
         notifyTypeList: Set<NotifyType>,
         projectName: String,
-        name: String,
-        experienceName: String,
-        version: String,
-        innerUrl: String,
-        outerUrl: String,
-        receiver: String,
-        experienceId: Long
+        innerReceivers: MutableSet<String>,
+        experienceRecord: TExperienceRecord,
+        pcUrl: String,
+        appUrl: String
     ) {
-        if (notifyTypeList.contains(NotifyType.RTX)) {
-            val message = RtxUtil.makeMessage(
+        // 内部邮件
+        if (notifyTypeList.contains(NotifyType.EMAIL)) {
+            val message = EmailUtil.makeMessage(
+                userId = experienceRecord.creator,
                 projectName = projectName,
-                name = name,
-                version = version,
-                innerUrl = innerUrl,
-                outerUrl = outerUrl,
-                receivers = setOf(receiver)
+                name = experienceRecord.name,
+                version = experienceRecord.version,
+                url = pcUrl,
+                receivers = innerReceivers.toSet()
             )
-            client.get(ServiceNotifyResource::class).sendRtxNotify(message)
+            client.get(ServiceNotifyResource::class).sendEmailNotify(message)
         }
-        if (notifyTypeList.contains(NotifyType.WECHAT)) {
-            val message = WechatUtil.makeMessage(
-                projectName = projectName,
-                name = name,
-                version = version,
-                innerUrl = innerUrl,
-                outerUrl = outerUrl,
-                receivers = setOf(receiver)
+
+        // 内部企业微信群
+        if (experienceRecord.enableWechatGroups && !experienceRecord.wechatGroups.isNullOrBlank()) {
+            val wechatGroupList = regex.split(experienceRecord.wechatGroups)
+            wechatGroupList.forEach {
+                val message = WechatGroupUtil.makeRichtextMessage(
+                    projectName = projectName,
+                    name = experienceRecord.name,
+                    version = experienceRecord.version,
+                    innerUrl = pcUrl,
+                    outerUrl = appUrl,
+                    groupId = it
+                )
+                wechatWorkService.sendRichText(message)
+            }
+        }
+
+        // 企业微信
+        innerReceivers.forEach {
+            if (notifyTypeList.contains(NotifyType.RTX)) {
+                val message = RtxUtil.makeMessage(
+                    projectName = projectName,
+                    name = experienceRecord.name,
+                    version = experienceRecord.version,
+                    pcUrl = pcUrl,
+                    appUrl = appUrl,
+                    receivers = setOf(it)
+                )
+                client.get(ServiceNotifyResource::class).sendRtxNotify(message)
+            }
+            if (notifyTypeList.contains(NotifyType.WECHAT)) {
+                val message = WechatUtil.makeMessage(
+                    projectName = projectName,
+                    name = experienceRecord.name,
+                    version = experienceRecord.version,
+                    innerUrl = pcUrl,
+                    outerUrl = appUrl,
+                    receivers = setOf(it)
+                )
+                client.get(ServiceNotifyResource::class).sendWechatNotify(message)
+            }
+
+            // 发送APP通知
+            val appMessage = AppNotifyUtil.makeMessage(
+                experienceHashId = HashUtil.encodeLongId(experienceRecord.id),
+                experienceName = experienceRecord.experienceName,
+                appVersion = experienceRecord.version,
+                receiver = it,
+                platform = experienceRecord.platform
             )
-            client.get(ServiceNotifyResource::class).sendWechatNotify(message)
+            experiencePushService.pushMessage(appMessage)
         }
-        // 发送APP通知
-        val appMessage = AppNotifyUtil.makeMessage(
-            experienceHashId = HashUtil.encodeLongId(experienceId),
-            experienceName = experienceName,
-            appVersion = version,
-            receiver = receiver
-        )
-        experiencePushService.pushMessage(appMessage)
     }
 
     private fun makeSha1(artifactoryType: ArtifactoryType, path: String): String {
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
     }
 
-    private fun getInnerUrl(projectId: String, experienceId: Long): String {
+    private fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
                 "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"

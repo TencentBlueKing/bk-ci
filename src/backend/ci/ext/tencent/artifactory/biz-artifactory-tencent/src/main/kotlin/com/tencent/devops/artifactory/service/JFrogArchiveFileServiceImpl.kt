@@ -392,6 +392,18 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         jFrogService.tryDelete("${getBasePath()}$filePath")
     }
 
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo> {
+        TODO("Not yet implemented")
+    }
+
     private fun getBasePath(): String {
         return JFrogUtil.getRepoPath()
     }
