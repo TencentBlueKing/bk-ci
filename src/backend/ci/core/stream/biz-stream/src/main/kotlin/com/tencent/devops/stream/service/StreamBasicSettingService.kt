@@ -195,31 +195,33 @@ class StreamBasicSettingService @Autowired constructor(
 
             // 增加判断可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
-            val projectResult =
-                client.get(ServiceProjectResource::class).createStreamProject(
-                    gitProjectId = setting.gitProjectId,
-                    userId = userId,
-                    gitProjectName = gitProjectName
-                )
-            if (projectResult.isNotOk()) {
-                throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
-            }
-            val projectInfo = projectResult.data!!
-            setting.creatorBgName = projectInfo.bgName
-            setting.creatorDeptName = projectInfo.deptName
-            setting.creatorCenterName = projectInfo.centerName
-            streamBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
+            TODO("等待接口完成")
+//            val projectResult =
+//                client.get(ServiceProjectResource::class).createStreamProject(
+//                    gitProjectId = setting.gitProjectId,
+//                    userId = userId,
+//                    gitProjectName = gitProjectName
+//                )
+//            if (projectResult.isNotOk()) {
+//                throw RuntimeException("Create git ci project in devops failed, msg: ${projectResult.message}")
+//            }
+//            val projectInfo = projectResult.data!!
+//            setting.creatorBgName = projectInfo.bgName
+//            setting.creatorDeptName = projectInfo.deptName
+//            setting.creatorCenterName = projectInfo.centerName
+//            streamBasicSettingDao.saveSetting(dslContext, setting, projectInfo.projectCode)
         } else {
-            val projectResult = client.get(ServiceUserResource::class).get(gitRepoConf.enableUserId)
-            if (projectResult.isNotOk()) {
-                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
-                return false
-            }
-            val userInfo = projectResult.data!!
-            setting.creatorBgName = userInfo.bgName
-            setting.creatorDeptName = userInfo.deptName
-            setting.creatorCenterName = userInfo.centerName
-            streamBasicSettingDao.saveSetting(dslContext, setting, gitRepoConf.projectCode!!)
+            TODO("等待接口完成")
+//            val projectResult = client.get(ServiceUserResource::class).get(gitRepoConf.enableUserId)
+//            if (projectResult.isNotOk()) {
+//                logger.error("Update git ci project in devops failed, msg: ${projectResult.message}")
+//                return false
+//            }
+//            val userInfo = projectResult.data!!
+//            setting.creatorBgName = userInfo.bgName
+//            setting.creatorDeptName = userInfo.deptName
+//            setting.creatorCenterName = userInfo.centerName
+//            streamBasicSettingDao.saveSetting(dslContext, setting, gitRepoConf.projectCode!!)
         }
         return true
     }
@@ -249,6 +251,19 @@ class StreamBasicSettingService @Autowired constructor(
             pathWithNamespace = projectInfo.pathWithNamespace,
             nameWithNamespace = projectInfo.nameWithNamespace
         )
+        TODO("等待接口完成")
+//        if (oldData.name != projectInfo.name) {
+//            try {
+//                client.get(ServiceProjectResource::class).updateProjectName(
+//                    userId = userId,
+//                    projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
+//                    projectName = projectInfo.name
+//                )
+//            } catch (e: Throwable) {
+//                logger.error("update bkci project name error :${e.message}")
+//                return false
+//            }
+//        }
         return true
     }
 
