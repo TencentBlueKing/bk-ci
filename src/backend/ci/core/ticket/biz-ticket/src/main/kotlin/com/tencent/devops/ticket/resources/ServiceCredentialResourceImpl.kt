@@ -41,6 +41,7 @@ import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.ticket.pojo.enums.Permission
 import com.tencent.devops.ticket.service.CredentialService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -48,6 +49,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : ServiceCredentialResource {
+
+    @Timed
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -65,6 +68,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Timed
     override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -75,6 +79,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
     }
 
+    @Timed
     override fun list(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -120,6 +125,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         credentialService.serviceCheck(projectId, credentialId)
     }
 
+    @Timed
     override fun hasPermissionList(
         userId: String,
         projectId: String,

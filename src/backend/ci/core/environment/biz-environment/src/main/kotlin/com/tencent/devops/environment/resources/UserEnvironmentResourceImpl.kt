@@ -46,6 +46,7 @@ import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.service.EnvService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -54,6 +55,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService,
     private val environmentPermissionService: EnvironmentPermissionService
 ) : UserEnvironmentResource {
+
+    @Timed
     override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listUsableServerEnvs(userId, projectId))
     }
@@ -62,6 +65,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE))
     }
 
+    @Timed
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
@@ -91,18 +95,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Timed
     override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listEnvironment(userId, projectId))
     }
 
+    @Timed
     override fun listByType(userId: String, projectId: String, envType: EnvType): Result<List<EnvWithNodeCount>> {
         return Result(envService.listEnvironmentByType(userId, projectId, envType))
     }
 
+    @Timed
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
     }
 
+    @Timed
     override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -120,6 +128,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Timed
     override fun listNodes(userId: String, projectId: String, envHashId: String): Result<List<NodeBaseInfo>> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -128,6 +137,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listAllEnvNodes(userId, projectId, listOf(envHashId)))
     }
 
+    @Timed
     override fun addNodes(
         userId: String,
         projectId: String,
@@ -173,14 +183,16 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         limit: Int?
     ): Result<Page<SharedProjectInfo>> {
         checkParam(userId, projectId, envHashId)
-        return Result(envService.listShareEnv(
-            userId,
-            projectId,
-            envHashId,
-            name,
-            offset ?: 0,
-            limit ?: 20
-        ))
+        return Result(
+            envService.listShareEnv(
+                userId,
+                projectId,
+                envHashId,
+                name,
+                offset ?: 0,
+                limit ?: 20
+            )
+        )
     }
 
     override fun setShareEnv(

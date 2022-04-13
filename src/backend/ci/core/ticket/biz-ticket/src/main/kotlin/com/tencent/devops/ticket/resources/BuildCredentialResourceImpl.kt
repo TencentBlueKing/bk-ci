@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.service.CredentialService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -41,6 +42,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildCredentialResource {
     @SensitiveApiPermission("get_credential")
+    @Timed
     override fun get(
         projectId: String,
         buildId: String,
@@ -78,6 +80,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
+    @Timed
     override fun getAcrossProject(
         projectId: String,
         buildId: String,
@@ -108,6 +111,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
+    @Timed
     override fun getDetail(
         projectId: String,
         buildId: String,

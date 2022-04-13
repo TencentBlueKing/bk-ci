@@ -47,6 +47,7 @@ import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.RepositoryService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -83,6 +84,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(repositoryService.hasAliasName(projectId, repositoryHashId, aliasName))
     }
 
+    @Timed
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -99,6 +101,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
     }
 
+    @Timed
     override fun get(
         userId: String,
         projectId: String,
@@ -127,6 +130,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Timed
     override fun list(
         userId: String,
         projectId: String,
@@ -162,6 +166,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         )
     }
 
+    @Timed
     override fun hasPermissionList(
         userId: String,
         projectId: String,

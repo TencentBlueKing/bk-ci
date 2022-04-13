@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VA
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.EnvironmentId
@@ -64,7 +63,6 @@ interface ApigwEnvironmentResourceV3 {
     @ApiOperation("获取用户有权限使用的服务器列表", tags = ["v3_user_env_list_usable_nodes", "v3_app_env_list_usable_nodes"])
     @GET
     @Path("/projects/{projectId}/nodes/listUsableServerNodes")
-    @BkTimed
     fun listUsableServerNodes(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -83,7 +81,6 @@ interface ApigwEnvironmentResourceV3 {
     @ApiOperation("创建环境", tags = ["v3_app_env_create", "v3_user_env_create"])
     @POST
     @Path("/projects/{projectId}/envs")
-    @BkTimed
     fun createEnv(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -145,7 +142,6 @@ interface ApigwEnvironmentResourceV3 {
     @ApiOperation("添加节点到环境", tags = ["v3_app_env_add_node", "v3_user_env_add_node"])
     @POST
     @Path("/projects/{projectId}/envs/{envHashId}/addNodes")
-    @BkTimed
     fun envAddNodes(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -192,7 +188,6 @@ interface ApigwEnvironmentResourceV3 {
     @ApiOperation("获取用户有权限使用的环境列表", tags = ["v3_app_env_list_usable_envs", "v3_user_env_list_usable_envs"])
     @GET
     @Path("/projects/{projectId}/envs/listUsableServerEnvs")
-    @BkTimed
     fun listUsableServerEnvs(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -214,7 +209,6 @@ interface ApigwEnvironmentResourceV3 {
     )
     @POST
     @Path("/projects/{projectId}/envs/listRawByEnvNames")
-    @BkTimed
     fun listEnvRawByEnvNames(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -238,7 +232,6 @@ interface ApigwEnvironmentResourceV3 {
     )
     @POST
     @Path("/projects/{projectId}/envs/listRawByEnvHashIds")
-    @BkTimed
     fun listEnvRawByEnvHashIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -262,7 +255,6 @@ interface ApigwEnvironmentResourceV3 {
     )
     @POST
     @Path("/projects/{projectId}/nodes/listRawByNodeHashIds")
-    @BkTimed
     fun listNodeRawByNodeHashIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -286,7 +278,6 @@ interface ApigwEnvironmentResourceV3 {
     )
     @POST
     @Path("/projects/{projectId}/nodes/listRawByEnvHashIds")
-    @BkTimed
     fun listNodeRawByEnvHashIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

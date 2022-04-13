@@ -43,6 +43,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepositoryService
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
 
@@ -52,6 +53,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : ServiceRepositoryResource {
 
+    @Timed
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -68,6 +70,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
     }
 
+    @Timed
     override fun list(projectId: String, repositoryType: ScmType?): Result<List<RepositoryInfoWithPermission>> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -78,6 +81,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     /**
      * @param repositoryId 代表的是hashId或者代码库名，依赖repositoryType
      */
+    @Timed
     override fun get(projectId: String, repositoryId: String, repositoryType: RepositoryType?): Result<Repository> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -103,6 +107,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(data)
     }
 
+    @Timed
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -134,6 +139,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(Page(0, 9999, result.count, result.records))
     }
 
+    @Timed
     override fun listByProjects(projectIds: Set<String>, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
@@ -142,6 +148,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
+    @Timed
     override fun listByProject(
         projectId: String,
         repositoryType: ScmType?,
@@ -183,6 +190,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Timed
     override fun listRepoByIds(
         repositoryIds: Set<String>
     ): Result<List<Repository>> {

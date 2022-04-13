@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvUpdateInfo
 import com.tencent.devops.environment.pojo.EnvWithNodeCount
@@ -76,7 +75,6 @@ interface UserEnvironmentResource {
     @ApiOperation("创建环境")
     @POST
     @Path("/{projectId}")
-    @BkTimed
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -108,7 +106,6 @@ interface UserEnvironmentResource {
     @ApiOperation("获取环境列表")
     @GET
     @Path("/{projectId}")
-    @BkTimed
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -121,7 +118,6 @@ interface UserEnvironmentResource {
     @ApiOperation("根据类型获取环境列表")
     @GET
     @Path("/{projectId}/types/{envType}")
-    @BkTimed
     fun listByType(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -137,7 +133,6 @@ interface UserEnvironmentResource {
     @ApiOperation("根据OS获取第三方构建环境列表")
     @GET
     @Path("/{projectId}/buildEnvs")
-    @BkTimed
     fun listBuildEnvs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -153,7 +148,6 @@ interface UserEnvironmentResource {
     @ApiOperation("获取环境信息")
     @GET
     @Path("/{projectId}/{envHashId}")
-    @BkTimed
     fun get(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -184,7 +178,6 @@ interface UserEnvironmentResource {
     @ApiOperation("获取环境的节点列表")
     @POST
     @Path("/{projectId}/{envHashId}/listNodes")
-    @BkTimed
     fun listNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -200,7 +193,6 @@ interface UserEnvironmentResource {
     @ApiOperation("添加节点到环境")
     @POST
     @Path("/{projectId}/{envHashId}/addNodes")
-    @BkTimed
     fun addNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -235,7 +227,6 @@ interface UserEnvironmentResource {
     @ApiOperation("获取用户有权限使用的环境列表")
     @GET
     @Path("/{projectId}/listUsableServerEnvs")
-    @BkTimed
     fun listUsableServerEnvs(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

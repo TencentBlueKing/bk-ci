@@ -37,12 +37,15 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.Permission
+import io.micrometer.core.annotation.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwRepositoryResourceV3 {
+
+    @Timed
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -58,6 +61,7 @@ class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
+    @Timed
     override fun hasPermissionList(
         appCode: String?,
         apigwType: String?,

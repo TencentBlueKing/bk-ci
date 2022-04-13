@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.RepositoryInfo
@@ -63,7 +62,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("关联代码库")
     @POST
     @Path("/{projectId}/")
-    @BkTimed
     fun create(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -78,7 +76,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("代码库列表")
     @GET
     @Path("/{projectId}/")
-    @BkTimed
     fun list(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -91,7 +88,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("获取代码库详情")
     @GET
     @Path("/{projectId}/{repositoryId}/")
-    @BkTimed
     fun get(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -125,7 +121,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("代码库列表")
     @GET
     @Path("/{projectId}/hasPermissionList")
-    @BkTimed
     fun hasPermissionList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -144,7 +139,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("获取项目代码库列表")
     @POST
     @Path("/listByProjects")
-    @BkTimed
     fun listByProjects(
         projectIds: Set<String>,
         @ApiParam("分页", required = false)
@@ -158,7 +152,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("获取项目代码库列表")
     @GET
     @Path("/projects/{projectId}/listByProject")
-    @BkTimed
     fun listByProject(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
@@ -209,7 +202,6 @@ interface ServiceRepositoryResource {
     @ApiOperation("通过hashId来获取SVN仓库信息")
     @GET
     @Path("/listByRepoHashIds")
-    @BkTimed
     fun listRepoByIds(
         @ApiParam("仓库hashIdSet", required = true)
         @QueryParam("repositoryIds")

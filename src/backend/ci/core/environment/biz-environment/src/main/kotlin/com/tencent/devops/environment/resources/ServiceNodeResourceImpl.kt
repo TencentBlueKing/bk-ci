@@ -38,6 +38,7 @@ import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeService
 import com.tencent.devops.environment.utils.NodeUtils
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -45,10 +46,13 @@ class ServiceNodeResourceImpl @Autowired constructor(
     private val nodeService: NodeService,
     private val envService: EnvService
 ) : ServiceNodeResource {
+
+    @Timed
     override fun listNodeByNodeType(projectId: String, nodeType: NodeType): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByNodeType("", projectId, nodeType))
     }
 
+    @Timed
     override fun listRawByHashIds(
         userId: String,
         projectId: String,
@@ -62,6 +66,7 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listRawServerNodeByIds(userId, projectId, nodeHashIds))
     }
 
+    @Timed
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
@@ -75,10 +80,12 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(envService.listRawServerNodeByEnvHashIds(userId, projectId, envHashIds))
     }
 
+    @Timed
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(nodeService.listUsableServerNodes(userId, projectId))
     }
 
+    @Timed
     override fun listByHashIds(
         userId: String,
         projectId: String,
@@ -87,10 +94,12 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
     }
 
+    @Timed
     override fun listNodeByType(userId: String, projectId: String, type: String): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByType(userId, projectId, type))
     }
 
+    @Timed
     override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
         return Result(NodeUtils.sortByDisplayName(nodeService.extListNodes(userId, projectId)))
     }

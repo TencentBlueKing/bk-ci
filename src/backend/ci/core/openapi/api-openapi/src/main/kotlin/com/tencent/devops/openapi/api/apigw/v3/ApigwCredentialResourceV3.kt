@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
@@ -62,7 +61,6 @@ interface ApigwCredentialResourceV3 {
     @ApiOperation("获取用户拥有对应权限凭据列表", tags = ["v3_app_credential_list", "v3_user_credential_list"])
     @Path("/")
     @GET
-    @BkTimed
     fun list(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -114,7 +112,6 @@ interface ApigwCredentialResourceV3 {
     @ApiOperation("新增凭据", tags = ["v3_app_credential_create", "v3_user_credential_create"])
     @Path("/")
     @POST
-    @BkTimed
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -135,7 +132,6 @@ interface ApigwCredentialResourceV3 {
     @ApiOperation("获取凭据", tags = ["v3_user_credential_get", "v3_app_credential_get"])
     @Path("/{credentialId}")
     @GET
-    @BkTimed
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)

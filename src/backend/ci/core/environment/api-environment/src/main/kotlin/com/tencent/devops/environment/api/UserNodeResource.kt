@@ -30,7 +30,6 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import io.swagger.annotations.Api
@@ -80,7 +79,6 @@ interface UserNodeResource {
     @ApiOperation("获取项目节点列表")
     @GET
     @Path("/{projectId}")
-    @BkTimed
     fun list(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -93,7 +91,6 @@ interface UserNodeResource {
     @ApiOperation("获取用户有权限使用的服务器列表")
     @GET
     @Path("/{projectId}/listUsableServerNodes")
-    @BkTimed
     fun listUsableServerNodes(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

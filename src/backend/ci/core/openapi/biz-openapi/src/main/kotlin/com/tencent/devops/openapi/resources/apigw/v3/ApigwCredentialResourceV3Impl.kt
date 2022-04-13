@@ -35,12 +35,15 @@ import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
+import io.micrometer.core.annotation.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwCredentialResourceV3 {
+
+    @Timed
     override fun list(
         appCode: String?,
         apigwType: String?,
@@ -77,6 +80,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
 //        )
 //    }
 
+    @Timed
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -92,6 +96,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
+    @Timed
     override fun get(
         appCode: String?,
         apigwType: String?,

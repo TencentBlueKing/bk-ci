@@ -30,7 +30,6 @@ package com.tencent.devops.environment.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -51,7 +50,6 @@ interface BuildNodeResource {
 
     @ApiOperation("构建机获取节点信息")
     @GET
-    @BkTimed
     fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
