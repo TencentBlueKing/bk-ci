@@ -227,7 +227,7 @@ object DateTimeUtil {
      * 将格式化的日期时间字符串转换为LocalDate对象
      */
     fun stringToLocalDate(dateStr: String?): LocalDate? {
-        var localDate : LocalDate? = null
+        var localDate: LocalDate? = null
         if (!dateStr.isNullOrBlank()) {
             localDate = LocalDate.parse(dateStr)
         }
