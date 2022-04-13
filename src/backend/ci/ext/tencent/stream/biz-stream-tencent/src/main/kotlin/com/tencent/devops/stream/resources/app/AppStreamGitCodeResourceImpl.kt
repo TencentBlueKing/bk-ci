@@ -9,7 +9,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.api.app.AppStreamGitCodeResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppStreamGitCodeResourceImpl @Autowired constructor(
     private val permissionService: GitCIV2PermissionService,
     private val streamScmService: StreamScmService,
-    private val streamBasicSettingService: StreamBasicSettingService,
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val oauthService: StreamOauthService,
     private val streamPipelineBranchService: StreamPipelineBranchService
 ) : AppStreamGitCodeResource {
@@ -75,7 +75,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
 
     // 看是否使用工蜂开启人的OAuth
     private fun getOauthToken(gitProjectId: Long): String {
-        val setting = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val setting = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         return oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
     }
 }

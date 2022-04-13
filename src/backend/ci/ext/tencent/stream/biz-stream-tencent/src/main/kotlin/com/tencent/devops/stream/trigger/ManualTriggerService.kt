@@ -64,7 +64,7 @@ import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import com.tencent.devops.stream.v1.pojo.V1GitRequestEvent
 import com.tencent.devops.stream.v1.service.V1StreamYamlService
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,7 +81,7 @@ class ManualTriggerService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val streamBasicSettingService: StreamBasicSettingService,
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val gitCIEventService: GitCIEventService,
     private val yamlBuild: V1YamlBuild,
     private val yamlBuildV2: StreamYamlBuild,
@@ -380,7 +380,7 @@ class ManualTriggerService @Autowired constructor(
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        streamBasicSettingService.refreshSetting(gitRequestEventForHandle.userId, gitRequestEventForHandle.gitProjectId)
+        TXStreamBasicSettingService.refreshSetting(gitRequestEventForHandle.userId, gitRequestEventForHandle.gitProjectId)
 
         var params = emptyMap<String, String>()
         if (gitRequestEventForHandle.gitRequestEvent.gitEvent != null) {

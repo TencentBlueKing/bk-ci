@@ -3,6 +3,7 @@ package com.tencent.devops.stream.api.op
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -31,7 +32,7 @@ interface OpGitCIBasicSettingResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "工蜂项目", required = true)
-        gitCIBasicSetting: GitCIBasicSetting
+        gitCIBasicSetting: StreamBasicSetting
     ): Result<Boolean>
 
     @ApiOperation("填充存量流水线的组织架构信息")

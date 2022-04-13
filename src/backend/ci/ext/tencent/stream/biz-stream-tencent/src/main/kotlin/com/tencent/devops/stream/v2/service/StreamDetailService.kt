@@ -62,7 +62,7 @@ class StreamDetailService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val streamBasicSettingService: StreamBasicSettingService,
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val streamScmService: StreamScmService
@@ -77,7 +77,7 @@ class StreamDetailService @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): GitCIModelDetail? {
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val eventBuildRecord =
             gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
@@ -104,7 +104,7 @@ class StreamDetailService @Autowired constructor(
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
@@ -145,7 +145,7 @@ class StreamDetailService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): FileInfoPage<FileInfo> {
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val prop = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
         return client.get(ServiceArtifactoryResource::class).search(
             userId = userId,
@@ -163,7 +163,7 @@ class StreamDetailService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Url {
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         try {
             val url = client.get(ServiceArtifactoryDownLoadResource::class).downloadIndexUrl(
                 projectId = conf.projectCode!!,
@@ -193,7 +193,7 @@ class StreamDetailService @Autowired constructor(
     }
 
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val reportList = client.get(TXUserReportResource::class)
             .getGitCI(userId, conf.projectCode!!, pipelineId, buildId)
             .data!!.toMutableList()

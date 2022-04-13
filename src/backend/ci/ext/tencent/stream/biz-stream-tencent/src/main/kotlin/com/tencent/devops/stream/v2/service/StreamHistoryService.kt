@@ -54,7 +54,7 @@ class StreamHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val streamBasicSettingService: StreamBasicSettingService,
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val eventMessageUtil: StreamTriggerMessageUtils,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
@@ -74,7 +74,7 @@ class StreamHistoryService @Autowired constructor(
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = search?.page ?: 1
         val pageSizeNotNull = search?.pageSize ?: 10
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val totalPage = gitRequestEventBuildDao.getRequestEventBuildListMultipleCount(
             dslContext = dslContext,
             gitProjectId = gitProjectId,

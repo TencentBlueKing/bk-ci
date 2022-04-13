@@ -38,7 +38,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.v2.message.UserMessageType
 import com.tencent.devops.stream.utils.StreamTriggerMessageUtils
 import com.tencent.devops.stream.v2.dao.StreamUserMessageDao
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -56,7 +56,7 @@ class GitCIEventService @Autowired constructor(
     private val userMessageDao: StreamUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val streamBasicSettingService: StreamBasicSettingService,
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val websocketService: StreamWebsocketService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val eventMessageUtil: StreamTriggerMessageUtils
@@ -111,7 +111,7 @@ class GitCIEventService @Autowired constructor(
     ): Long {
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
-        val gitBasicSetting = streamBasicSettingService.getGitCIConf(gitProjectId)
+        val gitBasicSetting = TXStreamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw RuntimeException("can't find gitBasicSetting $gitProjectId")
         // 人工触发不发送
         if (gitBasicSetting.enableCommitCheck &&

@@ -66,7 +66,7 @@ import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.template.TemplateProjectData
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import java.time.LocalDateTime
@@ -81,7 +81,7 @@ class StreamYamlTrigger @Autowired constructor(
     private val streamScmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitBasicSettingService: StreamBasicSettingService,
+    private val gitBasicSettingService: TXStreamBasicSettingService,
     private val yamlTemplateService: YamlTemplateService,
     private val triggerMatcher: TriggerMatcher,
     private val yamlSchemaCheck: YamlSchemaCheck,

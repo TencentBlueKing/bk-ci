@@ -39,23 +39,26 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserGitBasicSettingResourceImpl @Autowired constructor(
-    private val streamBasicSettingService: StreamBasicSettingService,
+class TXUserGitBasicSettingResourceImpl @Autowired constructor(
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val permissionService: GitCIV2PermissionService,
     private val client: Client
-) : UserGitBasicSettingResource {
+) : UserGitBasicSettingResourceImpl(
+    TXStreamBasicSettingService,
+    permissionService,
+    client
+) {
 
     override fun enableGitCI(
         userId: String,
@@ -70,11 +73,11 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId
         )
-        val setting = streamBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = TXStreamBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
-            streamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
+            TXStreamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
         } else {
-            streamBasicSettingService.updateProjectSetting(
+            TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableCi = enabled
             )
@@ -86,7 +89,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIPermission(userId, projectId)
-        return Result(streamBasicSettingService.getGitCIConf(gitProjectId))
+        return Result(TXStreamBasicSettingService.getGitCIConf(gitProjectId))
     }
 
     override fun saveGitCIConf(
@@ -99,7 +102,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkGitCIPermission(userId = userId, projectId = projectId)
         permissionService.checkEnableGitCI(gitProjectId)
         return Result(
-            streamBasicSettingService.updateProjectSetting(
+            TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = gitCIUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = gitCIUpdateSetting.buildPushedBranches,
@@ -119,7 +122,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
-            streamBasicSettingService.updateProjectSetting(
+            TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 userId = userId,
                 authUserId = authUserId
@@ -153,7 +156,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         checkParam(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
+        return Result(TXStreamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
     }
 
     private fun checkNodeId(nodeHashId: String) {

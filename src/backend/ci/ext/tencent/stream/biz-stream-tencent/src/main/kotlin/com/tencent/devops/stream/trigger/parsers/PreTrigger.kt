@@ -33,7 +33,7 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommitRepository
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.v2.service.StreamOauthService
 import com.tencent.devops.stream.v2.service.StreamScmService
 import org.slf4j.LoggerFactory
@@ -45,7 +45,7 @@ class PreTrigger @Autowired constructor(
     private val config: StreamPreTriggerConfig,
     private val scmService: StreamScmService,
     private val streamOauthService: StreamOauthService,
-    private val gitBasicSettingService: StreamBasicSettingService
+    private val gitBasicSettingService: TXStreamBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PreTrigger::class.java)

@@ -30,11 +30,6 @@ package com.tencent.devops.stream.v2.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentResource
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.common.exception.GitCINoEnableException
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -45,6 +40,11 @@ import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.StreamBasicSetting
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -52,60 +52,36 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class StreamBasicSettingService @Autowired constructor(
+class TXStreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val tokenService: StreamGitTokenService,
     private val streamScmService: StreamScmService,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitTransferService: StreamGitTransferService
+): StreamBasicSettingService(
+    dslContext = dslContext,
+    client = client,
+    streamBasicSettingDao = streamBasicSettingDao,
+    pipelineResourceDao = pipelineResourceDao,
+    streamGitTransferService = streamGitTransferService
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
+        private val logger = LoggerFactory.getLogger(TXStreamBasicSettingService::class.java)
         private const val projectPrefix = "git_"
     }
 
-    fun listAgentBuilds(
-        user: String,
-        projectId: String,
-        nodeHashId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Page<AgentBuildDetail> {
-        val agentBuilds =
-            client.get(UserThirdPartyAgentResource::class).listAgentBuilds(
-                userId = user,
-                projectId = projectId,
-                nodeHashId = nodeHashId,
-                page = page,
-                pageSize = pageSize
-            )
-        if (agentBuilds.isNotOk()) {
-            logger.error("get agent builds list in devops failed, msg: ${agentBuilds.message}")
-            throw RuntimeException("get agent builds list in devops failed, msg: ${agentBuilds.message}")
-        }
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        val pipelines = pipelineResourceDao.getPipelinesInIds(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            pipelineIds = agentBuilds.data!!.records.map { it.pipelineId }.toList().distinct()
-        ).associateBy { it.pipelineId }
-        val agentBuildDetails = agentBuilds.data!!.records.map {
-            it.copy(pipelineName = pipelines[it.pipelineId]?.displayName ?: it.pipelineName)
-        }
-        return agentBuilds.data!!.copy(records = agentBuildDetails)
-    }
-
-    fun updateProjectSetting(
+    override fun updateProjectSetting(
         gitProjectId: Long,
-        userId: String? = null,
-        buildPushedBranches: Boolean? = null,
-        buildPushedPullRequest: Boolean? = null,
-        enableMrBlock: Boolean? = null,
-        enableCi: Boolean? = null,
-        authUserId: String? = null,
-        enableCommitCheck: Boolean? = null,
-        enableMrComment: Boolean? = null
+        userId: String?,
+        buildPushedBranches: Boolean?,
+        buildPushedPullRequest: Boolean?,
+        enableMrBlock: Boolean?,
+        enableCi: Boolean?,
+        authUserId: String?,
+        enableCommitCheck: Boolean?,
+        enableMrComment: Boolean?
     ): Boolean {
         val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (setting == null) {
@@ -190,57 +166,8 @@ class StreamBasicSettingService @Autowired constructor(
         )
     }
 
-    fun getGitCIConf(gitProjectId: Long): GitCIBasicSetting? {
-        return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
-    }
-
-    fun getGitCIBasicSettingAndCheck(gitProjectId: Long): GitCIBasicSetting {
-        return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
-            ?: throw GitCINoEnableException(gitProjectId.toString())
-    }
-
-    fun initGitCIConf(
-        userId: String,
-        projectId: String,
-        gitProjectId: Long,
-        enabled: Boolean
-    ): Boolean {
-        val projectInfo = requestGitProjectInfo(gitProjectId)
-
-        run back@{
-            return saveGitCIConf(
-                userId,
-                GitCIBasicSetting(
-                    gitProjectId = gitProjectId,
-                    name = projectInfo?.name ?: return@back,
-                    url = projectInfo.gitSshUrl ?: return@back,
-                    homepage = projectInfo.homepage ?: return@back,
-                    gitHttpUrl = projectInfo.gitHttpsUrl ?: return@back,
-                    gitSshUrl = projectInfo.gitSshUrl ?: return@back,
-                    enableCi = enabled,
-                    enableUserId = userId,
-                    buildPushedBranches = true,
-                    buildPushedPullRequest = true,
-                    enableMrBlock = true,
-                    projectCode = projectId,
-                    createTime = null,
-                    updateTime = null,
-                    creatorCenterName = null,
-                    creatorDeptName = null,
-                    creatorBgName = null,
-                    gitProjectDesc = projectInfo.description,
-                    gitProjectAvatar = projectInfo.avatarUrl,
-                    lastCiInfo = null,
-                    pathWithNamespace = projectInfo.pathWithNamespace,
-                    nameWithNamespace = projectInfo.nameWithNamespace
-                )
-            )
-        }
-        logger.warn("initGitCIConf: $gitProjectId  info: $projectInfo")
-        throw RuntimeException("Create git ci project in devops failed, msg: get project info from git error")
-    }
-
-    fun saveGitCIConf(userId: String, setting: GitCIBasicSetting): Boolean {
+    // TODO("需要等待CORE接口补全后再判断是否需要修改")
+    override fun saveStreamConf(userId: String, setting: StreamBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $setting")
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
         if (gitRepoConf?.projectCode == null) {
@@ -320,12 +247,17 @@ class StreamBasicSettingService @Autowired constructor(
     }
 
     // 更新时同步更新蓝盾项目名称
-    fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
+    // TODO("需要等待CORE接口补全后再判断是否需要修改")
+    override fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
         val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
         return updateProjectInfo(userId, projectInfo)
     }
 
-    fun updateProjectInfo(userId: String, projectInfo: GitCIProjectInfo): Boolean {
+    // TODO("需要等待CORE接口补全后再判断是否需要修改")
+    override fun updateProjectInfo(
+        userId: String,
+        projectInfo: StreamGitProjectInfoWithProject
+    ): Boolean {
         val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return false
 
         streamBasicSettingDao.updateInfoSetting(
@@ -355,36 +287,6 @@ class StreamBasicSettingService @Autowired constructor(
             }
         }
         return true
-    }
-
-    fun getMaxId(
-        gitProjectIdList: List<Long>? = null
-    ): Long {
-        return streamBasicSettingDao.getMaxId(dslContext, gitProjectIdList)
-    }
-
-    fun getBasicSettingList(
-        gitProjectIdList: List<Long>? = null,
-        minId: Long? = null,
-        maxId: Long? = null
-    ): List<Long>? {
-        val basicSettingRecords = streamBasicSettingDao.getBasicSettingList(
-            dslContext = dslContext,
-            gitProjectIdList = gitProjectIdList,
-            minId = minId,
-            maxId = maxId
-        )
-        return if (basicSettingRecords.isEmpty()) {
-            null
-        } else {
-            val idList = mutableListOf<Long>()
-            basicSettingRecords.forEach { record ->
-                idList.add(
-                    record.id
-                )
-            }
-            idList
-        }
     }
 
     private fun refreshNameSpace(it: TGitBasicSettingRecord) {
@@ -431,10 +333,9 @@ class StreamBasicSettingService @Autowired constructor(
         }
     }
 
-    private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
+    private fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
         return try {
-            val accessToken = tokenService.getToken(gitProjectId)
-            streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)
+            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
@@ -447,7 +348,8 @@ class StreamBasicSettingService @Autowired constructor(
      * case:项目存在，并且项目group/project跟入参一致(工蜂侧做项目group/名称唯一性保障,理论不会出现);
      * case:项目不存在，说明该项目ID已经在工蜂侧删除，则更改该projectID对应的project_name为xxx_时间戳_delete;
      */
-    fun checkSameGitProjectName(userId: String, projectName: String) {
+    // TODO("需要等待CORE接口补全后再判断是否需要修改")
+    override fun checkSameGitProjectName(userId: String, projectName: String) {
 
         // sp1:根据gitProjectName调用project接口获取t_project信息
         val bkProjectResult = client.get(ServiceTxProjectResource::class).getProjectInfoByProjectName(

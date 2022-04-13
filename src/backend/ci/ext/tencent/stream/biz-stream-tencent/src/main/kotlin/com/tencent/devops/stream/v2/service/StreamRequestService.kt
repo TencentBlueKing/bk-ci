@@ -56,7 +56,7 @@ class StreamRequestService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val streamBasicSettingService: StreamBasicSettingService,
+    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val streamScmService: StreamScmService
 ) {
@@ -71,7 +71,7 @@ class StreamRequestService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get request list, gitProjectId: $gitProjectId")
-        val conf = streamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val conf = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
         val requestList = gitRequestEventDao.getRequestList(
             dslContext = dslContext,

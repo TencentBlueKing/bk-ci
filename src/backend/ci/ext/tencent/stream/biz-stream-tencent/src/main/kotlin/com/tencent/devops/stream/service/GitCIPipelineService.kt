@@ -27,11 +27,8 @@
 
 package com.tencent.devops.stream.service
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
