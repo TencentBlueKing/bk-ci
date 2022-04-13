@@ -64,7 +64,7 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
             endTime = DateTimeUtil.stringToLocalDate(endTime),
             pageNum = pageNum,
             pageSize = pageSize,
-            user = userId
+            userId = userId
         )
     }
 
@@ -85,7 +85,7 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
             sortType = sortType,
             turboRecordModel = turboRecordModel,
             projectId = projectId,
-            user = userId
+            userId = userId
         )
     }
 
@@ -98,7 +98,7 @@ class ApigwTurboResourceV4Impl @Autowired constructor(
         return client.getSpringMvc(IOpenApiTurboController::class).getTurboPlanDetailByPlanId(
             planId = planId,
             projectId = projectId,
-            user = userId
+            userId = userId
         )
     }
 }
