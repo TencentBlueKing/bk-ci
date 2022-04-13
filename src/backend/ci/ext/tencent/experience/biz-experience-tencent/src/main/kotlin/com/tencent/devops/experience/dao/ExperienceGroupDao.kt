@@ -77,10 +77,12 @@ class ExperienceGroupDao {
     }
 
     fun listGroupIdsByRecordId(dslContext: DSLContext, recordId: Long): Result<Record1<Long>> {
-        val eg = TExperienceGroup.T_EXPERIENCE_GROUP
-        val g = TGroup.T_GROUP
-        val table = eg.rightJoin(g).on(eg.GROUP_ID.eq(g.ID))
-        return dslContext.select(g.ID).from(table).where(eg.RECORD_ID.eq(recordId)).fetch()
+        return with(TExperienceGroup.T_EXPERIENCE_GROUP) {
+            dslContext.select(GROUP_ID)
+                .from(this)
+                .where(RECORD_ID.eq(recordId))
+                .fetch()
+        }
     }
 
     fun deleteByRecordId(dslContext: DSLContext, recordId: Long, excludeGroupIds: Set<Long>) {
