@@ -229,9 +229,15 @@ class PipelineBuildService(
                     handlePostFlag = handlePostFlag
                 )
             }
+            val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
 
             val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(pipelineInfo = readyToBuildPipelineInfo, model = model, startType = startType)
+                InterceptData(
+                    pipelineInfo = readyToBuildPipelineInfo,
+                    model = model,
+                    startType = startType,
+                    setting = setting
+                )
             )
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
@@ -291,7 +297,8 @@ class PipelineBuildService(
                 },
                 startParamsWithType = paramsWithType,
                 buildNo = buildNo,
-                buildNumRule = pipelineSetting.buildNumRule
+                buildNumRule = pipelineSetting.buildNumRule,
+                setting = setting
             )
             return buildId
         } finally {
