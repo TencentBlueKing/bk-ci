@@ -38,5 +38,4 @@ object Versions {
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
     const val Pulsar = "2.8.1"
-    const val SpringPlugin = "2.0.0.RELEASE"
 }
