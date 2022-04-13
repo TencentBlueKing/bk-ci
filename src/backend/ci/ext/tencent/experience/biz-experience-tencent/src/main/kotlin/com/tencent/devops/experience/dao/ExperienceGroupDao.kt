@@ -28,7 +28,6 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperienceGroup
-import com.tencent.devops.model.experience.tables.TGroup
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
