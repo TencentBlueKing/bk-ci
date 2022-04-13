@@ -33,4 +33,5 @@ dependencies {
     api("org.springframework.boot:spring-boot-actuator")
     api("org.springframework.boot:spring-boot-actuator-autoconfigure")
     api("org.springframework.cloud:spring-cloud-stream")
+    api("org.springframework.plugin:spring-plugin-core")
 }
