@@ -27,55 +27,50 @@
 
 package com.tencent.devops.stream.resources.user
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.ServiceGitOauthResource
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
-import com.tencent.devops.stream.permission.GitCIV2PermissionService
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.pojo.StreamUpdateSetting
+import com.tencent.devops.stream.service.StreamGitTransferService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TXUserGitBasicSettingResourceImpl @Autowired constructor(
+    private val client: Client,
     private val TXStreamBasicSettingService: TXStreamBasicSettingService,
-    private val permissionService: GitCIV2PermissionService,
-    private val client: Client
+    private val permissionService: StreamPermissionService,
+    private val streamGitTransferService: StreamGitTransferService
 ) : UserGitBasicSettingResourceImpl(
     TXStreamBasicSettingService,
     permissionService,
-    client
+    streamGitTransferService
 ) {
 
-    override fun enableGitCI(
+    override fun enableStream(
         userId: String,
         enabled: Boolean,
-        projectInfo: GitCIProjectInfo
+        projectInfo: StreamGitProjectInfoWithProject
     ): Result<Boolean> {
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkGitCIAndOAuth(
+        permissionService.checkStreamAndOAuth(
             userId = userId,
             projectId = projectId
         )
-        val setting = TXStreamBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = TXStreamBasicSettingService.getStreamConf(gitProjectId)
         val result = if (setting == null) {
-            TXStreamBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled)
+            TXStreamBasicSettingService.initStreamConf(userId, projectId, gitProjectId, enabled)
         } else {
             TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
@@ -85,28 +80,21 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId)
-        permissionService.checkGitCIPermission(userId, projectId)
-        return Result(TXStreamBasicSettingService.getGitCIConf(gitProjectId))
-    }
-
-    override fun saveGitCIConf(
+    override fun saveStreamConf(
         userId: String,
         projectId: String,
-        gitCIUpdateSetting: GitCIUpdateSetting
+        streamUpdateSetting: StreamUpdateSetting
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId = userId, projectId = projectId)
-        permissionService.checkEnableGitCI(gitProjectId)
+        permissionService.checkStreamPermission(userId = userId, projectId = projectId)
+        permissionService.checkEnableStream(gitProjectId)
         return Result(
             TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
-                buildPushedPullRequest = gitCIUpdateSetting.buildPushedPullRequest,
-                buildPushedBranches = gitCIUpdateSetting.buildPushedBranches,
-                enableMrBlock = gitCIUpdateSetting.enableMrBlock
+                buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
+                buildPushedBranches = streamUpdateSetting.buildPushedBranches,
+                enableMrBlock = streamUpdateSetting.enableMrBlock
             )
         )
     }
@@ -119,8 +107,8 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
-        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
@@ -128,47 +116,6 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
                 authUserId = authUserId
             )
         )
-    }
-
-    override fun isOAuth(
-        userId: String,
-        redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?,
-        gitProjectId: Long?,
-        refreshToken: Boolean?
-    ): Result<AuthorizeResult> {
-        return client.get(ServiceGitOauthResource::class).isOAuth(
-            userId = userId,
-            redirectUrlType = redirectUrlType,
-            redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = refreshToken
-        )
-    }
-
-    override fun listAgentBuilds(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<AgentBuildDetail>> {
-        checkParam(userId)
-        checkProjectId(projectId)
-        checkNodeId(nodeHashId)
-        return Result(TXStreamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
-    }
-
-    private fun checkNodeId(nodeHashId: String) {
-        if (nodeHashId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
-        }
-    }
-
-    private fun checkProjectId(projectId: String) {
-        if (projectId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
-        }
     }
 
     private fun checkParam(userId: String) {

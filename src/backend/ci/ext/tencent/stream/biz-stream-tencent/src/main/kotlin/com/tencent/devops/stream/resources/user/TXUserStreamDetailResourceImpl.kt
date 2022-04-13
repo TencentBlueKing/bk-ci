@@ -27,18 +27,48 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.user.UserGitCIPermissionResource
-import com.tencent.devops.stream.permission.GitCIV2PermissionService
+import com.tencent.devops.stream.v2.service.TXStreamDetailService
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.service.StreamDetailService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserGitCIPermissionResourceImpl @Autowired constructor(
-    private val permissionService: GitCIV2PermissionService
-) : UserGitCIPermissionResource {
+class TXUserStreamDetailResourceImpl @Autowired constructor(
+    private val streamDetailService: StreamDetailService,
+    private val txStreamDetailService: TXStreamDetailService,
+    private val permissionService: StreamPermissionService
+) : UserStreamDetailResourceImpl(
+    streamDetailService, permissionService
+) {
+    override fun downloadUrl(
+        userId: String,
+        gitUserId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamPermission(userId, projectId)
+        permissionService.checkEnableStream(gitProjectId)
+        return Result(txStreamDetailService.downloadUrl(
+            userId = userId,
+            gitUserId = gitUserId,
+            gitProjectId = gitProjectId,
+            artifactoryType = artifactoryType,
+            path = path
+        ))
+    }
 
-    override fun validateUserResourcePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(permissionService.checkWebPermission(userId, projectId))
+    private fun checkParam(userId: String) {
+        if (userId.isBlank()) {
+            throw ParamBlankException("Invalid userId")
+        }
     }
 }

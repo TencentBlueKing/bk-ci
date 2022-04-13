@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.v2.service
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
@@ -36,7 +35,6 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.constant.GitCIConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -45,7 +43,7 @@ import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitTransferService
-import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,11 +54,9 @@ class TXStreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val tokenService: StreamGitTokenService,
-    private val streamScmService: StreamScmService,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamGitTransferService: StreamGitTransferService
-): StreamBasicSettingService(
+) : StreamBasicSettingService(
     dslContext = dslContext,
     client = client,
     streamBasicSettingDao = streamBasicSettingDao,
@@ -179,7 +175,7 @@ class TXStreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
+                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH, gitProjectName.length
                 )
             }
 
@@ -382,7 +378,7 @@ class TXStreamBasicSettingService @Autowired constructor(
             if (deletedProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 deletedProjectName = deletedProjectName.substring(
                     deletedProjectName.length -
-                            GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
+                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH
                 )
             }
             client.get(ServiceTxProjectResource::class).updateProjectName(
