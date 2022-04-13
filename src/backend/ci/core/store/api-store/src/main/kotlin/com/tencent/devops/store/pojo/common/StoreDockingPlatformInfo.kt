@@ -44,7 +44,7 @@ data class StoreDockingPlatformInfo(
     val summary: String,
     @ApiModelProperty("负责人", required = true)
     val principal: String,
-    @ApiModelProperty("平台logo地址", required = true)
+    @ApiModelProperty("平台logo地址", required = false)
     val logoUrl: String?,
     @ApiModelProperty("添加用户", required = true)
     val creator: String,
