@@ -86,17 +86,11 @@ interface OpStoreDockingPlatformResource {
 
     @ApiOperation("获取对接平台信息列表")
     @GET
-    @Path("/types/{storeType}/codes/{storeCode}/list")
+    @Path("/list")
     fun listPlatforms(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
-        @PathParam("storeType")
-        storeType: String,
-        @ApiParam("组件标识", required = true)
-        @PathParam("storeCode")
-        storeCode: String,
         @ApiParam("平台名称", required = false)
         @QueryParam("platformName")
         @BkField(patternStyle = BkStyleEnum.NAME_STYLE, required = false)

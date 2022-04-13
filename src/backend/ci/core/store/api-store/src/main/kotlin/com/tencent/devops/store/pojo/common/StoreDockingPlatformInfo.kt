@@ -34,10 +34,6 @@ import io.swagger.annotations.ApiModelProperty
 data class StoreDockingPlatformInfo(
     @ApiModelProperty("环境变量ID", required = true)
     val id: String,
-    @ApiModelProperty("store组件代码", required = true)
-    val storeCode: String,
-    @ApiModelProperty("store组件类型", required = true)
-    val storeType: String,
     @ApiModelProperty("平台代码", required = true)
     val platformCode: String,
     @ApiModelProperty("平台名称", required = true)

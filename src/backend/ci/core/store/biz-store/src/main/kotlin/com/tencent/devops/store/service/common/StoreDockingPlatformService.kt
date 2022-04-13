@@ -58,7 +58,7 @@ interface StoreDockingPlatformService {
     /**
      * 更新对接平台信息
      * @param userId 用户ID
-     * @param id 对接平台ID
+     * @param id 主键ID
      * @param storeDockingPlatformRequest 请求报文
      * @return 布尔值
      */
@@ -71,8 +71,6 @@ interface StoreDockingPlatformService {
     /**
      * 获取对接平台信息列表
      * @param userId 用户ID
-     * @param storeType 组件类型
-     * @param storeCode 组件代码
      * @param platformName 平台名称
      * @param page 页码
      * @param pageSize 每页大小
@@ -80,8 +78,6 @@ interface StoreDockingPlatformService {
      */
     fun getStoreDockingPlatforms(
         userId: String,
-        storeType: String,
-        storeCode: String,
         platformName: String? = null,
         page: Int = 1,
         pageSize: Int = 10

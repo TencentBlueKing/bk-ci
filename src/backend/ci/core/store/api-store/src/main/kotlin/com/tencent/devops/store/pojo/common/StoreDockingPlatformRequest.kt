@@ -34,12 +34,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("store组件对接平台请求报文体")
 data class StoreDockingPlatformRequest(
-    @ApiModelProperty("store组件代码", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeCode: String,
-    @ApiModelProperty("store组件类型", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
-    val storeType: String,
     @ApiModelProperty("平台代码", required = true)
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     val platformCode: String,

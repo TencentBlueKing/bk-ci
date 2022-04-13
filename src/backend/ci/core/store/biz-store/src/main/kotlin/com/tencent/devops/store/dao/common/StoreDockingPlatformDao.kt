@@ -33,7 +33,6 @@ import com.tencent.devops.model.store.tables.TStoreDockingPlatform
 import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformRecord
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -52,8 +51,6 @@ class StoreDockingPlatformDao {
             dslContext.insertInto(
                 this,
                 ID,
-                STORE_CODE,
-                STORE_TYPE,
                 PLATFORM_CODE,
                 PLATFORM_NAME,
                 CREATOR,
@@ -61,8 +58,6 @@ class StoreDockingPlatformDao {
             )
                 .values(
                     UUIDUtil.generate(),
-                    storeDockingPlatformRequest.storeCode,
-                    StoreTypeEnum.valueOf(storeDockingPlatformRequest.storeType).type.toByte(),
                     storeDockingPlatformRequest.platformCode,
                     storeDockingPlatformRequest.platformName,
                     userId,
@@ -96,18 +91,18 @@ class StoreDockingPlatformDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, platformName: String, storeType: Byte): Int {
+    fun countByName(dslContext: DSLContext, platformName: String): Int {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
-                .where(PLATFORM_NAME.eq(platformName).and(STORE_TYPE.eq(storeType)))
+                .where(PLATFORM_NAME.eq(platformName))
                 .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun countByCode(dslContext: DSLContext, platformCode: String, storeType: Byte): Int {
+    fun countByCode(dslContext: DSLContext, platformCode: String): Int {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
-                .where(PLATFORM_CODE.eq(platformCode).and(STORE_TYPE.eq(storeType)))
+                .where(PLATFORM_CODE.eq(platformCode))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -122,14 +117,12 @@ class StoreDockingPlatformDao {
 
     fun getStoreDockingPlatforms(
         dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte,
         platformName: String?,
         page: Int,
         pageSize: Int
     ): Result<TStoreDockingPlatformRecord>? {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            val conditions = getStoreDockingPlatformsCondition(storeCode, storeType, platformName)
+            val conditions = getStoreDockingPlatformsCondition(platformName)
             return dslContext
                 .selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc())
@@ -140,12 +133,10 @@ class StoreDockingPlatformDao {
 
     fun getStoreDockingPlatformCount(
         dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte,
         platformName: String?
     ): Long {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            val conditions = getStoreDockingPlatformsCondition(storeCode, storeType, platformName)
+            val conditions = getStoreDockingPlatformsCondition(platformName)
             return dslContext
                 .selectFrom(this)
                 .where(conditions)
@@ -154,13 +145,9 @@ class StoreDockingPlatformDao {
     }
 
     private fun TStoreDockingPlatform.getStoreDockingPlatformsCondition(
-        storeCode: String,
-        storeType: Byte,
         platformName: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(STORE_CODE.eq(storeCode))
-        conditions.add(STORE_TYPE.eq(storeType))
         if (!platformName.isNullOrBlank()) {
             conditions.add(PLATFORM_NAME.contains(platformName))
         }
@@ -171,8 +158,6 @@ class StoreDockingPlatformDao {
         with(record) {
             return StoreDockingPlatformInfo(
                 id = id,
-                storeCode = storeCode,
-                storeType = StoreTypeEnum.getStoreType(storeType.toInt()),
                 platformCode = platformCode,
                 platformName = platformName,
                 creator = creator,

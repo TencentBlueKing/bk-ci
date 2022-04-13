@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDockingPlatformService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,9 +46,8 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
 
     override fun create(userId: String, storeDockingPlatformRequest: StoreDockingPlatformRequest): Boolean {
         val platformCode = storeDockingPlatformRequest.platformCode
-        val storeType = StoreTypeEnum.valueOf(storeDockingPlatformRequest.storeType).type.toByte()
         // 判断平台代码是否存在
-        val codeCount = storeDockingPlatformDao.countByCode(dslContext, platformCode, storeType)
+        val codeCount = storeDockingPlatformDao.countByCode(dslContext, platformCode)
         if (codeCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
@@ -59,7 +57,7 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         }
         val platformName = storeDockingPlatformRequest.platformName
         // 判断平台名称是否存在
-        val nameCount = storeDockingPlatformDao.countByName(dslContext, platformName, storeType)
+        val nameCount = storeDockingPlatformDao.countByName(dslContext, platformName)
         if (nameCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
@@ -82,9 +80,8 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         storeDockingPlatformRequest: StoreDockingPlatformRequest
     ): Boolean {
         val platformCode = storeDockingPlatformRequest.platformCode
-        val storeType = StoreTypeEnum.valueOf(storeDockingPlatformRequest.storeType).type.toByte()
         // 判断平台代码是否存在
-        val codeCount = storeDockingPlatformDao.countByCode(dslContext, platformCode, storeType)
+        val codeCount = storeDockingPlatformDao.countByCode(dslContext, platformCode)
         if (codeCount > 0) {
             val storeDockingPlatform = storeDockingPlatformDao.getStoreDockingPlatform(dslContext, id)
             if (null != storeDockingPlatform && platformCode != storeDockingPlatform.platformCode) {
@@ -97,7 +94,7 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         }
         val platformName = storeDockingPlatformRequest.platformName
         // 判断平台名称是否存在
-        val nameCount = storeDockingPlatformDao.countByName(dslContext, platformName, storeType)
+        val nameCount = storeDockingPlatformDao.countByName(dslContext, platformName)
         if (nameCount > 0) {
             val storeDockingPlatform = storeDockingPlatformDao.getStoreDockingPlatform(dslContext, id)
             if (null != storeDockingPlatform && platformName != storeDockingPlatform.platformName) {
@@ -119,16 +116,12 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
 
     override fun getStoreDockingPlatforms(
         userId: String,
-        storeType: String,
-        storeCode: String,
         platformName: String?,
         page: Int,
         pageSize: Int
     ): Page<StoreDockingPlatformInfo>? {
         val storeDockingPlatformRecords = storeDockingPlatformDao.getStoreDockingPlatforms(
             dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
             platformName = platformName,
             page = page,
             pageSize = pageSize
@@ -143,8 +136,6 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         }
         val storeDockingPlatformCount = storeDockingPlatformDao.getStoreDockingPlatformCount(
             dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = StoreTypeEnum.valueOf(storeType).type.toByte(),
             platformName = platformName
         )
         val totalPages = PageUtil.calTotalPage(pageSize, storeDockingPlatformCount)
