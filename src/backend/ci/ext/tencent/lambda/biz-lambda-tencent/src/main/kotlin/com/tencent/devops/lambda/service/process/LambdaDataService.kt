@@ -253,6 +253,7 @@ class LambdaDataService @Autowired constructor(
                             washTime = LocalDateTime.now().format(dateTimeFormatter)
                         )
                         val jobDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.jobDetailTopic, "jobDetailTopic")
+                        logger.info("pushJobDetail buildId:${dataPlatJobDetail.buildId}")
                         kafkaClient.send(jobDetailTopic, JsonUtil.toJson(dataPlatJobDetail))
 //                        kafkaClient.send(KafkaTopic.LANDUN_JOB_DETAIL_TOPIC, JsonUtil.toJson(dataPlatJobDetail))
                     }
