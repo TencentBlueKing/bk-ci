@@ -28,6 +28,7 @@
 dependencies {
     api(project(":core:common:common-service"))
     api("org.apache.pulsar:pulsar-client") {
+        // 暂时无需消息加解密能力，为避免版本冲突排除
         exclude("org.bouncycastle")
     }
     api("org.springframework.boot:spring-boot-actuator")
