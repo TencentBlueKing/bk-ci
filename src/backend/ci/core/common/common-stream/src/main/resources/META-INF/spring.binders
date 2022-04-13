@@ -1,1 +1,1 @@
-pulsar:com.tencent.devops.stream.binder.pulsar.autoconfigurate.PulsarBinderAutoConfiguration
+pulsar:com.tencent.devops.common.stream.pulsar.config.PulsarBinderAutoConfiguration

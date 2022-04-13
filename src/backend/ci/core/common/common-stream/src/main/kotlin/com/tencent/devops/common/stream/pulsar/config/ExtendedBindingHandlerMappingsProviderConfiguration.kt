@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.pulsar.autoconfigurate
+package com.tencent.devops.common.stream.pulsar.config
 
 import com.tencent.devops.common.stream.pulsar.convert.PulsarMessageConverter
 import com.tencent.devops.common.stream.pulsar.custom.PulsarConfigBeanPostProcessor

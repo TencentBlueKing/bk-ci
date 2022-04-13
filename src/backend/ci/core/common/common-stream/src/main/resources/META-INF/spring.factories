@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.tencent.devops.stream.binder.pulsar.autoconfigurate.ExtendedBindingHandlerMappingsProviderConfiguration
+com.tencent.devops.common.stream.pulsar.config.ExtendedBindingHandlerMappingsProviderConfiguration
