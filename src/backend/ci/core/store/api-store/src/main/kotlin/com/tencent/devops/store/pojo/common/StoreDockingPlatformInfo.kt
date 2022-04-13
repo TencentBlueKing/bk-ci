@@ -38,6 +38,14 @@ data class StoreDockingPlatformInfo(
     val platformCode: String,
     @ApiModelProperty("平台名称", required = true)
     val platformName: String,
+    @ApiModelProperty("网址", required = false)
+    val website: String?,
+    @ApiModelProperty("简介", required = true)
+    val summary: String,
+    @ApiModelProperty("负责人", required = true)
+    val principal: String,
+    @ApiModelProperty("平台logo地址", required = true)
+    val logoUrl: String?,
     @ApiModelProperty("添加用户", required = true)
     val creator: String,
     @ApiModelProperty("修改用户", required = true)
