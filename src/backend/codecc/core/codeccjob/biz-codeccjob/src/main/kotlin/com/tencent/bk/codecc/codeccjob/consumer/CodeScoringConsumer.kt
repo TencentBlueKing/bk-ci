@@ -66,7 +66,7 @@ class CodeScoringConsumer @Autowired constructor(
         private val logger = LoggerFactory.getLogger(CodeScoringConsumer::class.java)
     }
 
-    @Value("\${codecc.public.url}")
+    @Value("\${codecc.public.url:#{null}}")
     private val codeccGateWay: String? = null
 
     /**

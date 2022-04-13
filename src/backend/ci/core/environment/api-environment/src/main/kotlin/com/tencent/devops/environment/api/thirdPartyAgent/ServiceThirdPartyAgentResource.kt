@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
@@ -183,9 +185,11 @@ interface ServiceThirdPartyAgentResource {
     fun listAgents(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 128)
         projectId: String,
         @ApiParam("操作系统", required = true)
         @PathParam("os")
@@ -219,12 +223,15 @@ interface ServiceThirdPartyAgentResource {
     fun listPipelineRef(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 128)
         projectId: String,
         @ApiParam("Node Hash ID", required = true)
         @PathParam("nodeHashId")
+        @BkField(minLength = 1, maxLength = 128)
         nodeHashId: String,
         @ApiParam("排序字段, pipelineName|lastBuildTime", required = true)
         @QueryParam("sortBy")
@@ -247,4 +254,22 @@ interface ServiceThirdPartyAgentResource {
         @ApiParam("流水线引用信息", required = true)
         request: AgentPipelineRefRequest
     ): Result<Boolean>
+
+    @ApiOperation("获取构建机详情")
+    @GET
+    @Path("/projects/{projectId}/agents/{agentId}/detail")
+    fun getAgentDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 128)
+        projectId: String,
+        @ApiParam("Node Hash ID/Agent Id", required = true)
+        @PathParam("agentId")
+        @BkField(minLength = 3, maxLength = 32)
+        agentHashId: String
+    ): Result<ThirdPartyAgentDetail?>
 }

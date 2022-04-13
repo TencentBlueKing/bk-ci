@@ -67,6 +67,7 @@ object Runner {
 
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         logger.info("Start the worker ...")
+        ErrorMsgLogUtil.init()
         var workspacePathFile: File? = null
         // 启动成功, 报告process我已经启动了, #1613 如果这都失败了，则也无法向后台上报信息了。将由devopsAgent监控传递
         val buildVariables = EngineService.setStarted()
@@ -297,7 +298,7 @@ object Runner {
      * 发送构建初始化日志
      */
     private fun showBuildStartupLog(buildId: String, vmSeqId: String) {
-        LoggerService.addNormalLine("The build $buildId environment #$vmSeqId is ready")
+        LoggerService.addNormalLine("构建机已收到请求，准备构建(Build[$buildId] Job#$vmSeqId is ready）")
     }
 
     /**

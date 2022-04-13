@@ -62,6 +62,8 @@ object DateTimeUtil {
 
     const val YYYY_MM_DD = "yyyy-MM-dd"
 
+    const val YYYYMMDD = "yyyyMMdd"
+
     /**
      * 单位转换，分钟转换秒
      */
