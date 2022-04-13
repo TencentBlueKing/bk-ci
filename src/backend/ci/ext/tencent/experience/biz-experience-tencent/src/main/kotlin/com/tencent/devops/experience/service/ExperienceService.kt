@@ -622,7 +622,12 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
-    fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate): ExperienceCreateResp {
+    fun serviceCreate(
+        userId: String,
+        projectId: String,
+        experience: ExperienceServiceCreate,
+        source: Source
+    ): ExperienceCreateResp {
         checkCreatePermission(userId, projectId, experience.path, experience.artifactoryType)
 
         val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
@@ -666,7 +671,7 @@ class ExperienceService @Autowired constructor(
             projectId,
             experienceCreate,
             propertyMap,
-            Source.PIPELINE,
+            source,
             userId,
             isPublic,
             artifactoryType

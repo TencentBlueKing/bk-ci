@@ -40,6 +40,7 @@ import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceUpdate
+import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.service.ExperienceBaseService
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
@@ -60,7 +61,7 @@ class ServiceExperienceResourceImpl @Autowired constructor(
 
     override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<String> {
         checkParam(userId, projectId)
-        val experienceCreateResp = experienceService.serviceCreate(userId, projectId, experience)
+        val experienceCreateResp = experienceService.serviceCreate(userId, projectId, experience, Source.OPENAPI)
         return Result(experienceCreateResp.experienceHashId)
     }
 
