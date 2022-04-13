@@ -37,7 +37,7 @@ data class GroupUpdate(
     @ApiModelProperty("内部人员")
     val innerUsers: Set<String>,
     @ApiModelProperty("外部人员")
-    val outerUsers: Set<String>,
+    val outerUsers: Set<String> = setOf(),
     @ApiModelProperty("描述")
     val remark: String?
 )
