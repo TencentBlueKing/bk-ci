@@ -37,8 +37,10 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-web")
     api("io.swagger:swagger-jersey2-jaxrs")
     api("com.github.ulisesbocchio:jasypt-spring-boot-starter")
-    api("org.springframework.boot:spring-boot-starter-amqp")
     api("org.aspectj:aspectjweaver")
+    api("com.tencent.devops:devops-boot-starter-stream") {
+        exclude("org.bouncycastle")
+    }
     val assemblyMode = project.findPropertyOrNull("devops.assemblyMode")
     if (assemblyMode == null || assemblyMode.toUpperCase() == "CONSUL") {
         api("org.springframework.cloud:spring-cloud-starter-config")
