@@ -43,7 +43,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
+import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -278,42 +278,42 @@ class GitRequestEventHandle @Autowired constructor(
         )
     }
 
-    fun createManualTriggerEvent(userId: String, triggerBuildReq: TriggerBuildReq): GitRequestEvent {
-        if (triggerBuildReq.branch.isBlank()) {
+    fun createManualTriggerEvent(userId: String, v1TriggerBuildReq: V1TriggerBuildReq): GitRequestEvent {
+        if (v1TriggerBuildReq.branch.isBlank()) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = "branche cannot be empty"
             )
         }
-        val gitProjectId = triggerBuildReq.gitProjectId
-        val latestCommit = if (!triggerBuildReq.commitId.isNullOrEmpty()) {
+        val gitProjectId = v1TriggerBuildReq.gitProjectId
+        val latestCommit = if (!v1TriggerBuildReq.commitId.isNullOrEmpty()) {
             // 选择历史提交时，无需重新获取latest commit 相关信息
             null
         } else {
             streamScmService.getCommitInfo(
                 gitToken = streamGitTokenService.getToken(gitProjectId),
                 projectName = gitProjectId.toString(),
-                sha = triggerBuildReq.branch
+                sha = v1TriggerBuildReq.branch
             )
         }
         return GitRequestEvent(
             id = null,
-            objectKind = triggerBuildReq.objectKind,
+            objectKind = v1TriggerBuildReq.objectKind,
             operationKind = "",
             extensionAction = null,
-            gitProjectId = triggerBuildReq.gitProjectId,
+            gitProjectId = v1TriggerBuildReq.gitProjectId,
             sourceGitProjectId = null,
-            branch = getBranchName(triggerBuildReq.branch),
+            branch = getBranchName(v1TriggerBuildReq.branch),
             targetBranch = null,
-            commitId = triggerBuildReq.commitId ?: (latestCommit?.id ?: ""),
-            commitMsg = triggerBuildReq.customCommitMsg,
+            commitId = v1TriggerBuildReq.commitId ?: (latestCommit?.id ?: ""),
+            commitMsg = v1TriggerBuildReq.customCommitMsg,
             commitTimeStamp = getCommitTimeStamp(null),
             commitAuthorName = userId,
             userId = userId,
             totalCommitCount = 0,
             mergeRequestId = null,
             event = "",
-            description = triggerBuildReq.description,
+            description = v1TriggerBuildReq.description,
             mrTitle = "",
             gitEvent = null,
             gitProjectName = null

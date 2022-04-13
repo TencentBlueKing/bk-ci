@@ -7,7 +7,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.app.AppStreamTriggerResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.AppTriggerBuildResult
-import com.tencent.devops.stream.pojo.TriggerBuildReq
+import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.pojo.V2AppTriggerBuildReq
 import com.tencent.devops.stream.trigger.ManualTriggerService
 import com.tencent.devops.stream.utils.GitCommonUtils
@@ -43,7 +43,7 @@ class AppStreamTriggerResourceImpl @Autowired constructor(
         }
 
         val new = with(triggerBuildReq) {
-            TriggerBuildReq(
+            V1TriggerBuildReq(
                 gitProjectId = gitProjectId,
                 name = null,
                 url = null,

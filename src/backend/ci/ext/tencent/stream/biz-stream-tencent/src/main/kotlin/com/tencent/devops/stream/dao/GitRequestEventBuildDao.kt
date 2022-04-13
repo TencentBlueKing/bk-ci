@@ -152,21 +152,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getEventByBuildId(
-        dslContext: DSLContext,
-        buildId: String
-    ): Record? {
-        val t1 = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("t1")
-        val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
-        return dslContext.select(
-            t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2
-            .COMMIT_MESSAGE, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID, t1.ID
-        )
-            .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
-            .where(t1.BUILD_ID.eq(buildId))
-            .fetchAny()
-    }
-
     fun getByEventIds(
         dslContext: DSLContext,
         eventIds: Collection<Long>
@@ -176,16 +161,6 @@ class GitRequestEventBuildDao {
                 .where(EVENT_ID.`in`(eventIds))
                 .and(BUILD_ID.isNotNull)
                 .fetch()
-        }
-    }
-
-    fun getIdByEventIds(
-        dslContext: DSLContext,
-        eventIds: Collection<Long>
-    ): List<Long> {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.select(EVENT_ID).from(this)
-                .where(EVENT_ID.`in`(eventIds)).fetch(EVENT_ID)
         }
     }
 
@@ -231,42 +206,6 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getBranchBuildList(
-        dslContext: DSLContext,
-        gitProjectId: Long
-    ): List<BranchBuilds> {
-        val sql = "SELECT BRANCH, GIT_PROJECT_ID, SOURCE_GIT_PROJECT_ID, \n" +
-            "SUBSTRING_INDEX(GROUP_CONCAT(BUILD_ID ORDER BY EVENT_ID DESC), ',', 5) " +
-            "as BUILD_IDS, SUBSTRING_INDEX(GROUP_CONCAT(EVENT_ID ORDER BY EVENT_ID DESC), ',', 5) " +
-            "as EVENT_IDS, COUNT(BUILD_ID) as BUILD_TOTAL\n" +
-            "FROM T_GIT_REQUEST_EVENT_BUILD\n" +
-            "WHERE BUILD_ID IS NOT NULL AND GIT_PROJECT_ID = $gitProjectId \n" +
-            "GROUP BY BRANCH, SOURCE_GIT_PROJECT_ID\n" +
-            "order by EVENT_ID desc"
-        val result = dslContext.fetch(sql)
-        return if (result.isEmpty()) {
-            emptyList()
-        } else {
-            val branchBuildsList = mutableListOf<BranchBuilds>()
-            result.forEach {
-                val branchBuilds = BranchBuilds(
-                    it.getValue("BRANCH") as String,
-                    it.getValue("BUILD_TOTAL") as Long,
-                    it.getValue("BUILD_IDS") as String,
-                    it.getValue("EVENT_IDS") as String,
-                    it.getValue("GIT_PROJECT_ID") as Long,
-                    if (it.getValue("SOURCE_GIT_PROJECT_ID") == null) {
-                        null
-                    } else {
-                        it.getValue("SOURCE_GIT_PROJECT_ID") as Long
-                    }
-                )
-                branchBuildsList.add(branchBuilds)
-            }
-            branchBuildsList
-        }
-    }
-
     fun getAllBuildBranchList(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -309,41 +248,6 @@ class GitRequestEventBuildDao {
             return dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
                 .fetch()
-        }
-    }
-
-    fun getRequestEventBuildListCount(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        branchName: String?,
-        sourceGitProjectId: Long?,
-        triggerUser: String?,
-        pipelineId: String?,
-        event: String?
-    ): Int {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectCount().from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(BUILD_ID.isNotNull)
-            if (!branchName.isNullOrBlank()) {
-                // 针对fork库的特殊分支名 namespace:branchName 进行查询
-                if (sourceGitProjectId != null && branchName.contains(":")) {
-                    dsl.and(BRANCH.eq(branchName.split(":")[1]))
-                        .and(SOURCE_GIT_PROJECT_ID.eq(sourceGitProjectId))
-                } else {
-                    dsl.and(BRANCH.eq(branchName))
-                }
-            }
-            if (!triggerUser.isNullOrBlank()) {
-                dsl.and(TRIGGER_USER.eq(triggerUser))
-            }
-            if (!pipelineId.isNullOrBlank()) {
-                dsl.and(PIPELINE_ID.eq(pipelineId))
-            }
-            if (!event.isNullOrBlank()) {
-                dsl.and(OBJECT_KIND.eq(event))
-            }
-            return dsl.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -404,29 +308,6 @@ class GitRequestEventBuildDao {
                 dsl.and(OBJECT_KIND.eq(event))
             }
             return dsl
-        }
-    }
-
-    fun getLastEventByPipelineId(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        pipelineId: String,
-        branch: String? = null,
-        objectKind: String? = null
-    ): TGitRequestEventBuildRecord? {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-            if (!branch.isNullOrBlank()) {
-                dsl.and(BRANCH.eq(branch))
-            }
-            if (!objectKind.isNullOrBlank()) {
-                dsl.and(OBJECT_KIND.eq(objectKind))
-            }
-            return dsl.orderBy(ID.desc())
-                .limit(1)
-                .fetchAny()
         }
     }
 
@@ -627,29 +508,6 @@ class GitRequestEventBuildDao {
 
     fun batchUpdateBuild(dslContext: DSLContext, builds: List<TGitRequestEventBuildRecord>) {
         dslContext.batchUpdate(builds).execute()
-    }
-
-    fun lastBuildByProject(dslContext: DSLContext, gitProjectIds: Set<Long>?): List<TGitRequestEventBuildRecord> {
-        if (gitProjectIds.isNullOrEmpty()) {
-            return emptyList()
-        }
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectFrom(this)
-                .where(UPDATE_TIME.`in`(
-                    dslContext.select(DSL.max(UPDATE_TIME))
-                        .from(this)
-                        .groupBy(GIT_PROJECT_ID)
-                        .having(GIT_PROJECT_ID.`in`(gitProjectIds)))
-                ).fetch()
-        }
-    }
-
-    fun isBuildExist(dslContext: DSLContext, buildId: String): Boolean {
-        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            return dslContext.selectCount().from(this)
-                .where(BUILD_ID.eq(buildId))
-                .fetchOne(0, Int::class.java)!! > 0
-        }
     }
 
     fun getBuildCountByPipelineId(

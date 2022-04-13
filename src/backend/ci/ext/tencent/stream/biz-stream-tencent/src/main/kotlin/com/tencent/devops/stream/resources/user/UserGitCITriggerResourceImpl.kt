@@ -31,19 +31,19 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCITriggerResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
 import com.tencent.devops.stream.pojo.GitYamlString
-import com.tencent.devops.stream.pojo.TriggerBuildReq
+import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V2TriggerBuildReq
 import com.tencent.devops.stream.pojo.v2.V2BuildYaml
+import com.tencent.devops.stream.service.StreamYamlService
 import com.tencent.devops.stream.trigger.ManualTriggerService
-import com.tencent.devops.stream.trigger.StreamYamlService
-import com.tencent.devops.stream.trigger.YamlTriggerFactory
 import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.v1.components.V1YamlTrigger
+import com.tencent.devops.stream.v1.service.V1StreamYamlService
 import com.tencent.devops.stream.v2.service.StreamPipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -53,9 +53,9 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
     private val streamPipelineService: StreamPipelineService,
     private val permissionService: GitCIV2PermissionService,
+    private val v1streamYamlService: V1StreamYamlService,
     private val streamYamlService: StreamYamlService,
-    private val yamlTriggerFactory: YamlTriggerFactory,
-    private val redisOperation: RedisOperation
+    private val v1YamlTrigger: V1YamlTrigger
 ) : UserGitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserGitCITriggerResourceImpl::class.java)
@@ -70,7 +70,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
         val new = with(triggerBuildReq) {
-            TriggerBuildReq(
+            V1TriggerBuildReq(
                 gitProjectId = gitProjectId,
                 name = null,
                 url = null,
@@ -99,12 +99,12 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
                     val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
                     logger.debug("yaml str : $yamlStr")
 
-                    val (validate, message) = streamYamlService.validateCIBuildYaml(yamlStr)
+                    val (validate, message) = v1streamYamlService.validateCIBuildYaml(yamlStr)
                     if (!validate) {
                         logger.error("Check yaml failed, error: $message")
                         return Result(1, "Invalid yaml: $message", message)
                     }
-                    streamYamlService.createCIBuildYaml(yaml.yaml)
+                    v1streamYamlService.createCIBuildYaml(yaml.yaml)
 
                     return Result("OK")
                 } catch (e: Throwable) {
@@ -113,14 +113,13 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
                 }
             }
             else -> {
-                val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
-                return triggerInterface.checkYamlSchema(userId, yaml.yaml)
+                return v1YamlTrigger.checkYamlSchema(userId, yaml.yaml)
             }
         }
     }
 
     override fun getYamlSchema(userId: String): Result<String> {
-        val schema = streamYamlService.getCIBuildYamlSchema()
+        val schema = v1streamYamlService.getCIBuildYamlSchema()
         logger.info("ci build yaml schema: $schema")
         return Result(schema)
     }

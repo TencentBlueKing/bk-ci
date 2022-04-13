@@ -59,7 +59,6 @@ import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.isFork
-import com.tencent.devops.stream.trigger.YamlTriggerInterface
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
@@ -89,7 +88,7 @@ class StreamYamlTrigger @Autowired constructor(
     private val yamlBuildV2: StreamYamlBuild,
     private val tokenService: StreamGitTokenService,
     private val streamStorageBean: StreamStorageBean
-) : YamlTriggerInterface {
+) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlTrigger::class.java)
@@ -100,7 +99,7 @@ class StreamYamlTrigger @Autowired constructor(
     }
 
     @Suppress("ComplexMethod")
-    override fun triggerBuild(
+    fun triggerBuild(
         context: StreamTriggerContext
     ): Boolean {
         val start = LocalDateTime.now().timestampmilli()
@@ -278,7 +277,7 @@ class StreamYamlTrigger @Autowired constructor(
         )
     }
 
-    override fun checkYamlSchema(userId: String, yaml: String): Result<String> {
+    fun checkYamlSchema(userId: String, yaml: String): Result<String> {
         return try {
             yamlSchemaCheck.check(yaml, null, true)
             Result("OK")

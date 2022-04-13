@@ -16,7 +16,6 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.listener.StreamBuildListenerContext
 import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
-import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.getBuildStatus
 import com.tencent.devops.stream.listener.getGitCommitCheckState
 import com.tencent.devops.stream.listener.isSuccess
@@ -44,11 +43,6 @@ class SendNotify @Autowired constructor(
     fun sendNotify(
         context: StreamBuildListenerContext
     ) {
-        // v1 校验是否发送通知，v1发通知功能未有使用，直接下掉
-        if (context is StreamFinishContextV1) {
-            return
-        }
-
         val build = client.get(ServiceBuildResource::class)
             .getBatchBuildStatus(
                 projectId = GitCommonUtils.getCiProjectId(context.requestEvent.gitProjectId),

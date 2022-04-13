@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.listener.components
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.between
@@ -36,21 +34,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.stream.client.ScmClient
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
-import com.tencent.devops.stream.listener.StreamBuildListenerContext
 import com.tencent.devops.stream.listener.StreamBuildListenerContextV2
 import com.tencent.devops.stream.listener.StreamBuildStageListenerContextV2
-import com.tencent.devops.stream.listener.StreamFinishContextV1
 import com.tencent.devops.stream.listener.getBuildStatus
 import com.tencent.devops.stream.listener.getGitCommitCheckState
 import com.tencent.devops.stream.listener.isSuccess
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.enums.StreamMrEventAction
 import com.tencent.devops.stream.pojo.isMr
 import com.tencent.devops.stream.trigger.GitCheckService
 import com.tencent.devops.stream.trigger.StreamTriggerCache
@@ -68,9 +58,7 @@ import org.springframework.stereotype.Component
 @Suppress("NestedBlockDepth")
 @Component
 class SendCommitCheck @Autowired constructor(
-    private val objectMapper: ObjectMapper,
     private val client: Client,
-    private val scmClient: ScmClient,
     private val config: StreamBuildFinishConfig,
     private val gitCheckService: GitCheckService,
     private val streamGitTokenService: StreamGitTokenService,
@@ -92,23 +80,11 @@ class SendCommitCheck @Autowired constructor(
     }
 
     fun sendCommitCheck(
-        context: StreamBuildListenerContext
+        context: StreamBuildListenerContextV2
     ) {
-        // 当人工触发时不推送CommitCheck消息, 此处与下面重复是为了兼容V1
-        if (context.requestEvent.objectKind == TGitObjectKind.MANUAL.value) {
-            return
-        }
-
         try {
-            when (context) {
-                is StreamBuildListenerContextV2 -> {
-                    if (CommitCheckUtils.needSendCheck(context.requestEvent, context.streamSetting)) {
-                        sendCommitCheckV2(context)
-                    }
-                }
-                is StreamFinishContextV1 -> {
-                    sendCommitCheckV1(context)
-                }
+            if (CommitCheckUtils.needSendCheck(context.requestEvent, context.streamSetting)) {
+                sendCommitCheckV2(context)
             }
         } catch (e: Throwable) {
             logger.error("sendCommitCheck error: ${context.requestEvent}")
@@ -140,22 +116,6 @@ class SendCommitCheck @Autowired constructor(
                 block = requestEvent.isMr() && !context.isSuccess() && streamSetting.enableMrBlock,
                 targetUrl = getTargetUrl(context)
             )
-        }
-    }
-
-    // 获取mr action
-    private fun checkGitEventAndGetAction(request: GitRequestEvent): String {
-        // gitRequestEvent中存的为mriid不是mrid
-        val gitEvent = try {
-            objectMapper.readValue<GitEvent>(request.event)
-        } catch (e: Throwable) {
-            logger.error("checkGitEventAndGetAction get git event error ${e.message}")
-            null
-        }
-        return if (gitEvent is GitMergeRequestEvent) {
-            StreamMrEventAction.getActionValue(gitEvent) ?: ""
-        } else {
-            ""
         }
     }
 
@@ -270,24 +230,6 @@ class SendCommitCheck @Autowired constructor(
             }
         }
         return Pair(" ", " ")
-    }
-
-    private fun sendCommitCheckV1(
-        context: StreamFinishContextV1
-    ) {
-        with(context) {
-            scmClient.pushCommitCheck(
-                commitId = requestEvent.commitId,
-                description = requestEvent.commitMsg ?: "",
-                mergeRequestId = requestEvent.mergeRequestId,
-                pipelineId = pipeline.pipelineId,
-                buildId = buildEvent.buildId,
-                userId = buildEvent.userId,
-                status = getGitCommitCheckState(),
-                context = "${pipeline.displayName}(${pipeline.filePath})",
-                gitProjectConf = streamSetting
-            )
-        }
     }
 }
 

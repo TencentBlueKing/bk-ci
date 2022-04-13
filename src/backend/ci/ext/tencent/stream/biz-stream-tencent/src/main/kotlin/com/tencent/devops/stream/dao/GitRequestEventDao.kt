@@ -231,54 +231,6 @@ class GitRequestEventDao {
         }
     }
 
-    fun getMergeRequestList(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        page: Int,
-        pageSize: Int
-    ): List<GitRequestEvent> {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val records = dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(OBJECT_KIND.eq(TGitObjectKind.MERGE_REQUEST.value))
-                .orderBy(ID.desc())
-                .limit(pageSize).offset((page - 1) * pageSize)
-                .fetch()
-            val result = mutableListOf<GitRequestEvent>()
-            records.forEach {
-                result.add(
-                    GitRequestEvent(
-                        id = it.id,
-                        objectKind = it.objectKind,
-                        operationKind = it.operationKind,
-                        extensionAction = it.extensionAction,
-                        gitProjectId = it.gitProjectId,
-                        sourceGitProjectId = it.sourceGitProjectId,
-                        branch = it.branch,
-                        targetBranch = it.targetBranch,
-                        commitId = it.commitId,
-                        commitMsg = it.commitMessage,
-                        commitTimeStamp = it.commitTimestamp,
-                        userId = it.userName,
-                        totalCommitCount = it.totalCommitCount,
-                        mergeRequestId = it.mergeRequestId,
-                        event = "", // record.event,
-                        description = if (it.description.isNullOrBlank()) {
-                            it.commitMessage
-                        } else {
-                            it.description
-                        },
-                        mrTitle = it.mrTitle,
-                        gitEvent = null,
-                        commitAuthorName = null,
-                        gitProjectName = null
-                    )
-                )
-            }
-            return result
-        }
-    }
-
     fun getRequestCount(
         dslContext: DSLContext,
         gitProjectId: Long
@@ -289,19 +241,6 @@ class GitRequestEventDao {
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .orderBy(ID.desc())
                 .fetchOne(0, Long::class.java)!!
-        }
-    }
-
-    /**
-     * 根据ID删除
-     */
-    fun deleteByIds(
-        dslContext: DSLContext,
-        ids: Collection<Long>
-    ): Int {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            return dslContext.delete(this)
-                .where(ID.`in`(ids)).execute()
         }
     }
 
@@ -364,53 +303,6 @@ class GitRequestEventDao {
                 )
             }
             return result
-        }
-    }
-
-    fun getMinByGitProjectId(
-        dslContext: DSLContext,
-        gitProjectId: Long
-    ): Long {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            return dslContext.select(DSL.min(ID))
-                .from(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .fetchOne(0, Long::class.java)!!
-        }
-    }
-
-    fun getEventsByGitProjectId(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        minId: Long,
-        limit: Long
-    ): Result<out Record>? {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(GIT_PROJECT_ID.eq(gitProjectId))
-            conditions.add(ID.ge(minId))
-            return dslContext.select(ID).from(this)
-                .where(conditions)
-                .orderBy(ID.asc())
-                .limit(limit)
-                .fetch()
-        }
-    }
-
-    fun getClearDeleteEventIdList(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        eventIdList: List<Long>,
-        gapDays: Long
-    ): Result<out Record>? {
-        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            return dslContext.select(ID).from(this)
-                .where(
-                    GIT_PROJECT_ID.eq(gitProjectId)
-                        .and(CREATE_TIME.lt(LocalDateTime.now().minusDays(gapDays)))
-                        .and(ID.`in`(eventIdList))
-                )
-                .fetch()
         }
     }
 }

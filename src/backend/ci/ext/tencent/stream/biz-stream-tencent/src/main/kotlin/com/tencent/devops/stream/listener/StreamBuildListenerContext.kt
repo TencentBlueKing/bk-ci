@@ -41,7 +41,6 @@ fun StreamBuildListenerContext.getGitCommitCheckState(): GitCICommitCheckState {
     }
 }
 
-// TODO: 后续将这个上下文和其他上下文重构集成，并看v1是否可以干掉
 open class StreamBuildListenerContextV2(
     override val buildEvent: BuildEvent,
     override val requestEvent: GitRequestEvent,
@@ -60,15 +59,6 @@ class StreamBuildStageListenerContextV2(
 ) : StreamBuildListenerContextV2(
     buildEvent, requestEvent, streamBuildEvent, pipeline, streamSetting
 )
-
-data class StreamFinishContextV1(
-    override val buildEvent: BuildEvent,
-    override val requestEvent: GitRequestEvent,
-    override val streamBuildEvent: StreamBuildEvent,
-    override val pipeline: GitProjectPipeline,
-    val streamSetting: GitRepositoryConf,
-    val buildFinishEvent: PipelineBuildFinishBroadCastEvent
-) : StreamBuildListenerContext
 
 data class BuildEvent(
     val projectId: String,

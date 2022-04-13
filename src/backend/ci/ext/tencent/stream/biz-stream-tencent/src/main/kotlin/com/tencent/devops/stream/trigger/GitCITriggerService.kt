@@ -69,6 +69,7 @@ import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerContext
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
+import com.tencent.devops.stream.v1.components.V1YamlTrigger
 import com.tencent.devops.stream.v2.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.v2.service.RepoTriggerEventService
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
@@ -92,7 +93,7 @@ class GitCITriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val rabbitTemplate: RabbitTemplate,
-    private val yamlTriggerFactory: YamlTriggerFactory,
+    val requestTrigger: V1YamlTrigger,
     private val streamScmService: StreamScmService,
     private val preTrigger: PreTrigger,
     private val mergeConflictCheck: MergeConflictCheck,
@@ -513,7 +514,7 @@ class GitCITriggerService @Autowired constructor(
 
         // 检查yml版本，根据yml版本选择不同的实现
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
-        val triggerInterface = yamlTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+
         if (ymlVersion?.version == "v2.0") {
             dispatchStreamTrigger(
                 StreamTriggerEvent(
@@ -531,9 +532,7 @@ class GitCITriggerService @Autowired constructor(
                 )
             )
         } else {
-            triggerInterface.triggerBuild(
-                context
-            )
+            TODO("等待开源版合并改动")
         }
         streamStorageBean.triggerCheckTime(LocalDateTime.now().timestampmilli() - start)
     }

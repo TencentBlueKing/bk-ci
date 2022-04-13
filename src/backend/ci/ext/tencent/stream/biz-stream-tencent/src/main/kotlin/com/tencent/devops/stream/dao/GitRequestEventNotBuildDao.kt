@@ -209,21 +209,6 @@ class GitRequestEventNotBuildDao {
         }
     }
 
-    fun getLatestBuild(
-        dslContext: DSLContext,
-        gitProjectId: Long,
-        pipelineId: String?
-    ): TGitRequestEventNotBuildRecord? {
-        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
-            val query = dslContext.selectFrom(this)
-                .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-            if (!pipelineId.isNullOrBlank()) query.and(PIPELINE_ID.eq(pipelineId))
-            return query.orderBy(EVENT_ID.desc())
-                .fetchAny()
-        }
-    }
-
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,

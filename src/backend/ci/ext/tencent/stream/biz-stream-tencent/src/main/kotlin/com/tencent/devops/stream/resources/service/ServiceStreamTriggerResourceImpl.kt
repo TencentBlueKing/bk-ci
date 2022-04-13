@@ -32,7 +32,7 @@ class ServiceStreamTriggerResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         val new = with(streamTriggerBuildReq) {
-            com.tencent.devops.stream.pojo.TriggerBuildReq(
+            com.tencent.devops.stream.pojo.V1TriggerBuildReq(
                 gitProjectId = gitProjectId,
                 name = null,
                 url = null,

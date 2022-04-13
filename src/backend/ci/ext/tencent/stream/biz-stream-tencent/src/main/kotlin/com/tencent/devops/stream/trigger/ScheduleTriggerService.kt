@@ -48,6 +48,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEven
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import com.tencent.devops.stream.trigger.v2.StreamYamlBuild
+import com.tencent.devops.stream.trigger.v2.StreamYamlTrigger
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -57,14 +58,14 @@ import org.springframework.stereotype.Service
 @Service
 class ScheduleTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val yamlTriggerFactory: YamlTriggerFactory,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIBasicSettingService: StreamBasicSettingService,
     private val yamlBuildV2: StreamYamlBuild,
     private val streamTimerService: StreamTimerService,
-    private val triggerExceptionService: TriggerExceptionService
+    private val triggerExceptionService: TriggerExceptionService,
+    private val streamYamlTrigger: StreamYamlTrigger
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ScheduleTriggerService::class.java)
@@ -172,7 +173,7 @@ class ScheduleTriggerService @Autowired constructor(
             )
         }
 
-        val yamlReplaceResult = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
+        val yamlReplaceResult = streamYamlTrigger.prepareCIBuildYaml(
             gitRequestEventForHandle = gitRequestEventForHandle,
             isMr = false,
             originYaml = originYaml,
