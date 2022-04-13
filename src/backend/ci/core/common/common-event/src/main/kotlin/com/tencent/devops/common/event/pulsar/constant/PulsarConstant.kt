@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.constant
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+/**
+ * 间隔符
+ */
+const val PATH_SPLIT = "/"
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
+/**
+ * 持久化
+ */
+const val PERSISTENT = "persistent://"
 
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
+/**
+ * 非持久化
+ */
+const val NON_PERSISTENT = "non-persistent://"
 
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
-            )
-        }
-        return StorageProperties()
-    }
+const val MESSAGE_ID = "messageId"
 
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
-}
+const val PUBLISH_TIME = "publishTime"
+
+const val PRODUCER_NAME = "producerName"
+
+const val TOPIC_NAME = "topicName"
+
+const val DLQ = "-DLQ"
+const val RETRY = "-RETRY"

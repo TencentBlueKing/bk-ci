@@ -25,41 +25,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.metrics
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import org.springframework.context.Lifecycle
+import java.util.Objects
+import java.util.concurrent.atomic.AtomicBoolean
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
+class Instrumentation(
+    val topic: String,
+    val actuator: Lifecycle? = null
+) {
+    private val started = AtomicBoolean(false)
+    var failedException: Exception? = null
 
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
-
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
-            )
-        }
-        return StorageProperties()
+    fun isDown(): Boolean {
+        return failedException != null
     }
 
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
+    fun isUp(): Boolean {
+        return started.get()
+    }
+
+    fun isOutOfService(): Boolean {
+        return !started.get() && failedException == null
+    }
+
+    fun markStartedSuccessfully() {
+        started.set(true)
+    }
+
+    fun markStartFailed(e: java.lang.Exception) {
+        started.set(false)
+        failedException = e
+    }
+
+    fun isStarted(): Boolean {
+        return started.get()
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(topic, actuator)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other == null || javaClass != other.javaClass) {
+            return false
+        }
+        val that: Instrumentation = other as Instrumentation
+        return topic == that.topic && actuator == that.actuator
+    }
 }

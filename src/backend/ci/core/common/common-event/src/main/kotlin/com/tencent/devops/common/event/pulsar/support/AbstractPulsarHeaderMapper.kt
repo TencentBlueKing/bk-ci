@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.support
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.event.pulsar.constant.Serialization
+import org.springframework.messaging.MessageHeaders
+import org.springframework.util.Assert
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
+/**
+ * Base for Pulsar header mappers.
+ */
+abstract class AbstractPulsarHeaderMapper(
+    private var serialization: Serialization = Serialization.BYTE
+) : PulsarHeaderMapper {
 
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
-
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
+    protected open fun matches(headerName: String): Boolean {
+        return (
+            MessageHeaders.ID != headerName &&
+                MessageHeaders.TIMESTAMP != headerName &&
+                MessageHeaders.CONTENT_TYPE != headerName &&
+                MessageHeaders.REPLY_CHANNEL != headerName &&
+                MessageHeaders.ERROR_CHANNEL != headerName
             )
-        }
-        return StorageProperties()
     }
 
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
+    open fun setSerialization(serialization: Serialization) {
+        Assert.notNull(serialization, "'serialization' cannot be null")
+        this.serialization = serialization
+    }
 }

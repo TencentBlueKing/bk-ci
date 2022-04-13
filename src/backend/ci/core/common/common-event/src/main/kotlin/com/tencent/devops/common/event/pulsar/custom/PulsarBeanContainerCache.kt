@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.custom
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.event.pulsar.extend.ErrorAcknowledgeHandler
+import org.springframework.messaging.converter.CompositeMessageConverter
+import org.springframework.util.StringUtils
+import java.util.concurrent.ConcurrentHashMap
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
+object PulsarBeanContainerCache {
 
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
+    private val CLASSES = arrayOf<Class<*>>(
+        CompositeMessageConverter::class.java,
+        ErrorAcknowledgeHandler::class.java
+    )
 
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
-            )
-        }
-        return StorageProperties()
+    private val BEANS_CACHE: MutableMap<String, Any> = ConcurrentHashMap()
+
+    fun putBean(beanName: String, beanObj: Any) {
+        BEANS_CACHE[beanName] = beanObj
     }
 
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
+    fun getClassAry(): Array<Class<*>> {
+        return CLASSES
+    }
+
+    fun <T> getBean(beanName: String, clazz: Class<T?>): T? {
+        return getBean(beanName, clazz, null)
+    }
+
+    fun <T> getBean(beanName: String, clazz: Class<T>, defaultObj: T): T {
+        if (!StringUtils.hasLength(beanName)) {
+            return defaultObj
+        }
+        val obj = BEANS_CACHE[beanName] ?: return defaultObj
+        return if (clazz.isAssignableFrom(obj.javaClass)) {
+            obj as T
+        } else defaultObj
+    }
 }

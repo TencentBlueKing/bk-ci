@@ -25,41 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.metrics
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+object InstrumentationManager {
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
+    private val HEALTH_INSTRUMENTATIONS: MutableMap<Int, Instrumentation> = HashMap()
 
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
-
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
-            )
-        }
-        return StorageProperties()
+    fun getHealthInstrumentations(): Collection<Instrumentation> {
+        return HEALTH_INSTRUMENTATIONS.values
     }
 
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
+    fun addHealthInstrumentation(instrumentation: Instrumentation? = null) {
+        if (null != instrumentation) {
+            HEALTH_INSTRUMENTATIONS.computeIfPresent(
+                instrumentation.hashCode()
+            ) { _: Int?, _: Instrumentation? ->
+                if (instrumentation.actuator != null) {
+                    instrumentation.actuator.stop()
+                }
+                throw IllegalArgumentException(
+                    "The current actuator exists, please confirm if there is a repeat operation!!!"
+                )
+            }
+        }
+    }
 }

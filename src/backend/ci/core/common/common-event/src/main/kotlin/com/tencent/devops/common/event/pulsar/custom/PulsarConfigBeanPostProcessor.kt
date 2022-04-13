@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.custom
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import org.springframework.beans.BeansException
+import org.springframework.beans.factory.config.BeanPostProcessor
+import java.util.stream.Stream
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
-
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
-
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
-            )
+class PulsarConfigBeanPostProcessor : BeanPostProcessor {
+    @Throws(BeansException::class)
+    override fun postProcessAfterInitialization(bean: Any, beanName: String): Any {
+        Stream.of(PulsarBeanContainerCache.getClassAry()).forEach { clazz ->
+            if (clazz.javaClass.isAssignableFrom(beanName.javaClass)) {
+                PulsarBeanContainerCache.putBean(beanName, bean)
+            }
         }
-        return StorageProperties()
+        return bean
     }
-
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
 }

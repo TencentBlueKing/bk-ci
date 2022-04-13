@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,41 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.configuration
+package com.tencent.devops.common.event.pulsar.util
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.event.pulsar.constant.Serialization
+import com.tencent.devops.common.event.pulsar.exception.ProducerInitException
+import org.apache.pulsar.client.api.Schema
+import java.lang.reflect.Method
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-class LogCommonConfiguration {
+object SchemaUtils {
 
-    @Value("\${log.storage.type:#{null}}")
-    private val type: String? = null
+    @Throws(RuntimeException::class)
+    private fun <T> getGenericSchema(serialization: Serialization, clazz: Class<T>): Schema<*> {
 
-    @Bean
-    fun storageProperties(): StorageProperties {
-        if (type.isNullOrBlank()) {
-            throw IllegalArgumentException(
-                "storage type of build log didn't config: " +
-                    "log.storage.type, it must be either of 'lucene' or 'elasticsearch'."
-            )
+        return when (serialization) {
+            Serialization.JSON -> {
+                Schema.JSON(clazz)
+            }
+            Serialization.AVRO -> {
+                Schema.AVRO(clazz)
+            }
+            Serialization.STRING -> {
+                Schema.STRING
+            }
+            else -> {
+                throw ProducerInitException("Unknown producer schema.")
+            }
         }
-        return StorageProperties()
     }
 
-    @Bean
-    fun defaultKeywords() = listOf(
-        "error ( )",
-        "Scripts have compiler errors",
-        "fatal error",
-        "no such",
-        // "Exception :",;
-        "Code Sign error",
-        "BUILD FAILED",
-        "Failed PVR compression"
-    )
+    fun getSchema(serialisation: Serialization, classStr: String? = null): Schema<*> {
+        val temp = if (classStr == null) {
+            ByteArray::class.java
+        } else {
+            Class.forName(classStr).kotlin.java
+        }
+        if (temp == ByteArray::class.java) {
+            return Schema.BYTES
+        }
+        return getGenericSchema(serialisation, temp as Class<Any>)
+    }
+
+    fun getParameterType(method: Method): Class<*>? {
+        return method.parameterTypes[0]
+    }
 }
