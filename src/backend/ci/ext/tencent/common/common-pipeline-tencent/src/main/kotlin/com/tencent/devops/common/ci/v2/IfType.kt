@@ -30,7 +30,7 @@ package com.tencent.devops.common.ci.v2
 enum class IfType {
     SUCCESS,
     FAILURE,
-    CANCELLED, // 兼容存量的使用，后续引导用户使用 CANCELED
+    CANCELLED, // 兼容存量的使用，后续文档引导用户使用 CANCELED
     CANCELED,
     ALWAYS,
     ALWAYS_UNLESS_CANCELLED
