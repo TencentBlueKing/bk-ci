@@ -39,5 +39,17 @@ data class StoreDockingPlatformRequest(
     val platformCode: String,
     @ApiModelProperty("平台名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
-    val platformName: String
+    val platformName: String,
+    @ApiModelProperty("网址", required = false)
+    @field:BkField(minLength = 1, maxLength = 256, required = false)
+    val website: String?,
+    @ApiModelProperty("简介", required = true)
+    @field:BkField(minLength = 1, maxLength = 1024)
+    val summary: String,
+    @ApiModelProperty("负责人", required = true)
+    @field:BkField(minLength = 1, maxLength = 50)
+    val principal: String,
+    @ApiModelProperty("平台logo地址", required = false)
+    @field:BkField(minLength = 1, maxLength = 256, required = false)
+    val logoUrl: String?
 )

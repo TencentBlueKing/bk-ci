@@ -53,6 +53,10 @@ class StoreDockingPlatformDao {
                 ID,
                 PLATFORM_CODE,
                 PLATFORM_NAME,
+                WEBSITE,
+                SUMMARY,
+                PRINCIPAL,
+                LOGO_URL,
                 CREATOR,
                 MODIFIER
             )
@@ -60,6 +64,10 @@ class StoreDockingPlatformDao {
                     UUIDUtil.generate(),
                     storeDockingPlatformRequest.platformCode,
                     storeDockingPlatformRequest.platformName,
+                    storeDockingPlatformRequest.website,
+                    storeDockingPlatformRequest.summary,
+                    storeDockingPlatformRequest.principal,
+                    storeDockingPlatformRequest.logoUrl,
                     userId,
                     userId
                 ).execute()
@@ -76,6 +84,10 @@ class StoreDockingPlatformDao {
             dslContext.update(this)
                 .set(PLATFORM_CODE, storeDockingPlatformRequest.platformCode)
                 .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
+                .set(WEBSITE, storeDockingPlatformRequest.website)
+                .set(SUMMARY, storeDockingPlatformRequest.summary)
+                .set(PRINCIPAL, storeDockingPlatformRequest.principal)
+                .set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .where(ID.eq(id))
@@ -160,6 +172,10 @@ class StoreDockingPlatformDao {
                 id = id,
                 platformCode = platformCode,
                 platformName = platformName,
+                website = website,
+                summary = summary,
+                principal = principal,
+                logoUrl = logoUrl,
                 creator = creator,
                 modifier = modifier,
                 createTime = DateTimeUtil.toDateTime(createTime),
