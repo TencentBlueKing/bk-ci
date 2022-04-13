@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C)) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -11,7 +11,7 @@
  * Terms of the MIT License:
  * ---------------------------------------------------
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software")), to deal in the Software without restriction, including without limitation the
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
@@ -25,20 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:log:api-log"))
-    api(project(":core:log:model-log"))
-    api(project(":core:process:api-process"))
-    api(project(":core:common:common-service"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-client"))
-    api(project(":core:auth:api-auth"))
+package com.tencent.devops.common.stream.pulsar.properties
 
-    api("org.elasticsearch:elasticsearch")
-    api("org.elasticsearch.client:elasticsearch-rest-client")
-    api("org.elasticsearch.client:elasticsearch-rest-high-level-client")
-    api("org.apache.logging.log4j:log4j-core")
-    api("org.apache.logging.log4j:log4j-api")
-    api("com.github.ben-manes.caffeine:caffeine")
+import org.springframework.cloud.stream.binder.BinderSpecificPropertiesProvider
+
+class PulsarBindingProperties(
+    var consumer: PulsarConsumerProperties = PulsarConsumerProperties(),
+    var producer: PulsarProducerProperties = PulsarProducerProperties()
+) : BinderSpecificPropertiesProvider {
+    override fun getConsumer(): Any {
+        return consumer
+    }
+
+    override fun getProducer(): Any {
+        return producer
+    }
 }

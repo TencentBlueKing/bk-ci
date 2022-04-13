@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,23 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.common.stream.pulsar.actuator
 
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.service.trace.TraceTag
-import org.slf4j.MDC
+import com.tencent.devops.common.stream.pulsar.metrics.Instrumentation
+import com.tencent.devops.common.stream.pulsar.metrics.InstrumentationManager
+import org.springframework.boot.actuate.health.AbstractHealthIndicator
+import org.springframework.boot.actuate.health.Health
 
-/**
- * 流水线事件
- */
-@Suppress("LongParameterList")
-open class IPipelineEvent(
-    open var actionType: ActionType,
-    open val source: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val userId: String,
-    open var delayMills: Int,
-    open var retryTime: Int = 1,
-    open var traceId: String? = MDC.get(TraceTag.BIZID)
-)
+class PulsarBinderHealthIndicator : AbstractHealthIndicator() {
+    @Throws(Exception::class)
+    override fun doHealthCheck(builder: Health.Builder) {
+        if (InstrumentationManager.getHealthInstrumentations().stream()
+            .allMatch(Instrumentation::isUp)
+        ) {
+            builder.up()
+            return
+        }
+        if (InstrumentationManager.getHealthInstrumentations().stream()
+            .allMatch(Instrumentation::isOutOfService)
+        ) {
+            builder.outOfService()
+            return
+        }
+        builder.down()
+        InstrumentationManager.getHealthInstrumentations().stream()
+            .filter { instrumentation -> !instrumentation.isStarted() }
+            .forEach {
+                builder
+                    .withException(it.failedException)
+            }
+    }
+}

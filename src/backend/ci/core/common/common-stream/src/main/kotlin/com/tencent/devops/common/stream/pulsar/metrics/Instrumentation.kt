@@ -25,23 +25,56 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.common.stream.pulsar.metrics
 
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.service.trace.TraceTag
-import org.slf4j.MDC
+import org.springframework.context.Lifecycle
+import java.util.Objects
+import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * 流水线事件
- */
-@Suppress("LongParameterList")
-open class IPipelineEvent(
-    open var actionType: ActionType,
-    open val source: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val userId: String,
-    open var delayMills: Int,
-    open var retryTime: Int = 1,
-    open var traceId: String? = MDC.get(TraceTag.BIZID)
-)
+class Instrumentation(
+    val topic: String,
+    val actuator: Lifecycle? = null
+) {
+    private val started = AtomicBoolean(false)
+    var failedException: Exception? = null
+
+    fun isDown(): Boolean {
+        return failedException != null
+    }
+
+    fun isUp(): Boolean {
+        return started.get()
+    }
+
+    fun isOutOfService(): Boolean {
+        return !started.get() && failedException == null
+    }
+
+    fun markStartedSuccessfully() {
+        started.set(true)
+    }
+
+    fun markStartFailed(e: java.lang.Exception) {
+        started.set(false)
+        failedException = e
+    }
+
+    fun isStarted(): Boolean {
+        return started.get()
+    }
+
+    override fun hashCode(): Int {
+        return Objects.hash(topic, actuator)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other == null || javaClass != other.javaClass) {
+            return false
+        }
+        val that: Instrumentation = other as Instrumentation
+        return topic == that.topic && actuator == that.actuator
+    }
+}

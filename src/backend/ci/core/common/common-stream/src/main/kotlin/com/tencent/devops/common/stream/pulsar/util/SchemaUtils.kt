@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,35 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.dispatcher.pipeline.stream
+package com.tencent.devops.common.stream.pulsar.util
 
-import com.tencent.devops.common.event.annotation.StreamEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import org.slf4j.LoggerFactory
-import org.springframework.cloud.stream.function.StreamBridge
+import com.tencent.devops.common.stream.pulsar.exception.ProducerInitException
+import com.tencent.devops.common.stream.pulsar.constant.Serialization
+import org.apache.pulsar.client.api.Schema
+import java.lang.reflect.Method
 
-/**
- * 基于Stream MQ实现的流水线事件下发器
- *
- * @version 1.0
- */
-class StreamEventDispatcher constructor(
-    private val bridge: StreamBridge
-) : PipelineEventDispatcher {
+object SchemaUtils {
 
-    override fun dispatch(vararg events: IPipelineEvent) {
-        events.forEach { event ->
-            try {
-                val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-                bridge.send(eventType.bindingName, event.streamMessage(eventType.delayMills))
-            } catch (ignored: Exception) {
-                logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+    @Throws(RuntimeException::class)
+    private fun <T> getGenericSchema(serialization: Serialization, clazz: Class<T>): Schema<*> {
+
+        return when (serialization) {
+            Serialization.JSON -> {
+                Schema.JSON(clazz)
+            }
+            Serialization.AVRO -> {
+                Schema.AVRO(clazz)
+            }
+            Serialization.STRING -> {
+                Schema.STRING
+            }
+            else -> {
+                throw ProducerInitException("Unknown producer schema.")
             }
         }
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamEventDispatcher::class.java)
+    fun getSchema(serialisation: Serialization, classStr: String? = null): Schema<*> {
+        val temp = if (classStr == null) {
+            ByteArray::class.java
+        } else {
+            Class.forName(classStr).kotlin.java
+        }
+        if (temp == ByteArray::class.java) {
+            return Schema.BYTES
+        }
+        return getGenericSchema(serialisation, temp as Class<Any>)
+    }
+
+    fun getParameterType(method: Method): Class<*>? {
+        return method.parameterTypes[0]
     }
 }

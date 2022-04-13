@@ -1,5 +1,3 @@
-import com.tencent.devops.utils.findPropertyOrNull
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -28,19 +26,11 @@ import com.tencent.devops.utils.findPropertyOrNull
  */
 
 dependencies {
-    api(project(":core:common:common-api"))
     api(project(":core:common:common-service"))
-    api(project(":core:common:common-security"))
-    api(project(":core:common:common-client"))
-    api("org.springframework.boot:spring-boot-starter-jersey")
-    api("org.springframework.boot:spring-boot-starter-undertow")
-    api("org.springframework.boot:spring-boot-starter-web")
-    api("io.swagger:swagger-jersey2-jaxrs")
-    api("com.github.ulisesbocchio:jasypt-spring-boot-starter")
-    api("org.springframework.boot:spring-boot-starter-amqp")
-    api("org.aspectj:aspectjweaver")
-    val assemblyMode = project.findPropertyOrNull("devops.assemblyMode")
-    if (assemblyMode == null || assemblyMode.toUpperCase() == "CONSUL") {
-        api("org.springframework.cloud:spring-cloud-starter-config")
+    api("org.apache.pulsar:pulsar-client") {
+        exclude("org.bouncycastle")
     }
+    api("org.springframework.boot:spring-boot-actuator")
+    api("org.springframework.boot:spring-boot-actuator-autoconfigure")
+    api("org.springframework.cloud:spring-cloud-stream")
 }

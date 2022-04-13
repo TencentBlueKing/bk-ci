@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,23 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.common.stream.pulsar.custom
 
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.service.trace.TraceTag
-import org.slf4j.MDC
+import com.tencent.devops.common.stream.pulsar.extend.ErrorAcknowledgeHandler
+import org.springframework.messaging.converter.CompositeMessageConverter
+import org.springframework.util.StringUtils
+import java.util.concurrent.ConcurrentHashMap
 
-/**
- * 流水线事件
- */
-@Suppress("LongParameterList")
-open class IPipelineEvent(
-    open var actionType: ActionType,
-    open val source: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val userId: String,
-    open var delayMills: Int,
-    open var retryTime: Int = 1,
-    open var traceId: String? = MDC.get(TraceTag.BIZID)
-)
+object PulsarBeanContainerCache {
+
+    private val CLASSES = arrayOf<Class<*>>(
+        CompositeMessageConverter::class.java,
+        ErrorAcknowledgeHandler::class.java
+    )
+
+    private val BEANS_CACHE: MutableMap<String, Any> = ConcurrentHashMap()
+
+    fun putBean(beanName: String, beanObj: Any) {
+        BEANS_CACHE[beanName] = beanObj
+    }
+
+    fun getClassAry(): Array<Class<*>> {
+        return CLASSES
+    }
+
+    fun <T> getBean(beanName: String, clazz: Class<T?>): T? {
+        return getBean(beanName, clazz, null)
+    }
+
+    fun <T> getBean(beanName: String, clazz: Class<T>, defaultObj: T): T {
+        if (!StringUtils.hasLength(beanName)) {
+            return defaultObj
+        }
+        val obj = BEANS_CACHE[beanName] ?: return defaultObj
+        return if (clazz.isAssignableFrom(obj.javaClass)) {
+            obj as T
+        } else defaultObj
+    }
+}
