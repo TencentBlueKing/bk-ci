@@ -49,6 +49,7 @@ import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -677,4 +678,29 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     )
+
+
+    @ApiOperation("获取git文件目录列表")
+    @GET
+    @Path("/getGitFileTree")
+    fun getGitFileTree(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "目录路径")
+        @QueryParam("path")
+        path: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String?,
+        @ApiParam(value = "是否支持递归目录结构")
+        @QueryParam("recursive")
+        recursive: Boolean? = false,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<List<GitFileInfo>>
 }

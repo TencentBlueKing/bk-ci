@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.scm
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
@@ -73,6 +74,7 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -1575,6 +1577,52 @@ class GitService @Autowired constructor(
                 status = Response.Status.fromStatusCode(code),
                 message = "($code)${e.message}"
             )
+        }
+    }
+
+    override fun getGitFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String?,
+        recursive: Boolean?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitFileInfo>> {
+        logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree")
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    "&path=${URLEncoder.encode(path, "UTF-8")}"
+                )
+                append(
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&recursive=$recursive&access_token=$token")
+            }
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code()})${it.message()}"
+                    )
+                }
+                val data = it.body()!!.string()
+                return Result(JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file tree")
         }
     }
 
