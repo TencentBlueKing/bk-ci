@@ -54,7 +54,7 @@ class AuthGroupMemberDao {
                 EXPIRED_TIEM,
                 EXPIRED_TYPE,
                 CREATE_TIME,
-                GROUP_TYPE,
+                GROUP_TYPE
             ).values(
                 groupMember.groupId,
                 groupMember.userId,

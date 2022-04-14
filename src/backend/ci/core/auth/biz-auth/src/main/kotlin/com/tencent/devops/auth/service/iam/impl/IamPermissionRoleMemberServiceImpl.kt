@@ -63,7 +63,7 @@ open class IamPermissionRoleMemberServiceImpl @Autowired constructor(
     private val groupService: AuthGroupService,
     private val iamCacheService: IamCacheService,
     private val groupMemberService: AuthGroupMemberService,
-    open val iamManagerService: ManagerService,
+    open val iamManagerService: ManagerService
 ) : AbsPermissionRoleMemberImpl(
     permissionGradeService, groupService, iamCacheService, groupMemberService
 ) {

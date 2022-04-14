@@ -132,7 +132,7 @@ class AuthConfiguration {
         permissionGradeService: PermissionGradeService,
         groupService: AuthGroupService,
         iamCacheService: IamCacheService,
-        groupMemberService: AuthGroupMemberService,
+        groupMemberService: AuthGroupMemberService
     ) = SimplePermissionRoleMemberServiceImpl(
         permissionGradeService, groupService, iamCacheService, groupMemberService
     )

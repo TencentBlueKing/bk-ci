@@ -163,6 +163,6 @@ class AuthCoreConfiguration {
     @ConditionalOnMissingBean(BkResourceService::class)
     fun simpleResourceService(
         dslContext: DSLContext,
-        resourceDao: ResourceDao,
+        resourceDao: ResourceDao
     ) = SimpleBkResourceServiceImpl(dslContext, resourceDao)
 }

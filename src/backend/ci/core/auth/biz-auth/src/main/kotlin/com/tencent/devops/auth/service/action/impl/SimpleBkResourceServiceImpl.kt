@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class SimpleBkResourceServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
-    override val resourceDao: ResourceDao,
+    override val resourceDao: ResourceDao
 ) : BkResourceServiceImpl(dslContext, resourceDao) {
     override fun createExtSystem(resource: CreateResourceDTO) {
         return

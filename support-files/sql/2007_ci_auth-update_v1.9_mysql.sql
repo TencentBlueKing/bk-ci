@@ -15,7 +15,7 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                           FROM information_schema.COLUMNS
                           WHERE TABLE_SCHEMA = db
-                            AND TABLE_NAME = 'T_GROUP_INFO'
+                            AND TABLE_NAME = 'T_AUTH_GROUP_INFO'
                             AND COLUMN_NAME = 'DESC') THEN
     ALTER TABLE T_GROUP_INFO ADD COLUMN `DESC` VARCHAR (255) COMMENT '用户组描述';
     END IF;

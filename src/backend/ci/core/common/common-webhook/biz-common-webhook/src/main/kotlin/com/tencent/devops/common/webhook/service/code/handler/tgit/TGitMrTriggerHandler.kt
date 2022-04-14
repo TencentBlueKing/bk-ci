@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
-1import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION

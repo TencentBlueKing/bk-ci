@@ -34,7 +34,6 @@ import com.tencent.devops.auth.pojo.action.CreateActionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.junit.Assert
 import org.junit.Test
-import org.junit.jupiter.api.Assertions.*
 
 class IamBkActionServiceImplTest {
 
@@ -48,8 +47,7 @@ class IamBkActionServiceImplTest {
             actionEnglishName = "项目_测试action",
             actionName = "project_test",
             actionType = ActionTypeEnum.LIST.name,
-            desc = "",
-            relationAction = arrayOf("project_view").toList()
+            desc = ""
         )
         val systemCreateRelationInfo: ResourceCreatorActionsDTO? = null
 
