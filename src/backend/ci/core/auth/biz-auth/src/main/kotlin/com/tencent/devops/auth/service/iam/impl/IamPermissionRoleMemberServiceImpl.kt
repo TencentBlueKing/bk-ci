@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
-class IamPermissionRoleMemberServiceImpl @Autowired constructor(
+open class IamPermissionRoleMemberServiceImpl @Autowired constructor(
     private val permissionGradeService: PermissionGradeService,
     private val groupService: AuthGroupService,
     private val iamCacheService: IamCacheService,

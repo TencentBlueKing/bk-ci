@@ -38,7 +38,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class IamPermissionGradeServiceImpl @Autowired constructor(
+open class IamPermissionGradeServiceImpl @Autowired constructor(
     open val iamManagerService: ManagerService,
     open val iamCacheService: IamCacheService
 ): PermissionGradeService {

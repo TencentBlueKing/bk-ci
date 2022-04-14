@@ -64,7 +64,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-class IamPermissionRoleExtService @Autowired constructor(
+open class IamPermissionRoleExtService @Autowired constructor(
     open val iamManagerService: ManagerService,
     open val iamCacheService: IamCacheService,
     open val resourceService: BkResourceService,
