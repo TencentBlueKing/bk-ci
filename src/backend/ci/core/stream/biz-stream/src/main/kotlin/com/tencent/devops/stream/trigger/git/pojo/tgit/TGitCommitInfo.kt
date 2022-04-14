@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 
 data class TGitCommitInfo(
@@ -34,4 +35,11 @@ data class TGitCommitInfo(
     override val commitDate: String,
     override val commitAuthor: String,
     override val commitMsg: String
-) : StreamGitCommitInfo
+) : StreamGitCommitInfo {
+    constructor(c: GitCommit) : this(
+        commitId = c.id,
+        commitDate = c.committed_date,
+        commitAuthor = c.author_email,
+        commitMsg = c.message
+    )
+}

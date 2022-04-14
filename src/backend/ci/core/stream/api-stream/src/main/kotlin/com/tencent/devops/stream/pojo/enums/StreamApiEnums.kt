@@ -27,6 +27,9 @@
 
 package com.tencent.devops.stream.pojo.enums
 
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
+
 class StreamApiEnums
 
 enum class StreamBranchesOrder(val value: String) {
@@ -34,9 +37,19 @@ enum class StreamBranchesOrder(val value: String) {
     UPDATE("update")
 }
 
-enum class StreamBranchesSort(val value: String) {
+enum class StreamSortAscOrDesc(val value: String) {
     ASC("asc"),
     DESC("desc")
+}
+
+fun StreamSortAscOrDesc?.toGitAscOrDesc(): GitSortAscOrDesc? {
+    if (this == null) {
+        return null
+    }
+    return when (this) {
+        StreamSortAscOrDesc.ASC -> GitSortAscOrDesc.ASC
+        StreamSortAscOrDesc.DESC -> GitSortAscOrDesc.DESC
+    }
 }
 
 enum class StreamProjectsOrder(val value: String) {
@@ -46,4 +59,18 @@ enum class StreamProjectsOrder(val value: String) {
     CREATED("created_at"),
     UPDATE("updated_at"),
     ACTIVITY("activity")
+}
+
+fun StreamProjectsOrder?.toGitOrderBy(): GitProjectsOrderBy? {
+    if (this == null) {
+        return null
+    }
+    return when (this) {
+        StreamProjectsOrder.ID -> GitProjectsOrderBy.ID
+        StreamProjectsOrder.NAME -> GitProjectsOrderBy.NAME
+        StreamProjectsOrder.PATH -> GitProjectsOrderBy.PATH
+        StreamProjectsOrder.CREATED -> GitProjectsOrderBy.CREATED
+        StreamProjectsOrder.UPDATE -> GitProjectsOrderBy.UPDATE
+        StreamProjectsOrder.ACTIVITY -> GitProjectsOrderBy.ACTIVITY
+    }
 }

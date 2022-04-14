@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import io.swagger.annotations.Api
@@ -77,7 +77,7 @@ interface UserStreamProjectResource {
         orderBy: StreamProjectsOrder?,
         @ApiParam("排序类型", required = false)
         @QueryParam("sort")
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): Pagination<StreamProjectCIInfo>
 
     @ApiOperation("获取用户最近访问的项目")

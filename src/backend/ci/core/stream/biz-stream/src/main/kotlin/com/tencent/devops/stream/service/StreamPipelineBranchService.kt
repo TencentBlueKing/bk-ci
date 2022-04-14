@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.stream.dao.StreamPipelineBranchDao
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -93,7 +93,7 @@ class StreamPipelineBranchService @Autowired constructor(
         page: Int,
         pageSize: Int,
         orderBy: StreamBranchesOrder,
-        sort: StreamBranchesSort
+        sort: StreamSortAscOrDesc
     ): Page<String> {
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
 

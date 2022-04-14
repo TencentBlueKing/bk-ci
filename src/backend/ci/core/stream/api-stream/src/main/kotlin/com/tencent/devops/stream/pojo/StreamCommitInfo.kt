@@ -29,6 +29,7 @@ package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.scm.pojo.Commit
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -68,4 +69,20 @@ data class StreamCommitInfo(
     @JsonProperty("scroll_object_id")
     @ApiModelProperty(name = "scroll_object_id")
     val scrollObjectId: Any?
-)
+) {
+    constructor(c: Commit) : this(
+        authorEmail = c.authorEmail,
+        authorName = c.authorName,
+        authoredDate = c.authoredDate,
+        committedDate = c.committedDate,
+        committerEmail = c.committerEmail,
+        committerName = c.committerName,
+        createdAt = c.createdAt,
+        id = c.id,
+        message = c.message,
+        parentIds = c.parentIds,
+        shortId = c.shortId,
+        title = c.title,
+        scrollObjectId = c.scrollObjectId
+    )
+}

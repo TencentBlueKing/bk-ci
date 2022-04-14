@@ -98,11 +98,24 @@ class TGitApiService @Autowired constructor(
         sha: String,
         retry: ApiRequestRetryInfo
     ): TGitCommitInfo? {
-        TODO("等待接口完成")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get commit info $sha fail",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR,
+        ) {
+            client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
+                repoName = gitProjectId,
+                sha = sha,
+                token = cred.toToken(),
+                tokenType = cred.toTokenType()
+            ).data
+        }?.let { TGitCommitInfo(it) }
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): TGitUserInfo? {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).getProjectUserInfo(
+            cred.toToken()
+        )
     }
 
     override fun getProjectUserInfo(
@@ -179,7 +192,20 @@ class TGitApiService @Autowired constructor(
         recursive: Boolean,
         retry: ApiRequestRetryInfo
     ): List<TGitTreeFileInfo> {
-        TODO("等待接口完成")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get $path file tree error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+        ) {
+            client.get(ServiceGitResource::class).getGitFileTree(
+                gitProjectId = gitProjectId.toLong(),
+                path = path ?: "",
+                token = cred.toToken(),
+                ref = ref,
+                recursive = recursive,
+                tokenType = cred.toTokenType()
+            ).data ?: emptyList()
+        }.map { TGitTreeFileInfo(it) }
     }
 
     override fun getFileContent(

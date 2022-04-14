@@ -78,6 +78,12 @@ enum class ErrorCodeEnum(
     GET_GIT_MERGE_INFO(ErrorType.THIRD_PARTY, 2129014, "获取MERGE提交信息失败"),
     GET_GIT_FILE_TREE_ERROR(ErrorType.THIRD_PARTY, 2129015, "获取仓库CI文件列表失败"),
 
+    GET_COMMIT_INFO_ERROR(
+        errorType = ErrorType.THIRD_PARTY,
+        errorCode = 2129026,
+        formatErrorMessage = "Load project [%s] failed. Git api error: %s"
+    ),
+
     // 手动触发需要转为错误码给用户，区分构建中的系统和用户异常
     MANUAL_TRIGGER_USER_ERROR(ErrorType.USER, 2129016, "manual trigger user error: [%s]"),
     MANUAL_TRIGGER_SYSTEM_ERROR(

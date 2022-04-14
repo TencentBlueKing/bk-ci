@@ -39,7 +39,7 @@ import com.tencent.devops.stream.pojo.StreamCIInfo
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
 import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.StreamProjectSimpleInfo
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -76,7 +76,7 @@ class StreamProjectService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): Pagination<StreamProjectCIInfo> {
         val realPage = if (page == null || page <= 0) {
             1
@@ -97,7 +97,7 @@ class StreamProjectService @Autowired constructor(
             realPageSize = realPageSize,
             search = search,
             orderBy = orderBy ?: StreamProjectsOrder.UPDATE,
-            sort = sort ?: StreamBranchesSort.DESC
+            sort = sort ?: StreamSortAscOrDesc.DESC
         )
         if (gitProjects.isNullOrEmpty()) {
             return Pagination(false, emptyList())
@@ -151,7 +151,7 @@ class StreamProjectService @Autowired constructor(
         realPage: Int?,
         realPageSize: Int?,
         orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): List<StreamProjectGitInfo>? {
         val gitProjects = try {
             streamGitTransferService.getProjectList(
@@ -160,7 +160,7 @@ class StreamProjectService @Autowired constructor(
                 pageSize = realPageSize,
                 search = search,
                 orderBy = orderBy ?: StreamProjectsOrder.UPDATE,
-                sort = sort ?: StreamBranchesSort.DESC,
+                sort = sort ?: StreamSortAscOrDesc.DESC,
                 owned = null,
                 minAccessLevel = if (type == StreamProjectType.MY_PROJECT) {
                     GitAccessLevelEnum.DEVELOPER
