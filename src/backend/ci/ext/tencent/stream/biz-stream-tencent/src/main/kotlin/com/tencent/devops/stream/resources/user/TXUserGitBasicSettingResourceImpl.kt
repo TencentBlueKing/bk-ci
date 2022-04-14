@@ -33,13 +33,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
-import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
 import com.tencent.devops.stream.service.StreamGitTransferService
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 

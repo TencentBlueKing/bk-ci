@@ -5,8 +5,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.Commit
-import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
-import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
+import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -80,9 +80,9 @@ interface AppStreamGitCodeResource {
         pageSize: Int?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("orderBy")
-        orderBy: GitCodeBranchesOrder?,
+        orderBy: StreamBranchesOrder?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("sort")
-        sort: GitCodeBranchesSort?
+        sort: StreamBranchesSort?
     ): Result<Page<String>?>
 }

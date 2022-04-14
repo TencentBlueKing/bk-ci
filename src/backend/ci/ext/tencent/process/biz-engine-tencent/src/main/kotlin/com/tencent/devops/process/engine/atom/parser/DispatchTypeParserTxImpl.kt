@@ -27,12 +27,13 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
-import com.tencent.devops.common.ci.v2.StreamDispatchInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
@@ -47,7 +48,6 @@ import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.util.CommonCredentialUtils
-import com.tencent.devops.process.util.StreamDispatchUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -171,7 +171,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         return when (customInfo) {
             is StreamDispatchInfo -> SampleDispatchInfo(
                 name = customInfo.name,
-                dispatchType = StreamDispatchUtils.getDispatchType(
+                dispatchType = TXStreamDispatchUtils.getDispatchType(
                     client = client,
                     objectMapper = objectMapper,
                     job = customInfo.job,
@@ -182,8 +182,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     containsMatrix = true,
                     buildTemplateAcrossInfo = buildTemplateAcrossInfo
                 ),
-                baseOS = StreamDispatchUtils.getBaseOs(customInfo.job, context),
-                buildEnv = StreamDispatchUtils.getBuildEnv(customInfo.job, context)
+                baseOS = TXStreamDispatchUtils.getBaseOs(customInfo.job, context),
+                buildEnv = TXStreamDispatchUtils.getBuildEnv(customInfo.job, context)
             )
             else -> null
         }

@@ -29,12 +29,15 @@ package com.tencent.devops.stream.resources.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
-import com.tencent.devops.stream.v2.service.StreamProjectService
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
+import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamProjectType
+import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
+import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
+import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.service.StreamProjectService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -50,14 +53,28 @@ class ServiceGitCIProjectResourceImpl @Autowired constructor(
         orderBy: GitCodeProjectsOrder?,
         sort: GitCodeBranchesSort?
     ): Result<List<ProjectCIInfo>> {
-        return Result(streamProjectService.getProjectList(
-            userId = userId,
-            type = type,
-            search = search,
-            page = page,
-            pageSize = pageSize,
-            orderBy = orderBy,
-            sort = sort
-        ).records)
+        return Result(
+            streamProjectService.getProjectList(
+                userId = userId,
+                type = if (type == null) {
+                    null
+                } else {
+                    StreamProjectType.valueOf(type.name)
+                },
+                search = search,
+                page = page,
+                pageSize = pageSize,
+                orderBy = if (orderBy == null) {
+                    null
+                } else {
+                    StreamProjectsOrder.valueOf(orderBy.name)
+                },
+                sort = if (sort == null) {
+                    null
+                } else {
+                    StreamBranchesSort.valueOf(sort.name)
+                }
+            ).records.map { ProjectCIInfo(it) }
+        )
     }
 }

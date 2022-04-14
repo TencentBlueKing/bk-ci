@@ -31,6 +31,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -85,6 +86,36 @@ data class V1GitRequestEvent(
     @ApiModelProperty("远程仓库触发时得到的主库流水线列表")
     var repoTriggerPipelineList: List<V1StreamRepoHookEvent>? = null
 ) {
+    constructor(r: GitRequestEvent) : this(
+        id = r.id,
+        objectKind = r.objectKind,
+        operationKind = r.operationKind,
+        extensionAction = r.extensionAction,
+        gitProjectId = r.gitProjectId,
+        sourceGitProjectId = r.sourceGitProjectId,
+        branch = r.branch,
+        targetBranch = r.targetBranch,
+        commitId = r.commitId,
+        commitMsg = r.commitMsg,
+        commitTimeStamp = r.commitTimeStamp,
+        commitAuthorName = r.commitAuthorName,
+        userId = r.userId,
+        totalCommitCount = r.totalCommitCount,
+        mergeRequestId = r.mergeRequestId,
+        event = r.event,
+        description = r.description,
+        mrTitle = r.mrTitle,
+        gitEvent = r.gitEvent,
+        gitProjectName = r.gitProjectName,
+        repoTriggerPipelineList = r.repoTriggerPipelineList?.map {
+            V1StreamRepoHookEvent(
+                pipelineId = it.pipelineId,
+                sourceGitProjectPath = it.sourceGitProjectPath,
+                targetGitProjectId = it.targetGitProjectId
+            )
+        }
+    )
+
     companion object {
         // 对应client下删除分支的场景，after=0000000000000000000000000000000000000000，表示删除分支。
         const val DELETE_BRANCH_COMMITID_FROM_CLIENT = "0000000000000000000000000000000000000000"

@@ -37,12 +37,12 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import com.tencent.devops.stream.pojo.GitCITriggerLock
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.client.V1ScmClient
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
-import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
+import com.tencent.devops.stream.v1.pojo.V1GitCITriggerLock
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.pojo.V1GitRequestEvent
 import com.tencent.devops.stream.v1.pojo.enums.V1GitCICommitCheckState
@@ -72,14 +72,14 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     abstract fun gitStartBuild(
-        pipeline: V1GitProjectPipeline,
+        pipeline: StreamTriggerPipeline,
         event: V1GitRequestEvent,
         yaml: T,
         gitBuildId: Long
     ): BuildId?
 
     fun startBuild(
-        pipeline: V1GitProjectPipeline,
+        pipeline: StreamTriggerPipeline,
         event: V1GitRequestEvent,
         gitProjectConf: V1GitRepositoryConf,
         model: Model,
@@ -227,7 +227,7 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
         gitProjectConf: V1GitRepositoryConf,
         pipelineId: String
     ): String {
-        val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
+        val triggerLock = V1GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
         try {
             triggerLock.lock()
             processClient.edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
@@ -247,7 +247,7 @@ abstract class V1YamlBaseBuild<T> @Autowired constructor(
         processClient: ServicePipelineResource,
         event: V1GitRequestEvent,
         gitProjectConf: V1GitRepositoryConf,
-        pipeline: V1GitProjectPipeline
+        pipeline: StreamTriggerPipeline
     ): Boolean {
         try {
             val response = processClient.get(

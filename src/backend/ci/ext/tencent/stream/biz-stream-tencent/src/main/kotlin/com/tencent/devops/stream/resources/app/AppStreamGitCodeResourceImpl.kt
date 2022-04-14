@@ -4,20 +4,20 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.pojo.Commit
-import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
-import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.stream.api.app.AppStreamGitCodeResource
-import com.tencent.devops.stream.permission.GitCIV2PermissionService
-import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
-import com.tencent.devops.stream.v2.service.StreamOauthService
-import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
-import com.tencent.devops.stream.v2.service.StreamScmService
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
+import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.service.StreamOauthService
+import com.tencent.devops.stream.service.StreamPipelineBranchService
+import com.tencent.devops.stream.service.StreamScmService
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class AppStreamGitCodeResourceImpl @Autowired constructor(
-    private val permissionService: GitCIV2PermissionService,
+    private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val oauthService: StreamOauthService,
@@ -34,7 +34,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
         pageSize: Int?
     ): Result<List<Commit>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        permissionService.checkGitCIPermission(userId, projectId)
+        permissionService.checkStreamPermission(userId, projectId)
         return Result(
             streamScmService.getCommits(
                 token = getOauthToken(gitProjectId),
@@ -56,8 +56,8 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
         search: String?,
         page: Int?,
         pageSize: Int?,
-        orderBy: GitCodeBranchesOrder?,
-        sort: GitCodeBranchesSort?
+        orderBy: StreamBranchesOrder?,
+        sort: StreamBranchesSort?
     ): Result<Page<String>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
@@ -66,8 +66,8 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 page = page ?: 1,
                 pageSize = pageSize ?: 100,
-                orderBy = orderBy ?: GitCodeBranchesOrder.UPDATE,
-                sort = sort ?: GitCodeBranchesSort.DESC,
+                orderBy = orderBy ?: StreamBranchesOrder.UPDATE,
+                sort = sort ?: StreamBranchesSort.DESC,
                 search = search
             )
         )
@@ -75,7 +75,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
 
     // 看是否使用工蜂开启人的OAuth
     private fun getOauthToken(gitProjectId: Long): String {
-        val setting = TXStreamBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
+        val setting = TXStreamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         return oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
     }
 }

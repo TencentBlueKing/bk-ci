@@ -84,7 +84,7 @@ class SendNotify @Autowired constructor(
         }
     }
 
-    private fun sendNotifyV2(
+    protected fun sendNotifyV2(
         action: BaseAction,
         build: BuildHistory,
         notice: GitNotices,
@@ -211,7 +211,7 @@ class SendNotify @Autowired constructor(
     }
 
     // 替换variables变量
-    private fun replaceVar(value: String?, variables: Map<String, String>?): String? {
+    protected fun replaceVar(value: String?, variables: Map<String, String>?): String? {
         if (value.isNullOrBlank()) {
             return value
         }
@@ -221,7 +221,7 @@ class SendNotify @Autowired constructor(
         return EnvUtils.parseEnv(value, variables)
     }
 
-    private fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
+    protected fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
         if (value.isNullOrEmpty()) {
             return value
         }
@@ -252,7 +252,7 @@ class SendNotify @Autowired constructor(
     }
 
     // 使用启动参数替换接收人
-    private fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
+    protected fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
         if (receivers == null || receivers.isEmpty()) {
             return mutableSetOf()
         }

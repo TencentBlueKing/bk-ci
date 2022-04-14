@@ -37,27 +37,27 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.repository.api.ServiceGitOauthResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
-import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
-import com.tencent.devops.stream.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
-import com.tencent.devops.stream.permission.GitCIV2PermissionService
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.stream.utils.GitCommonUtils
-import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
-import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
-import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
-import com.tencent.devops.stream.v2.service.StreamScmService
-import javax.ws.rs.core.Response
+import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
+import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
+import com.tencent.devops.stream.service.StreamScmService
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
+import com.tencent.devops.stream.util.GitCommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     private val TXStreamBasicSettingService: TXStreamBasicSettingService,
-    private val permissionService: GitCIV2PermissionService,
+    private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val client: Client
 ) : ServiceGitBasicSettingResource {
@@ -75,13 +75,13 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkGitCIAndOAuth(
+        permissionService.checkStreamAndOAuth(
             userId = userId,
             projectId = projectId
         )
-        val setting = TXStreamBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = TXStreamBasicSettingService.getStreamConf(gitProjectId)
         val result = if (setting == null) {
-            TXStreamBasicSettingService.initGitCIConf(
+            TXStreamBasicSettingService.initStreamConf(
                 userId = userId,
                 projectId = projectId,
                 gitProjectId = gitProjectId,
@@ -99,7 +99,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        return Result(TXStreamBasicSettingService.getGitCIConf(gitProjectId))
+        return Result(TXStreamBasicSettingService.getStreamConf(gitProjectId)?.let { GitCIBasicSetting(it) })
     }
 
     override fun validateGitProject(
@@ -139,27 +139,29 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = projectInfo.gitProjectId
         val projectCode = GitCommonUtils.getCiProjectId(gitProjectId)
 
-        permissionService.checkGitCIPermission(userId, projectCode, AuthPermission.USE)
+        permissionService.checkStreamPermission(userId, projectCode, AuthPermission.USE)
 
-        val setting = TXStreamBasicSettingService.getGitCIConf(gitProjectId)
+        val setting = TXStreamBasicSettingService.getStreamConf(gitProjectId)
             ?: return Result(
                 status = Response.Status.NOT_FOUND.statusCode,
                 message = "工蜂项目未开启Stream，请前往仓库的CI/CD进行配置",
                 data = null
             )
         logger.info("STREAM|validateGitProjectSetting|setting=$setting")
-        return Result(GitUserValidateResult(
-            gitProjectId = gitProjectId,
-            name = setting.name,
-            url = setting.url,
-            homepage = setting.homepage,
-            gitHttpUrl = setting.gitHttpUrl,
-            gitSshUrl = setting.gitSshUrl,
-            projectCode = projectCode,
-            projectName = projectInfo.nameWithNamespace,
-            enableCi = setting.enableCi,
-            authUserId = setting.enableUserId
-        ))
+        return Result(
+            GitUserValidateResult(
+                gitProjectId = gitProjectId,
+                name = setting.name,
+                url = setting.url,
+                homepage = setting.homepage,
+                gitHttpUrl = setting.gitHttpUrl,
+                gitSshUrl = setting.gitSshUrl,
+                projectCode = projectCode,
+                projectName = projectInfo.nameWithNamespace,
+                enableCi = setting.enableCi,
+                authUserId = setting.enableUserId
+            )
+        )
     }
 
     override fun saveGitCIConf(
@@ -169,8 +171,8 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId = userId, projectId = projectId)
-        permissionService.checkEnableGitCI(gitProjectId)
+        permissionService.checkStreamPermission(userId = userId, projectId = projectId)
+        permissionService.checkEnableStream(gitProjectId)
         return Result(
             TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
@@ -189,7 +191,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         checkCommonUser(userId)
-        permissionService.checkGitCIAndOAuthAndEnable(authUserId, projectId, gitProjectId)
+        permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
             TXStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
@@ -220,6 +222,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
     }
+
     // 判断用户是否公共账号，并且存在，否则提示用户注册
     private fun checkCommonUser(userId: String) {
         // get接口先查本地，再查tof

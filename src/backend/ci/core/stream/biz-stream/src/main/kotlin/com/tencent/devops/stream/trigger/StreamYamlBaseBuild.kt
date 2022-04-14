@@ -225,7 +225,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         } finally {
             buildLock.unlock()
             // 这里可以做构建相关的数据上报之类的工作
-            streamYamlBuildExpand.buildReportData(action, buildId)
+            streamYamlBuildExpand.buildReportData(action, buildId, pipeline)
         }
 
         if (buildId.isBlank()) {

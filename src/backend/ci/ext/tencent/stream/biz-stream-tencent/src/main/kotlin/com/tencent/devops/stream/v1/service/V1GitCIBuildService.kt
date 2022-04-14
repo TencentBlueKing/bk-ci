@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.components.V1YamlBuild
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
@@ -116,6 +117,14 @@ class V1GitCIBuildService @Autowired constructor(
         model: Model,
         gitBuildId: Long
     ): BuildId? {
-        return yamlBuild.startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
+        val realPipeline = StreamTriggerPipeline(
+            gitProjectId = pipeline.gitProjectId.toString(),
+            pipelineId = pipeline.pipelineId,
+            filePath = pipeline.filePath,
+            displayName = pipeline.displayName,
+            enabled = pipeline.enabled,
+            creator = pipeline.creator
+        )
+        return yamlBuild.startBuild(realPipeline, event, gitProjectConf, model, gitBuildId)
     }
 }

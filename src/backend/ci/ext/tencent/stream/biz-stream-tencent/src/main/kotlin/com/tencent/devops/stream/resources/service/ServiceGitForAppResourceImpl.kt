@@ -3,11 +3,11 @@ package com.tencent.devops.stream.resources.service
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.api.service.ServiceGitForAppResource
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.v2.service.StreamAppService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.project.pojo.app.AppProjectVO
+import com.tencent.devops.stream.api.service.ServiceGitForAppResource
+import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.service.StreamAppService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

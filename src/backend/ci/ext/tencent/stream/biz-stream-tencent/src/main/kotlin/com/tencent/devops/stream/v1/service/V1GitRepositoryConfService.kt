@@ -32,7 +32,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import com.tencent.devops.stream.constant.GitCIConstant
+import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.pojo.V1RtxCustomProperty
@@ -142,10 +142,10 @@ class V1GitRepositoryConfService @Autowired constructor(
                 repositoryConf.name
             }
             // 可能存在group多层嵌套的情况:a/b/c/d/e/xx.git，超过t_project表的设置长度64，默认只保存后64位的长度
-            if (gitProjectName.length > GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
+            if (gitProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                        GitCIConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
                     gitProjectName.length
                 )
             }

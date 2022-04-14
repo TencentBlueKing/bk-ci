@@ -31,8 +31,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.stream.api.ExternalStreamResource
-import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
-import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
+import com.tencent.devops.stream.service.StreamPipelineBadgeService
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 

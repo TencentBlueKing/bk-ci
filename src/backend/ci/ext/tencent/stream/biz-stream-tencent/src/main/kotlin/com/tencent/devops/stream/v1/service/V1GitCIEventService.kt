@@ -29,6 +29,7 @@ package com.tencent.devops.stream.v1.service
 
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.v1.client.V1ScmClient
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventDao
@@ -38,7 +39,6 @@ import com.tencent.devops.stream.v1.pojo.V1GitRequestEvent
 import com.tencent.devops.stream.v1.pojo.enums.V1GitCICommitCheckState
 import com.tencent.devops.stream.v1.pojo.enums.V1UserMessageType
 import com.tencent.devops.stream.v1.utils.V1StreamTriggerMessageUtils
-import com.tencent.devops.stream.v2.service.StreamWebsocketService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory

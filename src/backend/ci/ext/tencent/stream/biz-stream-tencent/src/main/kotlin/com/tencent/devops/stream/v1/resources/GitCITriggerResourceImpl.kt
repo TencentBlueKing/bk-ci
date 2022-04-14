@@ -29,13 +29,13 @@
 
 package com.tencent.devops.stream.v1.resources
 
+import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
-import com.tencent.devops.stream.trigger.ManualTriggerService
+import com.tencent.devops.stream.trigger.TXManualTriggerService
 import com.tencent.devops.stream.v1.api.GitCITriggerResource
 import com.tencent.devops.stream.v1.pojo.V1GitYamlString
 import com.tencent.devops.stream.v1.service.V1StreamYamlService
@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class GitCITriggerResourceImpl @Autowired constructor(
     private val streamYamlService: V1StreamYamlService,
-    private val manualTriggerService: ManualTriggerService
+    private val TXManualTriggerService: TXManualTriggerService
 ) : GitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerResourceImpl::class.java)
@@ -57,7 +57,7 @@ class GitCITriggerResourceImpl @Autowired constructor(
         v1TriggerBuildReq: V1TriggerBuildReq
     ): Result<Boolean> {
         checkParam(userId)
-        val result = manualTriggerService.triggerBuild(userId, pipelineId, v1TriggerBuildReq)
+        val result = TXManualTriggerService.triggerBuild(userId, pipelineId, v1TriggerBuildReq)
         logger.info("STREAM|$userId|$pipelineId|v1TriggerBuildReq=$v1TriggerBuildReq|result=$result")
         return Result(true)
     }

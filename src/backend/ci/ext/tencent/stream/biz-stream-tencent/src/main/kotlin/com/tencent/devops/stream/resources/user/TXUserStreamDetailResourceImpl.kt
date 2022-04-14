@@ -32,9 +32,9 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.v2.service.TXStreamDetailService
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.service.StreamDetailService
+import com.tencent.devops.stream.service.TXStreamDetailService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -57,13 +57,15 @@ class TXUserStreamDetailResourceImpl @Autowired constructor(
         checkParam(userId)
         permissionService.checkStreamPermission(userId, projectId)
         permissionService.checkEnableStream(gitProjectId)
-        return Result(txStreamDetailService.downloadUrl(
-            userId = userId,
-            gitUserId = gitUserId,
-            gitProjectId = gitProjectId,
-            artifactoryType = artifactoryType,
-            path = path
-        ))
+        return Result(
+            txStreamDetailService.downloadUrl(
+                userId = userId,
+                gitUserId = gitUserId,
+                gitProjectId = gitProjectId,
+                artifactoryType = artifactoryType,
+                path = path
+            )
+        )
     }
 
     private fun checkParam(userId: String) {

@@ -28,11 +28,12 @@
 package com.tencent.devops.stream.trigger.expand
 
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 
 /**
  * 一些build可供不同环境进行拓展的接口
  */
 interface StreamYamlBuildExpand {
 
-    fun buildReportData(action: BaseAction, buildId: String)
+    fun buildReportData(action: BaseAction, buildId: String, pipeline: StreamTriggerPipeline)
 }

@@ -1,4 +1,4 @@
-package com.tencent.devops.openapi.resources.apigw.v3
+package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -14,17 +14,17 @@ import com.tencent.devops.stream.v1.api.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
-import com.tencent.devops.stream.pojo.GitCIBuildHistory
-import com.tencent.devops.stream.pojo.GitCIModelDetail
-import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.StreamTriggerBuildReq
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
-import com.tencent.devops.stream.pojo.enums.GitCIProjectType
-import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
-import com.tencent.devops.stream.pojo.v2.GitCIUpdateSetting
-import com.tencent.devops.stream.pojo.v2.GitUserValidateRequest
-import com.tencent.devops.stream.pojo.v2.GitUserValidateResult
-import com.tencent.devops.stream.pojo.v2.project.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
+import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
+import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
+import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
+import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
+import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
+import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -74,7 +74,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         keyword: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<GitProjectPipeline>> {
+    ): Result<Page<V1GitProjectPipeline>> {
         val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
             MAX_PAGE_SIZE
         } else {
@@ -96,7 +96,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String,
         withHistory: Boolean?
-    ): Result<GitProjectPipeline?> {
+    ): Result<V1GitProjectPipeline?> {
         return client.get(GitCIPipelineResource::class).getPipeline(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -126,7 +126,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         gitProjectId: Long
-    ): Result<List<GitProjectPipeline>> {
+    ): Result<List<V1GitProjectPipeline>> {
         return client.get(GitCIPipelineResource::class).listPipelineNames(
             userId = userId,
             gitProjectId = gitProjectId
@@ -140,7 +140,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String?,
         buildId: String?
-    ): Result<GitCIModelDetail?> {
+    ): Result<V1GitCIModelDetail?> {
         return client.get(GitCIDetailResource::class).getLatestBuildDetail(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -162,7 +162,7 @@ class ApigwStreamResourceV4Impl @Autowired constructor(
         sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?
-    ): Result<Page<GitCIBuildHistory>> {
+    ): Result<Page<V1GitCIBuildHistory>> {
         val realPageSize = if (pageSize != null && pageSize > MAX_PAGE_SIZE) {
             MAX_PAGE_SIZE
         } else {

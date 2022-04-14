@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.op.OpGitCIBasicSettingResource
 import com.tencent.devops.stream.pojo.StreamBasicSetting
-import com.tencent.devops.stream.v2.service.TXStreamBasicSettingService
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

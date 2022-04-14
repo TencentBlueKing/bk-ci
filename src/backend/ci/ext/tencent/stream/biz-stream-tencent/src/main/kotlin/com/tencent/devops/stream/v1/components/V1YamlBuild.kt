@@ -93,13 +93,13 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.client.V1ScmClient
 import com.tencent.devops.stream.v1.config.V1BuildConfig
 import com.tencent.devops.stream.v1.dao.V1GitCIServicesConfDao
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
-import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.pojo.V1GitRequestEvent
 import com.tencent.devops.stream.v1.service.V1GitCIEventService
@@ -153,7 +153,7 @@ class V1YamlBuild @Autowired constructor(
     private val channelCode = ChannelCode.GIT
 
     override fun gitStartBuild(
-        pipeline: V1GitProjectPipeline,
+        pipeline: StreamTriggerPipeline,
         event: V1GitRequestEvent,
         yaml: CIBuildYaml,
         gitBuildId: Long

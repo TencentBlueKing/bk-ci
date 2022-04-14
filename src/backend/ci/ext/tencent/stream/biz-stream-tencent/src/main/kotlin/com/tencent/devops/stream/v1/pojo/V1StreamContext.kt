@@ -28,6 +28,8 @@
 package com.tencent.devops.stream.v1.pojo
 
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 
 // Stream 触发构建时的上下文参数
 interface V1StreamContext {
@@ -38,21 +40,21 @@ interface V1StreamContext {
     val gitRequestEventForHandle: V1GitRequestEventForHandle
 
     // stream 项目的设置
-    val streamSetting: V1GitCIBasicSetting
+    val streamSetting: StreamTriggerSetting
 }
 
 data class V1StreamRequestContext(
     override val gitEvent: GitEvent,
     override val gitRequestEventForHandle: V1GitRequestEventForHandle,
-    override val streamSetting: V1GitCIBasicSetting
+    override val streamSetting: StreamTriggerSetting
 ) : V1StreamContext
 
 data class V1StreamTriggerContext(
     override val gitEvent: GitEvent,
     override val gitRequestEventForHandle: V1GitRequestEventForHandle,
-    override val streamSetting: V1GitCIBasicSetting,
+    override val streamSetting: StreamTriggerSetting,
     // 用来构建的流水线
-    val pipeline: V1GitProjectPipeline,
+    val pipeline: StreamTriggerPipeline,
     // yaml原文配置
     val originYaml: String,
     // 变更文件列表

@@ -29,7 +29,7 @@ package com.tencent.devops.stream.v1.dao
 
 import com.tencent.devops.model.stream.tables.TGitPipelineResource
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
-import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -40,7 +40,7 @@ class V1GitPipelineResourceDao {
     fun createPipeline(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipeline: V1GitProjectPipeline,
+        pipeline: StreamTriggerPipeline,
         version: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
@@ -92,7 +92,7 @@ class V1GitPipelineResourceDao {
 
     fun updatePipelineBuildInfo(
         dslContext: DSLContext,
-        pipeline: V1GitProjectPipeline,
+        pipeline: StreamTriggerPipeline,
         buildId: String,
         version: String?
     ): Int {
@@ -102,7 +102,7 @@ class V1GitPipelineResourceDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(PIPELINE_ID, pipeline.pipelineId)
                 .set(VERSION, version)
-                .where(GIT_PROJECT_ID.eq(pipeline.gitProjectId))
+                .where(GIT_PROJECT_ID.eq(pipeline.gitProjectId.toLong()))
                 .and(FILE_PATH.eq(pipeline.filePath))
                 .execute()
         }
