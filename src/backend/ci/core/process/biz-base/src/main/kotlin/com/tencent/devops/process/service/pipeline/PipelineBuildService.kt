@@ -261,7 +261,7 @@ class PipelineBuildService(
                 ), startType = startType, channelCode = channelCode
             )
             // 增加对containsKey(PIPELINE_NAME)的逻辑判断,如果有传值，默认使用。
-            val paramsWithType = startParamsList.asSequence().plus(
+            var paramsWithType = startParamsList.asSequence().plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
@@ -278,7 +278,7 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
                 .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))
                 .plus(BuildParameters(PIPELINE_UPDATE_USER, readyToBuildPipelineInfo.lastModifyUser))
-                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toMutableList()
+                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId))
 
             val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             // #5264 保留启动参数的原始值以及重试中需要用到的字段
@@ -287,7 +287,7 @@ class PipelineBuildService(
                 if (realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
                     it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT) {
                     originStartParams.add(it)
-                    paramsWithType.add(it.copy(key = "variables.${it.key}"))
+                    paramsWithType = paramsWithType.plus(it.copy(key = "variables.${it.key}"))
                 }
             }
 
@@ -295,7 +295,7 @@ class PipelineBuildService(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
                 originStartParams = originStartParams,
-                startParamsWithType = paramsWithType,
+                startParamsWithType = paramsWithType.toList(),
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule
             )
