@@ -48,7 +48,7 @@ class SimplePermissionRoleService @Autowired constructor(
     private val resourceService: BkResourceService,
     private val actionsService: ActionService,
     private val authCustomizePermissionService: AuthCustomizePermissionService
-): AbsPermissionRoleServiceImpl(groupService, resourceService, actionsService) {
+) : AbsPermissionRoleServiceImpl(groupService, resourceService, actionsService) {
 
     override fun groupCreateExt(
         roleId: Int,
@@ -70,7 +70,6 @@ class SimplePermissionRoleService @Autowired constructor(
                 actions = actions
             )
         }
-
     }
 
     override fun updateGroupExt(

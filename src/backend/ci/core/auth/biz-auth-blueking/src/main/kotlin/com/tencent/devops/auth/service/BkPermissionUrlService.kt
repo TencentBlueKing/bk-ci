@@ -69,16 +69,20 @@ class BkPermissionUrlService @Autowired constructor(
             }
 
             if (instanceList == null || instanceList.isEmpty()) {
-                relatedResourceTypes.add(RelatedResourceTypes(
-                    system = iamConfiguration!!.systemId,
-                    type = relatedResourceType,
-                    instances = emptyList()
-                ))
+                relatedResourceTypes.add(
+                    RelatedResourceTypes(
+                        system = iamConfiguration!!.systemId,
+                        type = relatedResourceType,
+                        instances = emptyList()
+                    )
+                )
             } else {
-                relatedResourceTypes.add(RelatedResourceTypes(
-                    system = iamConfiguration!!.systemId,
-                    type = relatedResourceType,
-                    instances = listOf(instanceList))
+                relatedResourceTypes.add(
+                    RelatedResourceTypes(
+                        system = iamConfiguration!!.systemId,
+                        type = relatedResourceType,
+                        instances = listOf(instanceList)
+                    )
                 )
             }
 

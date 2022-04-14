@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service.iam.impl
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.service.ci.impl.AbsPermissionGradeServiceImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -41,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 open class IamPermissionGradeServiceImpl @Autowired constructor(
     open val iamManagerService: ManagerService,
     open val iamCacheService: IamCacheService
-): PermissionGradeService {
+) : PermissionGradeService {
     override fun checkGradeManagerUser(userId: String, projectId: String) {
         val iamProject = iamCacheService.getProjectIamRelationId(projectId)
         val pageInfoDTO = PageInfoDTO()

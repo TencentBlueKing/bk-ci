@@ -34,11 +34,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.model.auth.tables.TAuthAction
 import com.tencent.devops.model.auth.tables.records.TAuthActionRecord
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
-import javax.swing.Action
 
 @Repository
 class ActionDao {

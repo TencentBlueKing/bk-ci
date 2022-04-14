@@ -32,8 +32,8 @@ import com.tencent.devops.auth.api.user.UserProjectRoleResource
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
-import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.ci.PermissionRoleService
+import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -99,12 +99,14 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         roleId: Int,
         strategy: Map<String, List<String>>
     ): Result<Boolean> {
-        return Result(permissionRoleService.rolePermissionStrategy(
-            userId,
-            projectCode,
-            roleId,
-            strategy
-        ))
+        return Result(
+            permissionRoleService.rolePermissionStrategy(
+                userId,
+                projectCode,
+                roleId,
+                strategy
+            )
+        )
     }
 
     override fun getDefaultRole(userId: String): Result<List<DefaultGroup>> {

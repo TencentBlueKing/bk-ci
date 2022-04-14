@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 abstract class BkResourceServiceImpl @Autowired constructor(
     open val dslContext: DSLContext,
     open val resourceDao: ResourceDao
-): BkResourceService{
+) : BkResourceService {
     override fun createResource(userId: String, resource: CreateResourceDTO): Boolean {
         // 判断此资源是否存在, 存在直接报错
         if (resourceDao.getResourceById(dslContext, resource.resourceId) != null) {

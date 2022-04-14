@@ -57,12 +57,14 @@ class OpManagerUserResourceImpl @Autowired constructor(
         timeout: Int,
         managerIds: String
     ): Result<Boolean> {
-        return Result(mangerUserService.batchCreateManager(
-            userId = userId,
-            managerId = managerIds,
-            timeout = timeout,
-            managerUser = managerUserId
-        ))
+        return Result(
+            mangerUserService.batchCreateManager(
+                userId = userId,
+                managerId = managerIds,
+                timeout = timeout,
+                managerUser = managerUserId
+            )
+        )
     }
 
     override fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Result<Boolean> {

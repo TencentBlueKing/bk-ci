@@ -43,7 +43,7 @@ class SimpleAuthPermissionService @Autowired constructor(
     val groupMemberService: AuthGroupMemberService,
     val authCustomizePermissionService: AuthCustomizePermissionService,
     val strategyService: StrategyService
-): PermissionService {
+) : PermissionService {
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return true
     }
@@ -64,7 +64,7 @@ class SimpleAuthPermissionService @Autowired constructor(
          * 3. 自定义用户组校验
          */
         // 获取用户加入的用户组
-        val groupInfos = groupMemberService.getUserGroupByProject(userId, projectCode)?: return false
+        val groupInfos = groupMemberService.getUserGroupByProject(userId, projectCode) ?: return false
         val defaultGroup = mutableListOf<Int>()
         val customizeGroup = mutableListOf<Int>()
         groupInfos.forEach {

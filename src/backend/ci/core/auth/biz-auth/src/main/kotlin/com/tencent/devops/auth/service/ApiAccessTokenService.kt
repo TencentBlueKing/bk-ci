@@ -77,15 +77,20 @@ class ApiAccessTokenService @Autowired constructor(
     fun generateUserToken(userDetails: String): TokenInfo {
         logger.info("AUTH|generateUserToken| userId=$userDetails")
         if (secret.isNullOrBlank()) {
-            logger.error("AUTH| generateUserToken failed, " +
-                "because config[auth.accessToken.secret] is not found")
+            logger.error(
+                "AUTH| generateUserToken failed, " +
+                    "because config[auth.accessToken.secret] is not found"
+            )
             throw ErrorCodeException(
                 errorCode = PARAMETER_SECRET_ERROR,
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 defaultMessage = "AUTH| generateUserToken failed, " +
                     "because config[auth.accessToken.secret] is not found",
-                params = arrayOf("config", "AUTH| generateUserToken failed, " +
-                    "because config[auth.accessToken.secret] is not found")
+                params = arrayOf(
+                    "config",
+                    "AUTH| generateUserToken failed, " +
+                        "because config[auth.accessToken.secret] is not found"
+                )
             )
         }
         val tokenInfo = TokenInfo(
@@ -94,10 +99,13 @@ class ApiAccessTokenService @Autowired constructor(
             accessToken = null
         )
         tokenInfo.accessToken = try {
-            URLEncoder.encode(AESUtil.encrypt(
-                secret,
-                JsonUtil.toJson(tokenInfo, formatted = false)
-            ), "UTF-8")
+            URLEncoder.encode(
+                AESUtil.encrypt(
+                    secret,
+                    JsonUtil.toJson(tokenInfo, formatted = false)
+                ),
+                "UTF-8"
+            )
         } catch (ignore: Throwable) {
             logger.error("AUTH| generateUserToken failed because $ignore ")
             throw ErrorCodeException(

@@ -40,7 +40,6 @@ class IamBkActionServiceImplTest {
 
     private val iamActionService: IamBkActionServiceImpl = mock()
 
-
     @Test
     fun buildCreateRelationTest() {
         val action = CreateActionDTO(

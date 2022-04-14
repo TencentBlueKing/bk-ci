@@ -32,9 +32,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-open class AbsPermissionService @Autowired constructor(
-
-) : PermissionService {
+open class AbsPermissionService @Autowired constructor() : PermissionService {
 
     override fun validateUserActionPermission(
         userId: String,

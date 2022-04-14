@@ -74,8 +74,8 @@ class AuthGroupCustomizePermissionDao {
                 .set(ACTION_ID, actions)
                 .set(UPDATE_USER, UPDATE_USER)
                 .set(UPDATE_TIME, LocalDateTime.now()).where(
-                GROUP_ID.eq(groupId)
-            ).execute()
+                    GROUP_ID.eq(groupId)
+                ).execute()
         }
     }
 

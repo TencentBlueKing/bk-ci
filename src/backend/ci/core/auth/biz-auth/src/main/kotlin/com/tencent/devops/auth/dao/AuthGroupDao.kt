@@ -122,8 +122,10 @@ class AuthGroupDao {
 
     fun getGroupByName(dslContext: DSLContext, projectCode: String, groupName: String): TAuthGroupInfoRecord? {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-            return dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode)
-                .and(GROUP_NAME.eq(groupName))).fetchAny()
+            return dslContext.selectFrom(this).where(
+                PROJECT_CODE.eq(projectCode)
+                    .and(GROUP_NAME.eq(groupName))
+            ).fetchAny()
         }
     }
 
@@ -131,36 +133,38 @@ class AuthGroupDao {
         if (groups.isEmpty()) {
             return
         }
-        dslContext.batch(groups.map {
-            with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
-                dslContext.insertInto(
-                    this,
-                    GROUP_NAME,
-                    GROUP_CODE,
-                    GROUP_TYPE,
-                    RELATION_ID,
-                    DISPLAY_NAME,
-                    PROJECT_CODE,
-                    CREATE_USER,
-                    CREATE_TIME,
-                    UPDATE_USER,
-                    UPDATE_TIME,
-                    DESC
-                ).values(
-                    it.groupName,
-                    it.groupCode,
-                    it.groupType,
-                    it.relationId,
-                    it.displayName,
-                    it.projectCode,
-                    it.userId,
-                    LocalDateTime.now(),
-                    null,
-                    null,
-                    it.desc
-                )
+        dslContext.batch(
+            groups.map {
+                with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+                    dslContext.insertInto(
+                        this,
+                        GROUP_NAME,
+                        GROUP_CODE,
+                        GROUP_TYPE,
+                        RELATION_ID,
+                        DISPLAY_NAME,
+                        PROJECT_CODE,
+                        CREATE_USER,
+                        CREATE_TIME,
+                        UPDATE_USER,
+                        UPDATE_TIME,
+                        DESC
+                    ).values(
+                        it.groupName,
+                        it.groupCode,
+                        it.groupType,
+                        it.relationId,
+                        it.displayName,
+                        it.projectCode,
+                        it.userId,
+                        LocalDateTime.now(),
+                        null,
+                        null,
+                        it.desc
+                    )
+                }
             }
-        }).execute()
+        ).execute()
     }
 
     fun update(

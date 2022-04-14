@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class SimplePermissionProjectServiceImpl @Autowired constructor(
     private val groupMemberService: AuthGroupMemberService,
     private val groupService: AuthGroupService
-): PermissionProjectService {
+) : PermissionProjectService {
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         if (group == null) {
@@ -183,11 +183,13 @@ class SimplePermissionProjectServiceImpl @Autowired constructor(
                     displayName = it.displayName,
                     roleName = it.groupName,
                     roleId = it.id,
-                    type = (if (it.groupType) {
-                        GroupType.DEFAULT
-                    } else {
-                        GroupType.USER_BUILD
-                    }).toString()
+                    type = (
+                        if (it.groupType) {
+                            GroupType.DEFAULT
+                        } else {
+                            GroupType.USER_BUILD
+                        }
+                        ).toString()
                 )
             )
         }

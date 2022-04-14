@@ -27,8 +27,8 @@
 
 package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.service.ci.PermissionProjectService
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.auth.service.ci.PermissionProjectService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -74,18 +74,22 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Result<Boolean> {
-        return Result(permissionProjectService.isProjectUser(
-            userId = userId,
-            projectCode = projectCode,
-            group = group
-        ))
+        return Result(
+            permissionProjectService.isProjectUser(
+                userId = userId,
+                projectCode = projectCode,
+                group = group
+            )
+        )
     }
 
     override fun checkProjectManager(token: String, userId: String, projectCode: String): Result<Boolean> {
-        return Result(permissionProjectService.checkProjectManager(
-            userId = userId,
-            projectCode = projectCode
-        ))
+        return Result(
+            permissionProjectService.checkProjectManager(
+                userId = userId,
+                projectCode = projectCode
+            )
+        )
     }
 
     override fun createProjectUser(

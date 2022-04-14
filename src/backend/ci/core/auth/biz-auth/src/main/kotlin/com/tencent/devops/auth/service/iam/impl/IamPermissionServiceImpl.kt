@@ -46,7 +46,7 @@ open class IamPermissionServiceImpl @Autowired constructor(
     private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration,
     private val iamCacheService: IamCacheService
-): PermissionService {
+) : PermissionService {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         logger.info("[iam V3] validateUserActionPermission $userId $action")
@@ -77,8 +77,10 @@ open class IamPermissionServiceImpl @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        logger.info("[iam V3]validateUserResourcePermissionByRelation: $userId $action $projectCode " +
-                        "$resourceCode $resourceType $relationResourceType")
+        logger.info(
+            "[iam V3]validateUserResourcePermissionByRelation: $userId $action $projectCode " +
+                "$resourceCode $resourceType $relationResourceType"
+        )
 
         if (iamCacheService.checkProjectManager(userId, projectCode)) {
             return true

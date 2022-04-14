@@ -95,7 +95,8 @@ abstract class StreamPermissionServiceImpl : PermissionService {
                 action = action,
                 projectCode = projectCode,
                 resourceType = resourceType
-        )) {
+            )
+        ) {
             return arrayListOf("*")
         }
         return emptyList()

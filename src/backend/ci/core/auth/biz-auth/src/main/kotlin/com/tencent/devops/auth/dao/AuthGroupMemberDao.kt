@@ -29,7 +29,6 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.entity.GroupMemberInfo
 import com.tencent.devops.auth.pojo.enum.ExpiredStatus
-import com.tencent.devops.model.auth.tables.TAuthGroupInfo
 import com.tencent.devops.model.auth.tables.TAuthGroupMember
 import com.tencent.devops.model.auth.tables.records.TAuthGroupMemberRecord
 import org.jooq.Condition
@@ -73,30 +72,32 @@ class AuthGroupMemberDao {
         dslContext: DSLContext,
         groupMembers: List<GroupMemberInfo>
     ) {
-        dslContext.batch(groupMembers.map {
-            with(TAuthGroupMember.T_AUTH_GROUP_MEMBER) {
-                dslContext.insertInto(
-                    this,
-                    GROUP_ID,
-                    USER_ID,
-                    USER_TYPE,
-                    PROJECT_ID,
-                    EXPIRED_TIEM,
-                    EXPIRED_TYPE,
-                    CREATE_TIME,
-                    GROUP_TYPE
-                ).values(
-                    it.groupId,
-                    it.userId,
-                    it.userType,
-                    it.projectCode,
-                    LocalDateTime.now().plusDays(it.expiredDay),
-                    0,
-                    LocalDateTime.now(),
-                    it.groupType
-                )
+        dslContext.batch(
+            groupMembers.map {
+                with(TAuthGroupMember.T_AUTH_GROUP_MEMBER) {
+                    dslContext.insertInto(
+                        this,
+                        GROUP_ID,
+                        USER_ID,
+                        USER_TYPE,
+                        PROJECT_ID,
+                        EXPIRED_TIEM,
+                        EXPIRED_TYPE,
+                        CREATE_TIME,
+                        GROUP_TYPE
+                    ).values(
+                        it.groupId,
+                        it.userId,
+                        it.userType,
+                        it.projectCode,
+                        LocalDateTime.now().plusDays(it.expiredDay),
+                        0,
+                        LocalDateTime.now(),
+                        it.groupType
+                    )
+                }
             }
-        }).execute()
+        ).execute()
     }
 
     fun updateExpiredStatus(

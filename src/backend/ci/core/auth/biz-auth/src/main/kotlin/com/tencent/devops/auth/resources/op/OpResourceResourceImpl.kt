@@ -40,7 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpResourceResourceImpl @Autowired constructor(
     val resourceService: BkResourceService
-): OpResourceResource {
+) : OpResourceResource {
     override fun createSystemResource(userId: String, resourceInfo: CreateResourceDTO): Result<Boolean> {
         return Result(resourceService.createResource(userId, resourceInfo))
     }

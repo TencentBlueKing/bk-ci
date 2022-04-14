@@ -53,7 +53,8 @@ class CallBackService @Autowired constructor(
         resourceMap.forEach { (key, resource) ->
             if (resource.relatedResource != null &&
                 resource.relatedResource!!.isNotEmpty() &&
-                resource.relatedFlag!!) {
+                resource.relatedFlag!!
+            ) {
                 checkRelatedResource(resource.relatedResource!!, resourceMap.keys)
             }
             checkPath(resource.path)
@@ -95,14 +96,16 @@ class CallBackService @Autowired constructor(
         val resourceRecords = iamCallBackDao.list(dslContext) ?: return emptyList()
         val iamResourceList = mutableListOf<IamCallBackInfo>()
         resourceRecords.forEach {
-            iamResourceList.add(IamCallBackInfo(
-                id = it.id,
-                system = it.system,
-                path = it.path,
-                resource = it.resource,
-                deleteFlag = it.deleteFlag,
-                gateway = it.gateway
-            ))
+            iamResourceList.add(
+                IamCallBackInfo(
+                    id = it.id,
+                    system = it.system,
+                    path = it.path,
+                    resource = it.resource,
+                    deleteFlag = it.deleteFlag,
+                    gateway = it.gateway
+                )
+            )
         }
         return iamResourceList
     }

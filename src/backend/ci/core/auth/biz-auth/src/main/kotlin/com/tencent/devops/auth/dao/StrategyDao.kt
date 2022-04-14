@@ -39,7 +39,8 @@ class StrategyDao {
 
     fun create(dslContext: DSLContext, userId: String, strategyInfo: StrategyInfo): Int {
         with(TAuthStrategy.T_AUTH_STRATEGY) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 STRATEGY_NAME,
                 STRATEGY_BODY,
                 IS_DELETE,

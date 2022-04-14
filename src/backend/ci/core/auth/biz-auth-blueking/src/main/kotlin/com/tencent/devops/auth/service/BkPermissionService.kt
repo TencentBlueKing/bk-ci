@@ -31,7 +31,6 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.auth.service.ci.impl.AbsPermissionService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType

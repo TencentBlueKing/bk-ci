@@ -151,7 +151,6 @@ class AuthCoreConfiguration {
     @ConditionalOnMissingBean(name = ["permissionUrlService"])
     fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
 
-
     @Bean
     @ConditionalOnMissingBean(ActionService::class)
     fun simpleActionService(

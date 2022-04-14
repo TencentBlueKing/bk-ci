@@ -43,7 +43,7 @@ abstract class BKActionServiceImpl @Autowired constructor(
     open val dslContext: DSLContext,
     open val actionDao: ActionDao,
     open val resourceService: BkResourceService
-): ActionService {
+) : ActionService {
 
     override fun createAction(userId: String, action: CreateActionDTO): Boolean {
         logger.info("createAction $userId|$action")
@@ -126,7 +126,7 @@ abstract class BKActionServiceImpl @Autowired constructor(
 
     abstract fun extSystemCreate(userId: String, action: CreateActionDTO)
 
-    abstract fun extSystemUpdate(userId: String,actionId: String, action: UpdateActionDTO)
+    abstract fun extSystemUpdate(userId: String, actionId: String, action: UpdateActionDTO)
 
     companion object {
         val logger = LoggerFactory.getLogger(BKActionServiceImpl::class.java)

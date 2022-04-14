@@ -61,7 +61,8 @@ class TokenCheckFilter @Autowired constructor(
 
         // TODO: 配置化, 用于一些信任的第三方调用过来的特殊请求
         if (pathInfo.contains("open/auth/resource/projects") ||
-            pathInfo.contains("open/auth/resource/instances/list")) {
+            pathInfo.contains("open/auth/resource/instances/list")
+        ) {
             return chain.doFilter(request, response)
         }
 

@@ -41,7 +41,8 @@ class ManagerUserDao {
 
     fun create(dslContext: DSLContext, managerUserInfo: ManagerUserEntity): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 USER_ID,
                 MANAGER_ID,
                 END_TIME,
@@ -65,8 +66,10 @@ class ManagerUserDao {
 
     fun list(dslContext: DSLContext, managerId: Int): Result<TAuthManagerUserRecord>? {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectFrom(this).where(MANAGER_ID.eq(managerId)
-                .and(END_TIME.gt(LocalDateTime.now()))).orderBy(CREATE_TIME.desc()).fetch()
+            return dslContext.selectFrom(this).where(
+                MANAGER_ID.eq(managerId)
+                    .and(END_TIME.gt(LocalDateTime.now()))
+            ).orderBy(CREATE_TIME.desc()).fetch()
         }
     }
 
@@ -84,8 +87,10 @@ class ManagerUserDao {
 
     fun count(dslContext: DSLContext, managerId: Int): Int {
         with(TAuthManagerUser.T_AUTH_MANAGER_USER) {
-            return dslContext.selectCount().from(this).where(MANAGER_ID.eq(managerId)
-                .and(END_TIME.gt(LocalDateTime.now()))).fetchOne(0, Int::class.java)!!
+            return dslContext.selectCount().from(this).where(
+                MANAGER_ID.eq(managerId)
+                    .and(END_TIME.gt(LocalDateTime.now()))
+            ).fetchOne(0, Int::class.java)!!
         }
     }
 

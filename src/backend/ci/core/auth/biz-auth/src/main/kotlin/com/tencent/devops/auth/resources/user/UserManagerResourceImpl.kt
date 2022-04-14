@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserManagerResourceImpl @Autowired constructor(
     val actionService: ActionService
-): UserManagerResource{
+) : UserManagerResource {
     override fun getActions(): Result<Map<String, List<ActionInfo>>?> {
         return Result(actionService.actionMap())
     }

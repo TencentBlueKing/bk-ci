@@ -42,8 +42,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
@@ -153,7 +151,6 @@ class StrategyService @Autowired constructor(
 
     fun checkDefaultStrategy(strategyName: String, resourceType: String, actionId: String): Boolean {
         if (!DefaultGroupType.contains(strategyName)) {
-
         }
         val permissionStrategy = getStrategyByName(strategyName)?.strategy ?: return false
 

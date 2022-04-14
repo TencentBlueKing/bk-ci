@@ -31,7 +31,6 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.ProviderConfigDTO
 import com.tencent.bk.sdk.iam.dto.SelectionDTO
 import com.tencent.bk.sdk.iam.dto.resource.ParentResourceDTO
-import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeChainDTO
 import com.tencent.bk.sdk.iam.dto.resource.ResourceTypeDTO
 import com.tencent.bk.sdk.iam.exception.IamException
@@ -55,7 +54,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
     val iamConfiguration: IamConfiguration,
     val resourceService: IamResourceService,
     val iamSystemService: SystemService
-): BkResourceServiceImpl(dslContext, resourceDao) {
+) : BkResourceServiceImpl(dslContext, resourceDao) {
 
     @Value("\${iam.selector.project:#{null}}")
     val projectCallbackPath = "/api/service/auth/resource/projects"
@@ -154,7 +153,7 @@ class IamBkResourceServiceImpl @Autowired constructor(
             // 2. 资源视图
             buildIamResourceSelectorInstance(resourceInfo)
         } catch (iamException: IamException) {
-          logger.warn("updateExtSystem fail:$resource $iamException")
+            logger.warn("updateExtSystem fail:$resource $iamException")
         } catch (e: Exception) {
             logger.warn("updateExtSystem fail:$resource $e")
         }

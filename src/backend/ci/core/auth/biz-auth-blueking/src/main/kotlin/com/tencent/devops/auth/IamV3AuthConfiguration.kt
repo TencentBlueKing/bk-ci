@@ -46,9 +46,9 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.action.BkResourceService
 import com.tencent.devops.auth.service.action.impl.IamBkActionServiceImpl
 import com.tencent.devops.auth.service.action.impl.IamBkResourceServiceImpl
-import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
 import com.tencent.devops.auth.service.ci.PermissionRoleService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -66,7 +66,6 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
 class IamV3AuthConfiguration {
-
 
     @Bean
     fun v3permissionService(
@@ -103,7 +102,6 @@ class IamV3AuthConfiguration {
         projectAuthServiceCode = projectAuthServiceCode
     )
 
-
     @Bean
     fun iamSystemService(
         apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl,
@@ -123,7 +121,6 @@ class IamV3AuthConfiguration {
         apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl,
         systemService: SystemService
     ) = ResourceServiceImpl(iamConfiguration, apigwHttpClientServiceImpl, systemService)
-
 
     @Bean
     fun ciIamActionService(

@@ -39,7 +39,8 @@ class ManagerOrganizationDao {
 
     fun create(dslContext: DSLContext, userId: String, managerOrganization: ManagerOrganizationInfo): Int {
         with(TAuthManager.T_AUTH_MANAGER) {
-            return dslContext.insertInto(this,
+            return dslContext.insertInto(
+                this,
                 NAME,
                 ORGANIZATION_ID,
                 LEVEL,
@@ -97,9 +98,10 @@ class ManagerOrganizationDao {
     fun getByStrategyId(dslContext: DSLContext, organizationId: Int, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
-                .where(ORGANIZATION_ID.eq(organizationId)
-                    .and(STRATEGYID.eq(strategyId))
-                    .and(IS_DELETE.eq(0))
+                .where(
+                    ORGANIZATION_ID.eq(organizationId)
+                        .and(STRATEGYID.eq(strategyId))
+                        .and(IS_DELETE.eq(0))
                 ).fetch() ?: null
         }
     }
@@ -107,8 +109,9 @@ class ManagerOrganizationDao {
     fun getByStrategyId(dslContext: DSLContext, strategyId: Int): Result<TAuthManagerRecord>? {
         with(TAuthManager.T_AUTH_MANAGER) {
             return dslContext.selectFrom(this)
-                .where(STRATEGYID.eq(strategyId)
-                    .and(IS_DELETE.eq(0))
+                .where(
+                    STRATEGYID.eq(strategyId)
+                        .and(IS_DELETE.eq(0))
                 ).fetch()
         }
     }

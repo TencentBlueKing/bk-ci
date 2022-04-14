@@ -160,8 +160,9 @@ class IamCacheService @Autowired constructor(
     }
 
     fun getProjectIamRelationId(projectCode: String): Int {
-        if (projectRelationCache.getIfPresent(projectCode) != null
-            && projectRelationCache.getIfPresent(projectCode) != ERROR_RELATION) {
+        if (projectRelationCache.getIfPresent(projectCode) != null &&
+            projectRelationCache.getIfPresent(projectCode) != ERROR_RELATION
+        ) {
             val relationId = projectRelationCache.getIfPresent(projectCode)
             if (relationId == ERROR_RELATION) {
                 throw ErrorCodeException(

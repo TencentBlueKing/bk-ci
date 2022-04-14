@@ -48,11 +48,11 @@ class AuthGroupUserDao {
                 CREATE_TIME
             ).values(
                 UUIDUtil.generate(),
-                    userId,
-                    groupId,
-                    userId,
-                    LocalDateTime.now()
-                ).execute()
+                userId,
+                groupId,
+                userId,
+                LocalDateTime.now()
+            ).execute()
         }
     }
 

@@ -38,7 +38,7 @@ class SimpleBkActionServiceImpl @Autowired constructor(
     override val dslContext: DSLContext,
     override val actionDao: ActionDao,
     override val resourceService: BkResourceService
-): BKActionServiceImpl(dslContext, actionDao, resourceService) {
+) : BKActionServiceImpl(dslContext, actionDao, resourceService) {
 
     override fun extSystemCreate(userId: String, action: CreateActionDTO) {
         return

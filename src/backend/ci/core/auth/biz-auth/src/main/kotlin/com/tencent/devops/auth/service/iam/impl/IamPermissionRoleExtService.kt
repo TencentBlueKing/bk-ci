@@ -40,7 +40,6 @@ import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
@@ -54,9 +53,10 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -287,7 +287,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         addIamGroupPermission(actions, roleId, projectCode)
     }
 
-    private fun addIamGroupPermission (
+    private fun addIamGroupPermission(
         actions: Pair<List<String>, Map<String, List<String>>>,
         roleId: Int,
         projectCode: String
@@ -311,7 +311,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 defaultMessage = MessageCodeUtil.getCodeMessage(
                     messageCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
                     params = arrayOf(defaultGroup.value)
-                ))
+                )
+            )
         logger.info("getGroupStrategy ${strategyInfo.strategy}")
         return buildGroupAction(strategyInfo.strategy)
     }

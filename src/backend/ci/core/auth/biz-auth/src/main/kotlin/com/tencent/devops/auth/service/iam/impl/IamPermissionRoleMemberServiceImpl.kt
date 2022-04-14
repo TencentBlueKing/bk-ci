@@ -64,7 +64,7 @@ open class IamPermissionRoleMemberServiceImpl @Autowired constructor(
     private val iamCacheService: IamCacheService,
     private val groupMemberService: AuthGroupMemberService,
     open val iamManagerService: ManagerService,
-): AbsPermissionRoleMemberImpl(
+) : AbsPermissionRoleMemberImpl(
     permissionGradeService, groupService, iamCacheService, groupMemberService
 ) {
     private val projectMemberCache = CacheBuilder.newBuilder()

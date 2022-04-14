@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpActionResourceImpl @Autowired constructor(
     val actionService: ActionService
-): OpActionResource {
+) : OpActionResource {
     override fun createSystemAction(userId: String, actionInfo: CreateActionDTO): Result<Boolean> {
         return Result(actionService.createAction(userId, actionInfo))
     }

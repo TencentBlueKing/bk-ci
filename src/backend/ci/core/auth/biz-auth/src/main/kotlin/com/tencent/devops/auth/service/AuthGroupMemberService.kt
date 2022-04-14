@@ -37,20 +37,17 @@ import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.enum.ExpiredStatus
 import com.tencent.devops.auth.pojo.enum.UserType
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
-import com.tencent.devops.auth.service.ci.impl.AbsPermissionRoleMemberImpl
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
 @Service
 class AuthGroupMemberService @Autowired constructor(
     val dslContext: DSLContext,
     val authGroupMemberDao: AuthGroupMemberDao
-){
+) {
 
     private val userProjectCache = CacheBuilder.newBuilder()
         .expireAfterAccess(1, TimeUnit.HOURS)

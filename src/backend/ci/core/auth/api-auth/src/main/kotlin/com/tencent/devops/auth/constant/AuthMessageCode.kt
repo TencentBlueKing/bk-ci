@@ -81,5 +81,4 @@ object AuthMessageCode {
     const val RESOURCE_NOT_EXSIT = "2121303" // 权限系统：resource{0}不存在
     const val ACTION_CREATE_FAIL = "2121304" // 权限系统： action添加失败
     const val PERMISSION_MODEL_CHECK_FAIL = "2121305" // 权限系统： 权限模型校验失败
-
 }

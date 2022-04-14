@@ -15,14 +15,19 @@ internal class AccessTokenUtilsTest {
         val secret = "qIU&(*^(*yo"
         val userDetails = "testUserId"
         val expirationTime = 100000L
-        val res = URLEncoder.encode(AESUtil.encrypt(
-            secret,
-            JsonUtil.toJson(TokenInfo(
-                userId = userDetails,
-                expirationTime = expirationTime,
-                accessToken = null
-            ))
-        ), "UTF-8")
+        val res = URLEncoder.encode(
+            AESUtil.encrypt(
+                secret,
+                JsonUtil.toJson(
+                    TokenInfo(
+                        userId = userDetails,
+                        expirationTime = expirationTime,
+                        accessToken = null
+                    )
+                )
+            ),
+            "UTF-8"
+        )
         val result = AESUtil.decrypt(secret, URLDecoder.decode(res, "UTF-8"))
         val tokenInfo = JsonUtil.to(result, TokenInfo::class.java)
         print(tokenInfo)

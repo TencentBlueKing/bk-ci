@@ -29,9 +29,9 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
+import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGrantService
-import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
@@ -159,7 +159,8 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
-            ))
+            )
+        )
     }
 
     override fun grantInstancePermission(
@@ -168,9 +169,11 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         projectCode: String,
         grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
-        return Result(permissionGrantService.grantInstancePermission(
-            projectId = projectCode,
-            grantInfo = grantInstance
-        ))
+        return Result(
+            permissionGrantService.grantInstancePermission(
+                projectId = projectCode,
+                grantInfo = grantInstance
+            )
+        )
     }
 }

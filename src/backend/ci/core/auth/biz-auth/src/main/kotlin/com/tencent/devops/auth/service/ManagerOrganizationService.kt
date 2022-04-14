@@ -132,7 +132,8 @@ class ManagerOrganizationService @Autowired constructor(
         watcher.start("getParentOrganizationInfo")
         val parentOrganizationInfo = organizationService.getParentOrganizationInfo(
             organizationId = record.organizationId.toString(),
-            level = record.level)
+            level = record.level
+        )
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level }
         watcher.start("getOrganizationInfo")
         logger.info("list createTime: ${record.createTime}, ${DateTimeUtil.toDateTime(record.createTime)}")
@@ -195,13 +196,15 @@ class ManagerOrganizationService @Autowired constructor(
         val records = managerOrganizationDao.list(dslContext)
         val entitys = mutableListOf<ManagerOrganizationInfo>()
         records!!.forEach {
-            entitys.add(ManagerOrganizationInfo(
-                id = it.id,
-                organizationId = it.organizationId,
-                organizationLevel = it.level,
-                strategyId = it.strategyid,
-                name = it.name
-            ))
+            entitys.add(
+                ManagerOrganizationInfo(
+                    id = it.id,
+                    organizationId = it.organizationId,
+                    organizationLevel = it.level,
+                    strategyId = it.strategyid,
+                    name = it.name
+                )
+            )
         }
         return entitys
     }
@@ -221,8 +224,10 @@ class ManagerOrganizationService @Autowired constructor(
 
         when (action) {
             createAction -> if (record != null && record.size > 0) {
-                logger.warn("checkBeforeExecute fail, createAction:$record|" +
-                    " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
+                logger.warn(
+                    "checkBeforeExecute fail, createAction:$record|" +
+                        " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist"
+                )
                 throw ErrorCodeException(
                     defaultMessage = "",
                     errorCode = AuthMessageCode.MANAGER_ORG_EXIST
@@ -234,8 +239,10 @@ class ManagerOrganizationService @Autowired constructor(
                 }
                 val ids = record.map { it.id }
                 if (!ids.contains(id) || ids.size > 1) {
-                    logger.warn("checkBeforeExecute fail, updateAction: $ids |$id |" +
-                        " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
+                    logger.warn(
+                        "checkBeforeExecute fail, updateAction: $ids |$id |" +
+                            " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist"
+                    )
                     throw ErrorCodeException(
                         defaultMessage = "",
                         errorCode = AuthMessageCode.MANAGER_ORG_EXIST

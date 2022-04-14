@@ -38,10 +38,10 @@ import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.pojo.enum.UserType
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.ci.PermissionProjectService
 import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
 import com.tencent.devops.auth.service.ci.PermissionRoleService
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.auth.api.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.auth.pojo.TokenInfo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

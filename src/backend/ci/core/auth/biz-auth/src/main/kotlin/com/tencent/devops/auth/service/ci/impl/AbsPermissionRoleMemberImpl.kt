@@ -38,9 +38,9 @@ import com.tencent.devops.auth.pojo.enum.UserType
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.AuthGroupMemberService
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -138,7 +138,6 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     }
 
     abstract fun checkUser(userId: String)
-
 
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)

@@ -29,13 +29,11 @@ package com.tencent.devops.auth.service.simple
 
 import com.tencent.devops.auth.service.ci.PermissionProjectService
 import com.tencent.devops.auth.service.ci.impl.AbsPermissionGradeServiceImpl
-import com.tencent.devops.auth.service.iam.PermissionGradeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 
 class SimplePermissionGraderServiceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService
-): AbsPermissionGradeServiceImpl(permissionProjectService) {
+) : AbsPermissionGradeServiceImpl(permissionProjectService) {
     override fun checkGradeManagerUser(userId: String, projectId: String) {
         super.checkGradeManagerUser(userId, projectId)
     }

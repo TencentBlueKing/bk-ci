@@ -41,11 +41,13 @@ class OpManagerStrategyResourceImpl @Autowired constructor(
 ) : OpManagerStrategyResource {
 
     override fun createManagerStrategy(userId: String, name: String, strategy: ManageStrategyDTO): Result<String> {
-        return Result(strategyService.createStrategy(
-            userId = userId,
-            strategy = strategy,
-            name = name
-        ).toString())
+        return Result(
+            strategyService.createStrategy(
+                userId = userId,
+                strategy = strategy,
+                name = name
+            ).toString()
+        )
     }
 
     override fun updateManagerStrategy(
@@ -54,19 +56,23 @@ class OpManagerStrategyResourceImpl @Autowired constructor(
         name: String?,
         strategy: ManageStrategyDTO
     ): Result<Boolean> {
-        return Result(strategyService.updateStrategy(
-            userId = userId,
-            strategy = strategy,
-            name = name,
-            strategyId = strategyId
-        ))
+        return Result(
+            strategyService.updateStrategy(
+                userId = userId,
+                strategy = strategy,
+                name = name,
+                strategyId = strategyId
+            )
+        )
     }
 
     override fun deleteManagerStrategy(strategyId: Int, userId: String): Result<Boolean> {
-        return Result(strategyService.deleteStrategy(
-            userId = userId,
-            strategyId = strategyId
-        ))
+        return Result(
+            strategyService.deleteStrategy(
+                userId = userId,
+                strategyId = strategyId
+            )
+        )
     }
 
     override fun getManagerStrategy(strategyId: Int): Result<StrategyEntity?> {

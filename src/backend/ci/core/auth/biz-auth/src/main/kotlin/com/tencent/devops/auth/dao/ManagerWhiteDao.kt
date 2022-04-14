@@ -42,9 +42,11 @@ class ManagerWhiteDao {
         userId: String
     ) {
         with(Tables.T_AUTH_MANAGER_WHITELIST) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 MANAGER_ID,
-                USER_ID).values(
+                USER_ID
+            ).values(
                 managerId,
                 userId
             ).execute()

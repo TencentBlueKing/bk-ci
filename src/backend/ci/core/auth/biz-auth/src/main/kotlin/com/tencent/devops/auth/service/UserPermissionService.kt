@@ -34,8 +34,6 @@ import com.tencent.devops.auth.entity.StrategyChangeType
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

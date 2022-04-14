@@ -23,18 +23,24 @@ abstract class AbsPermissionGrantServiceImpl @Autowired constructor(
     ): Boolean {
         val pathList = mutableListOf<GrantPathDTO>()
         if (grantInfo.resourceType == AuthResourceType.PROJECT.value) {
-            pathList.add(GrantPathDTO.builder().id(projectId)
-                .type(grantInfo.resourceType)
-                .name(getProjectName(projectId))
-                .build())
+            pathList.add(
+                GrantPathDTO.builder().id(projectId)
+                    .type(grantInfo.resourceType)
+                    .name(getProjectName(projectId))
+                    .build()
+            )
         } else {
             // 非项目类的资源都需绑定项目
-            pathList.add(GrantPathDTO.builder().id(projectId)
-                .type(AuthResourceType.PROJECT.value)
-                .name(getProjectName(projectId))
-                .build())
-            pathList.add(GrantPathDTO.builder().id(grantInfo.resourceCode)
-                .type(grantInfo.resourceType).name(grantInfo.resourceName).build())
+            pathList.add(
+                GrantPathDTO.builder().id(projectId)
+                    .type(AuthResourceType.PROJECT.value)
+                    .name(getProjectName(projectId))
+                    .build()
+            )
+            pathList.add(
+                GrantPathDTO.builder().id(grantInfo.resourceCode)
+                    .type(grantInfo.resourceType).name(grantInfo.resourceName).build()
+            )
         }
 
         val resources = mutableListOf<GrantResourceDTO>()

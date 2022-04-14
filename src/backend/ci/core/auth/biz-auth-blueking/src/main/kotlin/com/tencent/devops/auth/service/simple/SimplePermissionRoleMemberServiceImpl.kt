@@ -39,7 +39,7 @@ class SimplePermissionRoleMemberServiceImpl @Autowired constructor(
     private val groupService: AuthGroupService,
     private val iamCacheService: IamCacheService,
     private val groupMemberService: AuthGroupMemberService
-): AbsPermissionRoleMemberImpl(
+) : AbsPermissionRoleMemberImpl(
     permissionGradeService, groupService, iamCacheService, groupMemberService
 ) {
     override fun checkUser(userId: String) {

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth
 
-import com.tencent.devops.auth.service.simple.SimpleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
@@ -45,6 +44,7 @@ import com.tencent.devops.auth.service.ci.PermissionRoleService
 import com.tencent.devops.auth.service.ci.PermissionService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.auth.service.simple.SimpleAuthPermissionService
 import com.tencent.devops.auth.service.simple.SimplePermissionGraderServiceImpl
 import com.tencent.devops.auth.service.simple.SimplePermissionProjectServiceImpl
 import com.tencent.devops.auth.service.simple.SimplePermissionRoleMemberServiceImpl

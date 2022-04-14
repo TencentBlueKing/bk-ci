@@ -75,7 +75,8 @@ class UserProjectMemberResourceImpl @Autowired constructor(
                 roleId = roleId,
                 page = page,
                 pageSize = pageSize
-            ))
+            )
+        )
     }
 
     override fun getProjectAllMember(projectId: String, page: Int?, pageSize: Int?): Result<ProjectMembersVO?> {
@@ -90,14 +91,16 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         members: String,
         type: ManagerScopesEnum
     ): Result<Boolean> {
-        Result(permissionRoleMemberService.deleteRoleMember(
-            executeUserId = userId,
-            projectId = projectId,
-            roleId = roleId,
-            deleteUserId = members,
-            type = type,
-            managerGroup = managerGroup
-        ))
+        Result(
+            permissionRoleMemberService.deleteRoleMember(
+                executeUserId = userId,
+                projectId = projectId,
+                roleId = roleId,
+                deleteUserId = members,
+                type = type,
+                managerGroup = managerGroup
+            )
+        )
         return Result(true)
     }
 

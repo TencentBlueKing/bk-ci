@@ -123,8 +123,10 @@ class ManagerUserService @Autowired constructor(
         if (record != null) {
             LOG.warn("createManagerUser user has this manager $userId $managerInfo $record")
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeMessage(messageCode = AuthMessageCode.MANAGER_USER_EXIST,
-                    params = arrayOf(managerInfo.userId)),
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.MANAGER_USER_EXIST,
+                    params = arrayOf(managerInfo.userId)
+                ),
                 errorCode = AuthMessageCode.MANAGER_USER_EXIST
             )
         }
@@ -273,7 +275,8 @@ class ManagerUserService @Autowired constructor(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeMessage(
                     messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                    params = arrayOf(userId))
+                    params = arrayOf(userId)
+                )
             )
         }
         val managerUser = ManagerUserDTO(
@@ -293,7 +296,8 @@ class ManagerUserService @Autowired constructor(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
                 defaultMessage = MessageCodeUtil.getCodeMessage(
                     messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                    params = arrayOf(userId))
+                    params = arrayOf(userId)
+                )
             )
         }
         deleteManagerUser("system", managerId, userId)
@@ -316,7 +320,8 @@ class ManagerUserService @Autowired constructor(
                         errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
                         defaultMessage = MessageCodeUtil.getCodeMessage(
                             messageCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                            params = arrayOf(it))
+                            params = arrayOf(it)
+                        )
                     )
                 }
 
@@ -342,11 +347,13 @@ class ManagerUserService @Autowired constructor(
         val records = managerWhiteDao.list(dslContext, managerId) ?: return emptyList()
         val whiteUsers = mutableListOf<WhiteEntify>()
         records.forEach {
-            whiteUsers.add(WhiteEntify(
-                id = it.id,
-                managerId = it.managerId,
-                user = it.userId
-            ))
+            whiteUsers.add(
+                WhiteEntify(
+                    id = it.id,
+                    managerId = it.managerId,
+                    user = it.userId
+                )
+            )
         }
         return whiteUsers
     }

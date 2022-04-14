@@ -66,28 +66,30 @@ class AuthGroupPermissionDao {
         if (authActions.isEmpty()) {
             return
         }
-        dslContext.batch(authActions.map {
-            with(TAuthGroupPerssion.T_AUTH_GROUP_PERSSION) {
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    GROUP_CODE,
-                    AUTH_ACTION,
-                    CREATE_USER,
-                    CREATE_TIME,
-                    UPDATE_USER,
-                    UPDATE_TIME
-                ).values(
-                    UUID.randomUUID().toString(),
-                    groupCode,
-                    it,
-                    userId,
-                    LocalDateTime.now(),
-                    null,
-                    null
-                )
+        dslContext.batch(
+            authActions.map {
+                with(TAuthGroupPerssion.T_AUTH_GROUP_PERSSION) {
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        GROUP_CODE,
+                        AUTH_ACTION,
+                        CREATE_USER,
+                        CREATE_TIME,
+                        UPDATE_USER,
+                        UPDATE_TIME
+                    ).values(
+                        UUID.randomUUID().toString(),
+                        groupCode,
+                        it,
+                        userId,
+                        LocalDateTime.now(),
+                        null,
+                        null
+                    )
+                }
             }
-        }).execute()
+        ).execute()
     }
 
     fun getByGroupCode(dslContext: DSLContext, groupCode: String): Result<TAuthGroupPerssionRecord>? {
