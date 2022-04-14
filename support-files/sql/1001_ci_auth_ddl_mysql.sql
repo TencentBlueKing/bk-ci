@@ -118,6 +118,37 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_IAM_CALLBACK` (
    PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='IAM回调地址';
 
+CREATE TABLE IF NOT EXIST `T_AUTH_CUSTOMIZE_GROUP_PERMISSION` (
+  `ID` int(11) NOT NULL,
+  `GROUP_ID` int(11) NOT NULL COMMENT '用户组ID',
+  `RESOURCE_TYPE` varchar(32) NOT NULL COMMENT '资源类型',
+  `ACTION_ID` varchar(512) NOT NULL COMMENT '操作类型，多个用逗号隔开',
+  `DELETE` bit(1) NOT NULL DEFAULT b'0' COMMENT '是否删除 0 正常 1 删除',
+  `CREATE_TIME` datetime NOT NULL COMMENT '添加时间',
+  `CREATE_USER` varchar(32) NOT NULL COMMENT '添加人',
+  `UPDATE_TIME` datetime DEFAULT NULL COMMENT '修改时间',
+  `UPDATE_USER` varchar(32) DEFAULT NULL COMMENT '修改人',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `bk_permision_index` (`GROUP_ID`,`RESOURCE_TYPE`,`ACTION_ID`),
+  KEY `bk_permission_group_index` (`GROUP_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='自定义组权限';
+
+CREATE TABLE IF NOT EXIST `T_AUTH_GROUP_MEMBER` (
+  `ID` int(11) NOT NULL,
+  `GROUP_ID` int(11) NOT NULL COMMENT '用户组ID',
+  `GROUP_TYPE` bit(1) NOT NULL DEFAULT b'0' COMMENT '用户组类型 0默认用户组 1自定义用户组',
+  `USER_ID` varchar(32) NOT NULL COMMENT '用户ID',
+  `PROJECT_ID` varchar(32) NOT NULL COMMENT '项目ID',
+  `CREATE_TIME` datetime NOT NULL COMMENT '加入时间',
+  `EXPIRED_TIEM` datetime DEFAULT NULL COMMENT '过期时间',
+  `USER_TYPE` bit(1) NOT NULL DEFAULT b'0' COMMENT '用户类型0 用户 1 组织',
+  `EXPIRED_TYPE` int(11) DEFAULT NULL COMMENT '过期状态 0 正常 1 即将过期 2已过期',
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `auth_member_group_unique_index` (`GROUP_ID`,`USER_ID`),
+  KEY `auth_member_group_inex` (`GROUP_ID`),
+  KEY `auth_member_index` (`USER_ID`,`PROJECT_ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户组用户表';
+
 CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE` (
    `RESOURCETYPE` varchar(64) NOT NULL,
    `NAME` varchar(64) NOT NULL,
