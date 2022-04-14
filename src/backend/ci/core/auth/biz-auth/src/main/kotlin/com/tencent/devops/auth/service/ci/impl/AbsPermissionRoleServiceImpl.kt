@@ -143,10 +143,11 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         permissionStrategy.forEach { resource, actions ->
             // 校验资源和action是否存在
             if (resourceService.getResource(resource) == null) {
-                AuthCustomizePermissionService.logger.info("createCustomizePermission $userId$roleId$resource not exist")
+                logger.info("createCustomizePermission $userId$roleId$resource not exist")
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.RESOURCE_NOT_EXSIT,
-                    defaultMessage = MessageCodeUtil.getCodeMessage(AuthMessageCode.RESOURCE_NOT_EXSIT, arrayOf(resource))
+                    defaultMessage = MessageCodeUtil.getCodeMessage(
+                        messageCode = AuthMessageCode.RESOURCE_NOT_EXSIT, params = arrayOf(resource))
                 )
             }
 

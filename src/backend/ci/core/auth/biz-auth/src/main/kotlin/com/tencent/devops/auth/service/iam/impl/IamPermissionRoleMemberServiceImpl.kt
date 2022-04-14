@@ -92,7 +92,14 @@ open class IamPermissionRoleMemberServiceImpl @Autowired constructor(
         return
     }
 
-    override fun deleteRoleMember(executeUserId: String, projectId: String, roleId: Int, deleteUserId: String, type: ManagerScopesEnum, managerGroup: Boolean) {
+    override fun deleteRoleMember(
+        executeUserId: String,
+        projectId: String,
+        roleId: Int,
+        deleteUserId: String,
+        type: ManagerScopesEnum,
+        managerGroup: Boolean,
+    ) {
         super.deleteRoleMember(executeUserId, projectId, roleId, deleteUserId, type, managerGroup)
 
         // 删除iam相关人员信息
@@ -156,7 +163,10 @@ open class IamPermissionRoleMemberServiceImpl @Autowired constructor(
                     // TODO: 待iam接口提供此字段
                     expiredAt = System.currentTimeMillis(),
                     // TODO: 待iam接口提供此字段
-                    expiredStatus = ExpiredStatus.buildExpiredStatus(0, TimeUnit.DAYS.toMillis(EXPIRED_TIMEOUT_SIZE.toLong()))
+                    expiredStatus = ExpiredStatus.buildExpiredStatus(
+                        expiredTime = 0,
+                        expiredSize = TimeUnit.DAYS.toMillis(EXPIRED_TIMEOUT_SIZE.toLong())
+                    )
                 )
             )
         }

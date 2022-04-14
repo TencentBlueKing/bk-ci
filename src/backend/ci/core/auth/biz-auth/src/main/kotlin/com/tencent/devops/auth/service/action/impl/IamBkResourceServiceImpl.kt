@@ -239,8 +239,8 @@ class IamBkResourceServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val systemId = "fitz_test"
-        val INSTANCELABLE = "_instance"
+        const val systemId = "fitz_test"
+        const val INSTANCELABLE = "_instance"
         val logger = LoggerFactory.getLogger(IamBkResourceServiceImpl::class.java)
     }
 }

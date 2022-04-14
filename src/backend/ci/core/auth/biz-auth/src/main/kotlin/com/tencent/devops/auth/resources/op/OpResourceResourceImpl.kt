@@ -45,7 +45,11 @@ class OpResourceResourceImpl @Autowired constructor(
         return Result(resourceService.createResource(userId, resourceInfo))
     }
 
-    override fun updateSystemResource(userId: String, resourceId: String, resourceInfo: UpdateResourceDTO): Result<Boolean> {
+    override fun updateSystemResource(
+        userId: String,
+        resourceId: String,
+        resourceInfo: UpdateResourceDTO,
+    ): Result<Boolean> {
         return Result(resourceService.updateResource(userId, resourceId, resourceInfo))
     }
 
