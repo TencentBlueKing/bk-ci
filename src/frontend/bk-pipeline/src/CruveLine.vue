@@ -4,10 +4,6 @@
     </svg>
 </template>
 
-// <path :d="`M 0 2 L 5 2 Q 10 2 10 7 L 10 ${60} Q 10 ${65} 17 ${65} L 60 ${65}`"></path>
-
-// <path :d="`M 60 2 L 55 2 Q 50 2 50 7 L 50 ${60} Q 50 ${65} 45 ${65} L 0 ${65}`"></path>
-
 <script>
     export default {
         props: {
@@ -43,7 +39,7 @@
                 const isPositive = this.direction ? 1 : -1
                 const cruveRadius = this.cruveRadius * isPositive
                 const startPoint = [this.direction ? 0 : this.width, 2]
-                const endPoint = [this.direction ? this.width : 0, this.height + this.cruveRadius]
+                const endPoint = [this.direction ? this.width : 2, this.height + this.cruveRadius]
                 const distance = startPoint[0] + this.distance * isPositive
                 const QPoint1 = [distance + cruveRadius, startPoint[1], distance + cruveRadius, startPoint[1] + this.cruveRadius]
                 const QPoint2 = [QPoint1[0], endPoint[1], QPoint1[0] + cruveRadius, endPoint[1]]
@@ -63,5 +59,3 @@
         }
     }
 </script>
-
-qPoint =
