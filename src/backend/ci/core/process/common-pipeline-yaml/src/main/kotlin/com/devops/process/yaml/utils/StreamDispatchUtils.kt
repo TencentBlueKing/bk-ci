@@ -116,6 +116,7 @@ object StreamDispatchUtils {
         logger.info("DEBUG|STREAM|RESOURCE: $resources")
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
+                envProjectId = null,
                 envName = poolName,
                 workspace = workspace,
                 agentType = AgentType.NAME

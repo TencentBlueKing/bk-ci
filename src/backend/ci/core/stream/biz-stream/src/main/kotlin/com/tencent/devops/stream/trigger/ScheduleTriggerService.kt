@@ -96,7 +96,8 @@ class ScheduleTriggerService @Autowired constructor(
                 enableCommitCheck = it.enableCommitCheck,
                 enableMrBlock = it.enableMrBlock,
                 name = it.name,
-                enableMrComment = it.enableMrComment
+                enableMrComment = it.enableMrComment,
+                homepage = it.homePage
             )
         }
         if (streamTriggerSetting == null) {
