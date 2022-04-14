@@ -35,11 +35,9 @@ import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import jdk.incubator.jpackage.internal.MacDmgBundler.required
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -94,7 +92,7 @@ interface UserProjectMemberResource {
         @ApiParam(name = "页面大小", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<GroupMemberDTO>
+    ): Result<GroupMemberDTO?>
 
     @GET
     @Path("/projectIds/{projectId}/members/all")

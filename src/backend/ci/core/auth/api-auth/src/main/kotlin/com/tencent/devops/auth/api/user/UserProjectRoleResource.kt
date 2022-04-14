@@ -129,6 +129,9 @@ interface UserProjectRoleResource {
     @POST
     @Path("/{roleId}/projectCodes/{projectCode}/permission/strategy")
     fun setRolePermissionStrategy(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectCode")
         projectCode: String,

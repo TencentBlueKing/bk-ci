@@ -68,7 +68,7 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         roleId: Int,
         page: Int?,
         pageSize: Int?
-    ): Result<GroupMemberDTO> {
+    ): Result<GroupMemberDTO?> {
         return Result(
             permissionRoleMemberService.getRoleMember(
                 projectId = projectId,

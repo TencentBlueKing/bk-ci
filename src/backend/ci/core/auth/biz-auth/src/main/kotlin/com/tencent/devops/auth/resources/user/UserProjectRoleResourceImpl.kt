@@ -94,11 +94,13 @@ class UserProjectRoleResourceImpl @Autowired constructor(
     }
 
     override fun setRolePermissionStrategy(
+        userId: String,
         projectCode: String,
         roleId: Int,
         strategy: Map<String, List<String>>
     ): Result<Boolean> {
         return Result(permissionRoleService.rolePermissionStrategy(
+            userId,
             projectCode,
             roleId,
             strategy
