@@ -30,7 +30,8 @@ package com.devops.process.yaml.v2.models
 enum class IfType {
     SUCCESS,
     FAILURE,
-    CANCELLED,
+    CANCELLED, // 兼容存量的使用，后续文档引导用户使用 CANCELED
+    CANCELED,
     ALWAYS,
     ALWAYS_UNLESS_CANCELLED
 }
