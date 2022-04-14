@@ -47,6 +47,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
@@ -57,6 +58,7 @@ import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.utils.scm.GitCodeUtils
 import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
@@ -72,6 +74,7 @@ import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -1623,6 +1626,101 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file tree")
+        }
+    }
+
+    override fun getCommits(
+        gitProjectId: Long,
+        filePath: String?,
+        branch: String?,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int,
+        tokenType: TokenTypeEnum
+    ): Result<List<Commit>> {
+
+        logger.info("[$gitProjectId|$filePath|$branch|$since|$until] Start to get the git commits")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits")
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    if (branch != null) {
+                        "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (filePath != null) {
+                        "&path=${URLEncoder.encode(filePath, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (since != null) {
+                        "&since=${since.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (until != null) {
+                        "&until=${until.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&page=$page&per_page=$perPage")
+            }
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code()})${it.message()}"
+                    )
+                }
+                val data = it.body()!!.string()
+                return Result(JsonUtil.getObjectMapper().readValue(data) as List<Commit>)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
+        }
+
+    }
+
+    override fun gitCICreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCICreateFile: GitCICreateFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitCICreateFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
         }
     }
 
