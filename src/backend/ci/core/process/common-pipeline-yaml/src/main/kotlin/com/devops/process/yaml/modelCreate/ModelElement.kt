@@ -43,8 +43,10 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
-open class ModelElement constructor(
+@Component
+class ModelElement constructor(
     val client: Client,
     val inner: InnerModelCreator
 ) {

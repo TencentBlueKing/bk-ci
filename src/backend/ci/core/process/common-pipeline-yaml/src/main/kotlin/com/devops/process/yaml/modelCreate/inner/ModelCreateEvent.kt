@@ -28,7 +28,7 @@
 package com.devops.process.yaml.modelCreate.inner
 
 import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.models.YamlTransferData
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 
 /**
  * 将yaml转为蓝盾model需要的参数
@@ -38,7 +38,7 @@ import com.devops.process.yaml.v2.models.YamlTransferData
  * @param gitData git相关数据
  * @param streamData stream微服务特有的函数需要的数据
  * @param changeSet 文件变更列表，主要用于实现 if-modify
- * @param yamlTransferData yaml模板替换时产生的中间数据
+ * @param JobTemplateAcrossInfo job级别的跨模板凭证需要的信息
  */
 data class ModelCreateEvent(
     val userId: String,
@@ -47,7 +47,7 @@ data class ModelCreateEvent(
     val gitData: GitData? = null,
     val streamData: StreamData? = null,
     val changeSet: Set<String>? = null,
-    val yamlTransferData: YamlTransferData? = null
+    val JobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null
 )
 
 /**

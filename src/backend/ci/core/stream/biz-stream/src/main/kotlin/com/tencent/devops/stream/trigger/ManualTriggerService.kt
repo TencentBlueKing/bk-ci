@@ -45,7 +45,6 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -159,7 +158,7 @@ class ManualTriggerService @Autowired constructor(
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = TriggerReason.CI_YAML_CONTENT_NULL.name +
-                        "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
+                    "(${TriggerReason.CI_YAML_CONTENT_NULL.detail.format("")})"
             )
         }
 
@@ -172,7 +171,7 @@ class ManualTriggerService @Autowired constructor(
         ) ?: throw CustomException(
             status = Response.Status.BAD_REQUEST,
             message = TriggerReason.PIPELINE_RUN_ERROR.name +
-                    "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
+                "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
             projectId = action.data.eventCommon.gitProjectId.toLong(),

@@ -27,7 +27,6 @@
 
 package com.devops.process.yaml.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.pojo.QualityElementInfo
 import com.devops.process.yaml.v2.models.ScriptBuildYaml
@@ -45,21 +44,21 @@ import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import com.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
-open class ModelCreate constructor(
+@Component
+class ModelCreate constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val inner: InnerModelCreator
+    val modelStage: ModelStage
 ) {
-
-    private val modelStage = ModelStage(client, objectMapper, inner)
 
     companion object {
         private val logger = LoggerFactory.getLogger(ModelCreate::class.java)
     }
 
-    open fun createPipelineModel(
+    fun createPipelineModel(
         modelName: String,
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
@@ -74,16 +73,6 @@ open class ModelCreate constructor(
         val triggerElementList = mutableListOf<Element>()
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
-
-        val jobBuildTemplateAcrossInfo = if (event.yamlTransferData != null && event.streamData != null) {
-            inner.getJobTemplateAcrossInfo(
-                yamlTransferData = event.yamlTransferData,
-                gitRequestEventId = event.streamData.requestEventId,
-                gitProjectId = event.streamData.gitProjectId
-            )
-        } else {
-            null
-        }
 
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -115,7 +104,7 @@ open class ModelCreate constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfo,
+                    jobBuildTemplateAcrossInfos = event.JobTemplateAcrossInfo,
                     elementNames = elementNames
                 )
             )
@@ -137,7 +126,7 @@ open class ModelCreate constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfo,
+                    jobBuildTemplateAcrossInfos = event.JobTemplateAcrossInfo,
                     elementNames = null
                 )
             )

@@ -56,17 +56,18 @@ import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import org.springframework.util.AntPathMatcher
 import com.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
-open class ModelStage constructor(
+@Component
+class ModelStage constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val inner: InnerModelCreator
+    val inner: InnerModelCreator,
+    val modelContainer: ModelContainer,
+    val modelElement: ModelElement
 ) {
-    private val modelContainer = ModelContainer(client, objectMapper, inner)
-    private val modelElement = ModelElement(client, inner)
-
     companion object {
         private val logger = LoggerFactory.getLogger(ModelStage::class.java)
     }

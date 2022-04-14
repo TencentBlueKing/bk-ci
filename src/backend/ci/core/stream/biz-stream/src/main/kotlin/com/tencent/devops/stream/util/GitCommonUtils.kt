@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.util
 
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.isFork

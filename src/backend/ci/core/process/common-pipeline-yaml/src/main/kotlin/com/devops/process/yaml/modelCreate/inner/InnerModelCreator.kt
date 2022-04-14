@@ -27,11 +27,9 @@
 
 package com.devops.process.yaml.modelCreate.inner
 
-import com.devops.process.yaml.v2.models.YamlTransferData
 import com.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 
 /**
  * ModelCreate的内部类，用来放一些不同使用者的不同方法和参数
@@ -48,21 +46,6 @@ interface InnerModelCreator {
 
     // 默认的公共镜像
     val defaultImage: String
-
-    // 各个服务自己提提供的额外参数
-    var extraParameters: Any
-
-    /**
-     * 获取job级别的跨项目模板共享凭证信息
-     * @param yamlTransferData yaml模板装换的中间数据
-     * @param gitRequestEventId stream的requestEvent ID
-     * @param gitProjectId stream中绑定的git仓库id
-     */
-    fun getJobTemplateAcrossInfo(
-        yamlTransferData: YamlTransferData,
-        gitRequestEventId: Long,
-        gitProjectId: Long
-    ): Map<String, BuildTemplateAcrossInfo>
 
     /**
      * 构造具有特殊语法的checkout插件

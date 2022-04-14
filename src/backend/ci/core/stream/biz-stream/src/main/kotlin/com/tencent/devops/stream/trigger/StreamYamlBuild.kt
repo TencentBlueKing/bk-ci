@@ -33,15 +33,14 @@ import com.devops.process.yaml.modelCreate.inner.GitData
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.modelCreate.inner.PipelineInfo
 import com.devops.process.yaml.modelCreate.inner.StreamData
+import com.devops.process.yaml.v2.enums.TemplateType
 import com.devops.process.yaml.v2.models.ResourcesPools
 import com.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.devops.process.yaml.v2.models.YamlTransferData
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -51,6 +50,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
@@ -62,7 +63,6 @@ import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
-import com.tencent.devops.stream.trigger.parsers.modelCreate.InnerModelCreatorImpl
 import com.tencent.devops.stream.trigger.parsers.modelCreate.ModelParameters
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.StreamTriggerLock
@@ -79,24 +79,17 @@ import org.springframework.stereotype.Service
 
 @Service
 class StreamYamlBuild @Autowired constructor(
-    private val client: Client,
-    private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
     private val streamYamlBaseBuild: StreamYamlBaseBuild,
     private val redisOperation: RedisOperation,
-    private val modelCreateInnerImpl: InnerModelCreatorImpl,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val streamGitConfig: StreamGitConfig,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val modelCreate: ModelCreate
 ) {
-    private val modelCreate = ModelCreate(
-        client = client,
-        objectMapper = objectMapper,
-        inner = modelCreateInnerImpl
-    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBuild::class.java)
@@ -160,7 +153,6 @@ class StreamYamlBuild @Autowired constructor(
                 yaml = yaml
             )
 
-            modelCreateInnerImpl.extraParameters = action
             return if (gitBuildId != null) {
                 startBuildPipeline(
                     action = action,
@@ -407,10 +399,46 @@ class StreamYamlBuild @Autowired constructor(
                 objectKind = action.metaData.streamObjectKind
             ),
             changeSet = action.data.context.changeSet?.toSet(),
-            yamlTransferData = yamlTransferData
+            JobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
         )
 
         return Pair(modelCreateEvent, modelParams)
+    }
+
+    // 获取job级别的跨项目模板信息
+    private fun getJobTemplateAcrossInfo(
+        yamlTransferData: YamlTransferData?,
+        action: BaseAction
+    ): Map<String, BuildTemplateAcrossInfo>? {
+        if (yamlTransferData == null) {
+            return null
+        }
+        // 临时保存远程项目id的映射，就不用去redis里面查了
+        val remoteProjectIdMap = mutableMapOf<String, String>()
+        yamlTransferData.templateData.transferDataMap.values.forEach { objectData ->
+            if (objectData.remoteProjectId in remoteProjectIdMap.keys) {
+                return@forEach
+            }
+            // 将pathWithPathSpace转为数字id
+            remoteProjectIdMap[objectData.remoteProjectId] = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                gitProjectKey = objectData.remoteProjectId,
+                action = action,
+                getProjectInfo = action.api::getGitProjectInfo
+            ).gitProjectId.let { "git_$it" }
+        }
+
+        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
+        yamlTransferData.templateData.transferDataMap.filter { it.value.templateType == TemplateType.JOB }
+            .forEach { (objectId, objectData) ->
+                results[objectId] = BuildTemplateAcrossInfo(
+                    templateId = yamlTransferData.templateData.templateId,
+                    templateType = TemplateAcrossInfoType.JOB,
+                    // 因为已经将jobId转为了map所以这里不保存，节省空间
+                    templateInstancesIds = emptyList(),
+                    targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
+                )
+            }
+        return results
     }
 
     // 替换跨项目第三方构建机
