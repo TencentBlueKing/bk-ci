@@ -58,7 +58,6 @@ import java.io.InputStreamReader
 class YamlSchemaCheck @Autowired constructor() {
 
     companion object {
-        private const val REDIS_STREAM_YAML_SCHEMA = "stream:yaml.schema.v2:json"
         private const val CI_SCHEMA = "ci"
         private const val TEMPLATE_EXTEND_SCHEMA = "template-extends"
         private const val TEMPLATE_STAGE_SCHEMA = "template-stages"
@@ -125,7 +124,7 @@ class YamlSchemaCheck @Autowired constructor() {
         }
     }
 
-    private fun schemaExceptionHandle(
+    fun schemaExceptionHandle(
         action: BaseAction,
         f: () -> Unit
     ) {

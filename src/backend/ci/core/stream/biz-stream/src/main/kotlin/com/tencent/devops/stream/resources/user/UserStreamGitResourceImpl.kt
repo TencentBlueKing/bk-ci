@@ -80,24 +80,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
         val routerTag = client.get(ServiceProjectResource::class).get(
             englishName = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId)
         ).data?.routerTag
-        return with(projectInfo) {
-            Result(
-                StreamGitProjectInfoWithProject(
-                    gitProjectId = projectInfo.gitProjectId,
-                    name = name,
-                    homepage = homepage,
-                    gitHttpUrl = gitHttpUrl,
-                    gitHttpsUrl = gitHttpsUrl,
-                    gitSshUrl = gitSshUrl,
-                    nameWithNamespace = nameWithNamespace,
-                    pathWithNamespace = pathWithNamespace,
-                    defaultBranch = defaultBranch,
-                    description = description,
-                    avatarUrl = avatarUrl,
-                    routerTag = routerTag
-                )
-            )
-        }
+        return Result(projectInfo.copy(routerTag = routerTag))
     }
 
     private fun getProjectInfo(gitProjectId: String): StreamGitProjectInfoWithProject? {

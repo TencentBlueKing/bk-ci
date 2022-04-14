@@ -60,15 +60,7 @@ import com.tencent.devops.stream.constant.MQ as StreamMQ
 
 @Service
 class StreamBuildFinishListener @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
-    private val actionFactory: EventActionFactory,
-    private val sendCommitCheck: SendCommitCheck,
-    private val sendNotify: SendNotify,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao,
-    private val streamBasicSettingDao: StreamBasicSettingDao,
-    private val gitPipelineResourceDao: GitPipelineResourceDao
+    private val finishListenerService: StreamBuildFinishListenerService
 ) {
 
     companion object {
@@ -76,8 +68,7 @@ class StreamBuildFinishListener @Autowired constructor(
     }
 
     @RabbitListener(
-        bindings = [
-            (
+        bindings = [(
                 QueueBinding(
                     value = Queue(value = StreamMQ.QUEUE_PIPELINE_BUILD_FINISH_STREAM, durable = "true"),
                     exchange = Exchange(
@@ -87,93 +78,11 @@ class StreamBuildFinishListener @Autowired constructor(
                         type = ExchangeTypes.FANOUT
                     )
                 )
-                )
-        ]
+                )]
     )
     fun listenPipelineBuildFinishBroadCastEvent(buildFinishEvent: PipelineBuildFinishBroadCastEvent) {
         try {
-            val buildEvent = gitRequestEventBuildDao.getByBuildId(dslContext, buildFinishEvent.buildId) ?: return
-            val requestEvent = gitRequestEventDao.getWithEvent(dslContext, buildEvent.eventId) ?: return
-            val pipelineId = buildEvent.pipelineId
-
-            logger.info("streamBuildFinish , pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
-
-            // 更新流水线执行状态
-            gitRequestEventBuildDao.updateBuildStatusById(
-                dslContext = dslContext,
-                id = buildEvent.id,
-                buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
-            )
-
-            val pipeline = gitPipelineResourceDao.getPipelinesInIds(
-                dslContext = dslContext,
-                gitProjectId = null,
-                pipelineIds = listOf(pipelineId)
-            ).getOrNull(0)?.let {
-                StreamTriggerPipeline(
-                    gitProjectId = it.gitProjectId.toString(),
-                    pipelineId = it.pipelineId,
-                    filePath = it.filePath,
-                    displayName = it.displayName,
-                    enabled = it.enabled,
-                    creator = it.creator
-                )
-            } ?: throw OperationException("stream pipeline not exist")
-
-            // 改为利用pipeline信息反查projectId 保证流水线和项目是绑定的
-            val setting = streamBasicSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let {
-                StreamTriggerSetting(it)
-            } ?: throw OperationException("stream all projectCode not exist")
-
-            // 加载action，并填充上下文，手动和定时触发需要自己的事件
-            val action = when (requestEvent.objectKind) {
-                StreamObjectKind.MANUAL.value -> actionFactory.loadManualAction(
-                    setting = setting,
-                    event = objectMapper.readValue(requestEvent.event)
-                )
-                StreamObjectKind.SCHEDULE.value -> actionFactory.loadScheduleAction(
-                    setting = setting,
-                    event = objectMapper.readValue(requestEvent.event)
-                )
-                else -> actionFactory.load(objectMapper.readValue(requestEvent.event))
-            } ?: throw OperationException("stream not support action ${requestEvent.event}")
-
-            action.data.setting = setting
-            action.data.context.pipeline = pipeline
-            action.data.context.finishData = BuildFinishData(
-                streamBuildId = buildEvent.id,
-                eventId = buildEvent.eventId,
-                version = buildEvent.version,
-                normalizedYaml = buildEvent.normalizedYaml,
-                projectId = buildFinishEvent.projectId,
-                pipelineId = buildFinishEvent.pipelineId,
-                userId = buildFinishEvent.userId,
-                buildId = buildFinishEvent.buildId,
-                status = buildFinishEvent.status,
-                startTime = buildFinishEvent.startTime,
-                stageId = null
-            )
-
-            // 推送结束构建消息
-            sendCommitCheck.sendCommitCheck(action)
-
-            // 更新最后一次执行状态
-            streamBasicSettingDao.updateSettingLastCiInfo(
-                dslContext,
-                action.data.getGitProjectId().toLong(),
-                StreamCIInfo(
-                    enableCI = setting.enableCi,
-                    lastBuildMessage = StreamTriggerMessageUtils.getEventMessageTitle(
-                        requestEvent
-                    ),
-                    lastBuildStatus = action.data.context.finishData!!.getBuildStatus(),
-                    lastBuildPipelineId = buildFinishEvent.pipelineId,
-                    lastBuildId = buildFinishEvent.buildId
-                )
-            )
-
-            // 发送通知
-            sendNotify.sendNotify(action)
+            finishListenerService.doFinish(buildFinishEvent)
         } catch (e: Throwable) {
             logger.error("Fail to listenPipelineBuildFinishBroadCastEvent(${buildFinishEvent.buildId})", e)
         }
