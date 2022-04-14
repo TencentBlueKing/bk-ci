@@ -278,22 +278,27 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
                 .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))
                 .plus(BuildParameters(PIPELINE_UPDATE_USER, readyToBuildPipelineInfo.lastModifyUser))
-                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toList()
+                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toMutableList()
 
             val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
-            val buildId = pipelineRuntimeService.startBuild(
+            // #5264 保留启动参数的原始值以及重试中需要用到的字段
+            val originStartParams = mutableListOf<BuildParameters>()
+            startParamsWithType.forEach {
+                if (realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
+                    it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT) {
+                    originStartParams.add(it)
+                    paramsWithType.add(it.copy(key = "variables.${it.key}"))
+                }
+            }
+
+            return pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
-                // #5264 保留启动参数的原始值以及重试中需要用到的字段
-                originStartParams = startParamsWithType.filter {
-                    realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
-                        it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT
-                },
+                originStartParams = originStartParams,
                 startParamsWithType = paramsWithType,
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule
             )
-            return buildId
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lockKey = lockKey)
