@@ -45,7 +45,7 @@ class StreamEventDispatcher constructor(
         events.forEach { event ->
             try {
                 val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-                bridge.send(eventType.bindingName, event.streamMessage(eventType.delayMills))
+                bridge.send(eventType.destination, event.buildMessage(eventType.delayMills))
             } catch (ignored: Exception) {
                 logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
             }

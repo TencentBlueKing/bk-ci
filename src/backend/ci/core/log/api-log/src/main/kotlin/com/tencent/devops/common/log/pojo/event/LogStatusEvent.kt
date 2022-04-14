@@ -25,12 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.annotation
+package com.tencent.devops.common.log.pojo.event
 
-/**
- * Stream事件注解
- * @version 1.0
- */
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
-@Retention(AnnotationRetention.RUNTIME)
-annotation class StreamEvent(val bindingName: String, val delayMills: Int = 0)
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.constants.Stream
+
+@StreamEvent(Stream.EXCHANGE_LOG_STATUS_BUILD_EVENT)
+data class LogStatusEvent(
+    override val buildId: String,
+    val finished: Boolean,
+    val tag: String,
+    val subTag: String?,
+    val jobId: String,
+    val executeCount: Int?,
+    val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
+    override var retryTime: Int = 2,
+    override var delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)

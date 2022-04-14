@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.common.log.pojo.event
 
-import com.tencent.devops.common.event.annotation.StreamEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.stream.pojo.IEvent
 
-@StreamEvent(MQ.EXCHANGE_LOG_BUILD_EVENT)
-data class LogEvent(
-    override val buildId: String,
-    val logs: List<LogMessage>,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+open class ILogEvent(
+    open val buildId: String,
+    override var retryTime: Int,
+    override var delayMills: Int
+): IEvent(delayMills, retryTime) {
+    companion object {
+        private const val DELAY_DURATION_MILLS = 3 * 1000
+    }
+
+    fun getNextDelayMills(retryTime: Int): Int {
+        return DELAY_DURATION_MILLS * (3 - retryTime)
+    }
+}

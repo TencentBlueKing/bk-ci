@@ -46,7 +46,6 @@ object PulsarProducerFactory {
      * @param producerProperties producerProperties
      * @return DefaultMQProducer
      */
-    @Suppress("UNCHECKED_CAST")
     fun initPulsarProducer(
         topic: String,
         producerProperties: PulsarProducerProperties,
@@ -56,8 +55,7 @@ object PulsarProducerFactory {
             // TODO 消息序列化方式需要调整， producer需要缓存
             val producer = pulsarClient.newProducer(
                 SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            )
-                .topic(topic)
+            ).topic(topic)
             if (!producerName.isNullOrBlank()) {
                 producer.producerName(producerName)
             }

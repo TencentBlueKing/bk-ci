@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.common.log.pojo.event
 
-import com.tencent.devops.common.event.annotation.StreamEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.constants.Stream
 
-@StreamEvent(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
+@StreamEvent(Stream.EXCHANGE_LOG_BUILD_MESSAGE)
+data class LogEvent(
     override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
+    val logs: List<LogMessage>,
+    override var retryTime: Int = 2,
+    override var delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)

@@ -30,8 +30,8 @@ package com.tencent.devops.common.stream.pulsar.properties
 import org.springframework.cloud.stream.binder.BinderSpecificPropertiesProvider
 
 class PulsarBindingProperties(
-    var consumer: PulsarConsumerProperties = PulsarConsumerProperties(),
-    var producer: PulsarProducerProperties = PulsarProducerProperties()
+    private var consumer: PulsarConsumerProperties = PulsarConsumerProperties(),
+    private var producer: PulsarProducerProperties = PulsarProducerProperties()
 ) : BinderSpecificPropertiesProvider {
     override fun getConsumer(): Any {
         return consumer

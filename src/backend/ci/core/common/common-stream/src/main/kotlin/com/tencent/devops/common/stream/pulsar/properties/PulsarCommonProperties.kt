@@ -27,10 +27,11 @@
 
 package com.tencent.devops.common.stream.pulsar.properties
 
+import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import kotlin.reflect.jvm.jvmName
 
 open class PulsarCommonProperties(
     // TODO 序列化方式
-    var serialType: String = "BYTE",
-    var serialClass: String? = ByteArray::class.jvmName
+    var serialType: String = Serialization.STRING.name,
+    var serialClass: String? = String::class.jvmName
 )

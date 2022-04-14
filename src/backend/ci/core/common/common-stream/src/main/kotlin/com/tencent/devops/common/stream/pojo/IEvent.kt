@@ -38,7 +38,7 @@ open class IEvent(
     open var delayMills: Int,
     open var retryTime: Int = 1
 ) {
-    fun streamMessage(defaultMills: Int = 0): Message<IEvent> {
+    fun buildMessage(defaultMills: Int = 0): Message<IEvent> {
         val builder = MessageBuilder
             .withPayload(this)
         // 事件中的变量指定

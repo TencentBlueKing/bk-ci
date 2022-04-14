@@ -82,6 +82,7 @@ object PulsarConsumerFactory {
             if (!consumerName.isNullOrBlank()) {
                 consumer.consumerName(consumerName)
             }
+
             consumer.ackTimeout(ackTimeoutMillis, TimeUnit.MILLISECONDS)
                 .ackTimeoutTickTime(tickDurationMillis, TimeUnit.MILLISECONDS)
                 .priorityLevel(priorityLevel)

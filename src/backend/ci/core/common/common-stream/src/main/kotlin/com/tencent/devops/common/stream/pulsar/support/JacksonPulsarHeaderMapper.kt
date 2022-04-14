@@ -43,7 +43,7 @@ import java.util.Objects
  */
 class JacksonPulsarHeaderMapper(
     private val objectMapper: ObjectMapper,
-    serialization: Serialization = Serialization.BYTE
+    serialization: Serialization = Serialization.STRING
 ) : AbstractPulsarHeaderMapper(serialization) {
 
     private val trustedPackages: MutableSet<String> = LinkedHashSet(

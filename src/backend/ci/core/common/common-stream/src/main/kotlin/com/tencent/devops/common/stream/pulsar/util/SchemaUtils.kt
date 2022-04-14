@@ -55,12 +55,9 @@ object SchemaUtils {
 
     fun getSchema(serialisation: Serialization, classStr: String? = null): Schema<*> {
         val temp = if (classStr == null) {
-            ByteArray::class.java
+            String::class.java
         } else {
             Class.forName(classStr).kotlin.java
-        }
-        if (temp == ByteArray::class.java) {
-            return Schema.BYTES
         }
         return getGenericSchema(serialisation, temp as Class<Any>)
     }

@@ -25,34 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.common.stream.constants
 
-import org.springframework.messaging.Message
-import org.springframework.messaging.support.MessageBuilder
-
-open class ILogEvent(
-    open val buildId: String,
-    open val retryTime: Int,
-    open val delayMills: Int
-) {
-    companion object {
-        private const val DELAY_DURATION_MILLS = 3 * 1000
-    }
-
-    fun streamMessage(defaultMills: Int = 0): Message<ILogEvent> {
-        val builder = MessageBuilder
-            .withPayload(this)
-        // 事件中的变量指定
-        if (delayMills > 0) {
-            builder.setHeader("x-delay", delayMills)
-        } else if (defaultMills > 0) {
-            // 事件类型固化默认值
-            builder.setHeader("x-delay", defaultMills)
-        }
-        return builder.build()
-    }
-
-    fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (3 - retryTime)
-    }
+object Stream {
+    // 日志事件
+    const val EXCHANGE_LOG_BUILD_MESSAGE = "e.engine.log.build.event"
+    const val EXCHANGE_LOG_BATCH_BUILD_EVENT = "e.engine.log.batch.build.event"
+    const val EXCHANGE_LOG_STATUS_BUILD_EVENT = "e.engine.log.status.build.event"
 }

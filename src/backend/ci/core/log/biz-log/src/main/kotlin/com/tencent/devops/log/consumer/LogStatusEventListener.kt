@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.consumer
 
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogService
 import java.util.function.Consumer
@@ -61,17 +61,19 @@ class LogStatusEventListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogStatusEvent(
-                        buildId = buildId,
-                        finished = finished,
-                        tag = tag,
-                        subTag = subTag,
-                        jobId = jobId,
-                        logStorageMode = logStorageMode,
-                        executeCount = executeCount,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
+                    buildLogPrintService.dispatchEvent(
+                        LogStatusEvent(
+                            buildId = buildId,
+                            finished = finished,
+                            tag = tag,
+                            subTag = subTag,
+                            jobId = jobId,
+                            logStorageMode = logStorageMode,
+                            executeCount = executeCount,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
                 }
             }
         }

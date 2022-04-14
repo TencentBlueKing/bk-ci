@@ -35,7 +35,7 @@ import org.springframework.util.Assert
  * Base for Pulsar header mappers.
  */
 abstract class AbstractPulsarHeaderMapper(
-    private var serialization: Serialization = Serialization.BYTE
+    private var serialization: Serialization = Serialization.STRING
 ) : PulsarHeaderMapper {
 
     protected open fun matches(headerName: String): Boolean {

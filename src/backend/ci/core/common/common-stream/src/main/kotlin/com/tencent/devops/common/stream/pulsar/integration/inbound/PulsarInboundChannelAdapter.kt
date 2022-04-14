@@ -54,10 +54,12 @@ class PulsarInboundChannelAdapter(
     private var extendedConsumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
     private val pulsarProperties: PulsarBinderConfigurationProperties
 ) : MessageProducerSupport(), OrderlyShutdownCapable {
-    var consumer: Consumer<Any>? = null
+
+    private var consumer: Consumer<Any>? = null
     var retryTemplate: RetryTemplate? = null
     var recoveryCallback: RecoveryCallback<Any>? = null
     private var topic: String = ""
+
     override fun onInit() {
         if (extendedConsumerProperties.extension == null) {
             return
