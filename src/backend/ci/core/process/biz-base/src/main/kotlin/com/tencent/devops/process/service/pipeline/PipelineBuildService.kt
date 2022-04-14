@@ -288,10 +288,10 @@ class PipelineBuildService(
                 if (realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
                     it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT) {
                     originStartParams.add(it)
-                    // #6482 对于用户自定义的自动参数增加对应上下文，如果已是上下文无需处理
-                    if (it.key.startsWith(CONTEXT_PREFIX)) {
-                        paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
-                    }
+                }
+                // #6482 对于用户自定义的自动参数增加对应上下文，如果已是上下文无需处理
+                if (realStartParamKeys.contains(it.key) && it.key.startsWith(CONTEXT_PREFIX)) {
+                    paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
                 }
             }
 
