@@ -6,6 +6,9 @@ rbac:
 ## Add labels to all the deployed resources
 commonLabels: {}
 
+remoteDebug:
+  enabled: false
+
 # ingress 配置
 ingress:
   enabled: false
