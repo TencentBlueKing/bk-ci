@@ -37,6 +37,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
@@ -48,6 +49,7 @@ import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -211,7 +213,7 @@ class ScheduleTriggerService @Autowired constructor(
             action.getGitCred(),
             action.data.getGitProjectId(),
             ApiRequestRetryInfo(true)
-        )!!
+        )!!.toStreamGitProjectInfoWithProject()
         streamBasicSettingService.updateProjectInfo(action.data.eventCommon.userId, gitProjectInfo)
 
         return streamYamlBuild.gitStartBuild(

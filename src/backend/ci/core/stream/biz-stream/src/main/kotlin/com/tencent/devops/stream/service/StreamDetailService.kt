@@ -159,18 +159,6 @@ class StreamDetailService @Autowired constructor(
         TODO("开源版根据用户需求自由实现")
     }
 
-    private fun getUrl(url: String?): String? {
-        if (url == null) {
-            return null
-        }
-        // 没有被替换掉域名的url
-        return if (!url.startsWith("/")) {
-            url
-        } else {
-            reportPrefix + url
-        }
-    }
-
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         val reportList = client.get(UserReportResource::class)

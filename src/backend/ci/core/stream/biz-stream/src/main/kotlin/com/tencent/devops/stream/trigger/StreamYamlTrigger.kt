@@ -50,6 +50,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.YamlBehindException
 import com.tencent.devops.stream.trigger.exception.YamlBlankException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
@@ -129,7 +130,10 @@ class StreamYamlTrigger @Autowired constructor(
             } ?: pipeline.filePath
         }
 
-        streamBasicSettingService.updateProjectInfo(action.data.eventCommon.userId, gitProjectInfo)
+        streamBasicSettingService.updateProjectInfo(
+            action.data.eventCommon.userId,
+            gitProjectInfo.toStreamGitProjectInfoWithProject()
+        )
 
         if (isTiming || isDelete || !repoHookName.isNullOrEmpty()) {
             // 有特殊任务的注册事件

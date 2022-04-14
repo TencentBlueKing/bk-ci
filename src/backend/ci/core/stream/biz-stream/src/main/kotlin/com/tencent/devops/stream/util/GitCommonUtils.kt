@@ -160,18 +160,6 @@ object GitCommonUtils {
         throw OperationException("蓝盾项目ID $projectId 不正确")
     }
 
-    // 获取git项目名和git平台
-    fun getGitProjectIdAndScmType(projectId: String): Pair<Long, ScmType> {
-        try {
-            if (projectId.startsWith(tGitProjectPrefix)) {
-                return Pair(projectId.removePrefix(tGitProjectPrefix).toLong(), ScmType.CODE_GIT)
-            }
-        } catch (e: Exception) {
-            throw OperationException("蓝盾项目ID $projectId 不正确")
-        }
-        throw OperationException("蓝盾项目ID $projectId 不正确")
-    }
-
     // 获取蓝盾项目名称
     fun getCiProjectId(gitProjectId: Long) = "${tGitProjectPrefix}$gitProjectId"
 }

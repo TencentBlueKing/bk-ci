@@ -27,6 +27,8 @@
 
 package com.tencent.devops.stream.trigger.git.pojo
 
+import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+
 /**
  * Stream需要的各git平台的项目信息
  */
@@ -64,3 +66,18 @@ interface StreamGitProjectInfo {
     // 名称全称
     val nameWithNamespace: String
 }
+
+fun StreamGitProjectInfo.toStreamGitProjectInfoWithProject() = StreamGitProjectInfoWithProject(
+    gitProjectId = this.gitProjectId.toLong(),
+    defaultBranch = this.defaultBranch,
+    gitHttpUrl = this.gitHttpUrl,
+    name = this.name,
+    gitSshUrl = this.gitSshUrl,
+    homepage = this.homepage,
+    gitHttpsUrl = this.gitHttpsUrl,
+    description = this.description,
+    avatarUrl = this.avatarUrl,
+    pathWithNamespace = this.pathWithNamespace,
+    nameWithNamespace = this.nameWithNamespace,
+    routerTag = null
+)
