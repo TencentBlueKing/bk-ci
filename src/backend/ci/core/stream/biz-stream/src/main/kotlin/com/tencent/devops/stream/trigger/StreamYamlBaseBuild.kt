@@ -52,6 +52,7 @@ import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
+import com.tencent.devops.stream.trigger.expand.StreamYamlBuildExpand
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.pojo.StreamBuildLock
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -73,7 +74,8 @@ class StreamYamlBaseBuild @Autowired constructor(
     private val websocketService: StreamWebsocketService,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamGitConfig: StreamGitConfig,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamYamlBuildExpand: StreamYamlBuildExpand
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamYamlBaseBuild::class.java)
@@ -136,7 +138,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         }
     }
 
-    private fun preStartBuild(
+    protected fun preStartBuild(
         action: BaseAction,
         pipeline: StreamTriggerPipeline,
         model: Model,
@@ -223,6 +225,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         } finally {
             buildLock.unlock()
             // 这里可以做构建相关的数据上报之类的工作
+            streamYamlBuildExpand.buildReportData(action, buildId)
         }
 
         if (buildId.isBlank()) {
@@ -240,7 +243,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         return BuildId(buildId)
     }
 
-    private fun errorStartBuild(
+    protected fun errorStartBuild(
         action: BaseAction,
         pipeline: StreamTriggerPipeline,
         gitBuildId: Long,
@@ -278,7 +281,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     }
 
     @Suppress("NestedBlockDepth")
-    private fun afterStartBuild(
+    protected fun afterStartBuild(
         action: BaseAction,
         pipeline: StreamTriggerPipeline,
         buildId: String,
