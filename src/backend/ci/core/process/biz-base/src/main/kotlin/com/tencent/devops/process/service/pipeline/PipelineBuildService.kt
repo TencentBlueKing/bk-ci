@@ -285,12 +285,13 @@ class PipelineBuildService(
             // #5264 保留启动参数的原始值以及重试中需要用到的字段
             val originStartParams = mutableListOf<BuildParameters>()
             startParamsWithType.forEach {
-                if (realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
-                    it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT) {
+                val originKey = realStartParamKeys.contains(it.key)
+                if (originKey || it.key == BUILD_NO || it.key == PIPELINE_BUILD_MSG ||
+                    it.key == PIPELINE_RETRY_COUNT) {
                     originStartParams.add(it)
                 }
                 // #6482 对于用户自定义的自动参数增加对应上下文，如果已是上下文无需处理
-                if (realStartParamKeys.contains(it.key) && it.key.startsWith(CONTEXT_PREFIX)) {
+                if (originKey && it.key.startsWith(CONTEXT_PREFIX)) {
                     paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
                 }
             }
