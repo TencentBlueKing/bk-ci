@@ -28,12 +28,9 @@
 package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -42,7 +39,6 @@ import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
@@ -52,12 +48,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ApiPriority
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
@@ -65,7 +55,6 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType
-import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 
@@ -75,7 +64,6 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
 
     companion object {
         private const val AGENT_PROPERTIES_FILE_NAME = "/.agent.properties"
-        private const val RELEASE_STAGE_KEY = "release.stage"
     }
 
     /**
@@ -164,31 +152,6 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         }
         val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
-        // 上传至jfrog(插件迁移需求发布到灰度阶段还需继续把插件文件上传到jfrog)
-        if (PropertyUtil.getPropertyValue(RELEASE_STAGE_KEY, AGENT_PROPERTIES_FILE_NAME) != "prod") {
-            val url = StringBuilder("/atom/result/$uploadFilePath")
-            with(buildVariables) {
-                url.append(";$ARCHIVE_PROPS_PROJECT_ID=${encodeProperty(projectId)}")
-                url.append(";$ARCHIVE_PROPS_PIPELINE_ID=${encodeProperty(pipelineId)}")
-                url.append(";$ARCHIVE_PROPS_BUILD_ID=${encodeProperty(buildId)}")
-                url.append(";$ARCHIVE_PROPS_USER_ID=${encodeProperty(userId)}")
-                url.append(";$ARCHIVE_PROPS_BUILD_NO=${encodeProperty(variables[PIPELINE_BUILD_NUM] ?: "")}")
-                url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
-            }
-
-            val request = buildPut(
-                path = url.toString(),
-                requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
-            )
-            val responseContent = request(request, "归档插件文件失败")
-            try {
-                val obj = JsonParser().parse(responseContent).asJsonObject
-                if (obj.has("code") && obj["code"].asString != "200") throw RuntimeException()
-            } catch (e: Exception) {
-                LoggerService.addNormalLine(e.message ?: "")
-                throw RuntimeException("AtomArchive fail: $responseContent")
-            }
-        }
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
             repoName = BkRepoEnum.PLUGIN.repoName,
@@ -228,27 +191,6 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val fileName = file.name
         val uploadFilePath = if (purePath.endsWith(fileName)) purePath else "$purePath/$fileName"
         LoggerService.addNormalLine("upload file >>> $uploadFilePath")
-        // 上传至jfrog(插件迁移需求发布到灰度阶段还需继续把插件文件上传到jfrog)
-        if (PropertyUtil.getPropertyValue(RELEASE_STAGE_KEY, AGENT_PROPERTIES_FILE_NAME) != "prod") {
-            val fileType = FileTypeEnum.BK_PLUGIN_FE
-            val url =
-                "/ms/artifactory/api/build/artifactories/file/archive?fileType=$fileType&customFilePath=$purePath"
-            val fileBody = RequestBody.create(MultipartFormData, file)
-            val requestBody = MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", fileName, fileBody)
-                .build()
-
-            val request = buildPost(url, requestBody)
-            val response = request(request, "upload file:$fileName fail")
-            try {
-                val obj = JsonParser().parse(response).asJsonObject
-                if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("upload file:$fileName fail")
-            } catch (ignored: Exception) {
-                LoggerService.addNormalLine(ignored.message ?: "")
-                throw RemoteServiceException("archive fail: $response")
-            }
-        }
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
             repoName = BkRepoEnum.STATIC.repoName,

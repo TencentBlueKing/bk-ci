@@ -9,5 +9,8 @@ data class DataPlatBuildCommits(
     val message: String,
     val repoType: String,
     val commitTime: String,
-    val createTime: String
+    val createTime: String,
+    val mrId: String,
+    val url: String,
+    val eventType: String
 )

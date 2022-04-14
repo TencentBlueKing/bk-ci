@@ -34,7 +34,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Resources
+import com.tencent.devops.common.ci.v2.ResourcesPools
 import com.tencent.devops.common.ci.v2.exception.YamlFormatException
+import com.tencent.devops.common.ci.v2.format
 import com.tencent.devops.common.ci.v2.parsers.template.YamlTemplate
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
@@ -296,6 +299,11 @@ class StreamYamlTrigger @Autowired constructor(
         event: GitEvent?,
         changeSet: Set<String>?
     ): YamlReplaceResult {
+        // 保存引用的pool信息
+        val resourcePoolExt = mutableMapOf<String, ResourcesPools>()
+        preTemplateYamlObject.resources?.pools?.forEach { pool ->
+            resourcePoolExt[pool.format()] = pool
+        }
         // 替换yaml文件中的模板引用
         try {
             val preYamlObject = YamlTemplate(
@@ -318,11 +326,20 @@ class StreamYamlTrigger @Autowired constructor(
                 ),
                 getTemplateMethod = yamlTemplateService::getTemplate,
                 nowRepo = null,
-                repo = null
+                repo = null,
+                resourcePoolMapExt = resourcePoolExt
             ).replace()
-            val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
+
+            val newPreYamlObject = preYamlObject.copy(
+                resources = Resources(
+                    repositories = preYamlObject.resources?.repositories,
+                    pools = resourcePoolExt.values.toList()
+                )
+            )
+
+            val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(newPreYamlObject, filePath)
             return YamlReplaceResult(
-                preYaml = preYamlObject, normalYaml = normalYaml, yamlTransferData = transferData
+                preYaml = newPreYamlObject, normalYaml = normalYaml, yamlTransferData = transferData
             )
         } catch (e: Throwable) {
             logger.info("event ${gitRequestEventForHandle.id} yaml template replace error", e)

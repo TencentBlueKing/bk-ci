@@ -99,8 +99,8 @@ func GetBuildTmpDir() (string, error) {
 }
 
 // GetWorkerErrorMsgFile 获取worker执行错误信息的日志文件
-func GetWorkerErrorMsgFile(buildId string) string {
-	return fmt.Sprintf("%s/%s_build_msg.log", fmt.Sprintf("%s/build_tmp", GetWorkDir()), buildId)
+func GetWorkerErrorMsgFile(buildId string, vmSeqId string) string {
+	return fmt.Sprintf("%s/%s_%s_build_msg.log", fmt.Sprintf("%s/build_tmp", GetWorkDir()), buildId, vmSeqId)
 }
 
 func GetLogDir() string {

@@ -39,7 +39,8 @@ object AppNotifyUtil {
         experienceName: String,
         appVersion: String,
         experienceHashId: String,
-        receiver: String
+        receiver: String,
+        platform: String
     ): AppNotifyMessage {
         val message = AppNotifyMessage()
         message.receiver = receiver
@@ -47,6 +48,7 @@ object AppNotifyUtil {
         message.body = "【$experienceName】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>"
         message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"
         message.experienceHashId = experienceHashId
+        message.platform = platform
         return message
     }
 }
