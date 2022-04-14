@@ -777,22 +777,30 @@ class GitService @Autowired constructor(
         path: String,
         token: String,
         ref: String?,
-        recursive: Boolean? = false
+        recursive: Boolean? = false,
+        tokenType: TokenTypeEnum
     ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
-                "?path=${URLEncoder.encode(path, "UTF-8")}" +
-                if (!ref.isNullOrBlank()) {
-                    "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
-                } else {
-                    ""
-                } + "&recursive=$recursive" +
-                "&access_token=$token"
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree")
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    "&path=${URLEncoder.encode(path, "UTF-8")}"
+                )
+                append(
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&recursive=$recursive&access_token=$token")
+            }
             logger.info("request url: $url")
             val request = Request.Builder()
-                .url(url)
+                .url(url.toString())
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {

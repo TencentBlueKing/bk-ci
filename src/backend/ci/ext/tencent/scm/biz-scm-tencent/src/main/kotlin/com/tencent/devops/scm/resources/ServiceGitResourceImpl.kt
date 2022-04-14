@@ -310,7 +310,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         path: String,
         token: String,
         ref: String?,
-        recursive: Boolean?
+        recursive: Boolean?,
+        tokenType: TokenTypeEnum
     ): Result<List<GitFileInfo>> {
         return Result(
             gitService.getGitCIFileTree(
@@ -318,7 +319,8 @@ class ServiceGitResourceImpl @Autowired constructor(
                 path = path,
                 token = token,
                 ref = ref,
-                recursive = recursive
+                recursive = recursive,
+                tokenType = tokenType
             )
         )
     }

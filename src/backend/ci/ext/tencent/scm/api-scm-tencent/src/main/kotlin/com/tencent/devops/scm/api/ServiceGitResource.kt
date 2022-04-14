@@ -282,7 +282,10 @@ interface ServiceGitResource {
         ref: String?,
         @ApiParam(value = "是否支持递归目录结构")
         @QueryParam("recursive")
-        recursive: Boolean? = false
+        recursive: Boolean? = false,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
     ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取mr请求的代码变更")

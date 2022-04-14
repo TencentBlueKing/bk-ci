@@ -51,6 +51,7 @@ import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -536,6 +537,24 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             gitProjectId = gitProjectId,
             mrId = mrId,
             mrBody = mrBody,
+            tokenType = tokenType
+        )
+    }
+
+    override fun getGitFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String?,
+        recursive: Boolean?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitFileInfo>> {
+        return client.getScm(ServiceGitResource::class).getGitCIFileTree(
+            gitProjectId = gitProjectId,
+            path = path,
+            token = token,
+            ref = ref,
+            recursive = recursive,
             tokenType = tokenType
         )
     }
