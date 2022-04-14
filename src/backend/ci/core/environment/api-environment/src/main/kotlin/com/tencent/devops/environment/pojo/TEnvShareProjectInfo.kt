@@ -27,24 +27,26 @@
 
 package com.tencent.devops.environment.pojo
 
-import com.tencent.devops.environment.pojo.enums.SharedEnvType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("VM虚拟机配额")
-data class SharedProjectInfo(
-    @ApiModelProperty("蓝盾项目Id", required = true)
-    val projectId: String,
-    @ApiModelProperty("工蜂项目ID", required = true)
-    val gitProjectId: String?,
-    @ApiModelProperty("项目名称，工蜂项目则为groupName/projectName", required = true)
-    val name: String,
-    @ApiModelProperty("类型，预留", required = true)
-    val type: SharedEnvType,
-    @ApiModelProperty("导入服务器配额", required = true)
+@ApiModel("T_ENV_SHARE_PROJECT POJO")
+data class TEnvShareProjectInfo(
+    @ApiModelProperty("环境ID")
+    val envId: Long,
+    @ApiModelProperty("名称")
+    val envName: String,
+    @ApiModelProperty("主项目ID")
+    val mainProjectId: String,
+    @ApiModelProperty("共享的目标项目ID")
+    val sharedProjectId: String?,
+    @ApiModelProperty("目标项目名称")
+    val sharedProjectName: String,
+    @ApiModelProperty("类型")
+    val type: String?,
+    @ApiModelProperty("创建者")
     val creator: String?,
-    @ApiModelProperty("允许使用DevCloud虚拟机功能", required = true)
-    val createTime: Long,
-    @ApiModelProperty("DevCloud虚拟机配额", required = true)
-    val updateTime: Long
+    val createTime: LocalDateTime,
+    val updateTime: LocalDateTime
 )
