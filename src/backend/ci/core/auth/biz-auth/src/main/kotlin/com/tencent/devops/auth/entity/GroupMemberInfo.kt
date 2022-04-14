@@ -30,6 +30,7 @@ package com.tencent.devops.auth.entity
 data class GroupMemberInfo(
     val userId: String,
     val groupId: Int,
+    val groupType: Boolean,
     val userType: Boolean,
     val expiredDay: Long,
     val projectCode: String

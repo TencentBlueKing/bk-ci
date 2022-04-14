@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.devops.auth.pojo.PermissionUrlDTO
+import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionUrlService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -48,7 +49,8 @@ class BkPermissionUrlService @Autowired constructor(
     val iamEsbService: IamEsbService,
     @Autowired(required = false) // v3 才会有
     val iamConfiguration: IamConfiguration?,
-    val bkPermissionProjectService: BkPermissionProjectService
+    val bkPermissionProjectService: BkPermissionProjectService,
+    val iamCacheService: IamCacheService
 ) : PermissionUrlService {
 
     @Value("\${auth.webHost:#{null}}")
@@ -110,7 +112,7 @@ class BkPermissionUrlService @Autowired constructor(
     }
 
     override fun getRolePermissionUrl(projectId: String, groupId: String?): String? {
-        val projectRelationId = bkPermissionProjectService.getProjectId(projectId)
+        val projectRelationId = iamCacheService.getProjectIamRelationId(projectId)
         val rolePermissionUrl = if (!groupId.isNullOrEmpty()) {
             "user-group-detail/$groupId?current_role_id=$projectRelationId&tab=group_perm"
         } else {

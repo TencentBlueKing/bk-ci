@@ -132,6 +132,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
     const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
     const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
+    const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -143,6 +144,7 @@ object ProcessMessageCode {
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101904" //  排队超时，取消运行! [{0}]
     const val ERROR_PARUS_PIEPLINE_IS_RUNNINT = "2101905" // 暂停的流水线已开始运行
     const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
+    const val ERROR_JOB_RUNNING = "2101907" // job非完成态，不能进行重试
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在

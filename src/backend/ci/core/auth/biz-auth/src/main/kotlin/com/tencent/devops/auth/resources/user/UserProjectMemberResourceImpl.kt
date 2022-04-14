@@ -29,10 +29,10 @@
 package com.tencent.devops.auth.resources.user
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
+import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
 import com.tencent.devops.common.api.pojo.Result
@@ -45,10 +45,11 @@ class UserProjectMemberResourceImpl @Autowired constructor(
 ) : UserProjectMemberResource {
     override fun createRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         managerGroup: Boolean,
-        members: List<RoleMemberDTO>
+        members: List<RoleMemberDTO>,
+        expiredDay: Long
     ): Result<Boolean> {
         permissionRoleMemberService.createRoleMember(
             userId = userId,
@@ -56,17 +57,18 @@ class UserProjectMemberResourceImpl @Autowired constructor(
             roleId = roleId,
             members = members,
             managerGroup = managerGroup,
-            checkAGradeManager = true
+            checkAGradeManager = true,
+            expiredDay = expiredDay
         )
         return Result(true)
     }
 
     override fun getRoleMember(
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         page: Int?,
         pageSize: Int?
-    ): Result<ManagerGroupMemberVo> {
+    ): Result<GroupMemberDTO> {
         return Result(
             permissionRoleMemberService.getRoleMember(
                 projectId = projectId,
@@ -76,23 +78,23 @@ class UserProjectMemberResourceImpl @Autowired constructor(
             ))
     }
 
-    override fun getProjectAllMember(projectId: Int, page: Int?, pageSize: Int?): Result<ProjectMembersVO?> {
+    override fun getProjectAllMember(projectId: String, page: Int?, pageSize: Int?): Result<ProjectMembersVO?> {
         return Result(permissionRoleMemberService.getProjectAllMember(projectId, page, pageSize))
     }
 
     override fun deleteRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         managerGroup: Boolean,
         members: String,
         type: ManagerScopesEnum
     ): Result<Boolean> {
         Result(permissionRoleMemberService.deleteRoleMember(
-            userId = userId,
+            executeUserId = userId,
             projectId = projectId,
             roleId = roleId,
-            id = members,
+            deleteUserId = members,
             type = type,
             managerGroup = managerGroup
         ))
@@ -101,9 +103,9 @@ class UserProjectMemberResourceImpl @Autowired constructor(
 
     override fun getUserAllGroup(
         userId: String,
-        projectId: Int,
+        projectId: String,
         searchUserId: String
-    ): Result<List<ManagerRoleGroupInfo>?> {
+    ): Result<List<UserGroupInfoDTO>?> {
         return Result(permissionRoleMemberService.getUserGroups(projectId, searchUserId))
     }
 }

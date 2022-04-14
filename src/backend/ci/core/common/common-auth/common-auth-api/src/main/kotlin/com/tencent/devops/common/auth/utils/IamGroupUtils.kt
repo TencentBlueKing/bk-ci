@@ -48,6 +48,10 @@ object IamGroupUtils {
             "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
+    fun buildCIGroup(iamGroupName: String): String {
+        return iamGroupName.substringAfterLast("-")
+    }
+
     fun renameSystemLable(groupName: String): String {
         return groupName.substringAfterLast("-")
     }

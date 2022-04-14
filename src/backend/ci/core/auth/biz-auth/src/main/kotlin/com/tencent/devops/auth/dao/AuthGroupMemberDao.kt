@@ -28,6 +28,8 @@
 package com.tencent.devops.auth.dao
 
 import com.tencent.devops.auth.entity.GroupMemberInfo
+import com.tencent.devops.auth.pojo.enum.ExpiredStatus
+import com.tencent.devops.model.auth.tables.TAuthGroupInfo
 import com.tencent.devops.model.auth.tables.TAuthGroupMember
 import com.tencent.devops.model.auth.tables.records.TAuthGroupMemberRecord
 import org.jooq.Condition
@@ -53,6 +55,7 @@ class AuthGroupMemberDao {
                 EXPIRED_TIEM,
                 EXPIRED_TYPE,
                 CREATE_TIME,
+                GROUP_TYPE,
             ).values(
                 groupMember.groupId,
                 groupMember.userId,
@@ -60,9 +63,40 @@ class AuthGroupMemberDao {
                 groupMember.projectCode,
                 LocalDateTime.now().plusDays(groupMember.expiredDay),
                 0,
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                groupMember.groupType
             ).execute()
         }
+    }
+
+    fun batchCreateMember(
+        dslContext: DSLContext,
+        groupMembers: List<GroupMemberInfo>
+    ) {
+        dslContext.batch(groupMembers.map {
+            with(TAuthGroupMember.T_AUTH_GROUP_MEMBER) {
+                dslContext.insertInto(
+                    this,
+                    GROUP_ID,
+                    USER_ID,
+                    USER_TYPE,
+                    PROJECT_ID,
+                    EXPIRED_TIEM,
+                    EXPIRED_TYPE,
+                    CREATE_TIME,
+                    GROUP_TYPE
+                ).values(
+                    it.groupId,
+                    it.userId,
+                    it.userType,
+                    it.projectCode,
+                    LocalDateTime.now().plusDays(it.expiredDay),
+                    0,
+                    LocalDateTime.now(),
+                    it.groupType
+                )
+            }
+        }).execute()
     }
 
     fun updateExpiredStatus(
@@ -105,9 +139,9 @@ class AuthGroupMemberDao {
     fun getGroupMemberByGroup(
         dslContext: DSLContext,
         groupId: Int
-    ): TAuthGroupMemberRecord? {
+    ): Result<TAuthGroupMemberRecord>? {
         with(TAuthGroupMember.T_AUTH_GROUP_MEMBER) {
-            return dslContext.selectFrom(this).where(GROUP_ID.eq(groupId)).fetchAny()
+            return dslContext.selectFrom(this).where(GROUP_ID.eq(groupId)).fetch()
         }
     }
 
@@ -115,7 +149,7 @@ class AuthGroupMemberDao {
         dslContext: DSLContext,
         projectCode: String,
         userId: String?
-    ): Result<TAuthGroupMemberRecord> {
+    ): Result<TAuthGroupMemberRecord>? {
         with(TAuthGroupMember.T_AUTH_GROUP_MEMBER) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectCode))
@@ -123,6 +157,16 @@ class AuthGroupMemberDao {
                 conditions.add(USER_ID.eq(userId))
             }
             return dslContext.selectFrom(this).where(conditions).fetch()
+        }
+    }
+
+    fun getUserGroup(
+        dslContext: DSLContext,
+        userId: String
+    ): Result<TAuthGroupMemberRecord> {
+        with(TAuthGroupMember.T_AUTH_GROUP_MEMBER) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId).and(EXPIRED_TYPE.notEqual(ExpiredStatus.TIMEOUT.ordinal))).fetch()
         }
     }
 }

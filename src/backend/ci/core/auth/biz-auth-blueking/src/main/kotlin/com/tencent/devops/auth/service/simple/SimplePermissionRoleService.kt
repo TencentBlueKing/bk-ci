@@ -25,14 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.simple
 
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
+import com.tencent.devops.auth.service.AuthCustomizePermissionService
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.action.ActionService
 import com.tencent.devops.auth.service.action.BkResourceService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
+import com.tencent.devops.auth.service.ci.impl.AbsPermissionRoleServiceImpl
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +53,7 @@ class SimplePermissionRoleService @Autowired constructor(
     override fun groupCreateExt(
         roleId: Int,
         userId: String,
-        projectId: Int,
+        projectId: String,
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ) {
@@ -60,7 +62,7 @@ class SimplePermissionRoleService @Autowired constructor(
         if (groupInfo.defaultGroup == true) {
             return
         }
-        groupInfo.actionMap.forEach { resource, actions ->
+        groupInfo.actionMap?.forEach { resource, actions ->
             authCustomizePermissionService.createCustomizePermission(
                 userId = userId,
                 groupId = roleId,
@@ -73,19 +75,19 @@ class SimplePermissionRoleService @Autowired constructor(
 
     override fun updateGroupExt(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         groupInfo: ProjectRoleDTO
     ) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun deleteRoleExt(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int
     ) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun rolePermissionStrategyExt(
@@ -105,8 +107,23 @@ class SimplePermissionRoleService @Autowired constructor(
         return true
     }
 
-    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
-        TODO("Not yet implemented")
+    override fun getPermissionRole(projectId: String): List<GroupInfoVo> {
+        val groupRecord = groupService.getGroupByProject(projectId) ?: return emptyList()
+        val groupInfos = mutableListOf<GroupInfoVo>()
+        groupRecord.forEach {
+            groupInfos.add(
+                GroupInfoVo(
+                    name = it.groupName,
+                    code = it.groupCode,
+                    displayName = it.displayName,
+                    defaultRole = it.groupType,
+                    desc = it.desc,
+                    userCount = 0,
+                    id = it.id
+                )
+            )
+        }
+        return groupInfos
     }
 
     override fun getDefaultRole(): List<DefaultGroup> {

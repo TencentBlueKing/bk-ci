@@ -27,21 +27,35 @@
 
 package com.tencent.devops.auth
 
-import com.tencent.devops.auth.service.SimpleAuthPermissionProjectService
-import com.tencent.devops.auth.service.SimpleAuthPermissionService
+import com.tencent.devops.auth.service.simple.SimpleAuthPermissionService
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
+import com.tencent.devops.auth.service.AuthCustomizePermissionService
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.AuthGroupMemberService
+import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.service.StrategyService
+import com.tencent.devops.auth.service.action.ActionService
+import com.tencent.devops.auth.service.action.BkResourceService
 import com.tencent.devops.auth.service.ci.PermissionProjectService
+import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
+import com.tencent.devops.auth.service.ci.PermissionRoleService
 import com.tencent.devops.auth.service.ci.PermissionService
+import com.tencent.devops.auth.service.iam.IamCacheService
+import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.auth.service.simple.SimplePermissionGraderServiceImpl
+import com.tencent.devops.auth.service.simple.SimplePermissionProjectServiceImpl
+import com.tencent.devops.auth.service.simple.SimplePermissionRoleMemberServiceImpl
+import com.tencent.devops.auth.service.simple.SimplePermissionRoleService
 import com.tencent.devops.auth.service.stream.GithubStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.GitlabStreamPermissionServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionProjectServiceImpl
 import com.tencent.devops.auth.service.stream.StreamPermissionServiceImpl
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.redis.RedisOperation
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -76,11 +90,58 @@ class AuthConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(PermissionService::class)
-    fun permissionService() = SimpleAuthPermissionService()
+    fun permissionService(
+        groupService: AuthGroupService,
+        actionService: ActionService,
+        groupMemberService: AuthGroupMemberService,
+        authCustomizePermissionService: AuthCustomizePermissionService,
+        strategyService: StrategyService
+    ) = SimpleAuthPermissionService(
+        groupService, actionService, groupMemberService, authCustomizePermissionService, strategyService
+    )
 
     @Bean
     @ConditionalOnMissingBean(PermissionProjectService::class)
-    fun permissionProjectService() = SimpleAuthPermissionProjectService()
+    fun permissionProjectService(
+        groupMemberService: AuthGroupMemberService,
+        groupService: AuthGroupService
+    ) = SimplePermissionProjectServiceImpl(
+        groupMemberService,
+        groupService
+    )
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionRoleService::class)
+    fun permissionRoleService(
+        dslContext: DSLContext,
+        groupService: AuthGroupService,
+        resourceService: BkResourceService,
+        actionsService: ActionService,
+        authCustomizePermissionService: AuthCustomizePermissionService
+    ) = SimplePermissionRoleService(
+        dslContext = dslContext,
+        groupService = groupService,
+        resourceService = resourceService,
+        actionsService = actionsService,
+        authCustomizePermissionService = authCustomizePermissionService
+    )
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionRoleMemberService::class)
+    fun permissionRoleMemberServiceImpl(
+        permissionGradeService: PermissionGradeService,
+        groupService: AuthGroupService,
+        iamCacheService: IamCacheService,
+        groupMemberService: AuthGroupMemberService,
+    ) = SimplePermissionRoleMemberServiceImpl(
+        permissionGradeService, groupService, iamCacheService, groupMemberService
+    )
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionGradeService::class)
+    fun permissionGradeService(
+        permissionProjectService: PermissionProjectService
+    ) = SimplePermissionGraderServiceImpl(permissionProjectService)
 
     @Bean
     @ConditionalOnMissingBean

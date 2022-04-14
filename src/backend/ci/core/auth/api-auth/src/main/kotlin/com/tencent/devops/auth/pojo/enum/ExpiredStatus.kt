@@ -23,21 +23,25 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.pojo.enum
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+enum class ExpiredStatus(val type: Int) {
+    NORMAL(1),
+    TIMEOUT(2),
+    NEARTIMEOUT(3)
+    ;
 
-@Service
-class BkPermissionGraderServiceImpl @Autowired constructor(
-    override val iamManagerService: ManagerService
-) : AbsPermissionGradeServiceImpl(iamManagerService) {
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        super.checkGradeManagerUser(userId, projectId)
+    companion object {
+        fun buildExpiredStatus(expiredTime: Long, expiredSize: Long): ExpiredStatus {
+            return if (expiredTime * 1000 < System.currentTimeMillis()) {
+                TIMEOUT
+            } else if (expiredTime * 1000 - System.currentTimeMillis() < expiredSize) {
+                NEARTIMEOUT
+            } else {
+                NORMAL
+            }
+        }
     }
 }

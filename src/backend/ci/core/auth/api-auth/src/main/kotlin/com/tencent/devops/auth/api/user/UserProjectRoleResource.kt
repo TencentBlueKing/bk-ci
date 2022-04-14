@@ -62,7 +62,7 @@ interface UserProjectRoleResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "项目标识", required = true)
         @QueryParam("projectCode")
         projectCode: String,
@@ -79,7 +79,7 @@ interface UserProjectRoleResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -96,7 +96,7 @@ interface UserProjectRoleResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int
+        projectId: String
     ): Result<List<GroupInfoVo>>
 
     @DELETE
@@ -108,7 +108,7 @@ interface UserProjectRoleResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int
@@ -123,7 +123,7 @@ interface UserProjectRoleResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int
+        projectId: String
     ): Result<Boolean>
 
     @POST

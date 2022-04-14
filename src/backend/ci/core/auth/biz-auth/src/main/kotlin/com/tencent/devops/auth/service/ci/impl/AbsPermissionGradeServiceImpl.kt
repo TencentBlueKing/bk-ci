@@ -23,24 +23,30 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.ci.impl
 
-import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.service.ci.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class BkPermissionRoleMemberImpl @Autowired constructor(
-    override val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService,
-    val groupService: AuthGroupService
-) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService, groupService) {
-    override fun checkUser(userId: String) {
-        return
+open class AbsPermissionGradeServiceImpl @Autowired constructor(
+    private val permissionProjectService: PermissionProjectService
+) : PermissionGradeService {
+
+    override fun checkGradeManagerUser(userId: String, projectId: String) {
+        if (!permissionProjectService.checkProjectManager(userId, projectId)) {
+            logger.warn("checkGradeManagerUser $userId $projectId ")
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AbsPermissionGradeServiceImpl::class.java)
     }
 }

@@ -9,5 +9,5 @@ data class ProjectMembersVO(
     @ApiModelProperty("数量")
     val count: Int,
     @ApiModelProperty("成员信息列表")
-    val results: Set<MemberInfo>
+    val results: Map<String, MemberInfo>
 )

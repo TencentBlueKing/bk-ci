@@ -65,7 +65,7 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))
 	b.instances[processId] = buildInfo
 	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
-	_ = fileutil.WriteString(systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId),
+	_ = fileutil.WriteString(systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId),
 		"业务构建进程异常退出，可能被操作系统或其他程序杀掉，需自查并降低负载后重试，"+
 			"或解压 agent.zip 还原安装后重启agent再重试。(Builder process was killed.)")
 	go b.waitProcessDone(processId)
@@ -84,7 +84,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 	_, err = process.Wait()
 	// #5806 从b-xxxx_build_msg.log 读取错误信息，此信息可由worker-agent.jar写入，用于当异常时能够将信息上报给服务器
-	msgFile := systemutil.GetWorkerErrorMsgFile(info.BuildId)
+	msgFile := systemutil.GetWorkerErrorMsgFile(info.BuildId, info.VmSeqId)
 	msg, _ := fileutil.GetString(msgFile)
 	logs.Info(fmt.Sprintf("build[%s] pid[%d] finish,  err=%s, msg=%s", info.BuildId, processId, err, msg))
 

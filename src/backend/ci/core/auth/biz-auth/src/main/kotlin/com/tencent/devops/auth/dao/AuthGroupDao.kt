@@ -101,6 +101,13 @@ class AuthGroupDao {
         }
     }
 
+    fun getGroupByIds(dslContext: DSLContext, groupIds: List<Int>): Result<TAuthGroupInfoRecord> {
+        with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.`in`(groupIds)).fetch()
+        }
+    }
+
     fun getGroupByRelationId(dslContext: DSLContext, relationId: Int): TAuthGroupInfoRecord? {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this).where(RELATION_ID.eq(relationId.toString())).fetchAny()

@@ -29,15 +29,17 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import jdk.incubator.jpackage.internal.MacDmgBundler.required
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -63,7 +65,7 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -71,7 +73,9 @@ interface UserProjectMemberResource {
         @QueryParam("managerGroup")
         managerGroup: Boolean,
         @ApiParam("添加用户集合", required = true)
-        members: List<RoleMemberDTO>
+        members: List<RoleMemberDTO>,
+        @ApiParam(name = "超时天数", required = false)
+        expiredDay: Long
     ): Result<Boolean>
 
     @GET
@@ -80,7 +84,7 @@ interface UserProjectMemberResource {
     fun getRoleMember(
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -90,15 +94,15 @@ interface UserProjectMemberResource {
         @ApiParam(name = "页面大小", required = true)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<ManagerGroupMemberVo>
+    ): Result<GroupMemberDTO>
 
     @GET
-    @Path("projectIds/{projectId}/members/all")
+    @Path("/projectIds/{projectId}/members/all")
     @ApiOperation("获取项目下所有用户")
     fun getProjectAllMember(
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "页数", required = true)
         @QueryParam("path")
         page: Int?,
@@ -116,7 +120,7 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
@@ -132,7 +136,7 @@ interface UserProjectMemberResource {
     ): Result<Boolean>
 
     @GET
-    @Path("projectIds/{projectId}/user/groups")
+    @Path("/projectIds/{projectId}/user/groups")
     @ApiOperation("获取指定用户指定项目下的用户组")
     fun getUserAllGroup(
         @ApiParam(name = "用户名", required = true)
@@ -140,9 +144,9 @@ interface UserProjectMemberResource {
         userId: String,
         @ApiParam(name = "项目标识", required = true)
         @PathParam("projectId")
-        projectId: Int,
+        projectId: String,
         @ApiParam(name = "待搜用户", required = true)
         @QueryParam("searchUserId")
         searchUserId: String
-    ): Result<List<ManagerRoleGroupInfo>?>
+    ): Result<List<UserGroupInfoDTO>?>
 }

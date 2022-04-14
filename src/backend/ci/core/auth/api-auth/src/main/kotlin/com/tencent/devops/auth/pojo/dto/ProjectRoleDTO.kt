@@ -50,5 +50,5 @@ data class ProjectRoleDTO(
     @ApiModelProperty("用户组描述")
     val desc: String,
     @ApiModelProperty("用户组权限")
-    val actionMap: Map<String /**资源类型*/, List<String> /**操作集合*/>
+    val actionMap: Map<String /**资源类型*/, List<String> /**操作集合*/>?
 )

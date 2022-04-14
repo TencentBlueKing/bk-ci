@@ -56,4 +56,11 @@ internal class IamGroupUtilsTest {
         val group = IamGroupUtils.buildManagerDescription(projectName, userId)
         Assert.assertNotEquals("测试项目 用户组:管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
+
+    @Test
+    fun buildCIGroup() {
+        val groupName = "v3-22040601-CI管理员"
+        val group = IamGroupUtils.buildCIGroup(groupName)
+        Assert.assertEquals("CI管理员", group)
+    }
 }

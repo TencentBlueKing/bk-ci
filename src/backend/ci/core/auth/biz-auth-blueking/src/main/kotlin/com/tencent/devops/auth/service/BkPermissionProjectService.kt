@@ -6,7 +6,7 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.ci.PermissionRoleService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.ci.PermissionRoleMemberService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
+import com.tencent.devops.auth.service.ci.impl.AbsPermissionProjectService
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode

@@ -48,6 +48,8 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.action.ActionService
 import com.tencent.devops.auth.service.action.BkResourceService
+import com.tencent.devops.auth.service.ci.impl.AbsPermissionRoleMemberImpl
+import com.tencent.devops.auth.service.ci.impl.AbsPermissionRoleServiceImpl
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -62,8 +64,9 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-open class IamPermissionRoleExtService @Autowired constructor(
+class IamPermissionRoleExtService @Autowired constructor(
     open val iamManagerService: ManagerService,
+    open val iamCacheService: IamCacheService,
     open val resourceService: BkResourceService,
     open val actionsService: ActionService,
     private val permissionGradeService: PermissionGradeService,
@@ -72,17 +75,17 @@ open class IamPermissionRoleExtService @Autowired constructor(
     private val groupDao: AuthGroupDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val strategyService: StrategyService,
-    private val iamCacheService: IamCacheService
+    private val strategyService: StrategyService
 ) : AbsPermissionRoleServiceImpl(groupService, resourceService, actionsService) {
 
     override fun groupCreateExt(
         roleId: Int,
         userId: String,
-        projectId: Int,
+        projectId: String,
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ) {
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         // 校验操作人是否有项目分级管理员权限
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
@@ -105,7 +108,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val roleGroups = mutableListOf<ManagerRoleGroup>()
         roleGroups.add(managerRoleGroup)
         val groups = ManagerRoleGroupDTO.builder().groups(roleGroups).build()
-        val iamRoleId = iamManagerService.batchCreateRoleGroup(projectId, groups)
+        val iamRoleId = iamManagerService.batchCreateRoleGroup(iamProjectId, groups)
 
         try {
             // 默认分组需要分配默认权限
@@ -119,8 +122,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 }
             } else {
                 // TODO: 添加自定义组权限。 待严格测试
-                val groupAction = buildGroupAction(groupInfo.actionMap)
-                addIamGroupPermission(groupAction, roleId, projectCode)
+                if (!groupInfo.actionMap.isNullOrEmpty()) {
+                    val groupAction = buildGroupAction(groupInfo.actionMap!!)
+                    addIamGroupPermission(groupAction, roleId, projectCode)
+                }
             }
         } catch (e: Exception) {
             iamManagerService.deleteRoleGroup(iamRoleId)
@@ -132,7 +137,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         groupService.bindRelationId(roleId, iamRoleId.toString())
     }
 
-    override fun updateGroupExt(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
+    override fun updateGroupExt(userId: String, projectId: String, roleId: Int, groupInfo: ProjectRoleDTO) {
         val iamGroupId = groupService.getRelationId(roleId) ?: return
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
@@ -146,19 +151,21 @@ open class IamPermissionRoleExtService @Autowired constructor(
         iamManagerService.updateRoleGroup(iamGroupId.toInt(), newGroupInfo)
     }
 
-    override fun deleteRoleExt(userId: String, projectId: Int, roleId: Int) {
-        val iamGroupId = groupService.getRelationId(roleId) ?: return
+    override fun deleteRoleExt(userId: String, projectId: String, relationRoleId: Int) {
+        logger.info("deleteRoleExt $userId $projectId $relationRoleId")
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
         // iam侧会统一把用户组内用剔除后,再删除用户组
-        iamManagerService.deleteRoleGroup(iamGroupId.toInt())
+        iamManagerService.deleteRoleGroup(relationRoleId)
     }
 
-    override fun getPermissionRole(projectId: Int): List<GroupInfoVo> {
+    override fun getPermissionRole(projectId: String): List<GroupInfoVo> {
+        val iamProjectId = iamCacheService.getProjectIamRelationId(projectId)
         val pageInfoDTO = PageInfoDTO()
         pageInfoDTO.limit = 1000
         pageInfoDTO.offset = 0
-        val groupInfos = iamManagerService.getGradeManagerRoleGroup(projectId, pageInfoDTO) ?: return emptyList()
+        val groupInfos = iamManagerService.getGradeManagerRoleGroup(iamProjectId, pageInfoDTO) ?: return emptyList()
         val iamIds = groupInfos.results.map { it.id }
         val localGroupInfo = groupDao.getGroupByRelationIds(dslContext, iamIds)
         val resultList = mutableListOf<GroupInfoVo>()
@@ -170,7 +177,8 @@ open class IamPermissionRoleExtService @Autowired constructor(
                     displayName = it?.displayName ?: "",
                     code = it?.groupCode ?: "",
                     defaultRole = it?.groupType ?: true,
-                    userCount = 0
+                    userCount = 0,
+                    desc = it?.desc ?: ""
                 )
             )
         }

@@ -23,37 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam.impl
+package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.bk.sdk.iam.dto.PageInfoDTO
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-open class AbsPermissionGradeServiceImpl @Autowired constructor(
-    open val iamManagerService: ManagerService
-) : PermissionGradeService {
-
-    override fun checkGradeManagerUser(userId: String, projectId: Int) {
-        val pageInfoDTO = PageInfoDTO()
-        pageInfoDTO.limit = 0
-        pageInfoDTO.offset = 500 // 一个用户最多可以加入500个项目
-        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)?.map { it.id }
-
-        if (managerProject == null || !managerProject.contains(projectId)) {
-            logger.warn("checkGradeManagerUser $userId $projectId $managerProject")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AbsPermissionGradeServiceImpl::class.java)
-    }
-}
+@Event(MQ.EXCHANGE_PIPELINE_BUILD_COMMIT_FINISH_FANOUT)
+data class PipelineBuildCommitFinishEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String = "",
+    val buildId: String,
+    override var actionType: ActionType = ActionType.START,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

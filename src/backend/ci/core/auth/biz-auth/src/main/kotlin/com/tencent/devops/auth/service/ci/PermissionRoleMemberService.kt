@@ -28,42 +28,34 @@
 package com.tencent.devops.auth.service.ci
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroupInfo
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.GroupMemberDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.pojo.dto.UserGroupInfoDTO
 import com.tencent.devops.auth.pojo.vo.ProjectMembersVO
 
 interface PermissionRoleMemberService {
     fun createRoleMember(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         members: List<RoleMemberDTO>,
         managerGroup: Boolean,
-        checkAGradeManager: Boolean? = true
+        checkAGradeManager: Boolean? = true,
+        expiredDay: Long
     )
 
     fun deleteRoleMember(
-        userId: String,
-        projectId: Int,
+        executeUserId: String,
+        projectId: String,
         roleId: Int,
-        id: String,
+        deleteUserId: String,
         type: ManagerScopesEnum,
         managerGroup: Boolean
     )
 
-    fun getRoleMember(
-        projectId: Int,
-        roleId: Int,
-        page: Int?,
-        pageSize: Int?
-    ): ManagerGroupMemberVo
+    fun getRoleMember(projectId: String, roleId: Int, page: Int?, pageSize: Int?): GroupMemberDTO?
 
-    fun getProjectAllMember(
-        projectId: Int,
-        page: Int?,
-        pageSize: Int?
-    ): ProjectMembersVO?
+    fun getProjectAllMember(projectId: String, page: Int?, pageSize: Int?): ProjectMembersVO?
 
-    fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>?
+    fun getUserGroups(projectId: String, userId: String): List<UserGroupInfoDTO>?
 }

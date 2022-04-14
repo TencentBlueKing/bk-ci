@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthStrategyRecord
 import org.jooq.DSLContext
@@ -148,6 +149,24 @@ class StrategyService @Autowired constructor(
     fun getStrategyByName(strategyName: String): StrategyEntity? {
         val strategyRecord = strategyDao.getByName(dslContext, strategyName) ?: return null
         return record2Entity(strategyRecord)
+    }
+
+    fun checkDefaultStrategy(strategyName: String, resourceType: String, actionId: String): Boolean {
+        if (!DefaultGroupType.contains(strategyName)) {
+
+        }
+        val permissionStrategy = getStrategyByName(strategyName)?.strategy ?: return false
+
+        var permissionCheck = false
+        permissionStrategy.forEach { resource, actions ->
+            if (resource == resourceType) {
+                if (actions.contains(actionId)) {
+                    permissionCheck = true
+                    return@forEach
+                }
+            }
+        }
+        return permissionCheck
     }
 
     private fun record2Entity(record: TAuthStrategyRecord): StrategyEntity {

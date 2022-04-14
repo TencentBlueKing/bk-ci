@@ -5,8 +5,12 @@ import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.common.Constants.ALL_ACTION
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.utils.AuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -16,7 +20,8 @@ import java.util.concurrent.TimeUnit
 class IamCacheService @Autowired constructor(
     @Autowired(required = false)
     val policyService: PolicyService?,
-    val groupService: AuthGroupService
+    val groupService: AuthGroupService,
+    val client: Client
 ) {
 
     // 用户-管理员项目 缓存， 5分钟有效时间
@@ -47,6 +52,12 @@ class IamCacheService @Autowired constructor(
         .maximumSize(500)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, List<String>>()
+
+    // 项目-Iam分级管理员缓存
+    private val projectRelationCache = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .expireAfterWrite(2, TimeUnit.MINUTES)
+        .build<String, Int>()
 
     // 通过all_action 判断是否为项目管理员, 优先查缓存, 缓存时效10分钟
     fun checkProjectManager(userId: String, projectCode: String): Boolean {
@@ -148,6 +159,36 @@ class IamCacheService @Autowired constructor(
         return groupIds
     }
 
+    fun getProjectIamRelationId(projectCode: String): Int {
+        if (projectRelationCache.getIfPresent(projectCode) != null
+            && projectRelationCache.getIfPresent(projectCode) != ERROR_RELATION) {
+            val relationId = projectRelationCache.getIfPresent(projectCode)
+            if (relationId == ERROR_RELATION) {
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+                )
+            }
+            return projectRelationCache.getIfPresent(projectCode)!!
+        }
+
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
+        if (projectInfo == null) {
+            logger.warn("$projectCode is not exist")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+            )
+        }
+        if (projectInfo.relationId == null) {
+            logger.warn("$projectCode not bind iam")
+            projectRelationCache.put(projectCode, ERROR_RELATION)
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+            )
+        }
+        projectRelationCache.put(projectCode, projectInfo.relationId!!.toInt())
+        return projectInfo.relationId!!.toInt()
+    }
+
     private fun getProjectIamData(action: String, userId: String): List<String> {
         val managerActionDto = ActionDTO()
         managerActionDto.id = action
@@ -158,6 +199,7 @@ class IamCacheService @Autowired constructor(
     }
 
     companion object {
+        private const val ERROR_RELATION = -1
         private val logger = LoggerFactory.getLogger(IamCacheService::class.java)
     }
 }

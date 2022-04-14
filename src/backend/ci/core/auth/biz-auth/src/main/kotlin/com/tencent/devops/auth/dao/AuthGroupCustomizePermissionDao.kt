@@ -82,7 +82,7 @@ class AuthGroupCustomizePermissionDao {
     fun getPermission(
         dslContext: DSLContext,
         groupId: Int
-    ): Result<TAuthCustomizeGroupPermissionRecord> {
+    ): Result<TAuthCustomizeGroupPermissionRecord>? {
         with(TAuthCustomizeGroupPermission.T_AUTH_CUSTOMIZE_GROUP_PERMISSION) {
             return dslContext.selectFrom(this).where(GROUP_ID.eq(groupId)).fetch()
         }

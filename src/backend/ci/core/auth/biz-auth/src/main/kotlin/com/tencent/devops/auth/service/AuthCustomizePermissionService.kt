@@ -53,6 +53,24 @@ class AuthCustomizePermissionService @Autowired constructor(
         )
     }
 
+    fun checkCustomizePermission(
+        groupId: Int,
+        resourceType: String,
+        action: String
+    ): Boolean {
+        val permissionInfos = authGroupCustomizePermissionDao.getPermission(
+            dslContext, groupId
+        ) ?: return false
+        permissionInfos.forEach {
+            if (it.resourceType == resourceType) {
+                if (it.actionId.contains(action)) {
+                    return return true
+                }
+            }
+        }
+        return false
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(AuthCustomizePermissionService::class.java)
     }

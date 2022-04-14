@@ -46,7 +46,7 @@ class UserProjectRoleResourceImpl @Autowired constructor(
 ) : UserProjectRoleResource {
     override fun createProjectRole(
         userId: String,
-        projectId: Int,
+        projectId: String,
         projectCode: String,
         groupInfo: ProjectRoleDTO
     ): Result<String> {
@@ -62,7 +62,7 @@ class UserProjectRoleResourceImpl @Autowired constructor(
 
     override fun updateProjectRole(
         userId: String,
-        projectId: Int,
+        projectId: String,
         roleId: Int,
         groupInfo: ProjectRoleDTO
     ): Result<Boolean> {
@@ -75,16 +75,16 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getProjectRoles(userId: String, projectId: Int): Result<List<GroupInfoVo>> {
+    override fun getProjectRoles(userId: String, projectId: String): Result<List<GroupInfoVo>> {
         return Result(permissionRoleService.getPermissionRole(projectId))
     }
 
-    override fun deleteProjectRole(userId: String, projectId: Int, roleId: Int): Result<Boolean> {
+    override fun deleteProjectRole(userId: String, projectId: String, roleId: Int): Result<Boolean> {
         permissionRoleService.deletePermissionRole(userId, projectId, roleId)
         return Result(true)
     }
 
-    override fun hashPermission(userId: String, projectId: Int): Result<Boolean> {
+    override fun hashPermission(userId: String, projectId: String): Result<Boolean> {
         try {
             permissionGradeService.checkGradeManagerUser(userId, projectId)
         } catch (e: PermissionForbiddenException) {

@@ -25,15 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.auth.pojo.dto
 
+import com.tencent.devops.auth.pojo.enum.ExpiredStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("密钥信息")
-data class SecretInfo(
-    @ApiModelProperty("hash id 值", required = false)
-    val hashId: String,
-    @ApiModelProperty("密钥", required = false)
-    val secretKey: String
+@ApiModel("用户加入的用户组")
+data class UserGroupInfoDTO(
+    @ApiModelProperty("用户组名称")
+    val groupName: String,
+    @ApiModelProperty("用户组描述")
+    val groupDesc: String,
+    @ApiModelProperty("用户组ID")
+    val groupId: String,
+    @ApiModelProperty("用户组类型")
+    val groupType: Boolean,
+    @ApiModelProperty("过期时间")
+    val expiredAt: Long,
+    @ApiModelProperty("权限过期状态")
+    val expiredStatus: ExpiredStatus
 )
