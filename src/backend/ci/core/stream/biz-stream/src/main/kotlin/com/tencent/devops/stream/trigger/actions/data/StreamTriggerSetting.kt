@@ -40,6 +40,7 @@ import com.tencent.devops.stream.pojo.StreamBasicSetting
  * @param enableCommitCheck 当前项目是否发送commit check
  * @param enableMrBlock 合并请求的commit check是否锁定不让合并
  * @param name 项目名称
+ * @param homepage Git项目主页
  */
 data class StreamTriggerSetting(
     val enableCi: Boolean,
@@ -51,7 +52,8 @@ data class StreamTriggerSetting(
     val enableCommitCheck: Boolean,
     val enableMrBlock: Boolean,
     val name: String,
-    val enableMrComment: Boolean
+    val enableMrComment: Boolean,
+    val homepage: String
 ) {
     constructor(projectSetting: StreamBasicSetting) : this(
         enableCi = projectSetting.enableCi,
@@ -63,6 +65,7 @@ data class StreamTriggerSetting(
         enableCommitCheck = projectSetting.enableCommitCheck,
         enableMrBlock = projectSetting.enableMrBlock,
         name = projectSetting.name,
-        enableMrComment = projectSetting.enableMrComment
+        enableMrComment = projectSetting.enableMrComment,
+        homepage = projectSetting.homepage
     )
 }

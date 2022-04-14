@@ -286,5 +286,5 @@ class StreamTriggerRequestService @Autowired constructor(
         trigger(action)
     }
 
-    private fun trigger(action: BaseAction) = StreamTriggerDispatch.dispatch(rabbitTemplate, StreamTriggerEvent(action))
+    protected fun trigger(action: BaseAction) = StreamTriggerDispatch.dispatch(rabbitTemplate, StreamTriggerEvent(action))
 }
