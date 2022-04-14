@@ -97,6 +97,7 @@ class PipelineBuildService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
+        private val CONTEXT_PREFIX = "variables."
     }
 
     fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
@@ -287,7 +288,10 @@ class PipelineBuildService(
                 if (realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
                     it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT) {
                     originStartParams.add(it)
-                    paramsWithType = paramsWithType.plus(it.copy(key = "variables.${it.key}"))
+                    // #6482 对于用户自定义的自动参数增加对应上下文，如果已是上下文无需处理
+                    if (it.key.startsWith(CONTEXT_PREFIX)) {
+                        paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
+                    }
                 }
             }
 
