@@ -109,7 +109,7 @@ class ModelContainer constructor(
         containerList.add(vmContainer)
     }
 
-    private fun getMatrixControlOption(
+    protected fun getMatrixControlOption(
         job: Job,
         dispatchInfo: StreamDispatchInfo?
     ): MatrixControlOption? {
@@ -183,7 +183,7 @@ class ModelContainer constructor(
         )
     }
 
-    private fun getJobControlOption(
+    protected fun getJobControlOption(
         job: Job,
         jobEnable: Boolean = true,
         finalStage: Boolean = false
@@ -227,7 +227,7 @@ class ModelContainer constructor(
         }
     }
 
-    private fun getMutexGroup(resource: ResourceExclusiveDeclaration?): MutexGroup? {
+    protected fun getMutexGroup(resource: ResourceExclusiveDeclaration?): MutexGroup? {
         if (resource == null) {
             return null
         }

@@ -166,7 +166,7 @@ class ModelElement constructor(
         }
     }
 
-    protected open fun makeServiceElementList(job: Job): MutableList<Element> {
+    protected fun makeServiceElementList(job: Job): MutableList<Element> {
         return mutableListOf()
     }
 
