@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
@@ -51,7 +52,6 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
-import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -363,7 +363,10 @@ interface ServiceGitResource {
         page: Int,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
         @QueryParam("perPage")
-        perPage: Int
+        perPage: Int,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
     ): Result<List<Commit>>
 
     @ApiOperation("工蜂创建文件")
@@ -377,7 +380,10 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String,
         @ApiParam(value = "创建文件内容")
-        gitCICreateFile: GitCICreateFile
+        gitCICreateFile: GitCICreateFile,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
     ): Result<Boolean>
 
     @ApiOperation("获取当前commit记录所属")

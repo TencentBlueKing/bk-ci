@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
@@ -52,7 +53,6 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
-import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -277,21 +277,36 @@ class ServiceGitResourceImpl @Autowired constructor(
         since: String?,
         until: String?,
         page: Int,
-        perPage: Int
+        perPage: Int,
+        tokenType: TokenTypeEnum
     ): Result<List<Commit>> {
-        return Result(gitService.getCommits(gitProjectId, filePath, branch, token, since, until, page, perPage))
+        return Result(
+            gitService.getCommits(
+                gitProjectId = gitProjectId,
+                filePath = filePath,
+                branch = branch,
+                token = token,
+                since = since,
+                until = until,
+                page = page,
+                perPage = perPage,
+                tokenType = tokenType
+            )
+        )
     }
 
     override fun gitCICreateFile(
         gitProjectId: String,
         token: String,
-        gitCICreateFile: GitCICreateFile
+        gitCICreateFile: GitCICreateFile,
+        tokenType: TokenTypeEnum
     ): Result<Boolean> {
         return Result(
             gitService.gitCodeCreateFile(
                 gitProjectId = gitProjectId,
                 token = token,
-                gitCICreateFile = gitCICreateFile
+                gitCICreateFile = gitCICreateFile,
+                tokenType = tokenType
             )
         )
     }
@@ -630,7 +645,7 @@ class ServiceGitResourceImpl @Autowired constructor(
             filePath = filePath,
             token = token,
             ref = ref,
-            tokenType = tokenType,
+            tokenType = tokenType
         )
     }
 

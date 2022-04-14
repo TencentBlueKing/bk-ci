@@ -48,6 +48,7 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
@@ -76,7 +77,6 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
-import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -679,36 +679,48 @@ class GitService @Autowired constructor(
         since: String?,
         until: String?,
         page: Int,
-        perPage: Int
+        perPage: Int,
+        tokenType: TokenTypeEnum
     ): List<Commit> {
         logger.info("[$gitProjectId|$filePath|$branch|$since|$until] Start to get the git commits")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits?access_token=$token" +
-                if (branch != null) {
-                    "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
-                } else {
-                    ""
-                } +
-                if (filePath != null) {
-                    "&path=${URLEncoder.encode(filePath, "UTF-8")}"
-                } else {
-                    ""
-                } +
-                if (since != null) {
-                    "&since=${since.replace("+", "%2B")}"
-                } else {
-                    ""
-                } +
-                if (until != null) {
-                    "&until=${until.replace("+", "%2B")}"
-                } else {
-                    ""
-                } +
-                "&page=$page" + "&per_page=$perPage"
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits")
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    if (branch != null) {
+                        "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (filePath != null) {
+                        "&path=${URLEncoder.encode(filePath, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (since != null) {
+                        "&since=${since.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (until != null) {
+                        "&until=${until.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&page=$page&per_page=$perPage")
+            }
             logger.info("request url: $url")
             val request = Request.Builder()
-                .url(url)
+                .url(url.toString())
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use {
@@ -726,10 +738,16 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun gitCodeCreateFile(gitProjectId: String, token: String, gitCICreateFile: GitCICreateFile): Boolean {
-        val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files?access_token=$token"
+    fun gitCodeCreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCICreateFile: GitCICreateFile,
+        tokenType: TokenTypeEnum
+    ): Boolean {
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        setToken(tokenType, url, token)
         val request = Request.Builder()
-            .url(url)
+            .url(url.toString())
             .post(
                 RequestBody.create(
                     MediaType.parse("application/json;charset=utf-8"),

@@ -33,6 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
@@ -49,6 +50,7 @@ import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -557,5 +559,41 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
             recursive = recursive,
             tokenType = tokenType
         )
+    }
+
+    override fun getCommits(
+        gitProjectId: Long,
+        filePath: String?,
+        branch: String?,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int,
+        tokenType: TokenTypeEnum
+    ): Result<List<Commit>> {
+        return client.getScm(ServiceGitResource::class).getCommits(
+            gitProjectId,
+            filePath,
+            branch,
+            token,
+            since,
+            until,
+            page,
+            perPage,
+            tokenType
+        )
+    }
+
+    override fun gitCICreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCICreateFile: GitCICreateFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return client.getScm(ServiceGitResource::class).gitCICreateFile(
+            gitProjectId, token, gitCICreateFile, tokenType
+        )
+
     }
 }
