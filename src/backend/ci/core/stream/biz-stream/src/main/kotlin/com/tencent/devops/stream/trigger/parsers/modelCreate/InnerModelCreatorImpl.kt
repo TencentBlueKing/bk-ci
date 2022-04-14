@@ -30,16 +30,11 @@ package com.tencent.devops.stream.trigger.parsers.modelCreate
 import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.enums.TemplateType
-import com.devops.process.yaml.v2.models.YamlTransferData
 import com.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,41 +76,6 @@ class InnerModelCreatorImpl @Autowired constructor(
 
     override val defaultImage: String
         get() = defaultImageData
-
-    override lateinit var extraParameters: Any
-
-    override fun getJobTemplateAcrossInfo(
-        yamlTransferData: YamlTransferData,
-        gitRequestEventId: Long,
-        gitProjectId: Long
-    ): Map<String, BuildTemplateAcrossInfo> {
-        // 临时保存远程项目id的映射，就不用去redis里面查了
-        val remoteProjectIdMap = mutableMapOf<String, String>()
-        yamlTransferData.templateData.transferDataMap.values.forEach { objectData ->
-            if (objectData.remoteProjectId in remoteProjectIdMap.keys) {
-                return@forEach
-            }
-            // 将pathWithPathSpace转为数字id
-            remoteProjectIdMap[objectData.remoteProjectId] = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                gitProjectKey = objectData.remoteProjectId,
-                action = (extraParameters as BaseAction),
-                getProjectInfo = (extraParameters as BaseAction).api::getGitProjectInfo
-            ).gitProjectId.let { "git_$it" }
-        }
-
-        val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
-        yamlTransferData.templateData.transferDataMap.filter { it.value.templateType == TemplateType.JOB }
-            .forEach { (objectId, objectData) ->
-                results[objectId] = BuildTemplateAcrossInfo(
-                    templateId = yamlTransferData.templateData.templateId,
-                    templateType = TemplateAcrossInfoType.JOB,
-                    // 因为已经将jobId转为了map所以这里不保存，节省空间
-                    templateInstancesIds = emptyList(),
-                    targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
-                )
-            }
-        return results
-    }
 
     override fun makeCheckoutElement(
         step: Step,

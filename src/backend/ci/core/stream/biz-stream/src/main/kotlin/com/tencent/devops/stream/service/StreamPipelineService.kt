@@ -225,7 +225,7 @@ class StreamPipelineService @Autowired constructor(
         ref: String
     ): String? {
         logger.info("get yaml by pipelineId:($pipelineId), ref: $ref")
-        val conf = streamBasicSettingService.getStreamConf(gitProjectId)
+        val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return null
 
         val filePath =
             pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
@@ -242,7 +242,7 @@ class StreamPipelineService @Autowired constructor(
         gitProjectId: Long,
         pipelineIds: Set<String>
     ): Map<String, String> {
-        val conf = streamBasicSettingService.getStreamConf(gitProjectId)
+        val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return emptyMap()
         var branch: String? = null
         val result = mutableMapOf<String, String>()
         val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)

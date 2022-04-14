@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 internal class TGitMrActionGitTest {
 
-    private val action = TGitMrActionGit(mock(), mock(), mock())
+    private val action = TGitMrActionGit(mock(), mock(), mock(), mock())
 
     @Test
     /**

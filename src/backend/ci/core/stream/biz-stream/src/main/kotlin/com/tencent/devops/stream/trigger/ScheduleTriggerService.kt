@@ -37,7 +37,6 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.EventActionFactory

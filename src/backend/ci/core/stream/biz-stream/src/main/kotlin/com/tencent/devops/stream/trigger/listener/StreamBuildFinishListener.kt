@@ -27,27 +27,8 @@
 
 package com.tencent.devops.stream.trigger.listener
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.stream.dao.GitPipelineResourceDao
-import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.StreamCIInfo
-import com.tencent.devops.stream.trigger.actions.EventActionFactory
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
-import com.tencent.devops.stream.trigger.actions.data.context.getBuildStatus
-import com.tencent.devops.stream.trigger.listener.components.SendCommitCheck
-import com.tencent.devops.stream.trigger.listener.components.SendNotify
-import com.tencent.devops.stream.util.StreamTriggerMessageUtils
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -68,7 +49,8 @@ class StreamBuildFinishListener @Autowired constructor(
     }
 
     @RabbitListener(
-        bindings = [(
+        bindings = [
+            (
                 QueueBinding(
                     value = Queue(value = StreamMQ.QUEUE_PIPELINE_BUILD_FINISH_STREAM, durable = "true"),
                     exchange = Exchange(
@@ -78,7 +60,8 @@ class StreamBuildFinishListener @Autowired constructor(
                         type = ExchangeTypes.FANOUT
                     )
                 )
-                )]
+                )
+        ]
     )
     fun listenPipelineBuildFinishBroadCastEvent(buildFinishEvent: PipelineBuildFinishBroadCastEvent) {
         try {

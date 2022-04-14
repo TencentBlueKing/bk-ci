@@ -49,14 +49,14 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
-open class ModelContainer constructor(
+@Component
+class ModelContainer constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
     val inner: InnerModelCreator
 ) {
-    private val logger = LoggerFactory.getLogger(ModelContainer::class.java)
 
     fun addVmBuildContainer(
         job: Job,
