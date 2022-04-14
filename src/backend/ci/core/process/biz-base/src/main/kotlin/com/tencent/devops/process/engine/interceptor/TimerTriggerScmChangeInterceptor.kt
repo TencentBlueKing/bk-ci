@@ -100,7 +100,8 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
                         }
                     } else if (noScm && container is VMBuildContainer) {
                         container.elements.forEach ele@{ ele ->
-                            if (!ele.isElementEnable()) {
+                            // 插件没有启用或者是post action不需要比较变更
+                            if (!ele.isElementEnable() || ele.additionalOptions?.elementPostInfo != null) {
                                 return@ele
                             }
                             val (existScmElement, codeChange) = scmElementCheck(
@@ -336,7 +337,7 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
 
         val branchName = when {
             gitPullMode != null -> EnvUtils.parseEnv(gitPullMode.value, variables)
-            !oldBranchName.isNullOrBlank() -> EnvUtils.parseEnv(oldBranchName!!, variables)
+            !oldBranchName.isNullOrBlank() -> EnvUtils.parseEnv(oldBranchName, variables)
             else -> return false
         }
         val gitPullModeType = gitPullMode?.type ?: GitPullModeType.BRANCH
