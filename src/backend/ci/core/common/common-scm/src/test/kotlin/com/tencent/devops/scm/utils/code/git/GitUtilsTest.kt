@@ -91,11 +91,11 @@ class GitUtilsTest {
         assertEquals(repoName, domainAndRepoName.second)
         url = "git@github.com:2244/Tencent/bk-ci.git"
         domainAndRepoName = GitUtils.getDomainAndRepoName(url)
-        assertEquals(domain, domainAndRepoName.first)
+        assertEquals("$domain:2244", domainAndRepoName.first)
         assertEquals(repoName, domainAndRepoName.second)
         url = "ssh://git@github.com:2244/Tencent/bk-ci.git"
         domainAndRepoName = GitUtils.getDomainAndRepoName(url)
-        assertEquals(domain, domainAndRepoName.first)
+        assertEquals("$domain:2244", domainAndRepoName.first)
         assertEquals(repoName, domainAndRepoName.second)
         url = "http://github.com/Tencent/bk-ci.git"
         domainAndRepoName = GitUtils.getDomainAndRepoName(url)
@@ -104,6 +104,10 @@ class GitUtilsTest {
         url = "https://github.com/Tencent/bk-ci.git"
         domainAndRepoName = GitUtils.getDomainAndRepoName(url)
         assertEquals(domain, domainAndRepoName.first)
+        assertEquals(repoName, domainAndRepoName.second)
+        url = "http://github.com:8080/Tencent/bk-ci.git"
+        domainAndRepoName = GitUtils.getDomainAndRepoName(url)
+        assertEquals("$domain:8080", domainAndRepoName.first)
         assertEquals(repoName, domainAndRepoName.second)
     }
 
