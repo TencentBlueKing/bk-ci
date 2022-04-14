@@ -25,39 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.template
+package com.devops.process.yaml
 
-import com.devops.process.yaml.v2.enums.TemplateType
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.devops.process.yaml.pojo.StreamDispatchInfo
+import com.tencent.devops.common.pipeline.DispatchSubInfoFetcher
+import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 
-// 传入template的泛型接口
-data class TemplateProjectData(
-    val gitRequestEventId: Long,
-    // 发起者的库ID,用户名,分支
-    val triggerProjectId: Long,
-    // sourceProjectId，在fork时是源库的ID
-    val sourceProjectId: Long,
-    val triggerUserId: String,
-    val triggerRef: String,
-    val triggerToken: String,
-    val forkGitToken: String?,
-    val changeSet: Set<String>?,
-    val event: GitEvent?
-)
+class DispatchSubInfoFetcherImpl : DispatchSubInfoFetcher {
 
-// 获取远程模板需要是用的参数
-data class StreamGetTemplateData(
-    val gitRequestEventId: Long,
-    val token: String?,
-    val forkToken: String?,
-    val gitProjectId: Long,
-    val targetRepo: String?,
-    val ref: String?,
-    val personalAccessToken: String?,
-    val fileName: String,
-    val changeSet: Set<String>?,
-    val event: GitEvent?,
-    // 正在被替换的远程库
-    val nowRemoteGitProjectId: String?,
-    val templateType: TemplateType?
-)
+    override fun jsonSubInfo(): Map<String, Class<out DispatchInfo>> {
+        return mapOf(
+            "STREAM" to StreamDispatchInfo::class.java
+        )
+    }
+}

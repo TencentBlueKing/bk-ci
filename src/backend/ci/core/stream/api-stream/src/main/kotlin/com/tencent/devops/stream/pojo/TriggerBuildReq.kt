@@ -49,17 +49,3 @@ data class TriggerBuildReq(
     @ApiModelProperty("模拟代码事件类型")
     val eventType: String? = null
 )
-
-@ApiModel("AppTriggerBuild请求")
-data class AppTriggerBuildReq(
-    @ApiModelProperty("分支")
-    val branch: String,
-    @ApiModelProperty("Custom commit message")
-    val customCommitMsg: String?,
-    @ApiModelProperty("yaml")
-    val yaml: String?,
-    @ApiModelProperty("描述")
-    val description: String?,
-    @ApiModelProperty("用户选择的触发CommitId")
-    val commitId: String? = null
-)
