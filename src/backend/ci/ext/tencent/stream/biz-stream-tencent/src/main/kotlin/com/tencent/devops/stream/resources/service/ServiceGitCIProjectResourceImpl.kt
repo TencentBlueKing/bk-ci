@@ -32,9 +32,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
 import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
 import com.tencent.devops.stream.service.StreamProjectService
@@ -72,7 +72,7 @@ class ServiceGitCIProjectResourceImpl @Autowired constructor(
                 sort = if (sort == null) {
                     null
                 } else {
-                    StreamBranchesSort.valueOf(sort.name)
+                    StreamSortAscOrDesc.valueOf(sort.name)
                 }
             ).records.map { ProjectCIInfo(it) }
         )

@@ -7,7 +7,7 @@ import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.stream.api.app.AppStreamGitCodeResource
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamOauthService
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.service.StreamScmService
@@ -57,7 +57,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         orderBy: StreamBranchesOrder?,
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): Result<Page<String>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
@@ -67,7 +67,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
                 page = page ?: 1,
                 pageSize = pageSize ?: 100,
                 orderBy = orderBy ?: StreamBranchesOrder.UPDATE,
-                sort = sort ?: StreamBranchesSort.DESC,
+                sort = sort ?: StreamSortAscOrDesc.DESC,
                 search = search
             )
         )

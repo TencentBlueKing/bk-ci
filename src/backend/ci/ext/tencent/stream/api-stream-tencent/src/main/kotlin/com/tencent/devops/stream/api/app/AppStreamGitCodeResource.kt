@@ -6,7 +6,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -83,6 +83,6 @@ interface AppStreamGitCodeResource {
         orderBy: StreamBranchesOrder?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("sort")
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): Result<Page<String>?>
 }
