@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType
 interface OpenArtifactoryResource {
 
     @PUT
-    @Path("/projects/{projectId}/pipeline/{pipelineId}/buildId/{buildId}/artifactList")
+    @Path("/project/{projectId}/pipeline/{pipelineId}/build/{buildId}/artifactList")
     @ApiOperation("更新流水线构件列表")
     fun updateArtifactList(
         @ApiParam("认证token", required = true)

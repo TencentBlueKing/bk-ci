@@ -7,9 +7,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineRuntimeResource
 import org.slf4j.LoggerFactory
 
+@RestResource
 class OpenArtifactoryResourceImpl(
     private val clientTokenService: ClientTokenService,
     private val pipelineBuildArtifactoryService: PipelineBuildArtifactoryService,

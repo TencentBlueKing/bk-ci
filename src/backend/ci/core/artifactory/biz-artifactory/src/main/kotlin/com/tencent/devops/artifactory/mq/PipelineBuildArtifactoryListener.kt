@@ -62,12 +62,14 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         val buildId = event.buildId
         val pipelineId = event.pipelineId
 
+        updateArtifactList(userId, projectId, pipelineId, buildId)
+
         val (parentProjectId, parentPipelineId, parentBuildId) = getParentPipelineVars(
             userId, projectId, pipelineId, buildId
         )
-
-        updateArtifactList(userId, projectId, pipelineId, buildId)
-        updateArtifactList(userId, parentProjectId, parentPipelineId, parentBuildId)
+        if (parentProjectId.isNotBlank() && parentPipelineId.isNotBlank() && parentBuildId.isNotBlank()) {
+            updateArtifactList(userId, parentProjectId, parentPipelineId, parentBuildId)
+        }
     }
 
     private fun getParentPipelineVars(
@@ -98,7 +100,7 @@ class PipelineBuildArtifactoryListener @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String,
+        buildId: String
     ) {
         val artifactList: List<FileInfo> = try {
             pipelineBuildArtifactoryService.getArtifactList(userId, projectId, pipelineId, buildId)
