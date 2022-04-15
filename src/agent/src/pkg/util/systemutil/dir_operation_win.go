@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,6 +28,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package systemutil
 
-const AgentVersion = "v1.8.4"
+import (
+	"fmt"
+	"os"
+)
+
+// MkBuildTmpDir 创建构建提供的临时目录
+func MkBuildTmpDir() (string, error) {
+	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
+	err := os.MkdirAll(tmpDir, os.ModePerm)
+	return tmpDir, err
+}
