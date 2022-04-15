@@ -44,18 +44,20 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -90,7 +92,6 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.utils.GitCodeUtils
-import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
@@ -2089,7 +2090,7 @@ class GitService @Autowired constructor(
         token: String,
         gitProjectId: String,
         mrId: Long,
-        mrBody: MrCommentBody,
+        mrBody: String,
         tokenType: TokenTypeEnum
     ) {
         logger.info("$gitProjectId|$mrId|addMrComment")
@@ -2104,7 +2105,7 @@ class GitService @Autowired constructor(
                 token = token,
                 projectName = gitProjectId,
                 requestId = mrId,
-                message = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second)
+                message = mrBody
             )
         } catch (e: Exception) {
             logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")
@@ -2118,5 +2119,34 @@ class GitService @Autowired constructor(
                 message = "($code)${e.message}"
             )
         }
+    }
+
+    fun getGitCodeProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?, search: String?, orderBy: GitCodeProjectsOrder?, sort: GitCodeBranchesSort?, owned: Boolean?, minAccessLevel: GitAccessLevelEnum?): Result<List<GitCodeProjectInfo>> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            .addParams(
+                mapOf(
+                    "search" to search,
+                    "order_by" to orderBy?.value,
+                    "sort" to sort?.value,
+                    "owned" to owned,
+                    "min_access_level" to minAccessLevel?.level
+                )
+            )
+        val res = mutableListOf<GitCodeProjectInfo>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        logger.info("getProjectList: $url")
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()?.string() ?: return@use
+            val repoList = JsonParser().parse(data).asJsonArray
+            if (!repoList.isJsonNull) {
+                return Result(JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {}))
+            }
+        }
+        return Result(res)
     }
 }

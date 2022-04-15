@@ -30,17 +30,19 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -119,7 +121,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         return client.getScm(ServiceGitResource::class).getToken(userId = userId, code = code).data!!
     }
 
-    override fun getUserInfoByToken(token: String): GitUserInfo {
+    override fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum): GitUserInfo {
         return client.getScm(ServiceGitResource::class).getUserInfoByToken(token = token).data!!
     }
 
@@ -533,7 +535,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
-    override fun addMrComment(token: String, gitProjectId: String, mrId: Long, mrBody: MrCommentBody, tokenType: TokenTypeEnum) {
+    override fun addMrComment(token: String, gitProjectId: String, mrId: Long, mrBody: String, tokenType: TokenTypeEnum) {
         return client.getScm(ServiceGitResource::class).addMrComment(
             token = token,
             gitProjectId = gitProjectId,
@@ -585,7 +587,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         )
     }
 
-    override fun gitCICreateFile(
+    override fun gitCreateFile(
         gitProjectId: String,
         token: String,
         gitCICreateFile: GitCICreateFile,
@@ -594,6 +596,29 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         return client.getScm(ServiceGitResource::class).gitCICreateFile(
             gitProjectId, token, gitCICreateFile, tokenType
         )
+    }
 
+    override fun getGitCodeProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>> {
+        return client.getScm(ServiceGitResource::class).getGitCodeProjectList(
+            accessToken = accessToken,
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            orderBy = orderBy,
+            sort = sort,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        )
     }
 }

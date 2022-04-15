@@ -30,17 +30,19 @@ package com.tencent.devops.scm.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
@@ -981,9 +983,42 @@ interface ServiceGitResource {
         @QueryParam("mrId")
         mrId: Long,
         @ApiParam(value = "mr评论请求体")
-        mrBody: MrCommentBody,
+        mrBody: String,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     )
+
+    @ApiOperation("获取用户所有git项目，分页方式获取")
+    @GET
+    @Path("/getProjectList")
+    fun getGitCodeProjectList( // ServiceGitResource 中存在getProjectList，但是VO需要兼容
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("第几页", required = true)
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数据条数", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam("搜索条件，模糊匹配path,name")
+        @QueryParam("search")
+        search: String?,
+        @ApiParam("排序字段")
+        @QueryParam("orderBy")
+        orderBy: GitCodeProjectsOrder?,
+        @ApiParam("排序方式")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?,
+        @ApiParam("若为true，返回的是当前用户个人namespace下的project，以及owner为当前用户的group下的所有project")
+        @QueryParam("owned")
+        owned: Boolean?,
+        @ApiParam("指定最小访问级别，返回的project列表中，当前用户的project访问级别大于或者等于指定值")
+        @QueryParam("minAccessLevel")
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>>
 }
