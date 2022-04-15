@@ -28,8 +28,5 @@
 
 dependencies {
     api("org.springframework.cloud:spring-cloud-config-server")
-    api(project(":core:common:common-service"))
-    api("org.springframework.boot:spring-boot-starter-jersey")
-    api("org.springframework.boot:spring-boot-starter-undertow")
-    api("org.springframework.boot:spring-boot-starter-web")
+    api(project(":core:common:common-web"))
 }

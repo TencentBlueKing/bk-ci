@@ -3,6 +3,17 @@ server:
 spring:
   application:
     name: config
+  rabbitmq:
+    core:
+      virtual-host: dev-gray
+      username: dev-gray
+      password: dev-gray
+      addresses: 100.97.154.15:5672
+    extend:
+      virtual-host: dev-gray
+      username: dev-gray
+      password: dev-gray
+      addresses: 100.97.106.54:5672
   cloud:
     config:
       server:
