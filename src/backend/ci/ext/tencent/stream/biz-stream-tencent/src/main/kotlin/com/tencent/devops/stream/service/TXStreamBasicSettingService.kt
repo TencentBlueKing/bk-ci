@@ -47,8 +47,10 @@ import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
+@Primary
 @Service
 class TXStreamBasicSettingService @Autowired constructor(
     private val dslContext: DSLContext,
