@@ -110,7 +110,9 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        page: Int,
+        pageSize: Int
     ): List<String> {
 
         return client.getScm(ServiceScmResource::class).listBranches(
@@ -122,7 +124,9 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             token = token,
             region = region,
             userName = userName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         ).data!!
     }
 

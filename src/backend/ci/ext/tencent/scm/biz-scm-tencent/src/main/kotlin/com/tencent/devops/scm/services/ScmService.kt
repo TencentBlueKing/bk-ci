@@ -51,7 +51,6 @@ import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 
 @Service
 class ScmService @Autowired constructor(
@@ -100,7 +99,9 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        page: Int,
+        pageSize: Int
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
@@ -115,7 +116,7 @@ class ScmService @Autowired constructor(
                 token = token,
                 region = region,
                 userName = userName
-            ).getBranches(search = search)
+            ).getBranches(search = search, page = page, pageSize = pageSize)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }

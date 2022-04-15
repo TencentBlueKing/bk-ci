@@ -37,7 +37,9 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -237,7 +239,7 @@ class StreamScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.warn(
                 "getProjectInfo RemoteServiceException|" +
-                    "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
@@ -296,7 +298,8 @@ class StreamScmService @Autowired constructor(
                 since = since,
                 until = until,
                 page = page ?: 1,
-                perPage = perPage ?: 20
+                perPage = perPage ?: 20,
+                tokenType = TokenTypeEnum.OAUTH
             ).data
         } catch (e: CustomException) {
             if (e.status.statusCode == Response.Status.FORBIDDEN.statusCode && isFirst) {
@@ -319,12 +322,19 @@ class StreamScmService @Autowired constructor(
             return client.getScm(ServiceGitResource::class).gitCICreateFile(
                 gitProjectId = gitProjectId,
                 token = token,
-                gitCICreateFile = gitCICreateFile
+                gitCreateFile = GitCreateFile(
+                    filePath = gitCICreateFile.filePath,
+                    branch = gitCICreateFile.branch,
+                    encoding = GitCodeFileEncoding.valueOf(gitCICreateFile.encoding.name),
+                    content = gitCICreateFile.content,
+                    commitMessage = gitCICreateFile.commitMessage
+                ),
+                TokenTypeEnum.OAUTH
             ).data!!
         } catch (e: RemoteServiceException) {
             logger.warn(
                 "createNewFile RemoteServiceException|" +
-                    "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
                 error(
@@ -617,7 +627,8 @@ class StreamScmService @Autowired constructor(
                         path = filePath,
                         token = token,
                         ref = ref,
-                        recursive = recursive
+                        recursive = recursive,
+                        TokenTypeEnum.OAUTH
                     ).data ?: emptyList()
                 }
             )
@@ -652,7 +663,8 @@ class StreamScmService @Autowired constructor(
                         },
                         token = gitToken,
                         ref = "",
-                        recursive = recursive
+                        recursive = recursive,
+                        TokenTypeEnum.OAUTH
                     ).data ?: emptyList()
                 }
             )
