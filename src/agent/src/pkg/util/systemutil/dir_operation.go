@@ -43,17 +43,25 @@ import (
 func MkBuildTmpDir() (string, error) {
 	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
 	err := os.MkdirAll(tmpDir, os.ModePerm)
-	stat, err2 := os.Stat(tmpDir)
-	if stat != nil && stat.Mode() != os.ModePerm { // 修正目录权限
-		mask := syscall.Umask(0)            // 临时消除用户权限掩码
-		defer syscall.Umask(mask)           // 重置掩码
-		pe := os.Chmod(tmpDir, os.ModePerm) // 修改权限
-		if pe != nil {
-			logs.Warn("chmod %d %s fail: %s", os.ModePerm, tmpDir, pe.Error())
-		}
-	}
+	err2 := Chmod(tmpDir, os.ModePerm)
 	if err == nil && err2 != nil {
 		err = err2
 	}
 	return tmpDir, err
+}
+
+// Chmod 对指定file进行修改权限
+func Chmod(file string, perm os.FileMode) error {
+	stat, err := os.Stat(file)
+	if stat != nil && stat.Mode() != perm { // 修正目录权限
+		mask := syscall.Umask(0)   // 临时消除用户权限掩码
+		defer syscall.Umask(mask)  // 重置掩码
+		err = os.Chmod(file, perm) // 修改权限
+	}
+	if err == nil {
+		logs.Info("chmod %o %s ok!", perm, file)
+	} else {
+		logs.Warn("chmod %o %s msg: %s", perm, file, err)
+	}
+	return err
 }

@@ -292,7 +292,11 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	}
 	scriptContent := strings.Join(lines, "\n")
 
-	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
+	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), os.ModePerm)
+	defer func() {
+		_ = systemutil.Chmod(scriptFile, os.ModePerm)
+		_ = systemutil.Chmod(prepareScriptFile, os.ModePerm)
+	}()
 	if err != nil {
 		return "", err
 	} else {
@@ -301,7 +305,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 			"exec " + getCurrentShell() + " -l " + scriptFile,
 		}
 		prepareScriptContent := strings.Join(newLines, "\n")
-		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), 0777)
+		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
 		} else {
