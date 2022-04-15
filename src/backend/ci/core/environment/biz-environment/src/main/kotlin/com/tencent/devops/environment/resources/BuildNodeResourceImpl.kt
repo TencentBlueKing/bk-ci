@@ -28,11 +28,11 @@
 package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.BuildNodeResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.service.NodeService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,7 +40,7 @@ class BuildNodeResourceImpl @Autowired constructor(
     private val nodeService: NodeService
 ) : BuildNodeResource {
 
-    @Timed
+    @BkTimed
     override fun get(
         userId: String,
         projectId: String,

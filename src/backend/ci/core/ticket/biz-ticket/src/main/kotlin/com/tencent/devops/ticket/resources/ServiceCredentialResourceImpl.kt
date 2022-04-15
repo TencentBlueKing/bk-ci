@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.Credential
@@ -41,7 +42,6 @@ import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.ticket.pojo.enums.Permission
 import com.tencent.devops.ticket.service.CredentialService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -50,7 +50,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : ServiceCredentialResource {
 
-    @Timed
+    @BkTimed
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -68,7 +68,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun get(projectId: String, credentialId: String, publicKey: String): Result<CredentialInfo?> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -79,7 +79,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.serviceGet(projectId, credentialId, publicKey))
     }
 
-    @Timed
+    @BkTimed
     override fun list(projectId: String, page: Int?, pageSize: Int?): Result<Page<Credential>> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -125,7 +125,7 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         credentialService.serviceCheck(projectId, credentialId)
     }
 
-    @Timed
+    @BkTimed
     override fun hasPermissionList(
         userId: String,
         projectId: String,

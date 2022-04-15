@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.UserRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -47,7 +48,6 @@ import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.CommitService
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import com.tencent.devops.repository.service.RepositoryService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -84,7 +84,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(repositoryService.hasAliasName(projectId, repositoryHashId, aliasName))
     }
 
-    @Timed
+    @BkTimed
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -101,7 +101,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
     }
 
-    @Timed
+    @BkTimed
     override fun get(
         userId: String,
         projectId: String,
@@ -130,7 +130,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun list(
         userId: String,
         projectId: String,
@@ -166,7 +166,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         )
     }
 
-    @Timed
+    @BkTimed
     override fun hasPermissionList(
         userId: String,
         projectId: String,

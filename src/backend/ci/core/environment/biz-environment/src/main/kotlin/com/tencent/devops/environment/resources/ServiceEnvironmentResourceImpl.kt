@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -41,7 +42,6 @@ import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.service.EnvService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -49,12 +49,12 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
     private val envService: EnvService
 ) : ServiceEnvironmentResource {
 
-    @Timed
+    @BkTimed
     override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listUsableServerEnvs(userId, projectId))
     }
 
-    @Timed
+    @BkTimed
     override fun listRawByEnvHashIds(
         userId: String,
         projectId: String,
@@ -63,12 +63,12 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listRawEnvByHashIds(userId, projectId, envHashIds))
     }
 
-    @Timed
+    @BkTimed
     override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listEnvironment(userId, projectId))
     }
 
-    @Timed
+    @BkTimed
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
@@ -85,7 +85,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun addNodes(
         userId: String,
         projectId: String,
@@ -122,7 +122,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun listNodesByEnvIds(
         userId: String,
         projectId: String,
@@ -134,7 +134,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listAllEnvNodes(userId, projectId, envHashIds))
     }
 
-    @Timed
+    @BkTimed
     override fun listRawByEnvNames(
         userId: String,
         projectId: String,
@@ -146,7 +146,7 @@ class ServiceEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listRawEnvByEnvNames(userId, projectId, envNames))
     }
 
-    @Timed
+    @BkTimed
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
     }

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
@@ -43,7 +44,6 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryId
 import com.tencent.devops.repository.pojo.enums.Permission
 import com.tencent.devops.repository.service.RepositoryService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLDecoder
 
@@ -53,7 +53,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     private val repositoryService: RepositoryService
 ) : ServiceRepositoryResource {
 
-    @Timed
+    @BkTimed
     override fun create(userId: String, projectId: String, repository: Repository): Result<RepositoryId> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -70,7 +70,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(RepositoryId(repositoryService.userCreate(userId, projectId, repository)))
     }
 
-    @Timed
+    @BkTimed
     override fun list(projectId: String, repositoryType: ScmType?): Result<List<RepositoryInfoWithPermission>> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -81,7 +81,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
     /**
      * @param repositoryId 代表的是hashId或者代码库名，依赖repositoryType
      */
-    @Timed
+    @BkTimed
     override fun get(projectId: String, repositoryId: String, repositoryType: RepositoryType?): Result<Repository> {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
@@ -107,7 +107,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(data)
     }
 
-    @Timed
+    @BkTimed
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -139,7 +139,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(Page(0, 9999, result.count, result.records))
     }
 
-    @Timed
+    @BkTimed
     override fun listByProjects(projectIds: Set<String>, page: Int?, pageSize: Int?): Result<Page<RepositoryInfo>> {
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
@@ -148,7 +148,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    @Timed
+    @BkTimed
     override fun listByProject(
         projectId: String,
         repositoryType: ScmType?,
@@ -190,7 +190,7 @@ class ServiceRepositoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun listRepoByIds(
         repositoryIds: Set<String>
     ): Result<List<Repository>> {

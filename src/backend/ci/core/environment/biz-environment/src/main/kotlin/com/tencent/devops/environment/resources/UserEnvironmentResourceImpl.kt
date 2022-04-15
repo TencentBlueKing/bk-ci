@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserEnvironmentResource
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -46,7 +47,6 @@ import com.tencent.devops.environment.pojo.SharedProjectInfo
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.service.EnvService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -56,7 +56,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
     private val environmentPermissionService: EnvironmentPermissionService
 ) : UserEnvironmentResource {
 
-    @Timed
+    @BkTimed
     override fun listUsableServerEnvs(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listUsableServerEnvs(userId, projectId))
     }
@@ -65,7 +65,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE))
     }
 
-    @Timed
+    @BkTimed
     override fun create(userId: String, projectId: String, environment: EnvCreateInfo): Result<EnvironmentId> {
         if (environment.name.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NAME_NULL)
@@ -95,22 +95,22 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun list(userId: String, projectId: String): Result<List<EnvWithPermission>> {
         return Result(envService.listEnvironment(userId, projectId))
     }
 
-    @Timed
+    @BkTimed
     override fun listByType(userId: String, projectId: String, envType: EnvType): Result<List<EnvWithNodeCount>> {
         return Result(envService.listEnvironmentByType(userId, projectId, envType))
     }
 
-    @Timed
+    @BkTimed
     override fun listBuildEnvs(userId: String, projectId: String, os: OS): Result<List<EnvWithNodeCount>> {
         return Result(envService.listBuildEnvs(userId, projectId, os))
     }
 
-    @Timed
+    @BkTimed
     override fun get(userId: String, projectId: String, envHashId: String): Result<EnvWithPermission> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -128,7 +128,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Timed
+    @BkTimed
     override fun listNodes(userId: String, projectId: String, envHashId: String): Result<List<NodeBaseInfo>> {
         if (envHashId.isBlank()) {
             throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_ID_NULL)
@@ -137,7 +137,7 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(envService.listAllEnvNodes(userId, projectId, listOf(envHashId)))
     }
 
-    @Timed
+    @BkTimed
     override fun addNodes(
         userId: String,
         projectId: String,

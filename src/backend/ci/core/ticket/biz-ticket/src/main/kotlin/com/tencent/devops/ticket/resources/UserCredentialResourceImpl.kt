@@ -44,7 +44,6 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.ticket.pojo.enums.Permission
 import com.tencent.devops.ticket.service.CredentialPermissionService
 import com.tencent.devops.ticket.service.CredentialService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
@@ -57,7 +56,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
-    @Timed
+    @BkTimed
     override fun create(userId: String, projectId: String, credential: CredentialCreate): Result<Boolean> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -126,7 +125,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 
-    @Timed
+    @BkTimed
     override fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -205,7 +204,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(result.records)
     }
 
-    @Timed
+    @BkTimed
     override fun show(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
@@ -219,7 +218,7 @@ class UserCredentialResourceImpl @Autowired constructor(
         return Result(credentialService.userShow(userId, projectId, credentialId))
     }
 
-    @Timed
+    @BkTimed
     override fun get(userId: String, projectId: String, credentialId: String): Result<CredentialWithPermission> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")

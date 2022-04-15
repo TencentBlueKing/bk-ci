@@ -29,6 +29,7 @@ package com.tencent.devops.openapi.resources.apigw.v3.environment
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
@@ -41,7 +42,6 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.SharedProjectInfoWrap
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentResourceV3
-import io.micrometer.core.annotation.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -50,7 +50,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
     private val client: Client
 ) : ApigwEnvironmentResourceV3 {
 
-    @Timed
+    @BkTimed
     override fun listUsableServerNodes(
         appCode: String?,
         apigwType: String?,
@@ -61,7 +61,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).listUsableServerNodes(userId, projectId)
     }
 
-    @Timed
+    @BkTimed
     override fun createEnv(
         appCode: String?,
         apigwType: String?,
@@ -84,7 +84,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).delete(userId, projectId, envHashId)
     }
 
-    @Timed
+    @BkTimed
     override fun envAddNodes(
         appCode: String?,
         apigwType: String?,
@@ -123,7 +123,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).deleteNodes(userId, projectId, nodeHashIds)
     }
 
-    @Timed
+    @BkTimed
     override fun listUsableServerEnvs(
         appCode: String?,
         apigwType: String?,
@@ -134,7 +134,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(userId, projectId)
     }
 
-    @Timed
+    @BkTimed
     override fun listEnvRawByEnvNames(
         appCode: String?,
         apigwType: String?,
@@ -146,7 +146,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listRawByEnvNames(userId, projectId, envNames)
     }
 
-    @Timed
+    @BkTimed
     override fun listEnvRawByEnvHashIds(
         appCode: String?,
         apigwType: String?,
@@ -158,7 +158,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceEnvironmentResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
     }
 
-    @Timed
+    @BkTimed
     override fun listNodeRawByNodeHashIds(
         appCode: String?,
         apigwType: String?,
@@ -170,7 +170,7 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).listRawByHashIds(userId, projectId, nodeHashIds)
     }
 
-    @Timed
+    @BkTimed
     override fun listNodeRawByEnvHashIds(
         appCode: String?,
         apigwType: String?,

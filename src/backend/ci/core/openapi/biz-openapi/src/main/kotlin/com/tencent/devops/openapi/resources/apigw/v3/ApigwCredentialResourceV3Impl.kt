@@ -29,13 +29,13 @@ package com.tencent.devops.openapi.resources.apigw.v3
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwCredentialResourceV3
 import com.tencent.devops.ticket.api.UserCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
-import io.micrometer.core.annotation.Timed
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: Client) :
     ApigwCredentialResourceV3 {
 
-    @Timed
+    @BkTimed
     override fun list(
         appCode: String?,
         apigwType: String?,
@@ -80,7 +80,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
 //        )
 //    }
 
-    @Timed
+    @BkTimed
     override fun create(
         appCode: String?,
         apigwType: String?,
@@ -96,7 +96,7 @@ class ApigwCredentialResourceV3Impl @Autowired constructor(private val client: C
         )
     }
 
-    @Timed
+    @BkTimed
     override fun get(
         appCode: String?,
         apigwType: String?,

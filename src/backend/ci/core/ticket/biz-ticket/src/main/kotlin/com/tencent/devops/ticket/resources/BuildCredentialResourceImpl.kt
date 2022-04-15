@@ -29,6 +29,7 @@ package com.tencent.devops.ticket.resources
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
@@ -42,7 +43,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     private val credentialService: CredentialService
 ) : BuildCredentialResource {
     @SensitiveApiPermission("get_credential")
-    @Timed
+    @BkTimed
     override fun get(
         projectId: String,
         buildId: String,
@@ -80,7 +81,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
-    @Timed
+    @BkTimed
     override fun getAcrossProject(
         projectId: String,
         buildId: String,
@@ -111,7 +112,7 @@ class BuildCredentialResourceImpl @Autowired constructor(
     }
 
     @SensitiveApiPermission("get_credential")
-    @Timed
+    @BkTimed
     override fun getDetail(
         projectId: String,
         buildId: String,
