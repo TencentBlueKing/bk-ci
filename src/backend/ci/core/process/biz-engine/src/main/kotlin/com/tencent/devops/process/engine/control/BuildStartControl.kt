@@ -186,7 +186,7 @@ class BuildStartControl @Autowired constructor(
             }
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
-            if (setting?.runLockType == PipelineRunLockType.SINGLE || 
+            if (setting?.runLockType == PipelineRunLockType.SINGLE ||
                 setting?.runLockType == PipelineRunLockType.SINGLE_LOCK) {
                 // #4074 锁定当前构建是队列中第一个排队待执行的
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
