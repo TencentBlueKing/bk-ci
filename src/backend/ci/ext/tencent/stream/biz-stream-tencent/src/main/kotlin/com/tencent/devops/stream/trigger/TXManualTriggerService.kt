@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -34,9 +35,11 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
@@ -44,7 +47,10 @@ import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.V1TriggerBuildReq
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.utils.GitCIPipelineUtils
 import com.tencent.devops.stream.v1.components.V1GitRequestEventHandle
@@ -56,12 +62,22 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Primary
 @Service
 @SuppressWarnings("LongParameterList")
 class TXManualTriggerService @Autowired constructor(
+    objectMapper: ObjectMapper,
+    actionFactory: EventActionFactory,
+    streamGitConfig: StreamGitConfig,
+    streamEventService: StreamEventService,
+    streamBasicSettingService: StreamBasicSettingService,
+    streamYamlTrigger: StreamYamlTrigger,
+    streamBasicSettingDao: StreamBasicSettingDao,
+    streamYamlBuild: StreamYamlBuild,
     private val dslContext: DSLContext,
     private val gitRequestEventHandle: V1GitRequestEventHandle,
     private val gitRequestEventDao: GitRequestEventDao,
@@ -71,6 +87,19 @@ class TXManualTriggerService @Autowired constructor(
     private val yamlBuild: V1YamlBuild,
     private val streamYamlService: V1StreamYamlService,
     private val manualTriggerService: ManualTriggerService
+) : ManualTriggerService(
+    dslContext = dslContext,
+    objectMapper = objectMapper,
+    actionFactory = actionFactory,
+    streamGitConfig = streamGitConfig,
+    streamEventService = streamEventService,
+    streamBasicSettingService = streamBasicSettingService,
+    streamYamlTrigger = streamYamlTrigger,
+    streamBasicSettingDao = streamBasicSettingDao,
+    gitRequestEventDao = gitRequestEventDao,
+    gitPipelineResourceDao = gitPipelineResourceDao,
+    gitRequestEventBuildDao = gitRequestEventBuildDao,
+    streamYamlBuild = streamYamlBuild
 ) {
 
     @Value("\${rtx.v2GitUrl:#{null}}")
@@ -80,10 +109,38 @@ class TXManualTriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(TXManualTriggerService::class.java)
     }
 
+    override fun triggerBuild(
+        userId: String,
+        pipelineId: String,
+        triggerBuildReq: TriggerBuildReq
+    ): TriggerBuildResult {
+        return triggerBuild(
+            userId = userId,
+            pipelineId = pipelineId,
+            v1TriggerBuildReq = V1TriggerBuildReq(
+                gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId),
+                name = null,
+                url = null,
+                homepage = null,
+                gitHttpUrl = null,
+                gitSshUrl = null,
+                branch = triggerBuildReq.branch,
+                customCommitMsg = triggerBuildReq.customCommitMsg,
+                yaml = triggerBuildReq.yaml,
+                description = triggerBuildReq.description,
+                commitId = triggerBuildReq.commitId
+            )
+        )
+    }
+
     /**
      * 内部版本的因为有V1语法，所以和openapi触发拆开，openapi触发直接走core版
      */
-    fun triggerBuild(userId: String, pipelineId: String, v1TriggerBuildReq: V1TriggerBuildReq): TriggerBuildResult {
+    fun triggerBuild(
+        userId: String,
+        pipelineId: String,
+        v1TriggerBuildReq: V1TriggerBuildReq
+    ): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, v1TriggerBuildReq: $v1TriggerBuildReq")
 
         val originYaml = v1TriggerBuildReq.yaml

@@ -34,16 +34,36 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.GitRequestEventBuildDao
+import com.tencent.devops.stream.dao.GitRequestEventDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Primary
 @Service
 class TXStreamDetailService @Autowired constructor(
+    dslContext: DSLContext,
+    gitRequestEventBuildDao: GitRequestEventBuildDao,
+    gitRequestEventDao: GitRequestEventDao,
+    streamBasicSettingService: StreamBasicSettingService,
+    pipelineResourceDao: GitPipelineResourceDao,
+    streamGitProjectInfoCache: StreamGitProjectInfoCache,
     private val client: Client,
     private val TXStreamBasicSettingService: TXStreamBasicSettingService
+) : StreamDetailService(
+    client = client,
+    dslContext = dslContext,
+    gitRequestEventBuildDao = gitRequestEventBuildDao,
+    gitRequestEventDao = gitRequestEventDao,
+    streamBasicSettingService = streamBasicSettingService,
+    pipelineResourceDao = pipelineResourceDao,
+    streamGitProjectInfoCache = streamGitProjectInfoCache
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TXStreamDetailService::class.java)
@@ -52,7 +72,7 @@ class TXStreamDetailService @Autowired constructor(
     @Value("\${gateway.reportPrefix}")
     private lateinit var reportPrefix: String
 
-    fun downloadUrl(
+    override fun downloadUrl(
         userId: String,
         gitUserId: String,
         gitProjectId: Long,
