@@ -29,17 +29,19 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
@@ -67,7 +69,7 @@ interface IGitService {
     fun refreshToken(userId: String, accessToken: GitToken): GitToken
     fun getAuthUrl(authParamJsonStr: String): String
     fun getToken(userId: String, code: String): GitToken
-    fun getUserInfoByToken(token: String): GitUserInfo
+    fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH): GitUserInfo
     fun getRedirectUrl(authParamJsonStr: String): String
     fun getGitFileContent(
         repoUrl: String? = null,
@@ -83,11 +85,11 @@ interface IGitService {
         userId: String,
         page: Int?,
         pageSize: Int?,
-        search: String?,
-        orderBy: GitProjectsOrderBy?,
-        sort: GitSortAscOrDesc?,
-        owned: Boolean?,
-        minAccessLevel: GitAccessLevelEnum?
+        search: String? = null,
+        orderBy: GitProjectsOrderBy? = null,
+        sort: GitSortAscOrDesc? = null,
+        owned: Boolean? = null,
+        minAccessLevel: GitAccessLevelEnum? = null
     ): List<Project>
 
     fun getGitlabFileContent(
@@ -283,7 +285,7 @@ interface IGitService {
         token: String,
         gitProjectId: String,
         mrId: Long,
-        mrBody: MrCommentBody,
+        mrBody: String,
         tokenType: TokenTypeEnum
     )
 
@@ -295,7 +297,6 @@ interface IGitService {
         recursive: Boolean?,
         tokenType: TokenTypeEnum
     ): Result<List<GitFileInfo>>
-
 
     fun getCommits(
         gitProjectId: Long,
@@ -309,10 +310,22 @@ interface IGitService {
         tokenType: TokenTypeEnum
     ): Result<List<Commit>>
 
-    fun gitCICreateFile(
+    fun gitCreateFile(
         gitProjectId: String,
         token: String,
         gitCICreateFile: GitCICreateFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean>
+
+    fun getGitCodeProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>>
 }
