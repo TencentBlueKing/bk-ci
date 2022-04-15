@@ -48,7 +48,7 @@ object StreamTriggerMessageUtils {
                     if (eventMap?.isCreateBranch() == true) {
                         "Branch [${event.branch}] added by ${event.userId}"
                     } else {
-                        "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                        "Commit [${event.commitId.subSequence(0, 8)}] pushed by ${event.userId}"
                     }
                 }
             }
@@ -67,7 +67,7 @@ object StreamTriggerMessageUtils {
                 "Note [${noteEvent?.objectAttributes?.id}] submitted by ${event.userId}"
             }
             else -> {
-                "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                "Commit [${event.commitId.subSequence(0, 8)}] pushed by ${event.userId}"
             }
         }
         return messageTitle
