@@ -62,6 +62,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
         val gitProjectId = projectInfo.gitProjectId
         checkParam(userId)
+        permissionService.checkCommonUser(userId)
         permissionService.checkStreamAndOAuth(
             userId = userId,
             projectId = projectId
@@ -116,6 +117,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkCommonUser(userId)
         permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
         permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(

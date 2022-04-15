@@ -28,9 +28,13 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.pojo.StreamGitYamlString
 import com.tencent.devops.stream.pojo.V2BuildYaml
+import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,7 +45,8 @@ import javax.ws.rs.core.Response
 class StreamYamlService @Autowired constructor(
     private val dslContext: DSLContext,
     private val streamSettingDao: StreamBasicSettingDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val yamlSchemaCheck: YamlSchemaCheck
 ) {
 
     companion object {
@@ -58,5 +63,24 @@ class StreamYamlService @Autowired constructor(
         // 针对V2版本做替换
         val parsed = eventBuild.parsedYaml.replaceFirst("triggerOn:", "on:")
         return V2BuildYaml(parsedYaml = parsed, originYaml = eventBuild.originYaml)
+    }
+
+    fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
+        // 检查yml版本，根据yml版本选择不同的实现
+        val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
+        return when {
+            ymlVersion == null -> {
+                Result(1, "Invalid yaml")
+            }
+            else -> {
+                return try {
+                    yamlSchemaCheck.check(yaml.yaml, null, true)
+                    Result("OK")
+                } catch (e: Exception) {
+                    logger.error("Check yaml schema failed.", e)
+                    Result(1, "Invalid yaml: ${e.message}")
+                }
+            }
+        }
     }
 }
