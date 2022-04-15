@@ -1,3 +1,6 @@
+//go:build linux || darwin
+// +build linux darwin
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,6 +28,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package systemutil
 
-const AgentVersion = "v1.8.4"
+import (
+	"fmt"
+	"github.com/astaxie/beego/logs"
+	"os"
+	"syscall"
+)
+
+// MkBuildTmpDir 创建构建提供的临时目录
+// 对于指定构建帐号与当前agent运行帐号不同时，常用是用root安装运行agent，但配置文件中devops.slave.user指定其他普通帐号
+// 需要设置最大权限，以便任何runUser能够使用, 不考虑用chown切换目录属主，会导致之前的运行中所产生的子目录/文件的清理权限问题。
+func MkBuildTmpDir() (string, error) {
+	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
+	err := os.MkdirAll(tmpDir, os.ModePerm)
+	stat, err2 := os.Stat(tmpDir)
+	if stat != nil && stat.Mode() != os.ModePerm { // 修正目录权限
+		mask := syscall.Umask(0)            // 临时消除用户权限掩码
+		defer syscall.Umask(mask)           // 重置掩码
+		pe := os.Chmod(tmpDir, os.ModePerm) // 修改权限
+		if pe != nil {
+			logs.Warn("chmod %d %s fail: %s", os.ModePerm, tmpDir, pe.Error())
+		}
+	}
+	if err == nil && err2 != nil {
+		err = err2
+	}
+	return tmpDir, err
+}

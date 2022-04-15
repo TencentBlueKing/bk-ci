@@ -49,6 +49,7 @@ func main() {
 		fmt.Println(config.AgentVersion)
 		systemutil.ExitProcess(0)
 	}
+	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
 	runtime.GOMAXPROCS(4)
 
