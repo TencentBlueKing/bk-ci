@@ -42,7 +42,7 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import atomMixin from '../AtomPropertyPanel/atomMixin'
+    import atomMixin from '@/components/AtomPropertyPanel/atomMixin'
     import {
         isTextareaParam,
         isStringParam,
@@ -50,7 +50,7 @@
         isEnumParam,
         isMultipleParam
     } from '@/store/modules/atom/paramsConfig'
-    import CheckParams from './CheckParams.vue'
+    import CheckParams from '@/components/CheckParams.vue'
 
     export default {
         name: 'check-atom-dialog',
@@ -59,10 +59,6 @@
         },
         mixins: [atomMixin],
         props: {
-            atom: {
-                type: Object,
-                default: () => ({})
-            },
             isShowCheckDialog: {
                 type: Boolean,
                 default: false
@@ -135,7 +131,7 @@
                         projectId: this.routerParams.projectId,
                         pipelineId: this.routerParams.pipelineId,
                         buildId: this.routerParams.buildNo,
-                        elementId: this.atom.id
+                        elementId: this.element.id
                     }
                     const res = await this.getCheckAtomInfo(postData)
                     this.data = Object.assign(res, { status: '' })
@@ -165,7 +161,7 @@
                                     projectId: this.routerParams.projectId,
                                     pipelineId: this.routerParams.pipelineId,
                                     buildId: this.routerParams.buildNo,
-                                    elementId: this.atom.id,
+                                    elementId: this.element.id,
                                     postData: this.data
                                 }
                                 const res = await this.handleCheckAtom(data)
@@ -204,7 +200,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .check-atom-form {
         .choose-item {
             margin-right: 30px;

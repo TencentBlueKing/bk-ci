@@ -39,6 +39,8 @@ import '@icon-cool/bk-icon-devops'
 
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'
+import BkPipeline from 'bkui-pipeline'
+
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
 
@@ -59,6 +61,10 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
+console.log(BkPipeline)
+Vue.use(BkPipeline, {
+    i18n
+})
 
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$permissionActionMap = actionMap
