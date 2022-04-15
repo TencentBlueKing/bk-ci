@@ -239,7 +239,7 @@ class StreamScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.warn(
                 "getProjectInfo RemoteServiceException|" +
-                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+                    "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             when (e.httpStatus) {
                 GitCodeApiStatus.NOT_FOUND.status -> {
@@ -334,7 +334,7 @@ class StreamScmService @Autowired constructor(
         } catch (e: RemoteServiceException) {
             logger.warn(
                 "createNewFile RemoteServiceException|" +
-                        "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
+                    "${e.httpStatus}|${e.errorCode}|${e.errorMessage}|${e.responseContent}"
             )
             if (GitCodeApiStatus.getStatus(e.httpStatus) != null) {
                 error(
