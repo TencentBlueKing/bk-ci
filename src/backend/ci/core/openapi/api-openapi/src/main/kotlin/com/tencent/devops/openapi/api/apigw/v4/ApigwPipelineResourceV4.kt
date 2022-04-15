@@ -133,7 +133,7 @@ interface ApigwPipelineResourceV4 {
 
     @ApiOperation("获取流水线设置", tags = ["v4_app_pipeline_setting_get", "v4_user_pipeline_setting_get"])
     @GET
-    @Path("/pipeline_setting")
+    @Path("/setting")
     fun getSetting(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
