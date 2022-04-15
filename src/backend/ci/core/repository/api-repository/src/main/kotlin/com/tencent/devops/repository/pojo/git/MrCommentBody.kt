@@ -25,39 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.repository.pojo.git
 
-import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
 
-@ApiModel("Git拿到的项目信息")
-data class StreamProjectGitInfo(
-    @ApiModelProperty("Git项目ID")
-    val id: Long,
-    @ApiModelProperty("是否为stream 公共项目")
-    val public: Boolean?,
-    @ApiModelProperty("stream 项目名称")
-    val name: String?,
-    @ApiModelProperty("stream 项目名称带有路径")
-    val pathWithNamespace: String?,
-    @ApiModelProperty("https-git链接")
-    val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
-    val webUrl: String?,
-    @ApiModelProperty("项目头像")
-    val avatarUrl: String?,
-    @ApiModelProperty("项目描述")
-    val description: String?,
-) {
-    constructor(p: GitCodeProjectInfo) : this(
-        id = p.id!!,
-        public = p.public,
-        name = p.name,
-        pathWithNamespace = p.pathWithNamespace,
-        httpsUrlToRepo = p.httpsUrlToRepo,
-        webUrl = p.webUrl,
-        avatarUrl = p.avatarUrl,
-        description = p.description
-    )
-}
+data class MrCommentBody(
+    @ApiParam("报表数据", required = true)
+    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+)

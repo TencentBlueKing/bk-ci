@@ -27,9 +27,15 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 
 data class TGitTreeFileInfo(
     override val name: String,
     override val type: String
-) : StreamGitTreeFileInfo
+) : StreamGitTreeFileInfo {
+    constructor(f: GitFileInfo) : this(
+        name = f.name,
+        type = f.type
+    )
+}

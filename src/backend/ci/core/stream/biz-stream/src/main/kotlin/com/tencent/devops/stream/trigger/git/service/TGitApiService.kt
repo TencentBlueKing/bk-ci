@@ -98,11 +98,25 @@ class TGitApiService @Autowired constructor(
         sha: String,
         retry: ApiRequestRetryInfo
     ): TGitCommitInfo? {
-        TODO("等待接口完成")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get commit info $sha fail",
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR,
+        ) {
+            client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
+                repoName = gitProjectId,
+                sha = sha,
+                token = cred.toToken(),
+                tokenType = cred.toTokenType()
+            ).data
+        }?.let { TGitCommitInfo(it) }
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): TGitUserInfo? {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).getUserInfoByToken(
+            cred.toToken(),
+            cred.toTokenType()
+        ).data?.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
     }
 
     override fun getProjectUserInfo(
@@ -179,7 +193,20 @@ class TGitApiService @Autowired constructor(
         recursive: Boolean,
         retry: ApiRequestRetryInfo
     ): List<TGitTreeFileInfo> {
-        TODO("等待接口完成")
+        return doRetryFun(
+            retry = retry,
+            log = "$gitProjectId get $path file tree error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+        ) {
+            client.get(ServiceGitResource::class).getGitFileTree(
+                gitProjectId = gitProjectId.toLong(),
+                path = path ?: "",
+                token = cred.toToken(),
+                ref = ref,
+                recursive = recursive,
+                tokenType = cred.toTokenType()
+            ).data ?: emptyList()
+        }.map { TGitTreeFileInfo(it) }
     }
 
     override fun getFileContent(
@@ -216,7 +243,19 @@ class TGitApiService @Autowired constructor(
         ref: String?,
         retry: ApiRequestRetryInfo
     ): TGitFileInfo? {
-        TODO("等待接口完成")
+        return doRetryFun(
+            retry = retry,
+            log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getGitFileInfo(
+                gitProjectId,
+                fileName,
+                cred.toToken(),
+                ref,
+                cred.toTokenType()
+            ).data
+        }?.let { TGitFileInfo(content = it.content, blobId = it.blobId) }
     }
 
     /**
@@ -262,7 +301,13 @@ class TGitApiService @Autowired constructor(
         mrId: Long,
         mrBody: String
     ) {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).addMrComment(
+            token = cred.toToken(),
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            mrBody = mrBody,
+            tokenType = cred.toTokenType()
+        )
     }
 
     private fun StreamGitCred.toToken(): String {

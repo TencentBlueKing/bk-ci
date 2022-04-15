@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.scm
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
@@ -42,10 +43,15 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
@@ -54,6 +60,7 @@ import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.utils.scm.GitCodeUtils
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
@@ -64,9 +71,14 @@ import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.enums.GitProjectsOrderBy
+import com.tencent.devops.scm.enums.GitSortAscOrDesc
+import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
+import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
@@ -169,11 +181,30 @@ class GitService @Autowired constructor(
         }
     }
 
-    override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): List<Project> {
+    override fun getProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitProjectsOrderBy?,
+        sort: GitSortAscOrDesc?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<Project> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val url = "${gitConfig.gitApiUrl}/projects" +
             "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+                .addParams(
+                    mapOf(
+                        "search" to search,
+                        "order_by" to orderBy?.value,
+                        "sort" to sort?.value,
+                        "owned" to owned,
+                        "min_access_level" to minAccessLevel?.level
+                    )
+                )
         val res = mutableListOf<Project>()
         val request = Request.Builder()
             .url(url)
@@ -371,17 +402,17 @@ class GitService @Autowired constructor(
         }
     }
 
-    override fun getUserInfoByToken(token: String): GitUserInfo {
+    override fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum): GitUserInfo {
         logger.info("Start to get the user info by token[$token]")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "${gitConfig.gitUrl}/user?access_token=$token"
+            val url = StringBuilder("${gitConfig.gitUrl}/user")
+            setToken(tokenType, url, token)
             logger.info("getToken url>> $url")
             val request = Request.Builder()
-                .url(url)
+                .url(url.toString())
                 .get()
                 .build()
-
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body()!!.string()
                 return objectMapper.readValue(data, GitUserInfo::class.java)
@@ -1429,6 +1460,298 @@ class GitService @Autowired constructor(
             logger.error("get git project member fail! gitProjectId: $gitProjectId", ignore)
             return Result(null)
         }
+    }
+
+    override fun getProjectMembersAll(
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        tokenType: TokenTypeEnum,
+        token: String
+    ): Result<List<GitMember>> {
+        val newPage = if (page == 0) 1 else page
+        val newPageSize = if (pageSize > 1000) 1000 else pageSize
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all")
+        setToken(tokenType, url, token)
+        url.append(
+            if (search != null) {
+                "&query=$search"
+            } else {
+                ""
+            } +
+                "&page=$newPage" + "&per_page=$newPageSize"
+        )
+        logger.info("getGitCIAllMembers request url: $url")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
+            return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
+        }
+    }
+
+    override fun getGitFileInfo(
+        gitProjectId: String,
+        filePath: String?,
+        token: String,
+        ref: String?,
+        tokenType: TokenTypeEnum
+    ): Result<GitCodeFileInfo> {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val encodeId = URLEncoder.encode(gitProjectId, "utf-8")
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeId/repository/files")
+            setToken(tokenType, url, token)
+            url.append(
+                if (ref != null) {
+                    "&ref=${URLEncoder.encode(ref, "UTF-8")}"
+                } else {
+                    ""
+                }
+            )
+            url.append(
+                if (filePath != null) {
+                    "&file_path=${URLEncoder.encode(filePath, "UTF-8")}"
+                } else {
+                    ""
+                }
+            )
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                logger.info("[url=$url]|getFileInfo with response=$response")
+                if (!response.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code()})${response.message()}"
+                    )
+                }
+                val data = response.body()!!.string()
+                val result = try {
+                    JsonUtil.to(data, GitCodeFileInfo::class.java)
+                } catch (e: Throwable) {
+                    logger.info("[url=$url]|getFileInfo to data error: ${e.message}")
+                    throw CustomException(
+                        status = Response.Status.BAD_REQUEST,
+                        message = "File format error"
+                    )
+                }
+                return Result(result)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    override fun addMrComment(
+        token: String,
+        gitProjectId: String,
+        mrId: Long,
+        mrBody: String,
+        tokenType: TokenTypeEnum
+    ) {
+        logger.info("$gitProjectId|$mrId|addMrComment")
+        try {
+            val gitApi = if (TokenTypeEnum.OAUTH == tokenType) {
+                GitOauthApi()
+            } else {
+                GitApi()
+            }
+            gitApi.addMRComment(
+                host = "$gitCIUrl/api/v3",
+                token = token,
+                projectName = gitProjectId,
+                requestId = mrId,
+                message = mrBody
+            )
+        } catch (e: Exception) {
+            logger.warn("$gitProjectId add mr $mrId comment error: ${e.message}")
+            val code = if (e is GitApiException) {
+                e.code
+            } else {
+                Response.Status.BAD_REQUEST.statusCode
+            }
+            throw CustomException(
+                status = Response.Status.fromStatusCode(code),
+                message = "($code)${e.message}"
+            )
+        }
+    }
+
+    override fun getGitFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String?,
+        recursive: Boolean?,
+        tokenType: TokenTypeEnum
+    ): Result<List<GitFileInfo>> {
+        logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree")
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    "&path=${URLEncoder.encode(path, "UTF-8")}"
+                )
+                append(
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&recursive=$recursive&access_token=$token")
+            }
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code()})${it.message()}"
+                    )
+                }
+                val data = it.body()!!.string()
+                return Result(JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file tree")
+        }
+    }
+
+    override fun getCommits(
+        gitProjectId: Long,
+        filePath: String?,
+        branch: String?,
+        token: String,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int,
+        tokenType: TokenTypeEnum
+    ): Result<List<Commit>> {
+
+        logger.info("[$gitProjectId|$filePath|$branch|$since|$until] Start to get the git commits")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits")
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    if (branch != null) {
+                        "&ref_name=${URLEncoder.encode(branch, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (filePath != null) {
+                        "&path=${URLEncoder.encode(filePath, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (since != null) {
+                        "&since=${since.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    }
+                )
+                append(
+                    if (until != null) {
+                        "&until=${until.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&page=$page&per_page=$perPage")
+            }
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code()})${it.message()}"
+                    )
+                }
+                val data = it.body()!!.string()
+                return Result(JsonUtil.getObjectMapper().readValue(data) as List<Commit>)
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
+        }
+
+    }
+
+    override fun gitCreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCreateFile: GitCreateFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitCreateFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return Result(true)
+        }
+    }
+
+    override fun getGitCodeProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?, search: String?, orderBy: GitCodeProjectsOrder?, sort: GitCodeBranchesSort?, owned: Boolean?, minAccessLevel: GitAccessLevelEnum?): Result<List<GitCodeProjectInfo>> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"
+            .addParams(
+                mapOf(
+                    "search" to search,
+                    "order_by" to orderBy?.value,
+                    "sort" to sort?.value,
+                    "owned" to owned,
+                    "min_access_level" to minAccessLevel?.level
+                )
+            )
+        val res = mutableListOf<GitCodeProjectInfo>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        logger.info("getProjectList: $url")
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()?.string() ?: return@use
+            val repoList = JsonParser().parse(data).asJsonArray
+            if (!repoList.isJsonNull) {
+                return Result(JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {}))
+            }
+        }
+        return Result(res)
     }
 
     private fun String.addParams(args: Map<String, Any?>): String {

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.model.stream.tables.TStreamPipelineBranch
 import com.tencent.devops.model.stream.tables.records.TStreamPipelineBranchRecord
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.SelectConditionStep
@@ -186,7 +186,7 @@ class StreamPipelineBranchDao {
         search: String?,
         limit: SQLLimit,
         orderBy: StreamBranchesOrder,
-        sort: StreamBranchesSort
+        sort: StreamSortAscOrDesc
     ): Int {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
             return projectPipelineDslCount(dslContext, gitProjectId, pipelineId, search)
@@ -200,7 +200,7 @@ class StreamPipelineBranchDao {
         search: String?,
         limit: SQLLimit,
         orderBy: StreamBranchesOrder,
-        sort: StreamBranchesSort
+        sort: StreamSortAscOrDesc
     ): List<TStreamPipelineBranchRecord> {
         with(TStreamPipelineBranch.T_STREAM_PIPELINE_BRANCH) {
             return projectPipelineDsl(dslContext, gitProjectId, pipelineId, search, orderBy, sort)
@@ -217,7 +217,7 @@ class StreamPipelineBranchDao {
         pipelineId: String,
         search: String?,
         orderBy: StreamBranchesOrder,
-        sort: StreamBranchesSort
+        sort: StreamSortAscOrDesc
     ): SelectConditionStep<TStreamPipelineBranchRecord> {
         val dsl = dslContext.selectFrom(this)
             .where(GIT_PROJECT_ID.eq(gitProjectId))
@@ -234,10 +234,10 @@ class StreamPipelineBranchDao {
             }
         }
         when (sort) {
-            StreamBranchesSort.ASC -> {
+            StreamSortAscOrDesc.ASC -> {
                 dsl.orderBy(order.asc())
             }
-            StreamBranchesSort.DESC -> {
+            StreamSortAscOrDesc.DESC -> {
                 dsl.orderBy(order.desc())
             }
         }

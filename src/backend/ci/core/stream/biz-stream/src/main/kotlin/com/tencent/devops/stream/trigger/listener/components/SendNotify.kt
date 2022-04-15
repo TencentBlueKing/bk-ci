@@ -224,7 +224,7 @@ class SendNotify @Autowired constructor(
             IfType.FAILURE.name -> {
                 return !success
             }
-            IfType.CANCELLED.name -> {
+            IfType.CANCELLED.name, IfType.CANCELED.name -> {
                 return finishData.getBuildStatus().isCancel()
             }
             IfType.ALWAYS.name -> {

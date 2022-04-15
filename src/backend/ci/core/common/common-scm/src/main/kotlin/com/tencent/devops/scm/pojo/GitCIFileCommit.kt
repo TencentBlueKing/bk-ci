@@ -25,17 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.scm.pojo.Commit
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("git 查询代码库项目信息| USER 使用")
+/**
+ * {
+"commit": {
+"id": "f268ea920fca4451f5ee4f44dbe82a0189d42e6b",
+"message": "1",
+"parent_ids": [
+"2eafa1f4c3ba82fea05dc8a36ac582231531bcab"
+],
+"authored_date": "2020-12-29T08:10:48+0000",
+"author_name": "ruotiantang",
+"author_email": "ruotiantang@tencent.com",
+"committed_date": "2020-12-29T08:10:48+0000",
+"committer_name": "ruotiantang",
+"committer_email": "ruotiantang@tencent.com",
+"title": "1",
+"scroll_object_id": null,
+"short_id": "f268ea92",
+"created_at": "2020-12-29T08:10:48+0000"
+},
+"lines": [
+"11112233",
+""
+]
+}
+ */
+@ApiModel("gitci 文件的提交信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class StreamCommitInfo(
+data class GitCIFileCommit(
+    val commit: Commit,
+    val lines: List<String>?
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Commit(
     @JsonProperty("author_email")
     @ApiModelProperty(name = "author_email")
     val authorEmail: String?,
@@ -69,20 +99,4 @@ data class StreamCommitInfo(
     @JsonProperty("scroll_object_id")
     @ApiModelProperty(name = "scroll_object_id")
     val scrollObjectId: Any?
-) {
-    constructor(c: Commit) : this(
-        authorEmail = c.authorEmail,
-        authorName = c.authorName,
-        authoredDate = c.authoredDate,
-        committedDate = c.committedDate,
-        committerEmail = c.committerEmail,
-        committerName = c.committerName,
-        createdAt = c.createdAt,
-        id = c.id,
-        message = c.message,
-        parentIds = c.parentIds,
-        shortId = c.shortId,
-        title = c.title,
-        scrollObjectId = c.scrollObjectId
-    )
-}
+)

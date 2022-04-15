@@ -33,22 +33,27 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
+import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
+import com.tencent.devops.stream.pojo.StreamFileEncoding
 import com.tencent.devops.stream.pojo.StreamGitGroup
 import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.pojo.StreamGitProjectBaseInfoCache
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
+import com.tencent.devops.stream.pojo.enums.toGitCodeAscOrDesc
+import com.tencent.devops.stream.pojo.enums.toGitCodeOrderBy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -152,11 +157,21 @@ class StreamTGitTransferService @Autowired constructor(
         pageSize: Int?,
         search: String?,
         orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?,
+        sort: StreamSortAscOrDesc?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>? {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).getGitCodeProjectList(
+            accessToken = getAndCheckOauthToken(userId).accessToken,
+            userId,
+            page,
+            pageSize,
+            search,
+            orderBy.toGitCodeOrderBy(),
+            sort.toGitCodeAscOrDesc(),
+            owned,
+            minAccessLevel
+        ).data?.map { StreamProjectGitInfo(it) }
     }
 
     override fun getProjectMember(
@@ -208,11 +223,35 @@ class StreamTGitTransferService @Autowired constructor(
         page: Int?,
         perPage: Int?
     ): List<StreamCommitInfo>? {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).getCommits(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            branch = branch,
+            token = getAndCheckOauthToken(userId).accessToken,
+            since = since,
+            until = until,
+            page = page ?: 1,
+            perPage = perPage ?: 20,
+            tokenType = TokenTypeEnum.OAUTH
+        ).data?.map { StreamCommitInfo(it) }
     }
 
     override fun createNewFile(userId: String, gitProjectId: String, streamCreateFile: StreamCreateFileInfo): Boolean {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).gitCreateFile(
+            gitProjectId = gitProjectId,
+            token = getAndCheckOauthToken(userId).accessToken,
+            gitCreateFile = GitCreateFile(
+                filePath = streamCreateFile.filePath,
+                branch = streamCreateFile.branch,
+                encoding = when (streamCreateFile.encoding) {
+                    StreamFileEncoding.TEXT -> GitCodeFileEncoding.TEXT
+                    StreamFileEncoding.BASE64 -> GitCodeFileEncoding.BASE64
+                },
+                content = streamCreateFile.content,
+                commitMessage = streamCreateFile.commitMessage
+            ),
+            tokenType = TokenTypeEnum.OAUTH
+        ).data ?: false
     }
 
     override fun getProjectBranches(
@@ -222,7 +261,7 @@ class StreamTGitTransferService @Autowired constructor(
         pageSize: Int?,
         search: String?,
         orderBy: StreamBranchesOrder?,
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): List<String>? {
         return client.get(ServiceGitResource::class).getBranch(
             accessToken = getAndCheckOauthToken(userId).accessToken,

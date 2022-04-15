@@ -29,8 +29,8 @@ package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
 import com.tencent.devops.stream.pojo.StreamGitGroup
@@ -39,8 +39,8 @@ import com.tencent.devops.stream.pojo.StreamGitProjectBaseInfoCache
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 
 /**
  * 将后台中非trigger的部分需要多个Git端调用的依据配置的不同注入不同的bean
@@ -85,7 +85,7 @@ interface StreamGitTransferService {
         pageSize: Int?,
         search: String?,
         orderBy: StreamProjectsOrder?,
-        sort: StreamBranchesSort?,
+        sort: StreamSortAscOrDesc?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>?
@@ -145,7 +145,7 @@ interface StreamGitTransferService {
         pageSize: Int?,
         search: String?,
         orderBy: StreamBranchesOrder?,
-        sort: StreamBranchesSort?,
+        sort: StreamSortAscOrDesc?,
     ): List<String>?
 
     /**

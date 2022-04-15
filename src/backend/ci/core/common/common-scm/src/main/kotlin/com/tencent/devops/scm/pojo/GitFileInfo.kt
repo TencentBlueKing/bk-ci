@@ -25,39 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
-@ApiModel("Git拿到的项目信息")
-data class StreamProjectGitInfo(
-    @ApiModelProperty("Git项目ID")
-    val id: Long,
-    @ApiModelProperty("是否为stream 公共项目")
-    val public: Boolean?,
-    @ApiModelProperty("stream 项目名称")
-    val name: String?,
-    @ApiModelProperty("stream 项目名称带有路径")
-    val pathWithNamespace: String?,
-    @ApiModelProperty("https-git链接")
-    val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
-    val webUrl: String?,
-    @ApiModelProperty("项目头像")
-    val avatarUrl: String?,
-    @ApiModelProperty("项目描述")
-    val description: String?,
-) {
-    constructor(p: GitCodeProjectInfo) : this(
-        id = p.id!!,
-        public = p.public,
-        name = p.name,
-        pathWithNamespace = p.pathWithNamespace,
-        httpsUrlToRepo = p.httpsUrlToRepo,
-        webUrl = p.webUrl,
-        avatarUrl = p.avatarUrl,
-        description = p.description
-    )
+/**
+[
+{
+"id":"23c22934e8b4f901dd264cdd100d2f7c339014f5",
+"name":"GroupMilestoneStateStatistics.java",
+"type":"blob",
+"mode":"100644"
+},
+{
+"id":"30a6e86afd0d641b8e9715a6eab5165a71e56e80",
+"name":"GroupMilestoneStatistics.java",
+"type":"blob",
+"mode":"100644"
+},
+{
+"id":"69756319f6abcc246c11c932a3c07c923800544c",
+"name":"GroupStatisticsById.java",
+"type":"blob",
+"mode":"100644"
+},
+{
+"id":"28bdc11874295c5722276a63502010acb92cd9b6",
+"name":"GroupTypeStatistics.java",
+"type":"blob",
+"mode":"100644"
+},
+{
+"id":"b7899b52f700434959e228532171eebdc8a91bd5",
+"name":"TGitErrorStatistics.java",
+"type":"blob",
+"mode":"100644"
 }
+]
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitFileInfo(
+    val id: String,
+    val name: String,
+    val type: String,
+    val mode: Long
+)

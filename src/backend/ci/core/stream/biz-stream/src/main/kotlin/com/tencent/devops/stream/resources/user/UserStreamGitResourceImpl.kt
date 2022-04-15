@@ -42,7 +42,7 @@ import com.tencent.devops.stream.pojo.StreamCreateFileInfo
 import com.tencent.devops.stream.pojo.StreamGitMember
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamBranchesSort
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.service.StreamProjectService
@@ -199,7 +199,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         orderBy: StreamBranchesOrder?,
-        sort: StreamBranchesSort?
+        sort: StreamSortAscOrDesc?
     ): Result<List<String>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(

@@ -25,39 +25,51 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.pojo
+package com.tencent.devops.repository.pojo.git
 
-import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("Git拿到的项目信息")
-data class StreamProjectGitInfo(
-    @ApiModelProperty("Git项目ID")
-    val id: Long,
-    @ApiModelProperty("是否为stream 公共项目")
-    val public: Boolean?,
-    @ApiModelProperty("stream 项目名称")
-    val name: String?,
-    @ApiModelProperty("stream 项目名称带有路径")
-    val pathWithNamespace: String?,
-    @ApiModelProperty("https-git链接")
-    val httpsUrlToRepo: String?,
-    @ApiModelProperty("项目网页链接")
-    val webUrl: String?,
-    @ApiModelProperty("项目头像")
-    val avatarUrl: String?,
-    @ApiModelProperty("项目描述")
-    val description: String?,
-) {
-    constructor(p: GitCodeProjectInfo) : this(
-        id = p.id!!,
-        public = p.public,
-        name = p.name,
-        pathWithNamespace = p.pathWithNamespace,
-        httpsUrlToRepo = p.httpsUrlToRepo,
-        webUrl = p.webUrl,
-        avatarUrl = p.avatarUrl,
-        description = p.description
-    )
+/**
+{
+"file_name": "foo.h",
+"file_path": "src/controller/",
+"size": 15,
+"ref": "master",
+"blob_id": "37c36524713aa8083f787066a9ed0c0d2f82bbb4",
+"commit_id": "b5e3f65af2fd6d2895414a679290cad7664217b3",
+"content": "I2lmbmRlZiBXT1JLVFJFRV9ICiNkZWZpbmUgV09SS1RSRUVfSAoKI2luY2x1ZGUgInJlZnMua",
+"encoding": "base64"
 }
+ */
+
+@ApiModel("工蜂文件信息")
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class GitCodeFileInfo(
+    @JsonProperty("file_name")
+    @ApiModelProperty(name = "file_name")
+    val fileName: String,
+    @JsonProperty("file_path")
+    @ApiModelProperty(name = "file_path")
+    val filePath: String,
+    @JsonProperty("size")
+    @ApiModelProperty(name = "size")
+    val size: Int,
+    @JsonProperty("ref")
+    @ApiModelProperty(name = "ref")
+    val ref: String,
+    @JsonProperty("blob_id")
+    @ApiModelProperty(name = "blob_id")
+    val blobId: String,
+    @JsonProperty("commit_id")
+    @ApiModelProperty(name = "commit_id")
+    val commitId: String,
+    @JsonProperty("content")
+    @ApiModelProperty(name = "content")
+    val content: String,
+    @JsonProperty("encoding")
+    @ApiModelProperty(name = "encoding")
+    val encoding: String
+)
