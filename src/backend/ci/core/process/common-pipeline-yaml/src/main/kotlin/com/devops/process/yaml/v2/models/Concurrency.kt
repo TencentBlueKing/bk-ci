@@ -27,32 +27,14 @@
 
 package com.devops.process.yaml.v2.models
 
-import com.devops.process.yaml.v2.models.job.PreJob
-import com.devops.process.yaml.v2.models.on.PreTriggerOn
-import com.devops.process.yaml.v2.models.stage.PreStage
-import com.devops.process.yaml.v2.models.step.PreStep
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(stream,prebuild等)异常
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class PreScriptBuildYaml(
-    var version: String?,
-    var name: String?,
-    var label: List<String>? = null,
-    var triggerOn: PreTriggerOn?,
-    var variables: Map<String, Variable>? = null,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<PreStep>? = null,
-    var extends: Extends? = null,
-    var resources: Resources?,
-    var notices: List<GitNotices>?,
-    var finally: Map<String, PreJob>? = null,
-    val concurrency: Concurrency? = null
+data class Concurrency(
+    val group: String?,
+    @JsonProperty("cancel-in-progress")
+    val cancelInProgress: Boolean?
 )
