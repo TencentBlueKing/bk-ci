@@ -253,6 +253,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun getSettingWithPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        channelCode: ChannelCode,
+        checkPermission: Boolean
+    ): Result<PipelineSetting> {
+        checkParams(userId, projectId)
+        return Result(data = pipelineSettingFacadeService.userGetSetting(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = channelCode,
+            checkPermission = checkPermission
+        ))
+    }
+
     override fun getBatch(
         userId: String,
         projectId: String,

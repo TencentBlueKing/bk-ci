@@ -107,8 +107,20 @@ class PipelineSettingFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode = ChannelCode.BS,
-        version: Int = 0
+        version: Int = 0,
+        checkPermission: Boolean = false
     ): PipelineSetting {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+            )
+        }
+
         var settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
