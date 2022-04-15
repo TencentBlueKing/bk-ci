@@ -31,19 +31,24 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -485,7 +490,7 @@ class ServiceGitResourceImpl @Autowired constructor(
             token = token,
             gitProjectId = gitProjectId,
             mrId = mrId,
-            mrBody = mrBody,
+            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
             tokenType = tokenType
         )
     }
@@ -532,17 +537,53 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
-    override fun gitCICreateFile(
+    override fun gitCreateFile(
         gitProjectId: String,
         token: String,
         gitCICreateFile: GitCICreateFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        return gitService.gitCICreateFile(
+        return gitService.gitCreateFile(
             gitProjectId = gitProjectId,
             token = token,
             gitCICreateFile = gitCICreateFile,
             tokenType = tokenType
+        )
+    }
+
+    override fun getUserInfoByToken(
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitUserInfo> {
+        return Result(
+            gitService.getUserInfoByToken(
+                token,
+                tokenType
+            )
+        )
+    }
+
+    override fun getGitCodeProjectList(
+        accessToken: String,
+        userId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>> {
+        return gitService.getGitCodeProjectList(
+            accessToken = accessToken,
+            userId = userId,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            orderBy = orderBy,
+            sort = sort,
+            owned = owned,
+            minAccessLevel = minAccessLevel
         )
     }
 }
