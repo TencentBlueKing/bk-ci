@@ -773,7 +773,7 @@ interface ServiceGitResource {
 
     @ApiOperation("获取用户所有git项目，分页方式获取")
     @GET
-    @Path("/getProjectList")
+    @Path("/getGitCodeProjectList")
     fun getGitCodeProjectList( // ServiceGitResource 中存在getProjectList，但是VO需要兼容
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
