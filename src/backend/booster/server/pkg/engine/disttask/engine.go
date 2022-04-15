@@ -11,6 +11,7 @@ package disttask
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -75,10 +76,22 @@ const (
 	queueNameHeaderVMMac      queueNameHeader = "VM_MAC"
 )
 
+type time_slot struct {
+	start_time string
+	end_time   string
+	value      float64
+}
+
+type ResourceAllocater struct {
+	Allocate_by_time map[string]float64
+	time_data        []time_slot
+}
+
 // EngineConfig define engine config
 type EngineConfig struct {
 	engine.MySQLConf
-	Rd rd.RegisterDiscover
+	Rd        rd.RegisterDiscover
+	Allocater ResourceAllocater
 
 	JobServerTimesToCPU float64
 	QueueShareType      map[string]engine.QueueShareType
@@ -135,6 +148,10 @@ func NewDisttaskEngine(
 	if err = egn.initBrokers(); err != nil {
 		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
 		return nil, err
+	}
+
+	if res := egn.parseAllocateConf(); !res {
+		egn.conf.Allocater.time_data = egn.conf.Allocater.time_data[:0]
 	}
 
 	return egn, nil
@@ -290,6 +307,40 @@ func (de *disttaskEngine) getClient(timeoutSecond int) *httpclient.HTTPClient {
 	return client
 }
 
+// cheack Allocate_by_time map ,make sure the key is the format of xx:xx:xx-xx:xx:xx and smaller time is ahead
+func (de *disttaskEngine) parseAllocateConf() bool {
+	time_fmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
+	for k, v := range de.conf.Allocater.Allocate_by_time {
+		mid := strings.Index(k, "-")
+		if mid == -1 || !time_fmt.MatchString(k[:mid]) || !time_fmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
+			blog.Errorf("wrong time format:(%s) in engine_disttask config, expect format like 12:30:00-14:00:00,smaller time ahead", k)
+			return false
+		}
+		de.conf.Allocater.time_data = append(de.conf.Allocater.time_data, time_slot{
+			start_time: k[:mid],
+			end_time:   k[mid+1:],
+			value:      v,
+		},
+		)
+	}
+	return true
+}
+
+func (de *disttaskEngine) allocate() float64 {
+	return de.allocateByCurrentTime()
+}
+
+func (de *disttaskEngine) allocateByCurrentTime() float64 {
+	now := time.Now().Format("15:04:05")
+
+	for _, slot := range de.conf.Allocater.time_data {
+		if now >= slot.start_time && now < slot.end_time {
+			return slot.value
+		}
+	}
+	return 1.0
+}
+
 func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	project, err := de.mysql.GetProjectSetting(tb.Client.ProjectID)
 	if err != nil {
@@ -334,7 +385,7 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	task.InheritSetting.BanAllBooster = project.BanAllBooster
 	// if ban resources, then request and least cpu is 0
 	if !task.InheritSetting.BanAllBooster {
-		task.InheritSetting.RequestCPU = project.RequestCPU
+		task.InheritSetting.RequestCPU = project.RequestCPU * de.allocate()
 		task.InheritSetting.LeastCPU = project.LeastCPU
 		if task.InheritSetting.LeastCPU > task.InheritSetting.RequestCPU {
 			task.InheritSetting.LeastCPU = task.InheritSetting.RequestCPU
