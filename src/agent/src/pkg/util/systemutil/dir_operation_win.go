@@ -32,6 +32,7 @@ package systemutil
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"os"
 )
 
@@ -45,5 +46,5 @@ func MkBuildTmpDir() (string, error) {
 // Chmod windows 暂时不做任何事情
 func Chmod(file string, perm os.FileMode) error {
 	logs.Info("chmod %d %s do nothing in windows", perm, file)
-	return err
+	return nil
 }
