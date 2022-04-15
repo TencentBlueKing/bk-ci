@@ -36,7 +36,6 @@ import com.tencent.devops.turbo.vo.TurboRecordHistoryVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -94,7 +93,7 @@ interface ApigwTurboResourceV4 {
         @ApiParam(value = "排序类型", required = false)
         @QueryParam("sortType")
         sortType: String?,
-        @ApiParam(value = "编译加速历史请求数据信息", required = true) @Valid
+        @ApiParam(value = "编译加速历史请求数据信息", required = true)
         turboRecordModel: TurboRecordModel,
         @ApiParam(value = "蓝盾项目id", required = true)
         @PathParam("projectId")
