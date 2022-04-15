@@ -113,9 +113,10 @@ class TGitApiService @Autowired constructor(
     }
 
     override fun getUserInfoByToken(cred: StreamGitCred): TGitUserInfo? {
-        return client.get(ServiceGitResource::class).getProjectUserInfo(
-            cred.toToken()
-        )
+        return client.get(ServiceGitResource::class).getUserInfoByToken(
+            cred.toToken(),
+            cred.toTokenType()
+        ).data?.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
     }
 
     override fun getProjectUserInfo(
@@ -242,7 +243,19 @@ class TGitApiService @Autowired constructor(
         ref: String?,
         retry: ApiRequestRetryInfo
     ): TGitFileInfo? {
-        TODO("等待接口完成")
+        return doRetryFun(
+            retry = retry,
+            log = "getFileInfo: [$gitProjectId|$fileName][$ref] error",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getGitFileInfo(
+                gitProjectId,
+                fileName,
+                cred.toToken(),
+                ref,
+                cred.toTokenType()
+            ).data
+        }?.let { TGitFileInfo(content = it.content, blobId = it.blobId) }
     }
 
     /**
@@ -288,7 +301,13 @@ class TGitApiService @Autowired constructor(
         mrId: Long,
         mrBody: String
     ) {
-        TODO("等待接口完成")
+        return client.get(ServiceGitResource::class).addMrComment(
+            token = cred.toToken(),
+            gitProjectId = gitProjectId,
+            mrId = mrId,
+            mrBody = mrBody,
+            tokenType = cred.toTokenType()
+        )
     }
 
     private fun StreamGitCred.toToken(): String {

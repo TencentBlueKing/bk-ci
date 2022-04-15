@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.StreamProjectCIInfo
-import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.pojo.enums.StreamProjectType
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

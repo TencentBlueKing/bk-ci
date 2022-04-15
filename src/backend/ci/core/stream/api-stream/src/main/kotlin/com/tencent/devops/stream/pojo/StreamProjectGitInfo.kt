@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.scm.pojo.Project
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -49,9 +49,9 @@ data class StreamProjectGitInfo(
     val avatarUrl: String?,
     @ApiModelProperty("项目描述")
     val description: String?,
-){
-    constructor(p : Project):this(
-        id = p.id.toLong(),
+) {
+    constructor(p: GitCodeProjectInfo) : this(
+        id = p.id!!,
         public = p.public,
         name = p.name,
         pathWithNamespace = p.pathWithNamespace,

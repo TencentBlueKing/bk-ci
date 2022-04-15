@@ -37,7 +37,7 @@ import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitCICreateFile
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -50,10 +50,10 @@ import com.tencent.devops.stream.pojo.StreamGitProjectBaseInfoCache
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamProjectGitInfo
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
-import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
-import com.tencent.devops.stream.pojo.enums.toGitAscOrDesc
-import com.tencent.devops.stream.pojo.enums.toGitOrderBy
+import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
+import com.tencent.devops.stream.pojo.enums.toGitCodeAscOrDesc
+import com.tencent.devops.stream.pojo.enums.toGitCodeOrderBy
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -161,14 +161,14 @@ class StreamTGitTransferService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamProjectGitInfo>? {
-        return client.get(ServiceGitResource::class).getProjectList(
+        return client.get(ServiceGitResource::class).getGitCodeProjectList(
             accessToken = getAndCheckOauthToken(userId).accessToken,
             userId,
             page,
             pageSize,
             search,
-            orderBy.toGitOrderBy(),
-            sort.toGitAscOrDesc(),
+            orderBy.toGitCodeOrderBy(),
+            sort.toGitCodeAscOrDesc(),
             owned,
             minAccessLevel
         ).data?.map { StreamProjectGitInfo(it) }
@@ -237,10 +237,10 @@ class StreamTGitTransferService @Autowired constructor(
     }
 
     override fun createNewFile(userId: String, gitProjectId: String, streamCreateFile: StreamCreateFileInfo): Boolean {
-        return client.get(ServiceGitResource::class).gitCICreateFile(
+        return client.get(ServiceGitResource::class).gitCreateFile(
             gitProjectId = gitProjectId,
             token = getAndCheckOauthToken(userId).accessToken,
-            gitCICreateFile = GitCICreateFile(
+            gitCreateFile = GitCreateFile(
                 filePath = streamCreateFile.filePath,
                 branch = streamCreateFile.branch,
                 encoding = when (streamCreateFile.encoding) {

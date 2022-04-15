@@ -33,8 +33,8 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 data class TGitTreeFileInfo(
     override val name: String,
     override val type: String
-) : StreamGitTreeFileInfo{
-    constructor(f: GitFileInfo):this(
+) : StreamGitTreeFileInfo {
+    constructor(f: GitFileInfo) : this(
         name = f.name,
         type = f.type
     )
