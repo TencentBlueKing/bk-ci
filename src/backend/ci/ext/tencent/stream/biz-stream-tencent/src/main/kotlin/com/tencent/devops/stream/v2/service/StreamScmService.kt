@@ -36,7 +36,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -53,6 +52,7 @@ import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -317,7 +317,7 @@ class StreamScmService @Autowired constructor(
             return client.getScm(ServiceGitResource::class).gitCICreateFile(
                 gitProjectId = gitProjectId,
                 token = token,
-                gitCICreateFile = gitCICreateFile
+                gitCreateFile = gitCICreateFile
             ).data!!
         } catch (e: RemoteServiceException) {
             logger.warn(
