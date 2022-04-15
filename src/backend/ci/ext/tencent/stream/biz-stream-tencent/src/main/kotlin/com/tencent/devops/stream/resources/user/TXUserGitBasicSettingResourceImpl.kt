@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.resources.user
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
@@ -54,10 +55,9 @@ import org.springframework.context.annotation.Primary
 @RestResource
 class TXUserGitBasicSettingResourceImpl @Autowired constructor(
     private val client: Client,
-    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
+    private val streamBasicSettingService: TXStreamBasicSettingService,
     private val permissionService: StreamPermissionService,
-    private val streamGitTransferService: StreamGitTransferService,
-    private val userGitBasicSettingResourceImpl: UserGitBasicSettingResourceImpl
+    private val streamGitTransferService: StreamGitTransferService
 ) : UserGitBasicSettingResource {
 
     override fun enableStream(
@@ -73,11 +73,11 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId
         )
-        val setting = TXStreamBasicSettingService.getStreamConf(gitProjectId)
+        val setting = streamBasicSettingService.getStreamConf(gitProjectId)
         val result = if (setting == null) {
-            TXStreamBasicSettingService.initStreamConf(userId, projectId, gitProjectId, enabled)
+            streamBasicSettingService.initStreamConf(userId, projectId, gitProjectId, enabled)
         } else {
-            TXStreamBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableCi = enabled
             )
@@ -86,7 +86,10 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
     }
 
     override fun getStreamConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
-        return userGitBasicSettingResourceImpl.getStreamConf(userId, projectId)
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        permissionService.checkStreamPermission(userId, projectId)
+        return Result(streamBasicSettingService.getStreamConf(gitProjectId))
     }
 
     override fun saveStreamConf(
@@ -99,7 +102,7 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkStreamPermission(userId = userId, projectId = projectId)
         permissionService.checkEnableStream(gitProjectId)
         return Result(
-            TXStreamBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = streamUpdateSetting.buildPushedBranches,
@@ -119,7 +122,7 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkStreamAndOAuthAndEnable(userId, projectId, gitProjectId)
         permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
-            TXStreamBasicSettingService.updateProjectSetting(
+            streamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 userId = userId,
                 authUserId = authUserId
@@ -134,7 +137,13 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         gitProjectId: Long?,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        return userGitBasicSettingResourceImpl.isOAuth(userId, redirectUrlType, redirectUrl, gitProjectId, refreshToken)
+        return streamGitTransferService.isOAuth(
+            userId = userId,
+            redirectUrlType = redirectUrlType,
+            redirectUrl = redirectUrl,
+            gitProjectId = gitProjectId,
+            refreshToken = refreshToken
+        )
     }
 
     override fun listAgentBuilds(
@@ -144,12 +153,27 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<AgentBuildDetail>> {
-        return userGitBasicSettingResourceImpl.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize)
+        checkParam(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
     }
 
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
+        }
+    }
+
+    private fun checkProjectId(projectId: String) {
+        if (projectId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
+        }
+    }
+
+    private fun checkNodeId(nodeHashId: String) {
+        if (nodeHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
         }
     }
 

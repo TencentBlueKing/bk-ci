@@ -48,9 +48,10 @@ import com.tencent.devops.stream.v1.service.V1StreamYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
 
 @Primary
-@RestResource
+@Component
 class TXUserGitCITriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
     private val streamPipelineService: StreamPipelineService,

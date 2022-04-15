@@ -38,9 +38,10 @@ import com.tencent.devops.stream.service.TXStreamDetailService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
 
 @Primary
-@RestResource
+@Component
 class TXUserStreamDetailResourceImpl @Autowired constructor(
     private val streamDetailService: StreamDetailService,
     private val txStreamDetailService: TXStreamDetailService,
