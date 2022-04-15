@@ -54,6 +54,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -287,7 +288,7 @@ interface ServiceGitResource {
         recursive: Boolean? = false,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取mr请求的代码变更")
@@ -368,7 +369,7 @@ interface ServiceGitResource {
         perPage: Int,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<List<Commit>>
 
     @ApiOperation("工蜂创建文件")
@@ -382,10 +383,7 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String,
         @ApiParam(value = "创建文件内容")
-        gitCreateFile: GitCreateFile,
-        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
-        @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        gitCreateFile: GitCICreateFile
     ): Result<Boolean>
 
     @ApiOperation("获取当前commit记录所属")
@@ -1021,4 +1019,21 @@ interface ServiceGitResource {
         @QueryParam("minAccessLevel")
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>>
+
+    @ApiOperation("工蜂创建文件")
+    @POST
+    @Path("/stream/create/file")
+    fun gitCreateFile(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "创建文件内容")
+        gitCreateFile: GitCreateFile,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<Boolean>
 }

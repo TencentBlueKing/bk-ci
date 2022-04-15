@@ -55,6 +55,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -300,15 +301,14 @@ class ServiceGitResourceImpl @Autowired constructor(
     override fun gitCICreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
-        tokenType: TokenTypeEnum
+        gitCreateFile: GitCICreateFile,
     ): Result<Boolean> {
         return Result(
             gitService.gitCodeCreateFile(
                 gitProjectId = gitProjectId,
                 token = token,
                 gitCreateFile = gitCreateFile,
-                tokenType = tokenType
+                tokenType = TokenTypeEnum.OAUTH
             )
         )
     }
@@ -689,6 +689,22 @@ class ServiceGitResourceImpl @Autowired constructor(
             sort = sort,
             owned = owned,
             minAccessLevel = minAccessLevel
+        )
+    }
+
+    override fun gitCreateFile(
+        gitProjectId: String,
+        token: String,
+        gitCreateFile: GitCreateFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return Result(
+            gitService.gitCreateFile(
+                gitProjectId = gitProjectId,
+                token = token,
+                gitCreateFile = gitCreateFile,
+                tokenType = tokenType
+            )
         )
     }
 }
