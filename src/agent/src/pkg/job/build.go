@@ -207,7 +207,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		}
 	}
 	// #5806 定义临时目录
-	tmpDir, tmpMkErr := systemutil.GetBuildTmpDir()
+	tmpDir, tmpMkErr := systemutil.MkBuildTmpDir()
 	if tmpMkErr != nil {
 		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
 		logs.Error(errMsg)
