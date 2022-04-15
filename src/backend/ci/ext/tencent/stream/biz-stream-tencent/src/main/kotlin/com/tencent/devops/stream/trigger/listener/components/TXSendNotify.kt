@@ -1,9 +1,9 @@
 package com.tencent.devops.stream.trigger.listener.components
 
-import com.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction

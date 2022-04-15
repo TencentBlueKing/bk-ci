@@ -25,28 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml.modelCreate
+package com.tencent.devops.process.yaml.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.v2.models.ScriptBuildYaml
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXModelCreate constructor(
+class TXModelCreate @Autowired constructor(
     client: Client,
-    objectMapper: ObjectMapper,
     modelStage: ModelStage
 ) : ModelCreate(
-    client, objectMapper, modelStage
+    client, modelStage
 ) {
     override fun createPipelineModel(
         modelName: String,

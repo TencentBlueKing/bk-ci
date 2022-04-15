@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.yamlCheck
 
-import com.devops.process.yaml.v2.enums.TemplateType
-import com.devops.process.yaml.v2.exception.YamlFormatException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
@@ -36,6 +34,8 @@ import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.yaml.v2.enums.TemplateType
+import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.stream.config.TXStreamGitConfig
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService

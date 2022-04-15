@@ -27,8 +27,8 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache

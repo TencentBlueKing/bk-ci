@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml.modelCreate.inner
+package com.tencent.devops.process.yaml.modelCreate.inner
 
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 

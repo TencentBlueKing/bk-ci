@@ -25,13 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml.modelCreate
+package com.tencent.devops.process.yaml.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
-import com.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
-import com.devops.process.yaml.pojo.StreamDispatchInfo
-import com.devops.process.yaml.v2.models.Resources
-import com.devops.process.yaml.v2.models.job.Job
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -40,12 +35,18 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
+import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
+import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.v2.models.job.Job
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXModelContainer constructor(
+class TXModelContainer @Autowired constructor(
     client: Client,
     objectMapper: ObjectMapper,
     inner: TXInnerModelCreator

@@ -25,21 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml.modelCreate
+package com.tencent.devops.process.yaml.modelCreate
 
-import com.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
-import com.devops.process.yaml.v2.models.job.Job
-import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
+import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXModelElement constructor(
+class TXModelElement @Autowired constructor(
     client: Client,
     inner: TXInnerModelCreator
 ) : ModelElement(
