@@ -322,14 +322,13 @@ class StreamScmService @Autowired constructor(
             return client.getScm(ServiceGitResource::class).gitCICreateFile(
                 gitProjectId = gitProjectId,
                 token = token,
-                gitCreateFile = GitCreateFile(
+                gitCreateFile = GitCICreateFile(
                     filePath = gitCICreateFile.filePath,
                     branch = gitCICreateFile.branch,
-                    encoding = GitCodeFileEncoding.valueOf(gitCICreateFile.encoding.name),
+                    encoding = gitCICreateFile.encoding,
                     content = gitCICreateFile.content,
                     commitMessage = gitCICreateFile.commitMessage
-                ),
-                TokenTypeEnum.OAUTH
+                )
             ).data!!
         } catch (e: RemoteServiceException) {
             logger.warn(
