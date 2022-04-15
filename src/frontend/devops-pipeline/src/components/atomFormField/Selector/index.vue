@@ -7,6 +7,7 @@
             :name="item[displayKey]"
             :disabled="item.disabled"
         >
+            <slot name="option-item" v-bind="item"></slot>
         </bk-option>
         <div slot="extension">
             <slot></slot>

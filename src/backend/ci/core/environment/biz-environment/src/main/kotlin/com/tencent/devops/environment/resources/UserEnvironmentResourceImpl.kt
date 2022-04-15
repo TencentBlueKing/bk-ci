@@ -174,13 +174,36 @@ class UserEnvironmentResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun listUserShareEnv(
+        userId: String,
+        projectId: String,
+        envHashId: String,
+        search: String?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<SharedProjectInfo>> {
+        if (projectId.isEmpty()) {
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_EMPTY)
+        }
+        return Result(
+            envService.listUserShareEnv(
+                userId = userId,
+                projectId = projectId,
+                envHashId = envHashId,
+                search = search,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20
+            )
+        )
+    }
+
     override fun listShareEnv(
         userId: String,
         projectId: String,
         envHashId: String,
         name: String?,
-        offset: Int?,
-        limit: Int?
+        page: Int?,
+        pageSize: Int?
     ): Result<Page<SharedProjectInfo>> {
         checkParam(userId, projectId, envHashId)
         return Result(
@@ -189,8 +212,8 @@ class UserEnvironmentResourceImpl @Autowired constructor(
                 projectId,
                 envHashId,
                 name,
-                offset ?: 0,
-                limit ?: 20
+                page ?: 1,
+                pageSize ?: 20
             )
         )
     }

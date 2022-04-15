@@ -73,7 +73,7 @@
     }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
     .params-item {
         display: flex;
         margin-bottom: 10px;

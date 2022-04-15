@@ -41,7 +41,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import kotlin.math.max
@@ -172,7 +172,7 @@ class MatrixExecuteContainerCmd(
         if (fastKill) newActionType = ActionType.TERMINATE
         val maxConcurrency = min(
             matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
-            PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
         )
         if (newActionType.isEnd()) {
             buildLogPrinter.addLine(
