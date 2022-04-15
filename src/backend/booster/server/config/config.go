@@ -165,6 +165,7 @@ type EngineDisttaskConfig struct {
 	MySQLDebug       bool   `json:"engine_disttask_mysql_debug" value:"false" usage:"if true, will output raw sql"`
 	MysqlTableOption string `json:"engine_disttask_mysql_table_option" value:"" usage:"mysql table option"`
 
+	ResourceAllocater   map[string]float64           `json:"resource_allocater_by_current_time"`
 	LeastJobServer      int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
 	JobServerTimesToCPU float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
 	BrokerConfig        []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
