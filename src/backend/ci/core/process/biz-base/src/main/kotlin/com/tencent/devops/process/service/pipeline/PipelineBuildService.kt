@@ -291,7 +291,7 @@ class PipelineBuildService(
                     originStartParams.add(it)
                 }
                 // #6482 对于用户自定义的自动参数增加对应上下文，如果已是上下文无需处理
-                if (originKey && it.key.startsWith(CONTEXT_PREFIX)) {
+                if (originKey && !it.key.startsWith(CONTEXT_PREFIX)) {
                     paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
                 }
             }
