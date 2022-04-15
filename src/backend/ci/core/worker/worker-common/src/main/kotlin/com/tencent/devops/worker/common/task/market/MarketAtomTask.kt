@@ -624,6 +624,15 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 添加插件对接平台错误码信息
+        val platformCode = atomResult?.platformCode
+        if (platformCode != null) {
+            addPlatformCode(platformCode)
+        }
+        val platformErrorCode = atomResult?.platformErrorCode
+        if (platformErrorCode != null) {
+            addPlatformErrorCode(platformErrorCode)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {

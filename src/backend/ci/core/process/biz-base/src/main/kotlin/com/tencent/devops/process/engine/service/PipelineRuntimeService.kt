@@ -1307,7 +1307,9 @@ class PipelineRuntimeService @Autowired constructor(
                 buildStatus = completeTask.buildStatus,
                 errorType = completeTask.errorType,
                 errorCode = completeTask.errorCode,
-                errorMsg = completeTask.errorMsg
+                errorMsg = completeTask.errorMsg,
+                platformCode = completeTask.platformCode,
+                platformErrorCode = completeTask.platformErrorCode
             )
             // 刷新容器，下发后面的任务
             pipelineEventDispatcher.dispatch(
