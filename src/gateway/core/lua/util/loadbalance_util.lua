@@ -19,17 +19,22 @@ _M = {}
 -- 获取目标ip:port
 function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
-    if not in_container and devops_tag == 'kubernetes' then
+
+    -- 转发到容器环境里
+    if not in_container and devops_tag.find('^kubernetes-') then
         return config.kubernetes.domain .. "/ms/" .. service_name
     end
 
     -- 容器环境
     if in_container then
-        if ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil then
-            return service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. ngx.var.namespace ..
+        local is_multi_namespace = ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil
+        if is_multi_namespace then -- 多集群场景
+            local devops_ns = string.sub(devops_tag, 11)
+            return service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. devops_ns ..
                        '.svc.cluster.local'
+        else -- 单一集群场景
+            return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
         end
-        return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
     end
 
     -- 获取consul查询域名
