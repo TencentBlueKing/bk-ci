@@ -1,11 +1,5 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.models.on.IssueRule
-import com.devops.process.yaml.v2.models.on.MrRule
-import com.devops.process.yaml.v2.models.on.PushRule
-import com.devops.process.yaml.v2.models.on.TagRule
-import com.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
@@ -20,6 +14,12 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.models.on.IssueRule
+import com.tencent.devops.process.yaml.v2.models.on.MrRule
+import com.tencent.devops.process.yaml.v2.models.on.PushRule
+import com.tencent.devops.process.yaml.v2.models.on.TagRule
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.utils.code.git.GitUtils

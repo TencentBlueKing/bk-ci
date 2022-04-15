@@ -1,17 +1,17 @@
 package com.tencent.devops.stream.trigger.parsers.triggerMatch
 
-import com.devops.process.yaml.v2.enums.StreamMrEventAction
-import com.devops.process.yaml.v2.enums.StreamPushActionType
-import com.devops.process.yaml.v2.models.PreRepositoryHook
-import com.devops.process.yaml.v2.models.on.PreTriggerOn
-import com.devops.process.yaml.v2.models.on.TriggerOn
-import com.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
-import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
+import com.tencent.devops.process.yaml.v2.enums.StreamPushActionType
+import com.tencent.devops.process.yaml.v2.models.PreRepositoryHook
+import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v2.parsers.template.models.NoReplaceTemplate
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr

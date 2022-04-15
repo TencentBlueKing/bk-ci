@@ -27,11 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
-import com.devops.process.yaml.modelCreate.ModelCommon
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.models.ScriptBuildYaml
-import com.devops.process.yaml.v2.models.Variable
-import com.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -46,6 +41,11 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_RUN
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.yaml.modelCreate.ModelCommon
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.CommonVariables
 import com.tencent.devops.stream.trigger.actions.BaseAction

@@ -1,7 +1,7 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
-import com.devops.process.yaml.v2.models.Variable
-import com.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.StreamBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData

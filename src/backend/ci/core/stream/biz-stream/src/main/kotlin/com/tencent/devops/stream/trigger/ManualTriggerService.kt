@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
@@ -40,6 +38,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao

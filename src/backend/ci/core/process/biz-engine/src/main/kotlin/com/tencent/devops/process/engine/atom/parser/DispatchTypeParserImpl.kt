@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.devops.process.yaml.utils.StreamDispatchUtils
-import com.devops.process.yaml.pojo.StreamDispatchInfo
+import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo

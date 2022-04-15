@@ -27,9 +27,9 @@
 
 package com.tencent.devops.stream.trigger.pojo
 
-import com.devops.process.yaml.v2.models.PreScriptBuildYaml
-import com.devops.process.yaml.v2.models.ScriptBuildYaml
-import com.devops.process.yaml.v2.models.YamlTransferData
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 
 /**
  * Yaml模板替换完且初始化完的结果

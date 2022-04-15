@@ -25,12 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml.utils
+package com.tencent.devops.process.yaml.utils
 
-import com.devops.process.yaml.v2.models.PreScriptBuildYaml
-import com.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
-import com.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource

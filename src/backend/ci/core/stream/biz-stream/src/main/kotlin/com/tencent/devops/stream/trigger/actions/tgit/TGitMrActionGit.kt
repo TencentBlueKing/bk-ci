@@ -27,9 +27,6 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
-import com.devops.process.yaml.v2.enums.StreamMrEventAction
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -37,6 +34,9 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrForkEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrForkNotMergeEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isMrMergeEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
