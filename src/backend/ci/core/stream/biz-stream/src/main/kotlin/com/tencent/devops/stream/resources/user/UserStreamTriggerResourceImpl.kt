@@ -30,7 +30,6 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.api.user.UserStreamTriggerResource
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamGitYamlString
@@ -69,22 +68,7 @@ class UserStreamTriggerResourceImpl @Autowired constructor(
     }
 
     override fun checkYaml(userId: String, yaml: StreamGitYamlString): Result<String> {
-        // 检查yml版本，根据yml版本选择不同的实现
-        val ymlVersion = ScriptYmlUtils.parseVersion(yaml.yaml)
-        when {
-            ymlVersion == null -> {
-                return Result(1, "Invalid yaml")
-            }
-            else -> {
-                return try {
-                    yamlSchemaCheck.check(yaml.yaml, null, true)
-                    Result("OK")
-                } catch (e: Exception) {
-                    logger.error("Check yaml schema failed.", e)
-                    Result(1, "Invalid yaml: ${e.message}")
-                }
-            }
-        }
+        return streamYamlService.checkYaml(userId, yaml)
     }
 
     override fun getYamlByBuildId(userId: String, projectId: String, buildId: String): Result<V2BuildYaml?> {

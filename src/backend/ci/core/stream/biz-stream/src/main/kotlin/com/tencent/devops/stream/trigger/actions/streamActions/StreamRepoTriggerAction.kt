@@ -3,7 +3,6 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.actions.StreamBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -18,7 +17,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 class StreamRepoTriggerAction(
     // 可能会包含stream action事件类似删除
     private val baseAction: BaseAction
-) : StreamBaseAction {
+) : BaseAction {
     override val metaData: ActionMetaData = baseAction.metaData
     override var data: ActionData = baseAction.data
     override val api: StreamGitApiService = baseAction.api

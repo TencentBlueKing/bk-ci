@@ -3,8 +3,8 @@ package com.tencent.devops.stream.trigger.actions.streamActions
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.getTypesObjectKind
+import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.StreamBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -21,7 +21,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
  */
 class StreamDeleteAction(
     private val gitAction: GitBaseAction
-) : StreamBaseAction {
+) : BaseAction {
     override val metaData: ActionMetaData = gitAction.metaData
     override var data: ActionData = gitAction.data
     override val api: StreamGitApiService = gitAction.api
