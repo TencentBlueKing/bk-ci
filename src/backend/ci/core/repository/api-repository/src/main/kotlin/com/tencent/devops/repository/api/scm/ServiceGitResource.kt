@@ -744,7 +744,7 @@ interface ServiceGitResource {
 
     @ApiOperation("工蜂创建文件")
     @POST
-    @Path("/stream/create/file")
+    @Path("/gitcode/create/file")
     fun gitCreateFile(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
