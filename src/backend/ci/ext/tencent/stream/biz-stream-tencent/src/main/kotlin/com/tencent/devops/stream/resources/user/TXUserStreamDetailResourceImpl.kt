@@ -37,7 +37,9 @@ import com.tencent.devops.stream.service.StreamDetailService
 import com.tencent.devops.stream.service.TXStreamDetailService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 
+@Primary
 @RestResource
 class TXUserStreamDetailResourceImpl @Autowired constructor(
     private val streamDetailService: StreamDetailService,

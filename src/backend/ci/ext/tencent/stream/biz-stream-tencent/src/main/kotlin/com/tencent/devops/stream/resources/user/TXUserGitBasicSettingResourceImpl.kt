@@ -42,7 +42,9 @@ import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 
+@Primary
 @RestResource
 class TXUserGitBasicSettingResourceImpl @Autowired constructor(
     private val client: Client,

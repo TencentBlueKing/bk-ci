@@ -47,7 +47,9 @@ import com.tencent.devops.stream.v1.components.V1YamlTrigger
 import com.tencent.devops.stream.v1.service.V1StreamYamlService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
 
+@Primary
 @RestResource
 class TXUserGitCITriggerResourceImpl @Autowired constructor(
     private val manualTriggerService: ManualTriggerService,
