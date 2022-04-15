@@ -50,15 +50,18 @@ import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Component
 
 @Primary
-@RestResource
+@Component
 class TXUserGitBasicSettingResourceImpl @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingService: TXStreamBasicSettingService,
     private val permissionService: StreamPermissionService,
     private val streamGitTransferService: StreamGitTransferService
-) : UserGitBasicSettingResource {
+) : UserGitBasicSettingResourceImpl(
+    streamBasicSettingService, permissionService, streamGitTransferService
+) {
 
     override fun enableStream(
         userId: String,
@@ -85,32 +88,6 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun getStreamConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId)
-        permissionService.checkStreamPermission(userId, projectId)
-        return Result(streamBasicSettingService.getStreamConf(gitProjectId))
-    }
-
-    override fun saveStreamConf(
-        userId: String,
-        projectId: String,
-        streamUpdateSetting: StreamUpdateSetting
-    ): Result<Boolean> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId)
-        permissionService.checkStreamPermission(userId = userId, projectId = projectId)
-        permissionService.checkEnableStream(gitProjectId)
-        return Result(
-            streamBasicSettingService.updateProjectSetting(
-                gitProjectId = gitProjectId,
-                buildPushedPullRequest = streamUpdateSetting.buildPushedPullRequest,
-                buildPushedBranches = streamUpdateSetting.buildPushedBranches,
-                enableMrBlock = streamUpdateSetting.enableMrBlock
-            )
-        )
-    }
-
     override fun updateEnableUser(
         userId: String,
         projectId: String,
@@ -130,50 +107,9 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
         )
     }
 
-    override fun isOAuth(
-        userId: String,
-        redirectUrlType: RedirectUrlTypeEnum?,
-        redirectUrl: String?,
-        gitProjectId: Long?,
-        refreshToken: Boolean?
-    ): Result<AuthorizeResult> {
-        return streamGitTransferService.isOAuth(
-            userId = userId,
-            redirectUrlType = redirectUrlType,
-            redirectUrl = redirectUrl,
-            gitProjectId = gitProjectId,
-            refreshToken = refreshToken
-        )
-    }
-
-    override fun listAgentBuilds(
-        userId: String,
-        projectId: String,
-        nodeHashId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<AgentBuildDetail>> {
-        checkParam(userId)
-        checkProjectId(projectId)
-        checkNodeId(nodeHashId)
-        return Result(streamBasicSettingService.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize))
-    }
-
     private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
-        }
-    }
-
-    private fun checkProjectId(projectId: String) {
-        if (projectId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
-        }
-    }
-
-    private fun checkNodeId(nodeHashId: String) {
-        if (nodeHashId.isBlank()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
         }
     }
 
