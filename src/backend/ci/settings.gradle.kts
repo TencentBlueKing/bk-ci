@@ -432,7 +432,8 @@ include(":ext:tencent:openapi:biz-openapi-tencent")
 include(":ext:tencent:openapi:boot-openapi-tencent")
 include(":ext:tencent:openapi:model-openapi")
 
-include(":ext:tencent:config-server")
+include(":ext:tencent:config")
+include(":ext:tencent:config:boot-config-tencent")
 include(":ext:tencent:log:api-log-tencent")
 
 include(":ext:tencent:auth")
