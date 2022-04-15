@@ -36,19 +36,17 @@ import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitCICreateFile
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
+import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitMrInfo
 import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.git.MrCommentBody
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.repository.service.scm.IGitService
-import com.tencent.devops.repository.utils.scm.QualityUtils
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -482,7 +480,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String,
         gitProjectId: String,
         mrId: Long,
-        mrBody: MrCommentBody,
+        mrBody: String,
         tokenType: TokenTypeEnum
     ) {
         TODO("Not yet implemented")
@@ -490,7 +488,7 @@ class ServiceGitResourceImpl @Autowired constructor(
             token = token,
             gitProjectId = gitProjectId,
             mrId = mrId,
-            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
+            mrBody = mrBody,
             tokenType = tokenType
         )
     }
@@ -540,13 +538,13 @@ class ServiceGitResourceImpl @Autowired constructor(
     override fun gitCreateFile(
         gitProjectId: String,
         token: String,
-        gitCICreateFile: GitCICreateFile,
+        gitCreateFile: GitCreateFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
         return gitService.gitCreateFile(
             gitProjectId = gitProjectId,
             token = token,
-            gitCICreateFile = gitCICreateFile,
+            gitCreateFile = gitCreateFile,
             tokenType = tokenType
         )
     }
