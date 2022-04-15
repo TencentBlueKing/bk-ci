@@ -29,13 +29,19 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
+import com.tencent.devops.repository.pojo.AuthorizeResult
+import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
+import com.tencent.devops.stream.api.user.UserGitBasicSettingResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.constant.StreamConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.stream.permission.StreamPermissionService
+import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.StreamUpdateSetting
 import com.tencent.devops.stream.service.StreamGitTransferService
@@ -50,12 +56,9 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
     private val client: Client,
     private val TXStreamBasicSettingService: TXStreamBasicSettingService,
     private val permissionService: StreamPermissionService,
-    private val streamGitTransferService: StreamGitTransferService
-) : UserGitBasicSettingResourceImpl(
-    TXStreamBasicSettingService,
-    permissionService,
-    streamGitTransferService
-) {
+    private val streamGitTransferService: StreamGitTransferService,
+    private val userGitBasicSettingResourceImpl: UserGitBasicSettingResourceImpl
+) : UserGitBasicSettingResource {
 
     override fun enableStream(
         userId: String,
@@ -80,6 +83,10 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
             )
         }
         return Result(result)
+    }
+
+    override fun getStreamConf(userId: String, projectId: String): Result<StreamBasicSetting?> {
+        return userGitBasicSettingResourceImpl.getStreamConf(userId, projectId)
     }
 
     override fun saveStreamConf(
@@ -118,6 +125,26 @@ class TXUserGitBasicSettingResourceImpl @Autowired constructor(
                 authUserId = authUserId
             )
         )
+    }
+
+    override fun isOAuth(
+        userId: String,
+        redirectUrlType: RedirectUrlTypeEnum?,
+        redirectUrl: String?,
+        gitProjectId: Long?,
+        refreshToken: Boolean?
+    ): Result<AuthorizeResult> {
+        return userGitBasicSettingResourceImpl.isOAuth(userId, redirectUrlType, redirectUrl, gitProjectId, refreshToken)
+    }
+
+    override fun listAgentBuilds(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AgentBuildDetail>> {
+        return userGitBasicSettingResourceImpl.listAgentBuilds(userId, projectId, nodeHashId, page, pageSize)
     }
 
     private fun checkParam(userId: String) {
