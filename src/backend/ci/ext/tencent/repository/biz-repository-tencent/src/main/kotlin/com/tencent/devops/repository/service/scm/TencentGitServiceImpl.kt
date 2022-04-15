@@ -593,7 +593,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         gitCreateFile: GitCreateFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
-        return client.getScm(ServiceGitResource::class).gitCICreateFile(
+        return client.getScm(ServiceGitResource::class).gitCreateFile(
             gitProjectId, token, gitCreateFile, tokenType
         )
     }

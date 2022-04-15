@@ -79,6 +79,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -742,7 +743,7 @@ class GitService @Autowired constructor(
     fun gitCodeCreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
+        gitCreateFile: GitCICreateFile,
         tokenType: TokenTypeEnum
     ): Boolean {
         val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
@@ -2148,5 +2149,26 @@ class GitService @Autowired constructor(
             }
         }
         return Result(res)
+    }
+
+    fun gitCreateFile(gitProjectId: String, token: String, gitCreateFile: GitCreateFile, tokenType: TokenTypeEnum): Boolean {
+        val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+            .url(url.toString())
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitCreateFile)
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            logger.info("request: $request Start to create file resp: $it")
+            if (!it.isSuccessful) {
+                throw GitCodeUtils.handleErrorMessage(it)
+            }
+            return true
+        }
     }
 }
