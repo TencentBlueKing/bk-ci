@@ -255,7 +255,7 @@ BEGIN
 	END IF;
 	
 	IF NOT EXISTS(SELECT 1
-			  FROM information_schema.COLUMNS
+			  FROM information_schema.statistics
 			  WHERE TABLE_SCHEMA = db
 				AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
 				AND INDEX_NAME = 'IDX_PROJECT_STATUS_GROUP') THEN 
