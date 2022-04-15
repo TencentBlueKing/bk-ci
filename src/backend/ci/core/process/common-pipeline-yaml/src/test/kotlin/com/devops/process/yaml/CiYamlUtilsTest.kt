@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml
+package com.tencent.devops.process.yaml
 
-import com.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader

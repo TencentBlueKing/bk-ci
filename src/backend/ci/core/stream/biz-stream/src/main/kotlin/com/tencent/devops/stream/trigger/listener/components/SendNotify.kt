@@ -27,9 +27,6 @@
 
 package com.tencent.devops.stream.trigger.listener.components
 
-import com.devops.process.yaml.v2.models.GitNotices
-import com.devops.process.yaml.v2.models.IfType
-import com.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.YamlUtil
@@ -40,6 +37,9 @@ import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResourc
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.yaml.v2.models.GitNotices
+import com.tencent.devops.process.yaml.v2.models.IfType
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData

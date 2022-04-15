@@ -27,11 +27,11 @@
 
 package com.tencent.devops.stream.trigger.actions.streamActions
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.models.Variable
-import com.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction

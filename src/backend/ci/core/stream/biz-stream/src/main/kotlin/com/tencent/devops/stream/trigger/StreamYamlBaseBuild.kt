@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.devops.process.yaml.v2.enums.TemplateType
-import com.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -43,6 +41,8 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.yaml.v2.enums.TemplateType
+import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao

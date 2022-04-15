@@ -32,7 +32,7 @@ import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.stream")
+@ComponentScan("com.tencent.devops.stream", "com.tencent.devops.process.yaml")
 class StreamApplication
 
 fun main(args: Array<String>) {
