@@ -29,7 +29,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     if in_container then
         local is_multi_namespace = ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil
         if is_multi_namespace then -- 多集群场景
-            local devops_ns = string.sub(devops_tag, 11)
+            local devops_ns = string.sub(devops_tag, 12)
             return service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. devops_ns ..
                        '.svc.cluster.local'
         else -- 单一集群场景
