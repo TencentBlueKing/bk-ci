@@ -21,7 +21,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
 
     -- 转发到容器环境里
-    if not in_container and devops_tag.find('^kubernetes-') then
+    if not in_container and string.find(devops_tag, '^kubernetes-') then
         return config.kubernetes.domain .. "/ms/" .. service_name
     end
 
