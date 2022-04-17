@@ -199,7 +199,7 @@ class BuildStartControl @Autowired constructor(
                         pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                             projectId = projectId,
                             concurrencyGroup = it,
-                            status = BuildStatus.RUNNING
+                            status = listOf(BuildStatus.RUNNING)
                         ).size
                     } ?: 0
 
