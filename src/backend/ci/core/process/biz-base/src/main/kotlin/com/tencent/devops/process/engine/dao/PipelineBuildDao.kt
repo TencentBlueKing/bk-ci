@@ -51,6 +51,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
+import org.jooq.Record2
 
 @Suppress("ALL")
 @Repository
@@ -171,12 +172,12 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         concurrencyGroup: String,
-        statusSet: BuildStatus
-    ): Result<TPipelineBuildHistoryRecord?> {
+        statusSet: List<BuildStatus>
+    ): List<Record2<String, String>> {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectFrom(this)
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .and(STATUS.eq(statusSet.ordinal))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
                 .fetch()
         }

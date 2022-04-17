@@ -123,26 +123,15 @@ class QueueInterceptor @Autowired constructor(
                 Response(data = BuildStatus.RUNNING)
             !concurrencyGroup.isNullOrBlank() && setting.concurrencyCancelInProgress -> {
                 // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
-                val buildPipelineList = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
                     concurrencyGroup = concurrencyGroup,
-                    status = BuildStatus.RUNNING
-                ).plus(
-                    pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
-                        projectId = projectId,
-                        concurrencyGroup = concurrencyGroup,
-                        status = BuildStatus.QUEUE
-                    ).apply {
-                        pipelineRuntimeExtService.popAllConcurrencyGroupBuildInfo(this)
-                    }
-                )
-
-                buildPipelineList.forEach { buildInfo ->
-                    if (buildInfo == null) return@forEach
+                    status = listOf(BuildStatus.RUNNING, BuildStatus.QUEUE)
+                ).forEach { (pipelineId, buildId) ->
                     cancelBuildPipeline(
                         projectId = projectId,
-                        pipelineId = buildInfo.pipelineId,
-                        buildId = buildInfo.buildId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
                         userId = latestStartUser ?: task.pipelineInfo.creator,
                         groupName = concurrencyGroup
                     )
@@ -217,7 +206,7 @@ class QueueInterceptor @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = "$pipelineId] because concurrency cancel in progress with group($groupName)" +
-                        ", cancel all queue build",
+                            ", cancel all queue build",
                     tag = "QueueInterceptor",
                     jobId = "",
                     executeCount = 1
