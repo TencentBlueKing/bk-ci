@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `T_PIPELINE_BUILD_HISTORY` (
   KEY `inx_tpbh_status` (`STATUS`),
   KEY `inx_tpbh_start_time` (`START_TIME`),
   KEY `inx_tpbh_end_time` (`END_TIME`),
-  KEY `IDX_PROJECT_STATUS_GROUP` (`PROJECT_ID`,`STATUS`,`CONCURRENCY_GROUP`),
+  KEY `IDX_PROJECT_STATUS_GROUP` (`PROJECT_ID`,`STATUS`,`CONCURRENCY_GROUP`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='流水线构建历史表';
 -- ----------------------------
 -- Table structure for T_PIPELINE_BUILD_STAGE
