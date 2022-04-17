@@ -29,7 +29,7 @@ package com.tencent.devops.common.stream.constants
 
 object Stream {
     // 日志事件
-    const val EXCHANGE_LOG_BUILD_MESSAGE = "e.engine.log.build.event"
-    const val EXCHANGE_LOG_BATCH_BUILD_EVENT = "e.engine.log.batch.build.event"
-    const val EXCHANGE_LOG_STATUS_BUILD_EVENT = "e.engine.log.status.build.event"
+    const val EXCHANGE_LOG_BUILD_MESSAGE = "e.build.log.origin.event"
+    const val EXCHANGE_LOG_BATCH_BUILD_EVENT = "e.build.log.storage.event"
+    const val EXCHANGE_LOG_STATUS_BUILD_EVENT = "e.build.log.status.event"
 }
