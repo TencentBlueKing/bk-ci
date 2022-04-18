@@ -83,7 +83,7 @@ type TimeSlot struct {
 }
 
 type ResourceAllocater struct {
-	allocateMap map[string]float64
+	AllocateMap map[string]float64
 	timeData    []TimeSlot
 }
 
@@ -307,10 +307,10 @@ func (de *disttaskEngine) getClient(timeoutSecond int) *httpclient.HTTPClient {
 	return client
 }
 
-// cheack allocateMap map ,make sure the key is the format of xx:xx:xx-xx:xx:xx and smaller time is ahead
+// cheack AllocateMap map ,make sure the key is the format of xx:xx:xx-xx:xx:xx and smaller time is ahead
 func (de *disttaskEngine) parseAllocateConf() bool {
 	time_fmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
-	for k, v := range de.conf.Allocater.allocateMap {
+	for k, v := range de.conf.Allocater.AllocateMap {
 		mid := strings.Index(k, "-")
 		if mid == -1 || !time_fmt.MatchString(k[:mid]) || !time_fmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
 			blog.Errorf("wrong time format:(%s) in engine_disttask config, expect format like 12:30:00-14:00:00,smaller time ahead", k)

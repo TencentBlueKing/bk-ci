@@ -527,7 +527,7 @@ func (s *Server) initDisttaskEngine(
 			MysqlTableOption: s.conf.EngineDisttaskConfig.MysqlTableOption,
 		},
 		Allocater: disttask.ResourceAllocater{
-			Allocate_by_time: s.conf.EngineDisttaskConfig.ResourceAllocater,
+			AllocateMap: s.conf.EngineDisttaskConfig.ResourceAllocater,
 		},
 		Rd:                   s.rd,
 		QueueShareType:       s.conf.DisttaskQueueShareType,
