@@ -36,6 +36,7 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
@@ -70,8 +71,8 @@ class TGitTagPushActionGit(
     override val api: TGitApiService
         get() = apiService
 
-    override fun init() {
-        initCommonData()
+    override fun init(): BaseAction? {
+        return initCommonData()
     }
 
     private fun initCommonData(): GitBaseAction {

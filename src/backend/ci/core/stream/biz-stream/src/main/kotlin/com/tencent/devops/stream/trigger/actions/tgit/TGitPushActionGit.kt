@@ -102,8 +102,8 @@ class TGitPushActionGit(
     override val api: TGitApiService
         get() = apiService
 
-    override fun init() {
-        initCommonData()
+    override fun init(): BaseAction? {
+        return initCommonData()
     }
 
     private fun initCommonData(): GitBaseAction {

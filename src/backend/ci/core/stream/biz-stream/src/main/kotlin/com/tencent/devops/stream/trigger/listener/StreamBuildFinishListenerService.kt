@@ -138,6 +138,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
             startTime = buildFinishEvent.startTime,
             stageId = null
         )
+        action.data.context.requestEventId = requestEvent.id
 
         // 推送结束构建消息
         sendCommitCheck.sendCommitCheck(action)

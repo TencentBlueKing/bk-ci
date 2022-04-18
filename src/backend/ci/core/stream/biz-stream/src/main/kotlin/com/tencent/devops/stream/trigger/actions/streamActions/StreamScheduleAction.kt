@@ -65,8 +65,8 @@ class StreamScheduleAction(
 
     override lateinit var api: StreamGitApiService
 
-    override fun init() {
-        initCommonData()
+    override fun init(): BaseAction? {
+        return initCommonData()
     }
 
     private fun initCommonData(): StreamScheduleAction {
