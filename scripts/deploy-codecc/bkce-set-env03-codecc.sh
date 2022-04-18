@@ -81,7 +81,7 @@ set_env03 BK_CODECC_MONGODB_ADDR="$BK_CMDB_MONGODB_HOST:$BK_CMDB_MONGODB_PORT" B
 
 if grep -w repo $CTRL_DIR/install.config|grep -v ^\# ; then
   set_env03 BK_REPO_GATEWAY_IP=$BK_REPO_GATEWAY_IP \
-  set_env03 BK_REPO_HOST=$BK_REPO_HOST
+  BK_REPO_HOST=$BK_REPO_HOST
 fi
 
 echo "合并env."

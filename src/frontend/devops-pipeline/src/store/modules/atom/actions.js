@@ -46,9 +46,7 @@ import {
     UPDATE_CONTAINER,
     ADD_STAGE,
     UPDATE_STAGE,
-    CONTAINER_TYPE_SELECTION_VISIBLE,
-    SET_INSERT_STAGE_INDEX,
-    SET_INSERT_STAGE_ISFINALLY,
+    SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
     SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
@@ -191,10 +189,21 @@ export default {
             return response.data
         })
     },
-    requestPipeline: async ({ commit, dispatch }, { projectId, pipelineId }) => {
+    requestPipeline: async ({ commit, dispatch, getters }, { projectId, pipelineId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`)
-            dispatch('setPipeline', response.data)
+            const [pipelineRes, atomPropRes] = await Promise.all([
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`),
+                request.get(`/${PROCESS_API_URL_PREFIX}/user/pipeline/projects/${projectId}/pipelines/${pipelineId}/atom/prop/list`)
+            ])
+            const pipeline = pipelineRes.data
+            const atomProp = atomPropRes.data
+            const elements = getters.getAllElements(pipeline.stages)
+            elements.forEach(element => { // 将os属性设置到model内
+                Object.assign(element, {
+                    ...atomProp[element.atomCode]
+                })
+            })
+            dispatch('setPipeline', pipeline)
         } catch (e) {
             if (e.code === 403) {
                 e.message = ''
@@ -202,6 +211,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
+    
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
@@ -243,7 +253,9 @@ export default {
                 request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/classify`),
                 request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom`, {
                     params: {
-                        projectCode
+                        projectCode,
+                        page: 1,
+                        pageSize: 100
                     }
                 })
             ])
@@ -292,9 +304,7 @@ export default {
             commit(FETCHING_ATOM_VERSION, false)
         }
     },
-    setInertStageIndex: actionCreator(SET_INSERT_STAGE_INDEX),
-    setInsertStageIsFinally: actionCreator(SET_INSERT_STAGE_ISFINALLY),
-    toggleStageSelectPopup: actionCreator(CONTAINER_TYPE_SELECTION_VISIBLE),
+    setInsertStageState: actionCreator(SET_INSERT_STAGE_STATE),
     addStage: PipelineEditActionCreator(ADD_STAGE),
     deleteStage: ({ commit }, payload) => {
         commit(DELETE_STAGE, payload)
@@ -362,8 +372,8 @@ export default {
         commit(SET_PIPELINE_EDITING, true)
     },
     updateAtomType: PipelineEditActionCreator(UPDATE_ATOM_TYPE),
-    updateAtom: ({ commit }, { element: atom, newParam }) => {
-        PipelineEditActionCreator(UPDATE_ATOM)({ commit }, { atom, newParam })
+    updateAtom: (action, { element: atom, newParam }) => {
+        PipelineEditActionCreator(UPDATE_ATOM)(action, { atom, newParam })
     },
     updateAtomInput: PipelineEditActionCreator(UPDATE_ATOM_INPUT),
     updateWholeAtomInput: PipelineEditActionCreator(UPDATE_WHOLE_ATOM_INPUT),
@@ -528,6 +538,11 @@ export default {
             document.body.appendChild(a)
             a.click()
             document.body.removeChild(a)
+        })
+    },
+    reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
+            return response.data
         })
     }
 }

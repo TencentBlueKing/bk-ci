@@ -129,6 +129,22 @@ class PipelineContainerService @Autowired constructor(
         return result
     }
 
+    fun countStageContainers(
+        transactionContext: DSLContext?,
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        onlyMatrixGroup: Boolean
+    ): Int {
+        return pipelineBuildContainerDao.countStageContainers(
+            dslContext = transactionContext ?: dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            onlyMatrixGroup = onlyMatrixGroup
+        )
+    }
+
     fun listGroupContainers(
         projectId: String,
         buildId: String,
