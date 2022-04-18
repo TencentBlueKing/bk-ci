@@ -114,22 +114,6 @@ class TXStreamBasicSettingService @Autowired constructor(
         return true
     }
 
-    // 更新项目信息
-    fun updateProjectInfo(userId: String, projectId: String, userDeptDetail: UserDeptDetail) {
-        client.get(ServiceTxProjectResource::class).bindProjectOrganization(
-            userId = userId,
-            projectCode = projectId,
-            projectDeptInfo = ProjectDeptInfo(
-                bgId = userDeptDetail.bgId,
-                bgName = userDeptDetail.bgName,
-                deptId = userDeptDetail.deptId,
-                deptName = userDeptDetail.deptName,
-                centerId = userDeptDetail.centerId,
-                centerName = userDeptDetail.centerName
-            )
-        )
-    }
-
     // 更新项目组织架构信息
     fun updateProjectOrganizationInfo(
         projectId: String,
@@ -155,6 +139,23 @@ class TXStreamBasicSettingService @Autowired constructor(
         return userUpdateInfo
     }
 
+
+    // 更新项目信息
+    fun updateProjectInfo(userId: String, projectId: String, userDeptDetail: UserDeptDetail) {
+        client.get(ServiceTxProjectResource::class).bindProjectOrganization(
+            userId = userId,
+            projectCode = projectId,
+            projectDeptInfo = ProjectDeptInfo(
+                bgId = userDeptDetail.bgId,
+                bgName = userDeptDetail.bgName,
+                deptId = userDeptDetail.deptId,
+                deptName = userDeptDetail.deptName,
+                centerId = userDeptDetail.centerId,
+                centerName = userDeptDetail.centerName
+            )
+        )
+    }
+
     fun updateOauthSetting(gitProjectId: Long, userId: String, oauthUserId: String) {
         streamBasicSettingDao.updateOauthSetting(
             dslContext = dslContext,
@@ -164,7 +165,6 @@ class TXStreamBasicSettingService @Autowired constructor(
         )
     }
 
-    // TODO("需要等待CORE接口补全后再判断是否需要修改")
     override fun saveStreamConf(userId: String, setting: StreamBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $setting")
         val gitRepoConf = streamBasicSettingDao.getSetting(dslContext, setting.gitProjectId)
@@ -177,7 +177,7 @@ class TXStreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                            StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
                     gitProjectName.length
                 )
             }
@@ -245,49 +245,6 @@ class TXStreamBasicSettingService @Autowired constructor(
         return count
     }
 
-    // 更新时同步更新蓝盾项目名称
-    // TODO("需要等待CORE接口补全后再判断是否需要修改")
-    override fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
-        val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
-        return updateProjectInfo(userId, projectInfo)
-    }
-
-    // TODO("需要等待CORE接口补全后再判断是否需要修改")
-    override fun updateProjectInfo(
-        userId: String,
-        projectInfo: StreamGitProjectInfoWithProject
-    ): Boolean {
-        val oldData = streamBasicSettingDao.getSetting(dslContext, projectInfo.gitProjectId) ?: return false
-
-        streamBasicSettingDao.updateInfoSetting(
-            dslContext = dslContext,
-            gitProjectId = projectInfo.gitProjectId,
-            gitProjectName = projectInfo.name,
-            url = projectInfo.gitSshUrl ?: oldData.gitSshUrl,
-            homePage = projectInfo.homepage ?: oldData.homepage,
-            httpUrl = projectInfo.gitHttpsUrl ?: oldData.gitHttpUrl,
-            sshUrl = projectInfo.gitSshUrl ?: oldData.gitSshUrl,
-            desc = projectInfo.description,
-            avatar = projectInfo.avatarUrl,
-            pathWithNamespace = projectInfo.pathWithNamespace,
-            nameWithNamespace = projectInfo.nameWithNamespace
-        )
-
-        if (oldData.name != projectInfo.name) {
-            try {
-                client.get(ServiceTxProjectResource::class).updateProjectName(
-                    userId = userId,
-                    projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
-                    projectName = projectInfo.name
-                )
-            } catch (e: Throwable) {
-                logger.error("update bkci project name error :${e.message}")
-                return false
-            }
-        }
-        return true
-    }
-
     private fun refreshNameSpace(it: TGitBasicSettingRecord) {
         try {
             val projectResult = requestGitProjectInfo(it.id)
@@ -338,59 +295,6 @@ class TXStreamBasicSettingService @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("requestGitProjectInfo, msg: ${e.message}")
             return null
-        }
-    }
-
-    /**可能存在工蜂侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
-     * 根据传入项目gitProjectName查询t_project表，获取projectId，调用StreamScmService::getProjectInfo获取工蜂项目信息：
-     * case:项目存在，并且项目group/project跟入参不一致，说明该projectId的项目信息已修改，需更新同步到t_projec表；
-     * case:项目存在，并且项目group/project跟入参一致(工蜂侧做项目group/名称唯一性保障,理论不会出现);
-     * case:项目不存在，说明该项目ID已经在工蜂侧删除，则更改该projectID对应的project_name为xxx_时间戳_delete;
-     */
-    // TODO("需要等待CORE接口补全后再判断是否需要修改")
-    override fun checkSameGitProjectName(userId: String, projectName: String) {
-
-        // sp1:根据gitProjectName调用project接口获取t_project信息
-        val bkProjectResult = client.get(ServiceTxProjectResource::class).getProjectInfoByProjectName(
-            userId = userId,
-            projectName = projectName
-        ) ?: return
-
-        // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
-        val projectId = bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
-        val gitProjectResult = requestGitProjectInfo(projectId.toLong())
-        // 如果工蜂存在该项目信息
-        if (null != gitProjectResult) {
-            // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
-            val projectNameFromGit = gitProjectResult.name
-            val projectNameFromPara = projectName.substring(projectName.lastIndexOf("/") + 1)
-
-            if (projectNameFromGit.isNotEmpty() && projectNameFromPara.isNotEmpty() &&
-                projectNameFromPara != projectNameFromGit
-            ) {
-                // 项目已修改名称，更新项目信息，包含setting + project表
-                refreshSetting(userId, projectId.toLong())
-            }
-            return
-        }
-
-        // 工蜂不存在，则更新t_project表的project_name加上xxx_时间戳_delete,考虑到project_name的长度限制(64),只取时间戳后3位
-        try {
-            val timeStamp = System.currentTimeMillis().toString()
-            var deletedProjectName = "${projectName}_${timeStamp.substring(timeStamp.length - 3)}_delete"
-            if (deletedProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
-                deletedProjectName = deletedProjectName.substring(
-                    deletedProjectName.length -
-                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH
-                )
-            }
-            client.get(ServiceTxProjectResource::class).updateProjectName(
-                userId = userId,
-                projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
-                projectName = deletedProjectName
-            )
-        } catch (e: Throwable) {
-            logger.error("update bkci project name error :${e.message}")
         }
     }
 }
