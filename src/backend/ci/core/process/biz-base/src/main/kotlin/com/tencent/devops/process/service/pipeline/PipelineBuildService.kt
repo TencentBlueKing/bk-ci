@@ -97,6 +97,7 @@ class PipelineBuildService(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
+        private val CONTEXT_PREFIX = "variables."
     }
 
     fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
@@ -267,7 +268,7 @@ class PipelineBuildService(
                 ), startType = startType, channelCode = channelCode
             )
             // 增加对containsKey(PIPELINE_NAME)的逻辑判断,如果有传值，默认使用。
-            val paramsWithType = startParamsList.asSequence().plus(
+            var paramsWithType = startParamsList.asSequence().plus(
                 BuildParameters(PIPELINE_VERSION, readyToBuildPipelineInfo.version))
                 .plus(BuildParameters(PIPELINE_START_USER_ID, userId))
                 .plus(BuildParameters(PIPELINE_START_TYPE, startType.name))
@@ -284,23 +285,32 @@ class PipelineBuildService(
                 .plus(BuildParameters(PIPELINE_BUILD_MSG, buildMsg))
                 .plus(BuildParameters(PIPELINE_CREATE_USER, readyToBuildPipelineInfo.creator))
                 .plus(BuildParameters(PIPELINE_UPDATE_USER, readyToBuildPipelineInfo.lastModifyUser))
-                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId)).toList()
+                .plus(BuildParameters(PIPELINE_ID, readyToBuildPipelineInfo.pipelineId))
 
             val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
-            val buildId = pipelineRuntimeService.startBuild(
+            // #5264 保留启动参数的原始值以及重试中需要用到的字段
+            val originStartParams = mutableListOf<BuildParameters>()
+            startParamsWithType.forEach {
+                val originKey = realStartParamKeys.contains(it.key)
+                if (originKey || it.key == BUILD_NO || it.key == PIPELINE_BUILD_MSG ||
+                    it.key == PIPELINE_RETRY_COUNT) {
+                    originStartParams.add(it)
+                }
+                // #6482 对于用户自定义的自动参数增加对应上下文，如果已是上下文无需处理
+                if (originKey && !it.key.startsWith(CONTEXT_PREFIX)) {
+                    paramsWithType = paramsWithType.plus(it.copy(key = "$CONTEXT_PREFIX${it.key}"))
+                }
+            }
+
+            return pipelineRuntimeService.startBuild(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
-                // #5264 保留启动参数的原始值以及重试中需要用到的字段
-                originStartParams = startParamsWithType.filter {
-                    realStartParamKeys.contains(it.key) || it.key == BUILD_NO ||
-                        it.key == PIPELINE_BUILD_MSG || it.key == PIPELINE_RETRY_COUNT
-                },
-                startParamsWithType = paramsWithType,
+                originStartParams = originStartParams,
+                startParamsWithType = paramsWithType.toList(),
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule,
                 setting = setting
             )
-            return buildId
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lockKey = lockKey)
