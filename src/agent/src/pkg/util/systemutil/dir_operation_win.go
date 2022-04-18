@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -25,6 +28,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package systemutil
 
-const AgentVersion = "v1.8.5"
+import (
+	"fmt"
+	"github.com/astaxie/beego/logs"
+	"os"
+)
+
+// MkBuildTmpDir 创建构建提供的临时目录
+func MkBuildTmpDir() (string, error) {
+	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
+	err := os.MkdirAll(tmpDir, os.ModePerm)
+	return tmpDir, err
+}
+
+// Chmod windows 暂时不做任何事情
+func Chmod(file string, perm os.FileMode) error {
+	logs.Info("chmod %d %s do nothing in windows", perm, file)
+	return nil
+}
