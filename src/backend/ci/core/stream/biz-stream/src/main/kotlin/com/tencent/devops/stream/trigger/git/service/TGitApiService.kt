@@ -249,11 +249,11 @@ class TGitApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileInfo(
-                gitProjectId,
-                fileName,
-                cred.toToken(),
-                ref,
-                cred.toTokenType()
+                gitProjectId = gitProjectId,
+                filePath = fileName,
+                token = cred.toToken(),
+                ref = ref,
+                tokenType = cred.toTokenType()
             ).data
         }?.let { TGitFileInfo(content = it.content, blobId = it.blobId) }
     }

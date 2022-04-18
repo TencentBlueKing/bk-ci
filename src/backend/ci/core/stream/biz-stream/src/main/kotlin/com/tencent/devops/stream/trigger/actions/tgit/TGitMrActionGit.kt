@@ -62,6 +62,7 @@ import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
+import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
 import org.slf4j.LoggerFactory
@@ -71,7 +72,8 @@ class TGitMrActionGit(
     private val apiService: TGitApiService,
     private val mrConflictCheck: MergeConflictCheck,
     private val pipelineDelete: PipelineDelete,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val streamTriggerTokenService: StreamTriggerTokenService
 ) : TGitActionGit(apiService, gitCheckService), StreamMrAction {
 
     companion object {
@@ -99,7 +101,15 @@ class TGitMrActionGit(
         get() = apiService
 
     // 获取Fork库的凭证数据
-    private fun getForkGitCred() = TGitCred(data.setting.enableUser)
+    private fun getForkGitCred(): TGitCred {
+        return streamTriggerTokenService.getGitProjectToken(data.eventCommon.sourceGitProjectId)?.let {
+            TGitCred(
+                accessToken = it,
+                useAccessToken = true,
+                userId = null
+            )
+        } ?: TGitCred(data.setting.enableUser)
+    }
 
     override fun init() {
         initCommonData()
