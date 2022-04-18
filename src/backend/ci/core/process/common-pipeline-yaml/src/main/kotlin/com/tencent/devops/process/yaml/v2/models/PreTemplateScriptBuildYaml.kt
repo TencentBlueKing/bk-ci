@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.v2.models
 
+import com.devops.process.yaml.v2.models.Concurrency
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.process.yaml.v2.models.on.PreTriggerOn
