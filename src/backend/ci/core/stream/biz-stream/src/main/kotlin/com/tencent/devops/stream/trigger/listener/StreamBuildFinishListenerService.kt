@@ -29,10 +29,13 @@ package com.tencent.devops.stream.trigger.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -51,6 +54,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class StreamBuildFinishListenerService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -58,6 +62,7 @@ class StreamBuildFinishListenerService @Autowired constructor(
     private val actionFactory: EventActionFactory,
     private val sendCommitCheck: SendCommitCheck,
     private val sendNotify: SendNotify,
+    private val streamGitConfig: StreamGitConfig,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingDao: StreamBasicSettingDao,
@@ -103,17 +108,20 @@ class StreamBuildFinishListenerService @Autowired constructor(
         } ?: throw OperationException("stream all projectCode not exist")
 
         // 加载action，并填充上下文，手动和定时触发需要自己的事件
-        val action = when (requestEvent.objectKind) {
-            StreamObjectKind.MANUAL.value -> actionFactory.loadManualAction(
-                setting = setting,
-                event = objectMapper.readValue(requestEvent.event)
-            )
-            StreamObjectKind.SCHEDULE.value -> actionFactory.loadScheduleAction(
-                setting = setting,
-                event = objectMapper.readValue(requestEvent.event)
-            )
-            else -> actionFactory.load(objectMapper.readValue(requestEvent.event))
-        } ?: throw OperationException("stream not support action ${requestEvent.event}")
+        val action = when (streamGitConfig.getScmType()) {
+            ScmType.CODE_GIT -> when (requestEvent.objectKind) {
+                StreamObjectKind.MANUAL.value -> actionFactory.loadManualAction(
+                    setting = setting,
+                    event = objectMapper.readValue(requestEvent.event)
+                )
+                StreamObjectKind.SCHEDULE.value -> actionFactory.loadScheduleAction(
+                    setting = setting,
+                    event = objectMapper.readValue(requestEvent.event)
+                )
+                else -> actionFactory.load(objectMapper.readValue<GitEvent>(requestEvent.event))
+            } ?: throw OperationException("stream not support action ${requestEvent.event}")
+            else -> TODO("对接其他Git平台时需要补充")
+        }
 
         action.data.setting = setting
         action.data.context.pipeline = pipeline

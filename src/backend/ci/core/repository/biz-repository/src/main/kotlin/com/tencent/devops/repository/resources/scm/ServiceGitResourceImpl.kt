@@ -414,7 +414,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         search: String?,
         tokenType: TokenTypeEnum
     ): Result<List<GitMember>> {
-        TODO("Not yet implemented")
         return gitService.getMembers(
             token = token,
             gitProjectId = gitProjectId,
@@ -431,7 +430,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         tokenType: TokenTypeEnum,
         token: String
     ): Result<String?> {
-        TODO("Not yet implemented")
         return gitService.getGitUserId(
             rtxUserId = rtxUserId,
             gitProjectId = gitProjectId,
@@ -448,7 +446,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         tokenType: TokenTypeEnum,
         token: String
     ): Result<List<GitMember>> {
-        TODO("Not yet implemented")
         return gitService.getProjectMembersAll(
             gitProjectId = gitProjectId,
             page = page,
@@ -466,7 +463,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         ref: String?,
         tokenType: TokenTypeEnum
     ): Result<GitCodeFileInfo> {
-        TODO("Not yet implemented")
         return gitService.getGitFileInfo(
             gitProjectId = gitProjectId,
             filePath = filePath,
@@ -483,7 +479,6 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrBody: String,
         tokenType: TokenTypeEnum
     ) {
-        TODO("Not yet implemented")
         gitService.addMrComment(
             token = token,
             gitProjectId = gitProjectId,
