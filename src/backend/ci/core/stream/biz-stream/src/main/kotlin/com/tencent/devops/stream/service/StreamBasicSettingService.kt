@@ -321,15 +321,14 @@ class StreamBasicSettingService @Autowired constructor(
     fun checkSameGitProjectName(userId: String, projectName: String) {
 
         // sp1:根据gitProjectName调用project接口获取t_project信息  --先注释预留调用
-
         val bkProjectResult = client.get(ServiceProjectResource::class).getProjectByName(
             userId = userId,
             projectName = projectName
         ) ?: return
 
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
-        val projectId = "" // bkProjectResult.data!!.projectId.removePrefix(projectPrefix)
-        val gitProjectResult = requestGitProjectInfo(projectId.toLong())
+        val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.data!!.projectId)
+        val gitProjectResult = requestGitProjectInfo(projectId)
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
             // sp3:比对gitProjectinfo的project_name跟入参的gitProjectName对比是否同名，注意gitProjectName这里包含了group信息，拆解开。
@@ -340,7 +339,7 @@ class StreamBasicSettingService @Autowired constructor(
                 projectNameFromPara != projectNameFromGit
             ) {
                 // 项目已修改名称，更新项目信息，包含setting + project表
-                refreshSetting(userId, projectId.toLong())
+                refreshSetting(userId, projectId)
             }
             return
         }
