@@ -27,4 +27,11 @@ object KubernetesUtils {
             "$serviceName-$innerName-$serviceName"
         }
     }
+
+    /**
+     * 获取namespace
+     */
+    fun getNamespace(): String {
+        return namespace ?: "default"
+    }
 }
