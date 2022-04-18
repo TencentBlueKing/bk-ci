@@ -42,7 +42,7 @@ import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectService
 import org.slf4j.LoggerFactory
@@ -142,7 +142,7 @@ class AuthProjectService @Autowired constructor(
         }
 
         val routerTag = projectService.getByEnglishName(projectCode)!!.routerTag
-        val managerUser = ConsulContent.invokeByTag(routerTag) {
+        val managerUser = DiscoveryTag.invokeByTag(routerTag) {
             client.get(ServiceProjectAuthResource::class).getProjectUsers(
                 token = tokenService.getSystemToken(null)!!,
                 projectCode = projectCode,

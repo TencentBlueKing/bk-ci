@@ -31,7 +31,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
@@ -48,7 +48,8 @@ class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
-    private val tag: String?
+    private val tag: String,
+    private val colour: Boolean
 ) : FeignTarget<T> {
     private val msCache =
         CacheBuilder.newBuilder()
@@ -74,27 +75,30 @@ class MicroServiceTarget<T> constructor(
     private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
 
     private fun choose(serviceName: String): ServiceInstance {
+        val discoveryTag = if (DiscoveryTag.get() == null) {
+            logger.info("discoverTag is null, use local tag : $tag")
+            tag
+        } else DiscoveryTag.get()!!
+
         val svrName = if (KubernetesUtils.inContainer()) {
             KubernetesUtils.getSvrName(serviceName)
         } else {
             serviceName
         }
-        val instances = msCache.get(svrName)
+//        val instances = msCache.get(svrName)
+
+        val instances = if (KubernetesUtils.inContainer()) {
+            var srvName = KubernetesUtils.getSvrName(serviceName, discoveryTag.replace("kubernetes", ""))
+        }
+
         val matchTagInstances = ArrayList<ServiceInstance>()
 
-        // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
-        val consulContentTag = ConsulContent.getConsulContent()
-        val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
-            if (consulContentTag != tag) {
-                logger.info("MicroService content:${ConsulContent.getConsulContent()} local:$tag")
-            }
-            consulContentTag
-        } else tag
+
 
         instances.forEach { serviceInstance ->
             if (serviceInstance is ConsulServiceInstance) {
                 // 已经用过的不选择
-                if (serviceInstance.tags.contains(useConsulTag) && !usedInstance.contains(serviceInstance.url())) {
+                if (serviceInstance.tags.contains(finalTag) && !usedInstance.contains(serviceInstance.url())) {
                     matchTagInstances.add(serviceInstance)
                 }
             } else {
@@ -110,7 +114,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]-[$useConsulTag]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]-[$finalTag]服务提供者")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }

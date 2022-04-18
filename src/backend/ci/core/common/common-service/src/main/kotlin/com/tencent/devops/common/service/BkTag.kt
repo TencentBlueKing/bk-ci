@@ -15,7 +15,7 @@ class BkTag @Autowired constructor(
 
     fun getTag(): String {
         if (KubernetesUtils.inContainer()) {
-            return KubernetesUtils.getNamespace()
+            return "kubernetes-" + KubernetesUtils.getNamespace()
         }
         return tag
     }

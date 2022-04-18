@@ -20,11 +20,16 @@ object KubernetesUtils {
     /**
      * 获取服务发现的名称
      */
-    fun getSvrName(serviceName: String): String {
-        return if (innerName.isNullOrEmpty()) {
-            "$serviceSuffix-$serviceName"
+    fun getSvrName(serviceName: String, namespace: String? = null): String {
+        val tail = if (namespace == null) {
+            ""
         } else {
-            "$serviceName-$innerName-$serviceName"
+            ".$namespace"
+        }
+        return if (innerName.isNullOrEmpty()) {
+            "$serviceSuffix-$serviceName$tail"
+        } else {
+            "$serviceName-$innerName-$serviceName$tail"
         }
     }
 

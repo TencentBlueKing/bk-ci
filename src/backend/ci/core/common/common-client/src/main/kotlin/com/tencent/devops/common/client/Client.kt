@@ -146,6 +146,9 @@ class Client constructor(
     @Value("\${service-suffix:#{null}}")
     private val serviceSuffix: String? = null
 
+    @Value("\${colour.enabled:false}")
+    private val colour: Boolean = false
+
     fun <T : Any> get(clz: KClass<T>): T {
         return get(clz, "")
     }
@@ -178,7 +181,15 @@ class Client constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag()))
+            .target(
+                MicroServiceTarget(
+                    findServiceName(clz),
+                    clz.java,
+                    compositeDiscoveryClient!!,
+                    bkTag.getTag(),
+                    colour
+                )
+            )
     }
 
     fun <T : Any> getExternalServiceWithoutRetry(serviceName: String, clz: KClass<T>): T {
@@ -200,7 +211,7 @@ class Client constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, bkTag.getTag()))
+            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, bkTag.getTag(), colour))
     }
 
     /**
@@ -251,11 +262,19 @@ class Client constructor(
             .decoder(jacksonDecoder)
             .contract(clientContract)
             .requestInterceptor(requestInterceptor)
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag()))
+            .target(
+                MicroServiceTarget(
+                    findServiceName(clz),
+                    clz.java,
+                    compositeDiscoveryClient!!,
+                    bkTag.getTag(),
+                    colour
+                )
+            )
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
-        return MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag()).url()
+        return MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag(),colour).url()
     }
 
     private fun findServiceName(clz: KClass<*>): String {

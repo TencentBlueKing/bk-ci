@@ -48,10 +48,10 @@ class ConsulFilter : Filter {
         val httpServletRequest = request as HttpServletRequest
         val consulTag = httpServletRequest.getHeader(AUTH_HEADER_GATEWAY_TAG)
         if (consulTag != null) {
-            ConsulContent.setConsulContent(consulTag)
+            DiscoveryTag.set(consulTag)
         }
         chain?.doFilter(request, response)
-        ConsulContent.removeConsulContent()
+        DiscoveryTag.remove()
     }
 
     override fun destroy() {
