@@ -63,6 +63,7 @@ import com.tencent.devops.stream.trigger.parsers.PipelineDelete
 import com.tencent.devops.stream.trigger.service.DeleteEventService
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import com.tencent.devops.stream.trigger.timer.service.StreamTimerService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -83,7 +84,8 @@ class EventActionFactory @Autowired constructor(
     private val pipelineDelete: PipelineDelete,
     private val gitCheckService: GitCheckService,
     private val mrConflictCheck: MergeConflictCheck,
-    private val streamGitConfig: StreamGitConfig
+    private val streamGitConfig: StreamGitConfig,
+    private val streamTriggerTokenService: StreamTriggerTokenService
 ) {
 
     companion object {
@@ -146,7 +148,8 @@ class EventActionFactory @Autowired constructor(
                     apiService = tGitApiService,
                     mrConflictCheck = mrConflictCheck,
                     pipelineDelete = pipelineDelete,
-                    gitCheckService = gitCheckService
+                    gitCheckService = gitCheckService,
+                    streamTriggerTokenService = streamTriggerTokenService
                 )
                 tGitMrAction
             }
