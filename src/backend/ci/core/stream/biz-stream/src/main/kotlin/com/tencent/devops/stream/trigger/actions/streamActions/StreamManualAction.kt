@@ -62,8 +62,7 @@ class StreamManualAction(
 
     override lateinit var api: StreamGitApiService
 
-    override fun init(requestEventId: Long) {
-        this.data.context.requestEventId = requestEventId
+    override fun init() {
         initCommonData()
     }
 

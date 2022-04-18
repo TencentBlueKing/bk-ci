@@ -52,7 +52,6 @@ import org.springframework.stereotype.Service
 @Service
 class TGitNoteActionGit @Autowired constructor(
     private val apiService: TGitApiService,
-    private val streamTriggerCache: StreamTriggerCache,
     private val gitCheckService: GitCheckService
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
