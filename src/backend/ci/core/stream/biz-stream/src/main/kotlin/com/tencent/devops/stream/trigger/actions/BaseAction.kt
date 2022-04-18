@@ -30,6 +30,12 @@ interface BaseAction {
     fun format() = "${data.format()}|${api::class.qualifiedName}"
 
     /**
+     * 填充一些初始化数据
+     * 因为可能存在需要上下文参数的情况，所以和load分开
+     */
+    fun init(requestEventId: Long)
+
+    /**
      * 通过GIT项目唯一ID获取蓝盾项目ID
      * @param gitProjectId git项目唯一标识，为空时取action的执行项目
      */

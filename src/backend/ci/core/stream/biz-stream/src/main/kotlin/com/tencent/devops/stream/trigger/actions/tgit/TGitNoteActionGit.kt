@@ -68,7 +68,12 @@ class TGitNoteActionGit @Autowired constructor(
     override val api: TGitApiService
         get() = apiService
 
-    override fun initCommonData(): GitBaseAction {
+    override fun init(requestEventId: Long) {
+        this.data.context.requestEventId = requestEventId
+        initCommonData()
+    }
+
+    private fun initCommonData(): GitBaseAction {
         val event = data().event
         val gitProjectId = event.projectId
 

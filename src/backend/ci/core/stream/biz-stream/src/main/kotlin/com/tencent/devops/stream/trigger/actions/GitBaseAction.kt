@@ -33,12 +33,6 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
  * 和Git的一些操作的相关抽象类，方便不同源操作
  */
 interface GitBaseAction : BaseAction {
-
-    /**
-     * 初始化公共数据，可能会请求Git api所以放到action
-     */
-    fun initCommonData(): GitBaseAction
-
     /**
      * 判断是否为Stream删除事件
      */
