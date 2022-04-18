@@ -120,20 +120,12 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<StoreDockingPlatformInfo>? {
-        val storeDockingPlatformRecords = storeDockingPlatformDao.getStoreDockingPlatforms(
+        val storeDockingPlatformInfos = storeDockingPlatformDao.getStoreDockingPlatforms(
             dslContext = dslContext,
             platformName = platformName,
             page = page,
             pageSize = pageSize
         )
-        var storeDockingPlatformInfos: MutableList<StoreDockingPlatformInfo>? = null
-        if (!storeDockingPlatformRecords.isNullOrEmpty()) {
-            storeDockingPlatformInfos = mutableListOf()
-            storeDockingPlatformRecords.forEach { storeDockingPlatformRecord ->
-                val storeDockingPlatformInfo = storeDockingPlatformDao.convert(storeDockingPlatformRecord)
-                storeDockingPlatformInfos.add(storeDockingPlatformInfo)
-            }
-        }
         val storeDockingPlatformCount = storeDockingPlatformDao.getStoreDockingPlatformCount(
             dslContext = dslContext,
             platformName = platformName
