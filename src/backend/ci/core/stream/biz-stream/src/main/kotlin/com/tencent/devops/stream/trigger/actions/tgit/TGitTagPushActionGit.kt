@@ -68,8 +68,7 @@ class TGitTagPushActionGit(
     override val api: TGitApiService
         get() = apiService
 
-    override fun init(requestEventId: Long) {
-        this.data.context.requestEventId = requestEventId
+    override fun init() {
         initCommonData()
     }
 

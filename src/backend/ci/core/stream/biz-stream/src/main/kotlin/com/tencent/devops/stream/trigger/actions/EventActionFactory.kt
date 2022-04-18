@@ -157,12 +157,15 @@ class EventActionFactory @Autowired constructor(
             }
         }
         // 再根据stream独有的git action抽象出来
-        return when {
+        val action = when {
             gitAction.isStreamDeleteAction() -> {
                 StreamDeleteAction(gitAction)
             }
             else -> gitAction
         }
+
+        action.init()
+        return action
     }
 
     fun loadManualAction(
@@ -176,6 +179,7 @@ class EventActionFactory @Autowired constructor(
             else -> TODO("对接其他Git平台时需要补充")
         }
         streamManualAction.data.setting = setting
+        streamManualAction.init()
         return streamManualAction
     }
 
@@ -191,6 +195,7 @@ class EventActionFactory @Autowired constructor(
             else -> TODO("对接其他Git平台时需要补充")
         }
         streamScheduleAction.data.setting = setting
+        streamScheduleAction.init()
         return streamScheduleAction
     }
 }

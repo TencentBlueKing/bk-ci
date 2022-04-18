@@ -45,8 +45,8 @@ class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override var data: ActionData = action.data
     override val api: StreamGitApiService = action.api
 
-    override fun init(requestEventId: Long) {
-        action.init(requestEventId)
+    override fun init() {
+        action.init()
     }
 
     override fun getProjectCode(gitProjectId: String?) = action.getProjectCode()

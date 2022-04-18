@@ -68,8 +68,7 @@ class TGitNoteActionGit @Autowired constructor(
     override val api: TGitApiService
         get() = apiService
 
-    override fun init(requestEventId: Long) {
-        this.data.context.requestEventId = requestEventId
+    override fun init() {
         initCommonData()
     }
 
@@ -77,11 +76,11 @@ class TGitNoteActionGit @Autowired constructor(
         val event = data().event
         val gitProjectId = event.projectId
 
-        val defaultBranch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            gitProjectKey = gitProjectId.toString(),
-            action = this,
-            getProjectInfo = apiService::getGitProjectInfo
-        ).defaultBranch!!
+        val defaultBranch = apiService.getGitProjectInfo(
+            cred = this.getGitCred(),
+            gitProjectId = gitProjectId.toString(),
+            retry = ApiRequestRetryInfo(true)
+        )!!.defaultBranch!!
         val latestCommit = apiService.getGitCommitInfo(
             cred = this.getGitCred(),
             gitProjectId = gitProjectId.toString(),

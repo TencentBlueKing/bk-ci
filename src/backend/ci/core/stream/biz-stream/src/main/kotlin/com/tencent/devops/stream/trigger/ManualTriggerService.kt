@@ -208,7 +208,7 @@ class ManualTriggerService @Autowired constructor(
             message = "event invalid"
         )
         val id = gitRequestEventDao.saveGitRequest(dslContext, request)
-        action.init(id)
+        action.data.context.requestEventId = id
 
         return action
     }
@@ -239,7 +239,7 @@ class ManualTriggerService @Autowired constructor(
             message = "event invalid"
         )
         val id = gitRequestEventDao.saveGitRequest(dslContext, request)
-        action.init(id)
+        action.data.context.requestEventId = id
 
         action.data.setting = streamTriggerSetting
 

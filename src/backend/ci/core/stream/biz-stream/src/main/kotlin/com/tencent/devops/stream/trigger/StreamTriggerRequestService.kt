@@ -115,7 +115,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 跨项目触发的逻辑不需要当前项目也可以使用
         if (repoTriggerPipelineList.isNotEmpty()) {
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)
-            action.init(requestEventId)
+            action.data.context.requestEventId = requestEventId
 
             if (action.skipStream()) {
                 return true
@@ -145,7 +145,7 @@ class StreamTriggerRequestService @Autowired constructor(
 
         if (action.data.context.requestEventId == null) {
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)
-            action.init(requestEventId)
+            action.data.context.requestEventId = requestEventId
         }
 
         if (action.skipStream()) {
