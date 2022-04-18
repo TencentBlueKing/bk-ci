@@ -324,10 +324,10 @@ class StreamBasicSettingService @Autowired constructor(
         val bkProjectResult = client.get(ServiceProjectResource::class).getProjectByName(
             userId = userId,
             projectName = projectName
-        ) ?: return
+        ).data ?: return
 
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
-        val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.data!!.projectId)
+        val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.projectId)
         val gitProjectResult = requestGitProjectInfo(projectId)
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
