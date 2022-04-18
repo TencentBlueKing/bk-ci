@@ -39,7 +39,6 @@ import com.tencent.devops.stream.trigger.actions.tgit.data.TGitNoteActionData
 import com.tencent.devops.stream.trigger.actions.tgit.data.TGitNoteEventCommonData
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
