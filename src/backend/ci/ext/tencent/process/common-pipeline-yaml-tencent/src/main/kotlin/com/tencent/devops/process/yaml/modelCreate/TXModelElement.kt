@@ -40,9 +40,10 @@ import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXModelElement @Autowired constructor(
+class TXModelElement @Autowired(required = false) constructor(
     client: Client,
-    inner: TXInnerModelCreator
+    @Autowired(required = false)
+    inner: TXInnerModelCreator?
 ) : ModelElement(
     client, inner
 ) {

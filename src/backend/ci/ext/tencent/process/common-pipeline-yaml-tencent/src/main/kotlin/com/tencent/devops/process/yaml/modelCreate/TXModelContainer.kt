@@ -46,10 +46,11 @@ import org.springframework.stereotype.Component
 
 @Primary
 @Component
-class TXModelContainer @Autowired constructor(
+class TXModelContainer @Autowired(required = false) constructor(
     client: Client,
     objectMapper: ObjectMapper,
-    inner: TXInnerModelCreator
+    @Autowired(required = false)
+    inner: TXInnerModelCreator?
 ) : ModelContainer(
     client, objectMapper, inner
 ) {
