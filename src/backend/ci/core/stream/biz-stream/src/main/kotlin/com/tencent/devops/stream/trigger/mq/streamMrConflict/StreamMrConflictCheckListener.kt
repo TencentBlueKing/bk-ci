@@ -78,7 +78,7 @@ constructor(
                 checkEvent.actionSetting
             ).also {
                 if (it == null) {
-                    logger.error("event not support: $checkEvent")
+                    logger.error("mr conflict event not support: $checkEvent")
                     return
                 }
             } ?: return

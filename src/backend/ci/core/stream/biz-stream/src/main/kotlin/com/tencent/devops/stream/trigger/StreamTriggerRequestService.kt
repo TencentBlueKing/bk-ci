@@ -97,7 +97,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject).also {
             if (it == null) {
-                logger.error("event not support: $event")
+                logger.error("request event not support: $event")
                 return false
             }
         }!!
