@@ -28,6 +28,7 @@
 
 package com.tencent.devops.common.client.consul
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -45,7 +46,7 @@ class ConsulFilter : Filter {
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         val httpServletRequest = request as HttpServletRequest
-        val consulTag = httpServletRequest?.getHeader(ConsulConstants.HEAD_CONSUL_TAG)
+        val consulTag = httpServletRequest.getHeader(AUTH_HEADER_GATEWAY_TAG)
         if (consulTag != null) {
             ConsulContent.setConsulContent(consulTag)
         }

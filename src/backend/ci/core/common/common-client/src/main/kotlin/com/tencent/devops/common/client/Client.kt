@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -77,6 +78,7 @@ class Client @Autowired constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient?,
     private val clientErrorDecoder: ClientErrorDecoder,
     private val commonConfig: CommonConfig,
+    private val bkTag: BkTag,
     objectMapper: ObjectMapper
 ) {
 
@@ -141,9 +143,6 @@ class Client @Autowired constructor(
     private val jacksonDecoder = JacksonDecoder(objectMapper)
     private val jacksonEncoder = JacksonEncoder(objectMapper)
 
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
-
     @Value("\${spring.cloud.consul.discovery.service-name:#{null}}")
     private val assemblyServiceName: String? = null
 
@@ -182,7 +181,7 @@ class Client @Autowired constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, tag))
+            .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag()))
     }
 
     fun <T : Any> getExternalServiceWithoutRetry(serviceName: String, clz: KClass<T>): T {
@@ -204,7 +203,7 @@ class Client @Autowired constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, tag))
+            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, bkTag.getTag()))
     }
 
     /**
@@ -255,11 +254,11 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(clientContract)
             .requestInterceptor(requestInterceptor)
-            .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, tag))
+            .target(MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag()))
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
-        return MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, tag).url()
+        return MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag()).url()
     }
 
     private fun findServiceName(clz: KClass<*>): String {

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
@@ -57,7 +58,8 @@ class ProjectTagService @Autowired constructor(
     val redisOperation: RedisOperation,
     val projectDao: ProjectDao,
     val objectMapper: ObjectMapper,
-    val projectService: ProjectService
+    val projectService: ProjectService,
+    val bkTag: BkTag
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -70,9 +72,6 @@ class ProjectTagService @Autowired constructor(
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
-
-    @Value("\${spring.cloud.consul.discovery.tags:#{null}}")
-    private val tag: String? = null
 
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
@@ -315,6 +314,7 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun projectClusterCheck(routerTag: String?): Boolean {
+        val tag = bkTag.getTag()
         // 默认集群是不会有routerTag的信息
         if (routerTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true
