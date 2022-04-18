@@ -29,6 +29,7 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
@@ -38,6 +39,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -56,7 +58,10 @@ class TXStreamBasicSettingService @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val streamGitTransferService: StreamGitTransferService
+    private val streamGitTransferService: StreamGitTransferService,
+    private val tokenService: StreamGitTokenService,
+    private val streamScmService: StreamScmService,
+    private val streamGitConfig: StreamGitConfig
 ) : StreamBasicSettingService(
     dslContext = dslContext,
     client = client,
@@ -287,12 +292,31 @@ class TXStreamBasicSettingService @Autowired constructor(
         }
     }
 
-    private fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
-        return try {
-            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
-        } catch (e: Throwable) {
-            logger.error("requestGitProjectInfo, msg: ${e.message}")
-            return null
+    override fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
+        return when (streamGitConfig.getScmType()) {
+            ScmType.CODE_GIT -> try {
+                val accessToken = tokenService.getToken(gitProjectId)
+                streamScmService.getProjectInfo(accessToken, gitProjectId.toString(), useAccessToken = true)?.let {
+                    StreamGitProjectInfoWithProject(
+                        gitProjectId = it.gitProjectId,
+                        name = it.name,
+                        homepage = it.homepage,
+                        gitHttpUrl = it.gitHttpUrl.replace("https", "http"),
+                        gitHttpsUrl = it.gitHttpsUrl,
+                        gitSshUrl = it.gitSshUrl,
+                        nameWithNamespace = it.nameWithNamespace,
+                        pathWithNamespace = it.pathWithNamespace,
+                        defaultBranch = it.defaultBranch,
+                        description = it.description,
+                        avatarUrl = it.avatarUrl,
+                        routerTag = null
+                    )
+                }
+            } catch (e: Throwable) {
+                logger.error("requestGitProjectInfo, msg: ${e.message}")
+                return null
+            }
+            else -> TODO("对接其他Git平台时需要补充")
         }
     }
 }
