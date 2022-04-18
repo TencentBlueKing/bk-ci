@@ -62,6 +62,27 @@ class StreamManualAction(
 
     override lateinit var api: StreamGitApiService
 
+    override fun init(requestEventId: Long) {
+        this.data.context.requestEventId = requestEventId
+        initCommonData()
+    }
+
+    private fun initCommonData(): StreamManualAction {
+        val latestCommit = if (!data().event.commitId.isNullOrBlank()) {
+            // 选择历史提交时，无需重新获取latest commit 相关信息
+            null
+        } else {
+            api.getGitCommitInfo(
+                cred = this.getGitCred(),
+                gitProjectId = data().event.gitProjectId,
+                sha = data().event.branch.removePrefix("refs/heads/"),
+                retry = ApiRequestRetryInfo(retry = true)
+            )
+        }
+        this.data.eventCommon = StreamManualCommonData(data().event, latestCommit)
+        return this
+    }
+
     override fun getProjectCode(gitProjectId: String?) = data().event.projectCode
 
     override fun getGitCred(personToken: String?): StreamGitCred {
@@ -73,22 +94,6 @@ class StreamManualAction(
             )
             else -> TODO("对接其他Git平台时需要补充")
         }
-    }
-
-    fun initCommonData(): StreamManualAction {
-        val defaultBranch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            gitProjectKey = data().event.gitProjectId,
-            action = this,
-            getProjectInfo = api::getGitProjectInfo
-        ).defaultBranch!!
-        val latestCommit = api.getGitCommitInfo(
-            cred = this.getGitCred(),
-            gitProjectId = data().event.gitProjectId,
-            sha = defaultBranch,
-            retry = ApiRequestRetryInfo(retry = true)
-        )
-        this.data.eventCommon = StreamManualCommonData(data().event, latestCommit)
-        return this
     }
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {

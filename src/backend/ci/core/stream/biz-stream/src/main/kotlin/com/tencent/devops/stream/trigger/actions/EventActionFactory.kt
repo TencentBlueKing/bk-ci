@@ -105,7 +105,7 @@ class EventActionFactory @Autowired constructor(
                     gitCheckService = gitCheckService
                 )
                 tGitPushAction.data = TGitPushActionData(event)
-                tGitPushAction.init()
+                tGitPushAction
             }
             is GitMergeRequestEvent -> {
                 val tGitMrAction = TGitMrActionGit(
@@ -115,7 +115,7 @@ class EventActionFactory @Autowired constructor(
                     gitCheckService = gitCheckService
                 )
                 tGitMrAction.data = TGitMrActionData(event)
-                tGitMrAction.init()
+                tGitMrAction
             }
             is GitTagPushEvent -> {
                 val tGitTagPushAction = TGitTagPushActionGit(
@@ -123,7 +123,7 @@ class EventActionFactory @Autowired constructor(
                     gitCheckService = gitCheckService
                 )
                 tGitTagPushAction.data = TGitTagPushActionData(event)
-                tGitTagPushAction.init()
+                tGitTagPushAction
             }
             is GitIssueEvent -> {
                 val tGitIssueAction = TGitIssueActionGit(
@@ -132,7 +132,7 @@ class EventActionFactory @Autowired constructor(
                     gitCheckService = gitCheckService,
                 )
                 tGitIssueAction.data = TGitIssueActionData(event)
-                tGitIssueAction.init()
+                tGitIssueAction
             }
             is GitReviewEvent -> {
                 val tGitReviewAction = TGitReviewActionGit(
@@ -141,7 +141,7 @@ class EventActionFactory @Autowired constructor(
                     gitCheckService = gitCheckService
                 )
                 tGitReviewAction.data = TGitReviewActionData(event)
-                tGitReviewAction.init()
+                tGitReviewAction
             }
             is GitNoteEvent -> {
                 val tGitNoteAction = TGitNoteActionGit(
@@ -150,7 +150,7 @@ class EventActionFactory @Autowired constructor(
                     gitCheckService = gitCheckService
                 )
                 tGitNoteAction.data = TGitNoteActionData(event)
-                tGitNoteAction.init()
+                tGitNoteAction
             }
             else -> {
                 return null
@@ -165,10 +165,6 @@ class EventActionFactory @Autowired constructor(
         }
     }
 
-    private fun GitBaseAction.init(): GitBaseAction {
-        return this.initCommonData()
-    }
-
     fun loadManualAction(
         setting: StreamTriggerSetting,
         event: StreamManualEvent
@@ -180,9 +176,7 @@ class EventActionFactory @Autowired constructor(
             else -> TODO("对接其他Git平台时需要补充")
         }
         streamManualAction.data.setting = setting
-
-        // init common 需要api和setting
-        return streamManualAction.initCommonData()
+        return streamManualAction
     }
 
     fun loadScheduleAction(
@@ -197,7 +191,6 @@ class EventActionFactory @Autowired constructor(
             else -> TODO("对接其他Git平台时需要补充")
         }
         streamScheduleAction.data.setting = setting
-
-        return streamScheduleAction.initCommonData()
+        return streamScheduleAction
     }
 }

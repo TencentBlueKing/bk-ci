@@ -123,7 +123,7 @@ class ScheduleTriggerService @Autowired constructor(
             eventStr = JsonUtil.toJson(event)
         )
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
-        action.data.context.requestEventId = id
+        action.init(id)
 
         val existsPipeline = gitPipelineResourceDao.getPipelineById(
             dslContext = dslContext,

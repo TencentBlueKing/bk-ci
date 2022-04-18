@@ -63,6 +63,16 @@ class StreamScheduleAction(
 
     override lateinit var api: StreamGitApiService
 
+    override fun init(requestEventId: Long) {
+        this.data.context.requestEventId = requestEventId
+        initCommonData()
+    }
+
+    private fun initCommonData(): StreamScheduleAction {
+        this.data.eventCommon = StreamScheduleCommonData(data().event)
+        return this
+    }
+
     override fun getProjectCode(gitProjectId: String?) = data().event.projectCode
 
     override fun getGitCred(personToken: String?): StreamGitCred {
@@ -74,11 +84,6 @@ class StreamScheduleAction(
             )
             else -> TODO("对接其他Git平台时需要补充")
         }
-    }
-
-    fun initCommonData(): StreamScheduleAction {
-        this.data.eventCommon = StreamScheduleCommonData(data().event)
-        return this
     }
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
