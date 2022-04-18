@@ -29,9 +29,11 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -73,7 +75,8 @@ class TXStreamTriggerRequestService @Autowired constructor(
     val rabbitTemplate: RabbitTemplate,
     private val objectMapper: ObjectMapper,
     private val TXPreTrigger: TXPreTrigger,
-    private val v1YamlTrigger: V1YamlTrigger
+    private val v1YamlTrigger: V1YamlTrigger,
+    private val streamGitConfig: StreamGitConfig
 ) : StreamTriggerRequestService(
     objectMapper = objectMapper,
     dslContext = dslContext,
@@ -86,7 +89,8 @@ class TXStreamTriggerRequestService @Autowired constructor(
     streamTriggerRequestRepoService = streamTriggerRequestRepoService,
     streamSettingDao = streamSettingDao,
     gitRequestEventDao = gitRequestEventDao,
-    gitPipelineResourceDao = gitPipelineResourceDao
+    gitPipelineResourceDao = gitPipelineResourceDao,
+    streamGitConfig = streamGitConfig
 ) {
 
     companion object {
@@ -116,7 +120,18 @@ class TXStreamTriggerRequestService @Autowired constructor(
         val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
 
         if (ymlVersion?.version == "v2.0") {
-            StreamTriggerDispatch.dispatch(rabbitTemplate, StreamTriggerEvent(action))
+            when (streamGitConfig.getScmType()) {
+                ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
+                    rabbitTemplate = rabbitTemplate,
+                    event = StreamTriggerEvent(
+                        eventStr = objectMapper.writeValueAsString(action.data.event as GitEvent),
+                        actionCommonData = action.data.eventCommon,
+                        actionContext = action.data.context,
+                        actionSetting = action.data.setting
+                    )
+                )
+                else -> TODO("对接其他Git平台时需要补充")
+            }
             return
         }
 
