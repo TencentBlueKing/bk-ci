@@ -242,6 +242,17 @@ object PipelineVarUtil {
     }
 
     /**
+     * 填充CI预置变量
+     */
+    fun fillContextVarMap(buildVar: Map<String, String>): Map<String, String> {
+        val varMap = mutableMapOf<String, String>()
+        contextVarMappingBuildVar.forEach { (contextKey, varKey) ->
+            if (!buildVar[varKey].isNullOrBlank()) varMap[contextKey] = buildVar[varKey]!!
+        }
+        return buildVar.plus(varMap)
+    }
+
+    /**
      * 获取CI预置变量
      */
     fun fetchContextInBuildVars(contextKey: String, buildVar: Map<String, String>): String? {
