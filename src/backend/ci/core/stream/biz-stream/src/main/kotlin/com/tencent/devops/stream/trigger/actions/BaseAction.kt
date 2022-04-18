@@ -33,7 +33,7 @@ interface BaseAction {
      * 填充一些初始化数据
      * 因为可能存在需要上下文参数的情况，所以和load分开
      */
-    fun init(requestEventId: Long)
+    fun init()
 
     /**
      * 通过GIT项目唯一ID获取蓝盾项目ID

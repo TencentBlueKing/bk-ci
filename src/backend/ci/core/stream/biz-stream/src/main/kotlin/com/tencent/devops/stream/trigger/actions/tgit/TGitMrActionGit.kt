@@ -100,8 +100,7 @@ class TGitMrActionGit(
     // 获取Fork库的凭证数据
     private fun getForkGitCred() = TGitCred(data().setting.enableUser)
 
-    override fun init(requestEventId: Long) {
-        this.data.context.requestEventId = requestEventId
+    override fun init() {
         initCommonData()
     }
 
