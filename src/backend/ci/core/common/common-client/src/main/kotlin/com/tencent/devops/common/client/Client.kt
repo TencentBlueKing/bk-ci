@@ -51,12 +51,10 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.context.annotation.DependsOn
 import org.springframework.core.annotation.AnnotationUtils
-import org.springframework.stereotype.Component
 import java.lang.reflect.Method
 import java.security.cert.CertificateException
 import java.util.concurrent.ConcurrentHashMap
@@ -72,9 +70,8 @@ import kotlin.reflect.KClass
  * Powered By Tencent
  */
 @Suppress("UNUSED")
-@Component
 @DependsOn("springContextUtil")
-class Client @Autowired constructor(
+class Client constructor(
     private val compositeDiscoveryClient: CompositeDiscoveryClient?,
     private val clientErrorDecoder: ClientErrorDecoder,
     private val commonConfig: CommonConfig,
