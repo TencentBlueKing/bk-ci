@@ -27,17 +27,6 @@
 
 package com.tencent.devops.common.stream.pulsar.integration.outbound
 
-import com.tencent.devops.common.stream.pulsar.constant.Serialization
-import com.tencent.devops.common.stream.pulsar.properties.PulsarProducerProperties
-import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
-import org.apache.pulsar.client.api.CompressionType
-import org.apache.pulsar.client.api.HashingScheme
-import org.apache.pulsar.client.api.MessageRoutingMode
-import org.apache.pulsar.client.api.Producer
-import org.apache.pulsar.client.api.ProducerCryptoFailureAction
-import org.apache.pulsar.client.api.PulsarClient
-import java.util.concurrent.TimeUnit
-
 object PulsarProducerFactory {
 
     /**
@@ -46,31 +35,5 @@ object PulsarProducerFactory {
      * @param producerProperties producerProperties
      * @return DefaultMQProducer
      */
-    fun initPulsarProducer(
-        topic: String,
-        producerProperties: PulsarProducerProperties,
-        pulsarClient: PulsarClient
-    ): Producer<Any> {
-        with(producerProperties) {
-            // TODO 消息序列化方式需要调整， producer需要缓存
-            val producer = pulsarClient.newProducer(
-                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            ).topic(topic)
-            if (!producerName.isNullOrBlank()) {
-                producer.producerName(producerName)
-            }
-            producer.sendTimeout(sendTimeoutMs, TimeUnit.MILLISECONDS)
-                .blockIfQueueFull(blockIfQueueFull)
-                .maxPendingMessages(maxPendingMessages)
-                .maxPendingMessagesAcrossPartitions(maxPendingMessagesAcrossPartitions)
-                .messageRoutingMode(MessageRoutingMode.valueOf(messageRoutingMode))
-                .hashingScheme(HashingScheme.valueOf(hashingScheme))
-                .cryptoFailureAction(ProducerCryptoFailureAction.valueOf(cryptoFailureAction))
-                .batchingMaxPublishDelay(batchingMaxPublishDelayMicros, TimeUnit.MILLISECONDS)
-                .batchingMaxMessages(batchingMaxMessages)
-                .enableBatching(batchingEnabled)
-                .compressionType(CompressionType.valueOf(compressionType))
-            return producer.create() as Producer<Any>
-        }
-    }
+    
 }

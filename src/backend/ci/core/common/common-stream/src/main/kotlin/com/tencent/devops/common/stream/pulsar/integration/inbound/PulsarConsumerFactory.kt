@@ -27,19 +27,6 @@
 
 package com.tencent.devops.common.stream.pulsar.integration.inbound
 
-import com.tencent.devops.common.stream.pulsar.constant.Serialization
-import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
-import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
-import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
-import org.apache.pulsar.client.api.Consumer
-import org.apache.pulsar.client.api.ConsumerCryptoFailureAction
-import org.apache.pulsar.client.api.Message
-import org.apache.pulsar.client.api.PulsarClient
-import org.apache.pulsar.client.api.RegexSubscriptionMode
-import org.apache.pulsar.client.api.SubscriptionInitialPosition
-import org.apache.pulsar.client.api.SubscriptionType
-import java.util.concurrent.TimeUnit
-
 object PulsarConsumerFactory {
 
     // TODO 考虑缓存
@@ -50,57 +37,5 @@ object PulsarConsumerFactory {
      * @return DefaultMQConsumer
      */
     @Suppress("UNCHECKED_CAST")
-    fun initPulsarConsumer(
-        topic: String,
-        group: String? = null,
-        consumerProperties: PulsarConsumerProperties,
-        pulsarClient: PulsarClient,
-        messageListener: (Consumer<*>, Message<*>) -> Unit,
-        retryLetterTopic: String,
-        deadLetterTopic: String
-    ): Consumer<Any> {
-        with(consumerProperties) {
-            val topics = mutableListOf<String>()
-            topics.addAll(topicNames)
-            topics.add(topic)
-            val consumer = pulsarClient.newConsumer(
-                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            ).topics(topics)
-            if (!topicsPattern.isNullOrEmpty()) {
-                consumer.topicsPattern(topicsPattern)
-            }
-            if (group.isNullOrEmpty()) {
-                consumer.subscriptionName(subscriptionName)
-            } else {
-                consumer.subscriptionName(group)
-            }
-            consumer.subscriptionType(SubscriptionType.valueOf(subscriptionType))
-                .receiverQueueSize(receiverQueueSize)
-                .acknowledgmentGroupTime(acknowledgementsGroupTimeMicros, TimeUnit.MILLISECONDS)
-                .negativeAckRedeliveryDelay(negativeAckRedeliveryDelayMicros, TimeUnit.MILLISECONDS)
-                .maxTotalReceiverQueueSizeAcrossPartitions(maxTotalReceiverQueueSizeAcrossPartitions)
-            if (!consumerName.isNullOrBlank()) {
-                consumer.consumerName(consumerName)
-            }
 
-            consumer.ackTimeout(ackTimeoutMillis, TimeUnit.MILLISECONDS)
-                .ackTimeoutTickTime(tickDurationMillis, TimeUnit.MILLISECONDS)
-                .priorityLevel(priorityLevel)
-                .cryptoFailureAction(ConsumerCryptoFailureAction.valueOf(cryptoFailureAction))
-            if (properties.isNotEmpty()) {
-                consumer.properties(properties)
-            }
-            consumer.readCompacted(readCompacted)
-                .subscriptionInitialPosition(SubscriptionInitialPosition.valueOf(subscriptionInitialPosition))
-                .patternAutoDiscoveryPeriod(patternAutoDiscoveryPeriod)
-                .subscriptionTopicsMode(RegexSubscriptionMode.valueOf(regexSubscriptionMode))
-                .deadLetterPolicy(
-                    PulsarUtils.buildDeadLetterPolicy(deadLetterMaxRedeliverCount, retryLetterTopic, deadLetterTopic)
-                )
-                .autoUpdatePartitions(autoUpdatePartitions)
-                .replicateSubscriptionState(replicateSubscriptionState)
-            consumer.messageListener(messageListener)
-            return consumer.subscribe() as Consumer<Any>
-        }
-    }
 }

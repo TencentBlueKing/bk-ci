@@ -25,15 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.pulsar.integration.inbound
+package com.tencent.devops.common.stream.pulsar.integration
 
-import com.tencent.devops.common.stream.pulsar.properties.PulsarBinderConfigurationProperties
+import com.tencent.devops.common.stream.pulsar.constant.Serialization
+import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
 import com.tencent.devops.common.stream.pulsar.support.PulsarMessageConverterSupport
 import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
+import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
 import org.apache.pulsar.client.api.Consumer
+import org.apache.pulsar.client.api.ConsumerCryptoFailureAction
 import org.apache.pulsar.client.api.Message
-import org.apache.pulsar.client.api.PulsarClient
+import org.apache.pulsar.client.api.RegexSubscriptionMode
+import org.apache.pulsar.client.api.SubscriptionInitialPosition
+import org.apache.pulsar.client.api.SubscriptionType
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.binder.ExtendedConsumerProperties
 import org.springframework.integration.context.OrderlyShutdownCapable
@@ -46,14 +51,18 @@ import org.springframework.retry.RetryContext
 import org.springframework.retry.RetryListener
 import org.springframework.retry.support.RetryTemplate
 import org.springframework.util.Assert
+import java.util.concurrent.TimeUnit
 
 class PulsarInboundChannelAdapter(
     private val destination: String,
-    private val pulsarClient: PulsarClient,
     private val group: String? = null,
     private var extendedConsumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
-    private val pulsarProperties: PulsarBinderConfigurationProperties
+    private val pulsarProperties: PulsarProperties
 ) : MessageProducerSupport(), OrderlyShutdownCapable {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PulsarInboundChannelAdapter::class.java)
+    }
 
     private var consumer: Consumer<Any>? = null
     var retryTemplate: RetryTemplate? = null
@@ -84,11 +93,11 @@ class PulsarInboundChannelAdapter(
             // TODO prepare register consumer message listener
             val messageListener = createListener()
             // TODO multi topic如何处理， batch 如何处理， 对于Subscription多种模式如何处理
-            consumer = PulsarConsumerFactory.initPulsarConsumer(
+            consumer = generatePulsarConsumer(
                 topic = topic,
                 group = group,
-                consumerProperties = extendedConsumerProperties.extension,
-                pulsarClient = pulsarClient,
+                pulsarProperties = pulsarProperties,
+                consumerProperties = extendedConsumerProperties,
                 messageListener = messageListener,
                 deadLetterTopic = deadLetter,
                 retryLetterTopic = retryLetter
@@ -206,7 +215,63 @@ class PulsarInboundChannelAdapter(
         return 0
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(PulsarInboundChannelAdapter::class.java)
+
+    private fun generatePulsarConsumer(
+        topic: String,
+        group: String? = null,
+        pulsarProperties: PulsarProperties,
+        consumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
+        messageListener: (Consumer<*>, Message<*>) -> Unit,
+        retryLetterTopic: String,
+        deadLetterTopic: String
+    ): Consumer<Any> {
+        val pulsarConsumerProperties = consumerProperties.extension
+        with(pulsarConsumerProperties) {
+            val topics = mutableListOf<String>()
+            topics.addAll(topicNames)
+            topics.add(topic)
+            val builder = PulsarUtils.getClientBuilder(pulsarProperties)
+            pulsarConsumerProperties.numIoThreads?.let { builder.ioThreads(it) }
+            pulsarConsumerProperties.numListenerThreads?.let { builder.listenerThreads(it) }
+            pulsarConsumerProperties.connectionsPerBroker?.let { builder.connectionsPerBroker(it) }
+            val consumer = builder.build().newConsumer(
+                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
+            ).topics(topics)
+            if (!topicsPattern.isNullOrEmpty()) {
+                consumer.topicsPattern(topicsPattern)
+            }
+            if (group.isNullOrEmpty()) {
+                consumer.subscriptionName(subscriptionName)
+            } else {
+                consumer.subscriptionName(group)
+            }
+            consumer.subscriptionType(SubscriptionType.valueOf(subscriptionType))
+                .receiverQueueSize(receiverQueueSize)
+                .acknowledgmentGroupTime(acknowledgementsGroupTimeMicros, TimeUnit.MILLISECONDS)
+                .negativeAckRedeliveryDelay(negativeAckRedeliveryDelayMicros, TimeUnit.MILLISECONDS)
+                .maxTotalReceiverQueueSizeAcrossPartitions(maxTotalReceiverQueueSizeAcrossPartitions)
+            if (!consumerName.isNullOrBlank()) {
+                consumer.consumerName(consumerName)
+            }
+
+            consumer.ackTimeout(ackTimeoutMillis, TimeUnit.MILLISECONDS)
+                .ackTimeoutTickTime(tickDurationMillis, TimeUnit.MILLISECONDS)
+                .priorityLevel(priorityLevel)
+                .cryptoFailureAction(ConsumerCryptoFailureAction.valueOf(cryptoFailureAction))
+            if (properties.isNotEmpty()) {
+                consumer.properties(properties)
+            }
+            consumer.readCompacted(readCompacted)
+                .subscriptionInitialPosition(SubscriptionInitialPosition.valueOf(subscriptionInitialPosition))
+                .patternAutoDiscoveryPeriod(patternAutoDiscoveryPeriod)
+                .subscriptionTopicsMode(RegexSubscriptionMode.valueOf(regexSubscriptionMode))
+                .deadLetterPolicy(
+                    PulsarUtils.buildDeadLetterPolicy(deadLetterMaxRedeliverCount, retryLetterTopic, deadLetterTopic)
+                )
+                .autoUpdatePartitions(autoUpdatePartitions)
+                .replicateSubscriptionState(replicateSubscriptionState)
+            consumer.messageListener(messageListener)
+            return consumer.subscribe() as Consumer<Any>
+        }
     }
 }

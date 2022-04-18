@@ -29,8 +29,8 @@ package com.tencent.devops.common.stream.pulsar.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
-@ConfigurationProperties(prefix = "spring.cloud.stream.pulsar.binder")
-data class PulsarBinderConfigurationProperties(
+@ConfigurationProperties(prefix = "spring.pulsar")
+data class PulsarProperties(
     var serviceUrl: String = "pulsar://localhost:6650",
     var ioThreads: Int = 10,
     var listenerThreads: Int = 10,

@@ -29,7 +29,7 @@ package com.tencent.devops.common.stream.pulsar.config
 
 import com.tencent.devops.common.stream.pulsar.PulsarMessageChannelBinder
 import com.tencent.devops.common.stream.pulsar.exception.ClientInitException
-import com.tencent.devops.common.stream.pulsar.properties.PulsarBinderConfigurationProperties
+import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarExtendedBindingProperties
 import com.tencent.devops.common.stream.pulsar.provisioning.PulsarMessageQueueProvisioner
 import org.apache.pulsar.client.api.AuthenticationFactory
@@ -45,7 +45,7 @@ import java.net.URL
 import java.util.concurrent.TimeUnit
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(PulsarExtendedBindingProperties::class, PulsarBinderConfigurationProperties::class)
+@EnableConfigurationProperties(PulsarExtendedBindingProperties::class, PulsarProperties::class)
 class PulsarBinderAutoConfiguration {
 
     @Bean
@@ -54,75 +54,15 @@ class PulsarBinderAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    @Throws(PulsarClientException::class, ClientInitException::class, MalformedURLException::class)
-    fun pulsarClient(pulsarProperties: PulsarBinderConfigurationProperties): PulsarClient {
-        if (!pulsarProperties.tlsAuthCertFilePath.isNullOrEmpty() &&
-            !pulsarProperties.tlsAuthKeyFilePath.isNullOrEmpty() &&
-            !pulsarProperties.tokenAuthValue.isNullOrEmpty()
-        ) throw ClientInitException("You cannot use multiple auth options.")
-        val pulsarClientBuilder = PulsarClient.builder()
-            .serviceUrl(pulsarProperties.serviceUrl)
-            .ioThreads(pulsarProperties.ioThreads)
-            .listenerThreads(pulsarProperties.listenerThreads)
-            .enableTcpNoDelay(pulsarProperties.enableTcpNoDelay)
-            .keepAliveInterval(pulsarProperties.keepAliveIntervalSec, TimeUnit.SECONDS)
-            .connectionTimeout(pulsarProperties.connectionTimeoutSec, TimeUnit.SECONDS)
-            .operationTimeout(pulsarProperties.operationTimeoutSec, TimeUnit.SECONDS)
-            .startingBackoffInterval(pulsarProperties.startingBackoffIntervalMs.toLong(), TimeUnit.MILLISECONDS)
-            .maxBackoffInterval(pulsarProperties.maxBackoffIntervalSec.toLong(), TimeUnit.SECONDS)
-            .useKeyStoreTls(pulsarProperties.useKeyStoreTls)
-            .tlsTrustCertsFilePath(pulsarProperties.tlsTrustCertsFilePath)
-            .tlsCiphers(pulsarProperties.tlsCiphers)
-            .tlsProtocols(pulsarProperties.tlsProtocols)
-            .tlsTrustStorePassword(pulsarProperties.tlsTrustStorePassword)
-            .tlsTrustStorePath(pulsarProperties.tlsTrustStorePath)
-            .tlsTrustStoreType(pulsarProperties.tlsTrustStoreType)
-            .allowTlsInsecureConnection(pulsarProperties.allowTlsInsecureConnection)
-            .enableTlsHostnameVerification(pulsarProperties.enableTlsHostnameVerification)
-
-        if (!pulsarProperties.tlsAuthCertFilePath.isNullOrEmpty() &&
-            !pulsarProperties.tlsAuthKeyFilePath.isNullOrEmpty()
-        ) {
-            pulsarClientBuilder.authentication(
-                AuthenticationFactory
-                    .TLS(pulsarProperties.tlsAuthCertFilePath, pulsarProperties.tlsAuthKeyFilePath)
-            )
-        }
-
-        if (!pulsarProperties.tokenAuthValue.isNullOrEmpty()) {
-            pulsarClientBuilder.authentication(
-                AuthenticationFactory
-                    .token(pulsarProperties.tokenAuthValue)
-            )
-        }
-
-        if (!pulsarProperties.oauth2Audience.isNullOrEmpty() &&
-            !pulsarProperties.oauth2IssuerUrl.isNullOrEmpty() &&
-            !pulsarProperties.oauth2CredentialsUrl.isNullOrEmpty()
-        ) {
-            val issuerUrl = URL(pulsarProperties.oauth2IssuerUrl)
-            val credentialsUrl = URL(pulsarProperties.oauth2CredentialsUrl)
-            pulsarClientBuilder.authentication(
-                AuthenticationFactoryOAuth2
-                    .clientCredentials(issuerUrl, credentialsUrl, pulsarProperties.oauth2Audience)
-            )
-        }
-        return pulsarClientBuilder.build()
-    }
-
-    @Bean
     fun pulsarMessageChannelBinder(
-        pulsarClient: PulsarClient,
         provisioningProvider: PulsarMessageQueueProvisioner,
         bindingProperties: PulsarExtendedBindingProperties,
-        pulsarProperties: PulsarBinderConfigurationProperties
+        pulsarProperties: PulsarProperties
     ): PulsarMessageChannelBinder {
         return PulsarMessageChannelBinder(
-            pulsarClient,
-            provisioningProvider,
-            bindingProperties,
-            pulsarProperties
+            messageBinderProvisioner = provisioningProvider,
+            extendedBindingProperties = bindingProperties,
+            pulsarProperties = pulsarProperties
         )
     }
 

@@ -30,12 +30,75 @@ package com.tencent.devops.common.stream.pulsar.util
 import com.tencent.devops.common.stream.pulsar.constant.DLQ
 import com.tencent.devops.common.stream.pulsar.constant.PATH_SPLIT
 import com.tencent.devops.common.stream.pulsar.constant.RETRY
+import com.tencent.devops.common.stream.pulsar.exception.ClientInitException
+import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
+import org.apache.pulsar.client.api.AuthenticationFactory
+import org.apache.pulsar.client.api.ClientBuilder
 import org.apache.pulsar.client.api.DeadLetterPolicy
+import org.apache.pulsar.client.api.PulsarClient
+import org.apache.pulsar.client.impl.auth.oauth2.AuthenticationFactoryOAuth2
 import java.io.UnsupportedEncodingException
+import java.net.URL
 import java.util.StringJoiner
+import java.util.concurrent.TimeUnit
 import javax.validation.constraints.NotBlank
 
 object PulsarUtils {
+
+    fun getClientBuilder(pulsarProperties: PulsarProperties): ClientBuilder {
+        if (!pulsarProperties.tlsAuthCertFilePath.isNullOrEmpty() &&
+            !pulsarProperties.tlsAuthKeyFilePath.isNullOrEmpty() &&
+            !pulsarProperties.tokenAuthValue.isNullOrEmpty()
+        ) throw ClientInitException("You cannot use multiple auth options.")
+        val builder = PulsarClient.builder()
+            .serviceUrl(pulsarProperties.serviceUrl)
+            .ioThreads(pulsarProperties.ioThreads)
+            .listenerThreads(pulsarProperties.listenerThreads)
+            .enableTcpNoDelay(pulsarProperties.enableTcpNoDelay)
+            .keepAliveInterval(pulsarProperties.keepAliveIntervalSec, TimeUnit.SECONDS)
+            .connectionTimeout(pulsarProperties.connectionTimeoutSec, TimeUnit.SECONDS)
+            .operationTimeout(pulsarProperties.operationTimeoutSec, TimeUnit.SECONDS)
+            .startingBackoffInterval(pulsarProperties.startingBackoffIntervalMs.toLong(), TimeUnit.MILLISECONDS)
+            .maxBackoffInterval(pulsarProperties.maxBackoffIntervalSec.toLong(), TimeUnit.SECONDS)
+            .useKeyStoreTls(pulsarProperties.useKeyStoreTls)
+            .tlsTrustCertsFilePath(pulsarProperties.tlsTrustCertsFilePath)
+            .tlsCiphers(pulsarProperties.tlsCiphers)
+            .tlsProtocols(pulsarProperties.tlsProtocols)
+            .tlsTrustStorePassword(pulsarProperties.tlsTrustStorePassword)
+            .tlsTrustStorePath(pulsarProperties.tlsTrustStorePath)
+            .tlsTrustStoreType(pulsarProperties.tlsTrustStoreType)
+            .allowTlsInsecureConnection(pulsarProperties.allowTlsInsecureConnection)
+            .enableTlsHostnameVerification(pulsarProperties.enableTlsHostnameVerification)
+
+        if (!pulsarProperties.tlsAuthCertFilePath.isNullOrEmpty() &&
+            !pulsarProperties.tlsAuthKeyFilePath.isNullOrEmpty()
+        ) {
+            builder.authentication(
+                AuthenticationFactory
+                    .TLS(pulsarProperties.tlsAuthCertFilePath, pulsarProperties.tlsAuthKeyFilePath)
+            )
+        }
+
+        if (!pulsarProperties.tokenAuthValue.isNullOrEmpty()) {
+            builder.authentication(
+                AuthenticationFactory
+                    .token(pulsarProperties.tokenAuthValue)
+            )
+        }
+
+        if (!pulsarProperties.oauth2Audience.isNullOrEmpty() &&
+            !pulsarProperties.oauth2IssuerUrl.isNullOrEmpty() &&
+            !pulsarProperties.oauth2CredentialsUrl.isNullOrEmpty()
+        ) {
+            val issuerUrl = URL(pulsarProperties.oauth2IssuerUrl)
+            val credentialsUrl = URL(pulsarProperties.oauth2CredentialsUrl)
+            builder.authentication(
+                AuthenticationFactoryOAuth2
+                    .clientCredentials(issuerUrl, credentialsUrl, pulsarProperties.oauth2Audience)
+            )
+        }
+        return builder
+    }
 
     /**
      * Validate topic name. Allowed chars are ASCII alphanumerics, '.', '_' and '-'.
