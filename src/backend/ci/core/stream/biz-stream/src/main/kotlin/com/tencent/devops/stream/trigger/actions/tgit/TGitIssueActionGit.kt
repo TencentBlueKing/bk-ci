@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory
 
 class TGitIssueActionGit(
     private val apiService: TGitApiService,
-    private val streamTriggerCache: StreamTriggerCache,
     private val gitCheckService: GitCheckService
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 

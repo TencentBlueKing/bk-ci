@@ -128,7 +128,6 @@ class EventActionFactory @Autowired constructor(
             is GitIssueEvent -> {
                 val tGitIssueAction = TGitIssueActionGit(
                     apiService = tGitApiService,
-                    streamTriggerCache = streamTriggerCache,
                     gitCheckService = gitCheckService,
                 )
                 tGitIssueAction.data = TGitIssueActionData(event)
@@ -137,7 +136,6 @@ class EventActionFactory @Autowired constructor(
             is GitReviewEvent -> {
                 val tGitReviewAction = TGitReviewActionGit(
                     apiService = tGitApiService,
-                    streamTriggerCache = streamTriggerCache,
                     gitCheckService = gitCheckService
                 )
                 tGitReviewAction.data = TGitReviewActionData(event)
@@ -146,7 +144,6 @@ class EventActionFactory @Autowired constructor(
             is GitNoteEvent -> {
                 val tGitNoteAction = TGitNoteActionGit(
                     apiService = tGitApiService,
-                    streamTriggerCache = streamTriggerCache,
                     gitCheckService = gitCheckService
                 )
                 tGitNoteAction.data = TGitNoteActionData(event)
