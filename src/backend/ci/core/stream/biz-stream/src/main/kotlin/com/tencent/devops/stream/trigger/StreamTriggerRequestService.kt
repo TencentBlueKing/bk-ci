@@ -29,7 +29,9 @@ package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -63,6 +65,7 @@ class StreamTriggerRequestService @Autowired constructor(
     private val dslContext: DSLContext,
     private val rabbitTemplate: RabbitTemplate,
     private val actionFactory: EventActionFactory,
+    private val streamGitConfig: StreamGitConfig,
     private val streamTriggerCache: StreamTriggerCache,
     private val yamlSchemaCheck: YamlSchemaCheck,
     private val exHandler: StreamTriggerExceptionHandler,
@@ -94,7 +97,7 @@ class StreamTriggerRequestService @Autowired constructor(
         // 加载不同源的action
         val action = actionFactory.load(eventObject).also {
             if (it == null) {
-                logger.warn("event not support: $event")
+                logger.error("event not support: $event")
                 return false
             }
         }!!
@@ -288,5 +291,16 @@ class StreamTriggerRequestService @Autowired constructor(
         trigger(action)
     }
 
-    protected fun trigger(action: BaseAction) = StreamTriggerDispatch.dispatch(rabbitTemplate, StreamTriggerEvent(action))
+    protected fun trigger(action: BaseAction) = when (streamGitConfig.getScmType()) {
+        ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
+            rabbitTemplate = rabbitTemplate,
+            event = StreamTriggerEvent(
+                eventStr = objectMapper.writeValueAsString(action.data.event as GitEvent),
+                actionCommonData = action.data.eventCommon,
+                actionContext = action.data.context,
+                actionSetting = action.data.setting
+            )
+        )
+        else -> TODO("对接其他Git平台时需要补充")
+    }
 }

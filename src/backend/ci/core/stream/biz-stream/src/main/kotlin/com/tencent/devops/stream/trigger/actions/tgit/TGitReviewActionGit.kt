@@ -27,16 +27,18 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitReviewActionData
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitReviewEventCommonData
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
@@ -58,7 +60,7 @@ class TGitReviewActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.REVIEW)
 
     override lateinit var data: ActionData
-    fun data() = data as TGitReviewActionData
+    fun event() = data.event as GitReviewEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -68,7 +70,7 @@ class TGitReviewActionGit(
     }
 
     private fun initCommonData(): GitBaseAction {
-        val event = data().event
+        val event = event()
         val gitProjectId = event.projectId
         val defaultBranch = apiService.getGitProjectInfo(
             cred = this.getGitCred(),
@@ -81,19 +83,33 @@ class TGitReviewActionGit(
             sha = defaultBranch,
             retry = ApiRequestRetryInfo(retry = true)
         )
-        this.data.eventCommon = TGitReviewEventCommonData(event, defaultBranch, latestCommit)
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.projectId.toString(),
+            branch = defaultBranch,
+            commit = EventCommonDataCommit(
+                commitId = latestCommit?.commitId ?: "0",
+                commitMsg = latestCommit?.commitMsg,
+                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitAuthorName = latestCommit?.commitAuthor
+            ),
+            userId = if (event.reviewer == null) {
+                event.author.username
+            } else {
+                event.reviewer!!.reviewer.username
+            },
+            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
+        )
         return this
     }
 
-    override fun isStreamDeleteAction() = data().event.isDeleteEvent()
+    override fun isStreamDeleteAction() = event().isDeleteEvent()
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
-        val data = data()
         return GitRequestEventHandle.createReviewEvent(
-            gitReviewEvent = data.event,
+            gitReviewEvent = event(),
             e = eventStr,
             defaultBranch = data.eventCommon.branch,
-            latestCommit = (data.eventCommon as TGitReviewEventCommonData).latestCommit
+            latestCommit = data.eventCommon.commit
         )
     }
 
@@ -112,7 +128,7 @@ class TGitReviewActionGit(
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return TGitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data().getGitProjectId(),
+            gitProjectId = this.data.getGitProjectId(),
             ref = this.data.eventCommon.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }

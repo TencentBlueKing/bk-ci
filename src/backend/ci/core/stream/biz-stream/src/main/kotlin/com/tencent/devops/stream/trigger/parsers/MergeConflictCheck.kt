@@ -27,8 +27,12 @@
 
 package com.tencent.devops.stream.trigger.parsers
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
@@ -48,9 +52,11 @@ import org.springframework.stereotype.Component
 @Component
 class MergeConflictCheck @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val rabbitTemplate: RabbitTemplate,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val streamEventService: StreamEventService
+    private val streamEventService: StreamEventService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(MergeConflictCheck::class.java)
@@ -67,7 +73,7 @@ class MergeConflictCheck @Autowired constructor(
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
         val projectId = action.data.getGitProjectId()
-        val mrRequestId = action.data().event.object_attributes.id.toString()
+        val mrRequestId = action.event().object_attributes.id.toString()
 
         val mrInfo = action.api.getMrInfo(
             gitProjectId = projectId,
@@ -87,13 +93,20 @@ class MergeConflictCheck @Autowired constructor(
                     reasonDetail = TriggerReason.CI_MERGE_CHECKING.detail
                 )
 
-                dispatchMrConflictCheck(
-                    StreamMrConflictCheckEvent(
-                        action = action,
-                        path2PipelineExists = path2PipelineExists,
-                        notBuildRecordId = recordId
+                when (streamGitConfig.getScmType()) {
+                    ScmType.CODE_GIT -> dispatchMrConflictCheck(
+                        event = StreamMrConflictCheckEvent(
+                            eventStr = objectMapper.writeValueAsString(action.data.event as GitEvent),
+                            actionCommonData = action.data.eventCommon,
+                            actionContext = action.data.context,
+                            actionSetting = action.data.setting,
+                            path2PipelineExists = path2PipelineExists,
+                            notBuildRecordId = recordId
+                        )
                     )
-                )
+                    else -> TODO("对接其他Git平台时需要补充")
+                }
+
                 return false
             }
             TGitMrStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
@@ -117,7 +130,7 @@ class MergeConflictCheck @Autowired constructor(
         var isFinish: Boolean
         var isTrigger: Boolean
         val projectId = action.data.getGitProjectId()
-        val mrRequestId = action.data().event.object_attributes.id.toString()
+        val mrRequestId = action.event().object_attributes.id.toString()
         val mrInfo = try {
             action.api.getMrInfo(
                 gitProjectId = projectId,

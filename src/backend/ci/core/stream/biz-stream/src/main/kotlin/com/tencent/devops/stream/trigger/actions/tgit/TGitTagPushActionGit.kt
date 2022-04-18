@@ -27,19 +27,21 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitTagPushActionData
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitTagPushEventCommonData
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
@@ -63,7 +65,7 @@ class TGitTagPushActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
 
     override lateinit var data: ActionData
-    fun data() = data as TGitTagPushActionData
+    fun event() = data.event as GitTagPushEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -73,18 +75,51 @@ class TGitTagPushActionGit(
     }
 
     private fun initCommonData(): GitBaseAction {
-        this.data.eventCommon = TGitTagPushEventCommonData(data().event)
+        val event = event()
+        val lastCommit = getLatestCommit(event)
+
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.project_id.toString(),
+            branch = event.ref.removePrefix("refs/tags/"),
+            commit = EventCommonDataCommit(
+                commitId = event.after,
+                commitMsg = lastCommit?.message,
+                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitAuthorName = lastCommit?.author?.name
+            ),
+            userId = event.user_name,
+            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
+        )
         return this
     }
 
-    override fun isStreamDeleteAction() = data().event.isDeleteEvent()
+    private fun getLatestCommit(
+        event: GitTagPushEvent
+    ): GitCommit? {
+        val commitId = event.after
+        val commits = event.commits
+        if (commitId == null) {
+            return if (commits.isNullOrEmpty()) {
+                null
+            } else {
+                commits.last()
+            }
+        }
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
+            }
+        }
+        return null
+    }
+
+    override fun isStreamDeleteAction() = event().isDeleteEvent()
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
-        val rData = data()
-        if (!rData.event.tagPushEventFilter()) {
+        if (!event().tagPushEventFilter()) {
             return null
         }
-        return GitRequestEventHandle.createTagPushEvent(rData.event, eventStr)
+        return GitRequestEventHandle.createTagPushEvent(event(), eventStr)
     }
 
     override fun skipStream(): Boolean {
@@ -92,7 +127,7 @@ class TGitTagPushActionGit(
     }
 
     override fun checkProjectConfig() {
-        if (!data().setting.buildPushedBranches) {
+        if (!data.setting.buildPushedBranches) {
             throw StreamTriggerException(this, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED)
         }
     }
@@ -106,7 +141,7 @@ class TGitTagPushActionGit(
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return TGitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data().getGitProjectId(),
+            gitProjectId = this.data.getGitProjectId(),
             ref = this.data.eventCommon.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
@@ -122,7 +157,7 @@ class TGitTagPushActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val event = data().event
+        val event = event()
         val isMatch = TriggerMatcher.isTagPushMatch(
             triggerOn,
             TGitActionCommon.getTriggerBranch(event.ref),
@@ -148,7 +183,7 @@ class TGitTagPushActionGit(
         )
     }
 
-    override fun needSendCommitCheck() = !data().event.isDeleteTag()
+    override fun needSendCommitCheck() = !event().isDeleteTag()
 }
 
 private fun GitTagPushEvent.tagPushEventFilter(): Boolean {

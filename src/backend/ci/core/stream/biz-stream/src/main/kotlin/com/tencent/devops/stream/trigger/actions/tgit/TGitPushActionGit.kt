@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.actions.tgit
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
@@ -48,9 +49,9 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitPushActionData
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitPushEventCommonData
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -96,7 +97,7 @@ class TGitPushActionGit(
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
     override lateinit var data: ActionData
-    fun data() = data as TGitPushActionData
+    fun event() = data.event as GitPushEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -106,25 +107,60 @@ class TGitPushActionGit(
     }
 
     private fun initCommonData(): GitBaseAction {
-        this.data.eventCommon = TGitPushEventCommonData(data().event)
+        val event = event()
+        val lastCommit = getLatestCommit(event)
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.project_id.toString(),
+            branch = event.ref.removePrefix("refs/heads/"),
+            commit = EventCommonDataCommit(
+                commitId = event.after,
+                commitMsg = lastCommit?.message,
+                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitAuthorName = lastCommit?.author?.name
+            ),
+            userId = event.user_name,
+            gitProjectName = GitUtils.getProjectName(event.repository.homepage),
+        )
         return this
     }
 
-    override fun isStreamDeleteAction() = data().event.isDeleteEvent()
-
-    override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
-        val rData = data()
-        if (!rData.event.pushEventFilter()) {
+    private fun getLatestCommit(
+        event: GitPushEvent
+    ): GitCommit? {
+        if (event.isDeleteEvent()) {
             return null
         }
-        return GitRequestEventHandle.createPushEvent(rData.event, eventStr)
+        val commitId = event.after
+        val commits = event.commits
+        if (commitId == null) {
+            return if (commits.isNullOrEmpty()) {
+                null
+            } else {
+                commits.last()
+            }
+        }
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
+            }
+        }
+        return null
+    }
+
+    override fun isStreamDeleteAction() = event().isDeleteEvent()
+
+    override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
+        if (!event().pushEventFilter()) {
+            return null
+        }
+        return GitRequestEventHandle.createPushEvent(event(), eventStr)
     }
 
     override fun skipStream(): Boolean {
-        if (!data().event.skipStream()) {
+        if (!event().skipStream()) {
             return false
         }
-        logger.info("project: ${data().eventCommon.gitProjectId} commit: ${data().eventCommon.commit.commitId} skip ci")
+        logger.info("project: ${data.eventCommon.gitProjectId} commit: ${data.eventCommon.commit.commitId} skip ci")
         streamEventService.saveTriggerNotBuildEvent(
             action = this,
             reason = TriggerReason.USER_SKIPED.name,
@@ -134,7 +170,7 @@ class TGitPushActionGit(
     }
 
     override fun checkProjectConfig() {
-        if (!data().setting.buildPushedBranches) {
+        if (!data.setting.buildPushedBranches) {
             throw StreamTriggerException(this, TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED)
         }
     }
@@ -145,7 +181,7 @@ class TGitPushActionGit(
 
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
         // 直接删除分支,挪到前面，不需要对deleteYamlFiles获取后再做判断。
-        if (data().event.isDeleteBranch()) {
+        if (event().isDeleteBranch()) {
             val pipelines = streamPipelineBranchService.getBranchPipelines(
                 this.data.getGitProjectId().toLong(),
                 this.data.eventCommon.branch
@@ -167,7 +203,7 @@ class TGitPushActionGit(
             return
         }
 
-        val deleteYamlFiles = data().event.commits?.flatMap {
+        val deleteYamlFiles = event().commits?.flatMap {
             if (it.removed != null) {
                 it.removed!!.asIterable()
             } else {
@@ -180,7 +216,7 @@ class TGitPushActionGit(
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return TGitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data().getGitProjectId(),
+            gitProjectId = this.data.getGitProjectId(),
             ref = this.data.eventCommon.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
@@ -196,9 +232,9 @@ class TGitPushActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val branch = TGitActionCommon.getTriggerBranch(data().eventCommon.branch)
+        val branch = TGitActionCommon.getTriggerBranch(data.eventCommon.branch)
 
-        val isDefaultBranch = branch == data().context.defaultBranch
+        val isDefaultBranch = branch == data.context.defaultBranch
         // 校验是否注册跨项目触发
         val repoTriggerUserId = if (isDefaultBranch) {
             checkRepoTriggerCredentials(this, triggerOn)
@@ -219,7 +255,7 @@ class TGitPushActionGit(
         }
 
         // 判断是否注册删除任务
-        val changeSet = getCommitChangeSet(data().event)
+        val changeSet = getCommitChangeSet(event())
         data.context.changeSet = changeSet.toList()
         val isDelete = if (isDefaultBranch) {
             // 只有更改了delete相关流水线才做更新
@@ -234,7 +270,7 @@ class TGitPushActionGit(
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
             userId = data.eventCommon.userId,
-            isCreateBranch = data().event.isCreateBranch()
+            isCreateBranch = event().isCreateBranch()
         )
         val params = TGitActionCommon.getStartParams(
             action = this,
@@ -405,7 +441,7 @@ class TGitPushActionGit(
     }
 
     override fun getUserVariables(yamlVariables: Map<String, Variable>?): Map<String, Variable>? {
-        return replaceVariablesByPushOptions(yamlVariables, data().event.push_options)
+        return replaceVariablesByPushOptions(yamlVariables, event().push_options)
     }
 
     // git push -o ci.variable::<name>="<value>" -o ci.variable::<name>="<value>"
@@ -444,7 +480,7 @@ class TGitPushActionGit(
 
     override fun needSaveOrUpdateBranch() = true
 
-    override fun needSendCommitCheck() = !data().event.isDeleteBranch()
+    override fun needSendCommitCheck() = !event().isDeleteBranch()
 }
 
 @SuppressWarnings("ReturnCount")

@@ -29,27 +29,21 @@ package com.tencent.devops.stream.trigger.actions.data
 
 /**
  * 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
+ * @param gitProjectId Git平台项目唯一标识
+ * @param branch 当前event的触发branch
+ * @param commit 当前event的commitId
+ * @param userId 当前event的触发人
+ * @param gitProjectName Git平台项目全称: namespace/name
+ * @param sourceGitProjectId  mr触发时的源Git库
  */
-interface EventCommonData {
-    // Git平台项目唯一标识
-    val gitProjectId: String
-
-    // 当前event的触发branch
-    val branch: String
-
-    // 当前event的commitId
-    val commit: EventCommonDataCommit
-
-    // 当前event的触发人
-    val userId: String
-
-    // Git平台项目全称: namespace/name
-    val gitProjectName: String?
-
-    // mr触发时的源Git库
-    val sourceGitProjectId: String?
-        get() = null
-}
+data class EventCommonData(
+    val gitProjectId: String,
+    val branch: String,
+    val commit: EventCommonDataCommit,
+    val userId: String,
+    val gitProjectName: String?,
+    val sourceGitProjectId: String? = null
+)
 
 /**
  * 公共数据的commit数据

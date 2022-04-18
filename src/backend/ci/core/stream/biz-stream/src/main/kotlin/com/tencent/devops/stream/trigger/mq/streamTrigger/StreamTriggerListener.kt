@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.mq.streamTrigger
 
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.stream.trigger.StreamYamlTrigger
+import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -38,7 +39,8 @@ import org.springframework.stereotype.Service
 @Service
 class StreamTriggerListener @Autowired constructor(
     private val exceptionHandler: StreamTriggerExceptionHandler,
-    private val streamYamlTrigger: StreamYamlTrigger
+    private val streamYamlTrigger: StreamYamlTrigger,
+    private val actionFactory: EventActionFactory
 ) {
 
     companion object {
@@ -63,11 +65,22 @@ class StreamTriggerListener @Autowired constructor(
 
     private fun run(event: StreamTriggerEvent) {
         val startTime = System.currentTimeMillis()
+        val action = actionFactory.loadByData(
+            event.eventStr,
+            event.actionCommonData,
+            event.actionContext,
+            event.actionSetting
+        ).also {
+            if (it == null) {
+                logger.error("event not support: $event")
+                return
+            }
+        } ?: return
         // 针对每个流水线处理异常
-        exceptionHandler.handle(action = event.action) { streamYamlTrigger.triggerBuild(action = event.action) }
+        exceptionHandler.handle(action = action) { streamYamlTrigger.triggerBuild(action = action) }
 
         logger.info(
-            "stream pipeline: ${event.action.data.context.pipeline?.pipelineId} " +
+            "stream pipeline: ${action.data.context.pipeline?.pipelineId} " +
                 "from trigger to build time：${System.currentTimeMillis() - startTime}"
         )
     }

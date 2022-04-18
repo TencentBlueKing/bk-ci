@@ -35,7 +35,7 @@ object StreamMrConflictCheckDispatcher {
 
     fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamMrConflictCheckEvent) {
         try {
-            logger.info("[${event.action.data.eventCommon}] Dispatch the event")
+            logger.info("[${event.actionCommonData}] Dispatch the event")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 message.messageProperties.setHeader("x-delay", event.delayMills)

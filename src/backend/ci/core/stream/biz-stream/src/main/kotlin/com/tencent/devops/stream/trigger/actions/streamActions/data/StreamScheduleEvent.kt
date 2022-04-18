@@ -28,12 +28,6 @@
 package com.tencent.devops.stream.trigger.actions.streamActions.data
 
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
-import com.tencent.devops.stream.trigger.actions.data.ActionData
-import com.tencent.devops.stream.trigger.actions.data.EventCommonData
-import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 
 data class StreamScheduleEvent(
     val userId: String,
@@ -44,34 +38,3 @@ data class StreamScheduleEvent(
     val commitMsg: String,
     val commitAuthor: String
 ) : CodeWebhookEvent
-
-data class StreamScheduleActionData(
-    override val event: StreamScheduleEvent,
-    override val context: StreamTriggerContext = StreamTriggerContext()
-) : ActionData {
-    override lateinit var eventCommon: EventCommonData
-    override lateinit var setting: StreamTriggerSetting
-}
-
-class StreamScheduleCommonData(
-    private val event: StreamScheduleEvent
-) : EventCommonData {
-    override val gitProjectId: String
-        get() = event.gitProjectId
-
-    override val userId: String
-        get() = event.userId
-
-    override val branch: String
-        get() = event.branch.removePrefix("refs/heads/")
-
-    override val commit: EventCommonDataCommit
-        get() = EventCommonDataCommit(
-            commitId = event.commitId,
-            commitMsg = event.commitMsg,
-            commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
-            commitAuthorName = event.commitAuthor
-        )
-
-    override val gitProjectName: String? = null
-}

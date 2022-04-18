@@ -43,10 +43,9 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleEvent
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
-import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitInfo
 import org.joda.time.DateTime
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -157,7 +156,7 @@ object GitRequestEventHandle {
         gitIssueEvent: GitIssueEvent,
         e: String,
         defaultBranch: String,
-        latestCommit: TGitCommitInfo?
+        latestCommit: EventCommonDataCommit?
     ): GitRequestEvent {
         val gitProjectId = gitIssueEvent.objectAttributes.projectId
         return GitRequestEvent(
@@ -171,8 +170,8 @@ object GitRequestEventHandle {
             targetBranch = null,
             commitId = latestCommit?.commitId ?: "0",
             commitMsg = gitIssueEvent.objectAttributes.title,
-            commitTimeStamp = getCommitTimeStamp(latestCommit?.commitDate),
-            commitAuthorName = latestCommit?.commitAuthor,
+            commitTimeStamp = latestCommit?.commitTimeStamp,
+            commitAuthorName = latestCommit?.commitAuthorName,
             userId = gitIssueEvent.user.username,
             totalCommitCount = 1,
             mergeRequestId = gitIssueEvent.objectAttributes.iid.toLong(),
@@ -188,7 +187,7 @@ object GitRequestEventHandle {
         gitNoteEvent: GitNoteEvent,
         e: String,
         defaultBranch: String,
-        latestCommit: TGitCommitInfo?
+        latestCommit: EventCommonDataCommit?
     ): GitRequestEvent {
         val gitProjectId = gitNoteEvent.objectAttributes.projectId
         return GitRequestEvent(
@@ -202,8 +201,8 @@ object GitRequestEventHandle {
             targetBranch = null,
             commitId = latestCommit?.commitId ?: "0",
             commitMsg = gitNoteEvent.objectAttributes.note,
-            commitTimeStamp = getCommitTimeStamp(latestCommit?.commitDate),
-            commitAuthorName = latestCommit?.commitAuthor,
+            commitTimeStamp = latestCommit?.commitTimeStamp,
+            commitAuthorName = latestCommit?.commitAuthorName,
             userId = gitNoteEvent.user.username,
             totalCommitCount = 1,
             mergeRequestId = null,
@@ -219,7 +218,7 @@ object GitRequestEventHandle {
         gitReviewEvent: GitReviewEvent,
         e: String,
         defaultBranch: String,
-        latestCommit: TGitCommitInfo?
+        latestCommit: EventCommonDataCommit?
     ): GitRequestEvent {
         val gitProjectId = gitReviewEvent.projectId
         return GitRequestEvent(
@@ -237,8 +236,8 @@ object GitRequestEventHandle {
             targetBranch = null,
             commitId = latestCommit?.commitId ?: "0",
             commitMsg = latestCommit?.commitMsg,
-            commitTimeStamp = getCommitTimeStamp(latestCommit?.commitDate),
-            commitAuthorName = latestCommit?.commitAuthor,
+            commitTimeStamp = latestCommit?.commitTimeStamp,
+            commitAuthorName = latestCommit?.commitAuthorName,
             userId = if (gitReviewEvent.reviewer == null) {
                 gitReviewEvent.author.username
             } else {
@@ -256,7 +255,7 @@ object GitRequestEventHandle {
 
     fun createManualTriggerEvent(
         event: StreamManualEvent,
-        latestCommit: StreamGitCommitInfo?,
+        latestCommit: EventCommonDataCommit?,
         eventStr: String
     ): GitRequestEvent {
         if (event.branch.isBlank()) {
@@ -277,7 +276,7 @@ object GitRequestEventHandle {
             targetBranch = null,
             commitId = event.commitId ?: (latestCommit?.commitId ?: ""),
             commitMsg = event.customCommitMsg,
-            commitTimeStamp = getCommitTimeStamp(null),
+            commitTimeStamp = latestCommit?.commitTimeStamp ?: getCommitTimeStamp(null),
             commitAuthorName = event.userId,
             userId = event.userId,
             totalCommitCount = 0,

@@ -180,7 +180,9 @@ class ModelContainer @Autowired(required = false) constructor(
                 jobControlOption = getJobControlOption(
                     job = job, jobEnable = jobEnable, finalStage = finalStage
                 ),
-                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration)
+                mutexGroup = getMutexGroup(job.resourceExclusiveDeclaration),
+                matrixGroupFlag = job.strategy != null,
+                matrixControlOption = getMatrixControlOption(job, null)
             )
         )
     }

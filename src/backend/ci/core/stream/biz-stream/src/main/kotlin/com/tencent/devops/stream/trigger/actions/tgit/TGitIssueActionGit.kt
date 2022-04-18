@@ -27,16 +27,18 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitIssueActionData
-import com.tencent.devops.stream.trigger.actions.tgit.data.TGitIssueEventCommonData
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
@@ -60,7 +62,7 @@ class TGitIssueActionGit(
     )
 
     override lateinit var data: ActionData
-    fun data() = data as TGitIssueActionData
+    fun event() = data.event as GitIssueEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -70,7 +72,7 @@ class TGitIssueActionGit(
     }
 
     private fun initCommonData(): GitBaseAction {
-        val event = data().event
+        val event = event()
         val gitProjectId = event.objectAttributes.projectId
 
         val defaultBranch = apiService.getGitProjectInfo(
@@ -84,19 +86,29 @@ class TGitIssueActionGit(
             sha = defaultBranch,
             retry = ApiRequestRetryInfo(retry = true)
         )
-        this.data.eventCommon = TGitIssueEventCommonData(event, defaultBranch, latestCommit)
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.objectAttributes.projectId.toString(),
+            branch = defaultBranch,
+            commit = EventCommonDataCommit(
+                commitId = latestCommit?.commitId ?: "0",
+                commitMsg = event.objectAttributes.title,
+                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitAuthorName = latestCommit?.commitAuthor
+            ),
+            userId = event.user.username,
+            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
+        )
         return this
     }
 
-    override fun isStreamDeleteAction() = data().event.isDeleteEvent()
+    override fun isStreamDeleteAction() = event().isDeleteEvent()
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent {
-        val data = data()
         return GitRequestEventHandle.createIssueEvent(
-            gitIssueEvent = data.event,
+            gitIssueEvent = event(),
             e = eventStr,
             defaultBranch = data.eventCommon.branch,
-            latestCommit = (data.eventCommon as TGitIssueEventCommonData).latestCommit
+            latestCommit = data.eventCommon.commit
         )
     }
 
@@ -115,7 +127,7 @@ class TGitIssueActionGit(
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return TGitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data().getGitProjectId(),
+            gitProjectId = this.data.getGitProjectId(),
             ref = this.data.eventCommon.branch
         ).map { YamlPathListEntry(it, CheckType.NO_NEED_CHECK) }
     }
