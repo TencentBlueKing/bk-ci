@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.interceptor
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 
 /**
  *
@@ -39,5 +40,6 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 data class InterceptData(
     val pipelineInfo: PipelineInfo,
     val model: Model?,
-    val startType: StartType
+    val startType: StartType,
+    val setting: PipelineSetting?
 )

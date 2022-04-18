@@ -1003,7 +1003,9 @@ class PipelineRepositoryService constructor(
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
                 maxConRunningQueueSize = t.maxConRunningQueueSize,
-                buildNumRule = t.buildNumRule
+                buildNumRule = t.buildNumRule,
+                concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                concurrencyGroup = t.concurrencyGroup
             )
         } else null
     }
