@@ -27,11 +27,13 @@
 
 package com.tencent.devops.common.pipeline.container
 
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 /**
  *  互斥组
  */
+@ApiModel("互斥组模型")
 data class MutexGroup(
     @ApiModelProperty("是否启用", required = false)
     val enable: Boolean,

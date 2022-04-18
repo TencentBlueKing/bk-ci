@@ -30,12 +30,14 @@ package com.tencent.devops.common.pipeline.option
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 /**
  * 阶段流程控制
  * @version 1.0
  */
+@ApiModel("阶段流程控制模型")
 data class StageControlOption(
     @ApiModelProperty("是否启用该阶段", required = false)
     val enable: Boolean = true, // 是否启用该阶段

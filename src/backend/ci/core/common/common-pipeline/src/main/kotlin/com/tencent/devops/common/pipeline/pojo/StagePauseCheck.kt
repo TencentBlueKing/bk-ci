@@ -34,9 +34,11 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
+@ApiModel("stage准入/准出配置模型")
 data class StagePauseCheck(
     @ApiModelProperty("是否人工触发", required = false)
     var manualTrigger: Boolean? = false,
@@ -207,14 +209,16 @@ data class StagePauseCheck(
                 status = if (stageControlOption.triggered == true) {
                     BuildStatus.REVIEW_PROCESSED.name
                 } else null,
-                reviewGroups = mutableListOf(StageReviewGroup(
-                    id = UUIDUtil.generate(),
-                    reviewers = stageControlOption.triggerUsers ?: listOf(),
-                    status = if (stageControlOption.triggered == true) {
-                        ManualReviewAction.PROCESS.name
-                    } else null,
-                    params = stageControlOption.reviewParams
-                )),
+                reviewGroups = mutableListOf(
+                    StageReviewGroup(
+                        id = UUIDUtil.generate(),
+                        reviewers = stageControlOption.triggerUsers ?: listOf(),
+                        status = if (stageControlOption.triggered == true) {
+                            ManualReviewAction.PROCESS.name
+                        } else null,
+                        params = stageControlOption.reviewParams
+                    )
+                ),
                 reviewDesc = stageControlOption.reviewDesc,
                 reviewParams = stageControlOption.reviewParams,
                 timeout = stageControlOption.timeout

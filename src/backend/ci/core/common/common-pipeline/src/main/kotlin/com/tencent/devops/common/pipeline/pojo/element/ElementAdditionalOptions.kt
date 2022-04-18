@@ -28,8 +28,10 @@
 package com.tencent.devops.common.pipeline.pojo.element
 
 import com.tencent.devops.common.pipeline.NameAndValue
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("插件级别流程控制模型")
 data class ElementAdditionalOptions(
     @ApiModelProperty("是否启用", required = false)
     var enable: Boolean = true,

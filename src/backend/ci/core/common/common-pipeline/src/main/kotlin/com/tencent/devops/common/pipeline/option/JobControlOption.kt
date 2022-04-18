@@ -30,12 +30,14 @@ package com.tencent.devops.common.pipeline.option
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 /**
  * Job流程控制
  * @version 1.0
  */
+@ApiModel("job流程控制模型")
 data class JobControlOption(
     @ApiModelProperty("是否启用Job", required = false)
     val enable: Boolean = true, // 是否启用Job
