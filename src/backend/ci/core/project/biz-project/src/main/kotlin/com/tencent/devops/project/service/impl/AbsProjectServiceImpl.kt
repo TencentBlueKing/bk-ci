@@ -242,6 +242,38 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectId
     }
 
+    override fun createExtProject(
+        userId: String,
+        projectCode: String,
+        projectCreateInfo: ProjectCreateInfo,
+        needAuth: Boolean,
+        needValidate: Boolean,
+        channel: ProjectChannelCode,
+    ): ProjectVO? {
+        if (getByEnglishName(projectCode) == null) {
+            logger.warn("createExtProject $projectCode exist")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                    ProjectMessageCode.PROJECT_NAME_EXIST
+                )
+            )
+        }
+        val projectCreateExtInfo = ProjectCreateExtInfo(
+            needValidate = needValidate,
+            needAuth = needAuth
+        )
+        create(
+            userId = userId,
+            projectChannel = channel,
+            projectCreateInfo = projectCreateInfo,
+            accessToken = null,
+            defaultProjectId = projectCode,
+            createExtInfo = projectCreateExtInfo
+        )
+        return getByEnglishName(projectCode)
+    }
+
     // 内部版独立实现
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
@@ -555,6 +587,22 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Boolean {
+        if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.NAME_TOO_LONG,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG)
+            )
+        }
+        if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST)
+            )
+        }
+        return projectDao.updateProjectName(dslContext, projectCode, projectName) > 0
+    }
+
     override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
@@ -663,6 +711,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return updateCount > 0
     }
 
+    override fun getProjectByName(projectName: String): ProjectVO? {
+        return projectDao.getProjectByName(dslContext, projectName)
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
@@ -695,6 +747,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     companion object {
         const val Width = 128
         const val Height = 128
+        const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
     }
