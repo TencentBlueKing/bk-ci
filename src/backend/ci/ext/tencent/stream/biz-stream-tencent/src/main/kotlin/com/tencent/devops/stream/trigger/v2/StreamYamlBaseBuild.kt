@@ -46,6 +46,7 @@ import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -108,7 +109,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         pipeline: GitProjectPipeline,
         gitRequestEventForHandle: GitRequestEventForHandle,
         gitCIBasicSetting: GitCIBasicSetting,
-        model: Model,
+        modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean
     ) {
         val processClient = client.get(ServicePipelineResource::class)
@@ -118,10 +119,10 @@ class StreamYamlBaseBuild @Autowired constructor(
 
             pipeline.pipelineId =
                 processClient.create(
-                    gitRequestEventForHandle.userId,
-                    gitCIBasicSetting.projectCode!!,
-                    model,
-                    channelCode
+                    userId = gitRequestEventForHandle.userId,
+                    projectId = gitCIBasicSetting.projectCode!!,
+                    pipeline = modelAndSetting.model,
+                    channelCode = channelCode
                 ).data!!.id
             gitPipelineResourceDao.createPipeline(
                 dslContext = dslContext,
@@ -140,7 +141,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = gitRequestEventForHandle.userId,
                 projectId = gitCIBasicSetting.projectCode!!,
                 pipelineId = pipeline.pipelineId,
-                pipeline = model,
+                pipeline = modelAndSetting.model,
                 channelCode = channelCode,
                 updateLastModifyUser = updateLastModifyUser
             )
@@ -154,6 +155,16 @@ class StreamYamlBaseBuild @Autowired constructor(
                 version = ymlVersion
             )
         }
+        processClient.saveSetting(
+            userId = gitRequestEventForHandle.userId,
+            projectId = gitCIBasicSetting.projectCode!!,
+            pipelineId = pipeline.pipelineId,
+            setting = modelAndSetting.setting.copy(
+                projectId = gitCIBasicSetting.projectCode!!,
+                pipelineId = pipeline.pipelineId,
+                pipelineName = modelAndSetting.model.name
+            )
+        )
     }
 
     private fun preStartBuild(
@@ -190,7 +201,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         pipeline: GitProjectPipeline,
         gitRequestEventForHandle: GitRequestEventForHandle,
         gitCIBasicSetting: GitCIBasicSetting,
-        model: Model,
+        modelAndSetting: PipelineModelAndSetting,
         gitBuildId: Long,
         yamlTransferData: YamlTransferData? = null,
         updateLastModifyUser: Boolean
@@ -199,7 +210,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             pipeline = pipeline,
             gitRequestEventForHandle = gitRequestEventForHandle,
             gitCIBasicSetting = gitCIBasicSetting,
-            model = model,
+            model = modelAndSetting.model,
             yamlTransferData = yamlTransferData
         )
 
@@ -220,7 +231,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 pipeline = pipeline,
                 gitRequestEventForHandle = gitRequestEventForHandle,
                 gitCIBasicSetting = gitCIBasicSetting,
-                model = model,
+                modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
             buildId = client.get(ServiceBuildResource::class).manualStartupNew(

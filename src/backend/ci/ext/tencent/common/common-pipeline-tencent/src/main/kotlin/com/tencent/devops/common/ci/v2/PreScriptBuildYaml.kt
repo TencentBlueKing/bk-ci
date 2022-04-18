@@ -49,5 +49,6 @@ data class PreScriptBuildYaml(
     var extends: Extends? = null,
     var resources: Resources?,
     var notices: List<GitNotices>?,
-    var finally: Map<String, PreJob>? = null
+    var finally: Map<String, PreJob>? = null,
+    val concurrency: Concurrency? = null
 )
