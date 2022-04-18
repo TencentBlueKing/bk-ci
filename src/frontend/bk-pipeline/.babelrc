@@ -1,0 +1,11 @@
+{
+  "extends": "../.babelrc",
+  "plugins": [
+    [
+      "babel-plugin-import-bk-magic-vue",
+      {
+        "baseLibName": "bk-magic-vue"
+      }
+    ]
+  ]
+}

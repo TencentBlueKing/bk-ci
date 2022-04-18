@@ -43,13 +43,13 @@ open class TencentAgentUrlServiceImpl constructor(
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "https://$gw/external/agents/$agentHashId/install"
+        return "http://$gw/external/agents/$agentHashId/install"
     }
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "https://$gw/external/agents/$agentHashId/agent"
+        return "http://$gw/external/agents/$agentHashId/agent"
     }
 
     override fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
