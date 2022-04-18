@@ -97,7 +97,11 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getByEnglishName(englishName))
     }
 
-    override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
+    override fun create(
+        userId: String,
+        projectCreateInfo: ProjectCreateInfo,
+        accessToken: String?,
+    ): Result<Boolean> {
         // 创建项目
         val createExtInfo = ProjectCreateExtInfo(
             needAuth = true,
@@ -114,6 +118,23 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun createExtSystem(
+        userId: String,
+        projectInfo: ProjectCreateInfo,
+        needAuth: Boolean,
+        needValidate: Boolean,
+        channel: ProjectChannelCode
+    ): Result<ProjectVO?> {
+        return Result(projectService.createExtProject(
+            userId = userId,
+            projectCreateInfo = projectInfo,
+            channel = channel,
+            projectCode = projectInfo.englishName,
+            needAuth = needAuth,
+            needValidate = needValidate
+        ))
+    }
+
     override fun update(
         userId: String,
         projectId: String,
@@ -121,6 +142,18 @@ class ServiceProjectResourceImpl @Autowired constructor(
         accessToken: String?
     ): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
+    }
+
+    override fun updateProjectName(userId: String, projectCode: String, projectName: String): Result<Boolean> {
+        return Result(projectService.updateProjectName(
+            userId = userId,
+            projectCode = projectCode,
+            projectName = projectName
+        ))
+    }
+
+    override fun getProjectByName(userId: String, projectName: String): Result<ProjectVO?> {
+        return Result(projectService.getProjectByName(projectName))
     }
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?): Result<Boolean> {

@@ -33,9 +33,11 @@ import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.PaasProject
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.util.ProjectUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -416,6 +418,15 @@ class ProjectDao {
         }
     }
 
+    fun updateProjectName(dslContext: DSLContext, projectCode: String, projectName: String) : Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(PROJECT_NAME, projectName)
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     fun updateProjectId(dslContext: DSLContext, projectId: String, projectCode: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this).set(PROJECT_ID, projectId).where(ENGLISH_NAME.eq(projectCode)).execute()
@@ -761,6 +772,17 @@ class ProjectDao {
                 .from(this)
                 .where(IS_SECRECY.eq(true))
                 .fetch()
+        }
+    }
+
+    fun getProjectByName(
+        dslContext: DSLContext,
+        projectName: String
+    ): ProjectVO? {
+        with(TProject.T_PROJECT) {
+            val record = dslContext.selectFrom(this).where(PROJECT_NAME.eq(projectName)).fetchAny()
+                ?: return null
+            return ProjectUtils.packagingBean(record, emptySet())
         }
     }
 }
