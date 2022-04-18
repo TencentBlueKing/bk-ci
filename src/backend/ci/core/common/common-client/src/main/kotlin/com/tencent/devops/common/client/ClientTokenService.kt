@@ -2,12 +2,9 @@ package com.tencent.devops.common.client
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 
-@Component
-class ClientTokenService @Autowired constructor(
+class ClientTokenService constructor(
     val redisOperation: RedisOperation,
     val bkTag: BkTag
 ) {

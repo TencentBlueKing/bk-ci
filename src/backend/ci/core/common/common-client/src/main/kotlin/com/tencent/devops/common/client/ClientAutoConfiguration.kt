@@ -30,6 +30,7 @@ package com.tencent.devops.common.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.consul.ConsulFilter
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.ServiceAutoConfiguration
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,13 +65,14 @@ class ClientAutoConfiguration {
     fun client(
         clientErrorDecoder: ClientErrorDecoder,
         commonConfig: CommonConfig,
+        bkTag: BkTag,
         objectMapper: ObjectMapper,
         @Autowired(required = false) compositeDiscoveryClient: CompositeDiscoveryClient?
-    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper)
+    ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, objectMapper)
 
     @Bean
     fun consulFilter() = ConsulFilter()
 
     @Bean
-    fun clientTokenService(redisOperation: RedisOperation) = ClientTokenService(redisOperation)
+    fun clientTokenService(redisOperation: RedisOperation, bkTag: BkTag) = ClientTokenService(redisOperation, bkTag)
 }
