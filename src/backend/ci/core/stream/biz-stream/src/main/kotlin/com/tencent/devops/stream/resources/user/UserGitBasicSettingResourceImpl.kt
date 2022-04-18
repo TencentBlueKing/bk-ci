@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -54,6 +55,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val streamGitTransferService: StreamGitTransferService
 ) : UserGitBasicSettingResource {
 
+    @BkTimed
     override fun enableStream(
         userId: String,
         enabled: Boolean,
