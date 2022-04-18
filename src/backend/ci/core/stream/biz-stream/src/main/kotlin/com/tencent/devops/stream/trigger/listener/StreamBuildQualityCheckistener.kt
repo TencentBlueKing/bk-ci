@@ -123,6 +123,7 @@ class StreamBuildQualityCheckistener @Autowired constructor(
                 startTime = buildEvent.createTime.timestampmilli(),
                 stageId = null
             )
+            action.data.context.requestEventId = requestEvent.id
 
             if (!action.checkSend()) {
                 return

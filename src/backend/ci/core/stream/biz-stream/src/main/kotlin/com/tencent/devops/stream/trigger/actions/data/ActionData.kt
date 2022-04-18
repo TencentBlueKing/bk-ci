@@ -44,6 +44,7 @@ data class ActionData(
 
     // Stream触发时需要的配置信息
     lateinit var setting: StreamTriggerSetting
+    val isSettingInitialized get() = this::setting.isInitialized
 
     // 方便日志打印
     fun format() = "${event::class.qualifiedName}|$context|$eventCommon|$setting"

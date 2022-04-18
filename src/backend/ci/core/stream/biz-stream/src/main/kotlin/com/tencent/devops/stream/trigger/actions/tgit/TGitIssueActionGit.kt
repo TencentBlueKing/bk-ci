@@ -32,13 +32,16 @@ import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
@@ -46,11 +49,14 @@ import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEven
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.GitCheckService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 class TGitIssueActionGit(
+    private val dslContext: DSLContext,
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService
+    private val gitCheckService: GitCheckService,
+    private val basicSettingDao: StreamBasicSettingDao
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
     companion object {
@@ -67,8 +73,19 @@ class TGitIssueActionGit(
     override val api: TGitApiService
         get() = apiService
 
-    override fun init() {
-        initCommonData()
+    override fun init(): BaseAction? {
+        if (data.isSettingInitialized) {
+            return initCommonData()
+        }
+        val setting = basicSettingDao.getSetting(dslContext, event().objectAttributes.projectId)
+        if (null == setting || !setting.enableCi) {
+            logger.info(
+                "git ci is not enabled, but it has repo trigger , git project id: ${event().objectAttributes.projectId}"
+            )
+            return null
+        }
+        data.setting = StreamTriggerSetting(setting)
+        return initCommonData()
     }
 
     private fun initCommonData(): GitBaseAction {

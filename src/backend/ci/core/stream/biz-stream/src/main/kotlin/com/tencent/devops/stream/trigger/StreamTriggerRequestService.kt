@@ -135,16 +135,18 @@ class StreamTriggerRequestService @Autowired constructor(
         }
 
         // 没开启stream的就不存event事件信息
-        val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, eventCommon.gitProjectId.toLong())
+        if (!action.data.isSettingInitialized) {
+            val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, eventCommon.gitProjectId.toLong())
 
-        if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
-            logger.info(
-                "git ci is not enabled , but it has repo trigger , git project id: ${action.data.getGitProjectId()}"
-            )
-            return null
+            if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
+                logger.info(
+                    "git ci is not enabled , but it has repo trigger , git project id: ${action.data.getGitProjectId()}"
+                )
+                return null
+            }
+
+            action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
         }
-
-        action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
 
         if (action.data.context.requestEventId == null) {
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)

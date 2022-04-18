@@ -22,8 +22,8 @@ class StreamRepoTriggerAction(
     override var data: ActionData = baseAction.data
     override val api: StreamGitApiService = baseAction.api
 
-    override fun init() {
-        baseAction.init()
+    override fun init(): BaseAction? {
+        return baseAction.init()
     }
 
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)

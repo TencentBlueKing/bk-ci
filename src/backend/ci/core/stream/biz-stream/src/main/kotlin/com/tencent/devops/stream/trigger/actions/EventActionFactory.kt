@@ -41,6 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
+import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
@@ -81,6 +82,7 @@ class EventActionFactory @Autowired constructor(
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamDeleteEventService: DeleteEventService,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val basicSettingDao: StreamBasicSettingDao,
     private val pipelineDelete: PipelineDelete,
     private val gitCheckService: GitCheckService,
     private val mrConflictCheck: MergeConflictCheck,
@@ -95,8 +97,7 @@ class EventActionFactory @Autowired constructor(
     fun load(event: CodeWebhookEvent): BaseAction? {
         val action = loadEvent(event) ?: return null
 
-        action.init()
-        return action
+        return action.init()
     }
 
     fun loadByData(
@@ -162,22 +163,28 @@ class EventActionFactory @Autowired constructor(
             }
             is GitIssueEvent -> {
                 val tGitIssueAction = TGitIssueActionGit(
+                    dslContext = dslContext,
                     apiService = tGitApiService,
                     gitCheckService = gitCheckService,
+                    basicSettingDao = basicSettingDao
                 )
                 tGitIssueAction
             }
             is GitReviewEvent -> {
                 val tGitReviewAction = TGitReviewActionGit(
+                    dslContext = dslContext,
                     apiService = tGitApiService,
-                    gitCheckService = gitCheckService
+                    gitCheckService = gitCheckService,
+                    basicSettingDao = basicSettingDao
                 )
                 tGitReviewAction
             }
             is GitNoteEvent -> {
                 val tGitNoteAction = TGitNoteActionGit(
+                    dslContext = dslContext,
                     apiService = tGitApiService,
-                    gitCheckService = gitCheckService
+                    gitCheckService = gitCheckService,
+                    basicSettingDao = basicSettingDao
                 )
                 tGitNoteAction
             }
