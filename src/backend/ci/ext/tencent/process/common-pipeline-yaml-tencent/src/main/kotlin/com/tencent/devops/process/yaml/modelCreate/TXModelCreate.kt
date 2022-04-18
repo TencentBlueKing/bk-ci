@@ -33,6 +33,7 @@ import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +53,7 @@ class TXModelCreate @Autowired constructor(
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
         pipelineParams: List<BuildFormProperty>
-    ): Model {
+    ): PipelineModelAndSetting {
         // 预安装插件市场的插件
         ModelCommon.installMarketAtom(client, event.projectCode, event.userId, GitCiCodeRepoTask.atomCode)
         ModelCommon.installMarketAtom(client, event.projectCode, event.userId, DockerRunDevCloudTask.atomCode)
