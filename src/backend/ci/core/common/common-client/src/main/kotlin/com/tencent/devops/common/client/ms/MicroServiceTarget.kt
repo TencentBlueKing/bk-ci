@@ -88,7 +88,15 @@ class MicroServiceTarget<T> constructor(
 //        val instances = msCache.get(svrName)
 
         val instances = if (KubernetesUtils.inContainer()) {
-            var srvName = KubernetesUtils.getSvrName(serviceName, discoveryTag.replace("kubernetes", ""))
+            var srvName = KubernetesUtils.getSvrName(serviceName, discoveryTag.replace("kubernetes-", ""))
+            val currentInstance = msCache.get(srvName)
+            if (currentInstance.isEmpty()) {
+                srvName = KubernetesUtils.getSvrName(serviceName, "develop")
+                // 转发到开发环境
+                msCache.get(srvName)
+            } else {//转发到特性环境
+                currentInstance
+            }
         }
 
         val matchTagInstances = ArrayList<ServiceInstance>()
