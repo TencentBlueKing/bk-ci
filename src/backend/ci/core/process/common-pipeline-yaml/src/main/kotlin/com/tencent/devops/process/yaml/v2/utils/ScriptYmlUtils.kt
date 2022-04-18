@@ -557,7 +557,8 @@ object ScriptYmlUtils {
                 notices = preScriptBuildYaml.notices,
                 stages = stages,
                 finally = preJobs2Jobs(preScriptBuildYaml.finally, transferData),
-                label = preScriptBuildYaml.label ?: emptyList()
+                label = preScriptBuildYaml.label ?: emptyList(),
+                concurrency = preScriptBuildYaml.concurrency
             ),
             transferData
         )
@@ -962,7 +963,8 @@ object ScriptYmlUtils {
             notices = preScriptBuildYaml.notices,
             stages = stages,
             finally = preJobs2Jobs(preScriptBuildYaml.finally, null),
-            label = preScriptBuildYaml.label ?: emptyList()
+            label = preScriptBuildYaml.label ?: emptyList(),
+            concurrency = preScriptBuildYaml.concurrency
         )
     }
 }

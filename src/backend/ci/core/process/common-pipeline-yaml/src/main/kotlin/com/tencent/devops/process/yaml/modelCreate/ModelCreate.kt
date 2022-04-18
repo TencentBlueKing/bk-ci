@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -42,6 +43,10 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.pojo.QualityElementInfo
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -62,7 +67,7 @@ class ModelCreate @Autowired constructor(
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
         pipelineParams: List<BuildFormProperty>
-    ): Model {
+    ): PipelineModelAndSetting {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, yaml)
 
@@ -131,13 +136,27 @@ class ModelCreate @Autowired constructor(
             )
         }
 
-        return Model(
-            name = modelName,
-            desc = "",
-            stages = stageList,
-            labels = labelList,
-            instanceFromTemplate = false,
-            pipelineCreator = event.userId
+        return PipelineModelAndSetting(
+            model = Model(
+                name = modelName,
+                desc = "",
+                stages = stageList,
+                labels = labelList,
+                instanceFromTemplate = false,
+                pipelineCreator = event.userId
+            ),
+            setting = PipelineSetting(
+                concurrencyGroup = yaml.concurrency?.group?.let {
+                    val varMap = pipelineParams.associate { param -> param.id to param.defaultValue.toString() }
+                    EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
+                },
+                // Cancel-In-Progress入口先不放开给用户配置
+                concurrencyCancelInProgress = true,
+                runLockType = when {
+                    yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
+                    else -> PipelineRunLockType.MULTIPLE
+                }
+            )
         )
     }
 

@@ -40,6 +40,7 @@ import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
@@ -91,7 +92,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         userId: String,
         gitProjectId: Long,
         projectCode: String,
-        model: Model,
+        modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean
     ) {
         val processClient = client.get(ServicePipelineResource::class)
@@ -102,7 +103,7 @@ class StreamYamlBaseBuild @Autowired constructor(
             pipeline.pipelineId = processClient.create(
                 userId = userId,
                 projectId = projectCode,
-                pipeline = model,
+                pipeline = modelAndSetting.model,
                 channelCode = channelCode
             ).data!!.id
             gitPipelineResourceDao.createPipeline(
@@ -122,7 +123,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = userId,
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
-                pipeline = model,
+                pipeline = modelAndSetting.model,
                 channelCode = channelCode,
                 updateLastModifyUser = updateLastModifyUser
             )
@@ -136,6 +137,16 @@ class StreamYamlBaseBuild @Autowired constructor(
                 version = ymlVersion
             )
         }
+        processClient.saveSetting(
+            userId = userId,
+            projectId = projectCode,
+            pipelineId = pipeline.pipelineId,
+            setting = modelAndSetting.setting.copy(
+                projectId = projectCode,
+                pipelineId = pipeline.pipelineId,
+                pipelineName = modelAndSetting.model.name
+            )
+        )
     }
 
     protected fun preStartBuild(
@@ -167,7 +178,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     fun startBuild(
         pipeline: StreamTriggerPipeline,
         action: BaseAction,
-        model: Model,
+        modelAndSetting: PipelineModelAndSetting,
         gitBuildId: Long,
         yamlTransferData: YamlTransferData? = null,
         updateLastModifyUser: Boolean
@@ -177,7 +188,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         preStartBuild(
             action = action,
             pipeline = pipeline,
-            model = model,
+            model = modelAndSetting.model,
             yamlTransferData = yamlTransferData
         )
 
@@ -199,7 +210,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                 userId = action.data.eventCommon.userId,
                 gitProjectId = action.data.getGitProjectId().toLong(),
                 projectCode = action.getProjectCode(),
-                model = model,
+                modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
             buildId = client.get(ServiceBuildResource::class).manualStartupNew(
