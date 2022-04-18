@@ -25,36 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.service.common
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> ATOM.name
-                1 -> TEMPLATE.name
-                2 -> IMAGE.name
-                3 -> IDE_ATOM.name
-                4 -> SERVICE.name
-                else -> ATOM.name
-            }
-        }
+interface StoreDockingPlatformRelService {
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
-        }
-    }
+    /**
+     * 为组件添加对接平台信息
+     * @param userId 用户ID
+     * @param storeCode 组件代码
+     * @param storeType 组件类型
+     * @param platformCodes 平台列表集合
+     * @return 布尔值
+     */
+    fun create(
+        userId: String? = null,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        platformCodes: Set<String>
+    ): Boolean
+
+
+    /**
+     * 获取组件对接平台信息列表
+     * @param userId 用户ID
+     * @param storeCode 组件代码
+     * @param storeType 组件类型
+     * @return 对接平台信息列表
+     */
+    fun getStoreDockingPlatforms(
+        userId: String? = null,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): List<StoreDockingPlatformInfo>?
 }

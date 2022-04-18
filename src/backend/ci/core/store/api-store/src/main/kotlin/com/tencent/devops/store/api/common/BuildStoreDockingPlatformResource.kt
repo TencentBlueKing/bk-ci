@@ -25,36 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.api.common
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> ATOM.name
-                1 -> TEMPLATE.name
-                2 -> IMAGE.name
-                3 -> IDE_ATOM.name
-                4 -> SERVICE.name
-                else -> ATOM.name
-            }
-        }
+@Api(tags = ["BUILD_STORE_DOCKING_PLATFORM"], description = "BUILD-STORE-对接平台")
+@Path("/build/store/docking/platforms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildStoreDockingPlatformResource {
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
-        }
-    }
+    @ApiOperation("添加store组件对接平台")
+    @Path("/types/{storeType}/codes/{storeCode}/add")
+    @POST
+    fun addStoreDockingPlatforms(
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @ApiParam("组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("平台列表集合")
+        platformCodes: Set<String>
+    ): Result<Boolean>
 }

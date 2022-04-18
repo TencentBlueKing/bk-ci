@@ -25,36 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.resources.common
 
-enum class StoreTypeEnum(val type: Int) {
-    ATOM(0), // 插件
-    TEMPLATE(1), // 模板
-    IMAGE(2), // 镜像
-    IDE_ATOM(3), // IDE插件
-    SERVICE(4); // 扩展服务
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.BuildStoreDockingPlatformResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreDockingPlatformRelService
+import org.springframework.beans.factory.annotation.Autowired
 
-    companion object {
-        fun getStoreType(type: Int): String {
-            return when (type) {
-                0 -> ATOM.name
-                1 -> TEMPLATE.name
-                2 -> IMAGE.name
-                3 -> IDE_ATOM.name
-                4 -> SERVICE.name
-                else -> ATOM.name
-            }
-        }
+@RestResource
+class BuildStoreDockingPlatformResourceImpl @Autowired constructor(
+    private val storeDockingPlatformRelService: StoreDockingPlatformRelService
+) : BuildStoreDockingPlatformResource {
 
-        fun getStoreTypeObj(type: Int): StoreTypeEnum? {
-            return when (type) {
-                0 -> ATOM
-                1 -> TEMPLATE
-                2 -> IMAGE
-                3 -> IDE_ATOM
-                4 -> SERVICE
-                else -> null
-            }
-        }
+    override fun addStoreDockingPlatforms(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        platformCodes: Set<String>
+    ): Result<Boolean> {
+        return Result(storeDockingPlatformRelService.create(
+            storeCode = storeCode,
+            storeType = storeType,
+            platformCodes = platformCodes
+        ))
     }
 }

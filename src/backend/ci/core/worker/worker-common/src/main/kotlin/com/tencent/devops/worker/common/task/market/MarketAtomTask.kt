@@ -626,8 +626,9 @@ open class MarketAtomTask : ITask() {
         }
         // 添加插件对接平台错误码信息
         val platformCode = atomResult?.platformCode
-        if (platformCode != null) {
+        if (!platformCode.isNullOrBlank()) {
             addPlatformCode(platformCode)
+            atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
         }
         val platformErrorCode = atomResult?.platformErrorCode
         if (platformErrorCode != null) {
