@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
 
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
@@ -377,7 +378,7 @@ type ccArgs struct {
 }
 
 // scanArgs receive the complete compiling args, and the first item should always be a compiler name.
-func scanArgs(args []string) (*ccArgs, error) {
+func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 	blog.Debugf("cc: scanning arguments: %v", args)
 
 	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
@@ -391,11 +392,11 @@ func scanArgs(args []string) (*ccArgs, error) {
 	seenOptionO := false
 	seenInputFile := false
 	seenGcov := false
+	seenFprofileDir := false
 	for index := 0; index < len(args); index++ {
 		arg := args[index]
 
 		if strings.HasPrefix(arg, "-") {
-
 			switch arg {
 			case "-E":
 				// pre-process should be run locally.
@@ -447,6 +448,11 @@ func scanArgs(args []string) (*ccArgs, error) {
 
 			// ++ by tomtian 20201127,for example: -MF/data/.../XX.cpp.d
 			if strings.HasPrefix(arg, "-MF") {
+				continue
+			}
+
+			if strings.HasPrefix(arg, "-fprofile-dir") {
+				seenFprofileDir = true
 				continue
 			}
 			// --
@@ -610,7 +616,15 @@ func scanArgs(args []string) (*ccArgs, error) {
 
 	if seenGcov {
 		if gcovFile, _ := outputFromSource(r.outputFile, ".gcno"); gcovFile != "" {
-			r.additionOutputFile = append(r.additionOutputFile, gcovFile)
+			if seenFprofileDir && seenOptionC {
+				if !filepath.IsAbs(gcovFile) {
+					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
+				}
+				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
+				r.additionOutputFile = append(r.additionOutputFile, sandbox.Dir+gcovFile)
+			} else {
+				r.additionOutputFile = append(r.additionOutputFile, gcovFile)
+			}
 		}
 	}
 
@@ -877,12 +891,13 @@ func getFirstIncludeFile(args []string) string {
 	return ""
 }
 
-func getOutputFile(args []string) []string {
+func getOutputFile(args []string, sandbox *dcSyscall.Sandbox) []string {
 	r := make([]string, 0, 10)
 	seenOptionO := false
 	seenOptionS := false
 	seenOptionC := false
 	seenGcov := false
+	seenFprofileDir := false
 	var inputFile string
 	var outputFile string
 
@@ -914,6 +929,11 @@ func getOutputFile(args []string) []string {
 			if tmp := strings.TrimPrefix(arg, "-MF"); tmp != "" {
 				r = append(r, tmp)
 			}
+			continue
+		}
+
+		if strings.HasPrefix(arg, "-fprofile-dir") {
+			seenFprofileDir = true
 			continue
 		}
 
@@ -958,7 +978,15 @@ func getOutputFile(args []string) []string {
 
 	if outputFile != "" && seenGcov {
 		if gcovFile, _ := outputFromSource(outputFile, ".gcno"); gcovFile != "" {
-			r = append(r, gcovFile)
+			if seenFprofileDir && seenOptionC {
+				if !filepath.IsAbs(gcovFile) {
+					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
+				}
+				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
+				r = append(r, sandbox.Dir+gcovFile)
+			} else {
+				r = append(r, gcovFile)
+			}
 		}
 	}
 
