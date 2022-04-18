@@ -37,10 +37,10 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -64,6 +64,9 @@ class ProjectTagService @Autowired constructor(
 
     @Value("\${system.router:#{null}}")
     val routerTagList: String? = ""
+
+    @Value("\${system.enabled:false}")
+    val routerCheckEnabled: Boolean = true
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
@@ -215,7 +218,8 @@ class ProjectTagService @Autowired constructor(
             throw ParamBlankException("Invalid projectIds")
         }
 
-        val projectInfos = projectDao.listByEnglishName(dslContext,
+        val projectInfos = projectDao.listByEnglishName(
+            dslContext,
             projectIds,
             null,
             null,
@@ -320,7 +324,12 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun checkRouteTag(routerTag: String) {
-        if (routerTag.isNullOrBlank()) {
+        if (!routerCheckEnabled) {
+            logger.info("router check disabled")
+            return
+        }
+
+        if (routerTag.isBlank()) {
             throw ParamBlankException("routerTag error:empty routerTag")
         }
 
@@ -329,12 +338,12 @@ class ProjectTagService @Autowired constructor(
         }
 
         if (!routerTagList!!.contains(routerTag)) {
-            throw ParamBlankException("routerTag error:system unkown routerTag")
+            throw ParamBlankException("routerTag error:system unknown routerTag")
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
         const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
         const val PROJECT_TAG_REPO_REDIS_KEY = "project:setting:tag:repo:v2"
     }
