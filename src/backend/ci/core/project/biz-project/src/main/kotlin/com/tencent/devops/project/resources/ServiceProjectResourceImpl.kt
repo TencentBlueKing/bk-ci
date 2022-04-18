@@ -100,7 +100,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun create(
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
-        accessToken: String?,
+        accessToken: String?
     ): Result<Boolean> {
         // 创建项目
         val createExtInfo = ProjectCreateExtInfo(
