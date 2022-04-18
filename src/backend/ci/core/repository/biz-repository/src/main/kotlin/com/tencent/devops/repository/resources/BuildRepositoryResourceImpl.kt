@@ -36,7 +36,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.BuildRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.service.RepositoryService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

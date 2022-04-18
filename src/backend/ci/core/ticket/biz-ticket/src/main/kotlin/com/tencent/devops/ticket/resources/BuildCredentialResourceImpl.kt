@@ -35,7 +35,6 @@ import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.ticket.api.BuildCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.service.CredentialService
-import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
