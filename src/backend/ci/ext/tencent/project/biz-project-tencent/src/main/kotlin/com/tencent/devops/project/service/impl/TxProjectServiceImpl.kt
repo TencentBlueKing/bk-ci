@@ -349,7 +349,7 @@ class TxProjectServiceImpl @Autowired constructor(
         projectCreateInfo: ProjectCreateInfo,
         needAuth: Boolean,
         needValidate: Boolean,
-        channel: ProjectChannelCode,
+        channel: ProjectChannelCode
     ): ProjectVO? {
         val projectVO = super.createExtProject(userId, projectCode, projectCreateInfo, needAuth, needValidate, channel)
         val routerTag = if (channel == ProjectChannelCode.GITCI) {
