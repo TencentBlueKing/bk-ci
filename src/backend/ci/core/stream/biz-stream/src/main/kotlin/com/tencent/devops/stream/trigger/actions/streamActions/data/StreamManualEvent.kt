@@ -29,13 +29,6 @@ package com.tencent.devops.stream.trigger.actions.streamActions.data
 
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.stream.pojo.TriggerBuildReq
-import com.tencent.devops.stream.trigger.actions.data.ActionData
-import com.tencent.devops.stream.trigger.actions.data.EventCommonData
-import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 
 data class StreamManualEvent(
     val userId: String,
@@ -57,36 +50,4 @@ data class StreamManualEvent(
         description = triggerBuildReq.description,
         commitId = triggerBuildReq.commitId
     )
-}
-
-data class StreamManualActionData(
-    override val event: StreamManualEvent,
-    override val context: StreamTriggerContext = StreamTriggerContext()
-) : ActionData {
-    override lateinit var eventCommon: EventCommonData
-    override lateinit var setting: StreamTriggerSetting
-}
-
-class StreamManualCommonData(
-    private val event: StreamManualEvent,
-    val latestCommit: StreamGitCommitInfo?,
-) : EventCommonData {
-    override val gitProjectId: String
-        get() = event.gitProjectId
-
-    override val userId: String
-        get() = event.userId
-
-    override val branch: String
-        get() = event.branch.removePrefix("refs/heads/")
-
-    override val commit: EventCommonDataCommit
-        get() = EventCommonDataCommit(
-            commitId = event.commitId ?: (latestCommit?.commitId ?: ""),
-            commitMsg = event.customCommitMsg,
-            commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
-            commitAuthorName = userId
-        )
-
-    override val gitProjectName: String? = null
 }

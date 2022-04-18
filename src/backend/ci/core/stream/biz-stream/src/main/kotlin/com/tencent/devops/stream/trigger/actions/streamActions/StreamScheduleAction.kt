@@ -37,9 +37,11 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleActionData
-import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleCommonData
+import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamScheduleEvent
+import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
@@ -59,7 +61,7 @@ class StreamScheduleAction(
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.SCHEDULE)
 
     override lateinit var data: ActionData
-    fun data() = data as StreamScheduleActionData
+    fun event() = data.event as StreamScheduleEvent
 
     override lateinit var api: StreamGitApiService
 
@@ -68,16 +70,28 @@ class StreamScheduleAction(
     }
 
     private fun initCommonData(): StreamScheduleAction {
-        this.data.eventCommon = StreamScheduleCommonData(data().event)
+        val event = event()
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.gitProjectId,
+            userId = event.userId,
+            branch = event.branch.removePrefix("refs/heads/"),
+            commit = EventCommonDataCommit(
+                commitId = event.commitId,
+                commitMsg = event.commitMsg,
+                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
+                commitAuthorName = event.commitAuthor
+            ),
+            gitProjectName = null
+        )
         return this
     }
 
-    override fun getProjectCode(gitProjectId: String?) = data().event.projectCode
+    override fun getProjectCode(gitProjectId: String?) = event().projectCode
 
     override fun getGitCred(personToken: String?): StreamGitCred {
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> TGitCred(
-                userId = data().event.userId,
+                userId = event().userId,
                 accessToken = personToken,
                 useAccessToken = personToken == null
             )
@@ -86,10 +100,9 @@ class StreamScheduleAction(
     }
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
-        val data = data()
         // 手动触发保存下自定的定时触发事件，方便构建结束后逻辑
         return GitRequestEventHandle.createScheduleTriggerEvent(
-            event = data.event,
+            event = event(),
             eventStr = JsonUtil.toJson(data.event)
         )
     }

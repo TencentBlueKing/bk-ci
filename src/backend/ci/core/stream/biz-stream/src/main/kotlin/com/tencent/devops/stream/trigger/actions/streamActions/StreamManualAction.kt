@@ -37,28 +37,28 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
+import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualActionData
-import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualCommonData
+import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
+import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
 class StreamManualAction(
-    private val streamGitConfig: StreamGitConfig,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamGitConfig: StreamGitConfig
 ) : BaseAction {
 
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.MANUAL)
 
     override lateinit var data: ActionData
-    fun data() = data as StreamManualActionData
+    fun event() = data.event as StreamManualEvent
 
     override lateinit var api: StreamGitApiService
 
@@ -67,27 +67,39 @@ class StreamManualAction(
     }
 
     private fun initCommonData(): StreamManualAction {
-        val latestCommit = if (!data().event.commitId.isNullOrBlank()) {
+        val event = event()
+        val latestCommit = if (!event().commitId.isNullOrBlank()) {
             // 选择历史提交时，无需重新获取latest commit 相关信息
             null
         } else {
             api.getGitCommitInfo(
                 cred = this.getGitCred(),
-                gitProjectId = data().event.gitProjectId,
-                sha = data().event.branch.removePrefix("refs/heads/"),
+                gitProjectId = event().gitProjectId,
+                sha = event().branch.removePrefix("refs/heads/"),
                 retry = ApiRequestRetryInfo(retry = true)
             )
         }
-        this.data.eventCommon = StreamManualCommonData(data().event, latestCommit)
+        this.data.eventCommon = EventCommonData(
+            gitProjectId = event.gitProjectId,
+            userId = event.userId,
+            branch = event.branch.removePrefix("refs/heads/"),
+            commit = EventCommonDataCommit(
+                commitId = event.commitId ?: (latestCommit?.commitId ?: ""),
+                commitMsg = event.customCommitMsg,
+                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
+                commitAuthorName = event.userId
+            ),
+            gitProjectName = null
+        )
         return this
     }
 
-    override fun getProjectCode(gitProjectId: String?) = data().event.projectCode
+    override fun getProjectCode(gitProjectId: String?) = event().projectCode
 
     override fun getGitCred(personToken: String?): StreamGitCred {
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> TGitCred(
-                userId = data().event.userId,
+                userId = event().userId,
                 accessToken = personToken,
                 useAccessToken = personToken == null
             )
@@ -96,11 +108,10 @@ class StreamManualAction(
     }
 
     override fun buildRequestEvent(eventStr: String): GitRequestEvent? {
-        val data = data()
         // 手动触发保存下自定的手动触发事件，方便构建结束后逻辑
         return GitRequestEventHandle.createManualTriggerEvent(
-            event = data.event,
-            latestCommit = (data.eventCommon as StreamManualCommonData).latestCommit,
+            event = event(),
+            latestCommit = data.eventCommon.commit,
             eventStr = JsonUtil.toJson(data.event)
         )
     }

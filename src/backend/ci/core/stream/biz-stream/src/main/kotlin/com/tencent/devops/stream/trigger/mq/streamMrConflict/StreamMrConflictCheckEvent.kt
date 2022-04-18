@@ -29,12 +29,17 @@ package com.tencent.devops.stream.trigger.mq.streamMrConflict
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.stream.constant.MQ
+import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
-import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
+import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerContext
 
 @Event(MQ.EXCHANGE_STREAM_MR_CONFLICT_CHECK_EVENT, MQ.ROUTE_STREAM_MR_CONFLICT_CHECK_EVENT)
 data class StreamMrConflictCheckEvent(
-    val action: TGitMrActionGit,
+    val eventStr: String,
+    val actionCommonData: EventCommonData,
+    val actionContext: StreamTriggerContext,
+    val actionSetting: StreamTriggerSetting,
     val path2PipelineExists: Map<String, StreamTriggerPipeline>,
     // 单位为ms，冲突检查超时时间120s
     var retryTime: Int = 24,

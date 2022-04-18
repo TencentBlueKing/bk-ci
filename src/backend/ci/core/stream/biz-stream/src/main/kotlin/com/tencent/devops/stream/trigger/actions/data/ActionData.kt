@@ -32,19 +32,18 @@ import com.tencent.devops.stream.trigger.actions.data.context.StreamTriggerConte
 
 /**
  * 保存action需要用到的元数据
+ * @param event 各源的事件原文
+ * @param context stream触发过程中会用到的上下文数据
  */
-interface ActionData {
-    // 各源的事件原文
-    val event: CodeWebhookEvent
-
-    // stream触发过程中会用到的上下文数据
-    val context: StreamTriggerContext
-
+data class ActionData(
+    val event: CodeWebhookEvent,
+    var context: StreamTriggerContext
+) {
     // 需要根据各事件源的event去拿的通用数据，随event改变可能会不同
-    var eventCommon: EventCommonData
+    lateinit var eventCommon: EventCommonData
 
     // Stream触发时需要的配置信息
-    var setting: StreamTriggerSetting
+    lateinit var setting: StreamTriggerSetting
 
     // 方便日志打印
     fun format() = "${event::class.qualifiedName}|$context|$eventCommon|$setting"

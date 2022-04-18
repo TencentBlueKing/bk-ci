@@ -29,6 +29,8 @@ package com.tencent.devops.stream.trigger.mq.streamMrConflict
 
 import com.tencent.devops.stream.constant.MQ
 import com.tencent.devops.stream.trigger.StreamTriggerRequestService
+import com.tencent.devops.stream.trigger.actions.EventActionFactory
+import com.tencent.devops.stream.trigger.actions.tgit.TGitMrActionGit
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import org.slf4j.LoggerFactory
@@ -47,7 +49,8 @@ constructor(
     private val mergeConflictCheck: MergeConflictCheck,
     private val streamTriggerRequestService: StreamTriggerRequestService,
     private val rabbitTemplate: RabbitTemplate,
-    private val exHandler: StreamTriggerExceptionHandler
+    private val exHandler: StreamTriggerExceptionHandler,
+    private val actionFactory: EventActionFactory
 ) {
 
     @RabbitListener(
@@ -67,31 +70,48 @@ constructor(
         ]
     )
     fun listenGitCIRequestTriggerEvent(checkEvent: StreamMrConflictCheckEvent) {
-        val (isFinish, isTrigger) = with(checkEvent) {
-            mergeConflictCheck.checkMrConflictByListener(
-                action = action,
-                path2PipelineExists = path2PipelineExists,
-                isEndCheck = retryTime == 1,
-                notBuildRecordId = notBuildRecordId
-            )
-        }
-        // 未检查完成，继续进入延时队列
-        if (!isFinish && checkEvent.retryTime > 0) {
-            logger.warn(
-                "Retry to check gitci mr request conflict " +
-                    "event [${checkEvent.action.data.eventCommon}|${checkEvent.retryTime}]"
-            )
-            checkEvent.retryTime--
-            StreamMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
-        } else {
-            if (isTrigger) {
-                exHandler.handle(checkEvent.action) {
-                    streamTriggerRequestService.matchAndTriggerPipeline(
-                        action = checkEvent.action,
-                        path2PipelineExists = checkEvent.path2PipelineExists
-                    )
+        try {
+            val action = actionFactory.loadByData(
+                checkEvent.eventStr,
+                checkEvent.actionCommonData,
+                checkEvent.actionContext,
+                checkEvent.actionSetting
+            ).also {
+                if (it == null) {
+                    logger.error("event not support: $checkEvent")
+                    return
+                }
+            } ?: return
+
+            action as TGitMrActionGit
+            val (isFinish, isTrigger) = with(checkEvent) {
+                mergeConflictCheck.checkMrConflictByListener(
+                    action = action,
+                    path2PipelineExists = path2PipelineExists,
+                    isEndCheck = retryTime == 1,
+                    notBuildRecordId = notBuildRecordId
+                )
+            }
+            // 未检查完成，继续进入延时队列
+            if (!isFinish && checkEvent.retryTime > 0) {
+                logger.warn(
+                    "Retry to check gitci mr request conflict " +
+                        "event [${action.data.eventCommon}|${checkEvent.retryTime}]"
+                )
+                checkEvent.retryTime--
+                StreamMrConflictCheckDispatcher.dispatch(rabbitTemplate, checkEvent)
+            } else {
+                if (isTrigger) {
+                    exHandler.handle(action) {
+                        streamTriggerRequestService.matchAndTriggerPipeline(
+                            action = action,
+                            path2PipelineExists = checkEvent.path2PipelineExists
+                        )
+                    }
                 }
             }
+        } catch (e: Throwable) {
+            logger.error("listenGitCIRequestTriggerEvent error ${e.message}")
         }
     }
 

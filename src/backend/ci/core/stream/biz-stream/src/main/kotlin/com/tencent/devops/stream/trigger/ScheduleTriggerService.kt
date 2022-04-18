@@ -117,7 +117,7 @@ class ScheduleTriggerService @Autowired constructor(
                 commitAuthor = buildCommitInfo.authorName
             )
         )
-        val event = action.data().event
+        val event = action.event()
         val gitRequestEvent = GitRequestEventHandle.createScheduleTriggerEvent(
             event = event,
             eventStr = JsonUtil.toJson(event)
@@ -191,7 +191,7 @@ class ScheduleTriggerService @Autowired constructor(
         action.data.context.parsedYaml = parsedYaml
         action.data.context.normalizedYaml = normalizedYaml
 
-        val event = action.data().event
+        val event = action.event()
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
             eventId = action.data.context.requestEventId!!,

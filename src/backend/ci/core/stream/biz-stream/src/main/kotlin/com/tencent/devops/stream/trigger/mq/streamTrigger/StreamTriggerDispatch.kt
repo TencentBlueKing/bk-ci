@@ -35,7 +35,7 @@ object StreamTriggerDispatch {
     fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamTriggerEvent) {
         try {
             logger.info(
-                "${event.action.data.context.pipeline?.pipelineId}|${event.action.data.context.pipeline?.filePath}" +
+                "${event.actionContext.pipeline?.pipelineId}|${event.actionContext.pipeline?.filePath}" +
                     "|Dispatch stream trigger event"
             )
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
