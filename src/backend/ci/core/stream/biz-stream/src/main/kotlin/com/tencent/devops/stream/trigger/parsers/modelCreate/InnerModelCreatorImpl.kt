@@ -35,7 +35,6 @@ import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -45,7 +44,6 @@ import javax.ws.rs.core.Response
 @Component
 class InnerModelCreatorImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val streamTriggerCache: StreamTriggerCache,
     private val streamBasicSettingDao: StreamBasicSettingDao
 ) : InnerModelCreator {
 
