@@ -83,7 +83,8 @@ class TXStreamBuildFinishListenerService @Autowired constructor(
     gitRequestEventBuildDao = gitRequestEventBuildDao,
     gitRequestEventDao = gitRequestEventDao,
     streamBasicSettingDao = streamBasicSettingDao,
-    gitPipelineResourceDao = gitPipelineResourceDao
+    gitPipelineResourceDao = gitPipelineResourceDao,
+    streamGitConfig = streamGitConfig
 ) {
 
     companion object {
