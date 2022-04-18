@@ -43,7 +43,6 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
-import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -139,7 +138,6 @@ class TXStreamBasicSettingService @Autowired constructor(
         return userUpdateInfo
     }
 
-
     // 更新项目信息
     fun updateProjectInfo(userId: String, projectId: String, userDeptDetail: UserDeptDetail) {
         client.get(ServiceTxProjectResource::class).bindProjectOrganization(
@@ -177,7 +175,7 @@ class TXStreamBasicSettingService @Autowired constructor(
             if (gitProjectName.length > StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH) {
                 gitProjectName = gitProjectName.substring(
                     gitProjectName.length -
-                            StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
+                        StreamConstant.STREAM_MAX_PROJECT_NAME_LENGTH,
                     gitProjectName.length
                 )
             }
