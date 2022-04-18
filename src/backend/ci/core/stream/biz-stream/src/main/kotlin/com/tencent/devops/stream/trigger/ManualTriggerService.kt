@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.BuildId
@@ -286,6 +287,7 @@ class ManualTriggerService @Autowired constructor(
         return buildId
     }
 
+    @BkTimed
     private fun trigger(
         action: BaseAction,
         originYaml: String,

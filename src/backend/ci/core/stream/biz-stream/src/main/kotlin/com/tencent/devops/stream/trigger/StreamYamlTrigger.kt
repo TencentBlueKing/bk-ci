@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
@@ -82,6 +83,7 @@ class StreamYamlTrigger @Autowired constructor(
     }
 
     @Suppress("ComplexMethod")
+    @BkTimed
     fun triggerBuild(
         action: BaseAction
     ): Boolean {
