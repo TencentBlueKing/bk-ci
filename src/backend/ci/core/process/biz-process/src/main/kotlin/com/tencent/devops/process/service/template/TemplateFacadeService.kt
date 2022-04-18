@@ -1927,7 +1927,14 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
-        val templateRecord = templateDao.getLatestTemplate(dslContext, templateId)
+        val templateRecord = if (projectId.isNullOrEmpty()) templateDao.getLatestTemplate(dslContext, templateId)
+        else templateDao.getLatestTemplate(dslContext, projectId, templateId)
+        if (templateRecord == null) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                defaultMessage = "模板不存在"
+            )
+        }
         val modelStr = templateRecord.template
         if (modelStr != null) {
             val model = JsonUtil.to(modelStr, Model::class.java)
