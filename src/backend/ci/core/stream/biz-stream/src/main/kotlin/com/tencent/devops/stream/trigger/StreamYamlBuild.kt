@@ -52,6 +52,8 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
@@ -134,7 +136,7 @@ class StreamYamlBuild @Autowired constructor(
                         userId = action.data.eventCommon.userId,
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
-                        model = createTriggerModel(action.getProjectCode()),
+                        modelAndSetting = createTriggerModel(action.getProjectCode()),
                         updateLastModifyUser = true
                     )
                 }
@@ -256,27 +258,30 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun createTriggerModel(projectCode: String) = Model(
-        name = StreamPipelineUtils.genBKPipelineName(projectCode),
-        desc = "",
-        stages = listOf(
-            Stage(
-                id = VMUtils.genStageId(1),
-                name = VMUtils.genStageId(1),
-                containers = listOf(
-                    TriggerContainer(
-                        id = "0",
-                        name = "构建触发",
-                        elements = listOf(
-                            ManualTriggerElement(
-                                name = "手动触发",
-                                id = "T-1-1-1"
+    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
+        model = Model(
+            name = StreamPipelineUtils.genBKPipelineName(projectCode),
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = VMUtils.genStageId(1),
+                    name = VMUtils.genStageId(1),
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "构建触发",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    name = "手动触发",
+                                    id = "T-1-1-1"
+                                )
                             )
                         )
                     )
                 )
             )
-        )
+        ),
+        setting = PipelineSetting()
     )
 
     @SuppressWarnings("LongParameterList")
@@ -303,13 +308,13 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         // create or refresh pipeline
-        val model = modelCreate.createPipelineModel(
+        val modelAndSetting = modelCreate.createPipelineModel(
             modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
         )
-        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
+        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
         val changeSet = action.data.context.changeSet?.toSet()
@@ -318,7 +323,7 @@ class StreamYamlBuild @Autowired constructor(
         return streamYamlBaseBuild.startBuild(
             action = action,
             pipeline = pipeline,
-            model = model,
+            modelAndSetting = modelAndSetting,
             gitBuildId = gitBuildId,
             yamlTransferData = yamlTransferData,
             updateLastModifyUser = updateLastModifyUser
@@ -338,13 +343,13 @@ class StreamYamlBuild @Autowired constructor(
             yamlTransferData = null
         )
 
-        val model = modelCreate.createPipelineModel(
+        val modelAndSetting = modelCreate.createPipelineModel(
             modelName = StreamPipelineUtils.genBKPipelineName(action.getProjectCode()),
             event = modelCreateEvent,
             yaml = replaceYamlPoolName(yaml, action),
             pipelineParams = modelParams
         )
-        logger.info("savePipeline pipeline:${action.data.context.pipeline}, model: $model")
+        logger.info("savePipeline pipeline:${action.data.context.pipeline}, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
         val pipeline = action.data.context.pipeline!!
@@ -356,7 +361,7 @@ class StreamYamlBuild @Autowired constructor(
             userId = action.data.eventCommon.userId,
             gitProjectId = action.data.getGitProjectId().toLong(),
             projectCode = action.getProjectCode(),
-            model = model,
+            modelAndSetting = modelAndSetting,
             updateLastModifyUser = updateLastModifyUser
         )
     }

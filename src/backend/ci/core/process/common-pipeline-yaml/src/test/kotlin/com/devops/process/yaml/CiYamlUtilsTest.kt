@@ -65,7 +65,8 @@ internal class CiYamlUtilsTest {
             extends = null,
             resource = null,
             notices = null,
-            finally = listOf()
+            finally = listOf(),
+            concurrency = null
         )
         println(YamlUtil.toYaml(yamlObj))
     }
