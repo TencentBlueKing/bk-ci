@@ -83,9 +83,12 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
                 val numUnit = MessageCodeUtil.getCodeLanMessage(NUM_UNIT)
                 envNodeList?.map {
                     AgentResponse(
-                        it.envHashId,
-                        it.name,
-                        "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName: ${it.abnormalNodeCount}$numUnit）"
+                        id = it.envHashId,
+                        name = it.name,
+                        label = "（$normalName: ${it.normalNodeCount}$numUnit，$exceptionName:" +
+                            " ${it.abnormalNodeCount}$numUnit）",
+                        sharedProjectId = it.sharedProjectId,
+                        sharedUserId = it.sharedUserId
                     )
                 }?.toList()
             }

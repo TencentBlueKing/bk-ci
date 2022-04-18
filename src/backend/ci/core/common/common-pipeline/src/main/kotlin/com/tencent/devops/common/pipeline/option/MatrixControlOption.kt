@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
@@ -41,6 +42,7 @@ import java.util.regex.Pattern
 /**
  *  构建矩阵配置项
  */
+@ApiModel("构建矩阵配置项模型")
 data class MatrixControlOption(
     @ApiModelProperty("分裂策略（支持变量、Json、参数映射表）", required = true)
     val strategyStr: String? = null, // Map<String, List<String>>

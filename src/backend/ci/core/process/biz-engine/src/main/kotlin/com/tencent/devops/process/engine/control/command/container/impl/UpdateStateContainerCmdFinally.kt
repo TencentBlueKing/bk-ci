@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.DispatchQueueControl
 import com.tencent.devops.process.engine.control.MutexControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
@@ -51,7 +52,8 @@ class UpdateStateContainerCmdFinally(
     private val pipelineTaskService: PipelineTaskService,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val dispatchQueueControl: DispatchQueueControl
 ) : ContainerCmd {
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.FINALLY && !commandContext.container.status.isFinish()
@@ -65,6 +67,8 @@ class UpdateStateContainerCmdFinally(
         if (commandContext.buildStatus.isFinish()) {
             // 释放互斥组
             mutexRelease(commandContext = commandContext)
+            // 释放互斥组
+            dispatchDequeue(commandContext = commandContext)
         }
         // 发送回Stage
         if (commandContext.buildStatus.isFinish() || commandContext.buildStatus == BuildStatus.UNKNOWN) {
@@ -107,6 +111,14 @@ class UpdateStateContainerCmdFinally(
             mutexGroup = commandContext.mutexGroup,
             executeCount = commandContext.container.executeCount
         )
+    }
+
+    /**
+     * 清除[commandContext]中在调度队列中的对象
+     */
+    private fun dispatchDequeue(commandContext: ContainerContext) {
+        // 返回stage的时候，需要解锁
+        dispatchQueueControl.dequeueDispatch(commandContext.container)
     }
 
     /**

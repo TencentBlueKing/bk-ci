@@ -76,7 +76,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
@@ -430,11 +430,11 @@ class PipelineRepositoryService constructor(
 
     private fun matrixYamlCheck(option: MatrixControlOption?) {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
-                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX /" +
+                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
                         "matrix maxConcurrency(${option.maxConcurrency}) " +
-                        "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX"
+                        "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
         }
         MatrixContextUtils.schemaCheck(
@@ -1003,7 +1003,9 @@ class PipelineRepositoryService constructor(
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
                 maxConRunningQueueSize = t.maxConRunningQueueSize,
-                buildNumRule = t.buildNumRule
+                buildNumRule = t.buildNumRule,
+                concurrencyCancelInProgress = t.concurrencyCancelInProgress,
+                concurrencyGroup = t.concurrencyGroup
             )
         } else null
     }

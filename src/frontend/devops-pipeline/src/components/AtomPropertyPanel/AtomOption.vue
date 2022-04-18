@@ -102,7 +102,6 @@
                 const isAutoSkip = continueable && (this.atomOption.manualSkip === false || (name === 'manualSkip' && value === false))
                 const retryable = currentfailControl.includes('retryWhenFailed')
                 const manualRetry = !isAutoSkip && includeManualRetry
-                // debugger
 
                 console.log(currentfailControl, isAutoSkip, this.atomOption.failControl, value)
                 const failControl = isAutoSkip ? currentfailControl.filter(item => item !== 'MANUAL_RETRY') : [...currentfailControl]
