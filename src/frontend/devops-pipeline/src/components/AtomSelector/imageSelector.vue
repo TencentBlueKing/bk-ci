@@ -409,7 +409,7 @@
                 margin-left: 3px;
                 color: $primaryColor;
                 &.spin-icon {
-                    color: $fontLigtherColor
+                    color: $fontLighterColor
                 }
             }
             > h3 {
