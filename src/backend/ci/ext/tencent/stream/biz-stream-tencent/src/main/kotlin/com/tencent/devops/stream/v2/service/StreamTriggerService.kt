@@ -33,6 +33,8 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
@@ -129,6 +131,10 @@ class StreamTriggerService @Autowired constructor(
         gitBuildId: Long
     ): BuildId? {
         logger.info("startBuild build")
+        val modelAndSetting = PipelineModelAndSetting(
+            model = model,
+            setting = PipelineSetting()
+        )
         return yamlBuildV2.startBuild(
             pipeline = pipeline,
             gitRequestEventForHandle = GitRequestEventForHandle(
@@ -139,7 +145,7 @@ class StreamTriggerService @Autowired constructor(
                 gitRequestEvent = event
             ),
             gitCIBasicSetting = gitCIBasicSetting,
-            model = model,
+            modelAndSetting = modelAndSetting,
             gitBuildId = gitBuildId,
             yamlTransferData = null,
             updateLastModifyUser = true

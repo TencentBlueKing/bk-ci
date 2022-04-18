@@ -264,7 +264,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             dispatchType = if (agentId.isNotBlank()) {
                 ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
             } else if (envId.isNotBlank()) {
-                ThirdPartyAgentEnvDispatchType(envName = envId, workspace = workspace, agentType = AgentType.ID)
+                ThirdPartyAgentEnvDispatchType(
+                    envName = envId,
+                    envProjectId = null,
+                    workspace = workspace,
+                    agentType = AgentType.ID
+                )
             } // docker建机指定版本(旧)
             else if (!param.dockerBuildVersion.isNullOrBlank()) {
                 DockerDispatchType(param.dockerBuildVersion!!)
