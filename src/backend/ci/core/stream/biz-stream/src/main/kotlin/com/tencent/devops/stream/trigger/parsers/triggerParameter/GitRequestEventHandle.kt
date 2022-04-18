@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
@@ -41,6 +40,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent

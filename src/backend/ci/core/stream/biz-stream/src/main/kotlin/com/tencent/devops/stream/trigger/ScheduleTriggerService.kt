@@ -27,11 +27,11 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao

@@ -25,4 +25,4 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-com.devops.process.yaml.DispatchSubInfoFetcherImpl
+com.tencent.devops.process.yaml.DispatchSubInfoFetcherImpl

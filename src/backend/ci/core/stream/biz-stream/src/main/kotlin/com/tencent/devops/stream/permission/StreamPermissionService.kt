@@ -107,6 +107,9 @@ class StreamPermissionService @Autowired constructor(
         }
     }
 
+    // 校验公共账号，留空
+    fun checkCommonUser(userId: String) {}
+
     private fun checkPermissionAndOauth(userId: String, projectId: String, permission: AuthPermission) {
         logger.info("stream EnvironmentPermission user:$userId projectId: $projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(

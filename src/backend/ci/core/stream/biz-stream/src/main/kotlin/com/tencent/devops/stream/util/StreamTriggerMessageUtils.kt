@@ -1,6 +1,5 @@
 package com.tencent.devops.stream.util
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
@@ -9,6 +8,7 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKin
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.pojo.GitRequestEvent
 
 object StreamTriggerMessageUtils {

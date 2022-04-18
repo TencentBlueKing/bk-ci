@@ -27,18 +27,18 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
-import com.devops.process.yaml.v2.enums.StreamObjectKind
-import com.devops.process.yaml.v2.models.RepositoryHook
-import com.devops.process.yaml.v2.models.Variable
-import com.devops.process.yaml.v2.models.on.DeleteRule
-import com.devops.process.yaml.v2.models.on.TriggerOn
-import com.devops.process.yaml.v2.models.on.check
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
+import com.tencent.devops.process.yaml.v2.models.RepositoryHook
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
+import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
+import com.tencent.devops.process.yaml.v2.models.on.check
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.GitRequestEvent

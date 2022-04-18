@@ -25,17 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.devops.process.yaml.parsers.template
+package com.tencent.devops.process.yaml.parsers.template
 
-import com.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
-import com.devops.process.yaml.v2.models.ResourcesPools
-import com.devops.process.yaml.v2.models.format
-import com.devops.process.yaml.v2.parsers.template.YamlTemplate
-import com.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
-import com.devops.process.yaml.v2.utils.ScriptYmlUtils
-import com.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.ResourcesPools
+import com.tencent.devops.process.yaml.v2.models.format
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
