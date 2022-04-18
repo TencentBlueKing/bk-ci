@@ -80,7 +80,8 @@ class PipelineBuildDao {
         webhookType: String?,
         webhookInfo: String?,
         buildMsg: String?,
-        buildNumAlias: String? = null
+        buildNumAlias: String? = null,
+        concurrencyGroup: String? = null
     ) {
         try {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -106,7 +107,8 @@ class PipelineBuildDao {
                     WEBHOOK_TYPE,
                     WEBHOOK_INFO,
                     BUILD_MSG,
-                    BUILD_NUM_ALIAS
+                    BUILD_NUM_ALIAS,
+                    CONCURRENCY_GROUP
                 ).values(
                     buildId,
                     buildNum,
@@ -128,7 +130,8 @@ class PipelineBuildDao {
                     webhookType,
                     webhookInfo,
                     buildMsg,
-                    buildNumAlias
+                    buildNumAlias,
+                    concurrencyGroup
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -161,6 +164,21 @@ class PipelineBuildDao {
                 where.and(STATUS.`in`(statusIntSet))
             }
             where.fetch()
+        }
+    }
+
+    fun getBuildTasksByConcurrencyGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        statusSet: BuildStatus
+    ): Result<TPipelineBuildHistoryRecord?> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.eq(statusSet.ordinal))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .fetch()
         }
     }
 
@@ -497,7 +515,8 @@ class PipelineBuildDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
                 retryFlag = t.isRetry,
-                executeTime = t.executeTime ?: 0
+                executeTime = t.executeTime ?: 0,
+                concurrencyGroup = t.concurrencyGroup
             )
         }
     }
