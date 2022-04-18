@@ -53,10 +53,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class ModelContainer @Autowired constructor(
+class ModelContainer @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val inner: InnerModelCreator
+    @Autowired(required = false)
+    val inner: InnerModelCreator?
 ) {
 
     fun addVmBuildContainer(
@@ -70,7 +71,7 @@ class ModelContainer @Autowired constructor(
         resources: Resources? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
-        val defaultImage = inner.defaultImage
+        val defaultImage = inner!!.defaultImage
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
                 name = "dispatchInfo_${job.id}",

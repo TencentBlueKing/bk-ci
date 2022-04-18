@@ -47,9 +47,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class ModelElement @Autowired constructor(
+class ModelElement @Autowired(required = false) constructor(
     val client: Client,
-    val inner: InnerModelCreator
+    @Autowired(required = false)
+    val inner: InnerModelCreator?
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ModelElement::class.java)
@@ -93,7 +94,7 @@ class ModelElement @Autowired constructor(
                     makeRunElement(step, job, additionalOptions)
                 }
                 step.checkout != null -> {
-                    inner.makeCheckoutElement(step, event, additionalOptions)
+                    inner!!.makeCheckoutElement(step, event, additionalOptions)
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
@@ -126,15 +127,15 @@ class ModelElement @Autowired constructor(
         job: Job,
         additionalOptions: ElementAdditionalOptions
     ): Element {
-        return if (inner.marketRunTask) {
+        return if (inner!!.marketRunTask) {
             val data = mutableMapOf<String, Any>()
             data["input"] = mapOf("script" to step.run)
             MarketBuildAtomElement(
                 id = step.taskId,
                 name = step.name ?: "run",
                 stepId = step.id,
-                atomCode = inner.runPlugInAtomCode ?: throw ModelCreateException("runPlugInAtomCode must exist"),
-                version = inner.runPlugInVersion ?: throw ModelCreateException("runPlugInVersion must exist"),
+                atomCode = inner!!.runPlugInAtomCode ?: throw ModelCreateException("runPlugInAtomCode must exist"),
+                version = inner!!.runPlugInVersion ?: throw ModelCreateException("runPlugInVersion must exist"),
                 data = data,
                 additionalOptions = additionalOptions
             )

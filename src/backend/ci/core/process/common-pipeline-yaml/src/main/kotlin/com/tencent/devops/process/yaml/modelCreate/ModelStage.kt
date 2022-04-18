@@ -62,10 +62,11 @@ import org.springframework.util.AntPathMatcher
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 @Component
-class ModelStage @Autowired constructor(
+class ModelStage @Autowired(required = false) constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val inner: InnerModelCreator,
+    @Autowired(required = false)
+    val inner: InnerModelCreator?,
     val modelContainer: ModelContainer,
     val modelElement: ModelElement
 ) {
@@ -135,7 +136,7 @@ class ModelStage @Autowired constructor(
                         ele.name,
                         ele.getAtomCode().let {
                             // 替换 run 插件使其不管使用什么具体插件，在红线那边都是 run
-                            if (it == inner.runPlugInAtomCode) {
+                            if (it == inner!!.runPlugInAtomCode) {
                                 "run"
                             } else {
                                 it
