@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.repository.api.ServiceGitOauthResource
@@ -66,6 +67,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ServiceGitBasicSettingResourceImpl::class.java)
     }
 
+    @BkTimed
     override fun enableGitCI(
         userId: String,
         enabled: Boolean,
