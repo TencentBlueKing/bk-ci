@@ -66,13 +66,13 @@ class StreamTriggerListener @Autowired constructor(
     private fun run(event: StreamTriggerEvent) {
         val startTime = System.currentTimeMillis()
         val action = actionFactory.loadByData(
-            event.eventStr,
-            event.actionCommonData,
-            event.actionContext,
-            event.actionSetting
+            eventStr = event.eventStr,
+            actionCommonData = event.actionCommonData,
+            actionContext = event.actionContext,
+            actionSetting = event.actionSetting
         ).also {
             if (it == null) {
-                logger.error("event not support: $event")
+                logger.error("trigger listener event not support: $event")
                 return
             }
         } ?: return

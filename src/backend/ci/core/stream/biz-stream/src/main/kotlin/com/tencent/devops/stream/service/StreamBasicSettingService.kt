@@ -303,7 +303,7 @@ class StreamBasicSettingService @Autowired constructor(
         }
     }
 
-    private fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
+    protected fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
         return try {
             streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
         } catch (e: Throwable) {
