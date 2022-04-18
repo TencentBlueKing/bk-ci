@@ -64,7 +64,7 @@ class TXModelContainer @Autowired constructor(
         resources: Resources?,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
-        val defaultImage = inner.defaultImage
+        val defaultImage = inner!!.defaultImage
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
                 name = "dispatchInfo_${job.id}",
