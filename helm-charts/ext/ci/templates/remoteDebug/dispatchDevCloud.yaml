@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: debug-dispatchDevcloud
+  name: debug-dispatch-devcloud
   labels: 
     app.kubernetes.io/name: dispatchDevcloud
     app.kubernetes.io/component: microservice
