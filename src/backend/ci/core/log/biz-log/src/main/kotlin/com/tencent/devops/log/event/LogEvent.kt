@@ -25,21 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.event
+package com.tencent.devops.log.event
 
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.common.stream.constants.Stream
 
-@StreamEvent(Stream.EXCHANGE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
+@StreamEvent(Stream.EXCHANGE_LOG_BUILD_MESSAGE)
+data class LogEvent(
     override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val subTag: String?,
-    val jobId: String,
-    val executeCount: Int?,
-    val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
+    val logs: List<LogMessage>,
     override var retryTime: Int = 2,
     override var delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)

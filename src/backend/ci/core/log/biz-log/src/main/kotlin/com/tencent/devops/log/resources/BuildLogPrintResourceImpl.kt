@@ -28,10 +28,10 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.event.LogStatusEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.log.event.LogEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource

@@ -33,6 +33,7 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-client"))
+    api(project(":core:common:common-stream"))
     api(project(":core:auth:api-auth"))
 
     api("org.elasticsearch:elasticsearch")

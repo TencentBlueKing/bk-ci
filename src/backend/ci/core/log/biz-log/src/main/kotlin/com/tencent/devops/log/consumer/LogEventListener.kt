@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.consumer
 
-import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.log.event.LogEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogService
 import java.util.function.Consumer

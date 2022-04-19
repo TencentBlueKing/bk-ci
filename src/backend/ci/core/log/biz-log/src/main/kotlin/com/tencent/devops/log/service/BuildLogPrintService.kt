@@ -28,8 +28,8 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.event.ILogEvent
-import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.log.event.ILogEvent
+import com.tencent.devops.log.event.LogEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.log.configuration.LogServiceConfig

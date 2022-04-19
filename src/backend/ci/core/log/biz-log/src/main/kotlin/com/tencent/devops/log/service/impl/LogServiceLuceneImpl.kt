@@ -31,13 +31,13 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
-import com.tencent.devops.common.log.pojo.event.LogBatchEvent
-import com.tencent.devops.common.log.pojo.event.LogStatusEvent
+import com.tencent.devops.log.event.LogBatchEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.log.event.LogEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.log.jmx.LogStorageBean

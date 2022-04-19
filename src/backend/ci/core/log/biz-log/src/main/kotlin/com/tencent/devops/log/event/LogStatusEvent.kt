@@ -25,20 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo.event
+package com.tencent.devops.log.event
 
-import com.tencent.devops.common.stream.pojo.IEvent
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.constants.Stream
 
-open class ILogEvent(
-    open val buildId: String,
-    override var retryTime: Int,
-    override var delayMills: Int
-) : IEvent(delayMills, retryTime) {
-    companion object {
-        private const val DELAY_DURATION_MILLS = 3 * 1000
-    }
-
-    fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (3 - retryTime)
-    }
-}
+@StreamEvent(Stream.EXCHANGE_LOG_STATUS_BUILD_EVENT)
+data class LogStatusEvent(
+    override val buildId: String,
+    val finished: Boolean,
+    val tag: String,
+    val subTag: String?,
+    val jobId: String,
+    val executeCount: Int?,
+    val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
+    override var retryTime: Int = 2,
+    override var delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)
