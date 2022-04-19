@@ -15,8 +15,6 @@ spring:
     consul:
       discovery:
         tags: dev
-  config:
-    use-legacy-processing: true
 
 ---
 server:
