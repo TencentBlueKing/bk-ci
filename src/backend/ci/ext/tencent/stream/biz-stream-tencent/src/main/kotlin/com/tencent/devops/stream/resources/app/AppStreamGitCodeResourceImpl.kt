@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppStreamGitCodeResourceImpl @Autowired constructor(
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
-    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
+    private val txStreamBasicSettingService: TXStreamBasicSettingService,
     private val oauthService: StreamOauthService,
     private val streamPipelineBranchService: StreamPipelineBranchService
 ) : AppStreamGitCodeResource {
@@ -75,7 +75,7 @@ class AppStreamGitCodeResourceImpl @Autowired constructor(
 
     // 看是否使用工蜂开启人的OAuth
     private fun getOauthToken(gitProjectId: Long): String {
-        val setting = TXStreamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
+        val setting = txStreamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
         return oauthService.getAndCheckOauthToken(setting.enableUserId).accessToken
     }
 }

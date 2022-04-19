@@ -52,7 +52,7 @@ class TXYamlSchemaCheck @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val scmService: StreamScmService,
     private val streamGitTokenService: StreamGitTokenService,
-    private val TXStreamGitConfig: TXStreamGitConfig
+    private val txStreamGitConfig: TXStreamGitConfig
 ) : YamlSchemaCheck() {
 
     companion object {
@@ -136,10 +136,10 @@ class TXYamlSchemaCheck @Autowired constructor(
         }
         val schema = schemaFactory.getSchema(
             scmService.getYamlFromGit(
-                token = streamGitTokenService.getToken(TXStreamGitConfig.schemaGitProjectId!!),
-                gitProjectId = TXStreamGitConfig.schemaGitProjectId!!.toString(),
-                fileName = "${TXStreamGitConfig.schemaGitPath}/$file.json",
-                ref = TXStreamGitConfig.schemaGitRef!!,
+                token = streamGitTokenService.getToken(txStreamGitConfig.schemaGitProjectId!!),
+                gitProjectId = txStreamGitConfig.schemaGitProjectId!!.toString(),
+                fileName = "${txStreamGitConfig.schemaGitPath}/$file.json",
+                ref = txStreamGitConfig.schemaGitRef!!,
                 useAccessToken = true
             ).ifBlank {
                 throw RuntimeException("init yaml schema for git error: yaml blank")

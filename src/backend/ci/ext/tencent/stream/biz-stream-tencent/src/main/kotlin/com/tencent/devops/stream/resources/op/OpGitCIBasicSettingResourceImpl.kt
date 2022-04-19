@@ -9,15 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpGitCIBasicSettingResourceImpl @Autowired constructor(
-    private val TXStreamBasicSettingService: TXStreamBasicSettingService
+    private val txStreamBasicSettingService: TXStreamBasicSettingService
 ) : OpGitCIBasicSettingResource {
 
     override fun save(userId: String, gitCIBasicSetting: StreamBasicSetting): Result<Boolean> {
-        return Result(TXStreamBasicSettingService.saveStreamConf(userId, gitCIBasicSetting))
+        return Result(txStreamBasicSettingService.saveStreamConf(userId, gitCIBasicSetting))
     }
 
     override fun fixProjectInfo(): Result<Int> {
-        return Result(TXStreamBasicSettingService.fixProjectInfo())
+        return Result(txStreamBasicSettingService.fixProjectInfo())
     }
 
     override fun updateBasicSetting(
@@ -26,7 +26,7 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
         enableMrComment: Boolean?
     ): Result<Boolean> {
         return Result(
-            TXStreamBasicSettingService.updateProjectSetting(
+            txStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableCommitCheck = enableCommitCheck,
                 enableMrComment = enableMrComment
@@ -35,6 +35,6 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
     }
 
     override fun fixProjectNameSpace(): Result<Int> {
-        return Result(TXStreamBasicSettingService.fixProjectNameSpace())
+        return Result(txStreamBasicSettingService.fixProjectNameSpace())
     }
 }

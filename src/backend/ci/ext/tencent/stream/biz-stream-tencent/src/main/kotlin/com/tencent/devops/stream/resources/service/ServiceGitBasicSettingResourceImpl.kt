@@ -56,7 +56,7 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class ServiceGitBasicSettingResourceImpl @Autowired constructor(
-    private val TXStreamBasicSettingService: TXStreamBasicSettingService,
+    private val txStreamBasicSettingService: TXStreamBasicSettingService,
     private val permissionService: StreamPermissionService,
     private val streamScmService: StreamScmService,
     private val client: Client
@@ -79,16 +79,16 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             userId = userId,
             projectId = projectId
         )
-        val setting = TXStreamBasicSettingService.getStreamConf(gitProjectId)
+        val setting = txStreamBasicSettingService.getStreamConf(gitProjectId)
         val result = if (setting == null) {
-            TXStreamBasicSettingService.initStreamConf(
+            txStreamBasicSettingService.initStreamConf(
                 userId = userId,
                 projectId = projectId,
                 gitProjectId = gitProjectId,
                 enabled = enabled
             )
         } else {
-            TXStreamBasicSettingService.updateProjectSetting(
+            txStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 enableCi = enabled
             )
@@ -99,7 +99,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
     override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        return Result(TXStreamBasicSettingService.getStreamConf(gitProjectId)?.let { GitCIBasicSetting(it) })
+        return Result(txStreamBasicSettingService.getStreamConf(gitProjectId)?.let { GitCIBasicSetting(it) })
     }
 
     override fun validateGitProject(
@@ -141,7 +141,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
 
         permissionService.checkStreamPermission(userId, projectCode, AuthPermission.USE)
 
-        val setting = TXStreamBasicSettingService.getStreamConf(gitProjectId)
+        val setting = txStreamBasicSettingService.getStreamConf(gitProjectId)
             ?: return Result(
                 status = Response.Status.NOT_FOUND.statusCode,
                 message = "工蜂项目未开启Stream，请前往仓库的CI/CD进行配置",
@@ -174,7 +174,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         permissionService.checkStreamPermission(userId = userId, projectId = projectId)
         permissionService.checkEnableStream(gitProjectId)
         return Result(
-            TXStreamBasicSettingService.updateProjectSetting(
+            txStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 buildPushedPullRequest = gitCIUpdateSetting.buildPushedPullRequest,
                 buildPushedBranches = gitCIUpdateSetting.buildPushedBranches,
@@ -193,7 +193,7 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         checkCommonUser(userId)
         permissionService.checkStreamAndOAuthAndEnable(authUserId, projectId, gitProjectId)
         return Result(
-            TXStreamBasicSettingService.updateProjectSetting(
+            txStreamBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,
                 userId = userId,
                 authUserId = authUserId

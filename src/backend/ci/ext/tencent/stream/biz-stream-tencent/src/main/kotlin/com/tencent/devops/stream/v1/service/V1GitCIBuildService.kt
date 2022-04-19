@@ -52,7 +52,7 @@ class V1GitCIBuildService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val gitPipelineResourceDao: V1GitPipelineResourceDao,
-    private val V1GitRequestEventBuildDao: V1GitRequestEventBuildDao,
+    private val v1GitRequestEventBuildDao: V1GitRequestEventBuildDao,
     private val yamlBuild: V1YamlBuild
 ) {
     companion object {
@@ -75,7 +75,7 @@ class V1GitCIBuildService @Autowired constructor(
                 Response.Status.FORBIDDEN,
                 "流水线不存在或已删除，如有疑问请联系蓝盾助手"
             )
-        val gitEventBuild = V1GitRequestEventBuildDao.getByBuildId(dslContext, buildId)
+        val gitEventBuild = v1GitRequestEventBuildDao.getByBuildId(dslContext, buildId)
             ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
         val newBuildId = client.get(ServiceBuildResource::class).retry(
             userId = userId,
@@ -86,7 +86,7 @@ class V1GitCIBuildService @Autowired constructor(
             channelCode = channelCode
         ).data!!
 
-        V1GitRequestEventBuildDao.retryUpdate(
+        v1GitRequestEventBuildDao.retryUpdate(
             dslContext = dslContext,
             gitBuildId = gitEventBuild.id
         )

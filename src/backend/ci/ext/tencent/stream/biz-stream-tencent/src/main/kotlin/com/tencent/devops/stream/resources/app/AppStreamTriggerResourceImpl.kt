@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response
 
 @RestResource
 class AppStreamTriggerResourceImpl @Autowired constructor(
-    private val TXManualTriggerService: TXManualTriggerService,
+    private val txManualTriggerService: TXManualTriggerService,
     private val permissionService: StreamPermissionService,
     private val streamPipelineService: StreamPipelineService
 ) : AppStreamTriggerResource {
@@ -57,7 +57,7 @@ class AppStreamTriggerResourceImpl @Autowired constructor(
                 commitId = commitId
             )
         }
-        return Result(AppTriggerBuildResult(TXManualTriggerService.triggerBuild(userId, pipelineId, new).buildId))
+        return Result(AppTriggerBuildResult(txManualTriggerService.triggerBuild(userId, pipelineId, new).buildId))
     }
 
     private fun checkParam(userId: String) {

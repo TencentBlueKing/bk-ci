@@ -76,7 +76,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
     gitPipelineResourceDao: GitPipelineResourceDao,
     val rabbitTemplate: RabbitTemplate,
     private val objectMapper: ObjectMapper,
-    private val TXPreTrigger: TXPreTrigger,
+    private val txPreTrigger: TXPreTrigger,
     private val v1YamlTrigger: V1YamlTrigger,
     private val streamGitConfig: StreamGitConfig
 ) : StreamTriggerRequestService(
@@ -110,7 +110,7 @@ class TXStreamTriggerRequestService @Autowired constructor(
 
         // 做一些在接收到请求后做的预处理
         if (eventObject is GitPushEvent) {
-            TXPreTrigger.enableAtomCi(eventObject)
+            txPreTrigger.enableAtomCi(eventObject)
         }
 
         return start(eventObject, event)
