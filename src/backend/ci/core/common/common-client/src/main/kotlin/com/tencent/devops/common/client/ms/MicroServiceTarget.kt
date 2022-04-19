@@ -36,10 +36,10 @@ import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.apache.commons.lang3.RandomUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -56,12 +56,7 @@ class MicroServiceTarget<T> constructor(
             .expireAfterWrite(1, TimeUnit.SECONDS)
             .build(object : CacheLoader<String, List<ServiceInstance>>() {
                 override fun load(svrName: String): List<ServiceInstance> {
-                    val instances = compositeDiscoveryClient.getInstances(svrName)
-                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
-                    if (instances.isEmpty()) {
-                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
-                    }
-                    return instances
+                    return compositeDiscoveryClient.getInstances(svrName)
                 }
             })
 
@@ -78,35 +73,28 @@ class MicroServiceTarget<T> constructor(
         } else DiscoveryTag.get()!!
 
         val instances = if (KubernetesUtils.inContainer()) {
-            var srvName = KubernetesUtils.getSvrName(serviceName, discoveryTag.replace("kubernetes-", ""))
-            msCache.get(srvName).ifEmpty {
-                // 如果该ns下不存在服务 , 则转发到开发环境
-                srvName = KubernetesUtils.getSvrName(serviceName, "develop")
-                msCache.get(srvName)
+            val namespace = discoveryTag.replace("kubernetes-", "")
+            val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
+            pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
+                pods.filter { inNamespace(it.metadata, "develop") }
             }
         } else {
-            msCache.get(serviceName)
+            msCache.get(serviceName).filter { it.metadata.keys.contains(discoveryTag) }
         }
 
-        val matchTagInstances = ArrayList<ServiceInstance>()
-
-        instances.forEach { serviceInstance ->
-            if (serviceInstance is ConsulServiceInstance) {
-                if (serviceInstance.tags.contains(discoveryTag)) {
-                    matchTagInstances.add(serviceInstance)
-                }
-            } else {
-                matchTagInstances.add(serviceInstance)
-            }
+        if (instances.isEmpty()) {
+            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【${discoveryTag}】服务提供者")
         }
+        return instances[RandomUtils.nextInt(0, instances.size)]
+    }
 
-        if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$discoveryTag]服务提供者")
-        } else if (matchTagInstances.size > 1) {
-            matchTagInstances.shuffle()
-        }
-
-        return matchTagInstances[0]
+    /**
+     * 判断是否在集群中
+     */
+    private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
+        return metadata["k8s_namespace"] == namespace ||
+                metadata["helm.sh/release-namespace"] == namespace ||
+                metadata["io.tencent.bcs.namespace"] == namespace
     }
 
     override fun apply(input: RequestTemplate?): Request {
