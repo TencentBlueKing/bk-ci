@@ -25,20 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.builds
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class CompleteTask(
-    val projectId: String,
-    val buildId: String,
-    val taskId: String,
-    val userId: String,
-    val buildStatus: BuildStatus, // 构建任务结束状态
-    val errorType: ErrorType? = null,
-    val errorCode: Int? = null,
-    val errorMsg: String? = null,
-    val platformCode: String? = null, // 对接平台代码
-    val platformErrorCode: Int? = null // 对接平台错误码
+@ApiModel("store组件对接平台请求报文体")
+data class StoreDockingPlatformRequest(
+    @ApiModelProperty("平台代码", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+    val platformCode: String,
+    @ApiModelProperty("平台名称", required = true)
+    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
+    val platformName: String,
+    @ApiModelProperty("网址", required = false)
+    @field:BkField(minLength = 1, maxLength = 256, required = false)
+    val website: String?,
+    @ApiModelProperty("简介", required = true)
+    @field:BkField(minLength = 1, maxLength = 1024)
+    val summary: String,
+    @ApiModelProperty("负责人", required = true)
+    @field:BkField(minLength = 1, maxLength = 50)
+    val principal: String,
+    @ApiModelProperty("平台logo地址", required = false)
+    @field:BkField(minLength = 1, maxLength = 256, required = false)
+    val logoUrl: String?
 )

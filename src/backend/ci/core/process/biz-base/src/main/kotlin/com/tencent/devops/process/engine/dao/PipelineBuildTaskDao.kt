@@ -329,12 +329,12 @@ class PipelineBuildTaskDao {
 
     fun updateTaskInfo(
         dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        taskId: String,
         updateTaskInfo: UpdateTaskInfo
     ) {
         with(T_PIPELINE_BUILD_TASK) {
+            val projectId = updateTaskInfo.projectId
+            val buildId = updateTaskInfo.buildId
+            val taskId = updateTaskInfo.taskId
             val baseStep = dslContext.update(this).set(BUILD_ID, buildId)
             val taskStatus = updateTaskInfo.taskStatus
             if (null != taskStatus) {
@@ -359,6 +359,27 @@ class PipelineBuildTaskDao {
             val totalTime = updateTaskInfo.totalTime
             if (null != totalTime) {
                 baseStep.set(TOTAL_TIME, totalTime)
+            }
+
+            val errorType = updateTaskInfo.errorType
+            if (null != errorType) {
+                baseStep.set(ERROR_TYPE, errorType.num)
+            }
+            val errorCode = updateTaskInfo.errorCode
+            if (null != approver) {
+                baseStep.set(ERROR_CODE, errorCode)
+            }
+            val errorMsg = updateTaskInfo.errorMsg
+            if (null != errorMsg) {
+                baseStep.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
+            }
+            val platformCode = updateTaskInfo.platformCode
+            if (null != platformCode) {
+                baseStep.set(PLATFORM_CODE, platformCode)
+            }
+            val platformErrorCode = updateTaskInfo.platformErrorCode
+            if (null != platformErrorCode) {
+                baseStep.set(PLATFORM_ERROR_CODE, platformErrorCode)
             }
             baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId)).execute()
         }

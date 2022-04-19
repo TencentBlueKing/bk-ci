@@ -25,20 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.builds
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.BuildStoreDockingPlatformResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreDockingPlatformRelService
+import org.springframework.beans.factory.annotation.Autowired
 
-data class CompleteTask(
-    val projectId: String,
-    val buildId: String,
-    val taskId: String,
-    val userId: String,
-    val buildStatus: BuildStatus, // 构建任务结束状态
-    val errorType: ErrorType? = null,
-    val errorCode: Int? = null,
-    val errorMsg: String? = null,
-    val platformCode: String? = null, // 对接平台代码
-    val platformErrorCode: Int? = null // 对接平台错误码
-)
+@RestResource
+class BuildStoreDockingPlatformResourceImpl @Autowired constructor(
+    private val storeDockingPlatformRelService: StoreDockingPlatformRelService
+) : BuildStoreDockingPlatformResource {
+
+    override fun addStoreDockingPlatforms(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        platformCodes: Set<String>
+    ): Result<Boolean> {
+        return Result(storeDockingPlatformRelService.create(
+            storeCode = storeCode,
+            storeType = storeType,
+            platformCodes = platformCodes
+        ))
+    }
+}
