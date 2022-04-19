@@ -36,6 +36,7 @@ import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.ConsumerCryptoFailureAction
 import org.apache.pulsar.client.api.Message
+import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.RegexSubscriptionMode
 import org.apache.pulsar.client.api.SubscriptionInitialPosition
 import org.apache.pulsar.client.api.SubscriptionType
@@ -55,6 +56,7 @@ import java.util.concurrent.TimeUnit
 
 class PulsarInboundChannelAdapter(
     private val destination: String,
+    private val pulsarClient: PulsarClient,
     private val group: String? = null,
     private var extendedConsumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
     private val pulsarProperties: PulsarProperties
@@ -64,11 +66,10 @@ class PulsarInboundChannelAdapter(
         private val logger = LoggerFactory.getLogger(PulsarInboundChannelAdapter::class.java)
     }
 
-    private var consumer: Consumer<Any>? = null
+    var consumer: Consumer<Any>? = null
     var retryTemplate: RetryTemplate? = null
     var recoveryCallback: RecoveryCallback<Any>? = null
     private var topic: String = ""
-
     override fun onInit() {
         if (extendedConsumerProperties.extension == null) {
             return
@@ -96,8 +97,8 @@ class PulsarInboundChannelAdapter(
             consumer = generatePulsarConsumer(
                 topic = topic,
                 group = group,
-                pulsarProperties = pulsarProperties,
-                consumerProperties = extendedConsumerProperties,
+                consumerProperties = extendedConsumerProperties.extension,
+                pulsarClient = pulsarClient,
                 messageListener = messageListener,
                 deadLetterTopic = deadLetter,
                 retryLetterTopic = retryLetter
@@ -218,22 +219,17 @@ class PulsarInboundChannelAdapter(
     private fun generatePulsarConsumer(
         topic: String,
         group: String? = null,
-        pulsarProperties: PulsarProperties,
-        consumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
+        consumerProperties: PulsarConsumerProperties,
+        pulsarClient: PulsarClient,
         messageListener: (Consumer<*>, Message<*>) -> Unit,
         retryLetterTopic: String,
         deadLetterTopic: String
     ): Consumer<Any> {
-        val pulsarConsumerProperties = consumerProperties.extension
-        with(pulsarConsumerProperties) {
+        with(consumerProperties) {
             val topics = mutableListOf<String>()
             topics.addAll(topicNames)
             topics.add(topic)
-            val builder = PulsarUtils.getClientBuilder(pulsarProperties)
-            numIoThreads?.let { builder.ioThreads(it) }
-            numListenerThreads?.let { builder.listenerThreads(it) }
-            connectionsPerBroker?.let { builder.connectionsPerBroker(it) }
-            val consumer = builder.build().newConsumer(
+            val consumer = pulsarClient.newConsumer(
                 SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
             ).topics(topics)
             if (!topicsPattern.isNullOrEmpty()) {
@@ -252,7 +248,6 @@ class PulsarInboundChannelAdapter(
             if (!consumerName.isNullOrBlank()) {
                 consumer.consumerName(consumerName)
             }
-
             consumer.ackTimeout(ackTimeoutMillis, TimeUnit.MILLISECONDS)
                 .ackTimeoutTickTime(tickDurationMillis, TimeUnit.MILLISECONDS)
                 .priorityLevel(priorityLevel)

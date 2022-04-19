@@ -38,6 +38,7 @@ import org.apache.pulsar.client.api.HashingScheme
 import org.apache.pulsar.client.api.MessageRoutingMode
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.ProducerCryptoFailureAction
+import org.apache.pulsar.client.api.PulsarClient
 import org.apache.pulsar.client.api.TypedMessageBuilder
 import org.springframework.cloud.stream.binder.ExtendedProducerProperties
 import org.springframework.cloud.stream.provisioning.ProducerDestination
@@ -48,7 +49,8 @@ import java.util.concurrent.TimeUnit
 
 class PulsarProducerMessageHandler(
     private val destination: ProducerDestination,
-    private val producerProperties: ExtendedProducerProperties<PulsarProducerProperties>? = null,
+    private val producerProperties: PulsarProducerProperties? = null,
+    private val pulsarClient: PulsarClient,
     private val pulsarProperties: PulsarProperties
 ) : AbstractMessageHandler(), Lifecycle {
     private var producer: Producer<Any>? = null
@@ -69,8 +71,8 @@ class PulsarProducerMessageHandler(
         )
         producer = generatePulsarProducer(
             topic = topic,
-            pulsarProperties = pulsarProperties,
-            producerProperties = producerProperties
+            producerProperties = producerProperties,
+            pulsarClient = pulsarClient
         )
     }
 
@@ -113,17 +115,15 @@ class PulsarProducerMessageHandler(
 
     private fun generatePulsarProducer(
         topic: String,
-        pulsarProperties: PulsarProperties,
-        producerProperties: ExtendedProducerProperties<PulsarProducerProperties>
+        producerProperties: PulsarProducerProperties,
+        pulsarClient: PulsarClient
     ): Producer<Any> {
-        val pulsarProducerProperties = producerProperties.extension
-        with(pulsarProducerProperties) {
-            val builder = PulsarUtils.getClientBuilder(pulsarProperties)
-
+        with(producerProperties) {
             // TODO 消息序列化方式需要调整， producer需要缓存
-            val producer = builder.build().newProducer(
+            val producer = pulsarClient.newProducer(
                 SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            ).topic(topic)
+            )
+                .topic(topic)
             if (!producerName.isNullOrBlank()) {
                 producer.producerName(producerName)
             }
