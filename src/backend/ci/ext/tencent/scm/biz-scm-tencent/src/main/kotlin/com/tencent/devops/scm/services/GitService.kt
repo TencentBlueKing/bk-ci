@@ -1989,7 +1989,6 @@ class GitService @Autowired constructor(
         }
     }
 
-
     fun getProjectMembersAll(
         gitProjectId: String,
         page: Int,
