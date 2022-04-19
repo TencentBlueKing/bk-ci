@@ -47,7 +47,6 @@ interface StoreDockingPlatformRelService {
         platformCodes: Set<String>
     ): Boolean
 
-
     /**
      * 获取组件对接平台信息列表
      * @param userId 用户ID

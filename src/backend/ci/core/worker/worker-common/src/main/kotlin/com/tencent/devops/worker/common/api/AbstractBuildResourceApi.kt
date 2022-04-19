@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.api
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
@@ -36,7 +35,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.ErrorMsgLogUtil
