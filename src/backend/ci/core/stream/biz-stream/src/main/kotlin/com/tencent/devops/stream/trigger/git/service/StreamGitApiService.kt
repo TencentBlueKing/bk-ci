@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -155,4 +156,13 @@ interface StreamGitApiService {
         ref: String?,
         retry: ApiRequestRetryInfo
     ): StreamGitFileInfo?
+
+    /**
+     * 获取项目列表
+     */
+    fun getProjectList(
+        cred: StreamGitCred,
+        search: String?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<StreamGitProjectInfo>?
 }
