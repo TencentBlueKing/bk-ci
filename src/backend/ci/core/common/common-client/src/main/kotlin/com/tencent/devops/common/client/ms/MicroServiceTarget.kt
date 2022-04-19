@@ -56,12 +56,7 @@ class MicroServiceTarget<T> constructor(
             .expireAfterWrite(1, TimeUnit.SECONDS)
             .build(object : CacheLoader<String, List<ServiceInstance>>() {
                 override fun load(svrName: String): List<ServiceInstance> {
-                    val instances = compositeDiscoveryClient.getInstances(svrName)
-                        ?: throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
-                    if (instances.isEmpty()) {
-                        throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]服务提供者")
-                    }
-                    return instances
+                    return compositeDiscoveryClient.getInstances(svrName)
                 }
             })
 
@@ -86,6 +81,9 @@ class MicroServiceTarget<T> constructor(
             }
         } else {
             msCache.get(serviceName)
+        }
+        if (instances.isEmpty()) {
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$discoveryTag]服务提供者")
         }
 
         val matchTagInstances = ArrayList<ServiceInstance>()
