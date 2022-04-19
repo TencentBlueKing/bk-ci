@@ -30,7 +30,6 @@
 package com.tencent.devops.stream.pojo.openapi
 
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
-import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty

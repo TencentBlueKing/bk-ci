@@ -40,7 +40,7 @@ import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.TriggerBuildReq
@@ -195,7 +195,7 @@ class TXManualTriggerService @Autowired constructor(
             gitPipelineResourceDao.getPipelineById(dslContext, v1TriggerBuildReq.gitProjectId, pipelineId)
                 ?: throw OperationException("stream pipeline: $pipelineId is not exist")
         // 如果该流水线已保存过，则继续使用
-        val buildPipeline = GitProjectPipeline(
+        val buildPipeline = StreamGitProjectPipeline(
             gitProjectId = existsPipeline.gitProjectId,
             pipelineId = existsPipeline.pipelineId,
             filePath = existsPipeline.filePath,

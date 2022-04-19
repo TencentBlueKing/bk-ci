@@ -36,7 +36,7 @@ import com.tencent.devops.project.pojo.app.AppProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectSourceEnum
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -92,7 +92,7 @@ class StreamAppService @Autowired constructor(
         pageSize: Int?,
         sortType: PipelineSortType?,
         search: String?
-    ): Pagination<GitProjectPipeline> {
+    ): Pagination<StreamGitProjectPipeline> {
         val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val gitProjectId = getGitProjectId(projectId)
         val pipelines = pipelineResourceDao.getAppDataByGitProjectId(
@@ -109,7 +109,7 @@ class StreamAppService @Autowired constructor(
         return Pagination(
             pipelines.size == pageSize,
             pipelines.map {
-                GitProjectPipeline(
+                StreamGitProjectPipeline(
                     gitProjectId = gitProjectId,
                     pipelineId = it.pipelineId,
                     filePath = it.filePath,
@@ -126,7 +126,7 @@ class StreamAppService @Autowired constructor(
     fun getGitCIPipeline(
         projectId: String,
         pipelineId: String
-    ): GitProjectPipeline? {
+    ): StreamGitProjectPipeline? {
         val gitProjectId = getGitProjectId(projectId)
         val pipeline = pipelineResourceDao.getPipelineById(
             dslContext = dslContext,
@@ -134,7 +134,7 @@ class StreamAppService @Autowired constructor(
             pipelineId = pipelineId
         ) ?: return null
         with(pipeline) {
-            return GitProjectPipeline(
+            return StreamGitProjectPipeline(
                 gitProjectId = gitProjectId,
                 pipelineId = pipelineId,
                 filePath = filePath,
