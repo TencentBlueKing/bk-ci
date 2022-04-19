@@ -75,7 +75,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         buildLogPrintService.dispatchEvent(
             LogEvent(
                 buildId = buildId,
-                logs = listOf(logMessage.copy(message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()))
+                logs = listOf(
+                    logMessage.copy(
+                        message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()
+                    )
+                )
             )
         )
         return Result(true)
@@ -89,7 +93,11 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         buildLogPrintService.dispatchEvent(
             LogEvent(
                 buildId = buildId,
-                logs = listOf(logMessage.copy(message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()))
+                logs = listOf(
+                    logMessage.copy(
+                        message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()
+                    )
+                )
             )
         )
         return Result(true)
