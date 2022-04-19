@@ -30,6 +30,6 @@ package com.tencent.devops.stream.trigger.git.pojo.tgit
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitUserInfo
 
 data class TGitUserInfo(
-    val id: String,
+    override val id: String,
     override val username: String
 ) : StreamGitUserInfo

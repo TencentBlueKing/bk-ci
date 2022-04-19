@@ -80,6 +80,7 @@ class TriggerMatcher @Autowired constructor(
         } else {
             action.isMatch(ScriptYmlUtils.formatTriggerOn(newYaml.triggerOn)).copy(
                 repoHookName = checkRepoHook(
+                    action = action,
                     preTriggerOn = newYaml.triggerOn
                 )
             )
@@ -87,6 +88,7 @@ class TriggerMatcher @Autowired constructor(
     }
 
     private fun checkRepoHook(
+        action: BaseAction,
         preTriggerOn: PreTriggerOn?
     ): List<String> {
         logger.info("checkRepoHook|preTriggerOn=$preTriggerOn")
@@ -103,8 +105,11 @@ class TriggerMatcher @Autowired constructor(
             return emptyList()
         }
         val repoHookList = mutableListOf<String>()
-        repositoryHookList.forEach {
-            it.name?.let { name ->
+        repositoryHookList.forEach { repoHook ->
+            repoHook.name?.let { name ->
+                action.registerCheckRepoTriggerCredentials(
+                    repoHook = ScriptYmlUtils.repoHookRule(repoHook)
+                )
                 // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
                 if (name.contains("/") && !name.startsWith("/")) {
                     repoHookList.add(name)

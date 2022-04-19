@@ -35,10 +35,12 @@ import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.dao.StreamUserMessageDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.pojo.message.UserMessageType
+import com.tencent.devops.stream.service.StreamGitProjectInfoCache
 import com.tencent.devops.stream.service.StreamWebsocketService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import com.tencent.devops.stream.util.StreamTriggerMessageUtils
 import org.jooq.DSLContext
@@ -59,7 +61,8 @@ class StreamEventService @Autowired constructor(
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val websocketService: StreamWebsocketService,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache
 ) {
 
     companion object {
@@ -154,8 +157,17 @@ class StreamEventService @Autowired constructor(
         var messageId = -1L
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
-
-        val messageTitle = StreamTriggerMessageUtils.getEventMessageTitle(event)
+        val checkRepoHookTrigger = gitProjectId != event.gitProjectId
+        val realEvent = if (checkRepoHookTrigger) {
+            // 当gitProjectId与event的不同时，说明是远程仓库触发的
+            val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                gitProjectId = event.gitProjectId,
+                useAccessToken = true,
+                userId = userId
+            ).pathWithNamespace
+            GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
+        } else event
+        val messageTitle = StreamTriggerMessageUtils.getEventMessageTitle(realEvent, checkRepoHookTrigger)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             messageId = gitRequestEventNotBuildDao.save(

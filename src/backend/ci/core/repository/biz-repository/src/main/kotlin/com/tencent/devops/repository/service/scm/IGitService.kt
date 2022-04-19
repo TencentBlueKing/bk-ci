@@ -319,7 +319,6 @@ interface IGitService {
 
     fun getGitCodeProjectList(
         accessToken: String,
-        userId: String,
         page: Int?,
         pageSize: Int?,
         search: String?,
