@@ -96,7 +96,12 @@ class RepoTriggerEventService @Autowired constructor(
         var begin = sourceGitProjectPath.indexOf("/", 0)
         while (begin != -1) {
             sourceGitProjectPathList.add(sourceGitProjectPath.substring(0, begin) + "/**")
-            begin = sourceGitProjectPath.indexOf("/", begin + 1)
+            sourceGitProjectPath.indexOf("/", begin + 1).let { index ->
+                if (index == -1) {
+                    sourceGitProjectPathList.add(sourceGitProjectPath.substring(0, begin) + "/*")
+                }
+                begin = index
+            }
         }
         sourceGitProjectPathList.add(sourceGitProjectPath)
         logger.info("find target repo pipelines in ($sourceGitProjectPathList)")

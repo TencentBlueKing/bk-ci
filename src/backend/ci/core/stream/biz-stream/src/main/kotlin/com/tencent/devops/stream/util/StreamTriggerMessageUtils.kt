@@ -15,7 +15,7 @@ object StreamTriggerMessageUtils {
     private val objectMapper = ObjectMapper()
 
     @SuppressWarnings("ComplexMethod")
-    fun getEventMessageTitle(event: GitRequestEvent): String {
+    fun getEventMessageTitle(event: GitRequestEvent, checkRepoHookTrigger: Boolean = false): String {
         val messageTitle = when (event.objectKind) {
             StreamObjectKind.MERGE_REQUEST.value -> {
                 "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
@@ -70,6 +70,6 @@ object StreamTriggerMessageUtils {
                 "Commit [${event.commitId.subSequence(0, 8)}] pushed by ${event.userId}"
             }
         }
-        return messageTitle
+        return if (checkRepoHookTrigger) "[${event.branch}] " + messageTitle else messageTitle
     }
 }
