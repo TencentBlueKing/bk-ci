@@ -556,7 +556,7 @@ interface ServiceGitResource {
     @ApiOperation("获取用户所有项目组列表，分页获取")
     @GET
     @Path("/getProjectGroupsList")
-    fun getProjectGroupsList( // 需要迁移到ServiceGitResource
+    fun getProjectGroupsList(
         @ApiParam("oauth accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
@@ -580,7 +580,7 @@ interface ServiceGitResource {
     @ApiOperation("获取GitCode项目成员信息")
     @GET
     @Path("/getMembers")
-    fun getMembers( // 搬到repository ,iGitService 中已经存在
+    fun getMembers(
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String,
@@ -604,7 +604,7 @@ interface ServiceGitResource {
     @ApiOperation("校验用户git项目权限")
     @GET
     @Path("/getUserId")
-    fun getGitUserId( // auth 迁移至ServiceGitResource
+    fun getGitUserId(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
         rtxUserId: String,
@@ -622,7 +622,7 @@ interface ServiceGitResource {
     @ApiOperation("获取项目下具有权限的成员信息")
     @GET
     @Path("/projects/members/all")
-    fun getProjectMembersAll( // auth使用，搬到 ServiceGitResource ,iGitService 中已经存在
+    fun getProjectMembersAll(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
@@ -646,7 +646,7 @@ interface ServiceGitResource {
     @ApiOperation("文件内容和一些文件信息")
     @GET
     @Path("/getGitFileInfo")
-    fun getGitFileInfo( // 需要搬到 ServiceGitResource
+    fun getGitFileInfo(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
@@ -667,7 +667,7 @@ interface ServiceGitResource {
     @ApiOperation("添加mr评论")
     @POST
     @Path("/addMrComment")
-    fun addMrComment( // 已存在GitApi.addMRComment,需要 ServiceGitResource中添加方法
+    fun addMrComment(
         @ApiParam(value = "token")
         @QueryParam("token")
         token: String,
@@ -683,7 +683,6 @@ interface ServiceGitResource {
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum
     )
-
 
     @ApiOperation("获取git文件目录列表")
     @GET
@@ -774,7 +773,7 @@ interface ServiceGitResource {
     @ApiOperation("获取用户所有git项目，分页方式获取")
     @GET
     @Path("/getGitCodeProjectList")
-    fun getGitCodeProjectList( // ServiceGitResource 中存在getProjectList，但是VO需要兼容
+    fun getGitCodeProjectList(
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,

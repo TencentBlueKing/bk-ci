@@ -123,7 +123,7 @@ interface StreamGitTransferService {
         since: String?,
         until: String?,
         page: Int?,
-        perPage: Int?,
+        perPage: Int?
     ): List<StreamCommitInfo>?
 
     /**
@@ -132,7 +132,7 @@ interface StreamGitTransferService {
     fun createNewFile(
         userId: String,
         gitProjectId: String,
-        streamCreateFile: StreamCreateFileInfo,
+        streamCreateFile: StreamCreateFileInfo
     ): Boolean
 
     /**
@@ -145,7 +145,7 @@ interface StreamGitTransferService {
         pageSize: Int?,
         search: String?,
         orderBy: StreamBranchesOrder?,
-        sort: StreamSortAscOrDesc?,
+        sort: StreamSortAscOrDesc?
     ): List<String>?
 
     /**
@@ -154,6 +154,6 @@ interface StreamGitTransferService {
     fun getProjectGroupsList(
         userId: String,
         page: Int,
-        pageSize: Int,
+        pageSize: Int
     ): List<StreamGitGroup>?
 }

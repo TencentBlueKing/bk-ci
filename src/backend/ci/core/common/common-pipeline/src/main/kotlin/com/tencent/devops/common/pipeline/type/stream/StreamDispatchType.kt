@@ -33,11 +33,11 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
 
-class StreamDispatchType (@JsonProperty("value") var image: String) :
+class StreamDispatchType(@JsonProperty("value") var image: String) :
     DispatchType(
-    image,
-    DispatchRouteKeySuffix.STREAM
-) {
+        image,
+        DispatchRouteKeySuffix.STREAM
+    ) {
     override fun cleanDataBeforeSave() {
         this.image = this.image.trim()
     }

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.pojo.enums
 
-
 enum class GitCodeFileEncoding {
     TEXT,
     BASE64

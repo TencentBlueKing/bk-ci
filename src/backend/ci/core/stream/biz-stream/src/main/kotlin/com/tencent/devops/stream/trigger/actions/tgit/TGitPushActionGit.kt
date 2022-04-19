@@ -119,7 +119,7 @@ class TGitPushActionGit(
                 commitAuthorName = lastCommit?.author?.name
             ),
             userId = event.user_name,
-            gitProjectName = GitUtils.getProjectName(event.repository.homepage),
+            gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
         return this
     }

@@ -1380,7 +1380,7 @@ class GitService @Autowired constructor(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 owned = owned,
-                minAccessLevel = minAccessLevel,
+                minAccessLevel = minAccessLevel
             )
         } else {
             GitApi().getProjectGroupsList(
@@ -1389,7 +1389,7 @@ class GitService @Autowired constructor(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 owned = owned,
-                minAccessLevel = minAccessLevel,
+                minAccessLevel = minAccessLevel
             )
         }
     }

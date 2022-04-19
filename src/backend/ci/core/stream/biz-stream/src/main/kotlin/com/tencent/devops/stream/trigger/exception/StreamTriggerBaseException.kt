@@ -33,7 +33,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 open class StreamTriggerBaseException(
     val action: BaseAction,
     val reasonParams: List<String>? = null,
-    val commitCheck: CommitCheck? = null,
+    val commitCheck: CommitCheck? = null
 ) : Exception()
 
 data class CommitCheck(

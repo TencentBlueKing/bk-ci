@@ -149,7 +149,7 @@ class StreamEventService @Autowired constructor(
         gitProjectId: Long,
         version: String?,
         branch: String?,
-        projectCode: String,
+        projectCode: String
     ): Long {
         var messageId = -1L
         val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)

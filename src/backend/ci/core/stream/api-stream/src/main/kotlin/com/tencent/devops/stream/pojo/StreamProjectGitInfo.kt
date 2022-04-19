@@ -48,7 +48,7 @@ data class StreamProjectGitInfo(
     @ApiModelProperty("项目头像")
     val avatarUrl: String?,
     @ApiModelProperty("项目描述")
-    val description: String?,
+    val description: String?
 ) {
     constructor(p: GitCodeProjectInfo) : this(
         id = p.id!!,

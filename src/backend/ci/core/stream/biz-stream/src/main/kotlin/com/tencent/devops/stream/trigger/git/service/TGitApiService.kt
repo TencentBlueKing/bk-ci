@@ -67,7 +67,7 @@ class TGitApiService @Autowired constructor(
      * 通过凭据获取可以直接使用的token
      */
     override fun getToken(
-        cred: StreamGitCred,
+        cred: StreamGitCred
     ): String {
         return cred.toToken()
     }
