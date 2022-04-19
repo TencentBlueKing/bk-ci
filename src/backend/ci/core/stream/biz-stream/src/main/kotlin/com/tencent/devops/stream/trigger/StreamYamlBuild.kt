@@ -79,6 +79,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class StreamYamlBuild @Autowired constructor(
     private val dslContext: DSLContext,
@@ -404,7 +405,7 @@ class StreamYamlBuild @Autowired constructor(
                 objectKind = action.metaData.streamObjectKind
             ),
             changeSet = action.data.context.changeSet?.toSet(),
-            JobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
+            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
         )
 
         return Pair(modelCreateEvent, modelParams)

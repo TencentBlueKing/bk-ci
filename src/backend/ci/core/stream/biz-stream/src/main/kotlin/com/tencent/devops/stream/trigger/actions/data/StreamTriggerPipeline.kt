@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.trigger.actions.data
 
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 
 /**
  * Stream触发时需要的流水线数据
@@ -46,7 +46,7 @@ data class StreamTriggerPipeline(
     val enabled: Boolean,
     val creator: String?
 ) {
-    constructor(pipeline: GitProjectPipeline) : this(
+    constructor(pipeline: StreamGitProjectPipeline) : this(
         gitProjectId = pipeline.gitProjectId.toString(),
         pipelineId = pipeline.pipelineId,
         filePath = pipeline.filePath,
@@ -64,9 +64,9 @@ data class StreamTriggerPipeline(
         creator = pipeline.creator
     )
 
-    fun toGitPipeline(): GitProjectPipeline {
+    fun toGitPipeline(): StreamGitProjectPipeline {
         return with(this) {
-            GitProjectPipeline(
+            StreamGitProjectPipeline(
                 gitProjectId = gitProjectId.toLong(),
                 displayName = displayName,
                 pipelineId = pipelineId,

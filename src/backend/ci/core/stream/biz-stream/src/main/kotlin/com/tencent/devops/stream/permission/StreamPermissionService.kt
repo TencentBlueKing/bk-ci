@@ -47,6 +47,7 @@ import javax.ws.rs.core.Response
  * 首先判断是否具有角色权限，在判断是否开启
  * 项目开启：419 无OAuth：418 无角色：403
  */
+@Suppress("ALL")
 @Service
 class StreamPermissionService @Autowired constructor(
     private val client: Client,

@@ -51,6 +51,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEven
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
+@Suppress("ALL")
 class StreamManualAction(
     private val streamGitConfig: StreamGitConfig
 ) : BaseAction {

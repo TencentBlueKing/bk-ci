@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 enum class PoolType {
     DockerOnVm {
         override fun transfer(pool: Pool): DispatchType {

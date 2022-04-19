@@ -108,7 +108,7 @@ class ModelCreate @Autowired constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = event.JobTemplateAcrossInfo,
+                    jobBuildTemplateAcrossInfos = event.jobTemplateAcrossInfo,
                     elementNames = elementNames
                 )
             )
@@ -130,7 +130,7 @@ class ModelCreate @Autowired constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = event.JobTemplateAcrossInfo,
+                    jobBuildTemplateAcrossInfos = event.jobTemplateAcrossInfo,
                     elementNames = null
                 )
             )

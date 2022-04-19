@@ -31,6 +31,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import org.springframework.stereotype.Component
 
+@Suppress("ALL")
 @Component
 class StreamYamlBuildExpandImpl : StreamYamlBuildExpand {
     override fun buildReportData(action: BaseAction, buildId: String, pipeline: StreamTriggerPipeline) {}
