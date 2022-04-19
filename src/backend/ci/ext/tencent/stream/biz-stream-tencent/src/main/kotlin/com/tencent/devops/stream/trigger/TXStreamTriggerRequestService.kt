@@ -32,6 +32,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -124,7 +126,15 @@ class TXStreamTriggerRequestService @Autowired constructor(
                 ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
                     rabbitTemplate = rabbitTemplate,
                     event = StreamTriggerEvent(
-                        eventStr = objectMapper.writeValueAsString(action.data.event as GitEvent),
+                        eventStr = if (action.metaData.streamObjectKind == StreamObjectKind.REVIEW) {
+                            objectMapper.writeValueAsString(
+                                (action.data.event as GitReviewEvent).copy(
+                                    objectKind = GitReviewEvent.classType
+                                )
+                            )
+                        } else {
+                            objectMapper.writeValueAsString(action.data.event as GitEvent)
+                        },
                         actionCommonData = action.data.eventCommon,
                         actionContext = action.data.context,
                         actionSetting = action.data.setting
