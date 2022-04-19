@@ -70,12 +70,12 @@ class StreamTriggerListener @Autowired constructor(
             actionCommonData = event.actionCommonData,
             actionContext = event.actionContext,
             actionSetting = event.actionSetting
-        ).also {
-            if (it == null) {
-                logger.error("trigger listener event not support: $event")
-                return
-            }
-        } ?: return
+        )
+        if (action == null) {
+            logger.error("trigger listener event not support: $event")
+            return
+        }
+
         // 针对每个流水线处理异常
         exceptionHandler.handle(action = action) { streamYamlTrigger.triggerBuild(action = action) }
 

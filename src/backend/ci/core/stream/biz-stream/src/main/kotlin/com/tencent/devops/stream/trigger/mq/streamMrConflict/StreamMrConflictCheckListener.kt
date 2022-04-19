@@ -76,12 +76,11 @@ constructor(
                 checkEvent.actionCommonData,
                 checkEvent.actionContext,
                 checkEvent.actionSetting
-            ).also {
-                if (it == null) {
-                    logger.error("mr conflict event not support: $checkEvent")
-                    return
-                }
-            } ?: return
+            )
+            if (action == null) {
+                logger.error("mr conflict event not support: $checkEvent")
+                return
+            }
 
             action as TGitMrActionGit
             val (isFinish, isTrigger) = with(checkEvent) {

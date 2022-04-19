@@ -97,12 +97,11 @@ class StreamTriggerRequestService @Autowired constructor(
 
     fun start(eventObject: GitEvent, event: String): Boolean? {
         // 加载不同源的action
-        val action = actionFactory.load(eventObject).also {
-            if (it == null) {
-                logger.error("request event not support: $event")
-                return false
-            }
-        }!!
+        val action = actionFactory.load(eventObject)
+        if (action == null) {
+            logger.error("request event not support: $event")
+            return false
+        }
 
         // 获取前端展示相关的requestEvent
         val requestEvent = action.buildRequestEvent(event) ?: return false
@@ -111,10 +110,9 @@ class StreamTriggerRequestService @Autowired constructor(
 
         val repoTriggerPipelineList = repoTriggerEventService.getTargetPipelines(
             eventCommon.gitProjectName
-        ).also {
-            if (it.isNotEmpty()) {
-                action.data.context.repoTrigger = RepoTrigger("", it)
-            }
+        )
+        if (repoTriggerPipelineList.isNotEmpty()) {
+            action.data.context.repoTrigger = RepoTrigger("", repoTriggerPipelineList)
         }
 
         // 跨项目触发的逻辑不需要当前项目也可以使用

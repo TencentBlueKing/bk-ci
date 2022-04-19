@@ -226,11 +226,12 @@ class StreamYamlTrigger @Autowired constructor(
 
             val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(newPreYamlObject, filePath)
             return YamlReplaceResult(
-                preYaml = newPreYamlObject, normalYaml = normalYaml,
-                yamlTransferData = transferData.also {
-                    if (it.templateData.transferDataMap.isEmpty()) {
-                        null
-                    }
+                preYaml = newPreYamlObject,
+                normalYaml = normalYaml,
+                yamlTransferData = if (transferData.templateData.transferDataMap.isEmpty()) {
+                    null
+                } else {
+                    transferData
                 }
             )
         } catch (e: Throwable) {
