@@ -74,9 +74,9 @@ data class BuildHistoryWithVars(
     val executeTime: Long?,
     @ApiModelProperty("启动参数", required = false)
     val buildParameters: List<BuildParameters>?,
-    @ApiModelProperty("WebHookType", required = false)
+    @ApiModelProperty("WebHook类型", required = false)
     val webHookType: String?,
-    @ApiModelProperty("webhookInfo", required = false)
+    @ApiModelProperty("webhook信息", required = false)
     val webhookInfo: WebhookInfo?,
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,
