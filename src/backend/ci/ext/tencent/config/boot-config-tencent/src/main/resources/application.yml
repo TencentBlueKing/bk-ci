@@ -16,7 +16,7 @@ spring:
       discovery:
         tags: dev
   config:
-      use-leggacy-processing: true
+      use-legacy-processing: true
 
 ---
 server:
