@@ -30,7 +30,7 @@ package com.tencent.devops.process.api.app
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
@@ -86,7 +86,7 @@ class AppPipelineBuildTencentResourceImpl @Autowired constructor(
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
         val data = appBuildService.getBuildDetail(userId, projectId, pipelineId, buildIdReal, channelCode)
         if (channelCode == ChannelCode.GIT) {
-            ConsulContent.invokeByTag(gitCI) {
+            DiscoveryTag.invokeByTag(gitCI) {
                 try {
                     client.get(ServiceGitForAppResource::class)
                         .getGitCIPipeline(projectId, pipelineId).data?.displayName

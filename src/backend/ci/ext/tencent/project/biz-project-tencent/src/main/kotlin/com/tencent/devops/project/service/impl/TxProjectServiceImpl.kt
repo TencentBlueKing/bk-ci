@@ -44,7 +44,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -365,7 +365,7 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         logger.info("getV3userProject tag: $v3Tag")
         try {
-            return ConsulContent.invokeByTag(v3Tag) {
+            return DiscoveryTag.invokeByTag(v3Tag) {
                 try {
                     // 请求V3的项目,流量必须指向到v3,需指定项目头
                     client.get(ServiceProjectAuthResource::class).getUserProjects(

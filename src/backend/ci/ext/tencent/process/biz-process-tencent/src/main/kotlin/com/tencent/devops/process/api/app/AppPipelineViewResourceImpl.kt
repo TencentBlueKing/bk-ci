@@ -30,7 +30,7 @@ package com.tencent.devops.process.api.app
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.service.ServiceGitForAppResource
@@ -113,7 +113,7 @@ class AppPipelineViewResourceImpl @Autowired constructor(
 
         // gitci 返回值兼容
         val records = if (channelCode == ChannelCode.GIT) {
-            val gitciPipelines = ConsulContent.invokeByTag(gitCI) {
+            val gitciPipelines = DiscoveryTag.invokeByTag(gitCI) {
                 client.get(ServiceGitForAppResource::class).getGitCIPipelines(
                     projectId = projectId,
                     page = 1,

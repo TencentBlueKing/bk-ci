@@ -45,7 +45,7 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -116,7 +116,7 @@ class ProjectLocalService @Autowired constructor(
 
         // 先查询GITCI的项目
         if (page == 1) {
-            val gitCIProjectList = ConsulContent.invokeByTag(streamTag) {
+            val gitCIProjectList = DiscoveryTag.invokeByTag(streamTag) {
                 try {
                     client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 100, searchName)
                 } catch (e: Exception) {
