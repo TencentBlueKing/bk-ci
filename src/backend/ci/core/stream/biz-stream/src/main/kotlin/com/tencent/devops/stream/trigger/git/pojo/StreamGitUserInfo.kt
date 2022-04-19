@@ -31,6 +31,7 @@ package com.tencent.devops.stream.trigger.git.pojo
  * Stream需要的Git平台的用户信息
  */
 interface StreamGitUserInfo {
+    val id: String
     // 用户名称
     val username: String
 }

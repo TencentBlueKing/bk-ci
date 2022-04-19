@@ -2,6 +2,7 @@ package com.tencent.devops.stream.trigger.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
@@ -45,6 +46,8 @@ abstract class TGitActionGit(
     override fun needSaveOrUpdateBranch() = false
 
     override fun needSendCommitCheck() = true
+
+    override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {}
 
     override fun sendCommitCheck(
         buildId: String,
