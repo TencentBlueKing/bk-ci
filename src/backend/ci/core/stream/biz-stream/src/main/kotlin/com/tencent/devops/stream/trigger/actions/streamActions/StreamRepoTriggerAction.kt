@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
+import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -83,5 +84,9 @@ class StreamRepoTriggerAction(
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         baseAction.sendCommitCheck(buildId, gitProjectName, state, block, context, targetUrl, description)
+    }
+
+    override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
+        baseAction.registerCheckRepoTriggerCredentials(repoHook)
     }
 }

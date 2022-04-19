@@ -163,7 +163,6 @@ class StreamTGitTransferService @Autowired constructor(
     ): List<StreamProjectGitInfo>? {
         return client.get(ServiceGitResource::class).getGitCodeProjectList(
             accessToken = getAndCheckOauthToken(userId).accessToken,
-            userId = userId,
             page = page,
             pageSize = pageSize,
             search = search,
