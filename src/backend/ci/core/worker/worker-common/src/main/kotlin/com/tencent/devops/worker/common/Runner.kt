@@ -222,11 +222,11 @@ object Runner {
             val parsedVariables = mutableMapOf<String, String>()
             buildVariable?.forEach { (key, value) ->
                 parsedVariables[key] = ReplacementUtils.replace(value, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String {
+                    override fun getReplacement(key: String): String? {
                         return CredentialUtils.getCredentialContextValue(
                             key = key,
                             acrossProjectId = acrossInfo?.targetProjectId
-                        ) ?: value
+                        )
                     }
                 })
             }
