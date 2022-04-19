@@ -371,8 +371,8 @@ class PipelineBuildTaskDao {
             }
             val errorMsg = updateTaskInfo.errorMsg
             if (null != errorMsg) {
-                val finalErrorMsg = CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
-                baseStep.set(ERROR_MSG, finalErrorMsg)
+                val key = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+                baseStep.set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, key))
             }
             val platformCode = updateTaskInfo.platformCode
             if (null != platformCode) {
