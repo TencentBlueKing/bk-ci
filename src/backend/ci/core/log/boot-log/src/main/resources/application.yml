@@ -16,15 +16,15 @@ spring:
         logEventListener-in-0:
           destination: e.build.log.origin.event
           group: log-serivce
-          binder: extend-rabbitmq
+          binder: extend-pulsar
         logBatchEventListener-in-0:
           destination: e.build.log.storage.event
           group: log-serivce
-          binder: extend-rabbitmq
+          binder: extend-pulsar
         logStatusEventListener-in-0:
           destination: e.build.log.status.event
           group: log-serivce
-          binder: extend-rabbitmq
+          binder: extend-pulsar
       rabbit:
         bindings:
           logEventListener-in-0:
