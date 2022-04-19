@@ -199,7 +199,7 @@ interface ServiceProjectResource {
         projectCode: String,
         @ApiParam("项目名称", required = true)
         @QueryParam("projectName")
-        projectName: String,
+        projectName: String
     ): Result<Boolean>
 
     @GET

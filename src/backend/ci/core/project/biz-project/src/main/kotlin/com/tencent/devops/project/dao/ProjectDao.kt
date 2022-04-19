@@ -418,7 +418,7 @@ class ProjectDao {
         }
     }
 
-    fun updateProjectName(dslContext: DSLContext, projectCode: String, projectName: String) : Int {
+    fun updateProjectName(dslContext: DSLContext, projectCode: String, projectName: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
