@@ -98,6 +98,55 @@ type resource struct {
 	waitingList *list.List
 }
 
+// reset with []*dcProtocol.Host
+// add new hosts and disable released hosts
+func (wr *resource) Reset(hl []*dcProtocol.Host) ([]*dcProtocol.Host, error) {
+
+	wr.workerLock.Lock()
+	// new means in hl but not in wr.worker
+	newhl := make([]*dcProtocol.Host, 0)
+	for _, h := range hl {
+		existed := false
+		for _, w := range wr.worker {
+			if h.Equal(w.host) {
+				existed = true
+				break
+			}
+		}
+		if !existed {
+			newhl = append(newhl, h)
+			blog.Infof("remote slot: found new host:%v", *h)
+		}
+	}
+
+	// del means in wr.worker but not in hl
+	delhl := make([]*dcProtocol.Host, 0)
+	for _, w := range wr.worker {
+		existed := false
+		for _, h := range hl {
+			if h.Equal(w.host) {
+				existed = true
+				break
+			}
+		}
+		if !existed {
+			delhl = append(delhl, w.host)
+			blog.Infof("remote slot: found ready to delete host:%v", *w.host)
+		}
+	}
+	wr.workerLock.Unlock()
+
+	for _, h := range delhl {
+		wr.disableWorker(h)
+	}
+
+	for _, h := range newhl {
+		wr.addWorker(h)
+	}
+
+	return newhl, nil
+}
+
 // brings handler up and begin to handle requests
 func (wr *resource) Handle(ctx context.Context) {
 	if wr.handling {
@@ -185,6 +234,61 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 	}
 
 	blog.Infof("remote slot: total slot:%d after disable host:%v", wr.totalSlots, *host)
+	return
+}
+
+func (wr *resource) disableAllWorker() {
+	blog.Infof("remote slot: ready disable all host")
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	for _, w := range wr.worker {
+		if w.disabled {
+			continue
+		}
+
+		w.disabled = true
+	}
+
+	wr.totalSlots = 0
+	for _, v := range wr.usageMap {
+		v.limit = 0
+		blog.Infof("remote slot: usage map:%v after disable all host", *v)
+	}
+
+	blog.Infof("remote slot: total slot:%d after disable all host", wr.totalSlots)
+	return
+}
+
+func (wr *resource) addWorker(host *dcProtocol.Host) {
+	if host == nil || host.Jobs <= 0 {
+		return
+	}
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	for _, w := range wr.worker {
+		if host.Equal(w.host) {
+			blog.Infof("remote slot: host(%s) existed when add", w.host.Server)
+			return
+		}
+	}
+
+	wr.worker = append(wr.worker, &worker{
+		host:          host,
+		totalSlots:    host.Jobs,
+		occupiedSlots: 0,
+	})
+	wr.totalSlots += host.Jobs
+
+	for _, v := range wr.usageMap {
+		v.limit = wr.totalSlots
+		blog.Infof("remote slot: usage map:%v after add host:%v", *v, *host)
+	}
+
+	blog.Infof("remote slot: total slot:%d after add host:%v", wr.totalSlots, *host)
 	return
 }
 

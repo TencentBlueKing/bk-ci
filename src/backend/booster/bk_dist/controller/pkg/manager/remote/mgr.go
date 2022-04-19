@@ -13,12 +13,14 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	dcSyscall "github.com/Tencent/bk-ci/src/booster/bk_dist/common/syscall"
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/config"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/worker/pkg/client"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
@@ -37,6 +39,8 @@ func NewMgr(pCtx context.Context, work *types.Work) types.RemoteMgr {
 		fileSendMap:           make(map[string]*fileSendMap),
 		fileCollectionSendMap: make(map[string]*[]*types.FileCollectionInfo),
 		fileMessageBank:       newFileMessageBank(),
+		conf:                  work.Config(),
+		resourceCheckTick:     5 * time.Second,
 	}
 }
 
@@ -64,6 +68,13 @@ type Mgr struct {
 	fileMessageBank *fileMessageBank
 
 	initCancel context.CancelFunc
+
+	conf *config.ServerConfig
+
+	resourceCheckTick time.Duration
+	lastUsed          uint64 // only accurate to second now
+	lastApplied       uint64 // only accurate to second now
+	remotejobs        int64  // save job number which using remote worker
 }
 
 type fileSendMap struct {
@@ -156,6 +167,107 @@ func (m *Mgr) Init() {
 	m.initCancel = cancel
 
 	m.resource.Handle(ctx)
+
+	// register call back for resource changed
+	m.work.Resource().RegisterCallback(m.callback4ResChanged)
+
+	if m.conf.AutoResourceMgr {
+		go m.resourceCheck(ctx)
+	}
+}
+
+func (m *Mgr) callback4ResChanged() error {
+	blog.Infof("remote: resource changed call back for work:%s", m.work.ID())
+
+	newhl, _ := m.resource.Reset(m.work.Resource().GetHosts())
+	if newhl != nil && len(newhl) > 0 {
+		m.setLastApplied(uint64(time.Now().Local().Unix()))
+		m.syncHostTimeNoWait(newhl)
+	}
+	return nil
+}
+
+func (m *Mgr) setLastUsed(v uint64) {
+	atomic.StoreUint64(&m.lastUsed, v)
+}
+
+func (m *Mgr) getLastUsed() uint64 {
+	return atomic.LoadUint64(&m.lastUsed)
+}
+
+func (m *Mgr) setLastApplied(v uint64) {
+	atomic.StoreUint64(&m.lastApplied, v)
+}
+
+func (m *Mgr) getLastApplied() uint64 {
+	return atomic.LoadUint64(&m.lastApplied)
+}
+
+func (m *Mgr) incRemoteJobs() {
+	atomic.AddInt64(&m.remotejobs, 1)
+}
+
+func (m *Mgr) decRemoteJobs() {
+	atomic.AddInt64(&m.remotejobs, -1)
+}
+
+func (m *Mgr) getRemoteJobs() int64 {
+	return atomic.LoadInt64(&m.remotejobs)
+}
+
+func (m *Mgr) resourceCheck(ctx context.Context) {
+	blog.Infof("remote: run remote resource check tick for work: %s", m.work.ID())
+	ticker := time.NewTicker(m.resourceCheckTick)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			blog.Infof("remote: run remote resource check for work(%s) canceled by context", m.work.ID())
+			return
+
+		case <-ticker.C:
+			if m.getRemoteJobs() <= 0 { // no remote worker in use
+				needfree := false
+				// 从最近一次使用后的时间开始计算空闲时间
+				lastused := m.getLastUsed()
+				if lastused > 0 {
+					nowsecs := time.Now().Local().Unix()
+					if int(uint64(nowsecs)-lastused) > m.conf.ResIdleSecsForFree {
+						blog.Infof("remote: ready release remote resource for work(%s) %d"+
+							" seconds no used since last used %d",
+							m.work.ID(), int(uint64(nowsecs)-lastused), lastused)
+
+						needfree = true
+					}
+				} else {
+					// 从资源申请成功的时间开始计算空闲时间
+					lastapplied := m.getLastApplied()
+					if lastapplied > 0 {
+						nowsecs := time.Now().Local().Unix()
+						if int(uint64(nowsecs)-lastapplied) > m.conf.ResIdleSecsForFree {
+							blog.Infof("remote: ready release remote resource for work(%s) %d"+
+								" seconds no used since last applied %d",
+								m.work.ID(), int(uint64(nowsecs)-lastapplied), lastapplied)
+
+							needfree = true
+						}
+					}
+				}
+
+				if needfree {
+					// disable all workers and release
+					m.resource.disableAllWorker()
+					m.work.Resource().Release(nil)
+
+					// 重置最近一次使用时间
+					m.setLastUsed(0)
+					// 重置资源申请成功的时间
+					m.setLastApplied(0)
+				}
+			}
+		}
+	}
 }
 
 // ExecuteTask run the task in remote worker and ensure the dependent files
@@ -185,6 +297,12 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 	handler := m.remoteWorker.Handler(req.IOTimeout, req.Stats, func() {
 		m.work.Basic().UpdateJobStats(req.Stats)
 	}, req.Sandbox)
+
+	m.incRemoteJobs()
+	defer func() {
+		m.setLastUsed(uint64(time.Now().Local().Unix()))
+		m.decRemoteJobs()
+	}()
 
 	// 1. send toolchain if required  2. adjust exe remote path for req
 	err := m.sendToolchain(handler, req)
@@ -880,6 +998,7 @@ func (m *Mgr) unlockSlots(usage dcSDK.JobUsage, host *dcProtocol.Host) {
 	m.resource.Unlock(usage, host)
 }
 
+// TotalSlots return available total slots
 func (m *Mgr) TotalSlots() int {
 	return m.resource.TotalSlots()
 }

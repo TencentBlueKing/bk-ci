@@ -124,6 +124,11 @@ func (cc *TaskCC) LocalExecute(command []string) (int, error) {
 	return 0, nil
 }
 
+// NeedRemoteResource check whether this command need remote resource
+func (cc *TaskCC) NeedRemoteResource(command []string) bool {
+	return true
+}
+
 // RemoteRetryTimes will return the remote retry times
 func (cc *TaskCC) RemoteRetryTimes() int {
 	return 0

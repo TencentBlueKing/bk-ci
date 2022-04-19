@@ -215,9 +215,15 @@ func (s *sdk) launchServer() error {
 		disablefilelock = "--disable_file_lock"
 	}
 
+	autoResourceMgr := ""
+	if s.config.AutoResourceMgr {
+		autoResourceMgr = "--auto_resource_mgr"
+	}
+
 	return dcSyscall.RunServer(fmt.Sprintf("%s%s -a=%s -p=%d --log-dir=%s --v=%d --local_slots=%d "+
 		"--local_pre_slots=%d --local_exe_slots=%d --local_post_slots=%d --async_flush %s --remain_time=%d "+
-		"--use_local_cpu_percent=%d %s",
+		"--use_local_cpu_percent=%d %s"+
+		"%s --res_idle_secs_for_free=%d",
 		sudo,
 		ctrlPath,
 		s.config.IP,
@@ -232,6 +238,8 @@ func (s *sdk) launchServer() error {
 		s.config.RemainTime,
 		s.config.UseLocalCPUPercent,
 		disablefilelock,
+		autoResourceMgr,
+		s.config.ResIdleSecsForFree,
 	))
 }
 
