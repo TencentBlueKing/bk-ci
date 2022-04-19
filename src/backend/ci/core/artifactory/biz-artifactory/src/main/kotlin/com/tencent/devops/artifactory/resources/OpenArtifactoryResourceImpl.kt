@@ -1,6 +1,7 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.service.OpenArtifactoryResource
+import com.tencent.devops.artifactory.pojo.NodeCreatedEventPayload
 import com.tencent.devops.artifactory.service.PipelineBuildArtifactoryService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -20,10 +21,7 @@ class OpenArtifactoryResourceImpl(
 
     override fun updateArtifactList(
         token: String,
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String
+        nodeCreatedEventPayload: NodeCreatedEventPayload
     ) {
         val validateTokenFlag = clientTokenService.checkToken(null, token)
         if (!validateTokenFlag) {
@@ -32,6 +30,11 @@ class OpenArtifactoryResourceImpl(
                 params = arrayOf(token)
             )
         }
+
+        val userId = nodeCreatedEventPayload.user
+        val projectId = nodeCreatedEventPayload.node.projectId
+        val pipelineId = nodeCreatedEventPayload.node.metadata["pipelineId"].toString()
+        val buildId = nodeCreatedEventPayload.node.metadata["buildId"].toString()
 
         val artifactList = pipelineBuildArtifactoryService.getArtifactList(userId, projectId, pipelineId, buildId)
         logger.info("[$pipelineId]|getArtifactList-$buildId artifact: ${JsonUtil.toJson(artifactList)}")

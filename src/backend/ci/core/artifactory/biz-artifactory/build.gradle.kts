@@ -37,7 +37,6 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:process:api-process"))
     api("com.tencent.bkrepo:api-generic")
-    api("com.tencent.bkrepo:api-repository")
     api("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
 }
