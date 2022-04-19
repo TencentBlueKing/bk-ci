@@ -31,14 +31,31 @@ spring:
             consumer:
               prefetch: 1
               max-concurrency: 100
+              x-delayed-type: true
           logBatchEventListener-in-0:
             consumer:
               prefetch: 1
               max-concurrency: 100
+              x-delayed-type: true
           logStatusEventListener-in-0:
             consumer:
               prefetch: 1
               max-concurrency: 100
+              x-delayed-type: true
+      pulsar:
+        bindings:
+          logEventListener-in-0:
+            consumer:
+              num-io-threads: 100
+              num-listener-threads: 100
+          logBatchEventListener-in-0:
+            consumer:
+              num-io-threads: 100
+              num-listener-threads: 100
+          logStatusEventListener-in-0:
+            consumer:
+              num-io-threads: 100
+              num-listener-threads: 100
 
 server:
   port: 21914

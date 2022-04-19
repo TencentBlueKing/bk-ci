@@ -34,6 +34,7 @@ import org.springframework.cloud.stream.binder.BinderSpecificPropertiesProvider
 @ConfigurationProperties("spring.cloud.stream.pulsar")
 class PulsarExtendedBindingProperties :
     AbstractExtendedBindingProperties<PulsarConsumerProperties, PulsarProducerProperties, PulsarBindingProperties>() {
+
     private val defaultPrefix = "spring.cloud.stream.pulsar.default"
 
     override fun getDefaultsPrefix(): String { return defaultPrefix }

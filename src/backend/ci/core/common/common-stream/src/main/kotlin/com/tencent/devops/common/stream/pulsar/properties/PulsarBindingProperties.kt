@@ -33,6 +33,7 @@ class PulsarBindingProperties(
     private var consumer: PulsarConsumerProperties = PulsarConsumerProperties(),
     private var producer: PulsarProducerProperties = PulsarProducerProperties()
 ) : BinderSpecificPropertiesProvider {
+
     override fun getConsumer(): Any {
         return consumer
     }

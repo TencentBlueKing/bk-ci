@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PulsarExtendedBindingProperties::class, PulsarProperties::class)
-class PulsarBinderAutoConfiguration {
+class PulsarMessageChannelBinderConfiguration {
 
     @Bean
     fun pulsarMessageQueueProvisioner(): PulsarMessageQueueProvisioner {

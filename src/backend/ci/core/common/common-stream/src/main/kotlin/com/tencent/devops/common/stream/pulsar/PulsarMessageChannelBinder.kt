@@ -51,12 +51,10 @@ class PulsarMessageChannelBinder(
     private val pulsarProperties: PulsarProperties
 ) : AbstractMessageChannelBinder<
     ExtendedConsumerProperties<PulsarConsumerProperties>,
-    ExtendedProducerProperties<PulsarProducerProperties>, PulsarMessageQueueProvisioner
-    >(
+    ExtendedProducerProperties<PulsarProducerProperties>, PulsarMessageQueueProvisioner>(
     arrayOf(),
     messageBinderProvisioner
-),
-    ExtendedPropertiesBinder<MessageChannel, PulsarConsumerProperties, PulsarProducerProperties> {
+), ExtendedPropertiesBinder<MessageChannel, PulsarConsumerProperties, PulsarProducerProperties> {
 
     override fun createProducerMessageHandler(
         destination: ProducerDestination?,
