@@ -6,56 +6,6 @@ spring:
     desc: DevOps Log Service
     version: 4.0
     packageName: com.tencent.devops.log
-  cloud:
-    stream:
-      function:
-        definition: logEventListener;logBatchEventListener;logStatusEventListener
-      bindings:
-        # 配置MQ的绑定关系：destination为目标Exchange，group为该单例所在订阅组，binder为使用的组件类型
-        # 参数值：<单例名称>-<消费者in或生产者out，默认in>-<编号，默认0>
-        logEventListener-in-0:
-          destination: e.build.log.origin.event
-          group: log-serivce
-          binder: extend-pulsar
-        logBatchEventListener-in-0:
-          destination: e.build.log.storage.event
-          group: log-serivce
-          binder: extend-pulsar
-        logStatusEventListener-in-0:
-          destination: e.build.log.status.event
-          group: log-serivce
-          binder: extend-pulsar
-      rabbit:
-        bindings:
-          logEventListener-in-0:
-            consumer:
-              prefetch: 1
-              max-concurrency: 100
-              x-delayed-type: true
-          logBatchEventListener-in-0:
-            consumer:
-              prefetch: 1
-              max-concurrency: 100
-              x-delayed-type: true
-          logStatusEventListener-in-0:
-            consumer:
-              prefetch: 1
-              max-concurrency: 100
-              x-delayed-type: true
-      pulsar:
-        bindings:
-          logEventListener-in-0:
-            consumer:
-              num-io-threads: 100
-              num-listener-threads: 100
-          logBatchEventListener-in-0:
-            consumer:
-              num-io-threads: 100
-              num-listener-threads: 100
-          logStatusEventListener-in-0:
-            consumer:
-              num-io-threads: 100
-              num-listener-threads: 100
 
 server:
   port: 21914
