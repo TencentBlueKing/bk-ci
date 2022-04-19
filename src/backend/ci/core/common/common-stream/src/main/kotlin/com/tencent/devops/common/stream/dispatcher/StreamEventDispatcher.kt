@@ -39,7 +39,7 @@ import org.springframework.cloud.stream.function.StreamBridge
  */
 class StreamEventDispatcher constructor(
     private val bridge: StreamBridge
-): EventDispatcher<IEvent> {
+) : EventDispatcher<IEvent> {
 
     override fun dispatch(vararg events: IEvent) {
         events.forEach { event ->

@@ -28,21 +28,12 @@
 package com.tencent.devops.common.stream.pulsar.config
 
 import com.tencent.devops.common.stream.pulsar.PulsarMessageChannelBinder
-import com.tencent.devops.common.stream.pulsar.exception.ClientInitException
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarExtendedBindingProperties
 import com.tencent.devops.common.stream.pulsar.provisioning.PulsarMessageQueueProvisioner
-import org.apache.pulsar.client.api.AuthenticationFactory
-import org.apache.pulsar.client.api.PulsarClient
-import org.apache.pulsar.client.api.PulsarClientException
-import org.apache.pulsar.client.impl.auth.oauth2.AuthenticationFactoryOAuth2
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.net.MalformedURLException
-import java.net.URL
-import java.util.concurrent.TimeUnit
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(PulsarExtendedBindingProperties::class, PulsarProperties::class)

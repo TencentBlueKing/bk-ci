@@ -215,7 +215,6 @@ class PulsarInboundChannelAdapter(
         return 0
     }
 
-
     private fun generatePulsarConsumer(
         topic: String,
         group: String? = null,
@@ -231,9 +230,9 @@ class PulsarInboundChannelAdapter(
             topics.addAll(topicNames)
             topics.add(topic)
             val builder = PulsarUtils.getClientBuilder(pulsarProperties)
-            pulsarConsumerProperties.numIoThreads?.let { builder.ioThreads(it) }
-            pulsarConsumerProperties.numListenerThreads?.let { builder.listenerThreads(it) }
-            pulsarConsumerProperties.connectionsPerBroker?.let { builder.connectionsPerBroker(it) }
+            numIoThreads?.let { builder.ioThreads(it) }
+            numListenerThreads?.let { builder.listenerThreads(it) }
+            connectionsPerBroker?.let { builder.connectionsPerBroker(it) }
             val consumer = builder.build().newConsumer(
                 SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
             ).topics(topics)
