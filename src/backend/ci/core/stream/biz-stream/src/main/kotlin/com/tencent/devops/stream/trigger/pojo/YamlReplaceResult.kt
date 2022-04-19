@@ -40,5 +40,5 @@ data class YamlReplaceResult(
     // 初始化后Yaml对象
     val normalYaml: ScriptBuildYaml,
     // Yaml转换过程中中间变量
-    val yamlTransferData: YamlTransferData
+    val yamlTransferData: YamlTransferData?
 )
