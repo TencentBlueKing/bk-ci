@@ -664,7 +664,6 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getGitCodeProjectList(
         accessToken: String,
-        userId: String,
         page: Int?,
         pageSize: Int?,
         search: String?,
@@ -675,7 +674,6 @@ class ServiceGitResourceImpl @Autowired constructor(
     ): Result<List<GitCodeProjectInfo>> {
         return gitService.getGitCodeProjectList(
             accessToken = accessToken,
-            userId = userId,
             page = page,
             pageSize = pageSize,
             search = search,
