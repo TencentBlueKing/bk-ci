@@ -75,17 +75,26 @@ class MicroServiceTarget<T> constructor(
         val instances = if (KubernetesUtils.inContainer()) {
             val namespace = discoveryTag.replace("kubernetes-", "")
             val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
-            pods.filter { it.metadata["k8s_namespace"] == namespace }.ifEmpty {
-                pods.filter { it.metadata["k8s_namespace"] == "develop" }
+            pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
+                pods.filter { inNamespace(it.metadata, "develop") }
             }
         } else {
             msCache.get(serviceName).filter { it.metadata.keys.contains(discoveryTag) }
         }
 
         if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$discoveryTag]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【${discoveryTag}】服务提供者")
         }
         return instances[RandomUtils.nextInt(0, instances.size)]
+    }
+
+    /**
+     * 判断是否在集群中
+     */
+    private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
+        return metadata["k8s_namespace"] == namespace ||
+                metadata["helm.sh/release-namespace"] == namespace ||
+                metadata["io.tencent.bcs.namespace"] == namespace
     }
 
     override fun apply(input: RequestTemplate?): Request {
