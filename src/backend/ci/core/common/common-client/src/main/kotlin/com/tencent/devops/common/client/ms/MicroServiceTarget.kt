@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -72,62 +71,41 @@ class MicroServiceTarget<T> constructor(
     private val namespace = System.getenv("NAMESPACE")
     private val serviceSuffix = System.getenv("SERVICE_PREFIX")
 
-    private val usedInstance = ConcurrentHashMap<String, ServiceInstance>()
-
     private fun choose(serviceName: String): ServiceInstance {
         val discoveryTag = if (DiscoveryTag.get() == null) {
             logger.info("discoverTag is null, use local tag : $tag")
             tag
         } else DiscoveryTag.get()!!
 
-        val svrName = if (KubernetesUtils.inContainer()) {
-            KubernetesUtils.getSvrName(serviceName)
-        } else {
-            serviceName
-        }
-//        val instances = msCache.get(svrName)
-
         val instances = if (KubernetesUtils.inContainer()) {
             var srvName = KubernetesUtils.getSvrName(serviceName, discoveryTag.replace("kubernetes-", ""))
-            val currentInstance = msCache.get(srvName)
-            if (currentInstance.isEmpty()) {
+            msCache.get(srvName).ifEmpty {
+                // 如果该ns下不存在服务 , 则转发到开发环境
                 srvName = KubernetesUtils.getSvrName(serviceName, "develop")
-                // 转发到开发环境
                 msCache.get(srvName)
-            } else {//转发到特性环境
-                currentInstance
             }
+        } else {
+            msCache.get(serviceName)
         }
 
         val matchTagInstances = ArrayList<ServiceInstance>()
 
-
-
         instances.forEach { serviceInstance ->
             if (serviceInstance is ConsulServiceInstance) {
-                // 已经用过的不选择
-                if (serviceInstance.tags.contains(finalTag) && !usedInstance.contains(serviceInstance.url())) {
+                if (serviceInstance.tags.contains(discoveryTag)) {
                     matchTagInstances.add(serviceInstance)
                 }
             } else {
-                if (!usedInstance.contains(serviceInstance.url())) {
-                    matchTagInstances.add(serviceInstance)
-                }
+                matchTagInstances.add(serviceInstance)
             }
         }
 
-        // 如果为空，则将之前用过的实例重新加入选择
-        if (matchTagInstances.isEmpty() && usedInstance.isNotEmpty()) {
-            matchTagInstances.addAll(usedInstance.values)
-        }
-
         if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$svrName]-[$finalTag]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$discoveryTag]服务提供者")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }
 
-        usedInstance[matchTagInstances[0].url()] = matchTagInstances[0]
         return matchTagInstances[0]
     }
 
