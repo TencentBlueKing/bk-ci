@@ -36,7 +36,6 @@ enum class GitProjectsOrderBy(val value: String) {
     ACTIVITY("activity")
 }
 
-
 enum class GitSortAscOrDesc(val value: String) {
     ASC("asc"),
     DESC("desc")

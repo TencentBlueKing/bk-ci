@@ -53,6 +53,7 @@ import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 
+@Suppress("ALL")
 class StreamScheduleAction(
     private val streamGitConfig: StreamGitConfig,
     private val gitCheckService: GitCheckService

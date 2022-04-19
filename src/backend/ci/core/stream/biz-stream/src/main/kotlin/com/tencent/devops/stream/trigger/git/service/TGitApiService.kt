@@ -67,7 +67,7 @@ class TGitApiService @Autowired constructor(
      * 通过凭据获取可以直接使用的token
      */
     override fun getToken(
-        cred: StreamGitCred,
+        cred: StreamGitCred
     ): String {
         return cred.toToken()
     }
@@ -80,7 +80,7 @@ class TGitApiService @Autowired constructor(
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get project $gitProjectId fail",
-            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
+            apiErrorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR
         ) {
             client.get(ServiceGitResource::class).getProjectInfo(
                 token = cred.toToken(),
@@ -101,7 +101,7 @@ class TGitApiService @Autowired constructor(
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get commit info $sha fail",
-            apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR,
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_INFO_ERROR
         ) {
             client.get(ServiceGitResource::class).getRepoRecentCommitInfo(
                 repoName = gitProjectId,
@@ -196,7 +196,7 @@ class TGitApiService @Autowired constructor(
         return doRetryFun(
             retry = retry,
             log = "$gitProjectId get $path file tree error",
-            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileTree(
                 gitProjectId = gitProjectId.toLong(),
@@ -277,7 +277,7 @@ class TGitApiService @Autowired constructor(
         return doRetryFun(
             retry = retry,
             log = "getCommitChangeFileListRetry from: $from to: $to error",
-            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR,
+            apiErrorCode = ErrorCodeEnum.GET_COMMIT_CHANGE_FILE_LIST_ERROR
         ) {
             client.get(ServiceGitResource::class).getChangeFileList(
                 cred.toToken(),

@@ -30,7 +30,7 @@ package com.tencent.devops.stream.dao
 import com.tencent.devops.model.stream.tables.TGitPipelineResource
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -46,7 +46,7 @@ class GitPipelineResourceDao {
     fun createPipeline(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipeline: GitProjectPipeline,
+        pipeline: StreamGitProjectPipeline,
         version: String?
     ): Int {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
@@ -98,7 +98,7 @@ class GitPipelineResourceDao {
 
     fun updatePipelineBuildInfo(
         dslContext: DSLContext,
-        pipeline: GitProjectPipeline,
+        pipeline: StreamGitProjectPipeline,
         buildId: String,
         version: String?
     ): Int {

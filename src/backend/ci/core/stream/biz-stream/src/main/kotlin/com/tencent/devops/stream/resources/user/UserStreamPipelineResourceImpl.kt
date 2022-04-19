@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamPipelineResource
 import com.tencent.devops.stream.permission.StreamPermissionService
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.service.StreamPipelineService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -52,7 +52,7 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         filePath: String?
-    ): Result<Page<GitProjectPipeline>> {
+    ): Result<Page<StreamGitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(
@@ -87,7 +87,7 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String
-    ): Result<GitProjectPipeline?> {
+    ): Result<StreamGitProjectPipeline?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         val pipeline = pipelineService.getPipelineById(
@@ -124,7 +124,7 @@ class UserStreamPipelineResourceImpl @Autowired constructor(
         keyword: String?,
         page: Int?,
         pageSize: Int?
-    ): Result<List<GitProjectPipeline>> {
+    ): Result<List<StreamGitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         return Result(

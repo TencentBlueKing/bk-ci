@@ -104,7 +104,7 @@ class EventActionFactory @Autowired constructor(
         eventStr: String,
         actionCommonData: EventCommonData,
         actionContext: StreamTriggerContext,
-        actionSetting: StreamTriggerSetting,
+        actionSetting: StreamTriggerSetting
     ): BaseAction? {
         val event = when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> {

@@ -40,6 +40,7 @@ import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
+@Suppress("ALL")
 class StreamOpenApiAction(private val action: BaseAction) : BaseAction {
     override val metaData: ActionMetaData = ActionMetaData(StreamObjectKind.OPENAPI)
     override var data: ActionData = action.data

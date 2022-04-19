@@ -144,7 +144,7 @@ class YamlSchemaCheck @Autowired constructor() {
                     throw e
                 }
                 else -> {
-                    logger.warn("YamlSchemaCheck event: ${action.data.context.requestEventId} unknow error: ${e.message}")
+                    logger.warn("YamlSchemaCheck event: ${action.data.context.requestEventId}unknow error ${e.message}")
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }

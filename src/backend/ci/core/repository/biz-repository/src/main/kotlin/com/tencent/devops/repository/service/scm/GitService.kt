@@ -869,7 +869,6 @@ class GitService @Autowired constructor(
         }
     }
 
-
     override fun getGitRepositoryTreeInfo(
         userId: String,
         repoName: String,
@@ -1380,7 +1379,7 @@ class GitService @Autowired constructor(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 owned = owned,
-                minAccessLevel = minAccessLevel,
+                minAccessLevel = minAccessLevel
             )
         } else {
             GitApi().getProjectGroupsList(
@@ -1389,7 +1388,7 @@ class GitService @Autowired constructor(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
                 owned = owned,
-                minAccessLevel = minAccessLevel,
+                minAccessLevel = minAccessLevel
             )
         }
     }
@@ -1434,7 +1433,6 @@ class GitService @Autowired constructor(
 //    override fun getGitUserId(rtxUserId: String, gitProjectId: String): Result<String?> {
 //        TODO("Not yet implemented")
 //    }
-
 
     override fun getGitUserId(
         rtxUserId: String,
@@ -1696,7 +1694,6 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
         }
-
     }
 
     override fun gitCreateFile(

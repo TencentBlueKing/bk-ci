@@ -27,7 +27,7 @@ interface BaseAction {
     val api: StreamGitApiService
 
     // 方便日志打印
-    fun format() = "${data.format()}|${api::class.qualifiedName}"
+    fun format() = "${this::class.qualifiedName}|${data.format()}|${api::class.qualifiedName}"
 
     /**
      * 填充一些初始化数据

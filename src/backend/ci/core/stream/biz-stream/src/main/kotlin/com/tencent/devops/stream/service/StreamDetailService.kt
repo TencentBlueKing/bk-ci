@@ -42,7 +42,7 @@ import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
 import com.tencent.devops.stream.pojo.StreamModelDetail
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -123,7 +123,7 @@ class StreamDetailService @Autowired constructor(
         val remark = client.get(ServiceBuildResource::class)
             .getBatchBuildStatus(conf.projectCode!!, setOf(buildId), channelCode).data?.first()?.remark
         return StreamModelDetail(
-            gitProjectPipeline = pipeline,
+            streamGitProjectPipeline = pipeline,
             gitRequestEvent = StreamGitRequestEventReq(realEvent),
             modelDetail = modelDetail,
             buildHistoryRemark = remark
@@ -179,7 +179,7 @@ class StreamDetailService @Autowired constructor(
         userId: String,
         gitProjectId: Long,
         pipelineId: String
-    ): GitProjectPipeline? {
+    ): StreamGitProjectPipeline? {
         logger.info("get pipeline with pipelineId: $pipelineId, gitProjectId: $gitProjectId")
         val pipeline = pipelineResourceDao.getPipelineById(
             dslContext = dslContext,
@@ -187,7 +187,7 @@ class StreamDetailService @Autowired constructor(
             pipelineId = pipelineId
         ) ?: return null
 
-        return GitProjectPipeline(
+        return StreamGitProjectPipeline(
             gitProjectId = gitProjectId,
             pipelineId = pipeline.pipelineId,
             filePath = pipeline.filePath,

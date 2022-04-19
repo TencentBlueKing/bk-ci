@@ -91,7 +91,7 @@ interface StreamGitApiService {
     fun getProjectUserInfo(
         cred: StreamGitCred,
         userId: String,
-        gitProjectId: String,
+        gitProjectId: String
     ): StreamGitProjectUserInfo
 
     /**

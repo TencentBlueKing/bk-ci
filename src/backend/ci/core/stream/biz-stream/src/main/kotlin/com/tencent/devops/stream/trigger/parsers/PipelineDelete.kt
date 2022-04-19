@@ -52,7 +52,6 @@ class PipelineDelete @Autowired constructor(
     private val client: Client,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
-    private val streamGitConfig: StreamGitConfig,
     private val streamEventService: StreamEventService
 ) {
     companion object {
@@ -115,7 +114,7 @@ class PipelineDelete @Autowired constructor(
             if (isFileEmpty &&
                 !streamPipelineBranchService.hasBranchExist(gitProjectId.toLong(), pipelineId)
             ) {
-                logger.info("event: ${action.data.context.requestEventId} delete file: $filePath with pipeline: $pipelineId ")
+                logger.info("event: ${action.data.context.requestEventId}delete file: $filePath with pipeline: $pipelineId ")
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val pipelineInfoResult = processClient.getPipelineInfo(
                     projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),

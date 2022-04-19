@@ -230,7 +230,7 @@ class TriggerMatcher @Autowired constructor(
                 return false
             }
             logger.info(
-                "Git trigger tags($eventTag) is included and path(${tagRule.tags}) is included,and fromBranch($fromBranch)"
+                "Git trigger tags($eventTag) is included path(${tagRule.tags}) is included,and fromBranch($fromBranch)"
             )
             return true
         }

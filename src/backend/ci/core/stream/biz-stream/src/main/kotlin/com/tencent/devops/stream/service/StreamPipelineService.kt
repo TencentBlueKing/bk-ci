@@ -39,7 +39,7 @@ import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.stream.pojo.GitProjectPipeline
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -71,7 +71,7 @@ class StreamPipelineService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         filePath: String?
-    ): Page<GitProjectPipeline> {
+    ): Page<StreamGitProjectPipeline> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
@@ -99,7 +99,7 @@ class StreamPipelineService @Autowired constructor(
             pageSize = pageSizeNotNull,
             totalPages = PageUtil.calTotalPage(pageSizeNotNull, count.toLong()),
             records = pipelines.map {
-                GitProjectPipeline(
+                StreamGitProjectPipeline(
                     gitProjectId = gitProjectId,
                     pipelineId = it.pipelineId,
                     filePath = it.filePath,
@@ -135,7 +135,7 @@ class StreamPipelineService @Autowired constructor(
         keyword: String?,
         page: Int?,
         pageSize: Int?
-    ): List<GitProjectPipeline> {
+    ): List<StreamGitProjectPipeline> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
@@ -150,7 +150,7 @@ class StreamPipelineService @Autowired constructor(
             return emptyList()
         }
         return pipelines.map {
-            GitProjectPipeline(
+            StreamGitProjectPipeline(
                 gitProjectId = gitProjectId,
                 pipelineId = it.pipelineId,
                 filePath = it.filePath,
@@ -165,14 +165,14 @@ class StreamPipelineService @Autowired constructor(
 
     fun getPipelineById(
         pipelineId: String
-    ): GitProjectPipeline? {
+    ): StreamGitProjectPipeline? {
         logger.info("get pipeline: $pipelineId")
         val pipeline = pipelineResourceDao.getPipelinesInIds(
             dslContext = dslContext,
             gitProjectId = null,
             pipelineIds = listOf(pipelineId)
         ).getOrNull(0) ?: return null
-        return GitProjectPipeline(
+        return StreamGitProjectPipeline(
             gitProjectId = pipeline.gitProjectId,
             pipelineId = pipeline.pipelineId,
             filePath = pipeline.filePath,

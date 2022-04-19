@@ -34,7 +34,7 @@ package com.tencent.devops.stream.trigger.actions.data
  * @param commit 当前event的commitId
  * @param userId 当前event的触发人
  * @param gitProjectName Git平台项目全称: namespace/name
- * @param sourceGitProjectId  mr触发时的源Git库
+ * @param sourceGitProjectId mr触发时的源Git库
  */
 data class EventCommonData(
     val gitProjectId: String,

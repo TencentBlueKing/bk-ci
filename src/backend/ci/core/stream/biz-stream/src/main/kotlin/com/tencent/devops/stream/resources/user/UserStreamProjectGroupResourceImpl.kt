@@ -58,7 +58,7 @@ class UserStreamProjectGroupResourceImpl @Autowired constructor(
         val data = streamGitTransferService.getProjectGroupsList(
             userId = userId,
             page = realPage,
-            pageSize = realPageSize,
+            pageSize = realPageSize
         ) ?: return Result(
             Pagination(
                 hasNext = false,

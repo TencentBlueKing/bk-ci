@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("蓝盾stream流水线列表")
-data class GitProjectPipeline(
+data class StreamGitProjectPipeline(
     @ApiModelProperty("git项目ID", required = true)
     val gitProjectId: Long,
     @ApiModelProperty("流水线名称", required = true)
@@ -50,6 +50,6 @@ data class GitProjectPipeline(
     val latestBuildBranch: String?
 )
 
-fun GitProjectPipeline.isExist(): Boolean {
+fun StreamGitProjectPipeline.isExist(): Boolean {
     return pipelineId.isNotBlank()
 }
