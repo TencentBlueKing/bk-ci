@@ -658,7 +658,7 @@ object ScriptYmlUtils {
         )
     }
 
-    private fun repoHookRule(
+    fun repoHookRule(
         preRepositoryHook: PreRepositoryHook
     ): RepositoryHook {
         with(preRepositoryHook) {

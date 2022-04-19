@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions
 
+import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -127,4 +128,9 @@ interface BaseAction {
         description: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     )
+
+    /**
+     * 远程仓库校验凭据信息
+     */
+    fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook)
 }
