@@ -62,7 +62,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取项目的超级token")
     @GET
     @Path("/getToken")
-    fun getToken(// 不迁移repository,迁移至 ServiceGitResource
+    fun getToken(
         @ApiParam("gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
@@ -71,7 +71,7 @@ interface ServiceGitCiResource {
     @ApiOperation("校验用户git项目权限")
     @GET
     @Path("/checkUserGitAuth")
-    fun checkUserGitAuth( // 已迁移至repository ServiceGitResource.getProjectUserInfo
+    fun checkUserGitAuth(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
         userId: String,
@@ -92,7 +92,7 @@ interface ServiceGitCiResource {
     @ApiOperation("销毁项目的超级token")
     @DELETE
     @Path("/clearToken")
-    fun clearToken(// 不迁移repository,迁移至ServiceGitResource
+    fun clearToken(
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String
@@ -101,7 +101,7 @@ interface ServiceGitCiResource {
     @ApiOperation("刷新项目的token")
     @GET
     @Path("/refreshToken")
-    fun refreshToken(// 不迁移repository,迁移至ServiceGitResource
+    fun refreshToken(
         @ApiParam(value = "项目ID或者全路径", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String,
@@ -113,7 +113,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取GitCode项目成员信息")
     @GET
     @Path("/getMembers")
-    fun getMembers( //搬到repository ,迁移至ServiceGitResource.getMembers
+    fun getMembers(
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String,
@@ -134,7 +134,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取项目分支信息")
     @GET
     @Path("/getBranches")
-    fun getBranches( // 迁移至ServiceScmResource::listBranches,需要优化一下参数，把没有的参数补齐
+    fun getBranches(
         @ApiParam("token", required = true)
         @QueryParam("token")
         token: String,
@@ -161,7 +161,7 @@ interface ServiceGitCiResource {
     @ApiOperation("校验用户git项目权限")
     @GET
     @Path("/getUserId")
-    fun getGitUserId( // auth 迁移至ServiceGitResource
+    fun getGitUserId(
         @ApiParam("userId", required = true)
         @QueryParam("userId")
         rtxUserId: String,
@@ -173,7 +173,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取指定项目详细信息(简略)")
     @GET
     @Path("/getProjectInfo")
-    fun getProjectInfo( // 以存在ServiceGitResource.getProjectInfo 应该已兼容
+    fun getProjectInfo(
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
@@ -188,7 +188,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取git文件内容")
     @GET
     @Path("/gitci/getGitCIFileContent")
-    fun getGitCIFileContent( // 已存在ServiceGitResource.getGitFileContent 应该已兼容
+    fun getGitCIFileContent(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
@@ -209,7 +209,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取工蜂项目详细信息(使用超级token)")
     @GET
     @Path("/getGitCodeProjectInfo")
-    fun getGitCodeProjectInfo( // 不迁移
+    fun getGitCodeProjectInfo(
         @ApiParam("工蜂项目id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
@@ -218,7 +218,7 @@ interface ServiceGitCiResource {
     @ApiOperation("查询合并请求的代码变更")
     @GET
     @Path("getMergeRequestChangeInfo")
-    fun getMergeRequestChangeInfo( // 已存在ServiceGitResource.getMergeRequestChangeInfo
+    fun getMergeRequestChangeInfo(
         @ApiParam("工蜂项目id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: Long,
@@ -233,7 +233,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取用户所有git项目，分页方式获取")
     @GET
     @Path("/getProjectList")
-    fun getProjectList( // ServiceGitResource 中存在getProjectList，但是VO需要兼容
+    fun getProjectList(
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
@@ -266,7 +266,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取项目下具有权限的成员信息")
     @GET
     @Path("/projects/members/all")
-    fun getProjectMembersAll( // auth使用，搬到 ServiceGitResource ,iGitService 中已经存在
+    fun getProjectMembersAll(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
@@ -284,7 +284,7 @@ interface ServiceGitCiResource {
     @ApiOperation("文件内容和一些文件信息")
     @GET
     @Path("/getGitFileInfo")
-    fun getGitFileInfo( // 需要搬到 ServiceGitResource
+    fun getGitFileInfo(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
         gitProjectId: String,
@@ -305,7 +305,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取两次提交的差异文件列表")
     @GET
     @Path("/getCommitChangeFileList")
-    fun getCommitChangeFileList( // 已有 ServiceGitResource.getChangeFileList
+    fun getCommitChangeFileList(
         @ApiParam(value = "token")
         @QueryParam("token")
         token: String,
@@ -332,7 +332,7 @@ interface ServiceGitCiResource {
     @ApiOperation("添加mr评论")
     @POST
     @Path("/addMrComment")
-    fun addMrComment( // 已存在GitApi.addMRComment,需要 ServiceGitResource中添加方法
+    fun addMrComment(
         @ApiParam(value = "token")
         @QueryParam("token")
         token: String,
@@ -349,7 +349,7 @@ interface ServiceGitCiResource {
     @ApiOperation("获取用户所有项目组列表，分页获取")
     @GET
     @Path("/getProjectGroupsList")
-    fun getProjectGroupsList( // 需要迁移到ServiceGitResource 迁移至ServiceGitResource::getProjectGroupsList
+    fun getProjectGroupsList(
         @ApiParam("oauth accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,

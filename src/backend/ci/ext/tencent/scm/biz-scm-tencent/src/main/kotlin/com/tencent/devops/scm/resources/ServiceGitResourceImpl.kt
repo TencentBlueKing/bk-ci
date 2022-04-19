@@ -301,7 +301,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     override fun gitCICreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCICreateFile,
+        gitCreateFile: GitCICreateFile
     ): Result<Boolean> {
         return Result(
             gitService.gitCodeCreateFile(

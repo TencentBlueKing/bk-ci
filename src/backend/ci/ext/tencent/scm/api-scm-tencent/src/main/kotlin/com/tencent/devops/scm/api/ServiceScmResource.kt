@@ -126,7 +126,7 @@ interface ServiceScmResource {
         page: Int = 1,
         @ApiParam(value = "pageSize", required = true)
         @QueryParam("pageSize")
-        pageSize: Int = 20,
+        pageSize: Int = 20
     ): Result<List<String>>
 
     @ApiOperation("List all the branches of repo")

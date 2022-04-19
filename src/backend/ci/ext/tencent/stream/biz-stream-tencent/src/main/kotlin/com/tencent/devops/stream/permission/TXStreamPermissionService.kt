@@ -46,7 +46,7 @@ class TXStreamPermissionService @Autowired constructor(
     dslContext: DSLContext,
     streamBasicSettingDao: StreamBasicSettingDao,
     tokenCheckService: ClientTokenService,
-    private val client: Client,
+    private val client: Client
 ) : StreamPermissionService(
     client, dslContext, streamBasicSettingDao, tokenCheckService
 ) {
