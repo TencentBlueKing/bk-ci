@@ -40,6 +40,7 @@ import org.apache.commons.lang3.RandomUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
+import org.springframework.cloud.consul.discovery.ConsulServiceInstance
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -79,7 +80,7 @@ class MicroServiceTarget<T> constructor(
                 pods.filter { inNamespace(it.metadata, "develop") }
             }
         } else {
-            msCache.get(serviceName).filter { it.metadata.keys.contains(discoveryTag) }
+            msCache.get(serviceName).filter { it is ConsulServiceInstance && it.tags.contains(discoveryTag) }
         }
 
         if (instances.isEmpty()) {
