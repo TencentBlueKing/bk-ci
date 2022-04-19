@@ -1,5 +1,6 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
+import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.process.yaml.v2.models.on.getTypesObjectKind
@@ -101,5 +102,9 @@ class StreamDeleteAction(
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         gitAction.sendCommitCheck(buildId, gitProjectName, state, block, context, targetUrl, description)
+    }
+
+    override fun registerCheckRepoTriggerCredentials(repoHook: RepositoryHook) {
+        gitAction.registerCheckRepoTriggerCredentials(repoHook)
     }
 }
