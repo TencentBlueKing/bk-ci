@@ -35,7 +35,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.api.user.UserStreamGitResource
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_FILE_SUFFIX
-import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -44,19 +43,18 @@ import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
 import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamBasicSettingService
+import com.tencent.devops.stream.service.StreamGitService
 import com.tencent.devops.stream.service.StreamGitTransferService
 import com.tencent.devops.stream.service.StreamProjectService
 import com.tencent.devops.stream.util.GitCommonUtils
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStreamGitResourceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
     private val client: Client,
-    private val streamBasicSettingDao: StreamBasicSettingDao,
     private val permissionService: StreamPermissionService,
+    private val streamGitService: StreamGitService,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val streamProjectService: StreamProjectService,
     private val streamGitTransferService: StreamGitTransferService
@@ -69,7 +67,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
         if (gitProjectId.isBlank()) {
             return Result(data = null)
         }
-        val projectInfo = getProjectInfo(gitProjectId) ?: return Result(null)
+        val projectInfo = streamGitService.getProjectInfo(gitProjectId) ?: return Result(null)
         // 增加用户访问记录
         streamProjectService.addUserProjectHistory(
             userId = userId,
@@ -81,38 +79,6 @@ class UserStreamGitResourceImpl @Autowired constructor(
             englishName = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId)
         ).data?.routerTag
         return Result(projectInfo.copy(routerTag = routerTag))
-    }
-
-    private fun getProjectInfo(gitProjectId: String): StreamGitProjectInfoWithProject? {
-        logger.info("getGitCodeProjectInfo|get from DB|gitProjectId=$gitProjectId")
-        val setting = try {
-            streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
-        } catch (e: NumberFormatException) {
-            streamBasicSettingDao.getSettingByPathWithNameSpace(dslContext, gitProjectId)
-        } ?: return null
-
-        return try {
-            streamGitTransferService.getGitProjectInfo(
-                gitProjectId = gitProjectId,
-                userId = setting.enableUserId
-            )
-        } catch (e: Exception) {
-            logger.info("getGitCodeProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
-            StreamGitProjectInfoWithProject(
-                gitProjectId = setting.gitProjectId,
-                name = setting.name,
-                homepage = setting.homepage,
-                gitHttpUrl = setting.gitHttpUrl.replace("https", "http"),
-                gitHttpsUrl = setting.gitHttpUrl,
-                gitSshUrl = setting.gitSshUrl,
-                nameWithNamespace = setting.nameWithNamespace,
-                pathWithNamespace = setting.pathWithNamespace,
-                defaultBranch = "master",
-                description = setting.gitProjectDesc,
-                avatarUrl = setting.gitProjectAvatar,
-                routerTag = null
-            )
-        }
     }
 
     override fun getGitCodeProjectMembers(
