@@ -32,6 +32,7 @@ import com.tencent.devops.common.log.pojo.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
 import com.tencent.devops.log.meta.Ansi
@@ -57,7 +58,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     @Value("\${spring.application.name:#{null}}")
     private val applicationName: String? = null
 
-    override fun addLogLine(buildId: String, logMessage: com.tencent.devops.common.log.pojo.message.LogMessage): Result<Boolean> {
+    override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
@@ -66,7 +67,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun addRedLogLine(buildId: String, logMessage: com.tencent.devops.common.log.pojo.message.LogMessage): Result<Boolean> {
+    override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
@@ -80,7 +81,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun addYellowLogLine(buildId: String, logMessage: com.tencent.devops.common.log.pojo.message.LogMessage): Result<Boolean> {
+    override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
@@ -94,7 +95,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun addLogMultiLine(buildId: String, logMessages: List<com.tencent.devops.common.log.pojo.message.LogMessage>): Result<Boolean> {
+    override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
             return Result(false)

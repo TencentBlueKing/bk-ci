@@ -38,6 +38,7 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.lucene.LuceneClient
@@ -746,7 +747,7 @@ class LogServiceLuceneImpl constructor(
         return lines
     }
 
-    private fun addLineNo(buildId: String, logMessages: List<com.tencent.devops.common.log.pojo.message.LogMessage>): List<LogMessageWithLineNo> {
+    private fun addLineNo(buildId: String, logMessages: List<LogMessage>): List<LogMessageWithLineNo> {
         val lineNum = indexService.getAndAddLineNum(buildId, logMessages.size)
         if (lineNum == null) {
             logger.error("Got null logIndex from indexService, buildId: $buildId")

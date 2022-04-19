@@ -33,6 +33,7 @@ import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.common.log.pojo.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.event.LogEvent
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.service.BuildLogPrintService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +43,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService
 ) : ServiceLogPrintResource {
 
-    override fun addLogLine(buildId: String, logMessage: com.tencent.devops.common.log.pojo.message.LogMessage): Result<Boolean> {
+    override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
@@ -50,7 +51,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
     }
 
-    override fun addLogMultiLine(buildId: String, logMessages: List<com.tencent.devops.common.log.pojo.message.LogMessage>): Result<Boolean> {
+    override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
