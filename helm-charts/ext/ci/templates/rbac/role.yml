@@ -39,7 +39,7 @@ roleRef:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: default-role-read-binding
+  name: default-role-read-binding-{{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
     name: {{ .Values.rbac.serviceAccount }}
