@@ -77,7 +77,11 @@ class MicroServiceTarget<T> constructor(
             val namespace = discoveryTag.replace("kubernetes-", "")
             val pods = msCache.get(KubernetesUtils.getSvrName(serviceName))
             pods.filter { inNamespace(it.metadata, namespace) }.ifEmpty {
-                pods.filter { inNamespace(it.metadata, "develop") }
+                if (colour) {
+                    pods.filter { inNamespace(it.metadata, "develop") }
+                } else {
+                    emptyList()
+                }
             }
         } else {
             msCache.get(serviceName).filter { it is ConsulServiceInstance && it.tags.contains(discoveryTag) }
