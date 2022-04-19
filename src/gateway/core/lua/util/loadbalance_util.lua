@@ -21,18 +21,33 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
     local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
 
     -- 转发到容器环境里
-    if not in_container and devops_tag.find('^kubernetes-') then
+    if not in_container and string.find(devops_tag, '^kubernetes-') then
         return config.kubernetes.domain .. "/ms/" .. service_name
     end
 
     -- 容器环境
     if in_container then
         local is_multi_namespace = ngx.var.inner_name ~= '' and ngx.var.inner_name ~= nil
-        if is_multi_namespace then -- 多集群场景
-            local devops_ns = string.sub(devops_tag, 11)
-            return service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. devops_ns ..
-                       '.svc.cluster.local'
-        else -- 单一集群场景
+        if is_multi_namespace then
+            -- 多集群场景
+            local dns, err = resolver:new{
+                nameservers = resolvUtil.nameservers,
+                retrans = 5,
+                timeout = 2000 -- 2 sec
+            }
+            -- 先查询当前ns下的服务
+            local devops_ns = string.sub(devops_tag, 12)
+            local domain = service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name .. '.' .. devops_ns ..
+                               '.svc.cluster.local'
+            local records, err = dns:query(domain, {qtype = dns.TYPE_A})
+            if not records then
+                -- 使用 develop 下的服务
+                domain = service_name .. '-' .. ngx.var.inner_name .. '-' .. service_name ..
+                             '.develop.svc.cluster.local'
+            end
+            return domain
+        else
+            -- 单一集群场景
             return ngx.var.service_prefix .. '-' .. service_name .. '.' .. ngx.var.namespace .. '.svc.cluster.local'
         end
     end
