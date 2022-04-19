@@ -115,7 +115,7 @@ class PipelineDelete @Autowired constructor(
             ) {
                 logger.info(
                     "event: ${action.data.context.requestEventId}" +
-                            "delete file $filePath with pipeline: $pipelineId "
+                        "delete file $filePath with pipeline: $pipelineId "
                 )
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val pipelineInfoResult = processClient.getPipelineInfo(

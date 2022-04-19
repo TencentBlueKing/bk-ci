@@ -226,7 +226,12 @@ class StreamYamlTrigger @Autowired constructor(
 
             val (normalYaml, transferData) = ScriptYmlUtils.normalizeGitCiYaml(newPreYamlObject, filePath)
             return YamlReplaceResult(
-                preYaml = newPreYamlObject, normalYaml = normalYaml, yamlTransferData = transferData
+                preYaml = newPreYamlObject, normalYaml = normalYaml,
+                yamlTransferData = transferData.also {
+                    if (it.templateData.transferDataMap.isEmpty()) {
+                        null
+                    }
+                }
             )
         } catch (e: Throwable) {
             logger.info("event ${action.data.context.requestEventId} yaml template replace error", e)

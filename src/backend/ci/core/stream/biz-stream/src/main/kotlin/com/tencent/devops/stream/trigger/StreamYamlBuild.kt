@@ -107,7 +107,7 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitBuildId: Long?,
         onlySavePipeline: Boolean,
-        yamlTransferData: YamlTransferData
+        yamlTransferData: YamlTransferData?
     ): BuildId? {
         logger.info("|${action.data.context.requestEventId}|gitStartBuild|action|${action.format()}")
 
@@ -291,7 +291,7 @@ class StreamYamlBuild @Autowired constructor(
         yaml: ScriptBuildYaml,
         gitBuildId: Long,
         params: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData
+        yamlTransferData: YamlTransferData?
     ): BuildId? {
         logger.info("|${action.data.context.requestEventId}|startBuildPipeline|action|${action.format()}")
 
