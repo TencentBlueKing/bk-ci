@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.yaml.parsers.template
+package com.devops.process.yaml.parsers.template
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
