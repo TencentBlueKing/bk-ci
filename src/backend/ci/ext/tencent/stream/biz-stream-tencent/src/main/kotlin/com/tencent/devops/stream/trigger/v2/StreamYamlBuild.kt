@@ -53,6 +53,8 @@ import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.stream.common.exception.CommitCheck
 import com.tencent.devops.stream.common.exception.QualityRulesException
@@ -164,7 +166,7 @@ class StreamYamlBuild @Autowired constructor(
                         pipeline = realPipeline,
                         gitRequestEventForHandle = gitRequestEventForHandle,
                         gitCIBasicSetting = gitBasicSetting,
-                        model = createTriggerModel(gitBasicSetting),
+                        modelAndSetting = createTriggerModel(gitBasicSetting),
                         updateLastModifyUser = true
                     )
                 }
@@ -304,27 +306,30 @@ class StreamYamlBuild @Autowired constructor(
         }
     }
 
-    private fun createTriggerModel(gitBasicSetting: GitCIBasicSetting) = Model(
-        name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
-        desc = "",
-        stages = listOf(
-            Stage(
-                id = VMUtils.genStageId(1),
-                name = VMUtils.genStageId(1),
-                containers = listOf(
-                    TriggerContainer(
-                        id = "0",
-                        name = "构建触发",
-                        elements = listOf(
-                            ManualTriggerElement(
-                                name = "手动触发",
-                                id = "T-1-1-1"
+    private fun createTriggerModel(gitBasicSetting: GitCIBasicSetting) = PipelineModelAndSetting(
+        model = Model(
+            name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
+            desc = "",
+            stages = listOf(
+                Stage(
+                    id = VMUtils.genStageId(1),
+                    name = VMUtils.genStageId(1),
+                    containers = listOf(
+                        TriggerContainer(
+                            id = "0",
+                            name = "构建触发",
+                            elements = listOf(
+                                ManualTriggerElement(
+                                    name = "手动触发",
+                                    id = "T-1-1-1"
+                                )
                             )
                         )
                     )
                 )
             )
-        )
+        ),
+        setting = PipelineSetting()
     )
 
     @SuppressWarnings("LongParameterList")
@@ -340,7 +345,7 @@ class StreamYamlBuild @Autowired constructor(
     ): BuildId? {
         logger.info(
             "Git request gitBuildId:$gitBuildId, pipeline:${pipeline.pipelineId}," +
-                    " event: ${gitRequestEventForHandle.id}"
+                " event: ${gitRequestEventForHandle.id}"
         )
 
         val (modelCreateEvent, modelParams) = getModelCreateEventAndParams(
@@ -354,13 +359,13 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         // create or refresh pipeline
-        val model = modelCreate.createPipelineModel(
+        val modelAndSetting = modelCreate.createPipelineModel(
             modelName = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
             event = modelCreateEvent,
             yaml = yaml,
             pipelineParams = modelParams
         )
-        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
+        logger.info("startBuildPipeline gitBuildId:$gitBuildId, pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
@@ -369,7 +374,7 @@ class StreamYamlBuild @Autowired constructor(
             pipeline = pipeline,
             gitRequestEventForHandle = gitRequestEventForHandle,
             gitCIBasicSetting = gitBasicSetting,
-            model = model,
+            modelAndSetting = modelAndSetting,
             gitBuildId = gitBuildId,
             yamlTransferData = yamlTransferData,
             updateLastModifyUser = updateLastModifyUser
@@ -393,13 +398,13 @@ class StreamYamlBuild @Autowired constructor(
             yamlTransferData = null
         )
 
-        val model = modelCreate.createPipelineModel(
+        val modelAndSetting = modelCreate.createPipelineModel(
             modelName = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
             event = modelCreateEvent,
             yaml = yaml,
             pipelineParams = modelParams
         )
-        logger.info("savePipeline pipeline:$pipeline, model: $model")
+        logger.info("savePipeline pipeline:$pipeline, modelAndSetting: $modelAndSetting")
 
         // 判断是否更新最后修改人
         val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath)
@@ -408,7 +413,7 @@ class StreamYamlBuild @Autowired constructor(
             pipeline = pipeline,
             gitRequestEventForHandle = gitRequestEventForHandle,
             gitCIBasicSetting = gitBasicSetting,
-            model = model,
+            modelAndSetting = modelAndSetting,
             updateLastModifyUser = updateLastModifyUser
         )
     }

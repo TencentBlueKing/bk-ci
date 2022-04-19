@@ -25,6 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.common.ci.v2
 
-const AgentVersion = "v1.8.5"
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class Concurrency(
+    val group: String?,
+    @JsonProperty("cancel-in-progress")
+    val cancelInProgress: Boolean?
+)

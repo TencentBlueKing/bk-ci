@@ -840,12 +840,17 @@ class PipelineBuildFacadeService(
                 params = arrayOf(stageId)
             )
         }
-
+        val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
             runLock.lock()
             val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(pipelineInfo, null, StartType.MANUAL)
+                InterceptData(
+                    pipelineInfo = pipelineInfo,
+                    model = null,
+                    startType = StartType.MANUAL,
+                    setting = setting
+                )
             )
 
             if (interceptResult.isNotOk()) {
