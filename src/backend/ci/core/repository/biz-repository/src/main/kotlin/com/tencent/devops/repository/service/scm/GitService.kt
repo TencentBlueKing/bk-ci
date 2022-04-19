@@ -869,7 +869,6 @@ class GitService @Autowired constructor(
         }
     }
 
-
     override fun getGitRepositoryTreeInfo(
         userId: String,
         repoName: String,
@@ -1435,7 +1434,6 @@ class GitService @Autowired constructor(
 //        TODO("Not yet implemented")
 //    }
 
-
     override fun getGitUserId(
         rtxUserId: String,
         gitProjectId: String,
@@ -1696,7 +1694,6 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
         }
-
     }
 
     override fun gitCreateFile(
