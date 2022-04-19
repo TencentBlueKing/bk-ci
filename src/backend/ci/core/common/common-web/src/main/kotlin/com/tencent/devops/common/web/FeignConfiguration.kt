@@ -29,7 +29,7 @@ package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
@@ -88,8 +88,8 @@ class FeignConfiguration @Autowired constructor(
             }
 
             // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
-            if (!ConsulContent.getConsulContent().isNullOrEmpty()) {
-                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, ConsulContent.getConsulContent())
+            if (!DiscoveryTag.get().isNullOrEmpty()) {
+                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, DiscoveryTag.get())
             } else {
                 requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, bkTag.getTag())
             }

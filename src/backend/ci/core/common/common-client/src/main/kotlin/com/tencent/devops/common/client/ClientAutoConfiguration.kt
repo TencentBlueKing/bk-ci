@@ -34,6 +34,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.ServiceAutoConfiguration
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -54,8 +55,14 @@ import org.springframework.core.Ordered
 @AutoConfigureAfter(ServiceAutoConfiguration::class, LoadBalancerAutoConfiguration::class)
 class ClientAutoConfiguration {
 
+    @Value("\${spring.cloud.consul.discovery.tags:prod}")
+    private val consulTag: String = "prod"
+
     @Bean
     fun commonConfig() = CommonConfig()
+
+    @Bean
+    fun bkTag() = BkTag(consulTag)
 
     @Bean
     fun clientErrorDecoder(objectMapper: ObjectMapper) = ClientErrorDecoder(objectMapper)

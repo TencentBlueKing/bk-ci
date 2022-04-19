@@ -27,7 +27,7 @@
 package com.tencent.devops.store.config
 
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.redis.RedisOperation
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.After
@@ -80,7 +80,7 @@ class StoreApiAspect(
             // 网关无法判别项目信息, 切面捕获project信息。
             val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
             if (!projectConsulTag.isNullOrEmpty()) {
-                ConsulContent.setConsulContent(projectConsulTag!!)
+                DiscoveryTag.set(projectConsulTag!!)
             }
         }
     }
@@ -98,6 +98,6 @@ class StoreApiAspect(
     ) // 所有controller包下面的所有方法的所有参数
     fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
-        ConsulContent.removeConsulContent()
+        DiscoveryTag.remove()
     }
 }

@@ -28,27 +28,27 @@
 
 package com.tencent.devops.common.client.consul
 
-object ConsulContent {
-    private val consulContent = ThreadLocal<String>()
+object DiscoveryTag {
+    private val discoveryThreadLocal = ThreadLocal<String>()
 
-    fun getConsulContent(): String? {
-        return consulContent.get()
+    fun get(): String? {
+        return discoveryThreadLocal.get()
     }
 
-    fun setConsulContent(consulTag: String) {
-        consulContent.set(consulTag)
+    fun set(consulTag: String) {
+        discoveryThreadLocal.set(consulTag)
     }
 
-    fun removeConsulContent() {
-        consulContent.remove()
+    fun remove() {
+        discoveryThreadLocal.remove()
     }
 
     fun <T> invokeByTag(tag: String?, action: () -> T): T {
         try {
-            tag?.let { setConsulContent(it) }
+            tag?.let { set(it) }
             return action()
         } finally {
-            tag?.let { removeConsulContent() }
+            tag?.let { remove() }
         }
     }
 }

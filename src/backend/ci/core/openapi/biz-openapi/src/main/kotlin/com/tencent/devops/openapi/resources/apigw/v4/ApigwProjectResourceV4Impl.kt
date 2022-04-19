@@ -28,7 +28,7 @@ package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
-import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwProjectResourceV4
@@ -66,7 +66,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectRouteTag!!)
+            DiscoveryTag.set(projectRouteTag!!)
         }
 
         return client.get(ServiceProjectResource::class).create(
@@ -142,7 +142,7 @@ class ApigwProjectResourceV4Impl @Autowired constructor(
     ): Result<Boolean?> {
         val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
         if (!projectConsulTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectConsulTag)
+            DiscoveryTag.set(projectConsulTag)
         }
         logger.info("createProjectUser v3 $projectId| $createInfo $projectConsulTag")
         return client.get(ServiceProjectResource::class).createProjectUser(
