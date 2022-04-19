@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.stream.pulsar.util
 
+import com.google.protobuf.GeneratedMessageV3
 import com.tencent.devops.common.stream.pulsar.exception.ProducerInitException
 import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import org.apache.pulsar.client.api.Schema
@@ -55,9 +56,12 @@ object SchemaUtils {
 
     fun getSchema(serialisation: Serialization, classStr: String? = null): Schema<*> {
         val temp = if (classStr == null) {
-            String::class.java
+            ByteArray::class.java
         } else {
             Class.forName(classStr).kotlin.java
+        }
+        if (temp == ByteArray::class.java) {
+            return Schema.BYTES
         }
         return getGenericSchema(serialisation, temp as Class<Any>)
     }
