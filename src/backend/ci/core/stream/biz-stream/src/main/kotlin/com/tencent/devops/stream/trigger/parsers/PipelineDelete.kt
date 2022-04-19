@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
