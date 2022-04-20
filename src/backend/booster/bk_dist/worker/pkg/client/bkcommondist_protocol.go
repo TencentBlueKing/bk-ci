@@ -533,7 +533,7 @@ func saveResultFile(rf *protocol.PBFileDesc, data []byte, sandbox *syscall.Sandb
 	}
 
 	if strings.HasSuffix(filePath, ".gcno") && rf.GetSize() == 0 {
-		blog.Debugf("empty gcno file:[%s], not save", rf.GetFullpath())
+		blog.Debugf("empty gcno file:[%s] , not save", rf.GetFullpath())
 		return nil
 	}
 
