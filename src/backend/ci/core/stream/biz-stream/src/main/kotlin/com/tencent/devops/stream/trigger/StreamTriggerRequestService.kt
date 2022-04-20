@@ -197,7 +197,7 @@ class StreamTriggerRequestService @Autowired constructor(
 
         // 判断本次mr/push提交是否需要删除流水线, fork不用
         // 远程触发不存在删除流水线的情况
-        if (action.data.context.repoTrigger != null) {
+        if (action.data.context.repoTrigger == null) {
             action.checkAndDeletePipeline(path2PipelineExists)
         }
 
