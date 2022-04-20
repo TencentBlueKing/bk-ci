@@ -178,7 +178,7 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             val conditions = getStoreDockingPlatformsCondition(platformName)
             return dslContext
-                .selectFrom(this)
+                .selectCount()
                 .where(conditions)
                 .fetchOne(0, Long::class.java)!!
         }
