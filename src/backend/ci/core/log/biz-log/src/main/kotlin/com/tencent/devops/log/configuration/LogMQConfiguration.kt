@@ -27,12 +27,12 @@
 
 package com.tencent.devops.log.configuration
 
+import com.tencent.devops.common.stream.dispatcher.StreamEventDispatcher
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -45,9 +45,9 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun buildLogPrintService(
-        bridge: StreamBridge,
+        eventDispatcher: StreamEventDispatcher,
         logPrintBean: LogPrintBean,
         storageProperties: StorageProperties,
         logServiceConfig: LogServiceConfig
-    ) = BuildLogPrintService(bridge, logPrintBean, storageProperties, logServiceConfig)
+    ) = BuildLogPrintService(eventDispatcher, logPrintBean, storageProperties, logServiceConfig)
 }
