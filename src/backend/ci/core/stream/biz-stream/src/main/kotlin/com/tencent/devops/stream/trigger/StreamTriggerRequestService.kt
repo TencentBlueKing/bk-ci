@@ -203,7 +203,7 @@ class StreamTriggerRequestService @Autowired constructor(
             gitProjectKey = action.data.getGitProjectId(),
             action = action,
             getProjectInfo = action.api::getGitProjectInfo
-        ).defaultBranch
+        )!!.defaultBranch
 
         // 获取yaml文件列表，同时会拿到Mr的changeSet
         val yamlPathList = action.getYamlPathList()

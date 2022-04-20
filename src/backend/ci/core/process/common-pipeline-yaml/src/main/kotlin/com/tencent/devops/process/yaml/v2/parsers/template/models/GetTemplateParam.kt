@@ -44,4 +44,6 @@ data class GetTemplateParam<T>(
     val nowRepoId: String?,
     val targetRepo: Repositories?,
     val extraParameters: T
-)
+) {
+    fun format() = "GetTemplateParam|$path|$templateType|$nowRepoId|$targetRepo|"
+}
