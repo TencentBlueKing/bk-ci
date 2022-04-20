@@ -65,6 +65,7 @@ class StreamTriggerExceptionHandler @Autowired constructor(
                 is ErrorCodeException -> handleErrorCodeException(action, e)
                 is StreamTriggerBaseException -> handleStreamTriggerException(e)
                 else -> {
+                    logger.error("StreamTriggerExceptionHandler|Unknown error|action|${action.format()}", e)
                     // 非已知触发异常只保存
                     streamEventService.saveTriggerNotBuildEvent(
                         action = action,
