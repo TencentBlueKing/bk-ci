@@ -163,6 +163,7 @@ class YamlTemplateService @Autowired constructor(
                 action = extraParameters,
                 getProjectInfo = extraParameters.api::getGitProjectInfo
             ).gitProjectId
+            logger.info("YamlTemplateService|getTemplate|getTicket|acrossGitProjectId|$acrossGitProjectId")
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,

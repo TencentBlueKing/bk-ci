@@ -51,6 +51,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
+import com.tencent.devops.stream.util.GitCommonUtils
 
 @Suppress("ALL")
 class StreamManualAction(
@@ -96,7 +97,11 @@ class StreamManualAction(
         return this
     }
 
-    override fun getProjectCode(gitProjectId: String?) = event().projectCode
+    override fun getProjectCode(gitProjectId: String?) = if (gitProjectId != null) {
+        GitCommonUtils.getCiProjectId(gitProjectId.toLong())
+    } else {
+        event().projectCode
+    }
 
     override fun getGitCred(personToken: String?): StreamGitCred {
         return when (streamGitConfig.getScmType()) {
