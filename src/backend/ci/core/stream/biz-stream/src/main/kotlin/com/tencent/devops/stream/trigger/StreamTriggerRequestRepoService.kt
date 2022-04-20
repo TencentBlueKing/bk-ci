@@ -86,15 +86,6 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         }.forEach { gitProjectPipeline ->
             // 添加跨库触发相关数据
             action.data.context.pipeline = gitProjectPipeline
-            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
-                branch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = gitProjectPipeline.gitProjectId,
-                    action = action,
-                    getProjectInfo = action.api::getGitProjectInfo
-                )!!.defaultBranch!!
-            )
-            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
-
             exHandler.handle(action) {
                 // 使用跨项目触发的action
                 triggerPerPipeline(StreamRepoTriggerAction(action))
@@ -112,6 +103,15 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         // 剔除不触发的情形
         streamSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let { setting ->
             action.data.setting = StreamTriggerSetting(setting)
+            logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
+            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
+                branch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitProjectKey = pipeline.gitProjectId,
+                    action = action,
+                    getProjectInfo = action.api::getGitProjectInfo
+                )!!.defaultBranch!!
+            )
+            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
             try {
                 CheckStreamSetting.checkGitProjectConf(action)
             } catch (triggerException: StreamTriggerException) {
@@ -122,7 +122,6 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             if (!action.checkMrConflict(path2PipelineExists = mapOf(pipeline.filePath to pipeline))) {
                 return false
             }
-            logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
             return streamTriggerRequestService.matchAndTriggerPipeline(
                 action = action,
                 path2PipelineExists = mapOf(pipeline.filePath to pipeline)
