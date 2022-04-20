@@ -28,7 +28,8 @@ class StreamDeleteAction(
     override val api: StreamGitApiService = gitAction.api
 
     override fun init(): BaseAction? {
-        return gitAction.init()
+        gitAction.init()
+        return this
     }
 
     override fun getProjectCode(gitProjectId: String?) = gitAction.getProjectCode(gitProjectId)
