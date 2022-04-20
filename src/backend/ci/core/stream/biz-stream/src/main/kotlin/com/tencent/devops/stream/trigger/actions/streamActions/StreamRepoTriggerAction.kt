@@ -15,6 +15,7 @@ import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 
+@Suppress("ALL")
 class StreamRepoTriggerAction(
     // 可能会包含stream action事件类似删除
     private val baseAction: BaseAction
