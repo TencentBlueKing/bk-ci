@@ -54,7 +54,6 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlFormat
-import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.trigger.pojo.YamlReplaceResult
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
@@ -68,7 +67,6 @@ class StreamYamlTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val triggerMatcher: TriggerMatcher,
     private val yamlTemplateService: YamlTemplateService,
-    private val yamlSchemaCheck: YamlSchemaCheck,
     private val streamBasicSettingService: StreamBasicSettingService,
     private val yamlBuild: StreamYamlBuild,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
@@ -281,7 +279,7 @@ class StreamYamlTrigger @Autowired constructor(
                 !action.data.context.changeSet.isNullOrEmpty() &&
                     action.data.context.changeSet!!.toSet()
                         .contains(action.data.context.pipeline!!.filePath) &&
-                    action.data.context.repoTrigger != null
+                    action.data.context.repoTrigger == null
                 )
     }
 }
