@@ -69,7 +69,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         eventStr: String,
         actionCommonData: String,
         actionContext: String,
-        actionSetting: String,
+        actionSetting: String
     ): Boolean? {
         // 深拷贝转换，不影响主流程
         val action = eventActionFactory.loadByData(
