@@ -381,7 +381,7 @@ class TGitPushActionGit(
             repoHook = repoHook
         )
         // 表示路径至少为2级，不支持只填一级路径进行模糊匹配
-        if (repoHook.name!!.contains("/") && repoHook.name!!.startsWith("/")) {
+        if (repoHook.name!!.contains("/") && !repoHook.name!!.startsWith("/")) {
             checkHaveGroupName(repoHook.name!!, userName)
         }
     }

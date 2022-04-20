@@ -130,8 +130,7 @@ class StreamTriggerRequestService @Autowired constructor(
                     triggerPipelineList = repoTriggerPipelineList,
                     eventStr = event,
                     actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
-                    actionContext = objectMapper.writeValueAsString(action.data.context),
-                    actionSetting = objectMapper.writeValueAsString(action.data.setting)
+                    actionContext = objectMapper.writeValueAsString(action.data.context)
                 )
             } catch (ignore: Throwable) {
                 logger.error("Fail to start repo trigger (${action.data.eventCommon.gitProjectName})", ignore)
