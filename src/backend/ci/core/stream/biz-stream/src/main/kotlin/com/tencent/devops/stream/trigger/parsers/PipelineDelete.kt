@@ -76,7 +76,12 @@ class PipelineDelete @Autowired constructor(
         deleteYamlFiles.forEach { filePath ->
             val existPipeline = path2PipelineExists[filePath] ?: return@forEach
             val pipelineId = existPipeline.pipelineId
-            delete(action, pipelineId, existPipeline.gitProjectId, filePath)
+            delete(
+                action = action,
+                gitProjectId = existPipeline.gitProjectId,
+                pipelineId = pipelineId,
+                filePath = filePath
+            )
         }
     }
 
