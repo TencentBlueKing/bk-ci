@@ -63,7 +63,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         triggerPipelineList: List<StreamRepoHookEvent>,
         action: BaseAction
     ): Boolean? {
-        logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|action|${action.format()}")
+        logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
 
         if (triggerPipelineList.isEmpty()) {
             logger.info("repo trigger pipeline list is empty ,skip it")
@@ -107,7 +107,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private fun triggerPerPipeline(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
+        logger.info("|${action.data.context.requestEventId}|triggerPerPipeline")
         val pipeline = action.data.context.pipeline!!
         // 剔除不触发的情形
         streamSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let { setting ->
@@ -122,7 +122,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             if (!action.checkMrConflict(path2PipelineExists = mapOf(pipeline.filePath to pipeline))) {
                 return false
             }
-
+            logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
             return streamTriggerRequestService.matchAndTriggerPipeline(
                 action = action,
                 path2PipelineExists = mapOf(pipeline.filePath to pipeline)
