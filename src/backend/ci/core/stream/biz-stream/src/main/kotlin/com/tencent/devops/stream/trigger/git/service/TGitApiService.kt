@@ -36,6 +36,7 @@ import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -256,6 +257,37 @@ class TGitApiService @Autowired constructor(
                 tokenType = cred.toTokenType()
             ).data
         }?.let { TGitFileInfo(content = it.content, blobId = it.blobId) }
+    }
+
+    override fun getProjectList(
+        cred: StreamGitCred,
+        search: String?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): List<TGitProjectInfo>? {
+        return client.get(ServiceGitResource::class).getGitCodeProjectList(
+            accessToken = cred.toToken(),
+            page = null,
+            pageSize = null,
+            search = search,
+            orderBy = null,
+            sort = null,
+            owned = null,
+            minAccessLevel = minAccessLevel
+        ).data?.map {
+            TGitProjectInfo(
+                gitProjectId = it.id.toString(),
+                defaultBranch = it.defaultBranch,
+                gitHttpUrl = it.httpUrlToRepo ?: "",
+                name = it.name ?: "",
+                gitSshUrl = it.sshUrlToRepo,
+                homepage = it.webUrl,
+                gitHttpsUrl = it.httpsUrlToRepo,
+                description = it.description,
+                avatarUrl = it.avatarUrl,
+                pathWithNamespace = it.pathWithNamespace,
+                nameWithNamespace = it.nameWithNamespace ?: ""
+            )
+        }
     }
 
     /**
