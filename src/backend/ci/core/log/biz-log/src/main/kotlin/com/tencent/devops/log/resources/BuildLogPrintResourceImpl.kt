@@ -28,13 +28,13 @@
 package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.log.event.LogEvent
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
-import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogStatusService
@@ -72,10 +72,16 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogEvent(
-            buildId = buildId,
-            logs = listOf(logMessage.copy(message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()))
-        ))
+        buildLogPrintService.dispatchEvent(
+            LogEvent(
+                buildId = buildId,
+                logs = listOf(
+                    logMessage.copy(
+                        message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()
+                    )
+                )
+            )
+        )
         return Result(true)
     }
 
@@ -84,10 +90,16 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogEvent(
-            buildId = buildId,
-            logs = listOf(logMessage.copy(message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()))
-        ))
+        buildLogPrintService.dispatchEvent(
+            LogEvent(
+                buildId = buildId,
+                logs = listOf(
+                    logMessage.copy(
+                        message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()
+                    )
+                )
+            )
+        )
         return Result(true)
     }
 
@@ -113,7 +125,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogStatusEvent(
+        buildLogPrintService.dispatchEvent(
+            LogStatusEvent(
             buildId = buildId,
             finished = false,
             tag = tag ?: "",
@@ -121,7 +134,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             jobId = jobId ?: "",
             executeCount = executeCount,
             logStorageMode = LogStorageMode.parse(logMode)
-        ))
+        )
+        )
         return Result(true)
     }
 
@@ -138,7 +152,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogStatusEvent(
+        buildLogPrintService.dispatchEvent(
+            LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
@@ -146,7 +161,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             jobId = jobId ?: "",
             executeCount = executeCount,
             logStorageMode = LogStorageMode.parse(logMode)
-        ))
+        )
+        )
         return Result(false)
     }
 

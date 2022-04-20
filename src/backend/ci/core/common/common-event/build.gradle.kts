@@ -27,12 +27,5 @@
 
 dependencies {
     api(project(":core:common:common-service"))
-    api("org.apache.pulsar:pulsar-client") {
-        exclude("org.bouncycastle")
-    }
-    api("org.springframework.cloud:spring-cloud-stream")
-    api("org.springframework.cloud:spring-cloud-stream-binder-kafka")
-    api("org.springframework.cloud:spring-cloud-stream-binder-rabbit")
-
     compileOnly("org.springframework.boot:spring-boot-starter-amqp")
 }

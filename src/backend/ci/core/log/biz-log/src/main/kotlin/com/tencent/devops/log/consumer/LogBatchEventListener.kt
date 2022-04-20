@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.consumer
 
-import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.log.event.LogBatchEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogService
 import java.util.function.Consumer
@@ -61,12 +61,14 @@ class LogBatchEventListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogBatchEvent(
-                        buildId = buildId,
-                        logs = logs,
-                        retryTime = retryTime - 1,
-                        delayMills = getNextDelayMills(retryTime)
-                    ))
+                    buildLogPrintService.dispatchEvent(
+                        LogBatchEvent(
+                            buildId = buildId,
+                            logs = logs,
+                            retryTime = retryTime - 1,
+                            delayMills = getNextDelayMills(retryTime)
+                        )
+                    )
                 }
             }
         }

@@ -30,8 +30,6 @@ package com.tencent.devops.common.event.pojo.pipeline
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.MDC
-import org.springframework.messaging.Message
-import org.springframework.messaging.support.MessageBuilder
 
 /**
  * 流水线事件
@@ -46,17 +44,4 @@ open class IPipelineEvent(
     open var delayMills: Int,
     open var retryTime: Int = 1,
     open var traceId: String? = MDC.get(TraceTag.BIZID)
-) {
-    fun streamMessage(defaultMills: Int = 0): Message<IPipelineEvent> {
-        val builder = MessageBuilder
-            .withPayload(this)
-        // 事件中的变量指定
-        if (delayMills > 0) {
-            builder.setHeader("x-delay", delayMills)
-        } else if (defaultMills > 0) {
-            // 事件类型固化默认值
-            builder.setHeader("x-delay", defaultMills)
-        }
-        return builder.build()
-    }
-}
+)

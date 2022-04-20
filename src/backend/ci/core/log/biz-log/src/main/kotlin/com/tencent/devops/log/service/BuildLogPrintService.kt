@@ -28,10 +28,10 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.event.annotation.StreamEvent
-import com.tencent.devops.common.log.pojo.ILogEvent
-import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.log.event.ILogEvent
+import com.tencent.devops.log.event.LogEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
@@ -50,7 +50,7 @@ class BuildLogPrintService @Autowired constructor(
     private val bridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
-    private val logServiceConfig: LogServiceConfig
+    logServiceConfig: LogServiceConfig
 ) {
 
     private val logExecutorService = ThreadPoolExecutor(
@@ -64,7 +64,7 @@ class BuildLogPrintService @Autowired constructor(
     fun dispatchEvent(event: ILogEvent) {
         try {
             val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-            bridge.send(eventType.bindingName, event.streamMessage(eventType.delayMills))
+            bridge.send(eventType.destination, event.buildMessage(eventType.delayMills))
         } catch (ignored: Throwable) {
             logger.error("Fail to dispatch the event($event)", ignored)
         }
@@ -113,7 +113,7 @@ class BuildLogPrintService @Autowired constructor(
     private fun isEnabled(value: String?): Boolean {
         // 假设没有配置默认为开启日志保存
         return if (!value.isNullOrBlank()) {
-            value!!.toBoolean()
+            value.toBoolean()
         } else {
             true
         }
