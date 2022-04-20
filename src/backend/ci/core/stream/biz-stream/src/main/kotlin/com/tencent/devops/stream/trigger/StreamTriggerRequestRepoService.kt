@@ -76,7 +76,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             eventStr = eventStr,
             actionCommonData = objectMapper.readValue(actionCommonData),
             actionContext = objectMapper.readValue(actionContext),
-            actionSetting = objectMapper.readValue(actionSetting),
+            actionSetting = objectMapper.readValue(actionSetting)
         )!!
 
         logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
