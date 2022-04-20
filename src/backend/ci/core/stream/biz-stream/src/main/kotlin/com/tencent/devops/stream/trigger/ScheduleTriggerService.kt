@@ -109,7 +109,7 @@ class ScheduleTriggerService @Autowired constructor(
             setting = streamTriggerSetting,
             event = StreamScheduleEvent(
                 userId = streamTimerEvent.userId,
-                gitProjectId = streamTimerEvent.projectId,
+                gitProjectId = streamTimerEvent.gitProjectId.toString(),
                 projectCode = streamTimerEvent.projectId,
                 branch = buildBranch,
                 commitId = buildCommitInfo.revision,
