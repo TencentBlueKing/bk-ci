@@ -29,11 +29,14 @@ package com.tencent.devops.common.stream.constants
 
 object StreamBinding {
     // 日志预处理事件
-    const val BINDING_LOG_ORIGIN_EVENT = "logOriginEvent"
+    const val BINDING_LOG_ORIGIN_EVENT_IN = "logOriginEventIn"
+    const val BINDING_LOG_ORIGIN_EVENT_OUT = "logOriginEventOut"
 
     // 日志预处理事件
-    const val BINDING_LOG_STORAGE_EVENT = "logStorageEvent"
+    const val BINDING_LOG_STORAGE_EVENT_IN = "logStorageEventIn"
+    const val BINDING_LOG_STORAGE_EVENT_OUT = "logStorageEventOut"
 
     // 日志构建状态事件
-    const val BINDING_LOG_STATUS_EVENT = "logStatusEvent"
+    const val BINDING_LOG_STATUS_EVENT_IN = "logStatusEventIn"
+    const val BINDING_LOG_STATUS_EVENT_OUT = "logStatusEventOut"
 }

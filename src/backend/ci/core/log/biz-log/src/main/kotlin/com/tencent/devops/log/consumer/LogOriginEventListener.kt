@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
-@Component(StreamBinding.BINDING_LOG_ORIGIN_EVENT)
+@Component(StreamBinding.BINDING_LOG_ORIGIN_EVENT_IN)
 class LogOriginEventListener @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService

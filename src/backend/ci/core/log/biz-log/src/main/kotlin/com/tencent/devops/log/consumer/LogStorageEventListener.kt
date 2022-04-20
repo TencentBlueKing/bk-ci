@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
-@Component(StreamBinding.BINDING_LOG_STORAGE_EVENT)
+@Component(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
 class LogStorageEventListener @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService

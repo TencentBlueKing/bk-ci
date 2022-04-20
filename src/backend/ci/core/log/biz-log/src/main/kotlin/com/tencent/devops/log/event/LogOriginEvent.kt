@@ -31,7 +31,7 @@ import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@StreamEvent(StreamBinding.BINDING_LOG_ORIGIN_EVENT)
+@StreamEvent(StreamBinding.BINDING_LOG_ORIGIN_EVENT_OUT)
 data class LogOriginEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
