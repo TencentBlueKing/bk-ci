@@ -30,6 +30,7 @@ package com.tencent.devops.common.stream.dispatcher
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.common.stream.pojo.IEvent
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Component
 
@@ -39,7 +40,7 @@ import org.springframework.stereotype.Component
  * @version 1.0
  */
 @Component
-class StreamEventDispatcher constructor(
+class StreamEventDispatcher @Autowired constructor(
     private val bridge: StreamBridge
 ) : EventDispatcher<IEvent> {
 
