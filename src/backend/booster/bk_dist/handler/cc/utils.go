@@ -616,14 +616,17 @@ func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 
 	if seenGcov {
 		if gcovFile, _ := outputFromSource(r.outputFile, ".gcno"); gcovFile != "" {
+			r.additionOutputFile = append(r.additionOutputFile, gcovFile)
 			if seenFprofileDir && seenOptionC {
 				if !filepath.IsAbs(gcovFile) {
 					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
 				}
 				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
-				r.additionOutputFile = append(r.additionOutputFile, sandbox.Dir+gcovFile)
-			} else {
-				r.additionOutputFile = append(r.additionOutputFile, gcovFile)
+				currentDir := sandbox.Dir
+				if !strings.HasSuffix(currentDir, "/") {
+					currentDir = currentDir + "/"
+				}
+				r.additionOutputFile = append(r.additionOutputFile, currentDir+gcovFile)
 			}
 		}
 	}
@@ -978,14 +981,17 @@ func getOutputFile(args []string, sandbox *dcSyscall.Sandbox) []string {
 
 	if outputFile != "" && seenGcov {
 		if gcovFile, _ := outputFromSource(outputFile, ".gcno"); gcovFile != "" {
+			r = append(r, gcovFile)
 			if seenFprofileDir && seenOptionC {
 				if !filepath.IsAbs(gcovFile) {
 					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
 				}
 				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
-				r = append(r, sandbox.Dir+gcovFile)
-			} else {
-				r = append(r, gcovFile)
+				currentDir := sandbox.Dir
+				if !strings.HasSuffix(currentDir, "/") {
+					currentDir = currentDir + "/"
+				}
+				r = append(r, currentDir+gcovFile)
 			}
 		}
 	}

@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
@@ -530,6 +531,12 @@ func saveResultFile(rf *protocol.PBFileDesc, data []byte, sandbox *syscall.Sandb
 	if !filepath.IsAbs(filePath) {
 		filePath = filepath.Join(sandbox.Dir, filePath)
 	}
+
+	if strings.HasSuffix(filePath, ".gcno") && rf.GetSize() == 0 {
+		blog.Debugf("empty gcno file:[%s], not save", rf.GetFullpath())
+		return nil
+	}
+
 	_ = os.MkdirAll(filepath.Dir(filePath), os.ModePerm)
 
 	creatTime1 := time.Now().Local().UnixNano()
