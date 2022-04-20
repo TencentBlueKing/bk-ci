@@ -29,7 +29,7 @@ package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.log.event.ILogEvent
-import com.tencent.devops.log.event.LogEvent
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.log.configuration.LogServiceConfig
@@ -64,7 +64,7 @@ class BuildLogPrintService @Autowired constructor(
     fun dispatchEvent(event: ILogEvent) {
         try {
             val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-            bridge.send(eventType.destination, event.buildMessage(eventType.delayMills))
+            bridge.send(eventType.outBinding, event.buildMessage(eventType.delayMills))
         } catch (ignored: Throwable) {
             logger.error("Fail to dispatch the event($event)", ignored)
         }
@@ -73,7 +73,7 @@ class BuildLogPrintService @Autowired constructor(
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
         if (!isEnabled(storageProperties.enable)) {
             val warnings = "Service refuses to write the log, the log file of the task will be archived."
-            if (event is LogEvent && event.logs.isNotEmpty()) {
+            if (event is LogOriginEvent && event.logs.isNotEmpty()) {
                 dispatchEvent(event.copy(
                     logs = listOf(event.logs.first().copy(
                         message = Ansi().fgYellow().a(warnings).reset().toString(),

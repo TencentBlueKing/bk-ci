@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.log.event.LogEvent
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
@@ -63,7 +63,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogEvent(buildId, listOf(logMessage)))
+        buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
         return Result(true)
     }
 
@@ -73,7 +73,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogEvent(
+            LogOriginEvent(
                 buildId = buildId,
                 logs = listOf(
                     logMessage.copy(
@@ -91,7 +91,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             return Result(false)
         }
         buildLogPrintService.dispatchEvent(
-            LogEvent(
+            LogOriginEvent(
                 buildId = buildId,
                 logs = listOf(
                     logMessage.copy(
@@ -108,7 +108,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.dispatchEvent(LogEvent(buildId, logMessages))
+        buildLogPrintService.dispatchEvent(LogOriginEvent(buildId, logMessages))
         recordMultiLogCount(logMessages.size)
         return Result(true)
     }

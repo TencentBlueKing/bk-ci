@@ -25,16 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.event
+package com.tencent.devops.common.stream.constants
 
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.common.stream.annotation.StreamEvent
-import com.tencent.devops.common.stream.constants.Stream
+object StreamBinding {
+    // 日志预处理事件
+    const val BINDING_LOG_ORIGIN_EVENT = "logOriginEvent"
 
-@StreamEvent(Stream.EXCHANGE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
-    override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override var retryTime: Int = 2,
-    override var delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+    // 日志预处理事件
+    const val BINDING_LOG_STORAGE_EVENT = "logStorageEvent"
+
+    // 日志构建状态事件
+    const val BINDING_LOG_STATUS_EVENT = "logStatusEvent"
+}

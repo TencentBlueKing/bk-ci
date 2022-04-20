@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.log.event.LogEvent
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.service.BuildLogPrintService
 import org.slf4j.LoggerFactory
@@ -48,7 +48,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
+        return buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, listOf(logMessage)))
     }
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
@@ -56,7 +56,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             logger.error("Invalid build ID[$buildId]")
             return Result(false)
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
+        buildLogPrintService.asyncDispatchEvent(LogOriginEvent(buildId, logMessages))
         return Result(true)
     }
 

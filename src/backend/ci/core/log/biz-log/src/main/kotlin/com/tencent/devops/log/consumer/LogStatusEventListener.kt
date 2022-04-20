@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.consumer
 
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogService
@@ -36,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
-@Component("logStatusEventListener")
+@Component(StreamBinding.BINDING_LOG_STATUS_EVENT)
 class LogStatusEventListener @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService

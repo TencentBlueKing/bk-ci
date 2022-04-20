@@ -25,11 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.constants
+package com.tencent.devops.log.event
 
-object Stream {
-    // 日志事件
-    const val EXCHANGE_LOG_BUILD_MESSAGE = "e.build.log.origin.event"
-    const val EXCHANGE_LOG_BATCH_BUILD_EVENT = "e.build.log.storage.event"
-    const val EXCHANGE_LOG_STATUS_BUILD_EVENT = "e.build.log.status.event"
-}
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+
+@StreamEvent(StreamBinding.BINDING_LOG_STORAGE_EVENT)
+data class LogStorageEvent(
+    override val buildId: String,
+    val logs: List<LogMessageWithLineNo>,
+    override var retryTime: Int = 2,
+    override var delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)

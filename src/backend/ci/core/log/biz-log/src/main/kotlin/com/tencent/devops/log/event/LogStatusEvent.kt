@@ -29,9 +29,9 @@ package com.tencent.devops.log.event
 
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.stream.annotation.StreamEvent
-import com.tencent.devops.common.stream.constants.Stream
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@StreamEvent(Stream.EXCHANGE_LOG_STATUS_BUILD_EVENT)
+@StreamEvent(StreamBinding.BINDING_LOG_STATUS_EVENT)
 data class LogStatusEvent(
     override val buildId: String,
     val finished: Boolean,

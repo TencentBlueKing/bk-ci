@@ -27,7 +27,8 @@
 
 package com.tencent.devops.log.consumer
 
-import com.tencent.devops.log.event.LogEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.log.service.LogService
 import java.util.function.Consumer
@@ -36,21 +37,21 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
-@Component("logEventListener")
-class LogEventListener @Autowired constructor(
+@Component(StreamBinding.BINDING_LOG_ORIGIN_EVENT)
+class LogOriginEventListener @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService
-) : Consumer<Message<LogEvent>> {
+) : Consumer<Message<LogOriginEvent>> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LogEventListener::class.java)
+        private val logger = LoggerFactory.getLogger(LogOriginEventListener::class.java)
     }
 
-    override fun accept(message: Message<LogEvent>) {
+    override fun accept(message: Message<LogOriginEvent>) {
         logEvent(message.payload)
     }
 
-    fun logEvent(event: LogEvent) {
+    fun logEvent(event: LogOriginEvent) {
         var result = false
         try {
             logService.addLogEvent(event)
@@ -62,7 +63,7 @@ class LogEventListener @Autowired constructor(
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
                     buildLogPrintService.dispatchEvent(
-                        LogEvent(
+                        LogOriginEvent(
                             buildId = buildId,
                             logs = logs,
                             retryTime = retryTime - 1,

@@ -29,14 +29,14 @@ package com.tencent.devops.common.stream.annotation
 
 /**
  * Stream事件注解
- * @param destination 生产目标，RabbitMQ的Exchange，Kafka和Pulsar的Topic
+ * @param outBinding 发送目标绑定，用于指定RabbitMQ的Exchange，Kafka和Pulsar的Topic
  * @param fanout 是否为广播事件
  * @param delayMills 延迟时间，如果为延迟事件则必填
  */
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FILE)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class StreamEvent(
-    val destination: String,
+    val outBinding: String,
     val fanout: Boolean = false,
     val delayMills: Int = 0
 )
