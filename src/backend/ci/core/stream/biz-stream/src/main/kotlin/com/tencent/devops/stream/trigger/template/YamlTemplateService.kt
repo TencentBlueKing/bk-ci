@@ -97,7 +97,7 @@ class YamlTemplateService @Autowired constructor(
                         gitProjectKey = targetRepo!!.repository,
                         action = extraParameters,
                         getProjectInfo = extraParameters.api::getGitProjectInfo
-                    ).defaultBranch!!,
+                    )!!.defaultBranch!!,
                     retry = ApiRequestRetryInfo(true)
                 ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
 
@@ -131,7 +131,7 @@ class YamlTemplateService @Autowired constructor(
                     action = extraParameters,
                     getProjectInfo = extraParameters.api::getGitProjectInfo,
                     cred = extraParameters.getGitCred(personToken)
-                ).defaultBranch!!,
+                )!!.defaultBranch!!,
                 retry = ApiRequestRetryInfo(true)
             ).ifBlank { throw YamlBlankException(templateDirectory + path, targetRepo?.repository) }
 
@@ -162,7 +162,7 @@ class YamlTemplateService @Autowired constructor(
                 gitProjectKey = nowRepoId!!,
                 action = extraParameters,
                 getProjectInfo = extraParameters.api::getGitProjectInfo
-            ).gitProjectId
+            )!!.gitProjectId
             logger.info("YamlTemplateService|getTemplate|getTicket|acrossGitProjectId|$acrossGitProjectId")
             try {
                 return CommonCredentialUtils.getCredential(

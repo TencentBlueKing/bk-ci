@@ -67,7 +67,7 @@ class StreamTriggerCache @Autowired constructor(
             retry: ApiRequestRetryInfo
         ) -> StreamGitProjectInfo?,
         cred: StreamGitCred? = null
-    ): StreamGitProjectCache {
+    ): StreamGitProjectCache? {
         val cache = getRequestGitProjectInfo(
             gitRequestEventId = action.data.context.requestEventId!!,
             gitProjectKey = gitProjectKey
@@ -79,7 +79,7 @@ class StreamTriggerCache @Autowired constructor(
             action.getGitCred(),
             gitProjectKey,
             ApiRequestRetryInfo(true)
-        )!!
+        ) ?: return null
         val cacheData = StreamGitProjectCache(
             gitProjectId = gitProjectInfo.gitProjectId,
             defaultBranch = gitProjectInfo.defaultBranch,
