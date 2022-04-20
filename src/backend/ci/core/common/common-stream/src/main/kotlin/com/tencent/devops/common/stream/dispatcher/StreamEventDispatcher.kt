@@ -31,12 +31,14 @@ import com.tencent.devops.common.stream.annotation.StreamEvent
 import com.tencent.devops.common.stream.pojo.IEvent
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.stereotype.Component
 
 /**
  * 基于Stream MQ实现的流水线事件下发器
  *
  * @version 1.0
  */
+@Component
 class StreamEventDispatcher constructor(
     private val bridge: StreamBridge
 ) : EventDispatcher<IEvent> {
