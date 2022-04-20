@@ -32,6 +32,7 @@ import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.dispatcher.StreamEventDispatcher
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
@@ -39,7 +40,6 @@ import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -47,7 +47,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.RejectedExecutionException
 
 class BuildLogPrintService @Autowired constructor(
-    private val bridge: StreamBridge,
+    private val eventDispatcher: StreamEventDispatcher,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
     logServiceConfig: LogServiceConfig
@@ -62,12 +62,7 @@ class BuildLogPrintService @Autowired constructor(
     )
 
     fun dispatchEvent(event: ILogEvent) {
-        try {
-            val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-            bridge.send(eventType.outBinding, event.buildMessage(eventType.delayMills))
-        } catch (ignored: Throwable) {
-            logger.error("Fail to dispatch the event($event)", ignored)
-        }
+        eventDispatcher.dispatch(event)
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {

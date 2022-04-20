@@ -47,7 +47,7 @@ class StreamEventDispatcher constructor(
                 val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
                 bridge.send(eventType.outBinding, event.buildMessage(eventType.delayMills))
             } catch (ignored: Exception) {
-                logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                logger.error("[STREAM MQ] Fail to dispatch the event($event)", ignored)
             }
         }
     }
