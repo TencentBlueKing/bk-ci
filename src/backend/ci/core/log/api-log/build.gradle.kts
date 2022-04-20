@@ -27,7 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-api"))
-    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
 }
 
 plugins {
