@@ -24,7 +24,8 @@ class StreamRepoTriggerAction(
     override val api: StreamGitApiService = baseAction.api
 
     override fun init(): BaseAction? {
-        return baseAction.init()
+        baseAction.init()
+        return this
     }
 
     override fun getProjectCode(gitProjectId: String?) = baseAction.getProjectCode(gitProjectId)
@@ -43,9 +44,7 @@ class StreamRepoTriggerAction(
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ) = baseAction.checkMrConflict(path2PipelineExists)
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {
-        baseAction.checkAndDeletePipeline(path2PipelineExists)
-    }
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         return TGitActionCommon.getYamlPathList(
