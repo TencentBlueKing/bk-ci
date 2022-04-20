@@ -994,9 +994,6 @@ interface ServiceGitResource {
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String,
-        @ApiParam("用户id", required = true)
-        @QueryParam("userId")
-        userId: String,
         @ApiParam("第几页", required = true)
         @QueryParam("page")
         page: Int?,
