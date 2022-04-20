@@ -1662,7 +1662,7 @@ class GitService @Autowired constructor(
             }
             val body = response.body()!!.string()
             logger.info("[$userId]|[$gitProjectId]| Get git project member response body: $body")
-            return JsonUtil.to(body)
+            return JsonUtil.to(body, object : TypeReference<GitMember>() {})
         }
     }
 
