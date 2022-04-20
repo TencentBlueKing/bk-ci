@@ -27,10 +27,13 @@
 
 package com.tencent.devops.stream.trigger
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamRepoHookEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
@@ -47,10 +50,12 @@ import org.springframework.stereotype.Service
 @Service
 class StreamTriggerRequestRepoService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val objectMapper: ObjectMapper,
     private val streamSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamTriggerCache: StreamTriggerCache,
     private val exHandler: StreamTriggerExceptionHandler,
+    private val eventActionFactory: EventActionFactory,
     @org.springframework.context.annotation.Lazy
     private val streamTriggerRequestService: StreamTriggerRequestService
 ) {
@@ -61,9 +66,20 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     // 通用不区分projectId，多流水线触发
     fun repoTriggerBuild(
         triggerPipelineList: List<StreamRepoHookEvent>,
-        action: BaseAction
+        eventStr: String,
+        actionCommonData: String,
+        actionContext: String,
+        actionSetting: String,
     ): Boolean? {
-        logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|action|${action.format()}")
+        // 深拷贝转换，不影响主流程
+        val action = eventActionFactory.loadByData(
+            eventStr = eventStr,
+            actionCommonData = objectMapper.readValue(actionCommonData),
+            actionContext = objectMapper.readValue(actionContext),
+            actionSetting = objectMapper.readValue(actionSetting),
+        )!!
+
+        logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
 
         if (triggerPipelineList.isEmpty()) {
             logger.info("repo trigger pipeline list is empty ,skip it")
@@ -86,15 +102,6 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         }.forEach { gitProjectPipeline ->
             // 添加跨库触发相关数据
             action.data.context.pipeline = gitProjectPipeline
-            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
-                branch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    gitProjectKey = gitProjectPipeline.gitProjectId,
-                    action = action,
-                    getProjectInfo = action.api::getGitProjectInfo
-                )!!.defaultBranch!!
-            )
-            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
-
             exHandler.handle(action) {
                 // 使用跨项目触发的action
                 triggerPerPipeline(StreamRepoTriggerAction(action))
@@ -107,11 +114,21 @@ class StreamTriggerRequestRepoService @Autowired constructor(
     private fun triggerPerPipeline(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
+        logger.info("|${action.data.context.requestEventId}|triggerPerPipeline")
         val pipeline = action.data.context.pipeline!!
+
         // 剔除不触发的情形
         streamSettingDao.getSetting(dslContext, pipeline.gitProjectId.toLong())?.let { setting ->
             action.data.setting = StreamTriggerSetting(setting)
+            logger.info("|${action.data.context.requestEventId}|triggerPerPipeline|action|${action.format()}")
+            action.data.context.repoTrigger = action.data.context.repoTrigger!!.copy(
+                branch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+                    gitProjectKey = pipeline.gitProjectId,
+                    action = action,
+                    getProjectInfo = action.api::getGitProjectInfo
+                )!!.defaultBranch!!
+            )
+            action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
             try {
                 CheckStreamSetting.checkGitProjectConf(action)
             } catch (triggerException: StreamTriggerException) {
@@ -122,7 +139,6 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             if (!action.checkMrConflict(path2PipelineExists = mapOf(pipeline.filePath to pipeline))) {
                 return false
             }
-
             return streamTriggerRequestService.matchAndTriggerPipeline(
                 action = action,
                 path2PipelineExists = mapOf(pipeline.filePath to pipeline)
