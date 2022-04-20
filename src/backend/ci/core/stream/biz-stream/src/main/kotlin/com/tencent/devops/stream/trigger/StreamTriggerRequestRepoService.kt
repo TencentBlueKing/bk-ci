@@ -68,15 +68,14 @@ class StreamTriggerRequestRepoService @Autowired constructor(
         triggerPipelineList: List<StreamRepoHookEvent>,
         eventStr: String,
         actionCommonData: String,
-        actionContext: String,
-        actionSetting: String,
+        actionContext: String
     ): Boolean? {
         // 深拷贝转换，不影响主流程
         val action = eventActionFactory.loadByData(
             eventStr = eventStr,
             actionCommonData = objectMapper.readValue(actionCommonData),
             actionContext = objectMapper.readValue(actionContext),
-            actionSetting = objectMapper.readValue(actionSetting),
+            actionSetting = null
         )!!
 
         logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
