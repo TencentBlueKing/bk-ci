@@ -37,14 +37,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.Message
 import org.springframework.stereotype.Component
 
-@Component(StreamBinding.BINDING_LOG_ORIGIN_EVENT)
-class LogBatchEventListener @Autowired constructor(
+@Component(StreamBinding.BINDING_LOG_STORAGE_EVENT)
+class LogStorageEventListener @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService
 ) : Consumer<Message<LogStorageEvent>> {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(LogBatchEventListener::class.java)
+        private val logger = LoggerFactory.getLogger(LogStorageEventListener::class.java)
     }
 
     override fun accept(message: Message<LogStorageEvent>) {
