@@ -145,7 +145,7 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
 
     override fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum): GitUserInfo {
         return client.getScm(ServiceGitResource::class)
-            .getUserInfoByToken(token = token, tokenType == TokenTypeEnum.OAUTH).data!!
+            .getUserInfoByToken(token = token, useAccessToken = tokenType == TokenTypeEnum.OAUTH).data!!
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): String {
