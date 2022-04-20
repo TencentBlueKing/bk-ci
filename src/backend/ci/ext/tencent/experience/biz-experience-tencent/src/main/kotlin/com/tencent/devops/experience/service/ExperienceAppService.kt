@@ -40,7 +40,9 @@ import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
+import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -49,6 +51,7 @@ import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -77,7 +80,9 @@ class ExperienceAppService(
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
-    private val client: Client
+    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) {
 
     private val executorService = Executors.newFixedThreadPool(2)
@@ -106,20 +111,23 @@ class ExperienceAppService(
         experienceHashId: String,
         platform: Int,
         appVersion: String?,
-        organization: String?
+        organization: String?,
+        forceNew: Boolean
     ): AppExperienceDetail {
         var experienceId = HashUtil.decodeIdToLong(experienceHashId)
         var experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
         val platform = experience.platform
-        val newestRecordId = experienceBaseService.getNewestRecordId(projectId, bundleIdentifier, platform)
+        val newestPublic = experienceBaseService.getNewestPublic(projectId, bundleIdentifier, platform)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val isOuter = organization == ORGANIZATION_OUTER
-        val isPublic = !isOuter && newestRecordId != null
+        val isPublic = !isOuter && experienceBaseService.isPublic(experienceId, false)
+        // 移除红点
+        removeRedPoint(userId, experienceId)
         // 当APP前端传递的experienceId和公开体验的app被覆盖后T_EXPERIENCE_PUBLIC表中的RecordId不一致时，则将experienceId置为更新后的RecordId
-        if (newestRecordId != null && newestRecordId != experienceId) {
-            experienceId = newestRecordId
+        if (forceNew && newestPublic != null && newestPublic.recordId != experienceId) {
+            experienceId = newestPublic.recordId
             experience = experienceDao.get(dslContext, experienceId)
         }
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
@@ -144,7 +152,7 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
+        val isPrivate = experienceBaseService.isPrivate(experience, isOuter, userId)
         val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
@@ -197,6 +205,15 @@ class ExperienceAppService(
         )
     }
 
+    /**
+     * 删除红点
+     */
+    private fun removeRedPoint(userId: String, experienceId: Long) {
+        executorService.submit {
+            redisOperation.sremove(ExperienceConstant.redPointKey(userId), experienceId.toString())
+        }
+    }
+
     private fun getExperienceCondition(
         isPublic: Boolean,
         isPrivate: Boolean,
@@ -218,7 +235,8 @@ class ExperienceAppService(
         experienceHashId: String,
         page: Int,
         pageSize: Int,
-        organization: String?
+        organization: String?,
+        showAll: Boolean?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
@@ -231,7 +249,8 @@ class ExperienceAppService(
                 page = if (page <= 0) 1 else page,
                 pageSize = if (pageSize <= 0) 10 else pageSize,
                 isOldVersion = false,
-                isOuter = organization == ORGANIZATION_OUTER
+                isOuter = organization == ORGANIZATION_OUTER,
+                showAll = showAll ?: false
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -255,9 +274,11 @@ class ExperienceAppService(
         page: Int,
         pageSize: Int,
         isOldVersion: Boolean,
-        isOuter: Boolean = false
+        isOuter: Boolean = false,
+        showAll: Boolean = false
     ): List<ExperienceChangeLog> {
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
+        val groupIdTypeEnum = if (showAll) GroupIdTypeEnum.ALL else GroupIdTypeEnum.JUST_PRIVATE
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, groupIdTypeEnum, isOuter)
         val now = LocalDateTime.now()
         val lastDownloadRecord = platform?.let {
             experienceLastDownloadDao.get(
@@ -379,5 +400,35 @@ class ExperienceAppService(
         return Response
             .temporaryRedirect(URI.create(publicRecord.externalLink))
             .build()
+    }
+
+    fun publicExperiences(userId: String, platform: Int, offset: Int, limit: Int): List<AppExperience> {
+        val platformStr = PlatformEnum.of(platform)?.name
+        val recordIds = mutableListOf<Long>()
+
+        // 订阅的需要置顶
+        val subscribeRecordIds = experiencePublicDao.listSubscribeRecordIds(dslContext, userId, platformStr, 100)
+        recordIds.addAll(subscribeRecordIds)
+
+        // 普通的公开体验
+        val normalRecords = experienceDownloadDetailDao.listIdsForPublic(
+            dslContext, userId, platformStr, 100
+        ).filterNot { recordIds.contains(it) }
+        recordIds.addAll(normalRecords)
+
+        // 过滤内部体验ID
+        val privateRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, false)
+        recordIds.removeAll(privateRecordIds)
+
+        // 找到结果
+        val recordMap = experienceDao.listOnline(dslContext, recordIds).map { it.id to it }.toMap()
+
+        // 排序
+        val records = mutableListOf<TExperienceRecord>()
+        for (recordId in recordIds) {
+            recordMap[recordId]?.let { records.add(it) }
+        }
+
+        return experienceBaseService.toAppExperiences(userId, records)
     }
 }

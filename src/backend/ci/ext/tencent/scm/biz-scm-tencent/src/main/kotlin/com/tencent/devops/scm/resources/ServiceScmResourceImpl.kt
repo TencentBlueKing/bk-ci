@@ -35,6 +35,7 @@ import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -299,6 +300,28 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 type = type,
                 token = token,
                 mrId = mrId
+            )
+        )
+    }
+
+    override fun getMrCommitList(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long,
+        page: Int,
+        size: Int
+    ): Result<List<GitCommit>> {
+        return Result(
+            scmService.getMrCommitList(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                mrId = mrId,
+                page = page,
+                size = size
             )
         )
     }

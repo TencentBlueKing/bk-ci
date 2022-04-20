@@ -141,7 +141,8 @@ class OpExperienceResourceImpl @Autowired constructor(
             logoUrl = externalAdd.logoUrl,
             type = ExperiencePublicType.FROM_EXTERNAL_URL.id,
             externalUrl = externalAdd.externalLink,
-            scheme = ""
+            scheme = "",
+            version = ""
         )
 
         return Result("创建成功")

@@ -1,0 +1,23 @@
+parameters:
+  - name: STEP1
+    type: string
+  - name: STEP2
+    type: string
+  - name: STEP3
+    type: string
+    default: STEP-STEP3
+  - template: step-local.yml@parameters
+
+steps:
+  - run: ${{ parameters.STEP1 }}
+  - run: ${{ parameters.STEP2 }}
+  - run: ${{ parameters.STEP3 }}
+  - run: ${{ parameters.STEP4 }}
+
+resources:
+  repositories:
+    - repository: parameters
+      name: parameters
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx

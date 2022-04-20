@@ -116,6 +116,7 @@ object StreamDispatchUtils {
             val envName = getEnvName(client, poolName, resources?.pools)
             return ThirdPartyAgentEnvDispatchType(
                 envName = envName,
+                envProjectId = null,
                 workspace = workspace,
                 agentType = AgentType.NAME
             )

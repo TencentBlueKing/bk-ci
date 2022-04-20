@@ -448,3 +448,20 @@ CREATE TABLE IF NOT EXISTS `T_STREAM_DELETE_EVENT`  (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for T_GIT_PIPELINE_REPO_RESOURCE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_GIT_PIPELINE_REPO_RESOURCE` (
+    `ID` bigint(11) NOT NULL AUTO_INCREMENT COMMENT 'ID',
+    `SOURCE_GIT_PROJECT_PATH` varchar(255) charset utf8mb4                          not null comment '触发库工蜂项目ID',
+    `TARGET_GIT_PROJECT_ID`   bigint(11)                                            not null comment '流水线主库工蜂项目ID',
+    `PIPELINE_ID`             varchar(34) charset utf8mb4 default ''                not null comment '对应蓝盾流水线ID',
+    `CREATE_TIME`             timestamp                   default CURRENT_TIMESTAMP not null comment '创建时间',
+    `UPDATE_TIME`             timestamp                   default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '修改时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_pipeline_id` (`PIPELINE_ID`),
+    KEY `idx_source_project_path` (`SOURCE_GIT_PROJECT_PATH`),
+    KEY `idx_target_project_id` (`TARGET_GIT_PROJECT_ID`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='工蜂流水线资源表-存储远程仓库流水线相关信息';

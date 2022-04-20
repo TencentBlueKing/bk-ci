@@ -33,7 +33,6 @@ dependencies {
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-db"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
-    compile("com.amazonaws:aws-java-sdk-s3")
     api("net.coobird:thumbnailator")
     api("com.github.xingePush:xinge")
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))

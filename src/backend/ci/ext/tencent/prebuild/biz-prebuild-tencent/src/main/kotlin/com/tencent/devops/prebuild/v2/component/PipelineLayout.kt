@@ -531,6 +531,7 @@ class PipelineLayout private constructor(
         if (job.runsOn.selfHosted == true) {
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
+                envProjectId = null,
                 workspace = job.runsOn.workspace,
                 agentType = AgentType.NAME
             )

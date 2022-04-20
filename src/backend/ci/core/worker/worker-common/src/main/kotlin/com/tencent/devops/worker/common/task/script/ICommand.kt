@@ -50,6 +50,7 @@ interface ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
+        jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null,
         taskId: String? = null

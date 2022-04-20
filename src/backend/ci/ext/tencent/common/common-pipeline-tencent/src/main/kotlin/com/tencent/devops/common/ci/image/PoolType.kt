@@ -139,13 +139,15 @@ enum class PoolType {
         override fun transfer(pool: Pool): DispatchType {
             if (!pool.envName.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
-                    envName = pool.envName!!,
+                    envName = pool.envName,
+                    envProjectId = pool.envProjectId,
                     workspace = pool.workspace,
                     agentType = AgentType.NAME
                 )
             } else if (!pool.envId.isNullOrBlank()) {
                 return ThirdPartyAgentEnvDispatchType(
-                    envName = pool.envId!!,
+                    envName = pool.envId,
+                    envProjectId = pool.envProjectId,
                     workspace = pool.workspace,
                     agentType = AgentType.ID
                 )

@@ -29,8 +29,6 @@ package com.tencent.devops.stream.trigger.parsers.triggerParameter
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitIssueAction
-import com.tencent.devops.stream.pojo.GitRequestEvent
-import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitReviewEventKind
@@ -43,6 +41,9 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteTag
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.TriggerBuildReq
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamTimerBuildEvent
 import com.tencent.devops.stream.v2.service.StreamGitTokenService
 import com.tencent.devops.stream.v2.service.StreamScmService
@@ -88,7 +89,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = null,
-            gitEvent = gitPushEvent
+            gitEvent = gitPushEvent,
+            gitProjectName = GitUtils.getProjectName(gitPushEvent.repository.homepage)
         )
     }
 
@@ -118,7 +120,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = gitMrEvent.object_attributes.title,
-            gitEvent = gitMrEvent
+            gitEvent = gitMrEvent,
+            gitProjectName = GitUtils.getProjectName(gitMrEvent.object_attributes.target.http_url)
         )
     }
 
@@ -151,7 +154,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = null,
-            gitEvent = gitTagPushEvent
+            gitEvent = gitTagPushEvent,
+            gitProjectName = GitUtils.getProjectName(gitTagPushEvent.repository.homepage)
         )
     }
 
@@ -187,7 +191,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = gitIssueEvent.objectAttributes.title,
-            gitEvent = gitIssueEvent
+            gitEvent = gitIssueEvent,
+            gitProjectName = GitUtils.getProjectName(gitIssueEvent.repository.homepage)
         )
     }
 
@@ -223,7 +228,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = null,
-            gitEvent = gitNoteEvent
+            gitEvent = gitNoteEvent,
+            gitProjectName = GitUtils.getProjectName(gitNoteEvent.repository.homepage)
         )
     }
 
@@ -267,7 +273,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = e,
             description = "",
             mrTitle = "",
-            gitEvent = gitReviewEvent
+            gitEvent = gitReviewEvent,
+            gitProjectName = GitUtils.getProjectName(gitReviewEvent.repository.homepage)
         )
     }
 
@@ -308,7 +315,8 @@ class GitRequestEventHandle @Autowired constructor(
             event = "",
             description = triggerBuildReq.description,
             mrTitle = "",
-            gitEvent = null
+            gitEvent = null,
+            gitProjectName = null
         )
     }
 
@@ -340,7 +348,8 @@ class GitRequestEventHandle @Autowired constructor(
                 event = "",
                 description = null,
                 mrTitle = null,
-                gitEvent = null
+                gitEvent = null,
+                gitProjectName = null
             )
         }
 

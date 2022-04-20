@@ -40,6 +40,7 @@ import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.exception.TriggerExceptionService
@@ -84,6 +85,8 @@ class ScheduleTriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
+        val gitRequestEventForHandle = scheduleChangeGitRequestEvent(gitRequestEvent)
+
         val existsPipeline = gitPipelineResourceDao.getPipelineById(
             dslContext = dslContext,
             gitProjectId = streamTimerEvent.gitProjectId,
@@ -112,34 +115,50 @@ class ScheduleTriggerService @Autowired constructor(
         )
 
         return handleTrigger(
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             originYaml = streamTimerEvent.originYaml,
             buildPipeline = buildPipeline
         )
     }
 
+    private fun scheduleChangeGitRequestEvent(
+        gitRequestEvent: GitRequestEvent
+    ): GitRequestEventForHandle {
+        return GitRequestEventForHandle(
+            id = gitRequestEvent.id,
+            gitProjectId = gitRequestEvent.gitProjectId,
+            branch = gitRequestEvent.branch,
+            userId = gitRequestEvent.userId,
+            checkRepoTrigger = false,
+            gitRequestEvent = gitRequestEvent
+        )
+    }
+
     fun handleTrigger(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         originYaml: String,
         buildPipeline: GitProjectPipeline
     ): BuildId? {
-        return triggerExceptionService.handle(gitRequestEvent, null, null) {
-            trigger(gitRequestEvent, originYaml, buildPipeline)
+        return triggerExceptionService.handle(gitRequestEventForHandle, null, null) {
+            triggerExceptionService.handleErrorCode(request = gitRequestEventForHandle) {
+                trigger(gitRequestEventForHandle, originYaml, buildPipeline)
+            }
         }
     }
 
     private fun trigger(
-        gitRequestEvent: GitRequestEvent,
+        gitRequestEventForHandle: GitRequestEventForHandle,
         originYaml: String,
         buildPipeline: GitProjectPipeline
     ): BuildId? {
         // 如果当前文件没有内容直接不触发
         if (originYaml.isBlank()) {
             logger.warn(
-                "Matcher is false,gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+                "Matcher is false,gitProjectId: ${gitRequestEventForHandle.gitProjectId}," +
+                    " eventId: ${gitRequestEventForHandle.id}"
             )
             TriggerException.triggerError(
-                request = gitRequestEvent,
+                request = gitRequestEventForHandle,
                 event = null,
                 pipeline = buildPipeline,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL,
@@ -156,37 +175,36 @@ class ScheduleTriggerService @Autowired constructor(
         }
 
         val yamlReplaceResult = yamlTriggerFactory.requestTriggerV2.prepareCIBuildYaml(
-            gitRequestEvent = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             isMr = false,
             originYaml = originYaml,
             filePath = buildPipeline.filePath,
             pipelineId = buildPipeline.pipelineId,
             pipelineName = buildPipeline.displayName,
             event = null,
-            changeSet = null,
-            forkGitProjectId = null
+            changeSet = null
         )!!
         val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
-            eventId = gitRequestEvent.id!!,
+            eventId = gitRequestEventForHandle.id!!,
             originYaml = originYaml,
             parsedYaml = parsedYaml,
             normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml),
-            gitProjectId = gitRequestEvent.gitProjectId,
-            branch = gitRequestEvent.branch,
-            objectKind = gitRequestEvent.objectKind,
-            commitMsg = gitRequestEvent.commitMsg,
-            triggerUser = gitRequestEvent.userId,
-            sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+            gitProjectId = gitRequestEventForHandle.gitProjectId,
+            branch = gitRequestEventForHandle.branch,
+            objectKind = gitRequestEventForHandle.gitRequestEvent.objectKind,
+            commitMsg = gitRequestEventForHandle.gitRequestEvent.commitMsg,
+            triggerUser = gitRequestEventForHandle.userId,
+            sourceGitProjectId = gitRequestEventForHandle.gitRequestEvent.sourceGitProjectId,
             buildStatus = BuildStatus.RUNNING,
             version = "v2.0"
         )
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
-        gitCIBasicSettingService.refreshSetting(gitRequestEvent.userId, gitRequestEvent.gitProjectId)
+        gitCIBasicSettingService.refreshSetting(gitRequestEventForHandle.userId, gitRequestEventForHandle.gitProjectId)
         return yamlBuildV2.gitStartBuild(
             pipeline = buildPipeline,
-            event = gitRequestEvent,
+            gitRequestEventForHandle = gitRequestEventForHandle,
             yaml = yamlReplaceResult.normalYaml,
             parsedYaml = parsedYaml,
             originYaml = originYaml,

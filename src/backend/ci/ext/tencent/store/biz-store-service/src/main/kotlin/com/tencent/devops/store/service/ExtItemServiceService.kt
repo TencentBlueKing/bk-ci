@@ -82,7 +82,11 @@ class ExtItemServiceService @Autowired constructor(
                     projectCode = projectCode
                 )
                 // 获取扩展服务对应的域名(扩展服务如果有测试或审核中的版本，在其正式发布前killGrayAppFlag为false；全部是处于已发布这种终态的版本则所有项目都访问正式环境)
-                val hostConfig = if (testProjectFlag && (killGrayAppFlag != null && !killGrayAppFlag)) extServiceIngressConfig.grayHost else extServiceIngressConfig.host
+                val hostConfig = if (testProjectFlag && (killGrayAppFlag != null && !killGrayAppFlag)) {
+                    extServiceIngressConfig.grayHost
+                } else {
+                    extServiceIngressConfig.host
+                }
                 val host = MessageFormat(hostConfig).format(arrayOf(serviceCode))
                 serviceList.add(
                     ExtServiceVO(
@@ -94,7 +98,7 @@ class ExtItemServiceService @Autowired constructor(
                         vendor = ExtServiceVendorVO(
                             name = service["publisher"] as String
                         ),
-                        baseUrl = "http://$host",
+                        baseUrl = "//$host",
                         props = if (!props.isNullOrBlank()) JsonUtil.toMap(props!!) else null
                     )
                 )

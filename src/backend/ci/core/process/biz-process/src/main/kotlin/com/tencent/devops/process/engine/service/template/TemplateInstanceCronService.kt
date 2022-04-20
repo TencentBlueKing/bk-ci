@@ -159,7 +159,10 @@ class TemplateInstanceCronService @Autowired constructor(
                             successPipelines.add(pipelineName)
                         } catch (ignored: Throwable) {
                             logger.warn("Fail to update the pipeline|$pipelineName|$projectId|$userId|$ignored")
-                            failurePipelines.add(pipelineName)
+                            val message =
+                                if (!ignored.message.isNullOrBlank() && ignored.message!!.length > 36)
+                                    ignored.message!!.substring(0, 36) + "......" else ignored.message
+                            failurePipelines.add("【$pipelineName】reason: $message")
                         }
                     }
                 }
