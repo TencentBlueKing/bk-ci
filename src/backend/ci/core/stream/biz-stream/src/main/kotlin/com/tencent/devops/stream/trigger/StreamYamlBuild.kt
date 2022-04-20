@@ -195,7 +195,7 @@ class StreamYamlBuild @Autowired constructor(
                     throw e
                 }
                 else -> {
-                    logger.error("event: ${action.data.context.requestEventId} unknow error: ${e.message}")
+                    logger.error("gitStartBuild|event: ${action.data.context.requestEventId} unknow error", e)
                     Triple(false, e.message, TriggerReason.UNKNOWN_ERROR)
                 }
             }
