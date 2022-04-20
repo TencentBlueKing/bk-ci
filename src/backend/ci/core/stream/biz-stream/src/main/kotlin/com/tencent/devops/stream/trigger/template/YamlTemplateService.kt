@@ -39,7 +39,9 @@ import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
 import com.tencent.devops.stream.util.CommonCredentialUtils
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -52,6 +54,7 @@ class YamlTemplateService @Autowired constructor(
 ) {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(YamlTemplateService::class.java)
         private const val templateDirectory = ".ci/templates/"
         const val GET_TICKET_ERROR = "get ticket type: [%s]"
         const val ONLY_SUPPORT_ERROR = "Only supports using the settings context to access credentials"
@@ -70,6 +73,7 @@ class YamlTemplateService @Autowired constructor(
     fun getTemplate(
         param: GetTemplateParam<BaseAction>
     ): String {
+        logger.info("YamlTemplateService|getTemplate|param|${param.format()}")
         with(param) {
             // 获取当前库的模板
             if (targetRepo == null) {
@@ -149,7 +153,7 @@ class YamlTemplateService @Autowired constructor(
             } catch (ignore: Exception) {
                 if (nowRepoId == null) {
                     // 没有库信息说明是触发库，并不需要获取跨项目信息
-                    throw YamlFormatException(GET_TICKET_ERROR.format(ignore.message))
+                    throw YamlFormatException("no across" + GET_TICKET_ERROR.format(ignore.message))
                 }
             }
             // 运行至此说明当前触发项目中没用保存凭证，需要校验远程库是否开启凭证共享
@@ -162,13 +166,13 @@ class YamlTemplateService @Autowired constructor(
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,
-                    projectId = extraParameters.getProjectCode(acrossGitProjectId),
+                    projectId = GitCommonUtils.getCiProjectId(acrossGitProjectId.toLong()),
                     credentialId = key,
                     type = CredentialType.ACCESSTOKEN,
                     acrossProject = true
                 )["v1"]!!
             } catch (ignore: Exception) {
-                throw YamlFormatException(GET_TICKET_ERROR.format(ignore.message))
+                throw YamlFormatException("across" + GET_TICKET_ERROR.format(ignore.message))
             }
         }
     }
