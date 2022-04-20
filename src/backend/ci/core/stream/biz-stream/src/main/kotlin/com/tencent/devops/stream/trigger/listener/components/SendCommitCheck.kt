@@ -92,7 +92,7 @@ class SendCommitCheck @Autowired constructor(
             gitProjectKey = action.data.eventCommon.gitProjectId,
             action = action,
             getProjectInfo = action.api::getGitProjectInfo
-        )
+        )!!
 
         val finishData = action.data.context.finishData!!
         action.sendCommitCheck(
