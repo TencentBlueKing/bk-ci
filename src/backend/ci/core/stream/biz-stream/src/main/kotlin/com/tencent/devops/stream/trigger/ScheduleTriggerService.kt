@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.scm.pojo.RevisionInfo
@@ -109,7 +110,7 @@ class ScheduleTriggerService @Autowired constructor(
             setting = streamTriggerSetting,
             event = StreamScheduleEvent(
                 userId = streamTimerEvent.userId,
-                gitProjectId = streamTimerEvent.projectId,
+                gitProjectId = streamTimerEvent.gitProjectId.toString(),
                 projectCode = streamTimerEvent.projectId,
                 branch = buildBranch,
                 commitId = buildCommitInfo.revision,
@@ -169,6 +170,7 @@ class ScheduleTriggerService @Autowired constructor(
         }
     }
 
+    @BkTimed
     private fun trigger(
         action: StreamScheduleAction,
         originYaml: String

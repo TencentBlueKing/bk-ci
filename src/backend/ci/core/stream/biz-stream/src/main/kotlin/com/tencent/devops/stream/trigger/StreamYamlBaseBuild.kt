@@ -320,7 +320,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     gitProjectKey = action.data.eventCommon.gitProjectId,
                     action = action,
                     getProjectInfo = action.api::getGitProjectInfo
-                )
+                )!!
 
                 action.sendCommitCheck(
                     buildId = buildId,
@@ -368,10 +368,10 @@ class StreamYamlBaseBuild @Autowired constructor(
             if (remoteProjectString !in remoteProjectIdMap.keys) {
                 // 将pathWithPathSpace转为数字id
                 val remoteProjectIdLong = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                    remoteProjectString,
-                    action,
-                    action.api::getGitProjectInfo
-                ).gitProjectId.let { "git_$it" }
+                    gitProjectKey = remoteProjectString,
+                    action = action,
+                    getProjectInfo = action.api::getGitProjectInfo
+                )?.gitProjectId?.let { "git_$it" } ?: return@forEach
 
                 remoteProjectIdMap[remoteProjectString] = TemplateAcrossInfoType.values().associateWith {
                     BuildTemplateAcrossInfo(

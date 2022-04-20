@@ -137,7 +137,7 @@ class StreamTimerBuildListener @Autowired constructor(
                 scheduleTriggerService.triggerBuild(this, branch, latestRevisionInfo)
             }
         } catch (ignored: Throwable) {
-            logger.warn("[$pipelineId]|branch:$branch|TimerTrigger fail| error=${ignored.message}")
+            logger.warn("[$pipelineId]|branch:$branch|TimerTrigger fail|", ignored)
         }
     }
 

@@ -377,7 +377,7 @@ class StreamYamlBuild @Autowired constructor(
             gitProjectKey = action.data.eventCommon.gitProjectId,
             action = action,
             getProjectInfo = action.api::getGitProjectInfo
-        )
+        )!!
 
         val modelParams = ModelParameters.createPipelineParams(
             action = action,
@@ -430,7 +430,7 @@ class StreamYamlBuild @Autowired constructor(
                 gitProjectKey = objectData.remoteProjectId,
                 action = action,
                 getProjectInfo = action.api::getGitProjectInfo
-            ).gitProjectId.let { "git_$it" }
+            )?.gitProjectId?.let { "git_$it" } ?: return@forEach
         }
 
         val results = mutableMapOf<String, BuildTemplateAcrossInfo>()
@@ -474,7 +474,7 @@ class StreamYamlBuild @Autowired constructor(
                         gitProjectKey = repoNameAndPool[0],
                         action = action,
                         getProjectInfo = action.api::getGitProjectInfo
-                    )
+                    )!!
 
                     val result = "git_${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}"
 

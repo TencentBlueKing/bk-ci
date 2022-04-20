@@ -91,7 +91,7 @@ class StreamTriggerRequestRepoService @Autowired constructor(
                     gitProjectKey = gitProjectPipeline.gitProjectId,
                     action = action,
                     getProjectInfo = action.api::getGitProjectInfo
-                ).defaultBranch!!
+                )!!.defaultBranch!!
             )
             action.data.context.defaultBranch = action.data.context.repoTrigger!!.branch
 
