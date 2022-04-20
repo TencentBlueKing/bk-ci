@@ -103,11 +103,13 @@ class GitCITriggerRepoService @Autowired constructor(
                 gitEvent = event,
                 basicSetting = null
             ) {
-                triggerPerPipeline(
-                    gitProjectPipeline = gitProjectPipeline,
-                    gitRequestEventForHandle = gitRequestEventForHandle,
-                    event = event
-                )
+                triggerExceptionService.handleErrorCode(request = gitRequestEventForHandle) {
+                    triggerPerPipeline(
+                        gitProjectPipeline = gitProjectPipeline,
+                        gitRequestEventForHandle = gitRequestEventForHandle,
+                        event = event
+                    )
+                }
             }
         }
 

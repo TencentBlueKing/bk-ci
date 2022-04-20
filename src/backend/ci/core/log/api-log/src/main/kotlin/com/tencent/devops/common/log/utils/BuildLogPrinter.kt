@@ -114,17 +114,21 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        genLogPrintPrintResource().addLogLine(
-            buildId = buildId,
-            logMessage = genLogMessage(
-                message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                logType = LogType.ERROR,
-                executeCount = executeCount
+        try {
+            genLogPrintPrintResource().addLogLine(
+                buildId = buildId,
+                logMessage = genLogMessage(
+                    message = "$LOG_ERROR_FLAG${message.replace("\n", "\n$LOG_ERROR_FLAG")}",
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    logType = LogType.ERROR,
+                    executeCount = executeCount
+                )
             )
-        )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|addErrorLine error|message=$message", e)
+        }
     }
 
     fun addDebugLine(
@@ -135,17 +139,21 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        genLogPrintPrintResource().addLogLine(
-            buildId = buildId,
-            logMessage = genLogMessage(
-                message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                logType = LogType.DEBUG,
-                executeCount = executeCount
+        try {
+            genLogPrintPrintResource().addLogLine(
+                buildId = buildId,
+                logMessage = genLogMessage(
+                    message = "$LOG_DEBUG_FLAG${message.replace("\n", "\n$LOG_DEBUG_FLAG")}",
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    logType = LogType.DEBUG,
+                    executeCount = executeCount
+                )
             )
-        )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|addDebugLine error|message=$message", e)
+        }
     }
 
     fun addYellowLine(
@@ -245,6 +253,7 @@ class BuildLogPrinter(
         private const val LOG_DEBUG_FLAG = "##[debug]"
 
         private const val LOG_ERROR_FLAG = "##[error]"
+
         @Suppress("UNUSED")
         private const val LOG_WARN_FLAG = "##[warning]"
     }

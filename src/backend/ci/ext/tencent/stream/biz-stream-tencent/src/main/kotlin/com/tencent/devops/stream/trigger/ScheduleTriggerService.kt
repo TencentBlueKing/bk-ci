@@ -140,7 +140,9 @@ class ScheduleTriggerService @Autowired constructor(
         buildPipeline: GitProjectPipeline
     ): BuildId? {
         return triggerExceptionService.handle(gitRequestEventForHandle, null, null) {
-            trigger(gitRequestEventForHandle, originYaml, buildPipeline)
+            triggerExceptionService.handleErrorCode(request = gitRequestEventForHandle) {
+                trigger(gitRequestEventForHandle, originYaml, buildPipeline)
+            }
         }
     }
 

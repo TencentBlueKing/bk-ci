@@ -125,7 +125,8 @@ class TXPipelineExportService @Autowired constructor(
             .apply {
                 registerKotlinModule().setFilterProvider(
                     SimpleFilterProvider().addFilter(
-                        YAME_META_DATA_JSON_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
+                        YAME_META_DATA_JSON_FILTER,
+                        SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
                     )
                 )
             }
@@ -1205,7 +1206,12 @@ class TXPipelineExportService @Autowired constructor(
             return if (agentId.isNotBlank()) {
                 ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
             } else if (envId.isNotBlank()) {
-                ThirdPartyAgentEnvDispatchType(envName = envId, workspace = workspace, agentType = AgentType.ID)
+                ThirdPartyAgentEnvDispatchType(
+                    envName = envId,
+                    envProjectId = null,
+                    workspace = workspace,
+                    agentType = AgentType.ID
+                )
             } // docker建机指定版本(旧)
             else if (!param.dockerBuildVersion.isNullOrBlank()) {
                 DockerDispatchType(param.dockerBuildVersion!!)
