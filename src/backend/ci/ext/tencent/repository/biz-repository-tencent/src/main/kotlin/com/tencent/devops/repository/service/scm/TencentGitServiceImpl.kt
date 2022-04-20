@@ -629,7 +629,6 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
 
     override fun getGitCodeProjectList(
         accessToken: String,
-        userId: String,
         page: Int?,
         pageSize: Int?,
         search: String?,
@@ -640,7 +639,6 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
     ): Result<List<GitCodeProjectInfo>> {
         return client.getScm(ServiceGitResource::class).getGitCodeProjectList(
             accessToken = accessToken,
-            userId = userId,
             page = page,
             pageSize = pageSize,
             search = search,
