@@ -88,7 +88,7 @@ class StreamTriggerListener @Autowired constructor(
 
         logger.info(
             "stream pipeline: ${action.data.context.pipeline?.pipelineId} " +
-                    "from trigger to build time：${System.currentTimeMillis() - startTime}"
+                "from trigger to build time：${System.currentTimeMillis() - startTime}"
         )
     }
 }
