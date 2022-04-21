@@ -27,7 +27,10 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BEFORE_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_AUTHOR
@@ -36,6 +39,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushActionType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
@@ -49,6 +53,7 @@ import com.tencent.devops.common.webhook.pojo.code.DELETE_EVENT
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteBranch
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -60,8 +65,10 @@ import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.filter.CommitMessageFilter
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -202,7 +209,33 @@ class TGitPushTriggerHandler(
             event.commits?.firstOrNull { it.id == event.after }?.author?.name ?: ""
         startParams[PIPELINE_GIT_BEFORE_SHA] = event.before
         startParams[PIPELINE_GIT_BEFORE_SHA_SHORT] = GitUtils.getShortSha(event.before)
+        startParams[PIPELINE_GIT_ACTION] =
+            if (event.isCreateBranch()) TGitPushActionType.NEW_BRANCH.value else TGitPushActionType.PUSH_FILE.value
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/commit/${event.commits?.firstOrNull()?.id}"
         return startParams
+    }
+
+    override fun getWebhookCommitList(
+        event: GitPushEvent,
+        projectId: String?,
+        repository: Repository?,
+        page: Int,
+        size: Int
+    ): List<WebhookCommit> {
+        if (page > 1) {
+            // push 请求事件会在第一次请求时将所有的commit记录全部返回，所以如果分页参数不为1，则直接返回空列表
+            return emptyList()
+        }
+        return event.commits!!.map {
+            val commitTime =
+                DateTimeUtil.convertDateToLocalDateTime(Date(DateTimeUtil.zoneDateToTimestamp(it.timestamp)))
+            WebhookCommit(
+                commitId = it.id,
+                authorName = it.author.name,
+                message = it.message,
+                repoType = ScmType.CODE_TGIT.name,
+                commitTime = commitTime
+            )
+        }
     }
 }

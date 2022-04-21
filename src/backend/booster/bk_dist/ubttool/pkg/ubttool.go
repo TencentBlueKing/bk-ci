@@ -175,6 +175,11 @@ func (h *UBTTool) executeActions() error {
 		select {
 		case r := <-h.actionchan:
 			blog.Infof("UBTTool: got action result:%+v", r)
+			if r.Exitcode != 0 {
+				err := fmt.Errorf("exit code:%d", r.Exitcode)
+				blog.Errorf("UBTTool: %v", err)
+				return err
+			}
 			h.onActionFinished(r.Index, r.Exitcode)
 			if h.finished {
 				blog.Infof("UBTTool: all actions finished")

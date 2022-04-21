@@ -54,8 +54,6 @@ data class MarketAtomUpdateRequest(
     val description: String?,
     @ApiModelProperty("logo地址", required = false)
     val logoUrl: String?,
-    @ApiModelProperty("icon图标base64字符串", required = false)
-    var iconData: String?,
     @ApiModelProperty("版本号", required = true)
     val version: String,
     @ApiModelProperty(

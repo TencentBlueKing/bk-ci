@@ -45,7 +45,7 @@ export default {
         showPanelType: '',
         isShowCompleteLog: false,
         isStagePopupShow: false,
-        isAddParallelContainer: false,
+        isAddParallelStage: false,
         insertStageIndex: null,
         insertStageIsFinally: false,
         buildParamsMap: {},

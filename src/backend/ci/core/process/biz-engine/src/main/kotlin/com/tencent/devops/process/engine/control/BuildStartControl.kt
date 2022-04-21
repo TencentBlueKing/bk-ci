@@ -63,6 +63,7 @@ import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -72,6 +73,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import kotlin.math.max
 
 /**
  * 构建控制器
@@ -122,7 +124,7 @@ class BuildStartControl @Autowired constructor(
 
     fun PipelineBuildStartEvent.execute(watcher: Watcher) {
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, buildId)
-        buildLogPrinter.addLine(buildId = buildId, message = "Enter BuildStartControl",
+        buildLogPrinter.addDebugLine(buildId = buildId, message = "Enter BuildStartControl",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
 
@@ -136,7 +138,7 @@ class BuildStartControl @Autowired constructor(
         buildModel(buildInfo = buildInfo, executeCount = executeCount)
         watcher.stop()
 
-        buildLogPrinter.addLine(buildId = buildId, message = "BuildStartControl End",
+        buildLogPrinter.addDebugLine(buildId = buildId, message = "BuildStartControl End",
             tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
 
@@ -182,21 +184,34 @@ class BuildStartControl @Autowired constructor(
                 retry()
                 return false
             }
-            val runLockType = pipelineRepositoryService.getSetting(projectId, pipelineId)?.runLockType
+            val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
             // #4074 LOCK 不会进入到这里，在启动API已经拦截
-            if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
+            if (setting?.runLockType == PipelineRunLockType.SINGLE ||
+                setting?.runLockType == PipelineRunLockType.SINGLE_LOCK) {
                 // #4074 锁定当前构建是队列中第一个排队待执行的
                 if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
                     canStart = pipelineRuntimeExtService.queueCanPend2Start(projectId, pipelineId, buildId = buildId)
                 }
                 if (canStart) {
                     val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
-                    if (buildSummaryRecord!!.runningCount > 0) {
+                    // #6521 并发组中需要等待其他流水线
+                    val concurrencyGroupRunningCount = setting.concurrencyGroup?.let {
+                        pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                            projectId = projectId,
+                            concurrencyGroup = it,
+                            status = listOf(BuildStatus.RUNNING)
+                        ).size
+                    } ?: 0
+
+                    if (buildSummaryRecord!!.runningCount > 0 || concurrencyGroupRunningCount > 0) {
                         // 需要重新入队等待
                         pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
 
                         buildLogPrinter.addLine(
-                            message = "Mode: $runLockType, queue: ${buildSummaryRecord.runningCount}",
+                            message = "Mode: ${setting.runLockType}," + if (concurrencyGroupRunningCount > 0)
+                                "concurrency for group(${setting.concurrencyGroup}) " +
+                                    "and queue: $concurrencyGroupRunningCount"
+                            else " queue: ${buildSummaryRecord.runningCount}",
                             buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                         )
                         canStart = false
@@ -284,11 +299,12 @@ class BuildStartControl @Autowired constructor(
         )
     }
 
-    private fun updateModel(model: Model, buildInfo: BuildInfo, taskId: String) {
+    private fun updateModel(model: Model, buildInfo: BuildInfo, taskId: String, executeCount: Int) {
         val now = LocalDateTime.now()
         val stage = model.stages[0]
         val container = stage.containers[0]
         run lit@{
+            ContainerUtils.clearQueueContainerName(container)
             container.elements.forEach {
                 if (it.id == taskId) {
                     pipelineContainerService.updateContainerStatus(
@@ -316,15 +332,18 @@ class BuildStartControl @Autowired constructor(
         )
 
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = if (System.currentTimeMillis() - buildInfo.queueTime < 0) {
-            0
-        } else System.currentTimeMillis() - buildInfo.queueTime
+        stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
-        container.systemElapsed = System.currentTimeMillis() - buildInfo.queueTime
+        container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
+        container.executeCount = executeCount
         container.startVMStatus = BuildStatus.SUCCEED.name
 
         buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
+        buildLogPrinter.addLine(
+            message = "触发人(trigger user): ${buildInfo.triggerUser}, 执行人(start user): ${buildInfo.startUser}",
+            buildId = buildInfo.buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
+        )
     }
 
     @Suppress("ALL")
@@ -469,7 +488,7 @@ class BuildStartControl @Autowired constructor(
             buildLogPrinter.addLine(message = "Updating model & start parameters & variables",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            updateModel(model = model, buildInfo = buildInfo, taskId = taskId)
+            updateModel(model = model, buildInfo = buildInfo, taskId = taskId, executeCount = executeCount)
             buildVariableService.setVariable(
                 projectId = projectId,
                 pipelineId = pipelineId,

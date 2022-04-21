@@ -430,7 +430,7 @@
         line-height: 12px;
         font-size: 12px;
         border-radius: 2px;
-        border: 1px solid $fontLigtherColor;
+        border: 1px solid $fontLighterColor;
         resize: none;
     }
 
