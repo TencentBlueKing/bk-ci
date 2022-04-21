@@ -151,6 +151,7 @@ class StoreDockingPlatformDao {
             val conditions = getStoreDockingPlatformsCondition(platformName)
             return dslContext
                 .selectCount()
+                .from(this)
                 .where(conditions)
                 .fetchOne(0, Long::class.java)!!
         }
