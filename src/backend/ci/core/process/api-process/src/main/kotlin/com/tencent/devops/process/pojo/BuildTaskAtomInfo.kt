@@ -35,5 +35,5 @@ data class BuildTaskErrorMessage(
     @ApiModelProperty("插件创建人", required = false)
     var atomCreator: String?,
     @ApiModelProperty("第三方服务助手信息", required = false)
-    var thirdPartyAssistant: String?,
+    var thirdPartyAssistant: String?
 )

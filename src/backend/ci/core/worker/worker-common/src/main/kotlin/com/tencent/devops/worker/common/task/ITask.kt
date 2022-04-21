@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
-import com.tencent.devops.process.pojo.BuildTaskErrorMessage
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
