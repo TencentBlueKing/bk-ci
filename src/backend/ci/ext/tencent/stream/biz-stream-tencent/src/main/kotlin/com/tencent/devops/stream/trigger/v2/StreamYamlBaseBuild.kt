@@ -163,7 +163,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectId = gitCIBasicSetting.projectCode!!,
                 pipelineId = pipeline.pipelineId,
                 pipelineName = modelAndSetting.model.name
-            )
+            ),
+            updateLastModifyUser = updateLastModifyUser
         )
     }
 
