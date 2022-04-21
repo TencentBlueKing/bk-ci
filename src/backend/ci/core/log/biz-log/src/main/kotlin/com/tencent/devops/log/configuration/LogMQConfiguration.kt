@@ -28,7 +28,6 @@
 package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.stream.pojo.IEvent
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.log.event.LogStatusEvent
 import com.tencent.devops.log.event.LogStorageEvent
