@@ -59,21 +59,27 @@ class LogMQConfiguration @Autowired constructor() {
     ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
 
     @Bean(StreamBinding.BINDING_LOG_ORIGIN_EVENT_IN)
-    fun logOriginEventIn(listenerService: BuildLogListenerService): Consumer<Message<LogOriginEvent>> {
+    fun logOriginEventIn(
+        listenerService: BuildLogListenerService
+    ): Consumer<Message<LogOriginEvent>> {
         return Consumer { event: Message<LogOriginEvent> ->
             listenerService.handleEvent(event.payload)
         }
     }
 
-    @Bean(StreamBinding.BINDING_LOG_STORAGE_EVENT_OUT)
-    fun logStorageEventOut(listenerService: BuildLogListenerService): Consumer<Message<LogStorageEvent>> {
+    @Bean(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
+    fun logStorageEventOut(
+        listenerService: BuildLogListenerService
+    ): Consumer<Message<LogStorageEvent>> {
         return Consumer { event: Message<LogStorageEvent> ->
             listenerService.handleEvent(event.payload)
         }
     }
 
-    @Bean(StreamBinding.BINDING_LOG_STATUS_EVENT_OUT)
-    fun logStatusEventOut(listenerService: BuildLogListenerService): Consumer<Message<LogStatusEvent>> {
+    @Bean(StreamBinding.BINDING_LOG_STATUS_EVENT_IN)
+    fun logStatusEventOut(
+        listenerService: BuildLogListenerService
+    ): Consumer<Message<LogStatusEvent>> {
         return Consumer { event: Message<LogStatusEvent> ->
             listenerService.handleEvent(event.payload)
         }

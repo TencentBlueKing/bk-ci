@@ -33,7 +33,6 @@ dependencies {
     }
     api("org.springframework.boot:spring-boot-actuator")
     api("org.springframework.boot:spring-boot-actuator-autoconfigure")
-    api("org.springframework.boot:spring-boot-configuration-processor")
     api("org.springframework.cloud:spring-cloud-stream")
     api("org.springframework.cloud:spring-cloud-starter-stream-kafka")
     api("org.springframework.cloud:spring-cloud-starter-stream-rabbit")
