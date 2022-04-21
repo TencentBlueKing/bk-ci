@@ -29,10 +29,10 @@ package com.tencent.devops.log.event
 
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.stream.annotation.StreamEvent
-import com.tencent.devops.common.stream.constants.Stream
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@StreamEvent(Stream.EXCHANGE_LOG_BUILD_MESSAGE)
-data class LogEvent(
+@StreamEvent(StreamBinding.BINDING_LOG_ORIGIN_EVENT_OUT)
+data class LogOriginEvent(
     override val buildId: String,
     val logs: List<LogMessage>,
     override var retryTime: Int = 2,

@@ -27,7 +27,12 @@
 
 package com.tencent.devops.log.configuration
 
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.service.BuildLogListenerService
 import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -36,8 +41,9 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
-@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -45,9 +51,36 @@ class LogMQConfiguration @Autowired constructor() {
 
     @Bean
     fun buildLogPrintService(
-        bridge: StreamBridge,
+        streamBridge: StreamBridge,
         logPrintBean: LogPrintBean,
         storageProperties: StorageProperties,
         logServiceConfig: LogServiceConfig
-    ) = BuildLogPrintService(bridge, logPrintBean, storageProperties, logServiceConfig)
+    ) = BuildLogPrintService(streamBridge, logPrintBean, storageProperties, logServiceConfig)
+
+    @Bean(StreamBinding.BINDING_LOG_ORIGIN_EVENT_IN)
+    fun logOriginEventIn(
+        listenerService: BuildLogListenerService
+    ): Consumer<Message<LogOriginEvent>> {
+        return Consumer { event: Message<LogOriginEvent> ->
+            listenerService.handleEvent(event.payload)
+        }
+    }
+
+    @Bean(StreamBinding.BINDING_LOG_STORAGE_EVENT_IN)
+    fun logStorageEventOut(
+        listenerService: BuildLogListenerService
+    ): Consumer<Message<LogStorageEvent>> {
+        return Consumer { event: Message<LogStorageEvent> ->
+            listenerService.handleEvent(event.payload)
+        }
+    }
+
+    @Bean(StreamBinding.BINDING_LOG_STATUS_EVENT_IN)
+    fun logStatusEventOut(
+        listenerService: BuildLogListenerService
+    ): Consumer<Message<LogStatusEvent>> {
+        return Consumer { event: Message<LogStatusEvent> ->
+            listenerService.handleEvent(event.payload)
+        }
+    }
 }

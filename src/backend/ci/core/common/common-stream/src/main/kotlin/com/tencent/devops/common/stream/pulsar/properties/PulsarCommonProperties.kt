@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.stream.pulsar.properties
 
-import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import kotlin.reflect.jvm.jvmName
 
 open class PulsarCommonProperties(

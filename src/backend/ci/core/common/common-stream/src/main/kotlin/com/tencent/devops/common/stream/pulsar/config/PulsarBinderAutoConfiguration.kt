@@ -28,16 +28,27 @@
 package com.tencent.devops.common.stream.pulsar.config
 
 import com.tencent.devops.common.stream.pulsar.PulsarMessageChannelBinder
-import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
+import com.tencent.devops.common.stream.pulsar.properties.PulsarBinderConfigurationProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarExtendedBindingProperties
+import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.provisioning.PulsarMessageQueueProvisioner
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(PulsarExtendedBindingProperties::class, PulsarProperties::class)
-class PulsarMessageChannelBinderConfiguration {
+@EnableConfigurationProperties(
+    PulsarProperties::class,
+    PulsarExtendedBindingProperties::class
+)
+class PulsarBinderAutoConfiguration {
+
+    @Bean
+    fun configurationProperties(
+        pulsarProperties: PulsarProperties?
+    ): PulsarBinderConfigurationProperties? {
+        return PulsarBinderConfigurationProperties(pulsarProperties)
+    }
 
     @Bean
     fun pulsarMessageQueueProvisioner(): PulsarMessageQueueProvisioner {
@@ -48,13 +59,17 @@ class PulsarMessageChannelBinderConfiguration {
     fun pulsarMessageChannelBinder(
         provisioningProvider: PulsarMessageQueueProvisioner,
         bindingProperties: PulsarExtendedBindingProperties,
-        pulsarProperties: PulsarProperties
-    ): PulsarMessageChannelBinder {
-        return PulsarMessageChannelBinder(
-            messageBinderProvisioner = provisioningProvider,
-            extendedBindingProperties = bindingProperties,
-            pulsarProperties = pulsarProperties
-        )
+        pulsarBinderProperties: PulsarBinderConfigurationProperties
+    ): PulsarMessageChannelBinder? {
+        return if (pulsarBinderProperties.pulsarProperties == null) {
+            null
+        } else {
+            PulsarMessageChannelBinder(
+                provisioningProvider,
+                bindingProperties,
+                pulsarBinderProperties
+            )
+        }
     }
 
 //    @Configuration(proxyBeanMethods = false)

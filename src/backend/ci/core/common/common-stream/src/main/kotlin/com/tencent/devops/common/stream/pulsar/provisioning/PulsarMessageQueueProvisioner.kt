@@ -48,7 +48,6 @@ class PulsarMessageQueueProvisioner :
         name: String,
         properties: ExtendedProducerProperties<PulsarProducerProperties>
     ): ProducerDestination {
-        logger.info("Using pulsar topic for outbound: $name")
         PulsarUtils.validateTopicName(name)
         return PulsarProducerDestination(name, properties.partitionCount)
     }

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.common.stream.pulsar
 
-import com.tencent.devops.common.stream.pulsar.integration.PulsarInboundChannelAdapter
-import com.tencent.devops.common.stream.pulsar.integration.PulsarProducerMessageHandler
-import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
+import com.tencent.devops.common.stream.pulsar.integration.inbound.PulsarInboundChannelAdapter
+import com.tencent.devops.common.stream.pulsar.integration.outbound.PulsarProducerMessageHandler
+import com.tencent.devops.common.stream.pulsar.properties.PulsarBinderConfigurationProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarExtendedBindingProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProducerProperties
@@ -48,13 +48,15 @@ import org.springframework.messaging.MessageHandler
 class PulsarMessageChannelBinder(
     messageBinderProvisioner: PulsarMessageQueueProvisioner,
     private val extendedBindingProperties: PulsarExtendedBindingProperties,
-    private val pulsarProperties: PulsarProperties
+    private val pulsarProperties: PulsarBinderConfigurationProperties
 ) : AbstractMessageChannelBinder<
     ExtendedConsumerProperties<PulsarConsumerProperties>,
-    ExtendedProducerProperties<PulsarProducerProperties>, PulsarMessageQueueProvisioner>(
+    ExtendedProducerProperties<PulsarProducerProperties>, PulsarMessageQueueProvisioner
+    >(
     arrayOf(),
     messageBinderProvisioner
-), ExtendedPropertiesBinder<MessageChannel, PulsarConsumerProperties, PulsarProducerProperties> {
+),
+    ExtendedPropertiesBinder<MessageChannel, PulsarConsumerProperties, PulsarProducerProperties> {
 
     override fun createProducerMessageHandler(
         destination: ProducerDestination?,
@@ -74,8 +76,8 @@ class PulsarMessageChannelBinder(
     ): MessageHandler {
         val messageHandler = PulsarProducerMessageHandler(
             destination = destination,
-            producerProperties = producerProperties,
-            pulsarProperties = pulsarProperties
+            producerProperties = producerProperties.extension,
+            pulsarProperties = pulsarProperties.pulsarProperties!!
         )
         messageHandler.setApplicationContext(this.applicationContext)
         if (errorChannel != null) {
@@ -103,7 +105,7 @@ class PulsarMessageChannelBinder(
         val inboundChannelAdapter = PulsarInboundChannelAdapter(
             destination = destination!!.name,
             extendedConsumerProperties = properties,
-            pulsarProperties = pulsarProperties,
+            pulsarProperties = pulsarProperties.pulsarProperties!!,
             group = group
         )
         val errorInfrastructure = registerErrorInfrastructure(

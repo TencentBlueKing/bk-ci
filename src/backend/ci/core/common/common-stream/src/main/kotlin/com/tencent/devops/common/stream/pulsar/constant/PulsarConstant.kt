@@ -52,3 +52,4 @@ const val TOPIC_NAME = "topicName"
 
 const val DLQ = "-DLQ"
 const val RETRY = "-RETRY"
+const val X_DELAY = "x-delay"

@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,11 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.constants
+package com.tencent.devops.common.stream.pulsar.properties
 
-object Stream {
-    // 日志事件
-    const val EXCHANGE_LOG_BUILD_MESSAGE = "e.build.log.origin.event"
-    const val EXCHANGE_LOG_BATCH_BUILD_EVENT = "e.build.log.storage.event"
-    const val EXCHANGE_LOG_STATUS_BUILD_EVENT = "e.build.log.status.event"
-}
+data class PulsarBinderConfigurationProperties(
+    val pulsarProperties: PulsarProperties?
+)

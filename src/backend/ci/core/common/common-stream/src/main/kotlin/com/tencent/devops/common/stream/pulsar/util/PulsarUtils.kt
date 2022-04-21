@@ -30,77 +30,12 @@ package com.tencent.devops.common.stream.pulsar.util
 import com.tencent.devops.common.stream.pulsar.constant.DLQ
 import com.tencent.devops.common.stream.pulsar.constant.PATH_SPLIT
 import com.tencent.devops.common.stream.pulsar.constant.RETRY
-import com.tencent.devops.common.stream.pulsar.exception.ClientInitException
-import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
-import org.apache.pulsar.client.api.AuthenticationFactory
-import org.apache.pulsar.client.api.ClientBuilder
 import org.apache.pulsar.client.api.DeadLetterPolicy
-import org.apache.pulsar.client.api.PulsarClient
-import org.apache.pulsar.client.impl.auth.oauth2.AuthenticationFactoryOAuth2
 import java.io.UnsupportedEncodingException
-import java.net.URL
 import java.util.StringJoiner
-import java.util.concurrent.TimeUnit
 import javax.validation.constraints.NotBlank
 
 object PulsarUtils {
-
-    fun getClientBuilder(pulsarProperties: PulsarProperties): ClientBuilder {
-        with(pulsarProperties) {
-            if (!tlsAuthCertFilePath.isNullOrEmpty() &&
-                !tlsAuthKeyFilePath.isNullOrEmpty() &&
-                !tokenAuthValue.isNullOrEmpty()
-            ) throw ClientInitException("You cannot use multiple auth options.")
-            val builder = PulsarClient.builder()
-                .serviceUrl(serviceUrl)
-                .ioThreads(ioThreads)
-                .listenerThreads(listenerThreads)
-                .enableTcpNoDelay(enableTcpNoDelay)
-                .keepAliveInterval(keepAliveIntervalSec, TimeUnit.SECONDS)
-                .connectionTimeout(connectionTimeoutSec, TimeUnit.SECONDS)
-                .operationTimeout(operationTimeoutSec, TimeUnit.SECONDS)
-                .startingBackoffInterval(startingBackoffIntervalMs.toLong(), TimeUnit.MILLISECONDS)
-                .maxBackoffInterval(maxBackoffIntervalSec.toLong(), TimeUnit.SECONDS)
-                .useKeyStoreTls(useKeyStoreTls)
-                .tlsTrustCertsFilePath(tlsTrustCertsFilePath)
-                .tlsCiphers(tlsCiphers)
-                .tlsProtocols(tlsProtocols)
-                .tlsTrustStorePassword(tlsTrustStorePassword)
-                .tlsTrustStorePath(tlsTrustStorePath)
-                .tlsTrustStoreType(tlsTrustStoreType)
-                .allowTlsInsecureConnection(allowTlsInsecureConnection)
-                .enableTlsHostnameVerification(enableTlsHostnameVerification)
-
-            if (!tlsAuthCertFilePath.isNullOrEmpty() &&
-                !tlsAuthKeyFilePath.isNullOrEmpty()
-            ) {
-                builder.authentication(
-                    AuthenticationFactory
-                        .TLS(tlsAuthCertFilePath, tlsAuthKeyFilePath)
-                )
-            }
-
-            if (!tokenAuthValue.isNullOrEmpty()) {
-                builder.authentication(
-                    AuthenticationFactory
-                        .token(tokenAuthValue)
-                )
-            }
-
-            if (!oauth2Audience.isNullOrEmpty() &&
-                !oauth2IssuerUrl.isNullOrEmpty() &&
-                !oauth2CredentialsUrl.isNullOrEmpty()
-            ) {
-                val issuerUrl = URL(oauth2IssuerUrl)
-                val credentialsUrl = URL(oauth2CredentialsUrl)
-                builder.authentication(
-                    AuthenticationFactoryOAuth2
-                        .clientCredentials(issuerUrl, credentialsUrl, oauth2Audience)
-                )
-            }
-            return builder
-        }
-    }
 
     /**
      * Validate topic name. Allowed chars are ASCII alphanumerics, '.', '_' and '-'.

@@ -25,34 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.dispatcher
+package com.tencent.devops.common.stream.constants
 
-import com.tencent.devops.common.stream.annotation.StreamEvent
-import com.tencent.devops.common.stream.pojo.IEvent
-import org.slf4j.LoggerFactory
-import org.springframework.cloud.stream.function.StreamBridge
-
-/**
- * 基于Stream MQ实现的流水线事件下发器
- *
- * @version 1.0
- */
-class StreamEventDispatcher constructor(
-    private val bridge: StreamBridge
-) : EventDispatcher<IEvent> {
-
-    override fun dispatch(vararg events: IEvent) {
-        events.forEach { event ->
-            try {
-                val eventType = event::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
-                bridge.send(eventType.destination, event.buildMessage(eventType.delayMills))
-            } catch (ignored: Exception) {
-                logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
-            }
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StreamEventDispatcher::class.java)
-    }
+object StreamHeader {
+    const val X_DELAY = "x-delay"
 }

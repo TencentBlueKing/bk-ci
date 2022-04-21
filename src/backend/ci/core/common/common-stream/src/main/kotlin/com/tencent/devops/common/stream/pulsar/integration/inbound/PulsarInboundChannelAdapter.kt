@@ -25,21 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.pulsar.integration
+package com.tencent.devops.common.stream.pulsar.integration.inbound
 
-import com.tencent.devops.common.stream.pulsar.constant.Serialization
-import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
+import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.support.PulsarMessageConverterSupport
+import com.tencent.devops.common.stream.pulsar.util.PulsarClientUtils
 import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
-import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
 import org.apache.pulsar.client.api.Consumer
-import org.apache.pulsar.client.api.ConsumerCryptoFailureAction
 import org.apache.pulsar.client.api.Message
-import org.apache.pulsar.client.api.RegexSubscriptionMode
-import org.apache.pulsar.client.api.SubscriptionInitialPosition
-import org.apache.pulsar.client.api.SubscriptionType
-import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.binder.ExtendedConsumerProperties
 import org.springframework.integration.context.OrderlyShutdownCapable
 import org.springframework.integration.endpoint.MessageProducerSupport
@@ -51,7 +45,6 @@ import org.springframework.retry.RetryContext
 import org.springframework.retry.RetryListener
 import org.springframework.retry.support.RetryTemplate
 import org.springframework.util.Assert
-import java.util.concurrent.TimeUnit
 
 class PulsarInboundChannelAdapter(
     private val destination: String,
@@ -59,16 +52,10 @@ class PulsarInboundChannelAdapter(
     private var extendedConsumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
     private val pulsarProperties: PulsarProperties
 ) : MessageProducerSupport(), OrderlyShutdownCapable {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PulsarInboundChannelAdapter::class.java)
-    }
-
-    private var consumer: Consumer<Any>? = null
+    private val consumers: MutableList<Consumer<Any>> = mutableListOf()
     var retryTemplate: RetryTemplate? = null
     var recoveryCallback: RecoveryCallback<Any>? = null
     private var topic: String = ""
-
     override fun onInit() {
         if (extendedConsumerProperties.extension == null) {
             return
@@ -88,20 +75,41 @@ class PulsarInboundChannelAdapter(
                 deadLetterTopic = extendedConsumerProperties.extension.deadLetterTopic,
                 retryLetterTopic = extendedConsumerProperties.extension.retryLetterTopic
             )
-
-            createRetryTemplate()
             // TODO prepare register consumer message listener
             val messageListener = createListener()
-            // TODO multi topic如何处理， batch 如何处理， 对于Subscription多种模式如何处理
-            consumer = generatePulsarConsumer(
-                topic = topic,
-                group = group,
-                pulsarProperties = pulsarProperties,
-                consumerProperties = extendedConsumerProperties,
-                messageListener = messageListener,
-                deadLetterTopic = deadLetter,
-                retryLetterTopic = retryLetter
-            )
+            createRetryTemplate()
+            if (extendedConsumerProperties.concurrency > 1) {
+                val client = PulsarClientUtils.pulsarClient(
+                    pulsarProperties = pulsarProperties,
+                    concurrency = extendedConsumerProperties.concurrency
+                )
+                // TODO multi topic如何处理， batch 如何处理， 对于Subscription多种模式如何处理
+                for (i in 1..extendedConsumerProperties.concurrency) {
+                    val consumer = PulsarConsumerFactory.initPulsarConsumer(
+                        topic = topic,
+                        group = group,
+                        consumerProperties = extendedConsumerProperties,
+                        messageListener = messageListener,
+                        deadLetterTopic = deadLetter,
+                        retryLetterTopic = retryLetter,
+                        pulsarProperties = pulsarProperties,
+                        concurrency = extendedConsumerProperties.concurrency,
+                        pulsarClient = client
+                    )
+                    consumers.add(consumer)
+                }
+            } else {
+                val consumer = PulsarConsumerFactory.initPulsarConsumer(
+                    topic = topic,
+                    group = group,
+                    consumerProperties = extendedConsumerProperties,
+                    messageListener = messageListener,
+                    deadLetterTopic = deadLetter,
+                    retryLetterTopic = retryLetter,
+                    pulsarProperties = pulsarProperties
+                )
+                consumers.add(consumer)
+            }
         } catch (e: Exception) {
             logger.error("DefaultPulsarConsumer init failed, Caused by " + e.message)
             throw MessagingException(
@@ -153,7 +161,7 @@ class PulsarInboundChannelAdapter(
                 val message = PulsarMessageConverterSupport.convertMessage2Spring(msg)
                 if (retryTemplate != null) {
                     retryTemplate!!.execute(
-                        RetryCallback<Any, RuntimeException> { context: RetryContext? ->
+                        RetryCallback<Any, RuntimeException> { _: RetryContext? ->
                             sendMessage(message)
                             if (logger.isDebugEnabled) {
                                 logger.info("will send acknowledge: ${msg.messageId}")
@@ -203,7 +211,13 @@ class PulsarInboundChannelAdapter(
     }
 
     override fun doStop() {
-        consumer?.close()
+        // 2.8.1版本调用会出错，所以升级https://github.com/apache/pulsar/issues/12024
+        consumers.forEach {
+            try {
+                it.close()
+            } catch (ignore: Exception) {
+            }
+        }
     }
 
     override fun beforeShutdown(): Int {
@@ -215,62 +229,7 @@ class PulsarInboundChannelAdapter(
         return 0
     }
 
-    private fun generatePulsarConsumer(
-        topic: String,
-        group: String? = null,
-        pulsarProperties: PulsarProperties,
-        consumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
-        messageListener: (Consumer<*>, Message<*>) -> Unit,
-        retryLetterTopic: String,
-        deadLetterTopic: String
-    ): Consumer<Any> {
-        val pulsarConsumerProperties = consumerProperties.extension
-        with(pulsarConsumerProperties) {
-            val topics = mutableListOf<String>()
-            topics.addAll(topicNames)
-            topics.add(topic)
-            val builder = PulsarUtils.getClientBuilder(pulsarProperties)
-            numIoThreads?.let { builder.ioThreads(it) }
-            numListenerThreads?.let { builder.listenerThreads(it) }
-            connectionsPerBroker?.let { builder.connectionsPerBroker(it) }
-            val consumer = builder.build().newConsumer(
-                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            ).topics(topics)
-            if (!topicsPattern.isNullOrEmpty()) {
-                consumer.topicsPattern(topicsPattern)
-            }
-            if (group.isNullOrEmpty()) {
-                consumer.subscriptionName(subscriptionName)
-            } else {
-                consumer.subscriptionName(group)
-            }
-            consumer.subscriptionType(SubscriptionType.valueOf(subscriptionType))
-                .receiverQueueSize(receiverQueueSize)
-                .acknowledgmentGroupTime(acknowledgementsGroupTimeMicros, TimeUnit.MILLISECONDS)
-                .negativeAckRedeliveryDelay(negativeAckRedeliveryDelayMicros, TimeUnit.MILLISECONDS)
-                .maxTotalReceiverQueueSizeAcrossPartitions(maxTotalReceiverQueueSizeAcrossPartitions)
-            if (!consumerName.isNullOrBlank()) {
-                consumer.consumerName(consumerName)
-            }
-
-            consumer.ackTimeout(ackTimeoutMillis, TimeUnit.MILLISECONDS)
-                .ackTimeoutTickTime(tickDurationMillis, TimeUnit.MILLISECONDS)
-                .priorityLevel(priorityLevel)
-                .cryptoFailureAction(ConsumerCryptoFailureAction.valueOf(cryptoFailureAction))
-            if (properties.isNotEmpty()) {
-                consumer.properties(properties)
-            }
-            consumer.readCompacted(readCompacted)
-                .subscriptionInitialPosition(SubscriptionInitialPosition.valueOf(subscriptionInitialPosition))
-                .patternAutoDiscoveryPeriod(patternAutoDiscoveryPeriod)
-                .subscriptionTopicsMode(RegexSubscriptionMode.valueOf(regexSubscriptionMode))
-                .deadLetterPolicy(
-                    PulsarUtils.buildDeadLetterPolicy(deadLetterMaxRedeliverCount, retryLetterTopic, deadLetterTopic)
-                )
-                .autoUpdatePartitions(autoUpdatePartitions)
-                .replicateSubscriptionState(replicateSubscriptionState)
-            consumer.messageListener(messageListener)
-            return consumer.subscribe() as Consumer<Any>
-        }
+    companion object {
+//        private val logger = LoggerFactory.getLogger(PulsarInboundChannelAdapter::class.java)
     }
 }

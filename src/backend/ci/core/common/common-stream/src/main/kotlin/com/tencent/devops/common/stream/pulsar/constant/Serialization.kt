@@ -31,5 +31,6 @@ enum class Serialization {
     JSON,
     AVRO,
     STRING,
-    BYTE
+    BYTE,
+    PROTOBUF
 }

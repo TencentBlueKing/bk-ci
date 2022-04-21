@@ -27,27 +27,48 @@
 
 package com.tencent.devops.common.stream.pojo
 
+import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.constants.StreamHeader.X_DELAY
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.Message
 import org.springframework.messaging.support.MessageBuilder
 
 /**
  * 流水线事件
  */
-@Suppress("LongParameterList")
 open class IEvent(
     open var delayMills: Int,
     open var retryTime: Int = 1
 ) {
-    fun buildMessage(defaultMills: Int = 0): Message<IEvent> {
+
+    /**
+     * Stream事件发送
+     * @param bridge 传入一个自动加载的StreamBridge单例
+     */
+    fun sendTo(bridge: StreamBridge) {
+        try {
+            val eventType = this::class.java.annotations.find { s -> s is StreamEvent } as StreamEvent
+            bridge.send(eventType.outBinding, buildMessage(eventType.delayMills))
+        } catch (ignored: Exception) {
+            logger.error("[STREAM MQ] Fail to dispatch the event($this)", ignored)
+        }
+    }
+
+    private fun buildMessage(defaultMills: Int = 0): Message<IEvent> {
         val builder = MessageBuilder
             .withPayload(this)
         // 事件中的变量指定
         if (delayMills > 0) {
-            builder.setHeader("x-delay", delayMills)
+            builder.setHeader(X_DELAY, delayMills)
         } else if (defaultMills > 0) {
             // 事件类型固化默认值
-            builder.setHeader("x-delay", defaultMills)
+            builder.setHeader(X_DELAY, defaultMills)
         }
         return builder.build()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(IEvent::class.java)
     }
 }

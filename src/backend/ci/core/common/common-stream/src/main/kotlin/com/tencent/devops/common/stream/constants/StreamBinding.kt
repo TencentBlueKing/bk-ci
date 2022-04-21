@@ -25,39 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.pulsar.properties
+package com.tencent.devops.common.stream.constants
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+object StreamBinding {
+    // 日志预处理事件
+    const val BINDING_LOG_ORIGIN_EVENT_IN = "logOriginEventIn"
+    const val BINDING_LOG_ORIGIN_EVENT_OUT = "logOriginEventOut"
 
-@ConfigurationProperties(prefix = "spring.pulsar")
-data class PulsarProperties(
-    var serviceUrl: String = "pulsar://localhost:6650",
-    var ioThreads: Int = 1,
-    var listenerThreads: Int = 1,
-    var enableTcpNoDelay: Boolean = false,
-    var keepAliveIntervalSec: Int = 20,
-    var connectionTimeoutSec: Int = 10,
-    var operationTimeoutSec: Int = 15,
-    var startingBackoffIntervalMs: Int = 100,
-    var maxBackoffIntervalSec: Int = 10,
-    var consumerNameDelimiter: String = "",
-    var namespace: String = "default",
-    var tenant: String = "public",
-    var tlsTrustCertsFilePath: String? = null,
-    var tlsCiphers: Set<String> = emptySet<String>(),
-    var tlsProtocols: Set<String> = emptySet<String>(),
-    var tlsTrustStorePassword: String? = null,
-    var tlsTrustStorePath: String? = null,
-    var tlsTrustStoreType: String? = null,
-    var useKeyStoreTls: Boolean = false,
-    var allowTlsInsecureConnection: Boolean = false,
-    var enableTlsHostnameVerification: Boolean = false,
-    var tlsAuthCertFilePath: String? = null,
-    var tlsAuthKeyFilePath: String? = null,
-    var tokenAuthValue: String? = null,
-    var oauth2IssuerUrl: String? = null,
-    var oauth2CredentialsUrl: String? = null,
-    var oauth2Audience: String? = null,
-    var autoStart: Boolean = true,
-    var enableTransaction: Boolean = false
-)
+    // 日志预处理事件
+    const val BINDING_LOG_STORAGE_EVENT_IN = "logStorageEventIn"
+    const val BINDING_LOG_STORAGE_EVENT_OUT = "logStorageEventOut"
+
+    // 日志构建状态事件
+    const val BINDING_LOG_STATUS_EVENT_IN = "logStatusEventIn"
+    const val BINDING_LOG_STATUS_EVENT_OUT = "logStatusEventOut"
+}
