@@ -376,7 +376,7 @@ class TGitApiService @Autowired constructor(
         )
     }
 
-    private fun StreamGitCred.toToken(): String {
+    protected fun StreamGitCred.toToken(): String {
         this as TGitCred
         if (this.accessToken != null) {
             return this.accessToken
@@ -384,7 +384,7 @@ class TGitApiService @Autowired constructor(
         return client.get(ServiceOauthResource::class).gitGet(this.userId!!).data!!.accessToken
     }
 
-    private fun StreamGitCred.toTokenType(): TokenTypeEnum {
+    protected fun StreamGitCred.toTokenType(): TokenTypeEnum {
         this as TGitCred
         return if (this.useAccessToken) {
             TokenTypeEnum.OAUTH
@@ -393,7 +393,7 @@ class TGitApiService @Autowired constructor(
         }
     }
 
-    private fun <T> doRetryFun(
+    protected fun <T> doRetryFun(
         retry: ApiRequestRetryInfo,
         log: String,
         apiErrorCode: ErrorCodeEnum,
