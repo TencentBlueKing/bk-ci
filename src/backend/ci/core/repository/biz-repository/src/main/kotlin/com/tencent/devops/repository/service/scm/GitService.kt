@@ -456,18 +456,19 @@ class GitService @Autowired constructor(
         logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
         try {
-            var url =
+            val url =
                 "$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
                     "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
+            var realUrl = url
             val request = if (authType == RepoAuthType.OAUTH) {
-                url += "&access_token=$token"
+                realUrl += "&access_token=$token"
                 Request.Builder()
-                    .url(url)
+                    .url(realUrl)
                     .get()
                     .build()
             } else {
                 Request.Builder()
-                    .url(url)
+                    .url(realUrl)
                     .get()
                     .header("PRIVATE-TOKEN", token)
                     .build()

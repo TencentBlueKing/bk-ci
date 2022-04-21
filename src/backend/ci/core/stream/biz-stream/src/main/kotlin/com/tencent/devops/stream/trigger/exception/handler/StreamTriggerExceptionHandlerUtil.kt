@@ -35,6 +35,7 @@ import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerThirdException
 
+@Suppress("ALL")
 object StreamTriggerExceptionHandlerUtil {
 
     fun handleManualTrigger(action: () -> Unit) {
@@ -73,7 +74,16 @@ object StreamTriggerExceptionHandlerUtil {
     fun getReason(triggerE: StreamTriggerBaseException): Pair<String, String> {
         return when (triggerE) {
             is StreamTriggerException -> {
-                Pair(triggerE.triggerReason.name, triggerE.triggerReason.detail.format(triggerE.reasonParams))
+                Pair(
+                    triggerE.triggerReason.name,
+                    try {
+                        // format在遇到不可解析的问题可能会报错
+                        triggerE.triggerReason.detail.format(triggerE.reasonParams)
+                    } catch (ignore: Throwable) {
+                        triggerE.triggerReason.detail
+                    }
+
+                )
             }
             is StreamTriggerThirdException -> {
                 val error = try {
@@ -90,7 +100,11 @@ object StreamTriggerExceptionHandlerUtil {
                         if (triggerE.errorMessage.isNullOrBlank()) {
                             error.formatErrorMessage
                         } else {
-                            triggerE.errorMessage.format(triggerE.messageParams)
+                            try {
+                                triggerE.errorMessage.format(triggerE.messageParams)
+                            } catch (ignore: Throwable) {
+                                triggerE.errorMessage
+                            }
                         }
                     )
                 }

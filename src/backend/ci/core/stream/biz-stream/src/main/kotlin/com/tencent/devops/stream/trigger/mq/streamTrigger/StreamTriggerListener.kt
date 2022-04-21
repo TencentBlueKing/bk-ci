@@ -58,6 +58,8 @@ class StreamTriggerListener @Autowired constructor(
                 }
             }
             run(event)
+        } catch (e: Throwable) {
+            logger.error("listenStreamTriggerEvent|error", e)
         } finally {
             MDC.remove(TraceTag.BIZID)
         }
