@@ -32,7 +32,7 @@ class SimpleLocalManagerServiceImpl : LocalManagerService{
         userId: String,
         projectCode: String,
         action: String,
-        resourceType: String,
+        resourceType: String
     ): Boolean {
         return false
     }

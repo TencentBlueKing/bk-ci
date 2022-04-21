@@ -42,7 +42,7 @@ class ServiceManagerResourceImpl @Autowired constructor(
         token: String,
         projectCode: String,
         action: String,
-        resourceCode: String,
+        resourceCode: String
     ): Result<Boolean> {
         return Result(localManagerService.projectManagerCheck(
             userId = userId,
