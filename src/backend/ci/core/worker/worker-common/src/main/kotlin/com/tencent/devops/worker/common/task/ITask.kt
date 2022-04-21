@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskErrorMessage
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -42,6 +43,8 @@ abstract class ITask {
     private val environment = HashMap<String, String>()
 
     private val monitorData = HashMap<String, Any>()
+
+    private val taskErrorMessage = HashMap<String, String>()
 
     fun run(
         buildTask: BuildTask,
@@ -98,6 +101,14 @@ abstract class ITask {
 
     protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
         monitorData.putAll(monitorDataMap)
+    }
+
+    protected fun addTaskErrorMessage(key: String, value: String) {
+        taskErrorMessage[key] = value
+    }
+
+    fun getTaskErrorMessage(): Map<String, String> {
+        return taskErrorMessage
     }
 
     fun getMonitorData(): Map<String, Any> {

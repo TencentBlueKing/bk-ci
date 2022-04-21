@@ -25,58 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common
+package com.tencent.devops.process.pojo
 
-const val BUILD_ID = "devops.build.id"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-const val BUILD_TYPE = "build.type"
-
-const val AGENT_ID = "devops_agent_id"
-
-const val AGENT_SECRET_KEY = "devops_agent_secret_key"
-
-const val WORKSPACE_ENV = "WORKSPACE"
-
-const val WORKSPACE_CONTEXT = "ci.workspace"
-
-const val CI_TOKEN_CONTEXT = "ci.token"
-
-const val JOB_OS_CONTEXT = "job.os"
-
-const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
-
-const val SLAVE_AGENT_PREPARE_START_FILE = "devops.slave.agent.prepare.start.file"
-
-const val AGENT_ERROR_MSG_FILE = "devops.agent.error.file"
-
-const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
-
-const val JAVA_PATH_ENV = "bk_java_path"
-
-const val NODEJS_PATH_ENV = "bk_nodejs_path"
-
-const val LOG_DEBUG_FLAG = "##[debug]"
-
-const val LOG_ERROR_FLAG = "##[error]"
-
-const val LOG_WARN_FLAG = "##[warning]"
-
-const val LOG_SUBTAG_FLAG = "##subTag##"
-
-const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
-
-const val LOG_UPLOAD_BUFFER_SIZE = 200
-
-const val LOG_MESSAGE_LENGTH_LIMIT = 32000
-
-const val LOG_TASK_LINE_LIMIT = 1000000
-
-const val LOG_FILE_LENGTH_LIMIT = 1073741824 // 1 GB = 1073741824 Byte
-
-val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
-
-const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"
-
-const val ATOM_CREATOR = "atom_creator"
-
-const val ATOM_THIRD_PARTY_ASSISTANT = "atom_third_party_assistant"
+@ApiModel("流水线模型-构建任务失败时用于通知的信息")
+data class BuildTaskErrorMessage(
+    @ApiModelProperty("插件创建人", required = false)
+    var atomCreator: String?,
+    @ApiModelProperty("第三方服务助手信息", required = false)
+    var thirdPartyAssistant: String?,
+)

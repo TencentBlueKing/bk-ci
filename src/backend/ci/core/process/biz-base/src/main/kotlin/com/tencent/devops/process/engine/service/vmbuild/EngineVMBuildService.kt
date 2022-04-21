@@ -52,6 +52,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
 import com.tencent.devops.process.engine.common.VMUtils
@@ -72,6 +73,7 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskErrorMessage
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.service.BuildVariableService
@@ -630,7 +632,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             task?.errorCode = result.errorCode
             task?.errorType = errorType
             task?.errorMsg = result.message
-            logTaskFailed(task, errorType)
+            logTaskFailed(task, errorType, result.buildTaskErrorMessage)
             // 打印出失败继续的日志
             if (ControlUtils.continueWhenFailure(task?.additionalOptions)) {
                 buildLogPrinter.addRedLine(
@@ -791,19 +793,28 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     /**
      *  #4191 输出失败任务流水线日志
      */
-    private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?) {
+    private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?, errorInfo: BuildTaskErrorMessage?) {
         task?.run {
             errorType?.also { // #5046 增加错误信息
-                val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
+                val errMsg = "Error code:$errorCode. Error type:$errorType. $errorMsg. " +
                     (errorCode?.let {
                         "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
                     }
                         ?: "") +
                     when (errorType) {
-                        ErrorType.USER -> "Please check your input or service."
-                        ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
-                        ErrorType.PLUGIN -> "Please contact the plugin developer."
-                        ErrorType.SYSTEM -> "Please contact platform."
+                        ErrorType.USER -> MessageCodeUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_USER_FAILED
+                        )
+                        ErrorType.THIRD_PARTY -> MessageCodeUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_THIRD_PARTY_FAILED
+                        )
+                        ErrorType.PLUGIN -> MessageCodeUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_PLUGIN_FAILED,
+                            params = arrayOf(errorInfo?.atomCreator.orEmpty())
+                        )
+                        ErrorType.SYSTEM -> MessageCodeUtil.getCodeLanMessage(
+                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_SYSTEM_FAILED
+                        )
                     }
                 buildLogPrinter.addRedLine(
                     buildId = buildId,

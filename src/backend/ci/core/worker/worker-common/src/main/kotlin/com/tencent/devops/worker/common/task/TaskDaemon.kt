@@ -31,8 +31,11 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskErrorMessage
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.ATOM_CREATOR
+import com.tencent.devops.worker.common.ATOM_THIRD_PARTY_ASSISTANT
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -89,6 +92,10 @@ class TaskDaemon(
         return task.getMonitorData()
     }
 
+    private fun getTaskErrorMessage(): Map<String, String> {
+        return task.getTaskErrorMessage()
+    }
+
     fun getBuildResult(
         isSuccess: Boolean = true,
         errorMessage: String? = null,
@@ -123,7 +130,13 @@ class TaskDaemon(
             type = buildTask.type,
             errorType = errorType,
             errorCode = errorCode,
-            monitorData = getMonitorData()
+            monitorData = getMonitorData(),
+            buildTaskErrorMessage = getTaskErrorMessage().let {
+                BuildTaskErrorMessage(
+                    atomCreator = it[ATOM_CREATOR],
+                    thirdPartyAssistant = it[ATOM_THIRD_PARTY_ASSISTANT]
+                )
+            }
         )
     }
 
