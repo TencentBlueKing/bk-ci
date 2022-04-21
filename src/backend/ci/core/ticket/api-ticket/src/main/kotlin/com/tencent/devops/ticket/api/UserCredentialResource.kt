@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
@@ -74,7 +73,6 @@ interface UserCredentialResource {
     @ApiOperation("新增凭据")
     @Path("/{projectId}/")
     @POST
-    @BkTimed
     fun create(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -105,7 +103,6 @@ interface UserCredentialResource {
     @ApiOperation("获取凭据列表")
     @Path("/{projectId}/")
     @GET
-    @BkTimed
     fun list(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -130,7 +127,6 @@ interface UserCredentialResource {
     @ApiOperation("获取拥有对应权限凭据列表")
     @Path("/{projectId}/hasPermissionList")
     @GET
-    @BkTimed
     fun hasPermissionList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -158,7 +154,6 @@ interface UserCredentialResource {
     @ApiOperation("获取拥有对应权限凭据列表-不分页-插件UI调用")
     @Path("/{projectId}/getHasPermissionList")
     @GET
-    @BkTimed
     fun getHasPermissionList(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -180,7 +175,6 @@ interface UserCredentialResource {
     @ApiOperation("显示真实凭据")
     @Path("/{projectId}/{credentialId}/show")
     @GET
-    @BkTimed
     fun show(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -196,7 +190,6 @@ interface UserCredentialResource {
     @ApiOperation("获取凭据以编辑")
     @Path("/{projectId}/{credentialId}/")
     @GET
-    @BkTimed
     fun get(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
