@@ -53,8 +53,8 @@ object UrlUtil {
         } else if (innerPhotoAddr.contains("staticfile.woa.com")) {
             innerPhotoAddr.replace(
                 Regex("https://(dev|test|)staticfile.woa.com"),
-                "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic/bkcdn/static"
-            )
+                "${HomeHostUtil.outerServerHost()}/bkrepo/api/staticfile"
+            ).let { if (it.contains("?v=")) it.split("?v=")[0] else it }
         } else {
             innerPhotoAddr
         }
