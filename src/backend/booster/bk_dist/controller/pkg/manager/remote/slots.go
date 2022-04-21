@@ -66,6 +66,11 @@ func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *reso
 		occupied: 0,
 	}
 
+	for _, v := range usageMap {
+		blog.Infof("remote slot: usage map:%v after new resource", *v)
+	}
+	blog.Infof("remote slot: total slots:%d after new resource", total)
+
 	return &resource{
 		totalSlots:    total,
 		occupiedSlots: 0,
@@ -143,6 +148,8 @@ func (wr *resource) Reset(hl []*dcProtocol.Host) ([]*dcProtocol.Host, error) {
 	for _, h := range newhl {
 		wr.addWorker(h)
 	}
+
+	blog.Infof("remote slot: total slots:%d after reset resource", wr.totalSlots)
 
 	return newhl, nil
 }
@@ -382,12 +389,16 @@ func (wr *resource) getSlot(msg lockWorkerMessage) {
 		if wr.isIdle(set) {
 			set.occupied++
 			wr.occupiedSlots++
+			blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot available",
+				wr.totalSlots, wr.occupiedSlots)
 			msg.result <- wr.occupyWorkerSlots()
 			satisfied = true
 		}
 	}
 
 	if !satisfied {
+		blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot not available",
+			wr.totalSlots, wr.occupiedSlots)
 		wr.waitingList.PushBack(usage)
 		wr.waitingList.PushBack(msg.result)
 	}

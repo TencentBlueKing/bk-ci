@@ -67,7 +67,7 @@ type Mgr struct {
 
 	fileMessageBank *fileMessageBank
 
-	initCancel context.CancelFunc
+	// initCancel context.CancelFunc
 
 	conf *config.ServerConfig
 
@@ -160,11 +160,11 @@ func (m *Mgr) Init() {
 	settings := m.work.Basic().Settings()
 	m.resource = newResource(m.syncHostTimeNoWait(m.work.Resource().GetHosts()), settings.UsageLimit)
 
-	if m.initCancel != nil {
-		m.initCancel()
-	}
-	ctx, cancel := context.WithCancel(m.ctx)
-	m.initCancel = cancel
+	// if m.initCancel != nil {
+	// 	m.initCancel()
+	// }
+	ctx, _ := context.WithCancel(m.ctx)
+	// m.initCancel = cancel
 
 	m.resource.Handle(ctx)
 

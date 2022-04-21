@@ -210,7 +210,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		useLocalCPUPercent = c.Int(FlagLocalIdleCPUPercent)
 	}
 
-	resIdleSecsForFree := 60
+	resIdleSecsForFree := 120
 	if c.IsSet(FlagResIdleSecsForFree) {
 		resIdleSecsForFree = c.Int(FlagResIdleSecsForFree)
 	}

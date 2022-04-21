@@ -43,9 +43,9 @@ func NewMgr(pCtx context.Context, work *types.Work) types.LocalMgr {
 type Mgr struct {
 	ctx context.Context
 
-	work       *types.Work
-	resource   *resource
-	initCancel context.CancelFunc
+	work     *types.Work
+	resource *resource
+	// initCancel context.CancelFunc
 
 	pumpFileCache *analyser.FileCache
 	pumpRootCache *analyser.RootCache
@@ -63,11 +63,11 @@ func (m *Mgr) Init() {
 
 	m.recorder, _ = m.work.GetRecorder(types.GlobalRecorderKey)
 
-	if m.initCancel != nil {
-		m.initCancel()
-	}
-	ctx, cancel := context.WithCancel(m.ctx)
-	m.initCancel = cancel
+	// if m.initCancel != nil {
+	// 	m.initCancel()
+	// }
+	ctx, _ := context.WithCancel(m.ctx)
+	// m.initCancel = cancel
 
 	m.resource.Handle(ctx)
 }
@@ -108,21 +108,21 @@ func (m *Mgr) ExecuteTask(
 
 	// 该work被置为degraded || 该executor被置为degraded, 则直接走本地执行
 	if m.work.Basic().Settings().Degraded || e.degrade() {
-		blog.Warnf("local: execute pre-task for work(%s) from pid(%d) degrade to local with degraded",
+		blog.Warnf("local: execute task for work(%s) from pid(%d) degrade to local with degraded",
 			m.work.ID(), req.Pid)
 		return e.executeLocalTask(), nil
 	}
 
 	// 历史记录显示该任务多次远程失败，则直接走本地执行
 	if e.retryAndSuccessTooManyAndDegradeDirectly() {
-		blog.Warnf("local: execute pre-task for work(%s) from pid(%d) degrade to local for too many failed",
+		blog.Warnf("local: execute task for work(%s) from pid(%d) degrade to local for too many failed",
 			m.work.ID(), req.Pid)
 		return e.executeLocalTask(), nil
 	}
 
 	// 该任务已确定用本地资源运行，则直接走本地执行
 	if withlocalresource {
-		blog.Infof("local: execute pre-task for work(%s) from pid(%d) degrade to local for with local resource",
+		blog.Infof("local: execute task for work(%s) from pid(%d) degrade to local for with local resource",
 			m.work.ID(), req.Pid)
 		return e.executeLocalTask(), nil
 	}
@@ -130,10 +130,12 @@ func (m *Mgr) ExecuteTask(
 	// 没有申请到资源(或资源已释放) || 申请到资源但都失效了
 	if !m.work.Resource().HasAvailableWorkers() ||
 		m.work.Remote().TotalSlots() <= 0 {
+		needremote := false
 		runremote := false
 		// check whether this task need remote worker,
 		// apply resource when need, if not in appling, apply then
 		if e.needRemoteResource() {
+			needremote = true
 			_, err := m.work.Resource().Apply(nil, false)
 			if err == nil {
 				// wait until apply finished
@@ -151,8 +153,13 @@ func (m *Mgr) ExecuteTask(
 		}
 
 		if !runremote {
-			blog.Warnf("local: execute pre-task for work(%s) from pid(%d) degrade to local for no remote workers",
-				m.work.ID(), req.Pid)
+			if !needremote {
+				blog.Infof("local: execute task for work(%s) from pid(%d) degrade to local for do not need remote",
+					m.work.ID(), req.Pid)
+			} else {
+				blog.Warnf("local: execute task for work(%s) from pid(%d) degrade to local for no remote workers",
+					m.work.ID(), req.Pid)
+			}
 			return e.executeLocalTask(), nil
 		}
 	}
