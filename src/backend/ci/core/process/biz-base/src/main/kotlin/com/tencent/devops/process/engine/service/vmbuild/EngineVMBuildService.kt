@@ -798,7 +798,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error code:$errorCode. Error type:$errorType. $errorMsg. " +
                     (errorCode?.let {
-                        "\n${MessageCodeUtil.getCodeLanMessage(messageCode = errorCode.toString())}\n"
+                        "\n${
+                            MessageCodeUtil.getCodeLanMessage(
+                                messageCode = errorCode.toString(),
+                                defaultMessage = ""
+                            )
+                        }\n"
                     }
                         ?: "") +
                     when (errorType) {
