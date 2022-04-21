@@ -139,7 +139,7 @@ class InnerModelCreatorImpl @Autowired constructor(
                 inputMap["refName"] = gitData.branch
             }
             StreamObjectKind.TAG_PUSH -> {
-                inputMap["pullType"] = "TAG_PUSH"
+                inputMap["pullType"] = "TAG"
                 inputMap["refName"] = gitData.branch
             }
             StreamObjectKind.PUSH -> {
