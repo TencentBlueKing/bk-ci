@@ -72,7 +72,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         userId: String,
         setting: PipelineSetting,
         checkPermission: Boolean = true,
-        version: Int = 0
+        version: Int = 0,
+        updateLastModifyUser: Boolean? = true
     ): String {
         if (checkPermission) {
             checkEditPermission(
@@ -83,7 +84,12 @@ class PipelineSettingFacadeService @Autowired constructor(
             )
         }
 
-        pipelineRepositoryService.saveSetting(userId, setting, version)
+        pipelineRepositoryService.saveSetting(
+            userId = userId,
+            setting = setting,
+            version = version,
+            updateLastModifyUser = updateLastModifyUser
+        )
 
         if (checkPermission) {
             pipelinePermissionService.modifyResource(

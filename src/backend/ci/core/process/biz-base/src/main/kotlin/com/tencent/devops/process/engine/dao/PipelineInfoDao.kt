@@ -112,7 +112,8 @@ class PipelineInfoDao {
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
         taskCount: Int = 0,
-        latestVersion: Int = 0
+        latestVersion: Int = 0,
+        updateLastModifyUser: Boolean? = true
     ): Int {
         val count = with(T_PIPELINE_INFO) {
 
@@ -144,7 +145,7 @@ class PipelineInfoDao {
             if (latestVersion > 0) {
                 conditions.add(VERSION.eq(latestVersion))
             }
-            if (userId != null) {
+            if (userId != null && updateLastModifyUser == true) {
                 update.set(LAST_MODIFY_USER, userId)
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
