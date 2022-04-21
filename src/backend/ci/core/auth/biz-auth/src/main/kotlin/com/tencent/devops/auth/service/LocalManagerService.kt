@@ -27,7 +27,7 @@
 
 package com.tencent.devops.auth.service
 
-interface ManagerService {
+interface LocalManagerService {
     fun projectManagerCheck(
         userId: String,
         projectCode: String,
