@@ -1,7 +1,6 @@
 package com.tencent.devops.common.client.ms
 
 import com.tencent.devops.common.api.exception.ClientException
-import feign.Logger
 import feign.Request
 import feign.RequestTemplate
 import org.slf4j.LoggerFactory

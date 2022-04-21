@@ -36,7 +36,8 @@ class ServiceTurboController @Autowired constructor(
         if (!turboAuthService.getAuthResult(projectId, userId)) {
             throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
         }
-        return Response.success(turboPlanService.getTurboPlanByProjectIdAndCreatedDate(projectId, startTime, endTime, pageNum, pageSize))
+        return Response.success(
+            turboPlanService.getTurboPlanByProjectIdAndCreatedDate(projectId, startTime, endTime, pageNum, pageSize))
     }
 
     override fun getTurboRecordHistoryList(
