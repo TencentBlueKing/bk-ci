@@ -33,6 +33,7 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
+import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerThirdException
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.StreamEventService
@@ -108,6 +109,10 @@ class StreamTriggerExceptionHandler @Autowired constructor(
      * 对已知触发异常做逻辑处理
      */
     private fun handleStreamTriggerException(e: StreamTriggerBaseException): Nothing? {
+        if (e is StreamTriggerException && e.triggerReason == TriggerReason.UNKNOWN_ERROR) {
+            // 对Unknow error 打印日志方便排查
+            logger.error("StreamTriggerExceptionHandler|Unknown error|action|${e.action.format()}", e)
+        }
         val action = e.action
         val commitCheck = e.commitCheck
 
