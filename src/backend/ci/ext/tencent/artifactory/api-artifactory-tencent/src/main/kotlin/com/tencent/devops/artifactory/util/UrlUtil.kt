@@ -30,6 +30,7 @@ package com.tencent.devops.artifactory.util
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.springframework.core.env.Environment
+import java.util.regex.Pattern
 
 object UrlUtil {
     fun toOuterPhotoAddr(innerPhotoAddr: String?): String {
@@ -49,6 +50,11 @@ object UrlUtil {
             "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic" + innerPhotoAddr.split("generic")[1]
         } else if (innerPhotoAddr.contains(endpointUrl.value)) { // s3存储
             innerPhotoAddr.replace(endpointUrl.value, "${HomeHostUtil.outerServerHost()}/images")
+        } else if (innerPhotoAddr.contains("staticfile.woa.com")) {
+            innerPhotoAddr.replace(
+                Regex("(dev|test|)staticfile.woa.com"),
+                "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic/bkcdn/static"
+            )
         } else {
             innerPhotoAddr
         }
