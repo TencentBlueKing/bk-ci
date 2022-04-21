@@ -1,5 +1,8 @@
+import java.net.URI
+
 plugins {
-	id("com.tencent.devops.boot") version "0.0.5-SNAPSHOT"
+	id("com.tencent.devops.boot") version "0.0.5"
+	id("com.tencent.devops.publish") version "0.0.5" apply false
 }
 
 allprojects {
@@ -23,6 +26,9 @@ allprojects {
 			dependency("org.bouncycastle:bcprov-jdk16:${Versions.bouncyCastleVersion}")
 			dependency("io.springfox:springfox-boot-starter:${Versions.swaggerVersion}")
 			dependency("com.google.guava:guava:${Versions.guavaVersion}")
+			dependency("io.jsonwebtoken:jjwt:${Versions.jjwtVersion}")
 		}
 	}
 }
+
+apply(from = rootProject.file("gradle/publish-api.gradle.kts"))
