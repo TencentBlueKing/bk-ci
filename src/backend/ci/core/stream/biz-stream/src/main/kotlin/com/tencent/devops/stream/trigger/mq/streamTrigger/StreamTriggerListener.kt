@@ -65,23 +65,30 @@ class StreamTriggerListener @Autowired constructor(
 
     private fun run(event: StreamTriggerEvent) {
         val startTime = System.currentTimeMillis()
-        val action = actionFactory.loadByData(
-            eventStr = event.eventStr,
-            actionCommonData = event.actionCommonData,
-            actionContext = event.actionContext,
-            actionSetting = event.actionSetting
-        )
-        if (action == null) {
-            logger.error("trigger listener event not support: $event")
+        val action = try {
+            val action = actionFactory.loadByData(
+                eventStr = event.eventStr,
+                actionCommonData = event.actionCommonData,
+                actionContext = event.actionContext,
+                actionSetting = event.actionSetting
+            )
+            if (action == null) {
+                logger.error("trigger listener event not support: $event")
+                return
+            }
+            action
+        } catch (e: Throwable) {
+            logger.warn("StreamTriggerListener|load|action|error", e)
             return
         }
+        logger.info("|${action.data.context.requestEventId}|listenStreamTriggerEvent|action|${action.format()}")
 
         // 针对每个流水线处理异常
         exceptionHandler.handle(action = action) { streamYamlTrigger.triggerBuild(action = action) }
 
         logger.info(
             "stream pipeline: ${action.data.context.pipeline?.pipelineId} " +
-                "from trigger to build time：${System.currentTimeMillis() - startTime}"
+                    "from trigger to build time：${System.currentTimeMillis() - startTime}"
         )
     }
 }
