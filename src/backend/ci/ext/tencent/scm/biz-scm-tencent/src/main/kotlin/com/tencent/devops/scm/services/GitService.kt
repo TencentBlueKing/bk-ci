@@ -893,7 +893,7 @@ class GitService @Autowired constructor(
                 if (!it.isSuccessful) {
                     throw CustomException(
                         status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "fail to get git file content with: $url(${it.code()}): ${it.message()}"
+                        message = "fail to get git file content with: ${it.code()}): ${it.message()}"
                     )
                 }
                 return it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
