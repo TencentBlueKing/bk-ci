@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service
  * 将拿到的异常按规则 做入库，发commit check等操作
  * 因为需要对未知异常全部捕获并保留信息，所以只能使用手动函数去抓
  */
+@Suppress("ALL")
 @Service
 class StreamTriggerExceptionHandler @Autowired constructor(
     private val streamEventService: StreamEventService
@@ -61,19 +62,25 @@ class StreamTriggerExceptionHandler @Autowired constructor(
         try {
             return f()
         } catch (e: Throwable) {
-            return when (e) {
-                is ErrorCodeException -> handleErrorCodeException(action, e)
-                is StreamTriggerBaseException -> handleStreamTriggerException(e)
-                else -> {
-                    logger.error("StreamTriggerExceptionHandler|Unknown error|action|${action.format()}", e)
-                    // 非已知触发异常只保存
-                    streamEventService.saveTriggerNotBuildEvent(
-                        action = action,
-                        reason = TriggerReason.UNKNOWN_ERROR.name,
-                        reasonDetail = TriggerReason.UNKNOWN_ERROR.detail.format(e.message)
-                    )
-                    null
+            return try {
+                when (e) {
+                    is ErrorCodeException -> handleErrorCodeException(action, e)
+                    is StreamTriggerBaseException -> handleStreamTriggerException(e)
+                    else -> {
+                        logger.error("StreamTriggerExceptionHandler|Unknown error|action|${action.format()}", e)
+                        // 非已知触发异常只保存
+                        streamEventService.saveTriggerNotBuildEvent(
+                            action = action,
+                            reason = TriggerReason.UNKNOWN_ERROR.name,
+                            reasonDetail = TriggerReason.UNKNOWN_ERROR.detail.format(e.message)
+                        )
+                        null
+                    }
                 }
+            } catch (e: Throwable) {
+                // 防止Hanlder处理过程中报错，兜底
+                logger.error("StreamTriggerExceptionHandler|Handler error|action|${action.format()}", e)
+                return null
             }
         }
     }
