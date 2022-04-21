@@ -1,7 +1,6 @@
 
 package com.tencent.devops.turbo.vo
 
-import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -48,7 +47,6 @@ data class TurboRecordHistoryVO(
     var turboRatio: String? = "--",
 
     @ApiModelProperty("开始时间")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     var startTime: LocalDateTime? = null,
 
     @ApiModelProperty("状态")
