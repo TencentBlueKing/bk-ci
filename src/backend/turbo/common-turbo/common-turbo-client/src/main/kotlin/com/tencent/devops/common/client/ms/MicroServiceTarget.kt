@@ -1,8 +1,10 @@
 package com.tencent.devops.common.client.ms
 
 import com.tencent.devops.common.api.exception.ClientException
+import feign.Logger
 import feign.Request
 import feign.RequestTemplate
+import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.cloud.consul.discovery.ConsulServiceInstance
@@ -16,6 +18,7 @@ class MicroServiceTarget<T> constructor(
     private val tag: String?
 ) : FeignTarget<T> {
 
+    private val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
 //    private val errorInfo =
 //        MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
 
@@ -24,15 +27,15 @@ class MicroServiceTarget<T> constructor(
     private fun choose(serviceName: String): ServiceInstance {
 
         val instances = consulClient.getInstances(serviceName)
-            ?: throw ClientException("找不到任何有效的[$serviceName]服务提供者")
+            ?: throw ClientException("can not find[$serviceName]provider")
         if (instances.isEmpty()) {
-            throw ClientException("找不到任何有效的[$serviceName]服务提供者")
+            throw ClientException("can not find[$serviceName]provider")
         }
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         instances.forEach { serviceInstance ->
-            if (serviceInstance.metadata.isEmpty())
-                return@forEach
+            /*if (serviceInstance.metadata.isEmpty())
+                return@forEach*/
             if (serviceInstance is ConsulServiceInstance) {
                 if (serviceInstance.tags.contains(tag)) {
                     if (!usedInstance.contains(serviceInstance.url())) {
@@ -48,7 +51,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (matchTagInstances.isEmpty()) {
-            throw ClientException("找不到任何有效的[$serviceName]服务提供者")
+            throw ClientException("can not find[$serviceName]provider")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }
