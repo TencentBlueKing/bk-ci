@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
-import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -49,6 +48,7 @@ import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
@@ -81,7 +81,7 @@ class ScheduleTriggerService @Autowired constructor(
     fun triggerBuild(
         streamTimerEvent: StreamTimerBuildEvent,
         buildBranch: String,
-        buildCommitInfo: RevisionInfo
+        buildCommitInfo: StreamRevisionInfo
     ): BuildId? {
         val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
             dslContext = dslContext,

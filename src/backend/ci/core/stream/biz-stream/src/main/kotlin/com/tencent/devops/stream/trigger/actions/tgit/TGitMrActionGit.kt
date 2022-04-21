@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeActionKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitMergeExtensionActionKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
@@ -51,7 +52,9 @@ import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.parsers.MergeConflictCheck
 import com.tencent.devops.stream.trigger.parsers.PipelineDelete
@@ -262,7 +265,7 @@ class TGitMrActionGit(
             )
         }
 
-        val targetFile = apiService.getFileInfo(
+        val targetFile = getFileInfo(
             cred = getGitCred(),
             gitProjectId = event.object_attributes.target_project_id.toString(),
             fileName = fileName,
@@ -278,7 +281,7 @@ class TGitMrActionGit(
             }
         }
 
-        val sourceFile = apiService.getFileInfo(
+        val sourceFile = getFileInfo(
             cred = if (event.isMrForkEvent()) {
                 getForkGitCred()
             } else {
@@ -309,7 +312,7 @@ class TGitMrActionGit(
             mrId = event.object_attributes.id.toString(),
             retry = ApiRequestRetryInfo(true)
         )!!
-        val baseTargetFile = apiService.getFileInfo(
+        val baseTargetFile = getFileInfo(
             cred = getGitCred(),
             gitProjectId = event.object_attributes.target_project_id.toString(),
             fileName = fileName,
@@ -328,6 +331,29 @@ class TGitMrActionGit(
                 state = StreamCommitCheckState.FAILURE
             )
         )
+    }
+
+    private fun getFileInfo(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        fileName: String,
+        ref: String?,
+        retry: ApiRequestRetryInfo
+    ): TGitFileInfo? {
+        return try {
+            apiService.getFileInfo(
+                cred = cred,
+                gitProjectId = gitProjectId,
+                fileName = fileName,
+                ref = ref,
+                retry = retry
+            )
+        } catch (e: ErrorCodeException) {
+            if (e.statusCode == 404) {
+                return null
+            }
+            throw e
+        }
     }
 
     @Suppress("ComplexMethod")

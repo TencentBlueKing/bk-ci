@@ -29,16 +29,14 @@ package com.tencent.devops.stream.trigger.timer.listener
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
-import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.trigger.ScheduleTriggerService
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimerBranch
@@ -59,7 +57,6 @@ class StreamTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val dslContext: DSLContext,
     private val streamTimerBranchService: StreamTimerBranchService,
-    private val client: Client,
     private val scheduleTriggerService: ScheduleTriggerService,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val streamGitConfig: StreamGitConfig,
@@ -115,19 +112,15 @@ class StreamTimerBuildListener @Autowired constructor(
     ) {
         try {
             val latestRevisionInfo = when (streamGitConfig.getScmType()) {
-                ScmType.CODE_GIT -> client.get(ServiceScmOauthResource::class)
-                    .getLatestRevision(
-                        token = tGitApiService.getToken(TGitCred(enableUserId)),
-                        projectName = GitUtils.getProjectName(gitUrl),
-                        url = gitUrl,
-                        type = ScmType.CODE_GIT,
-                        branchName = branch,
-                        userName = userId,
-                        region = null,
-                        privateKey = null,
-                        passPhrase = null,
-                        additionalPath = null
-                    ).data
+                ScmType.CODE_GIT -> tGitApiService.getLatestRevision(
+                    pipelineId = pipelineId,
+                    projectName = GitUtils.getProjectName(gitUrl),
+                    gitUrl = gitUrl,
+                    branch = branch,
+                    userName = userId,
+                    enableUserId = enableUserId,
+                    retry = ApiRequestRetryInfo(true)
+                )
                 else -> TODO("对接其他Git平台时需要补充")
             } ?: return
 
@@ -141,7 +134,7 @@ class StreamTimerBuildListener @Autowired constructor(
         }
     }
 
-    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevisionInfo: RevisionInfo) {
+    private fun StreamTimerBuildEvent.branchChangeTimerTrigger(branch: String, latestRevisionInfo: StreamRevisionInfo) {
         val latestRevision = latestRevisionInfo.revision
         val timerBranch = streamTimerBranchService.get(
             pipelineId = pipelineId,
