@@ -1,6 +1,7 @@
 
 package com.tencent.devops.turbo.vo
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -9,6 +10,12 @@ import java.time.LocalDateTime
 data class TurboRecordHistoryVO(
     @ApiModelProperty("编译加速记录主键")
     var id: String = "",
+
+    @ApiModelProperty("项目id")
+    var projectId: String? = null,
+
+    @ApiModelProperty("方案id")
+    var turboPlanId: String? = null,
 
     @ApiModelProperty("流水线Id")
     var pipelineId: String? = null,
@@ -41,6 +48,7 @@ data class TurboRecordHistoryVO(
     var turboRatio: String? = "--",
 
     @ApiModelProperty("开始时间")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     var startTime: LocalDateTime? = null,
 
     @ApiModelProperty("状态")
