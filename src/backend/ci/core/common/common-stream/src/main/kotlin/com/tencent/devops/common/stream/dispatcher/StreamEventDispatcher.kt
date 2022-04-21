@@ -39,8 +39,7 @@ import org.springframework.stereotype.Component
  *
  * @version 1.0
  */
-@Component
-class StreamEventDispatcher @Autowired constructor(
+class StreamEventDispatcher constructor(
     private val bridge: StreamBridge
 ) : EventDispatcher<IEvent> {
 
