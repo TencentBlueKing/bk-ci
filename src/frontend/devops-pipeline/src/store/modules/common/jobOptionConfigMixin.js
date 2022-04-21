@@ -203,6 +203,7 @@ const jobOptionConfigMixin = {
                 prepareTimeout: {
                     rule: { numeric: true, max_value: 10080 },
                     component: 'vuex-input',
+                    required: true,
                     label: this.$t('storeMap.prepareTimeout'),
                     desc: this.$t('storeMap.timeoutDesc'),
                     placeholder: this.$t('storeMap.timeoutPlaceholder'),

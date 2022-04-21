@@ -74,6 +74,9 @@
                         Vue.set(this.jobOption, 'dependOnType', 'ID')
                         this.handleUpdateJobOption('dependOnId', [])
                     }
+                    if (this.jobOption && this.jobOption.prepareTimeout === undefined) {
+                        Vue.set(this.jobOption, 'prepareTimeout', '10')
+                    }
                 }
             },
             setKeyValueValidate (addErrors, removeErrors) {
