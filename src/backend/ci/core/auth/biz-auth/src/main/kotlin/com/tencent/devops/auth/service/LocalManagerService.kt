@@ -27,13 +27,11 @@
 
 package com.tencent.devops.auth.service
 
-class SimpleManagerServiceImpl : ManagerService{
-    override fun projectManagerCheck(
+interface LocalManagerService {
+    fun projectManagerCheck(
         userId: String,
         projectCode: String,
         action: String,
-        resourceType: String,
-    ): Boolean {
-        return false
-    }
+        resourceType: String
+    ): Boolean
 }

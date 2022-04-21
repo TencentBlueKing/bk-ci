@@ -28,23 +28,23 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceManagerResource
-import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.auth.service.LocalManagerService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceManagerResourceImpl @Autowired constructor(
-    val managerService: ManagerService
+    val localManagerService: LocalManagerService
 ) : ServiceManagerResource {
     override fun validateManagerPermission(
         userId: String,
         token: String,
         projectCode: String,
         action: String,
-        resourceCode: String,
+        resourceCode: String
     ): Result<Boolean> {
-        return Result(managerService.projectManagerCheck(
+        return Result(localManagerService.projectManagerCheck(
             userId = userId,
             projectCode = projectCode,
             action = resourceCode,
