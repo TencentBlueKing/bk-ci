@@ -54,7 +54,7 @@ object UrlUtil {
             innerPhotoAddr.replace(
                 Regex("(dev|test|)staticfile.woa.com"),
                 "${HomeHostUtil.outerServerHost()}/bkrepo/api/staticfile"
-            )
+            ).let { if (it.contains("?v=")) it.split("?v=")[0] else it }
         } else {
             innerPhotoAddr
         }
