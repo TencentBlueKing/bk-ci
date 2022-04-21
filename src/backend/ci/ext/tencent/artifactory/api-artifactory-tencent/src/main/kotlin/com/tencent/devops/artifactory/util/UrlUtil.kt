@@ -50,11 +50,11 @@ object UrlUtil {
             "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic" + innerPhotoAddr.split("generic")[1]
         } else if (innerPhotoAddr.contains(endpointUrl.value)) { // s3存储
             innerPhotoAddr.replace(endpointUrl.value, "${HomeHostUtil.outerServerHost()}/images")
-        } else if (innerPhotoAddr.contains("https://staticfile.woa.com")) {
+        } else if (innerPhotoAddr.contains("staticfile.woa.com")) {
             innerPhotoAddr.replace(
                 Regex("https://(dev|test|)staticfile.woa.com"),
-                "${HomeHostUtil.outerServerHost()}/bkrepo/api/staticfile"
-            ).let { if (it.contains("?v=")) it.split("?v=")[0] else it }
+                "${HomeHostUtil.outerServerHost()}/bkrepo/api/external/generic/bkcdn/static"
+            )
         } else {
             innerPhotoAddr
         }
