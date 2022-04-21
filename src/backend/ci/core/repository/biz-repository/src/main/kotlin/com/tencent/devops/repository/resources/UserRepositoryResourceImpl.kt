@@ -221,6 +221,7 @@ class UserRepositoryResourceImpl @Autowired constructor(
         return Result(commitService.getCommit(buildId))
     }
 
+    @BkTimed
     override fun fuzzySearchByAliasName(
         userId: String,
         projectId: String,
