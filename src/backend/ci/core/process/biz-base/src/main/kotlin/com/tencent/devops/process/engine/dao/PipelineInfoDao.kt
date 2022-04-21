@@ -101,6 +101,7 @@ class PipelineInfoDao {
         return version
     }
 
+    @Suppress("ComplexMethod")
     fun update(
         dslContext: DSLContext,
         projectId: String,
