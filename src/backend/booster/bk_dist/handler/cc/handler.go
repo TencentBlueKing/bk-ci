@@ -232,15 +232,6 @@ func (cc *TaskCC) postExecute(r *dcSDK.BKDistResult) error {
 	}
 
 	if r.Results[0].RetCode == 0 {
-		for _, file := range r.Results[0].ResultFiles {
-			if file.FileSize == 0 {
-				err := "unknown"
-				if strings.HasSuffix(file.FilePath, ".gcno") {
-					err = "wrong gcno file path,check whether your gcc version is same with worker and support the arg -fprofile-dir"
-				}
-				blog.Warnf("cc: return a empty file: %s   error:[%s]", file.FilePath, err)
-			}
-		}
 		blog.Infof("cc: [%s] success done post execute", cc.tag)
 		return nil
 	}
