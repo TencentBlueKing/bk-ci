@@ -36,13 +36,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class TxManagerServiceImpl @Autowired constructor(
-    val managerService: ManagerService,
+    val managerService: ManagerService
 ) : LocalManagerService {
     override fun projectManagerCheck(
         userId: String,
         projectCode: String,
         action: String,
-        resourceType: String,
+        resourceType: String
     ): Boolean {
         return managerService.isManagerPermission(
             userId = userId,
