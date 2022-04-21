@@ -29,10 +29,14 @@ package com.tecent.devops.config
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import com.tencent.devops.common.web.mq.CoreRabbitMQConfiguration
+import com.tencent.devops.common.web.mq.ExtendRabbitMQConfiguration
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.cloud.config.server.EnableConfigServer
 
 @EnableConfigServer
 @MicroService
+@EnableAutoConfiguration(exclude = [CoreRabbitMQConfiguration::class, ExtendRabbitMQConfiguration::class])
 class Application
 
 fun main(args: Array<String>) {

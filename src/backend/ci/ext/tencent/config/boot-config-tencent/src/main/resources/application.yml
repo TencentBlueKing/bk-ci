@@ -7,11 +7,11 @@ spring:
     config:
       server:
         git:
-          uri: file:///Users/rdeng/work/codes/devops-config
+          uri: file:///data1/work/config/devops-config
           search-paths:
             - config-server
             - "config-server/{application}"
-          default-label: dev-gray
+          default-label: develop
     consul:
       discovery:
         tags: dev
@@ -34,9 +34,10 @@ spring:
       discovery:
         enabled: false
 
+
 ---
 spring:
-  profiles: dev-gray
+  profiles: dev
   cloud:
     config:
       server:
@@ -79,3 +80,8 @@ server:
 ---
 spring:
   profiles: prod-gray
+  cloud:
+    config:
+      server:
+        git:
+          default-label: master-gray
