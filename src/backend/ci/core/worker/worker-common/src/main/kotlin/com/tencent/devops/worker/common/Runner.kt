@@ -45,7 +45,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PipelineVarUtil
-import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -227,13 +226,12 @@ object Runner {
             buildVariable?.forEach { (key, value) ->
                 parsedVariables[key] = if (value.contains("settings.")) {
                     ReplacementUtils.replace(value, object : ReplacementUtils.KeyReplacement {
-                        override fun getReplacement(key: String): String? =
-                            try {
-                                CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-                            } catch (ignore: Exception) {
-                                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-                            }
-                    }, mapOf())
+                        override fun getReplacement(key: String): String? = try {
+                            CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                        } catch (ignore: Exception) {
+                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                        }
+                    })
                 } else value
             }
             return this.copy(buildVariable = parsedVariables)
