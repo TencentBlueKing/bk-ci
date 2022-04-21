@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -34,9 +35,11 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
@@ -48,6 +51,7 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrChangeInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitMrInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
 import com.tencent.devops.stream.util.RetryUtils
@@ -287,6 +291,36 @@ class TGitApiService @Autowired constructor(
                 pathWithNamespace = it.pathWithNamespace,
                 nameWithNamespace = it.nameWithNamespace ?: ""
             )
+        }
+    }
+
+    override fun getLatestRevision(
+        pipelineId: String,
+        projectName: String,
+        gitUrl: String,
+        branch: String,
+        userName: String,
+        enableUserId: String,
+        retry: ApiRequestRetryInfo
+    ): TGitRevisionInfo? {
+        return doRetryFun(
+            retry = retry,
+            log = "timer|[$pipelineId] get latestRevision fail",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
+        ) {
+            client.get(ServiceScmOauthResource::class)
+                .getLatestRevision(
+                    token = TGitCred(userId = enableUserId).toToken(),
+                    projectName = GitUtils.getProjectName(gitUrl),
+                    url = gitUrl,
+                    type = ScmType.CODE_GIT,
+                    branchName = branch,
+                    userName = userName,
+                    region = null,
+                    privateKey = null,
+                    passPhrase = null,
+                    additionalPath = null
+                ).data?.let { TGitRevisionInfo(it) }
         }
     }
 

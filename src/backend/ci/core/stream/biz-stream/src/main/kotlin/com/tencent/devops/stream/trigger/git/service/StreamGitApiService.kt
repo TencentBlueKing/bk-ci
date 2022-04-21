@@ -38,6 +38,7 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitUserInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamRevisionInfo
 
 /**
  * Stream 需要用到的各平台的标准接口
@@ -165,4 +166,14 @@ interface StreamGitApiService {
         search: String?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<StreamGitProjectInfo>?
+
+    fun getLatestRevision(
+        pipelineId: String,
+        projectName: String,
+        gitUrl: String,
+        branch: String,
+        userName: String,
+        enableUserId: String,
+        retry: ApiRequestRetryInfo
+    ): StreamRevisionInfo?
 }
