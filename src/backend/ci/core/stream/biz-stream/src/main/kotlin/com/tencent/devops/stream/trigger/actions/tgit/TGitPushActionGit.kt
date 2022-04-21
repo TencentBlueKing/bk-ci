@@ -76,6 +76,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class TGitPushActionGit(
     private val dslContext: DSLContext,
     private val client: Client,
@@ -434,42 +435,46 @@ class TGitPushActionGit(
 
     private fun getCommitChangeSet(gitEvent: GitPushEvent): Set<String> {
         val changeSet = mutableSetOf<String>()
-        if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
-            for (i in 1..10) {
-                // 反向进行三点比较可以比较出rebase的真实提交
-                val result = apiService.getCommitChangeList(
-                    cred = getGitCred(),
-                    gitProjectId = data.eventCommon.gitProjectId,
-                    from = gitEvent.after,
-                    to = gitEvent.before,
-                    straight = false,
-                    page = i,
-                    pageSize = 100,
-                    retry = ApiRequestRetryInfo(true)
-                )
-                changeSet.addAll(
-                    result.map {
-                        if (it.deletedFile) {
-                            it.oldPath
-                        } else if (it.renameFile) {
-                            it.oldPath
-                            it.newPath
-                        } else {
-                            it.newPath
-                        }
-                    }
-                )
-                if (result.size < 100) {
-                    break
-                }
-            }
-            return changeSet
+
+        // git push -f 使用反向进行三点比较可以比较出rebase的真实提交
+        val from = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            gitEvent.after
+        } else {
+            gitEvent.before
         }
 
-        gitEvent.commits?.forEach { commit ->
-            changeSet.addAll(commit.added?.map { it }?.toSet() ?: emptySet())
-            changeSet.addAll(commit.modified?.map { it }?.toSet() ?: emptySet())
-            changeSet.addAll(commit.removed?.map { it }?.toSet() ?: emptySet())
+        val to = if (gitEvent.operation_kind == TGitPushOperationKind.UPDATE_NONFASTFORWORD.value) {
+            gitEvent.before
+        } else {
+            gitEvent.after
+        }
+
+        for (i in 1..10) {
+            val result = apiService.getCommitChangeList(
+                cred = getGitCred(),
+                gitProjectId = data.eventCommon.gitProjectId,
+                from = from,
+                to = to,
+                straight = false,
+                page = i,
+                pageSize = 100,
+                retry = ApiRequestRetryInfo(true)
+            )
+            changeSet.addAll(
+                result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else if (it.renameFile) {
+                        it.oldPath
+                        it.newPath
+                    } else {
+                        it.newPath
+                    }
+                }
+            )
+            if (result.size < 100) {
+                break
+            }
         }
         return changeSet
     }
