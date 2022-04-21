@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
@@ -218,17 +219,22 @@ object Runner {
     private fun BuildTask.parseCredentials(): BuildTask {
         with(this) {
             // 解析跨项目模板信息
-            val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariable ?: return this, taskId)
+            val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(
+                variables = buildVariable ?: return this,
+                taskId = taskId
+            )?.targetProjectId
             val parsedVariables = mutableMapOf<String, String>()
             buildVariable?.forEach { (key, value) ->
-                parsedVariables[key] = ReplacementUtils.replace(value, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String? {
-                        return CredentialUtils.getCredentialContextValue(
-                            key = key,
-                            acrossProjectId = acrossInfo?.targetProjectId
-                        )
-                    }
-                })
+                parsedVariables[key] = if (value.contains("settings.")) {
+                    ReplacementUtils.replace(value, object : ReplacementUtils.KeyReplacement {
+                        override fun getReplacement(key: String): String? =
+                            try {
+                                CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                            } catch (ignore: Exception) {
+                                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                            }
+                    }, mapOf())
+                } else value
             }
             return this.copy(buildVariable = parsedVariables)
         }
