@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.log.event.ILogEvent
 import com.tencent.devops.log.event.LogOriginEvent
 import com.tencent.devops.common.log.pojo.enums.LogType
-import com.tencent.devops.common.stream.annotation.StreamEvent
-import com.tencent.devops.common.stream.dispatcher.StreamEventDispatcher
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
@@ -40,6 +38,7 @@ import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -47,7 +46,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.RejectedExecutionException
 
 class BuildLogPrintService @Autowired constructor(
-    private val eventDispatcher: StreamEventDispatcher,
+    private val streamBridge: StreamBridge,
     private val logPrintBean: LogPrintBean,
     private val storageProperties: StorageProperties,
     logServiceConfig: LogServiceConfig
@@ -62,7 +61,7 @@ class BuildLogPrintService @Autowired constructor(
     )
 
     fun dispatchEvent(event: ILogEvent) {
-        eventDispatcher.dispatch(event)
+        event.sendTo(streamBridge)
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
