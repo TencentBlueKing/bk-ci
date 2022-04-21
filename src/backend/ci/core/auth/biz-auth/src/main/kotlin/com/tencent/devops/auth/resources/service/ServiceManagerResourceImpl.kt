@@ -47,8 +47,8 @@ class ServiceManagerResourceImpl @Autowired constructor(
         return Result(localManagerService.projectManagerCheck(
             userId = userId,
             projectCode = projectCode,
-            action = resourceCode,
-            resourceType = action
+            action = action,
+            resourceType = resourceCode
         ))
     }
 }
