@@ -28,6 +28,7 @@
 package com.tencent.devops.common.stream.pojo
 
 import com.tencent.devops.common.stream.annotation.StreamEvent
+import com.tencent.devops.common.stream.constants.StreamHeader.X_DELAY
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.messaging.Message
@@ -59,10 +60,10 @@ open class IEvent(
             .withPayload(this)
         // 事件中的变量指定
         if (delayMills > 0) {
-            builder.setHeader("x-delay", delayMills)
+            builder.setHeader(X_DELAY, delayMills)
         } else if (defaultMills > 0) {
             // 事件类型固化默认值
-            builder.setHeader("x-delay", defaultMills)
+            builder.setHeader(X_DELAY, defaultMills)
         }
         return builder.build()
     }

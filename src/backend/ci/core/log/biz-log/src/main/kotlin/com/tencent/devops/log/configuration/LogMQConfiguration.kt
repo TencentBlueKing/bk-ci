@@ -44,7 +44,6 @@ import org.springframework.core.Ordered
 import org.springframework.messaging.Message
 import java.util.function.Consumer
 
-@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)

@@ -25,30 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.pulsar.integration
+package com.tencent.devops.common.stream.pulsar.integration.outbound
 
-import com.tencent.devops.common.stream.pulsar.constant.Serialization
-import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
+import com.tencent.devops.common.stream.pulsar.constant.X_DELAY
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProducerProperties
+import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.support.PulsarMessageConverterSupport
 import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
-import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
-import org.apache.pulsar.client.api.CompressionType
-import org.apache.pulsar.client.api.HashingScheme
-import org.apache.pulsar.client.api.MessageRoutingMode
 import org.apache.pulsar.client.api.Producer
-import org.apache.pulsar.client.api.ProducerCryptoFailureAction
 import org.apache.pulsar.client.api.TypedMessageBuilder
-import org.springframework.cloud.stream.binder.ExtendedProducerProperties
 import org.springframework.cloud.stream.provisioning.ProducerDestination
 import org.springframework.context.Lifecycle
 import org.springframework.integration.handler.AbstractMessageHandler
 import org.springframework.messaging.Message
+import org.springframework.messaging.MessagingException
+import org.springframework.messaging.support.MessageBuilder
 import java.util.concurrent.TimeUnit
 
 class PulsarProducerMessageHandler(
     private val destination: ProducerDestination,
-    private val producerProperties: ExtendedProducerProperties<PulsarProducerProperties>? = null,
+    private val producerProperties: PulsarProducerProperties? = null,
     private val pulsarProperties: PulsarProperties
 ) : AbstractMessageHandler(), Lifecycle {
     private var producer: Producer<Any>? = null
@@ -67,10 +63,10 @@ class PulsarProducerMessageHandler(
             namespace = pulsarProperties.namespace,
             topic = destination.name
         )
-        producer = generatePulsarProducer(
+        producer = PulsarProducerFactory.initPulsarProducer(
             topic = topic,
-            pulsarProperties = pulsarProperties,
-            producerProperties = producerProperties
+            producerProperties = producerProperties,
+            pulsarProperties = pulsarProperties
         )
     }
 
@@ -89,14 +85,30 @@ class PulsarProducerMessageHandler(
         if (logger.isDebugEnabled) {
             logger.debug("Message's header is ${message.headers} and payload is ${message.payload}")
         }
+        sendMessage(message)
+    }
+
+    private fun sendMessage(message: Message<*>) {
         val (properties, payload) = PulsarMessageConverterSupport.convertMessage2Pulsar(destination.name, message)
         val key = properties[PulsarMessageConverterSupport.toPulsarHeaderKey(TypedMessageBuilder.CONF_KEY)]
-        if (key.isNullOrEmpty()) {
-            producer!!.newMessage()
-                .value(payload).properties(properties).sendAsync()
-        } else {
-            producer!!.newMessage().key(key)
-                .value(payload).properties(properties).sendAsync()
+        val deliveryAfterMillis = properties[X_DELAY]
+        val deliveryAt = properties[
+            PulsarMessageConverterSupport.toPulsarHeaderKey(TypedMessageBuilder.CONF_DELIVERY_AT)
+        ]
+        try {
+            val msg = producer!!.newMessage()
+                .value(payload).properties(properties)
+            key?.let { msg.key(key) }
+            deliveryAfterMillis?.let { msg.deliverAfter(deliveryAfterMillis.toLong(), TimeUnit.MILLISECONDS) }
+            deliveryAt?.let { msg.deliverAt(deliveryAt.toLong()) }
+            msg.sendAsync()
+        } catch (e: Exception) {
+            throw MessagingException(
+                MessageBuilder.withPayload(
+                    "Error occurred whiling producing message " + e.message
+                ).build(),
+                e
+            )
         }
     }
 
@@ -109,36 +121,5 @@ class PulsarProducerMessageHandler(
 
     override fun isRunning(): Boolean {
         return running
-    }
-
-    private fun generatePulsarProducer(
-        topic: String,
-        pulsarProperties: PulsarProperties,
-        producerProperties: ExtendedProducerProperties<PulsarProducerProperties>
-    ): Producer<Any> {
-        val pulsarProducerProperties = producerProperties.extension
-        with(pulsarProducerProperties) {
-            val builder = PulsarUtils.getClientBuilder(pulsarProperties)
-
-            // TODO 消息序列化方式需要调整， producer需要缓存
-            val producer = builder.build().newProducer(
-                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
-            ).topic(topic)
-            if (!producerName.isNullOrBlank()) {
-                producer.producerName(producerName)
-            }
-            producer.sendTimeout(sendTimeoutMs, TimeUnit.MILLISECONDS)
-                .blockIfQueueFull(blockIfQueueFull)
-                .maxPendingMessages(maxPendingMessages)
-                .maxPendingMessagesAcrossPartitions(maxPendingMessagesAcrossPartitions)
-                .messageRoutingMode(MessageRoutingMode.valueOf(messageRoutingMode))
-                .hashingScheme(HashingScheme.valueOf(hashingScheme))
-                .cryptoFailureAction(ProducerCryptoFailureAction.valueOf(cryptoFailureAction))
-                .batchingMaxPublishDelay(batchingMaxPublishDelayMicros, TimeUnit.MILLISECONDS)
-                .batchingMaxMessages(batchingMaxMessages)
-                .enableBatching(batchingEnabled)
-                .compressionType(CompressionType.valueOf(compressionType))
-            return producer.create() as Producer<Any>
-        }
     }
 }
