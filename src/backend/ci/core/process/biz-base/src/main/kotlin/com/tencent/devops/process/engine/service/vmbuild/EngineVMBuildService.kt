@@ -118,6 +118,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     companion object {
         private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
         const val ENV_CONTEXT_KEY_PREFIX = "envs."
+
         // 任务结束上报Key
         private fun completeTaskKey(buildId: String, vmSeqId: String) = "build:$buildId:job:$vmSeqId:ending_task"
     }
@@ -796,31 +797,37 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?, errorInfo: BuildTaskErrorMessage?) {
         task?.run {
             errorType?.also { // #5046 增加错误信息
-                val errMsg = "Error code:$errorCode. Error type:$errorType. $errorMsg. " +
-                    (errorCode?.let {
-                        "\n${
-                            MessageCodeUtil.getCodeLanMessage(
-                                messageCode = errorCode.toString(),
-                                defaultMessage = ""
-                            )
-                        }\n"
-                    }
-                        ?: "") +
-                    when (errorType) {
-                        ErrorType.USER -> MessageCodeUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_USER_FAILED
+                val errMsg = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.ERROR_TASK_LOG_OVERVIEW,
+                    params = arrayOf(
+                        errorCode.toString(),
+                        MessageCodeUtil.getMessageByLocale(errorType.typeName, errorType.name)
+                    )
+                ) + when (errorType) {
+                    ErrorType.USER -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_USER_FAILED
+                    )
+                    ErrorType.THIRD_PARTY -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_THIRD_PARTY_FAILED
+                    )
+                    ErrorType.PLUGIN -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_PLUGIN_FAILED,
+                        params = arrayOf(errorInfo?.atomCreator.orEmpty())
+                    )
+                    ErrorType.SYSTEM -> MessageCodeUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_TASK_LOG_SYSTEM_FAILED
+                    )
+                }
+                +" $errorMsg. "
+                +(errorCode?.let {
+                    "\n${
+                        MessageCodeUtil.getCodeLanMessage(
+                            messageCode = errorCode.toString(),
+                            defaultMessage = ""
                         )
-                        ErrorType.THIRD_PARTY -> MessageCodeUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_THIRD_PARTY_FAILED
-                        )
-                        ErrorType.PLUGIN -> MessageCodeUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_PLUGIN_FAILED,
-                            params = arrayOf(errorInfo?.atomCreator.orEmpty())
-                        )
-                        ErrorType.SYSTEM -> MessageCodeUtil.getCodeLanMessage(
-                            messageCode = ProcessMessageCode.ERROR_TASK_LOG_SYSTEM_FAILED
-                        )
-                    }
+                    }\n"
+                }
+                    ?: "")
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
                     message = errMsg,

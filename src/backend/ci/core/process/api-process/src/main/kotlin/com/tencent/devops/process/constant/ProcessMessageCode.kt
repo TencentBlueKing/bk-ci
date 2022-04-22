@@ -252,4 +252,5 @@ object ProcessMessageCode {
     const val ERROR_TASK_LOG_SYSTEM_FAILED = "2101502" // 请联系蓝盾助手DevOps-helper协助定位
     const val ERROR_TASK_LOG_THIRD_PARTY_FAILED = "2101503" // 请联系该插件所属第三方服务的助手协助定位
     const val ERROR_TASK_LOG_PLUGIN_FAILED = "2101504" // 请联系插件开发者 ${0} 协助定位
+    const val ERROR_TASK_LOG_OVERVIEW = "2101505" // 错误码：{0}. 错误类型：{1}.
 }
