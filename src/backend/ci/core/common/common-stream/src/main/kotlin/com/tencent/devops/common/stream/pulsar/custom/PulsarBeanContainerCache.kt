@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,21 +25,41 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.common.stream.pulsar.custom
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.stream.pulsar.extend.ErrorAcknowledgeHandler
+import org.springframework.messaging.converter.CompositeMessageConverter
+import org.springframework.util.StringUtils
+import java.util.concurrent.ConcurrentHashMap
 
-@Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
-data class LogStatusEvent(
-    override val buildId: String,
-    val finished: Boolean,
-    val tag: String,
-    val subTag: String?,
-    val jobId: String,
-    val executeCount: Int?,
-    val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+object PulsarBeanContainerCache {
+
+    private val CLASSES = arrayOf<Class<*>>(
+        CompositeMessageConverter::class.java,
+        ErrorAcknowledgeHandler::class.java
+    )
+
+    private val BEANS_CACHE: MutableMap<String, Any> = ConcurrentHashMap()
+
+    fun putBean(beanName: String, beanObj: Any) {
+        BEANS_CACHE[beanName] = beanObj
+    }
+
+    fun getClassAry(): Array<Class<*>> {
+        return CLASSES
+    }
+
+    fun <T> getBean(beanName: String, clazz: Class<T?>): T? {
+        return getBean(beanName, clazz, null)
+    }
+
+    fun <T> getBean(beanName: String, clazz: Class<T>, defaultObj: T): T {
+        if (!StringUtils.hasLength(beanName)) {
+            return defaultObj
+        }
+        val obj = BEANS_CACHE[beanName] ?: return defaultObj
+        return if (clazz.isAssignableFrom(obj.javaClass)) {
+            obj as T
+        } else defaultObj
+    }
+}
