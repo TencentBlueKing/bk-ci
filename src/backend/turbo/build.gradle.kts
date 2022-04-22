@@ -1,6 +1,5 @@
 plugins {
     id("com.tencent.devops.boot") version "0.0.5"
-    id("com.tencent.devops.publish") version "0.0.5" apply false
 }
 
 allprojects {
@@ -28,5 +27,3 @@ allprojects {
         }
     }
 }
-
-apply(from = rootProject.file("gradle/publish-api.gradle.kts"))
