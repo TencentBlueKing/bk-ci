@@ -1,0 +1,16 @@
+on:
+  push: [ master ]
+
+steps:
+- template: cyclic/step/templates/step1.yml
+  parameters:
+    username: STEP1
+- run: |
+    echo "APPROVE is ${{ variables.APPROVE }}"
+- template: cyclic/step/templates/step2.yml
+  parameters:
+    username: STEP2
+- template: cyclic/step/templates/step3.yml
+  parameters:
+    username: STEP3
+
