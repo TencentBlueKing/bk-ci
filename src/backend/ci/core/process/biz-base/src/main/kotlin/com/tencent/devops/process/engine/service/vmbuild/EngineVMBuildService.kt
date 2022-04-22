@@ -797,13 +797,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private fun logTaskFailed(task: PipelineBuildTask?, errorType: ErrorType?, errorInfo: BuildTaskErrorMessage?) {
         task?.run {
             errorType?.also { // #5046 增加错误信息
-                val errMsg = MessageCodeUtil.getCodeLanMessage(
+                val overview = MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.ERROR_TASK_LOG_OVERVIEW,
                     params = arrayOf(
                         errorCode.toString(),
                         MessageCodeUtil.getMessageByLocale(errorType.typeName, errorType.name)
                     )
-                ) + when (errorType) {
+                )
+                val typeMessage = when (errorType) {
                     ErrorType.USER -> MessageCodeUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.ERROR_TASK_LOG_USER_FAILED
                     )
@@ -818,19 +819,15 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         messageCode = ProcessMessageCode.ERROR_TASK_LOG_SYSTEM_FAILED
                     )
                 }
-                +" $errorMsg. "
-                +(errorCode?.let {
-                    "\n${
-                        MessageCodeUtil.getCodeLanMessage(
-                            messageCode = errorCode.toString(),
-                            defaultMessage = ""
-                        )
-                    }\n"
-                }
-                    ?: "")
+                val codeMessage = errorCode?.let {
+                    MessageCodeUtil.getCodeLanMessage(
+                        messageCode = errorCode.toString(),
+                        defaultMessage = ""
+                    )
+                } ?: ""
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = errMsg,
+                    message = "$overview $typeMessage $errorMsg. \n$codeMessage",
                     tag = taskId,
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
