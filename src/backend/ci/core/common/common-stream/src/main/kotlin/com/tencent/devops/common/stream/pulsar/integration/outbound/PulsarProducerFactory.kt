@@ -31,7 +31,7 @@ import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProducerProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.util.PulsarClientUtils
-import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
+import com.tencent.devops.common.stream.pulsar.util.PulsarSchemaUtils
 import org.apache.pulsar.client.api.CompressionType
 import org.apache.pulsar.client.api.HashingScheme
 import org.apache.pulsar.client.api.MessageRoutingMode
@@ -56,7 +56,7 @@ object PulsarProducerFactory {
         with(producerProperties) {
             // TODO 消息序列化方式需要调整， producer需要缓存
             val producer = PulsarClientUtils.pulsarClient(pulsarProperties).newProducer(
-                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
+                PulsarSchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
             )
                 .topic(topic)
             if (!producerName.isNullOrBlank()) {

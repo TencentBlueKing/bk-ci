@@ -29,8 +29,7 @@ package com.tencent.devops.common.stream.pulsar.provisioning
 
 import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProducerProperties
-import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.stream.pulsar.util.PulsarTopicUtils
 import org.springframework.cloud.stream.binder.ExtendedConsumerProperties
 import org.springframework.cloud.stream.binder.ExtendedProducerProperties
 import org.springframework.cloud.stream.provisioning.ConsumerDestination
@@ -48,7 +47,7 @@ class PulsarMessageQueueProvisioner :
         name: String,
         properties: ExtendedProducerProperties<PulsarProducerProperties>
     ): ProducerDestination {
-        PulsarUtils.validateTopicName(name)
+        PulsarTopicUtils.validateTopicName(name)
         return PulsarProducerDestination(name, properties.partitionCount)
     }
 
@@ -58,11 +57,11 @@ class PulsarMessageQueueProvisioner :
         properties: ExtendedConsumerProperties<PulsarConsumerProperties>
     ): ConsumerDestination {
         if (!properties.isMultiplex) {
-            doProvisionConsumerDestination(name, group, properties)
+            doProvisionConsumerDestination(name, properties)
         } else {
             val destinations = StringUtils.commaDelimitedListToStringArray(name)
             for (element in destinations) {
-                doProvisionConsumerDestination(element.trim(), group, properties)
+                doProvisionConsumerDestination(element.trim(), properties)
             }
         }
         return PulsarConsumerDestination(name)
@@ -70,10 +69,9 @@ class PulsarMessageQueueProvisioner :
 
     private fun doProvisionConsumerDestination(
         name: String,
-        group: String?,
         properties: ExtendedConsumerProperties<PulsarConsumerProperties>
     ): ConsumerDestination {
-        PulsarUtils.validateTopicName(name)
+        PulsarTopicUtils.validateTopicName(name)
         require(properties.instanceCount != 0) { "Instance count cannot be zero" }
         return PulsarConsumerDestination(name)
     }
@@ -115,9 +113,5 @@ class PulsarMessageQueueProvisioner :
                     ", dlqName='" + dlqName + '\'' + '}'
                 )
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PulsarMessageQueueProvisioner::class.java)
     }
 }

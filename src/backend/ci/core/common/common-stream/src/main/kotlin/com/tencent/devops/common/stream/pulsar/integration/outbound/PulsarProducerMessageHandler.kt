@@ -31,7 +31,7 @@ import com.tencent.devops.common.stream.pulsar.constant.X_DELAY
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProducerProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.support.PulsarMessageConverterSupport
-import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
+import com.tencent.devops.common.stream.pulsar.util.PulsarTopicUtils
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.TypedMessageBuilder
 import org.springframework.cloud.stream.provisioning.ProducerDestination
@@ -58,7 +58,7 @@ class PulsarProducerMessageHandler(
             return
         }
         super.onInit()
-        topic = PulsarUtils.generateTopic(
+        topic = PulsarTopicUtils.generateTopic(
             tenant = pulsarProperties.tenant,
             namespace = pulsarProperties.namespace,
             topic = destination.name

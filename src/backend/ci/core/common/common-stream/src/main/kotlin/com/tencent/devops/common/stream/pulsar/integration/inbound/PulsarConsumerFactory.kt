@@ -31,8 +31,7 @@ import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperties
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.util.PulsarClientUtils
-import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
-import com.tencent.devops.common.stream.pulsar.util.SchemaUtils
+import com.tencent.devops.common.stream.pulsar.util.PulsarSchemaUtils
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.ConsumerCryptoFailureAction
 import org.apache.pulsar.client.api.Message
@@ -45,21 +44,18 @@ import java.util.concurrent.TimeUnit
 
 object PulsarConsumerFactory {
 
-    // TODO 考虑缓存
     /**
      * init for the consumer,including convert consumer params.
      * @param topic topic
      * @param consumerProperties consumerProperties
      * @return DefaultMQConsumer
      */
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("LongParameterList")
     fun initPulsarConsumer(
         topic: String,
         group: String? = null,
         consumerProperties: ExtendedConsumerProperties<PulsarConsumerProperties>,
         messageListener: (Consumer<*>, Message<*>) -> Unit,
-        retryLetterTopic: String,
-        deadLetterTopic: String,
         pulsarProperties: PulsarProperties,
         concurrency: Int? = null,
         pulsarClient: PulsarClient? = null
@@ -70,7 +66,7 @@ object PulsarConsumerFactory {
             topics.add(topic)
             val client = pulsarClient ?: PulsarClientUtils.pulsarClient(pulsarProperties, concurrency)
             val consumer = client.newConsumer(
-                SchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
+                PulsarSchemaUtils.getSchema(Serialization.valueOf(serialType), serialClass)
             ).topics(topics)
             if (!topicsPattern.isNullOrEmpty()) {
                 consumer.topicsPattern(topicsPattern)
@@ -99,9 +95,6 @@ object PulsarConsumerFactory {
                 .subscriptionInitialPosition(SubscriptionInitialPosition.valueOf(subscriptionInitialPosition))
                 .patternAutoDiscoveryPeriod(patternAutoDiscoveryPeriod)
                 .subscriptionTopicsMode(RegexSubscriptionMode.valueOf(regexSubscriptionMode))
-                .deadLetterPolicy(
-                    PulsarUtils.buildDeadLetterPolicy(deadLetterMaxRedeliverCount, retryLetterTopic, deadLetterTopic)
-                )
                 .autoUpdatePartitions(autoUpdatePartitions)
                 .replicateSubscriptionState(replicateSubscriptionState)
             consumer.messageListener(messageListener)

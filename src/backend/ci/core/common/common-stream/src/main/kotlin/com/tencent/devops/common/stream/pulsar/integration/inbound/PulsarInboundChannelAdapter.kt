@@ -31,7 +31,7 @@ import com.tencent.devops.common.stream.pulsar.properties.PulsarConsumerProperti
 import com.tencent.devops.common.stream.pulsar.properties.PulsarProperties
 import com.tencent.devops.common.stream.pulsar.support.PulsarMessageConverterSupport
 import com.tencent.devops.common.stream.pulsar.util.PulsarClientUtils
-import com.tencent.devops.common.stream.pulsar.util.PulsarUtils
+import com.tencent.devops.common.stream.pulsar.util.PulsarTopicUtils
 import org.apache.pulsar.client.api.Consumer
 import org.apache.pulsar.client.api.Message
 import org.springframework.cloud.stream.binder.ExtendedConsumerProperties
@@ -62,18 +62,10 @@ class PulsarInboundChannelAdapter(
         }
         try {
             super.onInit()
-            topic = PulsarUtils.generateTopic(
+            topic = PulsarTopicUtils.generateTopic(
                 tenant = pulsarProperties.tenant,
                 namespace = pulsarProperties.namespace,
                 topic = destination
-            )
-            val (deadLetter, retryLetter) = PulsarUtils.generateDeadLetterTopics(
-                tenant = pulsarProperties.tenant,
-                namespace = pulsarProperties.namespace,
-                group = group,
-                subscriptionName = extendedConsumerProperties.extension.subscriptionName,
-                deadLetterTopic = extendedConsumerProperties.extension.deadLetterTopic,
-                retryLetterTopic = extendedConsumerProperties.extension.retryLetterTopic
             )
             // TODO prepare register consumer message listener
             val messageListener = createListener()
@@ -90,8 +82,6 @@ class PulsarInboundChannelAdapter(
                         group = group,
                         consumerProperties = extendedConsumerProperties,
                         messageListener = messageListener,
-                        deadLetterTopic = deadLetter,
-                        retryLetterTopic = retryLetter,
                         pulsarProperties = pulsarProperties,
                         concurrency = extendedConsumerProperties.concurrency,
                         pulsarClient = client
@@ -104,19 +94,17 @@ class PulsarInboundChannelAdapter(
                     group = group,
                     consumerProperties = extendedConsumerProperties,
                     messageListener = messageListener,
-                    deadLetterTopic = deadLetter,
-                    retryLetterTopic = retryLetter,
                     pulsarProperties = pulsarProperties
                 )
                 consumers.add(consumer)
             }
-        } catch (e: Exception) {
-            logger.error("DefaultPulsarConsumer init failed, Caused by " + e.message)
+        } catch (ignore: Exception) {
+            logger.error("DefaultPulsarConsumer init failed, Caused by " + ignore.message)
             throw MessagingException(
                 MessageBuilder.withPayload(
-                    "DefaultPulsarConsumer init failed, Caused by " + e.message
+                    "DefaultPulsarConsumer init failed, Caused by " + ignore.message
                 ).build(),
-                e
+                ignore
             )
         }
     }
@@ -181,8 +169,8 @@ class PulsarInboundChannelAdapter(
                 if (logger.isDebugEnabled) {
                     logger.info("Message ${msg.messageId} has been consumed")
                 }
-            } catch (e: Exception) {
-                logger.warn("Error occurred during consume message ${msg.messageId}: $e")
+            } catch (ignore: Exception) {
+                logger.warn("Error occurred during consume message ${msg.messageId}: $ignore")
                 it.negativeAcknowledge(msg)
             }
         }

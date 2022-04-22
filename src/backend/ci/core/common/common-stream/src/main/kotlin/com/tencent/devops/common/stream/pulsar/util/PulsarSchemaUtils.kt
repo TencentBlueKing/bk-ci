@@ -27,13 +27,12 @@
 
 package com.tencent.devops.common.stream.pulsar.util
 
-import com.google.protobuf.GeneratedMessageV3
 import com.tencent.devops.common.stream.pulsar.constant.Serialization
 import com.tencent.devops.common.stream.pulsar.exception.ProducerInitException
 import org.apache.pulsar.client.api.Schema
-import java.lang.reflect.Method
 
-object SchemaUtils {
+object PulsarSchemaUtils {
+
     @Throws(RuntimeException::class)
     private fun <T> getGenericSchema(serialization: Serialization, clazz: Class<T>): Schema<*> {
 
@@ -53,14 +52,6 @@ object SchemaUtils {
         }
     }
 
-    @Throws(RuntimeException::class)
-    private fun <T : GeneratedMessageV3> getProtoSchema(serialization: Serialization, clazz: Class<T>): Schema<*> {
-        if (serialization === Serialization.PROTOBUF) {
-            return Schema.PROTOBUF(clazz)
-        }
-        throw ProducerInitException("Unknown producer schema.")
-    }
-
     fun getSchema(serialisation: Serialization, classStr: String? = null): Schema<*> {
         val temp = if (classStr == null) {
             ByteArray::class.java
@@ -70,19 +61,6 @@ object SchemaUtils {
         if (temp == ByteArray::class.java) {
             return Schema.BYTES
         }
-        return if (isProto(serialisation)) {
-            // TODO 待处理
-            getProtoSchema(serialisation, temp as Class<out GeneratedMessageV3>)
-        } else {
-            getGenericSchema(serialisation, temp as Class<Any>)
-        }
-    }
-
-    fun isProto(serialization: Serialization): Boolean {
-        return serialization === Serialization.PROTOBUF
-    }
-
-    fun getParameterType(method: Method): Class<*>? {
-        return method.parameterTypes[0]
+        return getGenericSchema(serialisation, temp as Class<Any>)
     }
 }

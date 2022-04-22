@@ -25,11 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.pulsar.constant
+package com.tencent.devops.common.stream.pulsar.util
 
-enum class Serialization {
-    JSON,
-    AVRO,
-    STRING,
-    BYTE
+import com.tencent.devops.common.stream.pulsar.constant.PATH_SPLIT
+import java.io.UnsupportedEncodingException
+import java.util.StringJoiner
+
+object PulsarTopicUtils {
+
+    fun validateTopicName(topicName: String) {
+        try {
+            val utf8 = topicName.toByteArray(charset("UTF-8"))
+            for (b: Byte in utf8) {
+                if (!validateByte(b)) {
+                    throw IllegalArgumentException(
+                        "Topic name can only have ASCII alphanumerics, '.', '_' and '-', but was: '$topicName'"
+                    )
+                }
+            }
+        } catch (ex: UnsupportedEncodingException) {
+            throw AssertionError(ex)
+        }
+    }
+
+    private fun validateByte(b: Byte): Boolean {
+        return (
+            b >= 'a'.toByte() && b <= 'z'.toByte() ||
+                b >= 'A'.toByte() && b <= 'Z'.toByte() ||
+                b >= '0'.toByte() && b <= '9'.toByte() ||
+                b == '.'.toByte() || b == '-'.toByte() ||
+                b == '_'.toByte()
+            )
+    }
+
+    fun generateTopic(
+        tenant: String,
+        namespace: String,
+        topic: String
+    ): String {
+        val stringJoiner = StringJoiner(PATH_SPLIT)
+        stringJoiner.add(tenant).add(namespace).add(topic)
+        return stringJoiner.toString()
+    }
 }
