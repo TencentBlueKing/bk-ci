@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("stream 构建详情模型")
 data class StreamModelDetail(
     @ApiModelProperty("Stream流水线信息", required = true)
-    val streamGitProjectPipeline: StreamGitProjectPipeline?,
+    val gitProjectPipeline: StreamGitProjectPipeline?,
     @ApiModelProperty("stream Event事件", required = true)
     val gitRequestEvent: StreamGitRequestEventReq,
     @ApiModelProperty("构建详情-构建信息", required = true)
