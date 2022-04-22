@@ -34,7 +34,6 @@ import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -71,7 +70,6 @@ class TurboEngineConfigService @Autowired constructor(
     /**
      * 新增引擎配置信息
      */
-    @Transactional
     fun addNewEngineConfig(
         turboEngineConfigModel: TurboEngineConfigModel,
         user: String

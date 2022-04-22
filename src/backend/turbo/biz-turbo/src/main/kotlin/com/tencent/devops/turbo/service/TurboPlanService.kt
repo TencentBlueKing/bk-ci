@@ -29,7 +29,6 @@ import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -112,7 +111,6 @@ class TurboPlanService @Autowired constructor(
     /**
      * 新增加速方案
      */
-    @Transactional
     fun addNewTurboPlan(turboPlanModel: TurboPlanModel, user: String): String? {
         logger.info("add turbo plan, engine code: ${turboPlanModel.engineCode}, plan name: ${turboPlanModel.planName}")
         var turboPlanEntity: TTurboPlanEntity? = null
