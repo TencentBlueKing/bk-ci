@@ -827,7 +827,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 } ?: ""
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "$overview $typeMessage $errorMsg. \n$codeMessage",
+                    message = "$overview $typeMessage \n$errorMsg. \n$codeMessage",
                     tag = taskId,
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
