@@ -54,13 +54,13 @@ interface ServiceGitCIProjectResource {
 
     @ApiOperation("获取工蜂项目与STREAM关联列表")
     @GET
-    @Path("/{type}/list")
+    @Path("/list")
     fun getProjects(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("项目列表类型", required = false)
-        @PathParam("type")
+        @QueryParam("type")
         type: GitCIProjectType?,
         @ApiParam("搜索条件，模糊匹配path,name", required = false)
         @QueryParam("search")
