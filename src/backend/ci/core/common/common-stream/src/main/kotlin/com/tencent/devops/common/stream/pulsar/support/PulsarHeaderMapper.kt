@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.pojo
+package com.tencent.devops.common.stream.pulsar.support
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
+import org.springframework.messaging.MessageHeaders
 
-@Event(MQ.EXCHANGE_LOG_BATCH_BUILD_EVENT, MQ.ROUTE_LOG_BATCH_BUILD_EVENT)
-data class LogBatchEvent(
-    override val buildId: String,
-    val logs: List<LogMessageWithLineNo>,
-    override val retryTime: Int = 2,
-    override val delayMills: Int = 0
-) : ILogEvent(buildId, retryTime, delayMills)
+/**
+ * header value mapper for Pulsar.
+ */
+interface PulsarHeaderMapper {
+    /**
+     * Map from the given [MessageHeaders] to the specified target message.
+     * @param headers the abstracted MessageHeaders.
+     * @return the native target message.
+     */
+    fun fromHeaders(headers: MessageHeaders): Map<String, String>
+
+    /**
+     * Map from the given target message to abstracted [MessageHeaders].
+     * @param source the native target message.
+     * @return the target headers.
+     */
+    fun toHeaders(source: Map<String, String>): MessageHeaders?
+}

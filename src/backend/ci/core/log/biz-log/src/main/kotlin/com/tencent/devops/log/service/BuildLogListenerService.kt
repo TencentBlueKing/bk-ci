@@ -25,24 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.mq
+package com.tencent.devops.log.service
 
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
-import com.tencent.devops.log.service.LogService
-import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.event.LogOriginEvent
+import com.tencent.devops.log.event.LogStatusEvent
+import com.tencent.devops.log.event.LogStorageEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class LogListener @Autowired constructor(
+class BuildLogListenerService @Autowired constructor(
     private val logService: LogService,
     private val buildLogPrintService: BuildLogPrintService
 ) {
 
-    fun logEvent(event: LogEvent) {
+    fun handleEvent(event: LogOriginEvent) {
         var result = false
         try {
             logService.addLogEvent(event)
@@ -53,7 +51,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogEvent(
+                    buildLogPrintService.dispatchEvent(LogOriginEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
@@ -64,7 +62,7 @@ class LogListener @Autowired constructor(
         }
     }
 
-    fun logBatchEvent(event: LogBatchEvent) {
+    fun handleEvent(event: LogStorageEvent) {
         var result = false
         try {
             logService.addBatchLogEvent(event)
@@ -75,7 +73,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.dispatchEvent(LogBatchEvent(
+                    buildLogPrintService.dispatchEvent(LogStorageEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
@@ -86,7 +84,7 @@ class LogListener @Autowired constructor(
         }
     }
 
-    fun logStatusEvent(event: LogStatusEvent) {
+    fun handleEvent(event: LogStatusEvent) {
         var result = false
         try {
             logService.updateLogStatus(event)
@@ -113,12 +111,7 @@ class LogListener @Autowired constructor(
         }
     }
 
-    private fun getNextDelayMills(retryTime: Int): Int {
-        return DELAY_DURATION_MILLS * (3 - retryTime)
-    }
-
     companion object {
-        private val logger = LoggerFactory.getLogger(LogListener::class.java)
-        private const val DELAY_DURATION_MILLS = 3 * 1000
+        private val logger = LoggerFactory.getLogger(BuildLogListenerService::class.java)
     }
 }
