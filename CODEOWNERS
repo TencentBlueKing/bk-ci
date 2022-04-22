@@ -10,8 +10,8 @@
 /src/app @lockiechen
 /src/frontend @lockiechen
 /support-files @irwinsun 
-/src/backend/codecc @austinshen @foxdd
-/src/backend/codecc_tools @austinshen @foxdd
-/src/backend/ci @irwinsun @mingshewhe @hingbong @stuben @carlyin0801 @fitzcao
+/src/backend/codecc @austingod @foxdd
+/src/backend/codecc_tools @austingod @foxdd
+/src/backend/ci @irwinsun @mingshewhe @hingbong @stubenhuang @carlyin0801 @fitzcao
 /src/backend/storage @irwinsun @owenlxu
 /src/backend/booster @tming
