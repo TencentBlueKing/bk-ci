@@ -10,6 +10,12 @@ data class TurboRecordHistoryVO(
     @ApiModelProperty("编译加速记录主键")
     var id: String = "",
 
+    @ApiModelProperty("项目id")
+    var projectId: String? = null,
+
+    @ApiModelProperty("方案id")
+    var turboPlanId: String? = null,
+
     @ApiModelProperty("流水线Id")
     var pipelineId: String? = null,
 
