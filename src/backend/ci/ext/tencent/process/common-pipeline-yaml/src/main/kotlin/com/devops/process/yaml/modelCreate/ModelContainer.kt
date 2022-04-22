@@ -27,6 +27,7 @@
 
 package com.devops.process.yaml.modelCreate
 
+import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -48,16 +49,12 @@ import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.util.StreamDispatchUtils
-import org.springframework.beans.factory.annotation.Value
 
 class ModelContainer constructor(
     val client: Client,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val inner: InnerModelCreator
 ) {
-    // 公共镜像默认从配置获取
-    @Value("\${container.defaultImage:#{null}}")
-    val defaultImage: String? = null
-
     fun addVmBuildContainer(
         job: Job,
         elementList: List<Element>,
@@ -69,7 +66,7 @@ class ModelContainer constructor(
         resources: Resources? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
-        val defaultImage = defaultImage ?: "http://mirrors.tencent.com/ci/tlinux3_ci:1.5.0"
+        val defaultImage = inner.defaultImage
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
                 name = "dispatchInfo_${job.id}",
@@ -195,7 +192,7 @@ class ModelContainer constructor(
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
-                        IfType.CANCELLED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                        IfType.CANCELLED.name, IfType.CANCELED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
                         else -> JobRunCondition.STAGE_RUNNING
                     },
                     dependOnType = DependOnType.ID,

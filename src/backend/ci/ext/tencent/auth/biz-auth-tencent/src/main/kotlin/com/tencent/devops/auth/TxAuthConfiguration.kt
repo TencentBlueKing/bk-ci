@@ -37,7 +37,6 @@ import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.common.redis.RedisOperation
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -50,43 +49,38 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TxAuthConfiguration {
 
-    @Value("\${auth.url:}")
-    val iamBaseUrl = ""
+    /**
+     * 鉴权类http实例。 管理类与鉴权类http实例分开，防止相互影响
+     */
+    @Bean
+    fun apigwHttpClientService(iamConfiguration: IamConfiguration) = ApigwHttpClientServiceImpl(iamConfiguration)
 
-    @Value("\${auth.iamSystem:}")
-    val systemId = ""
+    /**
+     * 管理类http实例。 管理类与鉴权类http实例分开，防止相互影响
+     */
+    @Bean
+    fun managerHttpClientService(iamConfiguration: IamConfiguration) = ApigwHttpClientServiceImpl(iamConfiguration)
 
-    @Value("\${auth.appCode:}")
-    val appCode = ""
+    @Bean
+    fun iamManagerService(
+        iamConfiguration: IamConfiguration
+    ) = ManagerServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
 
-    @Value("\${auth.appSecret:}")
-    val appSecret = ""
+    @Bean
+    fun tokenService(
+        iamConfiguration: IamConfiguration
+    ) = TokenServiceImpl(iamConfiguration, apigwHttpClientService(iamConfiguration))
 
-    @Value("\${auth.apigwUrl:#{null}}")
-    val iamApigw = ""
+    @Bean
+    fun policyService(
+        iamConfiguration: IamConfiguration
+    ) = PolicyServiceImpl(iamConfiguration, apigwHttpClientService(iamConfiguration))
 
     @Bean
     @ConditionalOnMissingBean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
-
-    @Bean
-    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
-
-    @Bean
-    fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
-
-//    @Bean
-//    fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
-
-    @Bean
-    fun tokenService() = TokenServiceImpl(iamConfiguration(), apigwHttpClientServiceImpl())
-
-    @Bean
-    fun policyService() = PolicyServiceImpl(iamConfiguration(), apigwHttpClientServiceImpl())
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
+    fun authHelper(
+        iamConfiguration: IamConfiguration
+    ) = AuthHelper(tokenService(iamConfiguration), policyService(iamConfiguration), iamConfiguration)
 
     @Bean
     fun deptService(
@@ -95,5 +89,7 @@ class TxAuthConfiguration {
     ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 
     @Bean
-    fun grantServiceImpl() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+    fun grantServiceImpl(
+        iamConfiguration: IamConfiguration
+    ) = GrantServiceImpl(managerHttpClientService(iamConfiguration), iamConfiguration)
 }

@@ -28,9 +28,10 @@
 package com.devops.process.yaml.modelCreate
 
 import com.devops.process.yaml.modelCreate.inner.ModelCreateEvent
-import com.devops.process.yaml.modelCreate.inner.ModelCreateInner
+import com.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.devops.process.yaml.pojo.QualityElementInfo
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
@@ -47,12 +48,16 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
+import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 
 class ModelCreate constructor(
     val client: Client,
     val objectMapper: ObjectMapper,
-    val inner: ModelCreateInner
+    val inner: InnerModelCreator
 ) {
 
     private val modelStage = ModelStage(client, objectMapper, inner)
@@ -66,7 +71,7 @@ class ModelCreate constructor(
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
         pipelineParams: List<BuildFormProperty>
-    ): Model {
+    ): PipelineModelAndSetting {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, yaml)
 
@@ -82,7 +87,7 @@ class ModelCreate constructor(
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         triggerElementList.add(manualTriggerElement)
 
-        val jobBuildTemplateAcrossInfos = if (event.yamlTransferData != null && event.streamData != null) {
+        val jobBuildTemplateAcrossInfo = if (event.yamlTransferData != null && event.streamData != null) {
             inner.getJobTemplateAcrossInfo(
                 yamlTransferData = event.yamlTransferData,
                 gitRequestEventId = event.streamData.requestEventId,
@@ -122,7 +127,7 @@ class ModelCreate constructor(
                     // stream的stage标号从1开始，后续都加1
                     stageIndex = stageIndex++,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfo,
                     elementNames = elementNames
                 )
             )
@@ -144,19 +149,33 @@ class ModelCreate constructor(
                     stageIndex = stageIndex,
                     finalStage = true,
                     resources = yaml.resource,
-                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfos,
+                    jobBuildTemplateAcrossInfos = jobBuildTemplateAcrossInfo,
                     elementNames = null
                 )
             )
         }
 
-        return Model(
-            name = modelName,
-            desc = "",
-            stages = stageList,
-            labels = labelList,
-            instanceFromTemplate = false,
-            pipelineCreator = event.userId
+        return PipelineModelAndSetting(
+            model = Model(
+                name = modelName,
+                desc = "",
+                stages = stageList,
+                labels = labelList,
+                instanceFromTemplate = false,
+                pipelineCreator = event.userId
+            ),
+            setting = PipelineSetting(
+                concurrencyGroup = yaml.concurrency?.group?.let {
+                    val varMap = pipelineParams.associate { param -> param.id to param.defaultValue.toString() }
+                    EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
+                },
+                // Cancel-In-Progress入口先不放开给用户配置
+                concurrencyCancelInProgress = true,
+                runLockType = when {
+                    yaml.concurrency?.group != null -> PipelineRunLockType.SINGLE
+                    else -> PipelineRunLockType.MULTIPLE
+                }
+            )
         )
     }
 

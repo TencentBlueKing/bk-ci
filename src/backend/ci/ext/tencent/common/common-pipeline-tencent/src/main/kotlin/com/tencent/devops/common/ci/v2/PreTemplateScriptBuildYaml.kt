@@ -49,5 +49,6 @@ data class PreTemplateScriptBuildYaml(
     val extends: Extends?,
     val resources: Resources?,
     val notices: List<GitNotices>?,
-    var finally: Map<String, Any>?
+    var finally: Map<String, Any>?,
+    val concurrency: Concurrency? = null
 )

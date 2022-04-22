@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserGitCIPipelineResource
 import com.tencent.devops.stream.permission.GitCIV2PermissionService
+import com.tencent.devops.stream.pojo.GitPipelineDir
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.utils.GitCommonUtils
 import com.tencent.devops.stream.v2.service.StreamPipelineService
@@ -49,7 +50,8 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
         projectId: String,
         keyword: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        filePath: String?
     ): Result<Page<GitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
@@ -59,7 +61,24 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
                 gitProjectId = gitProjectId,
                 keyword = keyword,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                filePath = filePath
+            )
+        )
+    }
+
+    override fun getPipelineDirList(
+        userId: String,
+        projectId: String,
+        pipelineId: String?
+    ): Result<GitPipelineDir> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId)
+        return Result(
+            pipelineV2Service.getPipelineDirList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId
             )
         )
     }
@@ -71,12 +90,13 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     ): Result<GitProjectPipeline?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        return Result(
-            pipelineV2Service.getPipelineById(
-                gitProjectId = gitProjectId,
-                pipelineId = pipelineId
-            )
-        )
+        val pipeline = pipelineV2Service.getPipelineById(
+            pipelineId = pipelineId
+        ) ?: return Result(null)
+        if (pipeline.gitProjectId != gitProjectId) {
+            throw ParamBlankException("Invalid gitProjectId")
+        }
+        return Result(pipeline)
     }
 
     override fun enablePipeline(

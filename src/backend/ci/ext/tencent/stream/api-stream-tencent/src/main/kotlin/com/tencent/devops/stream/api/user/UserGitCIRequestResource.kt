@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.stream.pojo.EventTypeConf
 import com.tencent.devops.stream.pojo.GitRequestHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -67,4 +68,13 @@ interface UserGitCIRequestResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<GitRequestHistory>>
+
+    @ApiOperation("获取工蜂事件类型枚举数据")
+    @GET
+    @Path("/eventType")
+    fun getEventTypeConf(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<EventTypeConf>>
 }

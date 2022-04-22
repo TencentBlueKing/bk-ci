@@ -26,13 +26,14 @@
  */
 package com.tencent.devops.lambda.service.process
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
-import com.tencent.devops.common.kafka.KafkaTopic
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.process.LambdaPipelineInfoDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.pojo.DataPlatPipelineInfo
@@ -52,7 +53,8 @@ class LambdaPipelineModelService @Autowired constructor(
     private val kafkaClient: KafkaClient,
     private val dslContext: DSLContext,
     private val lambdaPipelineModelDao: LambdaPipelineModelDao,
-    private val lambdaPipelineInfoDao: LambdaPipelineInfoDao
+    private val lambdaPipelineInfoDao: LambdaPipelineInfoDao,
+    private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig
 ) {
 
     fun onModelExchange(event: PipelineModelAnalysisEvent) {
@@ -102,7 +104,10 @@ class LambdaPipelineModelService @Autowired constructor(
                     creator = pipelineResource.creator,
                     createTime = pipelineResource.createTime.timestampmilli().toString()
                 )
-                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
+                val pipelineResourceTopic1 = lambdaKafkaTopicConfig.pipelineResourceTopic
+                val pipelineResourceTopic = checkParamBlank(pipelineResourceTopic1, "pipelineResourceTopic")
+                kafkaClient.send(pipelineResourceTopic, JsonUtil.toJson(dataPlatPipelineResource))
+//                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_RESOURCE_TOPIC, JsonUtil.toJson(dataPlatPipelineResource))
             } else {
                 logger.error("onModelExchange sync pipeline resource failed, pipelineId: $pipelineId," +
                         " pipelineResource is null.")
@@ -127,16 +132,32 @@ class LambdaPipelineModelService @Autowired constructor(
                 channelCode = ChannelCode.valueOf(channelCode)
             ).data
             if (pipelineInfo != null) {
-                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(DataPlatPipelineInfo(
-                    washTime = LocalDateTime.now().format(dateTimeFormatter),
-                    pipelineInfo = pipelineInfo
-                )))
+                val pipelineInfoTopic = checkParamBlank(lambdaKafkaTopicConfig.pipelineInfoTopic, "pipelineInfoTopic")
+                kafkaClient.send(
+                    pipelineInfoTopic, JsonUtil.toJson(
+                    DataPlatPipelineInfo(
+                        washTime = LocalDateTime.now().format(dateTimeFormatter),
+                        pipelineInfo = pipelineInfo
+                    )
+                )
+                )
+//                kafkaClient.send(KafkaTopic.LANDUN_PIPELINE_INFO_TOPIC, JsonUtil.toJson(DataPlatPipelineInfo(
+//                    washTime = LocalDateTime.now().format(dateTimeFormatter),
+//                    pipelineInfo = pipelineInfo
+//                )))
             } else {
                 logger.error("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId, pipelineInfo is null.")
             }
         } catch (e: Exception) {
             logger.error("onModelExchange sync pipelineInfo failed, pipelineId: $pipelineId", e)
         }
+    }
+
+    private fun checkParamBlank(param: String?, message: String): String {
+        if (param.isNullOrBlank()) {
+            throw ParamBlankException("启动配置缺少 $message")
+        }
+        return param
     }
 
     companion object {

@@ -47,7 +47,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreStep
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Strategy
-import com.tencent.devops.common.ci.v2.YamlMetaDataJsonFilter
+import com.tencent.devops.common.ci.v2.YAME_META_DATA_JSON_FILTER
 import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
 import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
@@ -125,7 +125,8 @@ class TXPipelineExportService @Autowired constructor(
             .apply {
                 registerKotlinModule().setFilterProvider(
                     SimpleFilterProvider().addFilter(
-                        YamlMetaDataJsonFilter, SimpleBeanPropertyFilter.serializeAllExcept(YamlMetaDataJsonFilter)
+                        YAME_META_DATA_JSON_FILTER,
+                        SimpleBeanPropertyFilter.serializeAllExcept(YAME_META_DATA_JSON_FILTER)
                     )
                 )
             }
@@ -1205,7 +1206,12 @@ class TXPipelineExportService @Autowired constructor(
             return if (agentId.isNotBlank()) {
                 ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
             } else if (envId.isNotBlank()) {
-                ThirdPartyAgentEnvDispatchType(envName = envId, workspace = workspace, agentType = AgentType.ID)
+                ThirdPartyAgentEnvDispatchType(
+                    envName = envId,
+                    envProjectId = null,
+                    workspace = workspace,
+                    agentType = AgentType.ID
+                )
             } // docker建机指定版本(旧)
             else if (!param.dockerBuildVersion.isNullOrBlank()) {
                 DockerDispatchType(param.dockerBuildVersion!!)

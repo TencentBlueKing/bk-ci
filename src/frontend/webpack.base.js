@@ -36,9 +36,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     test: /\.js$/,
                     include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
                     use: [
-                        {
-                            loader: 'babel-loader'
-                        }
+                        { loader: 'babel-loader' }
                     ]
                 },
                 {
@@ -88,7 +86,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             }),
             new MiniCssExtractPlugin({
                 filename: '[name].[contenthash].css',
-                chunkFilename: '[id].css',
+                chunkFilename: '[id].[contenthash].css',
                 ignoreOrder: true
             }),
             new CopyWebpackPlugin({
@@ -110,7 +108,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         resolve: {
             extensions: ['.js', '.vue', '.json', '.ts', '.scss', '.css'],
             fallback: {
-                'path': false
+                path: false
             },
             alias: {
                 '@': path.resolve('src'),
@@ -118,9 +116,9 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             }
         },
         externals: {
-            'vue': 'Vue',
+            vue: 'Vue',
             'vue-router': 'VueRouter',
-            'vuex': 'Vuex'
+            vuex: 'Vuex'
         },
         devServer: {
             static: path.join(__dirname, envDist),

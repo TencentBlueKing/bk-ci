@@ -28,9 +28,16 @@
 package com.tencent.devops.experience.constant
 
 object ExperienceConstant {
+    /****************** 公开体验相关 ***********************/
     const val PUBLIC_GROUP = 0L
     val PUBLIC_INNER_USERS = mutableSetOf("全公司")
     const val PUBLIC_NAME = "公开体验"
+
+    /****************** 外部用户相关 ***********************/
     const val HEADER_O_TOKEN = "X-OTOKEN"
     const val ORGANIZATION_OUTER = "outer"
+
+    /****************** 红点相关 ***********************/
+    private const val RED_POINT_KEY = "experience:red:point"
+    fun redPointKey(userId: String) = "$RED_POINT_KEY:$userId"
 }

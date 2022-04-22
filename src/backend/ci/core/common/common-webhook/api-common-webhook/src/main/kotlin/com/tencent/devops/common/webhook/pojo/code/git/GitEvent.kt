@@ -116,4 +116,10 @@ data class GitChangeFileInfo(
 )
 
 fun GitEvent.isDeleteEvent() = (this is GitPushEvent && this.isDeleteBranch()) ||
-    (this is GitTagPushEvent && this.isDeleteTag())
+        (this is GitTagPushEvent && this.isDeleteTag())
+
+fun GitEvent.isMrMergeEvent() = this is GitMergeRequestEvent && this.isMrMergeEvent()
+
+fun GitEvent.isMrForkEvent() = this is GitMergeRequestEvent && this.isMrForkEvent()
+
+fun GitEvent.isMrForkNotMergeEvent() = !this.isMrMergeEvent() && this.isMrForkEvent()

@@ -28,6 +28,9 @@ queueConcurrency:
 # 流水线模板配置  
 template:
   instanceListUrl: "__BK_CI_PUBLIC_URL__/console/store/pipeline/{0}/template/{0}/instance"
+  maxSyncInstanceNum: 10
+  maxSaveVersionNum: 300
+  maxSaveVersionRecordNum: 2
   
 
 build:
@@ -45,6 +48,8 @@ pipeline:
     common:
       maxModelSize: 16777215
       maxStageNum: 20
+      maxPipelineNameSize: 255
+      maxPipelineDescSize: 255
       stage:
         maxJobNum: 20
         job:

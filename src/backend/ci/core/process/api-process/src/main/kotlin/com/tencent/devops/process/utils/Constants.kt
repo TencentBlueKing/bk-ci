@@ -158,7 +158,10 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
-
+/**
+ * 流水线设置-流水线最大任务并发数量-最大值
+ */
+const val PIPELINE_CON_RUNNING_CONTAINER_SIZE_MAX = 30
 /**
  * 流水线设置-矩阵内最大并发数量-默认值
  */
@@ -166,7 +169,11 @@ const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
 /**
  * 流水线设置-矩阵内最大并发数量-最大值
  */
-const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX = 20
+const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+/**
+ * 流水线设置-Stage内最大分裂后Job数量-最大值
+ */
+const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 

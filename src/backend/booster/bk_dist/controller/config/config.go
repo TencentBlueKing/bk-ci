@@ -34,7 +34,9 @@ type ServerConfig struct {
 	LocalPostSlots int `json:"local_post_slots" value:"0" usage:"local post slots define the max slots controller can use for post work, default is up to local_slots"`
 	RemainTime     int `json:"remain_time" value:"120" usage:"controller remain time after there is no active work (seconds)"`
 
-	NoWait bool `json:"no_wait" value:"false" usage:"if true, controller will quit immediately when no more running task"`
+	NoWait             bool `json:"no_wait" value:"false" usage:"if true, controller will quit immediately when no more running task"`
+	UseLocalCPUPercent int  `json:"use_local_cpu_percent" value:"0" usage:"how many local idle cpu will be used to execute tasks(0~100)"`
+	DisableFileLock    bool `json:"disable_file_lock" value:"false" usage:"if true, controller will launch without file lock"`
 }
 
 // CertConfig  configuration of Cert

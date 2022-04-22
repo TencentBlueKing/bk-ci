@@ -67,12 +67,10 @@ class BuildReviewListener @Autowired constructor(
             val requestEvent = gitRequestEventDao.getWithEvent(dslContext, buildEvent.eventId) ?: return
             val pipelineId = buildEvent.pipelineId
 
-            val gitProjectId = requestEvent.gitProjectId
-            val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
-                ?: throw OperationException("git ci all projectCode not exist")
-
-            val pipeline = streamPipelineService.getPipelineById(gitProjectId, pipelineId)
+            val pipeline = streamPipelineService.getPipelineById(pipelineId)
                 ?: throw OperationException("git ci pipeline not exist")
+            val v2GitSetting = streamBasicSettingDao.getSetting(dslContext, pipeline.gitProjectId)
+                ?: throw OperationException("git ci all projectCode not exist")
 
             when (buildReviewEvent.reviewType) {
                 BuildReviewType.STAGE_REVIEW, BuildReviewType.QUALITY_CHECK_IN, BuildReviewType.QUALITY_CHECK_OUT -> {

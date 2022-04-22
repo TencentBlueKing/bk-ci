@@ -38,7 +38,6 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.RedisAtomsBuild
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -240,20 +239,6 @@ interface BuildBuildResource {
         @PathParam("taskId")
         taskId: String
     ): Result<Map<String, String>>
-
-    @ApiOperation("构建过程中主动更新atoms缓存信息")
-    @PUT
-    @Path("/project/updateRedisAtoms")
-    fun updateRedisAtoms(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam("", required = true)
-        redisAtomsBuild: RedisAtomsBuild
-    ): Result<Boolean>
 
     @ApiOperation("获取当前构建的构建详情页")
     @GET

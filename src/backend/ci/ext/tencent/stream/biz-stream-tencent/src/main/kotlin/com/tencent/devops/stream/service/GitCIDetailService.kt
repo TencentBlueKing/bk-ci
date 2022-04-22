@@ -36,10 +36,12 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -49,8 +51,11 @@ import com.tencent.devops.stream.pojo.GitCIBuildHistory
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEventReq
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
+import com.tencent.devops.stream.v2.common.CommonVariables
 import com.tencent.devops.stream.v2.service.StreamBasicSettingService
+import com.tencent.devops.stream.v2.service.StreamScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,7 +71,9 @@ class GitCIDetailService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val repositoryConfService: GitRepositoryConfService,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIDetailService::class.java)
@@ -89,7 +96,16 @@ class GitCIDetailService @Autowired constructor(
         ) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+        }
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -109,7 +125,16 @@ class GitCIDetailService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+        }
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -118,7 +143,22 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, GitRequestEventReq(realEvent), modelDetail)
+        return GitCIModelDetail(
+            pipeline,
+            GitRequestEventReq(realEvent),
+            modelDetail.copy(
+                pipelineName = getPipelineName(modelDetail) ?: pipeline?.displayName ?: modelDetail.pipelineName
+            )
+        )
+    }
+
+    private fun getPipelineName(modelDetail: ModelDetail): String? {
+        modelDetail.model.stages.getOrNull(0)?.containers?.getOrNull(0).takeIf { it is TriggerContainer }.apply {
+            (this as TriggerContainer).params.forEach {
+                return it.takeIf { it.id == CommonVariables.CI_PIPELINE_NAME }?.defaultValue.toString()
+            }
+        }
+        return null
     }
 
     fun batchGetBuildHistory(
@@ -140,7 +180,16 @@ class GitCIDetailService @Autowired constructor(
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
-            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+            val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+                lazy {
+                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = it,
+                        useAccessToken = true,
+                        getProjectInfo = streamScmService::getProjectInfoRetry
+                    )
+                }
+            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
             val pipeline = pipelineResourceDao.getPipelineById(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
@@ -198,7 +247,11 @@ class GitCIDetailService @Autowired constructor(
         )
 
         // 校验工蜂项目权限
-        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, gitProjectId.toString())
+        val checkAuth = client.getScm(ServiceGitCiResource::class).checkUserGitAuth(
+            userId = gitUserId,
+            gitProjectId = gitProjectId.toString(),
+            accessLevel = 30
+        )
         if (!checkAuth.data!!) {
             throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
         }

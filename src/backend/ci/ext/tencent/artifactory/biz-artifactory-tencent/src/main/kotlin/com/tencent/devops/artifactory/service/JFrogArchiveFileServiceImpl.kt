@@ -78,7 +78,8 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         fileName: String?,
         fileType: FileTypeEnum?,
         props: Map<String, String?>?,
-        fileChannelType: FileChannelTypeEnum
+        fileChannelType: FileChannelTypeEnum,
+        logo: Boolean?
     ): String {
         logger.info("uploadFile, userId: $userId, file: $file, projectId: $projectId, filePath: $filePath, " +
             "fileName: $fileName, fileType: $fileType, props: $props, fileChannelType: $fileChannelType")
@@ -389,6 +390,18 @@ class JFrogArchiveFileServiceImpl : ArchiveFileServiceImpl() {
 
     override fun deleteFile(userId: String, filePath: String) {
         jFrogService.tryDelete("${getBasePath()}$filePath")
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        filePath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Page<FileInfo> {
+        TODO("Not yet implemented")
     }
 
     private fun getBasePath(): String {

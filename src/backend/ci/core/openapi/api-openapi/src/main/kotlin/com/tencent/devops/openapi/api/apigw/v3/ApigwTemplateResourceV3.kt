@@ -34,11 +34,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
 import com.tencent.devops.process.pojo.template.TemplateId
+import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
-import com.tencent.devops.process.pojo.template.TemplateListModel
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -46,12 +48,12 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_TEMPLATE_V3"], description = "OPENAPI-项目模板资源")
@@ -61,7 +63,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwTemplateResourceV3 {
 
-    @ApiOperation("获取所有种类流水线模板列表")
+    @ApiOperation("获取所有种类流水线模板列表", tags = ["v3_app_template_list_all", "v3_user_template_list_all"])
     @GET
     @Path("/allTemplates")
     fun listAllTemplate(
@@ -76,10 +78,17 @@ interface ApigwTemplateResourceV3 {
         userId: String,
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<OptionalTemplateList>
 
-    @ApiOperation("获取流水线模板详情")
+    @ApiOperation("获取流水线模板详情", tags = ["v3_user_template_get", "v3_app_template_get"])
     @GET
     @Path("/{templateId}")
     fun getTemplate(
@@ -103,7 +112,7 @@ interface ApigwTemplateResourceV3 {
         version: Long?
     ): Result<TemplateModelDetail>
 
-    @ApiOperation("模版管理-获取模版列表")
+    @ApiOperation("模版管理-获取模版列表", tags = ["v3_user_template_list", "v3_app_template_list"])
     @GET
     @Path("")
     fun listTemplate(
@@ -124,10 +133,17 @@ interface ApigwTemplateResourceV3 {
         templateType: TemplateType?,
         @ApiParam("是否已关联到store", required = false)
         @QueryParam("storeFlag")
-        storeFlag: Boolean?
+        storeFlag: Boolean?,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
+        pageSize: Int = 10
     ): Result<TemplateListModel>
 
-    @ApiOperation("创建流水线模板")
+    @ApiOperation("创建流水线模板", tags = ["v3_user_template_create", "v3_app_template_create"])
     @POST
     @Path("")
     fun createTemplate(
@@ -147,7 +163,7 @@ interface ApigwTemplateResourceV3 {
         template: Model
     ): Result<TemplateId>
 
-    @ApiOperation("删除流水线模板")
+    @ApiOperation("删除流水线模板", tags = [])
     @DELETE
     @Path("/{templateId}")
     fun deleteTemplate(
@@ -168,7 +184,7 @@ interface ApigwTemplateResourceV3 {
         templateId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线模板的版本")
+    @ApiOperation("删除流水线模板的版本", tags = [])
     @DELETE
     @Path("/{templateId}/versions/{version}")
     fun deleteTemplateVersion(
@@ -192,7 +208,7 @@ interface ApigwTemplateResourceV3 {
         version: Long
     ): Result<Boolean>
 
-    @ApiOperation("更新流水线模板")
+    @ApiOperation("更新流水线模板", tags = ["v3_user_template_update", "v3_app_template_update"])
     @PUT
     @Path("/{templateId}")
     fun updateTemplate(

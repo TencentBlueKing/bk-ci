@@ -180,11 +180,21 @@ class QualityIndicatorService @Autowired constructor(
         return serviceListIndicatorRecord(allIndicatorRecords)
     }
 
+    fun serviceListByElementType(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
+        val indicatorRecords = indicatorDao.listByElementType(
+            dslContext = dslContext,
+            elementType = elementType,
+            type = null,
+            enNameSet = enNameSet
+        )
+        return serviceListIndicatorRecord(indicatorRecords)
+    }
+
     fun serviceListFilterBash(elementType: String, enNameSet: Collection<String>): List<QualityIndicator> {
         return if (elementType in QualityIndicator.SCRIPT_ELEMENT) {
             listOf()
         } else {
-            serviceList(elementType, enNameSet).filter { it.enable ?: false }
+            serviceListByElementType(elementType, enNameSet).filter { it.enable ?: false }
         }
     }
 
@@ -393,6 +403,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun setTestIndicator(userId: String, elementType: String, indicatorUpdateList: Collection<IndicatorUpdate>): Int {
+        logger.info("QUALITY|setTestIndicator userId: $userId, elementType: $elementType")
         val testIndicatorList = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
             ?.filter { isTestIndicator(it) } ?: listOf()
         val testIndicatorMap = testIndicatorList.map { it.enName to it }.toMap()
@@ -418,6 +429,7 @@ class QualityIndicatorService @Autowired constructor(
 
     // 把测试的数据刷到正式的， 有或无都update，多余的删掉
     fun serviceRefreshIndicator(elementType: String, metadataMap: Map<String /* dataId */, String /* id */>): Int {
+        logger.info("QUALITY|refreshIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType, IndicatorType.MARKET)
         val testData = data?.filter { isTestIndicator(it) } ?: listOf()
         val prodData = data?.filter { !isTestIndicator(it) } ?: listOf()
@@ -491,6 +503,7 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun serviceDeleteTestIndicator(elementType: String): Int {
+        logger.info("QUALITY|deleteTestIndicator elementType: $elementType")
         val data = indicatorDao.listByElementType(dslContext, elementType)
         val testData = data?.filter { isTestIndicator(it) } ?: listOf()
         return indicatorDao.delete(testData.map { it.id }, dslContext)

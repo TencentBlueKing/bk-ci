@@ -44,12 +44,12 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_TEMPLATE_V3"], description = "OPENAPI-项目模板资源")
@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("ALL")
 interface ApigwTemplateInstanceResourceV3 {
-    @ApiOperation("批量实例化流水线模板")
+    @ApiOperation("批量实例化流水线模板", tags = ["v3_app_templateInstance_create", "v3_user_templateInstance_create"])
     @POST
     @Path("/")
     fun createTemplateInstances(
@@ -87,7 +87,7 @@ interface ApigwTemplateInstanceResourceV3 {
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet
 
-    @ApiOperation("批量更新流水线模板实例")
+    @ApiOperation("批量更新流水线模板实例", tags = ["v3_user_templateInstance_update", "v3_app_templateInstance_update"])
     @PUT
     @Path("/")
     fun updateTemplateInstances(
@@ -116,7 +116,7 @@ interface ApigwTemplateInstanceResourceV3 {
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet
 
-    @ApiOperation("获取流水线模板的实例列表")
+    @ApiOperation("获取流水线模板的实例列表", tags = ["v3_app_templateInstance_get", "v3_user_templateInstance_get"])
     @GET
     @Path("/")
     fun listTemplateInstances(

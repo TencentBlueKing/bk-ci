@@ -1,13 +1,13 @@
 package com.tencent.devops.stream.common.exception
 
 import com.tencent.devops.stream.pojo.GitProjectPipeline
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.v2.GitCIBasicSetting
 
 class TriggerException(
-    requestEvent: GitRequestEvent,
+    requestEvent: GitRequestEventForHandle,
     reasonParams: List<String>? = null,
     gitEvent: GitEvent? = null,
     commitCheck: CommitCheck? = null,
@@ -30,7 +30,7 @@ class TriggerException(
 ) {
     companion object {
         fun triggerError(
-            request: GitRequestEvent,
+            request: GitRequestEventForHandle,
             reason: TriggerReason,
             reasonParams: List<String>? = null,
             event: GitEvent? = null,

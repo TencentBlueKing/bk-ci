@@ -169,14 +169,17 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun setTestControlPoint(userId: String, controlPoint: QualityControlPoint): Int {
+        logger.info("QUALITY|setTestControlPoint userId: $userId, controlPoint: ${controlPoint.type}")
         return controlPointDao.setTestControlPoint(dslContext, userId, controlPoint)
     }
 
     fun refreshControlPoint(elementType: String): Int {
+        logger.info("QUALITY|refreshControlPoint controlPoint: $elementType")
         return controlPointDao.refreshControlPoint(dslContext, elementType)
     }
 
     fun deleteTestControlPoint(elementType: String): Int {
+        logger.info("QUALITY|deleteTestControlPoint controlPoint: $elementType")
         return controlPointDao.deleteTestControlPoint(dslContext, elementType)
     }
 

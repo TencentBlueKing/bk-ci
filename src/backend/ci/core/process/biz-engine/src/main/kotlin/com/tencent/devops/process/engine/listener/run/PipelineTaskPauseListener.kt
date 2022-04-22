@@ -36,17 +36,20 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_STOP_PAUSE_ATOM
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -58,8 +61,9 @@ class PipelineTaskPauseListener @Autowired constructor(
     private val taskBuildDetailService: TaskBuildDetailService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
-    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val buildVariableService: BuildVariableService,
+    private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter
 ) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
@@ -68,10 +72,23 @@ class PipelineTaskPauseListener @Autowired constructor(
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = event.buildId)
         try {
             redisLock.lock()
+            // feat: 插件暂停继续需校验关机状态 #6317:没有关机，丢入延迟队列轮询
+            if (!checkStopVm(taskRecord!!)) {
+                // 重试次数超过阈值, 直接失败
+                if (event.retryCount > RETRY_MAX_COUNT) {
+                    logger.warn("Pause Continue retryCount fail. ${taskRecord.buildId}|${taskRecord.taskName}")
+                    return
+                }
+                with(event) {
+                    delayEvent(taskRecord)
+                }
+                return
+            }
+
             if (event.actionType == ActionType.REFRESH) {
-                taskContinue(task = taskRecord!!, userId = event.userId)
+                taskContinue(taskRecord, event.userId)
             } else if (event.actionType == ActionType.END) {
-                taskCancel(task = taskRecord!!, userId = event.userId)
+                taskCancel(task = taskRecord, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
         } catch (ignored: Exception) {
@@ -111,6 +128,15 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = task.containerId,
             taskId = task.taskId,
             element = newElement
+        )
+        // issues_6210 添加继续操作操作人变量
+        buildVariableService.saveVariable(
+            dslContext = dslContext,
+            projectId = task.projectId,
+            pipelineId = task.pipelineId,
+            buildId = task.buildId,
+            name = "${VALUE_KEY}_${task.taskId}",
+            value = userId
         )
 
         // 触发引擎container事件，继续后续流程
@@ -228,5 +254,49 @@ class PipelineTaskPauseListener @Autowired constructor(
             containerId = current.containerId,
             buildStatus = BuildStatus.QUEUE
         )
+    }
+
+    private fun checkStopVm(task: PipelineBuildTask): Boolean {
+        val projectId = task.projectId
+        val buildId = task.buildId
+        val jobId = task.containerId
+        // 查找job所属job对应的关机插件是否完成
+        val jobTaskInfos = pipelineTaskService.listContainerBuildTasks(
+            projectId = projectId,
+            buildId = buildId,
+            containerSeqId = jobId
+        )
+        jobTaskInfos.forEach {
+            if (it.taskId.startsWith(VMUtils.getStopVmLabel())) {
+                if (it.status.isFinish()) {
+                    logger.info("PauseListener checkStopVm $projectId|$buildId|$jobId| success")
+                    return true
+                } else return@forEach
+            }
+        }
+        logger.warn("PauseListener checkStopVm $projectId|$buildId|$jobId| fail")
+        return false
+    }
+
+    private fun PipelineTaskPauseEvent.delayEvent(task: PipelineBuildTask) {
+        // 默认延迟3秒再继续丢入队列
+        val loopDelayMills =
+            if (task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS] != null) {
+                task.taskParams[BS_ATOM_STATUS_REFRESH_DELAY_MILLS].toString().trim().toInt()
+            } else {
+                DELAY_SIZE
+            }
+        // 重试延迟时间随着次数添加延迟时间
+        this.delayMills += loopDelayMills
+        this.retryCount += 1
+        logger.info("taskContinue delay${this.delayMills}. ${this.buildId}| ${this.containerId}| ${task.taskName}")
+        pipelineEventDispatcher.dispatch(this)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineTaskPauseListener::class.java)
+        private const val VALUE_KEY = "BK_CI_OPERATOR"
+        private const val DELAY_SIZE = 3000
+        private const val RETRY_MAX_COUNT = 5
     }
 }

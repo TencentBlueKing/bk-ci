@@ -69,6 +69,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -124,6 +125,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.StageTagService
@@ -258,6 +260,19 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(t)
     }
 
+    fun getBuildInfoListByConcurrencyGroup(
+        projectId: String,
+        concurrencyGroup: String,
+        status: List<BuildStatus>
+    ): List<Pair<String, String>> {
+        return pipelineBuildDao.getBuildTasksByConcurrencyGroup(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            statusSet = status
+        ).map { Pair(it.value1(), it.value2()) }
+    }
+
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
         val result = mutableMapOf<String, String>()
         val buildInfoList = pipelineBuildDao.listBuildInfoByBuildIds(
@@ -322,7 +337,13 @@ class PipelineRuntimeService @Autowired constructor(
         return ret
     }
 
-    fun listPipelineBuildHistory(projectId: String, pipelineId: String, offset: Int, limit: Int): List<BuildHistory> {
+    fun listPipelineBuildHistory(
+        projectId: String,
+        pipelineId: String,
+        offset: Int,
+        limit: Int,
+        updateTimeDesc: Boolean? = null
+    ): List<BuildHistory> {
         val currentTimestamp = System.currentTimeMillis()
         // 限制最大一次拉1000，防止攻击
         val list = pipelineBuildDao.listPipelineBuildInfo(
@@ -330,7 +351,8 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             offset = offset,
-            limit = if (limit < 0) 1000 else limit
+            limit = if (limit < 0) 1000 else limit,
+            updateTimeDesc = updateTimeDesc
         )
         val result = mutableListOf<BuildHistory>()
         val buildStatus = BuildStatus.values()
@@ -511,7 +533,9 @@ class PipelineRuntimeService @Autowired constructor(
                     startType = StartType.toStartType(trigger),
                     channelCode = ChannelCode.valueOf(channel)
                 ),
-                buildNumAlias = buildNumAlias
+                buildNumAlias = buildNumAlias,
+                updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L, // 防止空异常
+                concurrencyGroup = concurrencyGroup
             )
         }
     }
@@ -625,9 +649,12 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        terminateFlag: Boolean = false
     ): Boolean {
-        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus")
+        logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
+        // 发送取消事件
+        val actionType = if (terminateFlag) ActionType.TERMINATE else ActionType.END
         // 发送取消事件
         pipelineEventDispatcher.dispatch(
             PipelineBuildCancelEvent(
@@ -636,14 +663,16 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = userId,
                 buildId = buildId,
-                status = buildStatus
+                status = buildStatus,
+                actionType = actionType
             ),
             PipelineBuildCancelBroadCastEvent(
                 source = "cancelBuild",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
-                buildId = buildId
+                buildId = buildId,
+                actionType = actionType
             )
         )
         // 给未结束的job发送心跳监控事件
@@ -682,6 +711,7 @@ class PipelineRuntimeService @Autowired constructor(
         fullModel: Model,
         originStartParams: List<BuildParameters>,
         startParamsWithType: List<BuildParameters>,
+        setting: PipelineSetting?,
         buildNo: Int? = null,
         buildNumRule: String? = null,
         acquire: Boolean? = false
@@ -720,6 +750,14 @@ class PipelineRuntimeService @Autowired constructor(
             if (context.needSkipWhenStageFailRetry(stage) || stage.stageControlOption?.enable == false) {
                 logger.info("[$buildId|EXECUTE|#${stage.id!!}|${stage.status}|NOT_EXECUTE_STAGE")
                 context.containerSeq += stage.containers.size // Job跳过计数也需要增加
+                if (index == 0) {
+                    stage.containers.forEach {
+                        if (it is TriggerContainer) {
+                            it.status = BuildStatus.RUNNING.name
+                            ContainerUtils.setQueuingWaitName(it)
+                        }
+                    }
+                }
                 return@nextStage
             }
 
@@ -763,6 +801,8 @@ class PipelineRuntimeService @Autowired constructor(
                             buildNoLock?.unlock()
                         }
                     }
+                    container.status = BuildStatus.RUNNING.name
+                    ContainerUtils.setQueuingWaitName(container)
                     container.executeCount = context.executeCount
                     container.elements.forEach { atomElement ->
                         if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
@@ -794,7 +834,8 @@ class PipelineRuntimeService @Autowired constructor(
                             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                             container = container,
                             retryStartTaskId = context.retryStartTaskId
-                        )) {
+                        )
+                    ) {
 
                         logger.info("[$buildId|RETRY_SKIP_JOB|j(${container.id!!})|${container.name}")
                         context.containerSeq++
@@ -1028,7 +1069,8 @@ class PipelineRuntimeService @Autowired constructor(
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),
-                        buildNumAlias = buildNumAlias
+                        buildNumAlias = buildNumAlias,
+                        concurrencyGroup = setting?.concurrencyGroup
                     )
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(
@@ -1144,7 +1186,8 @@ class PipelineRuntimeService @Autowired constructor(
                     params[PIPELINE_WEBHOOK_EVENT_TYPE] as String?
                 },
                 webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
-                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA] as String?,
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] as String?
             ),
             formatted = false
         )

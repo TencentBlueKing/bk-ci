@@ -31,6 +31,9 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -49,12 +52,14 @@ data class Model(
     val instanceFromTemplate: Boolean? = null,
     @ApiModelProperty("创建人", required = false)
     var pipelineCreator: String? = null,
-    @ApiModelProperty("源模版ID", required = false)
+    @ApiModelProperty("当前模板对应的被复制的模板或安装的研发商店的模板对应的ID", required = false)
     var srcTemplateId: String? = null,
-    @ApiModelProperty("模板ID", required = false)
+    @ApiModelProperty("当前模板的ID", required = false)
     var templateId: String? = null,
     @ApiModelProperty("提示", required = false)
-    var tips: String? = null
+    var tips: String? = null,
+    @ApiModelProperty("流水线事件回调", required = false)
+    var events: Map<String, PipelineCallbackEvent>? = emptyMap()
 ) {
     @ApiModelProperty("提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -185,5 +190,23 @@ data class Model(
             }
         }
         return count
+    }
+
+    fun getPipelineCallBack(projectId: String, callbackEvent: CallBackEvent): List<ProjectPipelineCallBack> {
+        val pipelineCallBack = mutableListOf<ProjectPipelineCallBack>()
+        events?.forEach { eventName, event ->
+            if (event.callbackEvent == callbackEvent) {
+                pipelineCallBack.add(
+                    ProjectPipelineCallBack(
+                        id = null,
+                        projectId = projectId,
+                        events = event.callbackEvent.name,
+                        callBackUrl = event.callbackUrl,
+                        secretToken = event.secretToken
+                    )
+                )
+            }
+        }
+        return pipelineCallBack
     }
 }

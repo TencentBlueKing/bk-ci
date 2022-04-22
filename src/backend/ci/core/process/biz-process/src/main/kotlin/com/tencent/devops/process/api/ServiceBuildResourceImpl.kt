@@ -255,13 +255,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         page: Int?,
         pageSize: Int?,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         val result = pipelineBuildFacadeService.getHistoryBuild(
-            userId, projectId, pipelineId,
-            page, pageSize, channelCode, ChannelCode.isNeedAuth(channelCode)
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            page = page,
+            pageSize = pageSize,
+            channelCode = channelCode,
+            checkPermission = ChannelCode.isNeedAuth(channelCode),
+            updateTimeDesc = updateTimeDesc
         )
         return Result(result)
     }
@@ -469,6 +476,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         vmSeqId: String,
+        nodeHashId: String?,
         simpleResult: SimpleResult
     ): Result<Boolean> {
         pipelineBuildFacadeService.workerBuildFinish(
@@ -476,6 +484,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             vmSeqId = vmSeqId,
+            nodeHashId = nodeHashId,
             simpleResult = simpleResult
         )
         return Result(true)

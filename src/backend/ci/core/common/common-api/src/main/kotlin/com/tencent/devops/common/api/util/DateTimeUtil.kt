@@ -28,6 +28,8 @@
 package com.tencent.devops.common.api.util
 
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -49,6 +51,10 @@ fun LocalDateTime.timestampmilli(): Long {
     return this.atZone(zoneId).toInstant().toEpochMilli()
 }
 
+fun LocalDateTime.between(endLocalDateTime: LocalDateTime?): Duration {
+    return Duration.between(this, endLocalDateTime)
+}
+
 @Suppress("ALL")
 object DateTimeUtil {
 
@@ -61,6 +67,8 @@ object DateTimeUtil {
     }
 
     const val YYYY_MM_DD = "yyyy-MM-dd"
+
+    const val YYYYMMDD = "yyyyMMdd"
 
     /**
      * 单位转换，分钟转换秒
@@ -218,5 +226,16 @@ object DateTimeUtil {
         val format = SimpleDateFormat(formatStr)
         val date = format.parse(dateTimeStr)
         return convertDateToLocalDateTime(date)
+    }
+
+    /**
+     * 将格式化的日期时间字符串转换为LocalDate对象
+     */
+    fun stringToLocalDate(dateStr: String?): LocalDate? {
+        var localDate: LocalDate? = null
+        if (!dateStr.isNullOrBlank()) {
+            localDate = LocalDate.parse(dateStr)
+        }
+        return localDate
     }
 }

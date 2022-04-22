@@ -47,6 +47,7 @@ import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.pojo.GitCIModelDetail
 import com.tencent.devops.stream.pojo.GitProjectPipeline
 import com.tencent.devops.stream.pojo.GitRequestEventReq
+import com.tencent.devops.stream.trigger.StreamGitProjectInfoCache
 import com.tencent.devops.stream.utils.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -62,7 +63,9 @@ class StreamDetailService @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamScmService: StreamScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamDetailService::class.java)
@@ -79,7 +82,16 @@ class StreamDetailService @Autowired constructor(
             gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+        }
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -96,7 +108,16 @@ class StreamDetailService @Autowired constructor(
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
-        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
+        val gitProjectInfoCache = eventRecord.sourceGitProjectId?.let {
+            lazy {
+                streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                    gitProjectId = it,
+                    useAccessToken = true,
+                    getProjectInfo = streamScmService::getProjectInfoRetry
+                )
+            }
+        }
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, gitProjectInfoCache)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,

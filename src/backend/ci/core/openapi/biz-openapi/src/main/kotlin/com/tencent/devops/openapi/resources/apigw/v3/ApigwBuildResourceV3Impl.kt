@@ -90,7 +90,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        updateTimeDesc: Boolean?
     ): Result<BuildHistoryPage<BuildHistory>> {
         logger.info("$pipelineId|getHistoryBuild|user($userId)")
         return client.get(ServiceBuildResource::class).getHistoryBuild(
@@ -99,7 +100,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             page = page ?: 1,
             pageSize = pageSize ?: 20,
-            channelCode = apiGatewayUtil.getChannelCode()
+            channelCode = apiGatewayUtil.getChannelCode(),
+            updateTimeDesc = updateTimeDesc
         )
     }
 

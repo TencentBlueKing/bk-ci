@@ -105,7 +105,10 @@ interface ServicePipelineResource {
         pipeline: Model,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否修改最后修改人", required = false)
+        @QueryParam("updateLastModifyUser")
+        updateLastModifyUser: Boolean? = true
     ): Result<Boolean>
 
     @ApiOperation("复制流水线编排")
@@ -237,6 +240,9 @@ interface ServicePipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
+        @ApiParam("是否修改最后修改人", required = false)
+        @QueryParam("updateLastModifyUser")
+        updateLastModifyUser: Boolean? = true,
         @ApiParam(value = "流水线设置", required = true)
         setting: PipelineSetting
     ): Result<Boolean>

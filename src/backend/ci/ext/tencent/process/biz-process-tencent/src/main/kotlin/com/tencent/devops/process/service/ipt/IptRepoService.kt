@@ -82,7 +82,8 @@ class IptRepoService @Autowired constructor(
             serviceCode = BSPipelineAuthServiceCode(),
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             projectCode = projectId,
-            permission = AuthPermission.DOWNLOAD
+            permission = AuthPermission.DOWNLOAD,
+            resourceCode = pipelineId
         )
         if (!result) throw PermissionForbiddenException("用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
     }

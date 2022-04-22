@@ -39,10 +39,10 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
@@ -53,7 +53,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwEnvironmentAgentResourceV3 {
 
-    @ApiOperation("获取项目下第三方构建机列表")
+    @ApiOperation("获取项目下第三方构建机列表", tags = ["v3_app_node_list", "v3_user_node_list"])
     @GET
     @Path("/thirdPartAgent/nodeList")
     fun thirdPartAgentList(
@@ -71,7 +71,7 @@ interface ApigwEnvironmentAgentResourceV3 {
         projectId: String
     ): Result<List<NodeBaseInfo>>
 
-    @ApiOperation("获取指定构建机状态")
+    @ApiOperation("获取指定构建机状态", tags = ["v3_user_node_status", "v3_app_node_status"])
     @Path("/thirdPartAgent/nodes/status")
     @GET
     fun getNodeStatus(

@@ -39,15 +39,16 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.ArtifactoryInfoService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.archive.constant.REPO_CUSTOM
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
@@ -61,7 +62,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val artifactorySearchService: ArtifactorySearchService,
     private val bkRepoSearchService: BkRepoSearchService,
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val artifactoryInfoService: ArtifactoryInfoService
+    private val bkRepoCustomDirService: BkRepoCustomDirService
 ) : ServiceArtifactoryResource {
     override fun check(
         userId: String,
@@ -328,6 +329,28 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
                 records = result.second
             )
         )
+    }
+
+    override fun listCustomFiles(
+        userId: String,
+        projectId: String,
+        fullPath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<FileInfo>> {
+        val data = bkRepoCustomDirService.listPage(
+            userId = userId,
+            projectId = projectId,
+            repoName = REPO_CUSTOM,
+            fullPath = fullPath,
+            includeFolder = includeFolder ?: true,
+            deep = deep ?: false,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20
+        )
+        return Result(data)
     }
 
     companion object {

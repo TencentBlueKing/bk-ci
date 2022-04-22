@@ -2,12 +2,12 @@ package com.tencent.devops.stream.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitTagPushOperationKind
+import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
-import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isCreateBranch
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.slf4j.LoggerFactory
@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component
 
 @Component
 class StreamTriggerMessageUtils @Autowired constructor(
-    private val client: Client,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -25,42 +24,30 @@ class StreamTriggerMessageUtils @Autowired constructor(
     }
 
     @SuppressWarnings("ComplexMethod")
-    fun getEventMessageTitle(event: GitRequestEvent, gitProjectId: Long): String {
+    fun getEventMessageTitle(event: GitRequestEvent): String {
         val messageTitle = when (event.objectKind) {
             TGitObjectKind.MERGE_REQUEST.value -> {
-                val branch = GitCommonUtils.checkAndGetForkBranchName(
-                    gitProjectId = gitProjectId,
-                    sourceGitProjectId = event.sourceGitProjectId,
-                    branch = event.branch,
-                    client = client
-                )
-                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+                "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
             TGitObjectKind.MANUAL.value -> {
-                "[${event.branch}] Manual Triggered by ${event.userId}"
+                "Manually run by ${event.userId}"
             }
             TGitObjectKind.OPENAPI.value -> {
-                "[${event.branch}] openApi Triggered by ${event.userId}"
+                "Run by OPENAPI(${event.userId})"
             }
             TGitObjectKind.TAG_PUSH.value -> {
                 if (event.operationKind == TGitTagPushOperationKind.DELETE.value) {
-                    "[${event.branch}] tag [${event.branch}] deleted by ${event.userId}"
+                    "Tag [${event.branch}] deleted by ${event.userId}"
                 } else {
-                    val eventMap = try {
-                        objectMapper.readValue<GitTagPushEvent>(event.event)
-                    } catch (e: Exception) {
-                        logger.error("event as GitTagPushEvent error ${e.message}")
-                        null
-                    }
-                    "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
+                    "Tag [${event.branch}] pushed by ${event.userId}"
                 }
             }
             TGitObjectKind.SCHEDULE.value -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] schedule"
+                "Scheduled"
             }
             TGitObjectKind.PUSH.value -> {
                 if (event.operationKind == TGitPushOperationKind.DELETE.value) {
-                    "[${event.branch}] branch [${event.branch}] deleted by ${event.userId}"
+                    "Branch [${event.branch}] deleted by ${event.userId}"
                 } else {
                     val eventMap = try {
                         objectMapper.readValue<GitPushEvent>(event.event)
@@ -71,7 +58,7 @@ class StreamTriggerMessageUtils @Autowired constructor(
                     if (eventMap?.isCreateBranch() == true) {
                         "Branch [${event.branch}] added by ${event.userId}"
                     } else {
-                        "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                        "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
                     }
                 }
             }
@@ -82,10 +69,15 @@ class StreamTriggerMessageUtils @Autowired constructor(
                 "Review [${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
             TGitObjectKind.NOTE.value -> {
-                "Note [${event.commitMsg?.take(7)}...] submitted by ${event.userId}"
+                val noteEvent = try {
+                    JsonUtil.to(event.event, GitNoteEvent::class.java)
+                } catch (e: Exception) {
+                    null
+                }
+                "Note [${noteEvent?.objectAttributes?.id}] submitted by ${event.userId}"
             }
             else -> {
-                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+                "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
         return messageTitle
