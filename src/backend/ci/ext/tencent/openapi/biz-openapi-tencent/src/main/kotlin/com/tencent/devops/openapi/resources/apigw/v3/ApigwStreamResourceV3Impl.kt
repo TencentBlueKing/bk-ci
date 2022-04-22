@@ -11,7 +11,7 @@ import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.v1.api.GitCIDetailResource
 import com.tencent.devops.stream.v1.api.GitCIHistoryResource
-import com.tencent.devops.stream.v1.api.GitCIPipelineResource
+import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
