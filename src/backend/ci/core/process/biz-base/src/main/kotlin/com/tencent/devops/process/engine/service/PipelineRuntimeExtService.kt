@@ -118,29 +118,4 @@ class PipelineRuntimeExtService @Autowired constructor(
             redisLock.unlock()
         }
     }
-
-    fun popAllConcurrencyGroupBuildInfo(
-        buildInfoList: List<BuildInfo?>
-    ) {
-        buildInfoList.forEach { buildInfo ->
-            if (buildInfo == null) return@forEach
-            val redisLock = RedisLock(
-                redisOperation = redisOperation,
-                lockKey = "$nextBuildKey:${buildInfo.pipelineId}",
-                expiredTimeInSeconds = expiredTimeInSeconds
-            )
-            try {
-                redisLock.lock()
-                pipelineBuildDao.updateStatus(
-                    dslContext = dslContext,
-                    projectId = buildInfo.projectId,
-                    buildId = buildInfo.buildId,
-                    oldBuildStatus = BuildStatus.QUEUE,
-                    newBuildStatus = BuildStatus.UNEXEC
-                )
-            } finally {
-                redisLock.unlock()
-            }
-        }
-    }
 }
