@@ -25,86 +25,70 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v1.api
+package com.tencent.devops.stream.api.service.v1
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.v1.pojo.V1GitCIBuildBranch
-import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
+import com.tencent.devops.stream.v1.pojo.V1GitStarterWebList
+import com.tencent.devops.stream.v1.pojo.V1GitYamlContent
+import com.tencent.devops.stream.v1.pojo.V1GitYamlProperty
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_HISTORY"], description = "History页面")
-@Path("/service/history/build")
+@Api(tags = ["SERVICE_STREAM_STARTER"], description = "起始页面模板信息")
+@Path("/service/starter")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface GitCIHistoryResource {
+interface GitCIStarterWebResource {
 
-    @ApiOperation("构建历史列表")
+    @ApiOperation("获取所有模板信息-内容和配置")
     @GET
-    @Path("/list/{gitProjectId}")
-    fun getHistoryBuildList(
+    @Path("/yaml/list")
+    fun getYamlList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<V1GitYamlContent>>
+
+    @ApiOperation("获取所有模板信息-配置")
+    @GET
+    @Path("/properties/list")
+    fun getPropertyList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("查询开始时间，格式yyyy-MM-dd HH:mm:ss", required = false)
-        @QueryParam("startBeginTime")
-        startBeginTime: String?,
-        @ApiParam("查询结束时间，格式yyyy-MM-dd HH:mm:ss", required = false)
-        @QueryParam("endBeginTime")
-        endBeginTime: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("分支", required = false)
-        @QueryParam("branch")
-        branch: String?,
-        @ApiParam("源仓库ID", required = false)
-        @QueryParam("sourceGitProjectId")
-        sourceGitProjectId: Long?,
-        @ApiParam("触发人", required = false)
-        @QueryParam("triggerUser")
-        triggerUser: String?,
-        @ApiParam("流水线ID", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?
-    ): Result<Page<V1GitCIBuildHistory>>
+        @ApiParam("指定类别名", required = false, defaultValue = "")
+        @QueryParam("类别名")
+        category: String?
+    ): Result<List<V1GitYamlProperty>>
 
-    @ApiOperation("获取当前仓库的所有有关构建列表(包括fork库)")
+    @ApiOperation("获取Stream起始页分类模板信息")
     @GET
-    @Path("/branch/list/{gitProjectId}")
-    fun getAllBuildBranchList(
+    @Path("/web/list")
+    fun getWebList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<V1GitStarterWebList>
+
+    @ApiOperation("更新模板信息-内容和配置")
+    @POST
+    @Path("/yaml/update")
+    fun update(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("分支关键字(模糊搜索)", required = false)
-        @QueryParam("keyword")
-        keyword: String?
-    ): Result<Page<V1GitCIBuildBranch>>
+        @ApiParam(value = "最新的所有模板属性", required = true)
+        properties: List<V1GitYamlContent>
+    ): Result<Int>
 }

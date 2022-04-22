@@ -30,7 +30,7 @@ package com.tencent.devops.stream.v1.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.v1.api.GitCIStarterWebResource
+import com.tencent.devops.stream.api.service.v1.GitCIStarterWebResource
 import com.tencent.devops.stream.v1.pojo.V1GitStarterWebList
 import com.tencent.devops.stream.v1.pojo.V1GitYamlContent
 import com.tencent.devops.stream.v1.pojo.V1GitYamlProperty

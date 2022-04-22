@@ -8,8 +8,8 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwStreamResourceV4
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.v1.api.GitCIDetailResource
-import com.tencent.devops.stream.v1.api.GitCIHistoryResource
+import com.tencent.devops.stream.api.service.v1.GitCIDetailResource
+import com.tencent.devops.stream.api.service.v1.GitCIHistoryResource
 import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource

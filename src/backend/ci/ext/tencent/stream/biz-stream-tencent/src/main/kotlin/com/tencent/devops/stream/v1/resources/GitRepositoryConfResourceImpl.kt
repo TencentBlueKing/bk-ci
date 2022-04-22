@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.v1.api.GitRepositoryConfResource
+import com.tencent.devops.stream.api.service.v1.GitRepositoryConfResource
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
 import org.springframework.beans.factory.annotation.Autowired

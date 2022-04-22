@@ -30,7 +30,7 @@ package com.tencent.devops.stream.v1.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.v1.api.GitCIBranchResource
+import com.tencent.devops.stream.api.service.v1.GitCIBranchResource
 import com.tencent.devops.stream.v1.pojo.V1BranchBuildHistory
 import com.tencent.devops.stream.v1.service.V1GitCIBranchService
 import org.springframework.beans.factory.annotation.Autowired
