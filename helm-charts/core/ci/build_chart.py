@@ -43,7 +43,8 @@ default_value_dict = {
     'bkCiDocsUrl': 'https://docs.bkci.net/',
     'bkCiArtifactoryRealm': 'local',
     'bkRepoHost': 'repo.demo.com',
-    'bkRepoGatewayIp': '127.0.0.1'
+    'bkRepoGatewayIp': '127.0.0.1',
+    'bkCiConsulDiscoveryTag': 'devops'
 }
 
 if os.path.isfile(default_value_json):
