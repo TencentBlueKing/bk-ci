@@ -306,6 +306,7 @@ class TurboRecordService @Autowired constructor(
     /**
      * 获取编译加速记录显示信息
      */
+    @Suppress("ComplexMethod")
     fun getTurboRecordDisplayInfo(turboRecordEntity: TTurboRecordEntity, turboPlanEntity: TTurboPlanEntity): TurboRecordDisplayVO {
         val displayFields = mutableListOf(
             TurboDisplayFieldVO(
