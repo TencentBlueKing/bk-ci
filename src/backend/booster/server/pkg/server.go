@@ -526,8 +526,12 @@ func (s *Server) initDisttaskEngine(
 			MySQLDebug:       s.conf.EngineDisttaskConfig.MySQLDebug,
 			MysqlTableOption: s.conf.EngineDisttaskConfig.MysqlTableOption,
 		},
-		Allocater: disttask.ResourceAllocater{
-			AllocateMap: s.conf.EngineDisttaskConfig.ResourceAllocater,
+		QueueResourceAllocater: map[string]disttask.ResourceAllocater{
+			"MAC":     {AllocateMap: s.conf.EngineDisttaskConfig.QueueResourceAllocater.MacConfig.AllocateByTimeMap},
+			"WIN":     {AllocateMap: s.conf.EngineDisttaskConfig.QueueResourceAllocater.WinConfig.AllocateByTimeMap},
+			"K8S_WIN": {AllocateMap: s.conf.EngineDisttaskConfig.QueueResourceAllocater.K8sWinConfig.AllocateByTimeMap},
+			"K8S":     {AllocateMap: s.conf.EngineDisttaskConfig.QueueResourceAllocater.K8sConfig.AllocateByTimeMap},
+			"VM_MAC":  {AllocateMap: s.conf.EngineDisttaskConfig.QueueResourceAllocater.VmMacConfig.AllocateByTimeMap},
 		},
 		Rd:                   s.rd,
 		QueueShareType:       s.conf.DisttaskQueueShareType,

@@ -165,10 +165,24 @@ type EngineDisttaskConfig struct {
 	MySQLDebug       bool   `json:"engine_disttask_mysql_debug" value:"false" usage:"if true, will output raw sql"`
 	MysqlTableOption string `json:"engine_disttask_mysql_table_option" value:"" usage:"mysql table option"`
 
-	ResourceAllocater   map[string]float64           `json:"resource_allocater_by_current_time"`
-	LeastJobServer      int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
-	JobServerTimesToCPU float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
-	BrokerConfig        []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
+	QueueResourceAllocater EngineDisttaskResourceConfig `json:"queue_resource_allocater"`
+	LeastJobServer         int                          `json:"disttask_least_job_server" value:"144" usage:"least job server for remote compiles"`
+	JobServerTimesToCPU    float64                      `json:"disttask_job_server_times_to_cpu" value:"1.5" usage:"job server times to cpu"`
+	BrokerConfig           []EngineDisttaskBrokerConfig `json:"disttask_broker_config"`
+}
+
+// EngineDisttaskResourceConfig
+type EngineDisttaskResourceConfig struct {
+	MacConfig    ResourceAllocater `json:"mac_allocater"`
+	WinConfig    ResourceAllocater `json:"win_allocater"`
+	K8sWinConfig ResourceAllocater `json:"k8s_win_allocater"`
+	K8sConfig    ResourceAllocater `json:"k8s_allocater"`
+	VmMacConfig  ResourceAllocater `json:"vm_mac_allocater"`
+}
+
+// ResourceAllocater
+type ResourceAllocater struct {
+	AllocateByTimeMap map[string]float64 `json:"allocate_by_time_map"`
 }
 
 // EngineDisttaskBrokerConfig define the broker config used by engine disttask.
