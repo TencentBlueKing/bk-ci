@@ -123,7 +123,7 @@ class StreamDetailService @Autowired constructor(
         val remark = client.get(ServiceBuildResource::class)
             .getBatchBuildStatus(conf.projectCode!!, setOf(buildId), channelCode).data?.first()?.remark
         return StreamModelDetail(
-            streamGitProjectPipeline = pipeline,
+            gitProjectPipeline = pipeline,
             gitRequestEvent = StreamGitRequestEventReq(realEvent),
             modelDetail = modelDetail,
             buildHistoryRemark = remark
