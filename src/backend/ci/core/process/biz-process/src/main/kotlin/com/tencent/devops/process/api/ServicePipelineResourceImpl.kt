@@ -273,11 +273,17 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
+        updateLastModifyUser: Boolean?,
         setting: PipelineSetting
     ): Result<Boolean> {
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
-        pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
+        pipelineSettingFacadeService.saveSetting(
+            userId = userId,
+            setting = setting,
+            checkPermission = true,
+            updateLastModifyUser = updateLastModifyUser
+        )
         return Result(true)
     }
 

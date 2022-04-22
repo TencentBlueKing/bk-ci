@@ -1010,7 +1010,7 @@ class PipelineRepositoryService constructor(
         } else null
     }
 
-    fun saveSetting(userId: String, setting: PipelineSetting, version: Int) {
+    fun saveSetting(userId: String, setting: PipelineSetting, version: Int, updateLastModifyUser: Boolean? = true) {
         setting.checkParam()
 
         if (isPipelineExist(
@@ -1040,7 +1040,8 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 updateVersion = false,
                 pipelineName = setting.pipelineName,
-                pipelineDesc = setting.desc
+                pipelineDesc = setting.desc,
+                updateLastModifyUser = updateLastModifyUser
             )
             if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
                 if (old?.maxPipelineResNum != null) {
