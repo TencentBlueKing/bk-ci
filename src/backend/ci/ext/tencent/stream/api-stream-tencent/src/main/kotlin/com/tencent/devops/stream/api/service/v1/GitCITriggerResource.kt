@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v1.api
+package com.tencent.devops.stream.api.service.v1
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
+import com.tencent.devops.stream.pojo.V1TriggerBuildReq
+import com.tencent.devops.stream.v1.pojo.V1GitYamlString
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -42,81 +42,60 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_PIPELINE"], description = "CurrentBuild页面")
-@Path("/service/pipelines")
+@Api(tags = ["SERVICE_STREAM_TRIGGER"], description = "TriggerBuild页面")
+@Path("/service/trigger/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface GitCIPipelineResource {
+interface GitCITriggerResource {
 
-    @ApiOperation("项目下所有流水线概览")
-    @GET
-    @Path("/{gitProjectId}/list")
-    fun getPipelineList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("搜索关键字", required = false)
-        @QueryParam("keyword")
-        keyword: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "10")
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Result<Page<V1GitProjectPipeline>>
-
-    @ApiOperation("获取指定流水线信息")
-    @GET
-    @Path("/{gitProjectId}/{pipelineId}/info")
-    fun getPipeline(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "是否带有最新一次构建历史", required = false)
-        @QueryParam("withHistory")
-        withHistory: Boolean? = false
-    ): Result<V1GitProjectPipeline?>
-
-    @ApiOperation("开启或关闭流水线")
+    @ApiOperation("人工TriggerBuild启动构建")
     @POST
-    @Path("/{gitProjectId}/{pipelineId}/enable")
-    fun enablePipeline(
+    @Path("/{pipelineId}/startup")
+    fun triggerStartup(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam(value = "是否启用该流水线", required = true)
-        @QueryParam("enabled")
-        enabled: Boolean
+        @ApiParam("TriggerBuild请求", required = true)
+        v1TriggerBuildReq: V1TriggerBuildReq
     ): Result<Boolean>
 
-    @ApiOperation("获取流水线列表")
-    @GET
-    @Path("/{gitProjectId}/listInfo")
-    fun listPipelineNames(
+    @ApiOperation("校验yaml格式")
+    @POST
+    @Path("/checkYaml")
+    fun checkYaml(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
+        @ApiParam("yaml内容", required = true)
+        yaml: V1GitYamlString
+    ): Result<String>
+
+    @ApiOperation("获取yaml schema")
+    @GET
+    @Path("/getYamlSchema")
+    fun getYamlSchema(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
+
+    @ApiOperation("根据BuildId查询yaml内容")
+    @GET
+    @Path("/getYaml/{gitProjectId}/{buildId}")
+    fun getYamlByBuildId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工蜂项目ID", required = true)
         @PathParam("gitProjectId")
-        gitProjectId: Long
-    ): Result<List<V1GitProjectPipeline>>
+        gitProjectId: Long,
+        @ApiParam(value = "构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String
+    ): Result<String>
 }

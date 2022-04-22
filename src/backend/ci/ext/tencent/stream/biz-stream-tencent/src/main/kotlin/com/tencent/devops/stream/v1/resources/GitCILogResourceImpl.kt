@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.stream.v1.api.GitCILogResource
+import com.tencent.devops.stream.api.service.v1.GitCILogResource
 import com.tencent.devops.stream.v1.service.V1GitCILogService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response

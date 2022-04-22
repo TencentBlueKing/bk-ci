@@ -25,13 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v1.api
+package com.tencent.devops.stream.api.service.v1
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.stream.v1.pojo.V1GitRequestHistory
+import com.tencent.devops.stream.v1.pojo.V1GitMergeHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -44,13 +44,13 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_REQUEST"], description = "Request页面")
-@Path("/service/request")
+@Api(tags = ["SERVICE_STREAM_MERGE"], description = "MergeRequest页面")
+@Path("/service/merge/build")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface GitCIRequestResource {
+interface GitCIMergeResource {
 
-    @ApiOperation("查询Request列表")
+    @ApiOperation("MergeRequest列表")
     @GET
     @Path("/list/{gitProjectId}")
     fun getMergeBuildList(
@@ -66,5 +66,5 @@ interface GitCIRequestResource {
         @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<V1GitRequestHistory>>
+    ): Result<Page<V1GitMergeHistory>>
 }

@@ -25,17 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.v1.api
+package com.tencent.devops.stream.api.service.v1
 
-import com.tencent.devops.artifactory.pojo.FileInfo
-import com.tencent.devops.artifactory.pojo.FileInfoPage
-import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail
+import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -49,80 +45,38 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_STREAM_CURRENT"], description = "CurrentBuild页面")
-@Path("/service/current/build")
+@Api(tags = ["SERVICE_STREAM_PIPELINE"], description = "CurrentBuild页面")
+@Path("/service/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface GitCIDetailResource {
+interface GitCIPipelineResource {
 
-    @ApiOperation("查看指定的构建详情")
+    @ApiOperation("项目下所有流水线概览")
     @GET
-    @Path("/detail/{gitProjectId}")
-    fun getLatestBuildDetail(
+    @Path("/{gitProjectId}/list")
+    fun getPipelineList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long,
-        @ApiParam(value = "pipelineId", required = false)
-        @QueryParam("pipelineId")
-        pipelineId: String?,
-        @ApiParam(value = "buildId", required = false)
-        @QueryParam("buildId")
-        buildId: String?
-    ): Result<V1GitCIModelDetail?>
-
-    @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
-    @Path("/artifactories/projects/{gitProjectId}/search")
-    @GET
-    fun search(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("pipelineId", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("buildId", required = true)
-        @QueryParam("buildId")
-        buildId: String,
+        @ApiParam("搜索关键字", required = false)
+        @QueryParam("keyword")
+        keyword: String?,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "10")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<FileInfoPage<FileInfo>>
+    ): Result<Page<V1GitProjectPipeline>>
 
-    @ApiOperation("创建下载链接")
-    @Path("/artifactories/projects/{gitProjectId}/artifactoryType/{artifactoryType}/downloadUrl")
-    @POST
-    fun downloadUrl(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("工蜂用户ID", required = true, defaultValue = "0")
-        @HeaderParam("X-GIT-UID")
-        gitUserId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
-        @ApiParam("版本仓库类型", required = true)
-        @PathParam("artifactoryType")
-        artifactoryType: ArtifactoryType,
-        @ApiParam("路径", required = true)
-        @QueryParam("path")
-        path: String
-    ): Result<Url>
-
-    @ApiOperation("获取构建报告列表")
-    @Path("/projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
+    @ApiOperation("获取指定流水线信息")
     @GET
-    fun getReports(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+    @Path("/{gitProjectId}/{pipelineId}/info")
+    fun getPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "gitProjectId", required = true)
@@ -131,8 +85,38 @@ interface GitCIDetailResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String
-    ): Result<List<Report>>
+        @ApiParam(value = "是否带有最新一次构建历史", required = false)
+        @QueryParam("withHistory")
+        withHistory: Boolean? = false
+    ): Result<V1GitProjectPipeline?>
+
+    @ApiOperation("开启或关闭流水线")
+    @POST
+    @Path("/{gitProjectId}/{pipelineId}/enable")
+    fun enablePipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "是否启用该流水线", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean
+    ): Result<Boolean>
+
+    @ApiOperation("获取流水线列表")
+    @GET
+    @Path("/{gitProjectId}/listInfo")
+    fun listPipelineNames(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long
+    ): Result<List<V1GitProjectPipeline>>
 }
