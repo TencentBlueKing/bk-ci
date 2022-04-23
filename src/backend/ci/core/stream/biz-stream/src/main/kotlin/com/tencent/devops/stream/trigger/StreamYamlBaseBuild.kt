@@ -145,7 +145,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
                 pipelineName = modelAndSetting.model.name
-            )
+            ),
+            updateLastModifyUser = updateLastModifyUser
         )
     }
 
