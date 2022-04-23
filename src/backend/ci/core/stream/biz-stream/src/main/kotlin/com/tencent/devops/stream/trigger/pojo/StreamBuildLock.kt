@@ -25,43 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.git
+package com.tencent.devops.stream.trigger.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 
-/*
-* {
-        "id": 11323,
-        "username": "git-user1",
-        "web_url": "http://git.example.tencent.com/u/git-user1",
-        "name": "git-user1",
-        "state": "active",
-        "avatar_url": "git.example.tencent.com/uploads/user/avatar/111323/a75ba2727c7a409cab1d15dd993149aa.jpg",
-        "access_level": 30
-}
-*
-* 组/项目的权限access_level包括：
-
-GUEST = 10
-FOLLOWER = 15
-REPORTER = 20
-DEVELOPER = 30
-MASTER = 40
-OWNER = 50
-*
-* */
-
-@ApiModel("git成员模型")
-data class GitMember(
-    @ApiModelProperty("成员id")
-    val id: Int,
-    @ApiModelProperty("用户名")
-    val username: String,
-    @ApiModelProperty("状态")
-    val state: String,
-    @ApiModelProperty("权限级别", name = "access_level")
-    @JsonProperty("access_level")
-    val accessLevel: Int
-)
+class StreamBuildLock(redisOperation: RedisOperation, gitProjectId: Long, pipelineId: String) :
+    RedisLock(
+        redisOperation = redisOperation,
+        lockKey = "lock:gitProject:$gitProjectId:pipelineId:$pipelineId",
+        expiredTimeInSeconds = 60
+    )

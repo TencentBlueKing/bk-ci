@@ -101,7 +101,7 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    override fun getBranches(search: String?): List<String> {
+    override fun getBranches(search: String?, page: Int, pageSize: Int): List<String> {
         val repository = getRepository()
         val branchNames = ArrayList<String>()
         branchNames.add("trunk")
