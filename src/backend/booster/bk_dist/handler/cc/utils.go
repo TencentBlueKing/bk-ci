@@ -622,11 +622,7 @@ func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
 				}
 				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
-				currentDir := sandbox.Dir
-				if !strings.HasSuffix(currentDir, "/") {
-					currentDir = currentDir + "/"
-				}
-				r.additionOutputFile = append(r.additionOutputFile, currentDir+gcovFile)
+				r.additionOutputFile = append(r.additionOutputFile, filepath.Join(sandbox.Dir, gcovFile))
 			}
 		}
 	}
@@ -987,11 +983,7 @@ func getOutputFile(args []string, sandbox *dcSyscall.Sandbox) []string {
 					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
 				}
 				gcovFile = strings.ReplaceAll(gcovFile, "/", "#")
-				currentDir := sandbox.Dir
-				if !strings.HasSuffix(currentDir, "/") {
-					currentDir = currentDir + "/"
-				}
-				r = append(r, currentDir+gcovFile)
+				r = append(r, filepath.Join(sandbox.Dir, gcovFile))
 			}
 		}
 	}
