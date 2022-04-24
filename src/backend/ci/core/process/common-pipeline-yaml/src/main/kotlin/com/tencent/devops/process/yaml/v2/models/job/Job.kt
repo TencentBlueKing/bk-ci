@@ -38,8 +38,8 @@ data class Job(
     // val job: JobDetail,
     val id: String? = "",
     val name: String?,
-    @JsonProperty("resource-exclusive-declaration")
-    val resourceExclusiveDeclaration: ResourceExclusiveDeclaration? = null,
+    @JsonProperty("mutex")
+    val mutex: Mutex? = null,
     @JsonProperty("runs-on")
     @ApiModelProperty(name = "runs-on")
     val runsOn: RunsOn = RunsOn(),
@@ -125,7 +125,7 @@ enum class JobRunsOnType(val type: String) {
     LOCAL("local")
 }
 
-data class ResourceExclusiveDeclaration(
+data class Mutex(
     val label: String,
     @JsonProperty("queue-length")
     val queueLength: Int? = 0,

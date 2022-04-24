@@ -59,5 +59,6 @@ data class StreamTriggerContext(
  */
 data class RepoTrigger(
     val branch: String,
-    val repoTriggerPipelineList: List<StreamRepoHookEvent>
+    val repoTriggerPipelineList: List<StreamRepoHookEvent>,
+    val buildUserID: String? = null
 )

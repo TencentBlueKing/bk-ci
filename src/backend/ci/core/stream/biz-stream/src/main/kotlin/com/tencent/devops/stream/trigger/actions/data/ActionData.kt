@@ -55,4 +55,6 @@ data class ActionData(
      * 所以会优先拿取pipeline的gitProjectId
      */
     fun getGitProjectId() = context.pipeline?.gitProjectId ?: eventCommon.gitProjectId
+
+    fun getUserId() = context.repoTrigger?.buildUserID ?: eventCommon.userId
 }
