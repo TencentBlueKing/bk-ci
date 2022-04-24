@@ -222,7 +222,7 @@
                 return this.stage.canRetry === true
             },
             showCopyStage () {
-                return this.isMiddleStage && this.editable
+                return this.isMiddleStage && this.editable && !this.isFirstStage
             },
             showDeleteStage () {
                 return this.editable && !this.isTriggerStage
@@ -240,7 +240,7 @@
                 return this.stage.finally === true
             },
             isMiddleStage () {
-                return !(this.isTriggerStage || this.isFinallyStage || this.isFirstStage)
+                return !(this.isTriggerStage || this.isFinallyStage)
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -509,7 +509,6 @@
         padding: 0 0 24px 0;
         background: $stageBGColor;
         margin: 0 $StageMargin 0 0;
-        z-index: 1;
 
         .pipeline-stage-entry {
             position: relative;
@@ -522,7 +521,6 @@
             background-color: #EFF5FF;
             border: 1px solid #D4E8FF;
             color: $primaryColor;
-            z-index: 2;
 
             &:hover {
                 border-color: #1a6df3;

@@ -85,6 +85,7 @@
                     if (stageCheck.isReviewError) return 'review-error'
                     switch (true) {
                         case stageCheck.status === STATUS_MAP.REVIEWING:
+                        case stageCheck.status === STATUS_MAP.QUALITY_CHECK_WAIT:
                             return 'reviewing'
                         case stageCheck.status === STATUS_MAP.QUEUE:
                             return 'review-pause'
