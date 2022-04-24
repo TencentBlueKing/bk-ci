@@ -29,20 +29,30 @@ package com.tencent.devops.metrics.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.metrics.api.UserAtomDisplayConfigResource
+import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
 import com.tencent.metrics.pojo.vo.SaveAtomDisplayConfigVO
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAtomDisplayConfigResourceImpl @Autowired constructor(
-
-    ) : UserAtomDisplayConfigResource {
+    private val aomDisplayConfigManageService: AtomDisplayConfigManageService
+) : UserAtomDisplayConfigResource {
 
     override fun saveAtomDisplayConfig(
         projectId: String,
         userId: String,
         saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(
+            aomDisplayConfigManageService.saveAtomDisplayConfig(
+                SaveAtomDisplayConfigDTO(
+                    projectId = projectId,
+                    userId = userId,
+                    atomBaseInfos = saveAtomDisplayConfigVO.atomBaseInfos
+                )
+            )
+        )
     }
 }

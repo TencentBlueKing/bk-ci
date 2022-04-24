@@ -28,27 +28,34 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.model.metrics.tables.TAtomDisplayConfig
-import com.tencent.devops.model.store.tables.TAtom
-import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
 import com.tencent.metrics.pojo.po.SaveAtomDisplayConfigPO
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
 class AtomDisplayConfigDao {
 
-    fun batchSaveAtomDisplayConfig(saveAtomDisplayConfigPOs: List<SaveAtomDisplayConfigPO>) {
+    fun batchSaveAtomDisplayConfig(
+        dslContext: DSLContext,
+        saveAtomDisplayConfigPOs: List<SaveAtomDisplayConfigPO>
+    ) {
         with(TAtomDisplayConfig.T_ATOM_DISPLAY_CONFIG) {
-            return dslContext.select(
-                ATOM_CODE,
-                LOGO_URL,
-                OS,
-                BUILD_LESS_RUN_FLAG
-            ).from(this)
-                .where(ATOM_CODE.`in`(atomCodes).and(LATEST_FLAG.eq(true)))
-                .fetch()
+            saveAtomDisplayConfigPOs.forEach { saveAtomDisplayConfigPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomDisplayConfigPO.id)
+                    .set(PROJECT_ID, saveAtomDisplayConfigPO.projectId)
+                    .set(ATOM_CODE, saveAtomDisplayConfigPO.atomCode)
+                    .set(ATOM_NAME, saveAtomDisplayConfigPO.atomName)
+                    .set(CREATOR, saveAtomDisplayConfigPO.userId)
+                    .set(MODIFIER, saveAtomDisplayConfigPO.userId)
+                    .set(UPDATE_TIME, saveAtomDisplayConfigPO.updateTime)
+                    .set(CREATE_TIME, saveAtomDisplayConfigPO.createTime)
+                    .onDuplicateKeyUpdate()
+                    .set(ATOM_NAME, saveAtomDisplayConfigPO.atomName)
+                    .set(MODIFIER, saveAtomDisplayConfigPO.userId)
+                    .set(UPDATE_TIME, saveAtomDisplayConfigPO.updateTime)
+                    .execute()
+            }
         }
     }
 }

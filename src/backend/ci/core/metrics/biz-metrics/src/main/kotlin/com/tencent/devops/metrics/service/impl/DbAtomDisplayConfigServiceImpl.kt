@@ -27,18 +27,41 @@
 
 package com.tencent.devops.metrics.service.impl
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.db.utils.SnowFlakeUtils
+import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
+import com.tencent.metrics.pojo.po.SaveAtomDisplayConfigPO
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class DbAtomDisplayConfigServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val atomDisplayConfigDao: AtomDisplayConfigDao
 ) : AtomDisplayConfigManageService {
 
     override fun saveAtomDisplayConfig(saveAtomDisplayConfigDTO: SaveAtomDisplayConfigDTO): Boolean {
-        TODO("Not yet implemented")
+        val atomBaseInfos = saveAtomDisplayConfigDTO.atomBaseInfos
+        val saveAtomDisplayConfigPOs = mutableListOf<SaveAtomDisplayConfigPO>()
+        atomBaseInfos.forEach { atomBaseInfo ->
+            val currentTime = LocalDateTime.now()
+            saveAtomDisplayConfigPOs.add(
+                SaveAtomDisplayConfigPO(
+                    id = SnowFlakeUtils.getId(SystemModuleEnum.METRICS.code),
+                    projectId = saveAtomDisplayConfigDTO.projectId,
+                    userId = saveAtomDisplayConfigDTO.userId,
+                    atomCode = atomBaseInfo.atomCode,
+                    atomName = atomBaseInfo.atomName,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+            )
+        }
+        atomDisplayConfigDao.batchSaveAtomDisplayConfig(dslContext, saveAtomDisplayConfigPOs)
+        return true
     }
 }
