@@ -244,6 +244,22 @@ class PipelineBuildContainerDao {
         }
     }
 
+    fun countStageContainers(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        stageId: String,
+        onlyMatrixGroup: Boolean
+    ): Int {
+        return with(T_PIPELINE_BUILD_CONTAINER) {
+            val count = dslContext.selectCount().from(this).where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(STAGE_ID.eq(stageId))
+            if (onlyMatrixGroup) count.and(MATRIX_GROUP_FLAG.eq(true))
+            count.fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
     fun listByMatrixGroupId(
         dslContext: DSLContext,
         projectId: String,

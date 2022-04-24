@@ -47,7 +47,9 @@ class BuildCredentialResourceImpl @Autowired constructor(
         vmSeqId: String,
         vmName: String,
         credentialId: String,
-        publicKey: String
+        publicKey: String,
+        taskId: String?,
+        oldTaskId: String?
     ): Result<CredentialInfo?> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -64,7 +66,15 @@ class BuildCredentialResourceImpl @Autowired constructor(
         if (publicKey.isBlank()) {
             throw ParamBlankException("Invalid publicKey")
         }
-        return Result(credentialService.buildGet(projectId, buildId, credentialId, publicKey))
+        return Result(
+            credentialService.buildGet(
+                projectId = projectId,
+                buildId = buildId,
+                credentialId = credentialId,
+                publicKey = publicKey,
+                taskId = taskId ?: oldTaskId
+            )
+        )
     }
 
     @SensitiveApiPermission("get_credential")

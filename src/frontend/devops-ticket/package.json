@@ -7,6 +7,9 @@
     "vuex-class": "^0.3.0"
   },
   "devDependencies": {
+    "@babel/plugin-syntax-jsx": "^7.16.0",
+    "@babel/preset-react": "^7.16.0",
+    "@vue/babel-preset-jsx": "^1.2.4",
     "babel-loader": "^8.2.2",
     "css-loader": "^6.4.0",
     "eslint": "^7.3.1",
@@ -22,10 +25,9 @@
     "mini-css-extract-plugin": "2.4.2",
     "sass": "^1.42.1",
     "sass-loader": "^12.1.0",
-    "style-loader": "^0.23.0",
+    "style-loader": "^3.3.1",
     "vue-loader": "^15.9.8",
     "vue-property-decorator": "^6.0.0",
-    "vue-style-loader": "^3.0.3",
     "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
   },

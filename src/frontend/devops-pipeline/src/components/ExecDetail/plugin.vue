@@ -51,7 +51,16 @@
             ReferenceVariable,
             pluginLog
         },
-
+        props: {
+            execDetail: {
+                type: Object,
+                required: true
+            },
+            editingElementPos: {
+                type: Object,
+                required: true
+            }
+        },
         data () {
             return {
                 currentTab: 'log',
@@ -66,8 +75,6 @@
 
         computed: {
             ...mapState('atom', [
-                'execDetail',
-                'editingElementPos',
                 'globalEnvs'
             ]),
 

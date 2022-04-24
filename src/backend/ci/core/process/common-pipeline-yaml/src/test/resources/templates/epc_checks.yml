@@ -1,0 +1,13 @@
+parameters:
+  - name: receivers
+    type: array
+    default: [ "${{ ci.actor1 }}","${{ ci.actor1 }}" ]
+
+gates:
+  - name: gate-1
+    rule:
+      - CodeccCheckAtomDebug.coverity_serious_defect <= 3
+      - CodeccCheckAtomDebug.sensitive_defect < 2
+    notify-on-fail:
+      - type: wework-message
+        receivers: ${{ parameters.receivers }}

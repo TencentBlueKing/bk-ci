@@ -3,6 +3,7 @@
         <input
             ref="inputArea"
             class="bk-form-input"
+            type="text"
             v-bind="restProps"
             v-model="displayName"
             :disabled="disabled || loading"
@@ -109,14 +110,21 @@
             queryParams (newQueryParams, oldQueryParams) {
                 if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
                     this.debounceGetOptionList()
-                    this.handleChange(this.name, this.isMultiple ? [] : '')
-                    this.displayName = ''
+                    this.clearValue(false)
                 }
             },
             options (newOptions) {
                 this.optionList = newOptions
-                this.isFocused && !this.disabled && this.$nextTick(() => {
-                    this.$refs.inputArea.focus()
+                this.$nextTick(() => {
+                    if (this.isFocused && !this.disabled) {
+                        this.$refs.inputArea.focus()
+                    }
+                        
+                    if (this.isMultiple) {
+                        this.getMultipleDisplayName(this.value)
+                    } else {
+                        this.displayName = this.getDisplayName(this.value)
+                    }
                 })
             },
             isLoading (isLoading) {
@@ -215,11 +223,16 @@
                 }
             },
 
-            clearValue () {
+            clearValue (focus = true) {
                 this.displayName = ''
-                this.selectedMap = {}
-                this.handleChange(this.name, this.isMultiple ? [] : '')
-                this.$refs.inputArea.focus()
+                if (this.isMultiple) {
+                    this.selectedMap = {}
+                } else {
+                    this.handleChange(this.name, '')
+                }
+                if (focus) {
+                    this.$refs.inputArea.focus()
+                }
             },
 
             isEnvVar (str) {
@@ -235,7 +248,7 @@
                 
                 if (this.isMultiple) {
                     if (this.displayName) {
-                        this.getMultipleDisplayName(this.displayName)
+                        this.getMultipleDisplayName(this.displayName, 'name')
                     } else {
                         this.getMultipleDisplayName(this.value)
                     }
@@ -245,7 +258,7 @@
                     } else if (this.isEnvVar(this.value)) {
                         this.displayName = this.value
                     } else {
-                        this.displayName = this.getDisplayName(this.value)
+                        this.displayName = this.getDisplayName(this.value || this.displayName)
                     }
                 }
             },
@@ -281,7 +294,7 @@
                 this.selectedPointer = childIndex
                 this.adjustViewPort()
             },
-            getMultipleDisplayName (val) {
+            getMultipleDisplayName (val, type = 'id') {
                 if (typeof val === 'string') {
                     val = val === '' ? [] : val.split(',')
                 }
@@ -294,7 +307,8 @@
                     }, [])
                 }
                 const typeMap = opts.reduce((cur, opt) => {
-                    cur[opt.id] = opt
+                    const key = type === 'name' ? opt.name : opt.id
+                    cur[key] = opt
                     return cur
                 }, {})
                 const resultMap = {}
@@ -310,29 +324,33 @@
                     }
                 })
                 this.selectedMap = resultMap
-                if (invalidVal.length > 0) {
+                if (!this.loading && invalidVal.length > 0) {
                     this.showValValidTips(invalidVal.join(','))
                 }
             },
             getDisplayName (val) {
-                if (this.isEnvVar(val)) {
-                    return val
+                const defaultVal = Array.isArray(val) ? val.join(',') : val
+                if (this.isEnvVar(defaultVal)) {
+                    return defaultVal
                 }
                 if (this.hasGroup) {
                     for (let i = 0; i < this.optionList.length; i++) {
                         const option = this.optionList[i]
-                        const matchVal = option.children.find(child => child.id === val)
+                        const matchVal = option.children.find(child => child.id === defaultVal)
                         if (matchVal) {
                             return matchVal.name
                         }
                     }
                 } else {
-                    const option = this.optionList.find(option => option.id === val)
+                    const option = this.optionList.find(option => option.id === defaultVal)
                     if (option) {
                         return option.name
                     }
                 }
-                val && this.showValValidTips(val)
+                if (defaultVal && !this.loading) {
+                    this.showValValidTips(defaultVal)
+                    this.handleChange(this.name, '')
+                }
                 return ''
             },
             showValValidTips (val) {
@@ -364,13 +382,12 @@
                 } catch (e) {
                     console.error(e)
                 } finally {
-                    if (this.value.length) {
-                        if (this.isMultiple) {
-                            this.getMultipleDisplayName(this.value)
-                        } else {
-                            this.displayName = this.getDisplayName(this.value)
-                        }
+                    if (this.isMultiple) {
+                        this.getMultipleDisplayName(this.value)
+                    } else {
+                        this.displayName = this.getDisplayName(this.value)
                     }
+                    
                     this.loading = false
                 }
             },
@@ -401,7 +418,7 @@
             position: absolute;
             right: 20px;
             top: 10px;
-            color: $fontLigtherColor;
+            color: $fontLighterColor;
             &.icon-close-circle-shape {
                 cursor: pointer;
             }
@@ -439,7 +456,7 @@
                 //     }
 
                 //     &[disabled] {
-                //         color: $fontLigtherColor;
+                //         color: $fontLighterColor;
                 //     }
                 // }
                 li:first-child {
@@ -482,7 +499,7 @@
                     }
 
                     &[disabled] {
-                        color: $fontLigtherColor;
+                        color: $fontLighterColor;
                     }
                 }
             }

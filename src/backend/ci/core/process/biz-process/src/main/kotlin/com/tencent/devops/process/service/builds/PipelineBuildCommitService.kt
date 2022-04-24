@@ -39,7 +39,6 @@ class PipelineBuildCommitService @Autowired constructor(
                     page = page,
                     size = size
                 )
-                logger.info("commit list is $webhookCommitList")
                 webhookCommitList.forEach {
                     pipelineBuildCommitDao.create(
                         dslContext = dslContext,
@@ -52,6 +51,8 @@ class PipelineBuildCommitService @Autowired constructor(
                         authorName = it.authorName,
                         message = it.message,
                         repoType = it.repoType,
+                        url = repo.url,
+                        eventType = matcher.getEventType().name,
                         commitTime = it.commitTime,
                         mrId = matcher.getMergeRequestId()?.toString() ?: ""
                     )
