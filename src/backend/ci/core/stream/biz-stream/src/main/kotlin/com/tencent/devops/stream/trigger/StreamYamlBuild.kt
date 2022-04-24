@@ -134,7 +134,7 @@ class StreamYamlBuild @Autowired constructor(
                 if (realPipeline.pipelineId.isBlank()) {
                     streamYamlBaseBuild.savePipeline(
                         pipeline = realPipeline,
-                        userId = action.data.eventCommon.userId,
+                        userId = action.data.getUserId(),
                         gitProjectId = action.data.eventCommon.gitProjectId.toLong(),
                         projectCode = action.getProjectCode(),
                         modelAndSetting = createTriggerModel(action.getProjectCode()),
@@ -223,7 +223,7 @@ class StreamYamlBuild @Autowired constructor(
                 StreamTimer(
                     projectId = action.getProjectCode(),
                     pipelineId = pipeline.pipelineId,
-                    userId = action.data.eventCommon.userId,
+                    userId = action.data.getUserId(),
                     crontabExpressions = listOf(yaml.triggerOn?.schedules?.cron.toString()),
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     // 未填写则在每次触发拉默认分支
@@ -243,7 +243,7 @@ class StreamYamlBuild @Autowired constructor(
                 StreamDeleteEvent(
                     gitProjectId = action.data.getGitProjectId().toLong(),
                     pipelineId = pipeline.pipelineId,
-                    userId = action.data.eventCommon.userId,
+                    userId = action.data.getUserId(),
                     eventId = action.data.context.requestEventId!!,
                     originYaml = action.data.context.originYaml!!
                 )
@@ -359,7 +359,7 @@ class StreamYamlBuild @Autowired constructor(
 
         streamYamlBaseBuild.savePipeline(
             pipeline = pipeline,
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             gitProjectId = action.data.getGitProjectId().toLong(),
             projectCode = action.getProjectCode(),
             modelAndSetting = modelAndSetting,
@@ -389,7 +389,7 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         val modelCreateEvent = ModelCreateEvent(
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(
