@@ -29,6 +29,7 @@ package upgrade
 
 import (
 	"errors"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade/download"
 	"os"
 	"time"
 
@@ -48,6 +49,7 @@ func DoPollAndUpgradeAgent() {
 		logs.Info("upgrade done")
 	}
 }
+
 // agentUpgrade 升级主逻辑
 func agentUpgrade() {
 	// #5806 #5172 升级失败，保证重置回状态，防止一直处于升级状态
@@ -96,6 +98,7 @@ func agentUpgrade() {
 		success = true
 	}
 }
+
 // downloadUpgradeFiles 下载升级文件
 func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error) {
 	workDir := systemutil.GetWorkDir()
@@ -103,8 +106,7 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	_ = os.MkdirAll(upgradeDir, os.ModePerm)
 
 	logs.Info("[agentUpgrade]|download upgrader start")
-	_, err = api.DownloadUpgradeFile(
-		"upgrade/"+config.GetServerUpgraderFile(), upgradeDir+"/"+config.GetClientUpgraderFile())
+	_, err = download.DownloadUpgradeFile(upgradeDir)
 	if err != nil {
 		logs.Error("[agentUpgrade]|download upgrader failed", err)
 		return false, false, errors.New("download upgrader failed")
@@ -112,8 +114,7 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("[agentUpgrade]|download upgrader done")
 
 	logs.Info("[agentUpgrade]|download daemon start")
-	newDaemonMd5, err := api.DownloadUpgradeFile(
-		"upgrade/"+config.GetServerDaemonFile(), upgradeDir+"/"+config.GetClientDaemonFile())
+	newDaemonMd5, err := download.DownloadDaemonFile(upgradeDir)
 	if err != nil {
 		logs.Error("[agentUpgrade]|download daemon failed", err)
 		return false, false, errors.New("download daemon failed")
@@ -121,8 +122,7 @@ func downloadUpgradeFiles() (agentChanged bool, workAgentChanged bool, err error
 	logs.Info("[agentUpgrade]|download daemon done")
 
 	logs.Info("[agentUpgrade]|download agent start")
-	newAgentMd5, err := api.DownloadUpgradeFile(
-		"upgrade/"+config.GetServerAgentFile(), upgradeDir+"/"+config.GetClienAgentFile())
+	newAgentMd5, err := download.DownloadAgentFile(upgradeDir)
 	if err != nil {
 		logs.Error("[agentUpgrade]|download agent failed", err)
 		return false, false, errors.New("download agent failed")
