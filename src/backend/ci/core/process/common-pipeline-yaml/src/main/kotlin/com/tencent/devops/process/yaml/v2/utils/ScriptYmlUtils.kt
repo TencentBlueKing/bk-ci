@@ -344,7 +344,7 @@ object ScriptYmlUtils {
                 Job(
                     id = index,
                     name = preJob.name,
-                    resourceExclusiveDeclaration = preJob.resourceExclusiveDeclaration,
+                    mutex = preJob.mutex,
                     runsOn = formatRunsOn(preJob.runsOn),
                     services = services,
                     ifField = preJob.ifField,
