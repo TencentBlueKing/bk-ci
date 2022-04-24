@@ -43,7 +43,7 @@
                         @selected="handleUpdateVersion"
                         :disabled="!editable || showPanelType === 'PAUSE'"
                     >
-                        <bk-option v-for="v in atomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
+                        <bk-option v-for="v in computedAtomVersionList" :key="v.versionName" :id="v.versionValue" :name="v.versionName"></bk-option>
                     </bk-select>
                 </form-field>
             </div>
@@ -309,7 +309,7 @@
                     atomCode,
                     version
                 })
-
+                console.log(atomMap, atomModal)
                 switch (true) {
                     case !isObject(atom) && !isObject(atomModal):
                         return null
@@ -336,7 +336,27 @@
                 return this.getRelativeRule(this.templateRuleList)
             },
             hasVersionList () {
-                return Array.isArray(this.atomVersionList) && this.atomVersionList.length > 0
+                return Array.isArray(this.computedAtomVersionList) && this.computedAtomVersionList.length > 0
+            },
+            computedAtomVersionList () {
+                try {
+                    if (typeof this.element.version === 'string') {
+                        const versionValid = this.atomVersionList.find(v => v.versionValue === this.element.version)
+                        if (versionValid === null) {
+                            return [
+                                ...this.atomVersionList,
+                                {
+                                    versionValue: this.elmemnt.version,
+                                    versionName: this.elmemnt.version.replace('.*', '.latest')
+                                }
+                            ]
+                        }
+                    }
+                    return this.atomVersionList
+                } catch (error) {
+                    console.log(error)
+                    return this.atomVersionList
+                }
             },
             htmlTemplateVersion () {
                 return (this.atom.atomModal && this.atom.atomModal.htmlTemplateVersion) || this.atom.htmlTemplateVersion
