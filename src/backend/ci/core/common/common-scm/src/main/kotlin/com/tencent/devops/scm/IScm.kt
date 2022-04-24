@@ -27,12 +27,12 @@
 
 package com.tencent.devops.scm
 
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
 
 @Suppress("ALL")
 interface IScm {
@@ -41,7 +41,12 @@ interface IScm {
     val url: String
 
     fun getLatestRevision(): RevisionInfo
-    fun getBranches(search: String? = null): List<String>
+    fun getBranches(
+        search: String? = null,
+        page: Int = 1,
+        pageSize: Int = 20
+    ): List<String>
+
     fun getTags(search: String? = null): List<String>
 
     // This is to check if the token & private key legal

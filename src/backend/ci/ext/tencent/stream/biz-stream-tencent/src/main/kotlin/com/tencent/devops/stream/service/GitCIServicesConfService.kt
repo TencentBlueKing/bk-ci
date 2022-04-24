@@ -59,7 +59,8 @@ class GitCIServicesConfService @Autowired constructor(
                 enable = gitCIServicesConf.enable,
                 env = gitCIServicesConf.env,
                 createUser = gitCIServicesConf.createUser,
-                updateUser = gitCIServicesConf.updateUser)
+                updateUser = gitCIServicesConf.updateUser
+            )
             return true
         } catch (e: Exception) {
             logger.error("Create git service failed. ${e.message}")

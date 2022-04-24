@@ -39,19 +39,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.ci.v2.ExportPreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.IfType
-import com.tencent.devops.common.ci.v2.JobRunsOnType
-import com.tencent.devops.common.ci.v2.PreJob
-import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.PreStep
-import com.tencent.devops.common.ci.v2.RunsOn
-import com.tencent.devops.common.ci.v2.Strategy
-import com.tencent.devops.common.ci.v2.YAME_META_DATA_JSON_FILTER
-import com.tencent.devops.common.ci.v2.stageCheck.PreFlow
-import com.tencent.devops.common.ci.v2.stageCheck.PreStageCheck
-import com.tencent.devops.common.ci.v2.stageCheck.PreStageReviews
-import com.tencent.devops.common.ci.v2.stageCheck.ReviewVariable
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
@@ -94,6 +81,20 @@ import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.process.yaml.v2.models.IfType
+import com.tencent.devops.process.yaml.v2.models.YAME_META_DATA_JSON_FILTER
+import com.tencent.devops.process.yaml.v2.models.export.ExportPreScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.models.job.Container2
+import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v2.models.job.PreJob
+import com.tencent.devops.process.yaml.v2.models.job.RunsOn
+import com.tencent.devops.process.yaml.v2.models.job.Strategy
+import com.tencent.devops.process.yaml.v2.models.stage.PreStage
+import com.tencent.devops.process.yaml.v2.models.step.PreStep
+import com.tencent.devops.process.yaml.v2.stageCheck.PreFlow
+import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
+import com.tencent.devops.process.yaml.v2.stageCheck.PreStageReviews
+import com.tencent.devops.process.yaml.v2.stageCheck.ReviewVariable
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.ElementThirdPartySearchParam
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
@@ -571,7 +572,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container2(
+                                container = Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -589,7 +590,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = JobRunsOnType.DOCKER.type,
-                                container = com.tencent.devops.common.ci.v2.Container2(
+                                container = Container2(
                                     image = containerImage,
                                     credentials = credentials
                                 ),
@@ -601,7 +602,7 @@ class TXPipelineExportService @Autowired constructor(
                             RunsOn(
                                 selfHosted = null,
                                 poolName = "### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。" +
-                                    "注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###",
+                                        "注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###",
                                 container = null,
                                 agentSelector = null
                             )
@@ -817,7 +818,7 @@ class TXPipelineExportService @Autowired constructor(
                     } else null
                     logger.info(
                         "[$projectId] getV2StepFromJob export MarketBuildAtom " +
-                            "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step"
+                                "atomCode(${step.getAtomCode()}), inputMap=$inputMap, step=$step"
                     )
                     if (output != null && !(output as MutableMap<String, Any>).isNullOrEmpty()) {
                         output.keys.forEach { key ->
@@ -939,7 +940,7 @@ class TXPipelineExportService @Autowired constructor(
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     comment.append(
                         "# 注意：不支持插件【${element.name}(${element.getClassType()})】的导出，" +
-                            "请在蓝盾研发商店查找推荐的替换插件！\n"
+                                "请在蓝盾研发商店查找推荐的替换插件！\n"
                     )
                     stepList.add(
                         PreStep(
@@ -1105,10 +1106,10 @@ class TXPipelineExportService @Autowired constructor(
                 )
                 if (namespace.isNullOrBlank()) {
                     "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                        "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
+                            "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace }}"
                 } else {
                     "\${{ jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                        "$namespace.outputs.$originKeyWithNamespace }}"
+                            "$namespace.outputs.$originKeyWithNamespace }}"
                 }
             } else if (!variables?.get(originKey).isNullOrBlank()) {
                 "\${{ variables.$originKeyWithNamespace }}"
@@ -1137,7 +1138,7 @@ class TXPipelineExportService @Autowired constructor(
         val yamlSb = StringBuilder()
         yamlSb.append(
             "############################################################################" +
-                "#########################################\n"
+                    "#########################################\n"
         )
         yamlSb.append("# 项目ID: $projectId \n")
         yamlSb.append("# 流水线ID: $pipelineId \n")
@@ -1151,7 +1152,7 @@ class TXPipelineExportService @Autowired constructor(
         }
         yamlSb.append(
             "########################################################" +
-                "#############################################################\n\n"
+                    "#############################################################\n\n"
         )
         return yamlSb
     }
@@ -1574,11 +1575,11 @@ class TXPipelineExportService @Autowired constructor(
                     originKeyWithNamespace
                 } else {
                     "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                        "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
+                            "${lastExistingOutputElements.stepAtom?.id}.outputs.$originKeyWithNamespace"
                 }
             } else {
                 "jobs.${lastExistingOutputElements.jobLocation?.jobId}.steps." +
-                    "$namespace.outputs.$originKeyWithNamespace"
+                        "$namespace.outputs.$originKeyWithNamespace"
             }
         } else if (!ciName.isNullOrBlank()) {
             ciName

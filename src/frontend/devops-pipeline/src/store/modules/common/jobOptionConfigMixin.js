@@ -176,7 +176,8 @@ const jobOptionConfigMixin = {
                     default: [],
                     multiSelect: true,
                     list: this.dependOnList,
-                    isHidden: (jobOption) => {
+                    isHidden: (container) => {
+                        const jobOption = container.jobControlOption || {}
                         return !(jobOption && (jobOption.dependOnType === 'ID' || !jobOption.dependOnType))
                     }
                 },
@@ -185,7 +186,8 @@ const jobOptionConfigMixin = {
                     component: 'vuex-input',
                     default: '',
                     placeholder: this.$t('storeMap.dependOnNamePlaceholder'),
-                    isHidden: (jobOption) => {
+                    isHidden: (container) => {
+                        const jobOption = container.jobControlOption || {}
                         return !(jobOption && jobOption.dependOnType === 'NAME')
                     }
                 },
@@ -197,6 +199,19 @@ const jobOptionConfigMixin = {
                     desc: this.$t('storeMap.timeoutDesc'),
                     placeholder: this.$t('storeMap.timeoutPlaceholder'),
                     default: '900'
+                },
+                prepareTimeout: {
+                    rule: { numeric: true, max_value: 10080 },
+                    component: 'vuex-input',
+                    required: true,
+                    label: this.$t('storeMap.prepareTimeout'),
+                    desc: this.$t('storeMap.timeoutDesc'),
+                    placeholder: this.$t('storeMap.timeoutPlaceholder'),
+                    default: '10',
+                    isHidden: (container) => {
+                        const dispatchType = container.dispatchType || {}
+                        return dispatchType.buildType !== 'THIRD_PARTY_AGENT_ENV'
+                    }
                 },
                 runCondition: {
                     rule: {},
@@ -211,7 +226,8 @@ const jobOptionConfigMixin = {
                     default: [{ key: 'param1', value: '' }],
                     label: this.$t('storeMap.customVar'),
                     allowNull: false,
-                    isHidden: (jobOption) => {
+                    isHidden: (container) => {
+                        const jobOption = container.jobControlOption || {}
                         return !(jobOption && (jobOption.runCondition === 'CUSTOM_VARIABLE_MATCH' || jobOption.runCondition === 'CUSTOM_VARIABLE_MATCH_NOT_RUN'))
                     }
                 },
