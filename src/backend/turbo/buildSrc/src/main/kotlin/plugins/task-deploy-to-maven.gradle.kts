@@ -253,13 +253,13 @@ tasks.getByName<Upload>("uploadArchives") {
     var snapshotRepositoryPassword = project.extra["MAVEN_REPO_SNAPSHOT_PASSWORD"]?.toString()
 
     if (snapshotRepositoryUrl == null || snapshotRepositoryUrl.isEmpty()) {
-        snapshotRepositoryUrl = mavenRepoDeployUrl
+        snapshotRepositoryUrl = System.getenv("snapshotMavenRepoDeployUrl")
     }
     if (snapshotRepositoryUsername == null || snapshotRepositoryUsername.isEmpty()) {
-        snapshotRepositoryUsername = mavenRepoUsername
+        snapshotRepositoryUsername = System.getenv("snapshotMavenRepoUsername")
     }
     if (snapshotRepositoryPassword == null || snapshotRepositoryPassword.isEmpty()) {
-        snapshotRepositoryPassword = mavenRepoPassword
+        snapshotRepositoryPassword = System.getenv("snapshotMavenRepoPassword")
     }
 
     repositories.withGroovyBuilder {
