@@ -76,12 +76,18 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    override fun getBranches(search: String?) =
+    override fun getBranches(
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ) =
         gitApi.listBranches(
             host = apiUrl,
             token = token,
             projectName = projectName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         )
 
     override fun getTags(search: String?) =
