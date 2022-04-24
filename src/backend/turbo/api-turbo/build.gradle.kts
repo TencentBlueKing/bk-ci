@@ -7,3 +7,7 @@ dependencies {
         isTransitive = false
     }
 }
+
+plugins {
+    `task-deploy-to-maven`
+}
