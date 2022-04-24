@@ -395,7 +395,7 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	// if ban resources, then request and least cpu is 0
 	if !task.InheritSetting.BanAllBooster {
 		task.InheritSetting.RequestCPU = project.RequestCPU * de.allocate(tb.Client.QueueName)
-		blog.Info("project request cpu:[%f],actual request cpu:[%f] ,queue:[%s]",
+		blog.Info("project request cpu: [%f],actual request cpu:[%f] ,queue:[%s]",
 			project.RequestCPU,
 			task.InheritSetting.RequestCPU,
 			tb.Client.QueueName)
