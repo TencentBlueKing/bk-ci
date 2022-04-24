@@ -63,25 +63,25 @@ class CodeccConfig {
     /**
      *  代码检查插件维度详情
      */
-    @Value("\${quality.codecc.compileTool:}")
+    @Value("\${codecc.compileTool:}")
     val compileTool = ""
 
-    @Value("\${quality.codecc.ccnDupcTool:}")
+    @Value("\${codecc.ccnDupcTool:}")
     val ccnDupcTool = ""
 
-    @Value("\${quality.codecc.dimension:}")
+    @Value("\${codecc.dimension:}")
     val dimension = ""
 
-    @Value("\${quality.codecc.compileUrl:}")
+    @Value("\${codecc.compileUrl:}")
     val compileUrl = ""
 
-    @Value("\${quality.codecc.ccnDupcUrl:}")
+    @Value("\${codecc.ccnDupcUrl:}")
     val ccnDupcUrl = ""
 
-    @Value("\${quality.codecc.lintUrl:}")
+    @Value("\${codecc.lintUrl:}")
     val lintUrl = ""
 
-    @Value("\${quality.codecc.dimensionUrl:}")
+    @Value("\${codecc.dimensionUrl:}")
     val dimensionUrl = ""
 
     fun getCodeccDetailUrl(detail: String?): String {
