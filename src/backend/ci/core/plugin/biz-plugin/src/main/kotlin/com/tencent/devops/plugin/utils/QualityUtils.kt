@@ -40,15 +40,19 @@ import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 @Suppress("ALL")
-object QualityUtils {
+@Component
+class QualityUtils @Autowired constructor(
+    private val codeccConfig: CodeccConfig
+) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun getQualityGitMrResult(
         client: Client,
-        event: GitCommitCheckEvent,
-        codeccConfig: CodeccConfig
+        event: GitCommitCheckEvent
     ): Pair<List<String>, MutableMap<String, MutableList<List<String>>>> {
         val projectId = event.projectId
         val pipelineId = event.pipelineId
@@ -85,8 +89,7 @@ object QualityUtils {
                             buildId = buildId,
                             detail = indicator?.elementDetail,
                             value = interceptItem.actualValue ?: "null",
-                            client = client,
-                            config = codeccConfig
+                            client = client
                         )
                     } else {
                         interceptItem.actualValue ?: "null"
@@ -114,8 +117,7 @@ object QualityUtils {
         buildId: String,
         detail: String?,
         value: String,
-        client: Client,
-        config: CodeccConfig
+        client: Client
     ): String {
         val variable = client.get(ServiceVarResource::class).getBuildVar(
             projectId = projectId,
@@ -127,7 +129,7 @@ object QualityUtils {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/" +
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
-            val detailValue = config.getCodeccDetailUrl(detail)
+            val detailValue = codeccConfig.getCodeccDetailUrl(detail)
             logger.info("getDetailUrl: $detailValue")
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
