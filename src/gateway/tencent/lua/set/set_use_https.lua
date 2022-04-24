@@ -1,4 +1,4 @@
-local in_http = ngx.var.http_x_forwarded_proto == 'http' or ngx.var.http_protocol ~= 'https:'
+local in_http = ngx.var.http_x_forwarded_proto == 'http'
 
 if config.openHttps == 'true' and ngx.var.agent_type == 'brower' and in_http then
     return '1'
