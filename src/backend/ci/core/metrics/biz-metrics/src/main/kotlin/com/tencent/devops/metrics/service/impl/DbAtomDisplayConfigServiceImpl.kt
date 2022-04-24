@@ -27,10 +27,10 @@
 
 package com.tencent.devops.metrics.service.impl
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.db.utils.SnowFlakeUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
 import com.tencent.metrics.pojo.po.SaveAtomDisplayConfigPO
 import org.jooq.DSLContext
@@ -41,7 +41,8 @@ import java.time.LocalDateTime
 @Service
 class DbAtomDisplayConfigServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val atomDisplayConfigDao: AtomDisplayConfigDao
+    private val atomDisplayConfigDao: AtomDisplayConfigDao,
+    private val client: Client
 ) : AtomDisplayConfigManageService {
 
     override fun saveAtomDisplayConfig(saveAtomDisplayConfigDTO: SaveAtomDisplayConfigDTO): Boolean {
@@ -49,9 +50,10 @@ class DbAtomDisplayConfigServiceImpl @Autowired constructor(
         val saveAtomDisplayConfigPOs = mutableListOf<SaveAtomDisplayConfigPO>()
         atomBaseInfos.forEach { atomBaseInfo ->
             val currentTime = LocalDateTime.now()
+            val id = client.get(ServiceAllocIdResource::class).generateSegmentId("ATOM_DISPLAY_CONFIG").data ?: 0
             saveAtomDisplayConfigPOs.add(
                 SaveAtomDisplayConfigPO(
-                    id = SnowFlakeUtils.getId(SystemModuleEnum.METRICS.code),
+                    id = id,
                     projectId = saveAtomDisplayConfigDTO.projectId,
                     userId = saveAtomDisplayConfigDTO.userId,
                     atomCode = atomBaseInfo.atomCode,
