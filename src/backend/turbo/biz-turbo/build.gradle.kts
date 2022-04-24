@@ -9,10 +9,17 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-amqp")
     api("com.github.ben-manes.caffeine:caffeine")
     api("com.google.guava:guava")
+    api("io.jsonwebtoken:jjwt")
     api("com.tencent.bk.devops.ci.project:api-project:${Versions.ciVersion}"){
         isTransitive = false
     }
     api("com.tencent.bk.devops.ci.common:common-api:${Versions.ciVersion}"){
+        isTransitive = false
+    }
+    api("com.tencent.bk.devops.ci.auth:api-auth:${Versions.ciAuthVersion}"){
+        isTransitive = false
+    }
+    api("com.tencent.bk.devops.ci.common:common-auth-api:${Versions.ciAuthVersion}"){
         isTransitive = false
     }
 }
