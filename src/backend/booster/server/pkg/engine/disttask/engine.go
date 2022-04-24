@@ -11,6 +11,7 @@ package disttask
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -75,10 +76,22 @@ const (
 	queueNameHeaderVMMac      queueNameHeader = "VM_MAC"
 )
 
+type TimeSlot struct {
+	startTime string
+	endTime   string
+	value     float64
+}
+
+type ResourceAllocater struct {
+	AllocateMap map[string]float64
+	timeData    []TimeSlot
+}
+
 // EngineConfig define engine config
 type EngineConfig struct {
 	engine.MySQLConf
-	Rd rd.RegisterDiscover
+	Rd                     rd.RegisterDiscover
+	QueueResourceAllocater map[string]ResourceAllocater
 
 	JobServerTimesToCPU float64
 	QueueShareType      map[string]engine.QueueShareType
@@ -136,6 +149,8 @@ func NewDisttaskEngine(
 		blog.Errorf("engine(%s) init brokers failed: %v", EngineName, err)
 		return nil, err
 	}
+
+	_ = egn.parseAllocateConf()
 
 	return egn, nil
 }
@@ -290,6 +305,51 @@ func (de *disttaskEngine) getClient(timeoutSecond int) *httpclient.HTTPClient {
 	return client
 }
 
+// cheack AllocateMap map ,make sure the key is the format of xx:xx:xx-xx:xx:xx and smaller time is ahead
+func (de *disttaskEngine) parseAllocateConf() bool {
+	time_fmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
+
+	for header, allocater := range de.conf.QueueResourceAllocater {
+		for k, v := range allocater.AllocateMap {
+			mid := strings.Index(k, "-")
+			if mid == -1 || !time_fmt.MatchString(k[:mid]) || !time_fmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
+				blog.Errorf("wrong time format:(%s) in [%s] allocate config, expect format like 12:30:00-14:00:00,smaller time ahead", k, header)
+				return false
+			}
+			allocater.timeData = append(allocater.timeData, TimeSlot{
+				startTime: k[:mid],
+				endTime:   k[mid+1:],
+				value:     v,
+			},
+			)
+		}
+
+		de.conf.QueueResourceAllocater[header] = allocater
+	}
+
+	return true
+}
+
+func (de *disttaskEngine) allocate(queueName string) float64 {
+	return de.allocateByCurrentTime(queueName)
+}
+
+func (de *disttaskEngine) allocateByCurrentTime(queueName string) float64 {
+	now := time.Now().Format("15:04:05")
+	header := getQueueNameHeader(queueName)
+
+	if allocater, ok := de.conf.QueueResourceAllocater[string(header)]; !ok {
+		return 1.0
+	} else {
+		for _, slot := range allocater.timeData {
+			if now >= slot.startTime && now < slot.endTime {
+				return slot.value
+			}
+		}
+	}
+	return 1.0
+}
+
 func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	project, err := de.mysql.GetProjectSetting(tb.Client.ProjectID)
 	if err != nil {
@@ -334,7 +394,11 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	task.InheritSetting.BanAllBooster = project.BanAllBooster
 	// if ban resources, then request and least cpu is 0
 	if !task.InheritSetting.BanAllBooster {
-		task.InheritSetting.RequestCPU = project.RequestCPU
+		task.InheritSetting.RequestCPU = project.RequestCPU * de.allocate(tb.Client.QueueName)
+		blog.Info("project request cpu: [%f],actual request cpu:[%f] ,queue:[%s]",
+			project.RequestCPU,
+			task.InheritSetting.RequestCPU,
+			tb.Client.QueueName)
 		task.InheritSetting.LeastCPU = project.LeastCPU
 		if task.InheritSetting.LeastCPU > task.InheritSetting.RequestCPU {
 			task.InheritSetting.LeastCPU = task.InheritSetting.RequestCPU
@@ -391,6 +455,7 @@ func (de *disttaskEngine) getResource(queueName string) (float64, float64) {
 		Platform: getPlatform(queueName),
 		Group:    getQueueNamePure(queueName),
 	}
+
 	switch getQueueNameHeader(queueName) {
 	case queueNameHeaderK8SDefault, queueNameHeaderK8SWin:
 		ist := de.k8sCrmMgr.GetInstanceType(istKey.Platform, istKey.Group)
