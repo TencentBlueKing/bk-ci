@@ -39,9 +39,12 @@ import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 object QualityUtils {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     fun getQualityGitMrResult(
         client: Client,
         event: GitCommitCheckEvent,
@@ -125,6 +128,7 @@ object QualityUtils {
                 "console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
             val detailValue = config.getCodeccDetailUrl(detail)
+            logger.info("getDetailUrl: $detailValue")
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)
