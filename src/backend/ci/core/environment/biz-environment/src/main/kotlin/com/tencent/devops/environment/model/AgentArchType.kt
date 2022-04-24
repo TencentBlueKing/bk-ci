@@ -25,6 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package config
+package com.tencent.devops.environment.model
 
-const AgentVersion = "v1.8.6"
+enum class AgentArchType(val arch: String) {
+    ARM64("arm64"),
+    MIPS64("mips64")
+}

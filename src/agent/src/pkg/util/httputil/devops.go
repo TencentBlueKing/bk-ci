@@ -30,10 +30,12 @@ package httputil
 import (
 	"encoding/json"
 	"errors"
+	"github.com/Tencent/bk-ci/src/agent/internal/third_party/dep/fs"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
@@ -174,7 +176,7 @@ func DownloadUpgradeFile(url string, headers map[string]string, filepath string)
 		return "", errors.New("download upgrade file failed")
 	}
 
-	err = writeToFile(filepath, resp.Body)
+	err = AtomicWriteFile(filepath, resp.Body, 0644)
 	if err != nil {
 		logs.Error("download upgrade file failed", err)
 		return "", errors.New("download upgrade file failed")
@@ -209,4 +211,27 @@ func writeToFile(file string, content io.Reader) error {
 		return err
 	}
 	return nil
+}
+
+func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error {
+	tempFile, err := ioutil.TempFile(filepath.Split(filename))
+	if err != nil {
+		return err
+	}
+	tempName := tempFile.Name()
+
+	if _, err := io.Copy(tempFile, reader); err != nil {
+		tempFile.Close() // return value is ignored as we are already on error path
+		return err
+	}
+
+	if err := tempFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Chmod(tempName, mode); err != nil {
+		return err
+	}
+
+	return fs.RenameWithFallback(tempName, filename)
 }

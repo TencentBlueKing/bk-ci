@@ -121,15 +121,22 @@ func doCheckAndLaunchAgent() {
 	workDir := systemutil.GetWorkDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
-	defer func() { _ = agentLock.Unlock() }() // #1613 fix open too many files
-	ok, err := agentLock.TryLock()
+	locked, err := agentLock.TryLock()
+	if err == nil && locked {
+		// #1613 fix open too many files
+		defer func() {
+			err = agentLock.Unlock()
+			logs.Error("try to unlock agent.lock failed: %v", err)
+		}()
+	}
 	if err != nil {
 		logs.Error("try to get agent.lock failed: %v", err)
 		return
 	}
-	if !ok {
+	if !locked {
 		return
 	}
+
 	logs.Warn("agent is not available, will launch it")
 
 	process, err := launch(workDir + "/" + config.AgentFileClientLinux)
