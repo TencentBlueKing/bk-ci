@@ -144,7 +144,8 @@
       color: $successColor;
       border-color: $successColor;
     }
-    &.quality-check-error {
+    &.quality-check-error,
+    &.review-error {
       color: $failColor;
       border-color: $failColor;
     }
