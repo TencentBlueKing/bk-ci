@@ -25,20 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.builds
+package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-data class CompleteTask(
-    val projectId: String,
-    val buildId: String,
-    val taskId: String,
-    val userId: String,
-    val buildStatus: BuildStatus, // 构建任务结束状态
-    val errorType: ErrorType? = null,
-    val errorCode: Int? = null,
-    val errorMsg: String? = null,
-    val platformCode: String? = null, // 对接平台代码
-    val platformErrorCode: Int? = null // 对接平台错误码
-)
+interface StoreDockingPlatformRelService {
+
+    /**
+     * 为组件添加对接平台信息
+     * @param userId 用户ID
+     * @param storeCode 组件代码
+     * @param storeType 组件类型
+     * @param platformCodes 平台列表集合
+     * @return 布尔值
+     */
+    fun create(
+        userId: String? = null,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        platformCodes: Set<String>
+    ): Boolean
+
+    /**
+     * 获取组件对接平台信息列表
+     * @param userId 用户ID
+     * @param storeCode 组件代码
+     * @param storeType 组件类型
+     * @return 对接平台信息列表
+     */
+    fun getStoreDockingPlatforms(
+        userId: String? = null,
+        storeCode: String,
+        storeType: StoreTypeEnum
+    ): List<StoreDockingPlatformInfo>?
+}

@@ -132,15 +132,43 @@ class StoreDockingPlatformDao {
         platformName: String?,
         page: Int,
         pageSize: Int
-    ): Result<TStoreDockingPlatformRecord>? {
+    ): List<StoreDockingPlatformInfo>? {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             val conditions = getStoreDockingPlatformsCondition(platformName)
-            return dslContext
+            val storeDockingPlatformRecords = dslContext
                 .selectFrom(this)
                 .where(conditions).orderBy(CREATE_TIME.desc())
                 .offset((page - 1) * pageSize).limit(pageSize)
                 .fetch()
+            return generateStoreDockingPlatformInfos(storeDockingPlatformRecords)
         }
+    }
+
+    fun getStoreDockingPlatforms(
+        dslContext: DSLContext,
+        platformCodes: List<String>
+    ): List<StoreDockingPlatformInfo>? {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            val storeDockingPlatformRecords = dslContext
+                .selectFrom(this)
+                .where(PLATFORM_CODE.`in`(platformCodes))
+                .fetch()
+            return generateStoreDockingPlatformInfos(storeDockingPlatformRecords)
+        }
+    }
+
+    private fun generateStoreDockingPlatformInfos(
+        storeDockingPlatformRecords: Result<TStoreDockingPlatformRecord>
+    ): MutableList<StoreDockingPlatformInfo>? {
+        var storeDockingPlatformInfos: MutableList<StoreDockingPlatformInfo>? = null
+        if (!storeDockingPlatformRecords.isNullOrEmpty()) {
+            storeDockingPlatformInfos = mutableListOf()
+            storeDockingPlatformRecords.forEach { storeDockingPlatformRecord ->
+                val storeDockingPlatformInfo = convert(storeDockingPlatformRecord)
+                storeDockingPlatformInfos.add(storeDockingPlatformInfo)
+            }
+        }
+        return storeDockingPlatformInfos
     }
 
     fun getStoreDockingPlatformCount(
