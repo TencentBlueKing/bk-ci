@@ -342,7 +342,7 @@
                 try {
                     if (typeof this.element.version === 'string') {
                         const versionValid = this.atomVersionList.find(v => v.versionValue === this.element.version)
-                        if (versionValid === null) {
+                        if (typeof versionValid === 'undefined') {
                             return [
                                 ...this.atomVersionList,
                                 {
