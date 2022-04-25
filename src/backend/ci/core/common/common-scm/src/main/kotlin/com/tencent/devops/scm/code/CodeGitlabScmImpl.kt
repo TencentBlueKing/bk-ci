@@ -29,6 +29,7 @@ package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
@@ -57,6 +58,7 @@ class CodeGitlabScmImpl constructor(
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitlabApiUrl, repoUrl = url)
 
+    @BkTimed(extraTags = ["function","GitApi.getBranch"])
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
         val gitBranch = gitApi.getBranch(host = apiUrl, token = token, projectName = projectName, branchName = branch)
@@ -68,6 +70,7 @@ class CodeGitlabScmImpl constructor(
         )
     }
 
+    @BkTimed(extraTags = ["function","GitApi.listBranches"])
     override fun getBranches(
         search: String?,
         page: Int,
@@ -82,6 +85,7 @@ class CodeGitlabScmImpl constructor(
             pageSize = pageSize
         )
 
+    @BkTimed(extraTags = ["function","GitApi.listTags"])
     override fun getTags(search: String?) =
         gitApi.listTags(
             host = apiUrl,
@@ -144,7 +148,7 @@ class CodeGitlabScmImpl constructor(
         }
         try {
             logger.info("[HOOK_API]|$apiUrl")
-            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
+            addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
@@ -152,6 +156,15 @@ class CodeGitlabScmImpl constructor(
             )
         }
     }
+
+    @BkTimed(extraTags = ["function", "GitApi.addWebhook"])
+    private fun addWebhook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String?,
+    ) = gitApi.addWebhook(host, token, projectName, hookUrl, event)
 
     override fun addCommitCheck(
         commitId: String,
@@ -172,6 +185,7 @@ class CodeGitlabScmImpl constructor(
         logger.info("gitlab can not unlock")
     }
 
+    @BkTimed(extraTags = ["function", "GitApi.getMergeRequestChangeInfo"])
     override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
         val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId/changes"
         return gitApi.getMergeRequestChangeInfo(
@@ -181,6 +195,7 @@ class CodeGitlabScmImpl constructor(
         )
     }
 
+    @BkTimed(extraTags = ["function", "GitApi.getMrInfo"])
     override fun getMrInfo(mrId: Long): GitMrInfo {
         val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId"
         return gitApi.getMrInfo(
