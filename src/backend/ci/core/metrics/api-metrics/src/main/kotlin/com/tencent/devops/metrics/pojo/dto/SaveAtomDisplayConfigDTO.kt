@@ -25,14 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.metrics.pojo.vo
+package com.tencent.devops.metrics.pojo.dto
 
-import com.tencent.metrics.pojo.`do`.AtomBaseInfoDO
+import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("保存项目下展示插件配置报文")
-data class SaveAtomDisplayConfigVO(
+@ApiModel("保存项目下展示插件配置传输对象")
+data class SaveAtomDisplayConfigDTO(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("userId")
+    val userId: String,
     @ApiModelProperty("插件基本信息列表")
     val atomBaseInfos: List<AtomBaseInfoDO>
 )

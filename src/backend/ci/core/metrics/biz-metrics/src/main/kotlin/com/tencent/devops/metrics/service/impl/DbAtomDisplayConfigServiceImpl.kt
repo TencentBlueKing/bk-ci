@@ -31,8 +31,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.dao.AtomDisplayConfigDao
 import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
-import com.tencent.metrics.pojo.po.SaveAtomDisplayConfigPO
+import com.tencent.devops.metrics.pojo.dto.SaveAtomDisplayConfigDTO
+import com.tencent.devops.metrics.pojo.po.SaveAtomDisplayConfigPO
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

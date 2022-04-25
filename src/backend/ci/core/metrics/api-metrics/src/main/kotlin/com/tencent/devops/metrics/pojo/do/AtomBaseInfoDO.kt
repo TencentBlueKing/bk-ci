@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.metrics.pojo.`do`
+package com.tencent.devops.metrics.pojo.`do`
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
