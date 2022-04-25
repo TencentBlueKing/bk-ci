@@ -409,7 +409,7 @@ class TGitMrActionGit(
             sourceBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
             targetBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
             changeSet = data.context.changeSet?.toSet(),
-            userId = data.eventCommon.userId,
+            userId = data.getUserId(),
             mrAction = mrAction
         )
         val params = TGitActionCommon.getStartParams(

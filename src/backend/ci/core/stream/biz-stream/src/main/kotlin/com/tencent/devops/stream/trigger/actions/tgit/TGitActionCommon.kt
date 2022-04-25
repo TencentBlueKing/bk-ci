@@ -26,22 +26,19 @@ object TGitActionCommon {
 
     fun getStartParams(
         action: BaseAction,
-        triggerOn: TriggerOn?,
-        userId: String? = null
+        triggerOn: TriggerOn?
     ): Map<String, String> {
         return matchAndStartParams(
             action = action,
             triggerOn = triggerOn,
-            needMatch = false,
-            userId = userId
+            needMatch = false
         ).second
     }
 
     fun matchAndStartParams(
         action: BaseAction,
         triggerOn: TriggerOn?,
-        needMatch: Boolean = true,
-        userId: String? = null
+        needMatch: Boolean = true
     ): Pair<Boolean, Map<String, String>> {
         logger.info("match and start params|triggerOn:$triggerOn")
 
@@ -65,7 +62,7 @@ object TGitActionCommon {
                 url = action.data.setting.gitHttpUrl,
                 credentialId = "",
                 projectName = projectName,
-                userName = userId ?: action.data.eventCommon.userId,
+                userName = action.data.getUserId(),
                 authType = RepoAuthType.OAUTH,
                 projectId = action.getProjectCode(action.data.eventCommon.gitProjectId),
                 repoHashId = null
