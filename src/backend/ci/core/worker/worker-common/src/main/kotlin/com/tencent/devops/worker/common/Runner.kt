@@ -218,10 +218,12 @@ object Runner {
     private fun BuildTask.parseCredentials(): BuildTask {
         with(this) {
             // 解析跨项目模板信息
-            val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(
-                variables = buildVariable ?: return this,
-                taskId = taskId
-            )?.targetProjectId
+            val acrossTargetProjectId by lazy {
+                TemplateAcrossInfoUtil.getAcrossInfo(
+                    variables = buildVariable ?: mapOf(),
+                    taskId = taskId
+                )?.targetProjectId
+            }
             val parsedVariables = mutableMapOf<String, String>()
             buildVariable?.forEach { (key, value) ->
                 parsedVariables[key] = if (value.contains("settings.")) {
