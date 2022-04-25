@@ -948,7 +948,6 @@ class TemplateFacadeService @Autowired constructor(
             labels.addAll(it.labels)
         }
         model.labels = labels
-        model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
         if (!latestTemplate.storeFlag || latestTemplate.srcTemplateId.isNullOrBlank()) {
             try {
@@ -1018,7 +1017,7 @@ class TemplateFacadeService @Autowired constructor(
             }
             versionNames.add(versionName)
         }
-        return versions
+        return versions.sortedByDescending { templateVersion -> templateVersion.updateTime }
     }
 
     /**
@@ -1927,13 +1926,10 @@ class TemplateFacadeService @Autowired constructor(
     }
 
     fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
-        val templateRecord = if (projectId.isNullOrEmpty()) templateDao.getLatestTemplate(dslContext, templateId)
-        else templateDao.getLatestTemplate(dslContext, projectId, templateId)
-        if (templateRecord == null) {
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                defaultMessage = "模板不存在"
-            )
+        val templateRecord = if (projectId.isNullOrEmpty()) {
+            templateDao.getLatestTemplate(dslContext, templateId)
+        } else {
+            templateDao.getLatestTemplate(dslContext, projectId, templateId)
         }
         val modelStr = templateRecord.template
         if (modelStr != null) {
