@@ -72,7 +72,7 @@ stages:
   jobs:
   - id: "job_FxM"
     name: "构建环境-LINUX"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -115,7 +115,7 @@ stages:
   jobs:
   - id: "job_0YD"
     name: "PCG安全扫描"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -179,7 +179,7 @@ stages:
     depend-on: null
   - id: "job_7mD"
     name: "腾讯代码规范分析"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -282,7 +282,7 @@ stages:
     depend-on: null
   - id: "job_jtd"
     name: "同源单元测试"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -423,7 +423,7 @@ stages:
   jobs:
   - id: "job_zPm"
     name: "注册同源"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"
@@ -466,7 +466,7 @@ stages:
     depend-on: null
   - id: "job_EDT"
     name: "单元测试结果上报"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "agentless"
@@ -534,7 +534,7 @@ stages:
   jobs:
   - id: "job_aGC"
     name: "编译"
-    resource-exclusive-declaration: null
+    mutex: null
     runs-on:
       self-hosted: false
       pool-name: "docker"

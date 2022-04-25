@@ -367,7 +367,7 @@
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"
             },
-            "resource-exclusive-declaration" : {
+            "mutex" : {
               "$ref" : "#/definitions/resourceExclusiveDeclaration"
             }
           }
