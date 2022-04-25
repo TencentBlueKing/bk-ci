@@ -35,6 +35,8 @@ import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.EmptyPermissionExtServiceImpl
 import com.tencent.devops.auth.service.EmptyPermissionUrlServiceImpl
+import com.tencent.devops.auth.service.LocalManagerService
+import com.tencent.devops.auth.service.SimpleLocalManagerServiceImpl
 import com.tencent.devops.auth.utils.HostUtils
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -143,4 +145,8 @@ class AuthCoreConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = ["permissionUrlService"])
     fun permissionUrlService() = EmptyPermissionUrlServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean(LocalManagerService::class)
+    fun simpleManagerService() = SimpleLocalManagerServiceImpl()
 }

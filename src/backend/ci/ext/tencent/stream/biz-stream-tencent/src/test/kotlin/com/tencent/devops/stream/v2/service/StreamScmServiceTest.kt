@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.stream.service.StreamGitTokenService
+import com.tencent.devops.stream.service.StreamScmService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

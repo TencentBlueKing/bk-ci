@@ -54,7 +54,7 @@ class CodeP4ScmImpl(
         throw UnsupportedOperationException("p4 unsupported getLatestRevision")
     }
 
-    override fun getBranches(search: String?): List<String> {
+    override fun getBranches(search: String?, page: Int, pageSize: Int): List<String> {
         throw UnsupportedOperationException("p4 unsupported getBranches")
     }
 

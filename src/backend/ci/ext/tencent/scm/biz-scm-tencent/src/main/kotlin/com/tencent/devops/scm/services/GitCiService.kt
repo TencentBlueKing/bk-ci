@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
