@@ -125,6 +125,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.StageTagService
@@ -257,6 +258,19 @@ class PipelineRuntimeService @Autowired constructor(
     fun getBuildInfo(projectId: String, pipelineId: String, buildId: String): BuildInfo? {
         val t = pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineId, buildId) ?: return null
         return pipelineBuildDao.convert(t)
+    }
+
+    fun getBuildInfoListByConcurrencyGroup(
+        projectId: String,
+        concurrencyGroup: String,
+        status: List<BuildStatus>
+    ): List<Pair<String, String>> {
+        return pipelineBuildDao.getBuildTasksByConcurrencyGroup(
+            dslContext = dslContext,
+            projectId = projectId,
+            concurrencyGroup = concurrencyGroup,
+            statusSet = status
+        ).map { Pair(it.value1(), it.value2()) }
     }
 
     fun getBuildNoByByPair(buildIds: Set<String>, projectId: String?): MutableMap<String, String> {
@@ -520,7 +534,8 @@ class PipelineRuntimeService @Autowired constructor(
                     channelCode = ChannelCode.valueOf(channel)
                 ),
                 buildNumAlias = buildNumAlias,
-                updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L // 防止空异常
+                updateTime = updateTime?.timestampmilli() ?: endTime?.timestampmilli() ?: 0L, // 防止空异常
+                concurrencyGroup = concurrencyGroup
             )
         }
     }
@@ -696,6 +711,7 @@ class PipelineRuntimeService @Autowired constructor(
         fullModel: Model,
         originStartParams: List<BuildParameters>,
         startParamsWithType: List<BuildParameters>,
+        setting: PipelineSetting?,
         buildNo: Int? = null,
         buildNumRule: String? = null,
         acquire: Boolean? = false
@@ -818,7 +834,8 @@ class PipelineRuntimeService @Autowired constructor(
                             lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                             container = container,
                             retryStartTaskId = context.retryStartTaskId
-                        )) {
+                        )
+                    ) {
 
                         logger.info("[$buildId|RETRY_SKIP_JOB|j(${container.id!!})|${container.name}")
                         context.containerSeq++
@@ -1052,7 +1069,8 @@ class PipelineRuntimeService @Autowired constructor(
                         webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE] as String?,
                         webhookInfo = getWebhookInfo(startParamMap),
                         buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG] as String?),
-                        buildNumAlias = buildNumAlias
+                        buildNumAlias = buildNumAlias,
+                        concurrencyGroup = setting?.concurrencyGroup
                     )
                     // detail记录,未正式启动，先排队状态
                     buildDetailDao.create(

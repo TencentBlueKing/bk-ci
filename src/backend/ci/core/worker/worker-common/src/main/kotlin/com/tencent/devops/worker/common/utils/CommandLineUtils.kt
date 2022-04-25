@@ -176,10 +176,10 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String
     ) {
-        val pattenVar = "::set-variable\\sname=.*"
+        val pattenVar = "[\"]?::set-variable\\sname=.*"
         val prefixVar = "::set-variable name="
         if (Pattern.matches(pattenVar, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixVar)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixVar)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(
@@ -196,10 +196,10 @@ object CommandLineUtils {
         jobId: String,
         stepId: String
     ) {
-        val pattenOutput = "::set-output\\sname=.*"
+        val pattenOutput = "[\"]?::set-output\\sname=.*"
         val prefixOutput = "::set-output name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             val keyPrefix = "jobs.$jobId.steps.$stepId.outputs."
             if (keyValue.size >= 2) {
@@ -215,10 +215,10 @@ object CommandLineUtils {
         workspace: File?,
         resultLogFile: String
     ) {
-        val pattenOutput = "::set-gate-value\\sname=.*"
+        val pattenOutput = "[\"]?::set-gate-value\\sname=.*"
         val prefixOutput = "::set-gate-value name="
         if (Pattern.matches(pattenOutput, tmpLine)) {
-            val value = tmpLine.removePrefix(prefixOutput)
+            val value = tmpLine.removeSurrounding("\"").removePrefix(prefixOutput)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
                 File(workspace, resultLogFile).appendText(

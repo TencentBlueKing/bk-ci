@@ -695,11 +695,13 @@ open class MarketAtomTask : ITask() {
                 // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
                 // 即使没有jobId也以containerId前缀输出
                 val value = env[key] ?: ""
-                if (!buildTask.stepId.isNullOrBlank() && !buildVariables.jobId.isNullOrBlank()) {
+                if (!buildTask.stepId.isNullOrBlank() &&
+                    !buildVariables.jobId.isNullOrBlank() &&
+                    !key.startsWith("variables.")
+                ) {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
-                    // TODO 待定：是否进行原变量名输出，暂时保留
-                    // env.remove(key)
+                    env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()

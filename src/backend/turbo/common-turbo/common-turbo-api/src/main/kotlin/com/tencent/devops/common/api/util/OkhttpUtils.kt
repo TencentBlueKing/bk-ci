@@ -21,7 +21,7 @@ object OkhttpUtils {
         .connectTimeout(3L, TimeUnit.SECONDS)
         .readTimeout(3L, TimeUnit.SECONDS)
         .writeTimeout(3L, TimeUnit.SECONDS)
-        .build()!!
+        .build()
 
     fun doGet(url: String, headers: Map<String, String> = mapOf()): String {
         val requestBuilder = Request.Builder()

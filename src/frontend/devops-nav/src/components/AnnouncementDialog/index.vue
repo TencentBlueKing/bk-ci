@@ -78,6 +78,7 @@
             height: 547px;
             background-image: url('../../assets/images/guide-foot.png');
             background-size: 100% 100%;
+            overflow-y: scroll;
         }
         .announcement-title {
             text-align: center;
