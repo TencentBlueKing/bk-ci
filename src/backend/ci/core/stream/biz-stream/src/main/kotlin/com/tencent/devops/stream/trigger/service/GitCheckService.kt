@@ -56,6 +56,11 @@ class GitCheckService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitCheckService::class.java)
     }
 
+    // 针对不同部署环境的check token可以做不同的改动
+    protected fun getToken(gitProjectId: String): String? {
+        return null
+    }
+
     fun pushCommitCheck(
         userId: String,
         projectCode: String,
@@ -245,7 +250,7 @@ class GitCheckService @Autowired constructor(
             type = scmType,
             privateKey = null,
             passPhrase = null,
-            token = token,
+            token = getToken(gitProjectId) ?: token,
             region = null,
             commitId = commitId,
             state = state,

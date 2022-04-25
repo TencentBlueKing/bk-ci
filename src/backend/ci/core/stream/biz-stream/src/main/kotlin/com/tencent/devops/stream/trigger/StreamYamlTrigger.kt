@@ -131,7 +131,7 @@ class StreamYamlTrigger @Autowired constructor(
         }
 
         streamBasicSettingService.updateProjectInfo(
-            action.data.eventCommon.userId,
+            action.data.getUserId(),
             gitProjectInfo.toStreamGitProjectInfoWithProject()
         )
 

@@ -25,40 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.actions.data.context
+package com.tencent.devops.stream.trigger.service
 
-import com.tencent.devops.stream.pojo.StreamRepoHookEvent
-import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
-/**
- * Stream触发过程中需要用到的上下文数据
- * @param requestEventId 保存用来展示的gitRequestEvent的id方便关联一些展示项
- * @param pipeline stream当前触发的流水线信息
- * @param repoTrigger 是否是远程仓库触发以及相关参数
- * @param changeSet 当前git event涉及的文件变更列表
- * @param originYaml 当前流水线对应的yaml原文
- * @param parsedYaml 替换完模板之后的yaml
- * @param normalizedYaml 填充完成的yaml，可以用来生成流水线model
- * @param finishData stream在构建结束后的相关逻辑需要的数据
- */
-data class StreamTriggerContext(
-    var requestEventId: Long? = null,
-    var pipeline: StreamTriggerPipeline? = null,
-    var repoTrigger: RepoTrigger? = null,
-    var changeSet: List<String>? = null,
-    var defaultBranch: String? = null,
-    var originYaml: String? = null,
-    var parsedYaml: String? = null,
-    var normalizedYaml: String? = null,
-    var finishData: BuildFinishData? = null
-)
+@Primary
+@Service
+class TXGitCheckService @Autowired constructor(
+    client: Client,
+    redisOperation: RedisOperation,
+    private val streamTriggerTokenService: StreamTriggerTokenService
+) : GitCheckService(client, redisOperation) {
 
-/**
- * 跨Git库触发相关数据
- * @param branch 跨库的触发分支，一般为默认分支
- */
-data class RepoTrigger(
-    val branch: String,
-    val repoTriggerPipelineList: List<StreamRepoHookEvent>,
-    val buildUserID: String? = null
-)
+    override fun getToken(gitProjectId: String): String? {
+        return streamTriggerTokenService.getGitProjectToken(gitProjectId)
+    }
+}
