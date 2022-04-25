@@ -180,6 +180,7 @@
             "linkGroup": "Link group",
             "emptyLinkTilte": "Link your first project or group",
             "emptyLinkTips": "select projects or groups to share your agents in this pool",
+            "removeAgentTips": "Remove from the pool",
             "noAgent": "No agent",
             "hasSelected": "have been selected",
             "agents": "agents",

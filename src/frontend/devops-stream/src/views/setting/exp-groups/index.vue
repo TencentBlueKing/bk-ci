@@ -16,12 +16,12 @@
         >
             <bk-table-column label="Id" prop="groupHashId"></bk-table-column>
             <bk-table-column :label="$t('Name')" prop="name"></bk-table-column>
-            <bk-table-column :label="$t('setting.userGroup.innerUser')" prop="innerUsers">
+            <bk-table-column :label="$t('setting.userGroup.innerUsers')" prop="innerUsers">
                 <template slot-scope="props">
                     <span>{{props.row.innerUsers.join(';')}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('setting.userGroup.outerUser')" prop="outerUsers">
+            <bk-table-column :label="$t('setting.userGroup.outerUsers')" prop="outerUsers">
                 <template slot-scope="props">
                     <span>{{props.row.outerUsers.join(';')}}</span>
                 </template>
