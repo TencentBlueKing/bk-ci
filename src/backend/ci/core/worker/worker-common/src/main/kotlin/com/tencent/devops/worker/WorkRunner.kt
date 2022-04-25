@@ -65,8 +65,6 @@ object WorkRunner {
 
             ThirdPartyAgentBuildInfoUtils.setBuildInfo(buildInfo)
 
-            LoggerService.start()
-
             Runner.run(object : WorkspaceInterface {
                 val workspace = buildInfo.workspace
                 override fun getWorkspaceAndLogDir(
