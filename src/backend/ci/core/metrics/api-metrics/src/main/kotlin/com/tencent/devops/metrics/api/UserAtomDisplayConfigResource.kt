@@ -25,26 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.metrics.pojo.po
+package com.tencent.devops.metrics.api
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.metrics.pojo.vo.SaveAtomDisplayConfigVO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("保存项目下展示插件配置持久化对象")
-data class SaveAtomDisplayConfigPO(
-    @ApiModelProperty("主键ID")
-    val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("userId")
-    val userId: String,
-    @ApiModelProperty("插件标识")
-    val atomCode: String,
-    @ApiModelProperty("插件名称")
-    val atomName: String,
-    @ApiModelProperty("创建时间")
-    val createTime: LocalDateTime,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
-)
+@Api(tags = ["USER_ATOM_DISPLAY_CONFIG"], description = "插件-展示配置")
+@Path("/user/atom/display/config")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserAtomDisplayConfigResource {
+
+    @ApiOperation("保存项目下需要展示的插件的配置")
+    @Path("/save")
+    @POST
+    fun saveAtomDisplayConfig(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("保存项目下展示插件配置报文", required = true)
+        saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
+    ): Result<Boolean>
+}

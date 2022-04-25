@@ -27,7 +27,7 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
+import com.tencent.devops.metrics.pojo.dto.SaveAtomDisplayConfigDTO
 
 interface AtomDisplayConfigManageService {
 

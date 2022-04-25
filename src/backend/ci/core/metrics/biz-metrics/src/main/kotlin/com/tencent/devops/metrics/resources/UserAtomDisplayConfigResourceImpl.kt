@@ -30,9 +30,9 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
-import com.tencent.metrics.api.UserAtomDisplayConfigResource
-import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
-import com.tencent.metrics.pojo.vo.SaveAtomDisplayConfigVO
+import com.tencent.devops.metrics.api.UserAtomDisplayConfigResource
+import com.tencent.devops.metrics.pojo.dto.SaveAtomDisplayConfigDTO
+import com.tencent.devops.metrics.pojo.vo.SaveAtomDisplayConfigVO
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
