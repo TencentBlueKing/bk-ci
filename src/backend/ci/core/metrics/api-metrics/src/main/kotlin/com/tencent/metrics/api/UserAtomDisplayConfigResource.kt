@@ -25,43 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.metrics.api
 
-@Suppress("UNUSED")
-enum class SystemModuleEnum(val code: String) {
-    COMMON("00"), // 公共模块
-    PROCESS("01"), // 流水线
-    ARTIFACTORY("02"), // 版本仓库
-    DISPATCH("03"), // 公共模块
-    DOCKERHOST("04"), // DOCKER机器
-    ENVIRONMENT("05"), // 环境
-    EXPERIENCE("06"), // 版本体验
-    IMAGE("07"), // 镜像
-    LOG("08"), // 日志
-    MEASURE("09"), // 度量
-    MONITORING("10"), // 监控
-    NOTIFY("11"), // 通知
-    OPENAPI("12"), // 开放平台API
-    PLUGIN("13"), // 插件
-    QUALITY("14"), // 质量红线
-    REPOSITORY("15"), // 代码库
-    SCM("16"), // 软件配置管理
-    SUPPORT("17"), // 支撑服务
-    TICKET("18"), // 证书凭据
-    PROJECT("19"), // 项目管理
-    STORE("20"), // 商店
-    LAMBDA("21"), // lambda
-    SIGN("22"), // 签名服务
-    METRICS("23"); // 度量服务
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.metrics.pojo.vo.SaveAtomDisplayConfigVO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    companion object {
-        fun getSystemModule(code: String): String {
-            values().forEach {
-                if (it.code == code) {
-                    return it.name
-                }
-            }
-            return COMMON.name
-        }
-    }
+@Api(tags = ["USER_ATOM_DISPLAY_CONFIG"], description = "插件-展示配置")
+@Path("/user/atom/display/config")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserAtomDisplayConfigResource {
+
+    @ApiOperation("保存项目下需要展示的插件的配置")
+    @Path("/save")
+    @POST
+    fun saveAtomDisplayConfig(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("保存项目下展示插件配置报文", required = true)
+        saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
+    ): Result<Boolean>
 }

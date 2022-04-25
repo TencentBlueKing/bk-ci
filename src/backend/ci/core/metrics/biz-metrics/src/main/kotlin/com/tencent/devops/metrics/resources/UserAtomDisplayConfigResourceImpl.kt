@@ -25,43 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.devops.metrics.resources
 
-@Suppress("UNUSED")
-enum class SystemModuleEnum(val code: String) {
-    COMMON("00"), // 公共模块
-    PROCESS("01"), // 流水线
-    ARTIFACTORY("02"), // 版本仓库
-    DISPATCH("03"), // 公共模块
-    DOCKERHOST("04"), // DOCKER机器
-    ENVIRONMENT("05"), // 环境
-    EXPERIENCE("06"), // 版本体验
-    IMAGE("07"), // 镜像
-    LOG("08"), // 日志
-    MEASURE("09"), // 度量
-    MONITORING("10"), // 监控
-    NOTIFY("11"), // 通知
-    OPENAPI("12"), // 开放平台API
-    PLUGIN("13"), // 插件
-    QUALITY("14"), // 质量红线
-    REPOSITORY("15"), // 代码库
-    SCM("16"), // 软件配置管理
-    SUPPORT("17"), // 支撑服务
-    TICKET("18"), // 证书凭据
-    PROJECT("19"), // 项目管理
-    STORE("20"), // 商店
-    LAMBDA("21"), // lambda
-    SIGN("22"), // 签名服务
-    METRICS("23"); // 度量服务
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.metrics.service.AtomDisplayConfigManageService
+import com.tencent.metrics.api.UserAtomDisplayConfigResource
+import com.tencent.metrics.pojo.dto.SaveAtomDisplayConfigDTO
+import com.tencent.metrics.pojo.vo.SaveAtomDisplayConfigVO
+import org.springframework.beans.factory.annotation.Autowired
 
-    companion object {
-        fun getSystemModule(code: String): String {
-            values().forEach {
-                if (it.code == code) {
-                    return it.name
-                }
-            }
-            return COMMON.name
-        }
+@RestResource
+class UserAtomDisplayConfigResourceImpl @Autowired constructor(
+    private val aomDisplayConfigManageService: AtomDisplayConfigManageService
+) : UserAtomDisplayConfigResource {
+
+    override fun saveAtomDisplayConfig(
+        projectId: String,
+        userId: String,
+        saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
+    ): Result<Boolean> {
+        return Result(
+            aomDisplayConfigManageService.saveAtomDisplayConfig(
+                SaveAtomDisplayConfigDTO(
+                    projectId = projectId,
+                    userId = userId,
+                    atomBaseInfos = saveAtomDisplayConfigVO.atomBaseInfos
+                )
+            )
+        )
     }
 }

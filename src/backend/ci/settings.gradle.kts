@@ -262,6 +262,13 @@ include(":core:sign:biz-sign-sample")
 include(":core:sign:boot-sign")
 include(":core:sign:model-sign")
 
+include(":core:metrics")
+include(":core:metrics:api-metrics")
+include(":core:metrics:biz-metrics")
+include(":core:metrics:biz-metrics-sample")
+include(":core:metrics:boot-metrics")
+include(":core:metrics:model-metrics")
+
 //  ==================== tencent ============================================================
 include(":ext")
 include(":ext:tencent")
@@ -467,3 +474,7 @@ include(":ext:tencent:statistics:api-statistics-tencent")
 include(":ext:tencent:statistics:biz-statistics-tencent")
 include(":ext:tencent:statistics:boot-statistics-tencent")
 include(":ext:tencent:statistics:model-statistics-tencent")
+
+include(":ext:tencent:metrics")
+include(":ext:tencent:metrics:biz-metrics-tencent")
+include(":ext:tencent:metrics:boot-metrics-tencent")

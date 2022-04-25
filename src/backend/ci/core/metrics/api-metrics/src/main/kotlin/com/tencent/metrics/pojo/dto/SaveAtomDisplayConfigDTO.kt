@@ -25,43 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.enums
+package com.tencent.metrics.pojo.dto
 
-@Suppress("UNUSED")
-enum class SystemModuleEnum(val code: String) {
-    COMMON("00"), // 公共模块
-    PROCESS("01"), // 流水线
-    ARTIFACTORY("02"), // 版本仓库
-    DISPATCH("03"), // 公共模块
-    DOCKERHOST("04"), // DOCKER机器
-    ENVIRONMENT("05"), // 环境
-    EXPERIENCE("06"), // 版本体验
-    IMAGE("07"), // 镜像
-    LOG("08"), // 日志
-    MEASURE("09"), // 度量
-    MONITORING("10"), // 监控
-    NOTIFY("11"), // 通知
-    OPENAPI("12"), // 开放平台API
-    PLUGIN("13"), // 插件
-    QUALITY("14"), // 质量红线
-    REPOSITORY("15"), // 代码库
-    SCM("16"), // 软件配置管理
-    SUPPORT("17"), // 支撑服务
-    TICKET("18"), // 证书凭据
-    PROJECT("19"), // 项目管理
-    STORE("20"), // 商店
-    LAMBDA("21"), // lambda
-    SIGN("22"), // 签名服务
-    METRICS("23"); // 度量服务
+import com.tencent.metrics.pojo.`do`.AtomBaseInfoDO
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    companion object {
-        fun getSystemModule(code: String): String {
-            values().forEach {
-                if (it.code == code) {
-                    return it.name
-                }
-            }
-            return COMMON.name
-        }
-    }
-}
+@ApiModel("保存项目下展示插件配置传输对象")
+data class SaveAtomDisplayConfigDTO(
+    @ApiModelProperty("项目ID")
+    val projectId: String,
+    @ApiModelProperty("userId")
+    val userId: String,
+    @ApiModelProperty("插件基本信息列表")
+    val atomBaseInfos: List<AtomBaseInfoDO>
+)
