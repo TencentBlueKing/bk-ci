@@ -76,22 +76,11 @@ const (
 	queueNameHeaderVMMac      queueNameHeader = "VM_MAC"
 )
 
-type TimeSlot struct {
-	startTime string
-	endTime   string
-	value     float64
-}
-
-type ResourceAllocater struct {
-	AllocateMap map[string]float64
-	timeData    []TimeSlot
-}
-
 // EngineConfig define engine config
 type EngineConfig struct {
 	engine.MySQLConf
 	Rd                     rd.RegisterDiscover
-	QueueResourceAllocater map[string]ResourceAllocater
+	QueueResourceAllocater map[string]config.ResourceAllocater
 
 	JobServerTimesToCPU float64
 	QueueShareType      map[string]engine.QueueShareType
@@ -309,24 +298,22 @@ func (de *disttaskEngine) getClient(timeoutSecond int) *httpclient.HTTPClient {
 func (de *disttaskEngine) parseAllocateConf() bool {
 	time_fmt := regexp.MustCompile(`[0-9]+[0-9]+:+[0-9]+[0-9]+:+[0-9]+[0-9]`)
 
-	for header, allocater := range de.conf.QueueResourceAllocater {
-		for k, v := range allocater.AllocateMap {
+	for queue, allocater := range de.conf.QueueResourceAllocater {
+		for k, v := range allocater.AllocateByTimeMap {
 			mid := strings.Index(k, "-")
 			if mid == -1 || !time_fmt.MatchString(k[:mid]) || !time_fmt.MatchString(k[mid+1:]) || k[:mid] > k[:mid+1] {
-				blog.Errorf("wrong time format:(%s) in [%s] allocate config, expect format like 12:30:00-14:00:00,smaller time ahead", k, header)
+				blog.Errorf("wrong time format:(%s) in [%s] allocate config, expect format like 12:30:00-14:00:00,smaller time ahead", k, queue)
 				return false
 			}
-			allocater.timeData = append(allocater.timeData, TimeSlot{
-				startTime: k[:mid],
-				endTime:   k[mid+1:],
-				value:     v,
+			allocater.TimeSlot = append(allocater.TimeSlot, config.TimeSlot{
+				StartTime: k[:mid],
+				EndTime:   k[mid+1:],
+				Value:     v,
 			},
 			)
 		}
-
-		de.conf.QueueResourceAllocater[header] = allocater
+		de.conf.QueueResourceAllocater[queue] = allocater
 	}
-
 	return true
 }
 
@@ -335,15 +322,13 @@ func (de *disttaskEngine) allocate(queueName string) float64 {
 }
 
 func (de *disttaskEngine) allocateByCurrentTime(queueName string) float64 {
-	now := time.Now().Format("15:04:05")
-	header := getQueueNameHeader(queueName)
-
-	if allocater, ok := de.conf.QueueResourceAllocater[string(header)]; !ok {
+	if allocater, ok := de.conf.QueueResourceAllocater[queueName]; !ok {
 		return 1.0
 	} else {
-		for _, slot := range allocater.timeData {
-			if now >= slot.startTime && now < slot.endTime {
-				return slot.value
+		now := time.Now().Format("15:04:05")
+		for _, slot := range allocater.TimeSlot {
+			if now >= slot.StartTime && now < slot.EndTime {
+				return slot.Value
 			}
 		}
 	}
@@ -395,10 +380,12 @@ func (de *disttaskEngine) createTask(tb *engine.TaskBasic, extra []byte) error {
 	// if ban resources, then request and least cpu is 0
 	if !task.InheritSetting.BanAllBooster {
 		task.InheritSetting.RequestCPU = project.RequestCPU * de.allocate(tb.Client.QueueName)
-		blog.Info("project request cpu: [%f],actual request cpu:[%f] ,queue:[%s]",
+		blog.Info("disttask: queue:[%s] project:[%s] request cpu: [%f],actual request cpu:[%f]",
+			tb.Client.QueueName,
+			project.ProjectID,
 			project.RequestCPU,
-			task.InheritSetting.RequestCPU,
-			tb.Client.QueueName)
+			task.InheritSetting.RequestCPU)
+
 		task.InheritSetting.LeastCPU = project.LeastCPU
 		if task.InheritSetting.LeastCPU > task.InheritSetting.RequestCPU {
 			task.InheritSetting.LeastCPU = task.InheritSetting.RequestCPU
