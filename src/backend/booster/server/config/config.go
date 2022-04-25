@@ -174,8 +174,8 @@ type EngineDisttaskConfig struct {
 
 // ResourceAllocater
 type ResourceAllocater struct {
-	AllocateByTimeMap map[string]float64
-	TimeSlot          []TimeSlot
+	AllocateByTimeMap map[string]float64 `json:"allocate_by_time_map"`
+	TimeSlot          []TimeSlot         `json:"time_slot"`
 }
 
 // EngineDisttaskBrokerConfig define the broker config used by engine disttask.
