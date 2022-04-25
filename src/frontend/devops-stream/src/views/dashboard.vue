@@ -3,7 +3,7 @@
         <section class="dashboard-container">
             <infinite-scroll class="repo-container-wrapper" ref="infiniteScroll" :data-fetcher="getRepoList" :page-size="limit" scroll-box-class-name="dashboard-container" v-slot="slotProps">
                 <section v-if="recentProjects.length" class="recent-projects">
-                    <div class="recent-title">Recent Projects</div>
+                    <div class="recent-title">{{$t('dashboard.recentProjects')}}</div>
                     <div class="recent-projects-container">
                         <div v-for="repo in recentProjects" :key="repo.id" class="repo-item recent-item">
                             <div class="repo-img">
@@ -21,7 +21,7 @@
                                     <div class="repo-desc">
                                         <div v-if="repo.ciInfo && repo.ciInfo.enableCI" class="repo-ci-info">
                                             <i :class="getIconClass(repo.ciInfo.lastBuildStatus)"></i>
-                                            <span class="to-page-link" :title="repo.ciInfo.lastBuildMessage || 'Empty commit messages'" @click="toLastBuildDetail(repo)">{{ repo.ciInfo.lastBuildMessage || 'Empty commit messages' }}</span>
+                                            <span class="to-page-link" :title="repo.ciInfo.lastBuildMessage || 'Empty commit messages'" @click="toLastBuildDetail(repo)">{{ repo.ciInfo.lastBuildMessage || $t('dashboard.emptyCommit') }}</span>
                                         </div>
                                     </div>
                                 </section>
@@ -30,7 +30,7 @@
                                         {{ repo.nameWithNamespace }}
                                     </div>
                                     <div class="repo-desc">
-                                        <bk-button theme="primary" @click="enableCi(repo)">Enable CI</bk-button>
+                                        <bk-button theme="primary" @click="enableCi(repo)">{{$t('setting.enableCi')}}</bk-button>
                                     </div>
                                 </section>
                             </div>
@@ -52,7 +52,7 @@
                         <bk-input :left-icon="'bk-icon icon-search'" placeholder="Filter by name" :clearable="true" v-model="searchStr" @enter="search" @clear="search"></bk-input>
                     </div>
                     <div class="empty-repo" v-if="!slotProps.list.length">
-                        <empty-tips title="暂无项目"></empty-tips>
+                        <empty-tips :title="$t('dashboard.noProject')"></empty-tips>
                     </div>
                     <div v-for="repo in slotProps.list" :key="repo.id" class="repo-item">
                         <div class="repo-img">
@@ -70,7 +70,7 @@
                                 <div class="repo-desc">
                                     <div v-if="repo.ciInfo && repo.ciInfo.enableCI" class="repo-ci-info">
                                         <i :class="getIconClass(repo.ciInfo.lastBuildStatus)"></i>
-                                        <span class="to-page-link" @click="toLastBuildDetail(repo)">{{ repo.ciInfo.lastBuildMessage || 'Empty commit messages'}}</span>
+                                        <span class="to-page-link" @click="toLastBuildDetail(repo)">{{ repo.ciInfo.lastBuildMessage || $t('dashboard.emptyCommit') }}</span>
                                     </div>
                                 </div>
                             </section>
@@ -79,7 +79,7 @@
                                     {{ repo.nameWithNamespace }}
                                 </div>
                                 <div class="repo-desc">
-                                    <div>{{ repo.description || 'Empty project description' }}</div>
+                                    <div>{{ repo.description || $t('dashboard.emptyDesc') }}</div>
                                 </div>
                             </section>
                         </div>
@@ -93,11 +93,11 @@
                                     </div>
                                 </div>
                                 <ul class="dot-menu-list" slot="content">
-                                    <li @click="toProjectDetail('buildList', repo.nameWithNamespace)">Pipelines</li>
-                                    <li @click="toProjectDetail('basicSetting', repo.nameWithNamespace)">Settings</li>
+                                    <li @click="toProjectDetail('buildList', repo.nameWithNamespace)">{{$t('pipelines')}}</li>
+                                    <li @click="toProjectDetail('basicSetting', repo.nameWithNamespace)">{{$t('settings')}}</li>
                                 </ul>
                             </bk-popover>
-                            <bk-button v-else theme="primary" @click="enableCi(repo)">Enable CI</bk-button>
+                            <bk-button v-else theme="primary" @click="enableCi(repo)">{{$t('setting.enableCi')}}</bk-button>
                         </div>
                     </div>
                 </div>
