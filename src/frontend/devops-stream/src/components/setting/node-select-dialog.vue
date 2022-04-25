@@ -469,7 +469,7 @@
             flex: 4;
             width: 200px;
         }
-        .node-item-agstatus {
+        .node-item-status {
             flex: 1;
             min-width: 82px;
         }
