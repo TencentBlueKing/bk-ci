@@ -60,7 +60,7 @@ abstract class TGitActionGit(
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         gitCheckService.pushCommitCheck(
-            userId = data.eventCommon.userId,
+            userId = data.getUserId(),
             projectCode = getProjectCode(),
             buildId = buildId,
             gitProjectId = data.eventCommon.gitProjectId,

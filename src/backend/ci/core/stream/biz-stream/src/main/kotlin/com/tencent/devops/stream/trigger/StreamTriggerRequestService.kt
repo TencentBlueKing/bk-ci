@@ -231,7 +231,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 pipelineId = "", // 留空用于是否创建判断
                 filePath = filePath,
                 enabled = true,
-                creator = action.data.eventCommon.userId
+                creator = action.data.getUserId()
             )
             // 远程仓库触发不需要新建流水线
             if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
