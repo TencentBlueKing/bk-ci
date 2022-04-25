@@ -227,7 +227,7 @@ object Runner {
                 parsedVariables[key] = if (value.contains("settings.")) {
                     ReplacementUtils.replace(value, object : ReplacementUtils.KeyReplacement {
                         override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = try {
-                            CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                            CredentialUtils.getCredentialContextValue(key)
                         } catch (ignore: Exception) {
                             CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
                         }
