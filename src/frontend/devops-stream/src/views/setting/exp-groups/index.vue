@@ -11,26 +11,26 @@
             :header-cell-style="{ background: '#fafbfd' }"
             @page-change="pageChange"
             @page-limit-change="pageLimitChange"
-            empty-text="No group yet"
+            :empty-text="$t('setting.userGroup.emptyTips')"
             class="group-table"
         >
             <bk-table-column label="Id" prop="groupHashId"></bk-table-column>
-            <bk-table-column label="Name" prop="name"></bk-table-column>
-            <bk-table-column label="OA users" prop="innerUsers">
+            <bk-table-column :label="$t('Name')" prop="name"></bk-table-column>
+            <bk-table-column :label="$t('setting.userGroup.innerUser')" prop="innerUsers">
                 <template slot-scope="props">
                     <span>{{props.row.innerUsers.join(';')}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="Non-OA users" prop="outerUsers">
+            <bk-table-column :label="$t('setting.userGroup.outerUser')" prop="outerUsers">
                 <template slot-scope="props">
                     <span>{{props.row.outerUsers.join(';')}}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column label="Description" prop="remark"></bk-table-column>
-            <bk-table-column label="Operation" width="200" class-name="handler-btn">
+            <bk-table-column :label="$t('description')" prop="remark"></bk-table-column>
+            <bk-table-column :label="$t('operation')" width="200" class-name="handler-btn">
                 <template slot-scope="props">
-                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.canEdit }" @click="editGroup(props.row)">Edit</span>
-                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.canDelete }" @click="deleteGroup(props.row)">Delete</span>
+                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.canEdit }" @click="editGroup(props.row)">{{$t('edit')}}</span>
+                    <span :class="{ 'update-btn': true, disabled: !props.row.permissions.canDelete }" @click="deleteGroup(props.row)">{{$t('delete')}}</span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -42,9 +42,9 @@
             :loading="isDelLoading"
             theme="danger"
             header-position="left"
-            title="Delete"
+            :title="$t('delete')"
             @confirm="requestDelete">
-            Are you sure to delete【{{deleteObj.name}}】？
+            {{$t('deleteTips')}} delete【{{deleteObj.name}}】？
         </bk-dialog>
     </article>
 </template>

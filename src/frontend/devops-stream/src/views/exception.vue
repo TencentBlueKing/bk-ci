@@ -3,15 +3,15 @@
         <section class="exception-content">
             <span>{{ infoMap.titleMap[exceptionType] }}</span>
             <span class="exception-title">
-                {{ exceptionInfo.message || infoMap.messageMap[exceptionType] || 'System error, please try again later!' }}
-                <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM" v-if="exceptionType === 520">了解更多</bk-link>
-                <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM_PERMISSION" v-if="exceptionType === 403">Learn more</bk-link>
+                {{ exceptionInfo.message || infoMap.messageMap[exceptionType] || $t('exception.systemErrTips') }}
+                <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM" v-if="exceptionType === 520">{{$t('exception.learnMore')}}</bk-link>
+                <bk-link theme="primary" target="_blank" :href="LINK_CONFIG.STREAM_PERMISSION" v-if="exceptionType === 403">{{$t('exception.learnMore')}}</bk-link>
             </span>
-            <div v-bk-tooltips="{ content: 'Permission denied', disabled: permission }" v-if="exceptionType === 419">
-                <bk-button theme="primary" @click="enable" :loading="isSaving" :disabled="!permission">Enable</bk-button>
+            <div v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }" v-if="exceptionType === 419">
+                <bk-button theme="primary" @click="enable" :loading="isSaving" :disabled="!permission">{{$t('enable')}}</bk-button>
             </div>
-            <bk-button theme="primary" v-if="exceptionType === 418" @click="oauth" :loading="isSaving">OAUTH Authorization</bk-button>
-            <bk-button theme="primary" v-if="[500, 403].includes(exceptionType)" @click="refresh">Refresh</bk-button>
+            <bk-button theme="primary" v-if="exceptionType === 418" @click="oauth" :loading="isSaving">{{$t('exception.oauthAuth')}}</bk-button>
+            <bk-button theme="primary" v-if="[500, 403].includes(exceptionType)" @click="refresh">{{$t('refresh')}}</bk-button>
         </section>
     </bk-exception>
 </template>
@@ -48,22 +48,22 @@
                         520: 'login'
                     },
                     titleMap: {
-                        403: 'No permission',
-                        404: 'Not found',
-                        418: 'No permission',
-                        419: 'CI is not enabled',
-                        499: 'No project information found',
-                        500: 'System Error',
-                        520: 'Welcome to Stream.'
+                        403: this.$t('exception.title403'),
+                        404: this.$t('exception.title404'),
+                        418: this.$t('exception.title418'),
+                        419: this.$t('exception.title419'),
+                        499: this.$t('exception.title499'),
+                        500: this.$t('exception.title500'),
+                        520: this.$t('exception.title520')
                     },
                     messageMap: {
-                        403: `There is no access permission for the project ${this.projectPath}, please join the project first!`,
-                        404: 'Page not found',
-                        418: 'The OAUTH authorization has not been carried out yet, please authorize first!',
-                        419: 'CI has not been enabled yet, please enable it first!',
-                        499: `The information of the project ${this.projectPath} is not queried, please modify and try again`,
-                        500: 'System error, please try again later',
-                        520: 'Stream 服务可以在主流的操作系统上持续快速地编译、测试、部署你的服务。'
+                        403: this.$t('exception.tips403'),
+                        404: this.$t('exception.tips404'),
+                        418: this.$t('exception.tips418'),
+                        419: this.$t('exception.tips419'),
+                        499: this.$t('exception.tips499'),
+                        500: this.$t('exception.tips500'),
+                        520: this.$t('exception.tips520')
                     }
                 }
             }

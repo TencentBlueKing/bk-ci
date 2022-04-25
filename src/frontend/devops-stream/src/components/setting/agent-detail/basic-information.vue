@@ -161,12 +161,12 @@
                         message: this.$t('environment.successfullyCopyed')
                     })
                 }
-            },
-            $t (message) {
-                const arr = message.split('.')
-                const str = arr[arr.length - 1] || message
-                return str.replace(/^\S/, s => s.toUpperCase())
             }
+            // $t (message) {
+            //     const arr = message.split('.')
+            //     const str = arr[arr.length - 1] || message
+            //     return str.replace(/^\S/, s => s.toUpperCase())
+            // }
         }
     }
 </script>

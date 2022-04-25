@@ -630,7 +630,7 @@
             requireRule (name) {
                 return {
                     required: true,
-                    message: name + ' is required',
+                    message: name + this.$t('isRequired'),
                     trigger: 'blur'
                 }
             },

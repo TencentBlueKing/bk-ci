@@ -11,7 +11,7 @@
                     size="18"
                     :class="computedIconClass"
                     @click.native="goToSetting"
-                    v-bk-tooltips="{ content: 'Permission denied', disabled: permission }"
+                    v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
                 ></icon>
             </template>
         </span>
