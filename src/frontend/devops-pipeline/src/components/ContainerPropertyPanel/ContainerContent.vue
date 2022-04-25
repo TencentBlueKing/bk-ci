@@ -36,7 +36,7 @@
                 <span class="bk-form-help" v-if="isPublicResourceType">{{ $t('editPage.publicResTips') }}</span>
             </form-field>
 
-            <form-field :label="$t('editPage.image')" v-if="['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)" :required="true" :is-error="errors.has('buildImageVersion') || errors.has('buildResource')" :error-msg="$t('editPage.imageErrMgs')">
+            <form-field :label="$t('editPage.image')" v-if="showImagePublicTypeList.includes(buildResourceType)" :required="true" :is-error="errors.has('buildImageVersion') || errors.has('buildResource')" :error-msg="$t('editPage.imageErrMgs')">
                 <enum-input
                     name="imageType"
                     :list="imageTypeList"
@@ -65,7 +65,7 @@
 
             <form-field
                 :label="$t('editPage.assignResource')"
-                v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !['DOCKER', 'IDC', 'PUBLIC_DEVCLOUD'].includes(buildResourceType)"
+                v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
                 :is-error="errors.has('buildResource')"
                 :error-msg="errors.first('buildResource')"
                 :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''"
