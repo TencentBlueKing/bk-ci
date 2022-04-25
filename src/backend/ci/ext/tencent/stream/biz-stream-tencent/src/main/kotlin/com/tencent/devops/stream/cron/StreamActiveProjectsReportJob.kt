@@ -132,7 +132,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
                           "jsonrpc":"2.0",
                           "id":"$timestamp"
                         }
-                    """.trimIndent(),
+                """.trimIndent(),
                 headers = mapOf(
                     "timestamp" to timestamp,
                     "techmapType" to techmapType,

@@ -369,7 +369,7 @@ include(":ext:tencent:process:biz-engine-tencent")
 include(":ext:tencent:process:biz-process-tencent")
 include(":ext:tencent:process:boot-process-tencent")
 include(":ext:tencent:process:boot-engine-tencent")
-include(":ext:tencent:process:common-pipeline-yaml")
+include(":ext:tencent:process:common-pipeline-yaml-tencent")
 
 include(":ext:tencent:dispatch")
 include(":ext:tencent:dispatch:api-dispatch-bcs")
@@ -440,7 +440,8 @@ include(":ext:tencent:openapi:biz-openapi-tencent")
 include(":ext:tencent:openapi:boot-openapi-tencent")
 include(":ext:tencent:openapi:model-openapi")
 
-include(":ext:tencent:config-server")
+include(":ext:tencent:config")
+include(":ext:tencent:config:boot-config-tencent")
 include(":ext:tencent:log:api-log-tencent")
 
 include(":ext:tencent:auth")

@@ -36,13 +36,6 @@ import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
-import com.tencent.devops.common.ci.v2.Container2
-import com.tencent.devops.common.ci.v2.IfType
-import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.JobRunsOnType
-import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -78,8 +71,15 @@ import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
-import com.tencent.devops.common.ci.v2.Container as V2Container
-import com.tencent.devops.common.ci.v2.Stage as V2Stage
+import com.tencent.devops.process.yaml.v2.models.job.Container as V2Container
+import com.tencent.devops.process.yaml.v2.models.stage.Stage as V2Stage
+import com.tencent.devops.process.yaml.v2.models.IfType
+import com.tencent.devops.process.yaml.v2.models.Variable
+import com.tencent.devops.process.yaml.v2.models.job.Container2
+import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
+import com.tencent.devops.process.yaml.v2.models.step.Step
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import org.springframework.stereotype.Component
 
 /**
