@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
@@ -1153,7 +1152,6 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.getRepoMemberInfo"])
     override fun getRepoMemberInfo(
         accessToken: String,
         userId: String,
@@ -1227,7 +1225,6 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.unlockHookLock"])
     override fun unlockHookLock(
         projectId: String?,
         repoName: String,
@@ -1312,7 +1309,6 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.getChangeFileList"])
     override fun getChangeFileList(
         token: String,
         tokenType: TokenTypeEnum,
@@ -1348,7 +1344,6 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.getRepoMemberInfo"])
     override fun getProjectGroupList(
         accessToken: String,
         page: Int?,
@@ -1553,7 +1548,6 @@ class GitService @Autowired constructor(
         }
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.addMRComment"])
     override fun addMrComment(
         token: String,
         gitProjectId: String,

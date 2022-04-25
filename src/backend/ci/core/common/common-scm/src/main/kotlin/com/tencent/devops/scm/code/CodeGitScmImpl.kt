@@ -29,7 +29,6 @@ package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
@@ -60,7 +59,6 @@ class CodeGitScmImpl constructor(
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitApiUrl, repoUrl = url)
 
-    @BkTimed(extraTags = ["function","GitApi.getBranch"])
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
         val gitBranch = gitApi.getBranch(
@@ -77,7 +75,6 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    @BkTimed(extraTags = ["function","GitApi.listBranches"])
     override fun getBranches(
         search: String?,
         page: Int,
@@ -92,7 +89,6 @@ class CodeGitScmImpl constructor(
             pageSize = pageSize
         )
 
-    @BkTimed(extraTags = ["function","GitApi.listTags"])
     override fun getTags(search: String?) =
         gitApi.listTags(
             host = apiUrl,
@@ -180,7 +176,7 @@ class CodeGitScmImpl constructor(
             )
         }
         try {
-            addwebhook(apiUrl, token, projectName, hookUrl, event)
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
             throw ScmException(
                 ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
@@ -188,15 +184,6 @@ class CodeGitScmImpl constructor(
             )
         }
     }
-
-    @BkTimed(extraTags = ["function","GitApi.addWebhook"])
-    private fun addwebhook(
-        host: String,
-        token: String,
-        projectName: String,
-        hookUrl: String,
-        event: String?,
-    ) = gitApi.addWebhook(host, token, projectName, hookUrl, event)
 
     override fun addCommitCheck(
         commitId: String,
@@ -213,7 +200,7 @@ class CodeGitScmImpl constructor(
             )
         }
         try {
-            addCommitCheck(
+            gitApi.addCommitCheck(
                 host = apiUrl,
                 token = token,
                 projectName = projectName,
@@ -232,30 +219,6 @@ class CodeGitScmImpl constructor(
         }
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.addCommitCheck"])
-    private fun addCommitCheck(
-        host: String,
-        token: String,
-        projectName: String,
-        commitId: String,
-        state: String,
-        detailUrl: String,
-        context: String,
-        description: String,
-        block: Boolean
-    ) = gitApi.addCommitCheck(
-        host = host,
-        token = token,
-        projectName = projectName,
-        commitId = commitId,
-        state = state,
-        detailUrl = detailUrl,
-        context = context,
-        description = description,
-        block = block
-    )
-
-    @BkTimed(extraTags = ["function", "GitApi.addMRComment"])
     override fun addMRComment(mrId: Long, comment: String) {
         gitApi.addMRComment(apiUrl, token, projectName, mrId, comment)
     }
@@ -268,7 +231,6 @@ class CodeGitScmImpl constructor(
         logger.info("Git can not unlock")
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.getMergeRequestChangeInfo"])
     override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
         val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/changes"
         return gitApi.getMergeRequestChangeInfo(
@@ -278,7 +240,6 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.getMrInfo"])
     override fun getMrInfo(mrId: Long): GitMrInfo {
         val url = "projects/${urlEncode(projectName)}/merge_request/$mrId"
         return gitApi.getMrInfo(
@@ -288,7 +249,6 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    @BkTimed(extraTags = ["function", "GitApi.getMrReviewInfo"])
     override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo {
         val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/review"
         return gitApi.getMrReviewInfo(
