@@ -88,7 +88,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 200
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
@@ -97,7 +97,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 200
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
