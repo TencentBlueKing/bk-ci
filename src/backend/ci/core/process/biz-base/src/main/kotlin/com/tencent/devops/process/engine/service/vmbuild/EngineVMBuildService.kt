@@ -167,6 +167,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val variables = buildVariableService.getAllVariable(projectId, buildId)
 
         var variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId)
+        val sensitiveList = mutableListOf<String>()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
@@ -212,7 +213,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             c.customBuildEnv?.map { (key, value) ->
                                 BuildParameters(
                                     key = key,
-                                    value = value.parseValue(buildInfo.projectId, contextMap),
+                                    value = value.parseValue(buildInfo.projectId, contextMap, sensitiveList),
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 )
@@ -253,7 +254,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         jobId = c.jobId,
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
-                        containerType = c.getClassType()
+                        containerType = c.getClassType(),
+                        sensitiveList = null
                     )
                 }
                 vmId++
@@ -869,28 +871,30 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
     }
 
-    private fun String.parseValue(projectId: String, context: MutableMap<String, String>): String {
+    private fun String.parseValue(
+        projectId: String,
+        context: MutableMap<String, String>,
+        sensitiveList: MutableList<String>
+    ): String {
         return ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
                 val credentialKey = CredentialContextUtils.getCredentialKey(key)
                 // 如果不是凭据上下文则直接返回原value值
-                if (credentialKey == key) return key
+                if (credentialKey == key) return null
                 val pair = DHUtil.initKey()
                 val encoder = Base64.getEncoder()
                 val credentialInfo = client.get(ServiceCredentialResource::class).get(
                     projectId = projectId,
                     credentialId = credentialKey,
                     publicKey = encoder.encodeToString(pair.publicKey)
-                ).data ?: return key
-                val valueList = CredentialContextUtils.getDecodedCredentialList(credentialInfo, pair)
+                ).data ?: return null
                 return CredentialContextUtils.getCredentialValue(
-                    valueList = valueList,
+                    valueList = CredentialContextUtils.getDecodedCredentialList(credentialInfo, pair),
                     type = credentialInfo.credentialType,
                     key = key
-                ) ?: if (doubleCurlyBraces) {
-                    "\${{$key}}"
-                } else {
-                    "\${$key}"
+                )?.let {
+                    sensitiveList.add(it)
+                    it
                 }
             }
         }, context)
