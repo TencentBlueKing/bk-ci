@@ -43,8 +43,7 @@ default_value_dict = {
     'bkCiDocsUrl': 'https://docs.bkci.net/',
     'bkCiArtifactoryRealm': 'local',
     'bkRepoHost': 'repo.demo.com',
-    'bkRepoGatewayIp': '127.0.0.1',
-    'bkCiConsulDiscoveryTag': 'devops'
+    'bkRepoGatewayIp': '127.0.0.1'
 }
 
 if os.path.isfile(default_value_json):
@@ -72,7 +71,8 @@ include_dict = {
     '__BK_CI_INFLUXDB_PASSWORD__': '{{ include "bkci.influxdbPassword" . }}',
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}',
-    '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}'
+    '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}',
+    '__BK_CI_CONSUL_DISCOVERY_TAG__':'{{ .Release.Namespace }}'
 }
 
 # 读取变量映射
@@ -122,7 +122,7 @@ for config_name in os.listdir(config_parent):
                 else:
                     line = line.replace(key, '{{ .Values.config.'+replace_dict.get(key.replace('__', ''), '')+' }}')
             new_file.write(line)
-        new_file.write('{{- end -}}')
+        new_file.write('\n{{- end -}}')
 
         new_file.flush()
         new_file.close()
