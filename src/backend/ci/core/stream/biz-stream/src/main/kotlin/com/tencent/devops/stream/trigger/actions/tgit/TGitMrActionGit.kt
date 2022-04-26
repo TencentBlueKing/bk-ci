@@ -97,7 +97,7 @@ class TGitMrActionGit(
             cred = getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
             mrId = event().object_attributes.id,
-            mrBody = QualityUtils.getQualityReport(body.reportData.first, body.reportData.second)
+            mrBody = body
         )
     }
 
