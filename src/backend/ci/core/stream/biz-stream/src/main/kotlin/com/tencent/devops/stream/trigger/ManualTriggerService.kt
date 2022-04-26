@@ -305,7 +305,7 @@ class ManualTriggerService @Autowired constructor(
             action.data.getGitProjectId(),
             ApiRequestRetryInfo(true)
         )!!.toStreamGitProjectInfoWithProject()
-        streamBasicSettingService.updateProjectInfo(action.data.eventCommon.userId, gitProjectInfo)
+        streamBasicSettingService.updateProjectInfo(action.data.getUserId(), gitProjectInfo)
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
         var params = emptyMap<String, String>()

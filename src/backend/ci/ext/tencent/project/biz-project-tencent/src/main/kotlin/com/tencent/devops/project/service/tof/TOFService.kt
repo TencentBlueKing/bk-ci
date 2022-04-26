@@ -67,7 +67,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * API
- * http://open.oa.com/esb/docs/ieod/system/tof/
+ * /esb/docs/ieod/system/tof/
  */
 @Service
 class TOFService @Autowired constructor(

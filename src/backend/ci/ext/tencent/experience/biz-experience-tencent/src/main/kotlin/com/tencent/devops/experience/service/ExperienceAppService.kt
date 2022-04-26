@@ -342,6 +342,8 @@ class ExperienceAppService(
 
     fun downloadUrl(userId: String, experienceHashId: String, organization: String?): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        // 移除红点
+        removeRedPoint(userId, experienceId)
         return experienceDownloadService.getExternalDownloadUrl(
             userId = userId,
             experienceId = experienceId,
