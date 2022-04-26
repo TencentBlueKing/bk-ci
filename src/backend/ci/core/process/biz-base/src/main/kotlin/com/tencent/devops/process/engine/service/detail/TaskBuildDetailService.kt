@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.detail
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -274,7 +275,7 @@ class TaskBuildDetailService(
                                 e.version = taskVersion
                             }
                             else -> {
-                                e.version = "1.0.0"
+                                e.version = INIT_VERSION
                             }
                         }
                     }
