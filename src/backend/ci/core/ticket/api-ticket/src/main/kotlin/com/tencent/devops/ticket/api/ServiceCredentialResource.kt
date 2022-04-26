@@ -27,15 +27,10 @@
 
 package com.tencent.devops.ticket.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
 import com.tencent.devops.ticket.pojo.CredentialInfo
@@ -161,23 +156,4 @@ interface ServiceCredentialResource {
         @ApiParam("凭据", required = true)
         credential: CredentialUpdate
     ): Result<Boolean>
-
-    @ApiOperation("获取跨项目凭据")
-    @Path("/projects/{projectId}/credentials/{credentialId}/across/")
-    @GET
-    fun getAcrossProject(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("凭据ID", required = true)
-        @PathParam("credentialId")
-        credentialId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("targetProjectId")
-        targetProjectId: String,
-        @ApiParam("Base64编码的加密公钥", required = true)
-        @QueryParam("publicKey")
-        @BkField(required = true)
-        publicKey: String
-    ): Result<CredentialInfo?>
 }
