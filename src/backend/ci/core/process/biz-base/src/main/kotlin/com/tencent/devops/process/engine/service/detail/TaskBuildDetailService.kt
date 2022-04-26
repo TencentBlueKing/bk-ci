@@ -241,6 +241,7 @@ class TaskBuildDetailService(
         buildId: String,
         taskId: String,
         buildStatus: BuildStatus,
+        taskVersion: String? = null,
         errorType: ErrorType? = null,
         errorCode: Int? = null,
         errorMsg: String? = null
@@ -264,7 +265,20 @@ class TaskBuildDetailService(
                         e.errorCode = errorCode
                         e.errorMsg = errorMsg
                     }
+                    if (taskVersion != null) {
+                        when (e) {
+                            is MarketBuildAtomElement -> {
+                                e.version = taskVersion
+                            }
+                            is MarketBuildLessAtomElement -> {
+                                e.version = taskVersion
+                            }
+                            else -> {
+                                e.version = "1.0.0"
+                            }
+                        }
 
+                    }
                     var elementElapsed = 0L
                     run lit@{
                         val elements = c.elements

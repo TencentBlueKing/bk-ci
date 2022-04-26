@@ -343,6 +343,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         if (queryOfflineFlag) {
             atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
+            atomStatusList?.add(AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()) // 存在测试插件取消发布的情形
         }
         val pipelineAtomRecord = if (projectCode != null) {
             atomDao.getPipelineAtom(

@@ -136,7 +136,7 @@ open class MarketAtomTask : ITask() {
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
             )
-
+        buildTask.elementVersion = atomData.version
         // val atomWorkspace = File("${workspace.absolutePath}/${atomCode}_${buildTask.taskId}_data")
         val atomTmpSpace = Files.createTempDirectory("${atomCode}_${buildTask.taskId}_data").toFile()
 
