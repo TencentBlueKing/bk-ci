@@ -61,5 +61,7 @@ data class AtomResult(
     val qualityData: Map<String, Map<String, Any>>?,
     val errorType: Int?,
     val errorCode: Int?,
+    val platformCode: String? = null, // 对接平台代码
+    val platformErrorCode: Int? = null, // 对接平台错误码
     val monitorData: Map<String, Any>? = null
 )
