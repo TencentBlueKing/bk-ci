@@ -2,10 +2,10 @@
     <div class="stage-steps">
         <template v-for="step in steps">
             <span v-if="step.tooltip" v-bk-tooltips="step.tooltip" :class="`stage-step ${step.statusCls}`" :key="step.icon">
-                <logo :class="`step-icon ${step.statusCls}`" :name="step.icon" size="16" />
+                <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
             </span>
             <span v-else :class="`stage-step ${step.statusCls}`" :key="step.icon">
-                <logo :class="`step-icon ${step.statusCls}`" :name="step.icon" size="16" />
+                <logo :class="`step-icon ${step.statusCls} ${getRunningCls(step.statusCls)}`" :name="step.icon" size="16" />
             </span>
         </template>
     </div>
@@ -23,6 +23,11 @@
                 type: Array,
                 default: () => []
             }
+        },
+        methods: {
+          getRunningCls (statusCls) {
+            return statusCls === 'RUNNING' ? ' spin-icon' : '';
+          }
         }
     }
 </script>
