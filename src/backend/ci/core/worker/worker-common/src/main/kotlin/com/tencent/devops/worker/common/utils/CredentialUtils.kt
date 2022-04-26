@@ -106,7 +106,7 @@ object CredentialUtils {
                 sdkApi.getAcrossProject(acrossProjectId, credentialId, encoder.encodeToString(pair.publicKey))
             if (acrossResult.isNotOk() || acrossResult.data == null) {
                 logger.error("Fail to get the across project($acrossProjectId) " +
-                                 "credential($credentialId) because of ${result.message}")
+                    "credential($credentialId) because of ${result.message}")
                 throw NotFoundException(result.message!!)
             }
             return acrossResult
