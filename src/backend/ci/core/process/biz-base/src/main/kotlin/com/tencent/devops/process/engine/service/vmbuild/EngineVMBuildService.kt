@@ -871,7 +871,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
     private fun String.parseValue(projectId: String, context: MutableMap<String, String>): String {
         return ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String {
                 val credentialKey = CredentialContextUtils.getCredentialKey(key)
                 // 如果不是凭据上下文则直接返回原value值
                 if (credentialKey == key) return key
@@ -887,7 +887,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     valueList = valueList,
                     type = credentialInfo.credentialType,
                     key = key
-                )
+                ) ?: if (doubleCurlyBraces) {
+                    "\${{$key}}"
+                } else {
+                    "\${$key}"
+                }
             }
         }, context)
     }
