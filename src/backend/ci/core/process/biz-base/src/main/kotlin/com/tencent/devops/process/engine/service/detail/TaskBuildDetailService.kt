@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service.detail
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
@@ -50,10 +49,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
 @Service
