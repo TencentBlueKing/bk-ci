@@ -255,7 +255,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
                         containerType = c.getClassType(),
-                        sensitiveList = null
+                        sensitiveList = sensitiveList
                     )
                 }
                 vmId++
@@ -877,13 +877,15 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
     private fun String.parseValue(
         projectId: String,
-        context: MutableMap<String, String>,
+        context: Map<String, String>,
         sensitiveList: MutableList<String>
     ): String {
         return ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
             override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                val credentialKey = CredentialContextUtils.getCredentialKey(key)
+                // 支持嵌套的二次替换
+                context[key]?.let { return it }
                 // 如果不是凭据上下文则直接返回原value值
+                val credentialKey = CredentialContextUtils.getCredentialKey(key)
                 if (credentialKey == key) return null
                 val pair = DHUtil.initKey()
                 val encoder = Base64.getEncoder()
