@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
@@ -37,10 +36,12 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectInfo
+import com.tencent.devops.stream.trigger.pojo.MrCommentBody
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
+import com.tencent.devops.scm.pojo.MrCommentBody as ScmMrCommentBody
 
 @Primary
 @Service
@@ -114,13 +115,12 @@ class TXTGitApiService @Autowired constructor(
         }.map { TGitChangeFileInfo(it) }
     }
 
-    override fun addMrComment(cred: TGitCred, gitProjectId: String, mrId: Long, mrBody: String) {
-        return client.get(ServiceGitResource::class).addMrComment(
+    override fun addMrComment(cred: TGitCred, gitProjectId: String, mrId: Long, mrBody: MrCommentBody) {
+        return client.getScm(ServiceGitCiResource::class).addMrComment(
             token = streamTriggerTokenService.getGitProjectToken(gitProjectId) ?: cred.toToken(),
             gitProjectId = gitProjectId,
             mrId = mrId,
-            mrBody = mrBody,
-            tokenType = cred.toTokenType()
+            mrBody = ScmMrCommentBody(mrBody.reportData)
         )
     }
 }
