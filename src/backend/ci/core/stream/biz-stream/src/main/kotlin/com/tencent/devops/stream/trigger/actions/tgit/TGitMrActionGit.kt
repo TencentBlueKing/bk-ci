@@ -67,7 +67,6 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.service.GitCheckService
 import com.tencent.devops.stream.trigger.service.StreamTriggerTokenService
-import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.StreamCommonUtils
 import org.slf4j.LoggerFactory
 import java.util.Base64
@@ -97,7 +96,7 @@ class TGitMrActionGit(
             cred = getGitCred(),
             gitProjectId = data.eventCommon.gitProjectId,
             mrId = event().object_attributes.id,
-            mrBody = QualityUtils.getQualityReport(body.reportData.first, body.reportData.second)
+            mrBody = body
         )
     }
 
@@ -409,7 +408,7 @@ class TGitMrActionGit(
             sourceBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
             targetBranch = TGitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
             changeSet = data.context.changeSet?.toSet(),
-            userId = data.eventCommon.userId,
+            userId = data.getUserId(),
             mrAction = mrAction
         )
         val params = TGitActionCommon.getStartParams(

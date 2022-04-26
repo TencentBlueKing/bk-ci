@@ -54,6 +54,8 @@ import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitProjectUserInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitRevisionInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitTreeFileInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitUserInfo
+import com.tencent.devops.stream.trigger.pojo.MrCommentBody
+import com.tencent.devops.stream.util.QualityUtils
 import com.tencent.devops.stream.util.RetryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -365,13 +367,14 @@ class TGitApiService @Autowired constructor(
         cred: TGitCred,
         gitProjectId: String,
         mrId: Long,
-        mrBody: String
+        mrBody: MrCommentBody
     ) {
+        // 暂时无法兼容，服务间调用 mrBody 字符串转义存在问题
         return client.get(ServiceGitResource::class).addMrComment(
             token = cred.toToken(),
             gitProjectId = gitProjectId,
             mrId = mrId,
-            mrBody = mrBody,
+            mrBody = QualityUtils.getQualityReport(mrBody.reportData.first, mrBody.reportData.second),
             tokenType = cred.toTokenType()
         )
     }

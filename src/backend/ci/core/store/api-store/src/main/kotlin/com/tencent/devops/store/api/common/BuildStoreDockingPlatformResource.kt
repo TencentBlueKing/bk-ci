@@ -25,20 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.builds
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-data class CompleteTask(
-    val projectId: String,
-    val buildId: String,
-    val taskId: String,
-    val userId: String,
-    val buildStatus: BuildStatus, // 构建任务结束状态
-    val errorType: ErrorType? = null,
-    val errorCode: Int? = null,
-    val errorMsg: String? = null,
-    val platformCode: String? = null, // 对接平台代码
-    val platformErrorCode: Int? = null // 对接平台错误码
-)
+@Api(tags = ["BUILD_STORE_DOCKING_PLATFORM"], description = "BUILD-STORE-对接平台")
+@Path("/build/store/docking/platforms")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildStoreDockingPlatformResource {
+
+    @ApiOperation("添加store组件对接平台")
+    @Path("/types/{storeType}/codes/{storeCode}/add")
+    @POST
+    fun addStoreDockingPlatforms(
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @ApiParam("组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("平台列表集合")
+        platformCodes: Set<String>
+    ): Result<Boolean>
+}
