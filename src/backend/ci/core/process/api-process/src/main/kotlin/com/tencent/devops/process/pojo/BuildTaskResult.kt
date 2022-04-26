@@ -52,6 +52,10 @@ data class BuildTaskResult(
     val errorType: String? = null,
     @ApiModelProperty("错误码标识", required = false)
     val errorCode: Int? = null,
+    @ApiModelProperty("对接平台代码", required = false)
+    val platformCode: String? = null,
+    @ApiModelProperty("对接平台错误码", required = false)
+    val platformErrorCode: Int? = null,
     @ApiModelProperty("插件监控数据", required = false)
     val monitorData: Map<String, Any>? = null
 )
