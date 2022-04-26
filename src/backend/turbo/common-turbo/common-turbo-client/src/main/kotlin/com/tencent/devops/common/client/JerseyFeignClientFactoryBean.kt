@@ -83,7 +83,7 @@ class JerseyFeignClientFactoryBean(
                 val codeccRegex = Regex(codeccPackagePath)
                 val devopsRegex = Regex(devopsPackagePath)
                 val matches = codeccRegex.find(packageName) ?: devopsRegex.find(packageName)
-                ?: throw ClientException("无法根据接口[$packageName]分析所属的服务")
+                ?: throw ClientException("can not find service according to package [$packageName]")
                 matches.groupValues[1]
             }
         }

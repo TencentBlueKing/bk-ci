@@ -48,6 +48,8 @@ buildscript {
         ciVersion = "1.5.8-RELEASE"
         jsonVersion = "20180130"
         log4jVersion = "2.17.1"
+        fastjsonVersion = "1.2.76"
+        springMessagingVersion = "4.3.17.RELEASE"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -287,6 +289,8 @@ subprojects {
                 entry "log4j-core"
                 entry "log4j-slf4j-impl"
             }
+            dependency  "com.alibaba:fastjson:$fastjsonVersion"
+            dependency  "org.springframework:spring-messaging:$springMessagingVersion"
         }
     }
 

@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -345,16 +344,17 @@ class PipelineTaskService @Autowired constructor(
     fun updateTaskStatusInfo(
         transactionContext: DSLContext?,
         userId: String? = null,
-        projectId: String,
-        buildId: String,
-        taskId: String,
-        taskStatus: BuildStatus
+        updateTaskInfo: UpdateTaskInfo
     ) {
         var starter: String? = null
         var approver: String? = null
         var startTime: LocalDateTime? = null
         var endTime: LocalDateTime? = null
         var totalTime: Long? = null
+        val projectId = updateTaskInfo.projectId
+        val buildId = updateTaskInfo.buildId
+        val taskId = updateTaskInfo.taskId
+        val taskStatus = updateTaskInfo.taskStatus!!
         val taskRecord = pipelineBuildTaskDao.get(
             dslContext = transactionContext ?: dslContext,
             projectId = projectId,
@@ -388,19 +388,13 @@ class PipelineTaskService @Autowired constructor(
                 starter = userId
             }
         }
-        val updateTaskInfo = UpdateTaskInfo(
-            taskStatus = taskStatus,
-            starter = starter,
-            approver = approver,
-            startTime = startTime,
-            endTime = endTime,
-            totalTime = totalTime
-        )
+        updateTaskInfo.starter = starter
+        updateTaskInfo.approver = approver
+        updateTaskInfo.startTime = startTime
+        updateTaskInfo.endTime = endTime
+        updateTaskInfo.totalTime = totalTime
         pipelineBuildTaskDao.updateTaskInfo(
             dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
             updateTaskInfo = updateTaskInfo
         )
     }
@@ -642,7 +636,9 @@ class PipelineTaskService @Autowired constructor(
         buildStatus: BuildStatus,
         errorType: ErrorType? = null,
         errorCode: Int? = null,
-        errorMsg: String? = null
+        errorMsg: String? = null,
+        platformCode: String? = null,
+        platformErrorCode: Int? = null
     ) {
         val taskStatus = BuildStatusSwitcher.taskStatusMaker.switchByErrorCode(buildStatus, errorCode)
         val projectId = task.projectId
@@ -653,22 +649,21 @@ class PipelineTaskService @Autowired constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
-            updateTaskStatusInfo(
-                transactionContext = transactionContext,
-                taskStatus = taskStatus,
-                userId = userId,
-                projectId = projectId,
-                buildId = buildId,
-                taskId = taskId
-            )
-            if (errorType != null) setTaskErrorInfo(
-                transactionContext = transactionContext,
+            val updateTaskInfo = UpdateTaskInfo(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = taskId,
+                taskStatus = taskStatus,
                 errorType = errorType,
-                errorCode = errorCode ?: ErrorCode.PLUGIN_DEFAULT_ERROR,
-                errorMsg = errorMsg ?: ""
+                errorCode = errorCode,
+                errorMsg = errorMsg,
+                platformCode = platformCode,
+                platformErrorCode = platformErrorCode
+            )
+            updateTaskStatusInfo(
+                transactionContext = transactionContext,
+                userId = userId,
+                updateTaskInfo = updateTaskInfo
             )
         }
         // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新

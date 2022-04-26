@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -605,12 +606,15 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
-            pipelineTaskService.updateTaskStatusInfo(
-                transactionContext = null,
+            val updateTaskInfo = UpdateTaskInfo(
                 projectId = projectId,
                 buildId = buildId,
                 taskId = updateTaskStatusInfo.taskId,
                 taskStatus = updateTaskStatusInfo.buildStatus
+            )
+            pipelineTaskService.updateTaskStatusInfo(
+                transactionContext = null,
+                updateTaskInfo = updateTaskInfo
             )
             if (!updateTaskStatusInfo.message.isNullOrBlank()) {
                 buildLogPrinter.addLine(
@@ -628,7 +632,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 

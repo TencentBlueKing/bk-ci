@@ -74,14 +74,14 @@ object Runner {
         val buildVariables = EngineService.setStarted()
         var failed = false
         try {
-            // 上报agent启动给quota
-            QuotaService.addRunningAgent(buildVariables)
             SensitiveValueService.addSensitiveValues(buildVariables.sensitiveList)
             BuildEnv.setBuildId(buildVariables.buildId)
 
             workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
 
             try {
+                // 上报agent启动给quota
+                QuotaService.addRunningAgent(buildVariables)
                 // 开始轮询
                 failed = loopPickup(workspacePathFile, buildVariables)
             } catch (ignore: Throwable) {
