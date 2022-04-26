@@ -184,12 +184,6 @@ class TaskBuildDetailService(
                         e.errorType = null
                         e.errorCode = null
                         e.errorMsg = null
-                        e.version = findTaskVersion(
-                            projectId = projectId,
-                            atomCode = e.getAtomCode(),
-                            atomVersion = e.version,
-                            atomClass = e.getClassType()
-                        )
                         update = true
                         return Traverse.BREAK
                     }
