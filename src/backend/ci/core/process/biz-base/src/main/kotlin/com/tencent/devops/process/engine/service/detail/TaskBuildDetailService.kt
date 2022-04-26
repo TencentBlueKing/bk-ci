@@ -277,7 +277,6 @@ class TaskBuildDetailService(
                                 e.version = "1.0.0"
                             }
                         }
-
                     }
                     var elementElapsed = 0L
                     run lit@{
