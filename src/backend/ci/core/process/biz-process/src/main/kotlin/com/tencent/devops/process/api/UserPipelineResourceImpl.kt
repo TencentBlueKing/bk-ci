@@ -67,7 +67,7 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
-import com.tencent.devops.common.service.prometheus.BkTimed
+import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -477,7 +477,7 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineListFacadeService.listViewAndPipelines(userId, projectId, page, pageSize))
     }
 
-    @BkTimed
+    @Timed
     override fun listViewPipelines(
         userId: String,
         projectId: String,
