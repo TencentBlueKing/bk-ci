@@ -617,7 +617,7 @@ func scanArgs(args []string, sandbox *dcSyscall.Sandbox) (*ccArgs, error) {
 	if seenGcov {
 		if gcovFile, _ := outputFromSource(r.outputFile, ".gcno"); gcovFile != "" {
 			r.additionOutputFile = append(r.additionOutputFile, gcovFile)
-			if seenFprofileDir && seenOptionC {
+			if seenFprofileDir {
 				if !filepath.IsAbs(gcovFile) {
 					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
 				}
@@ -978,7 +978,7 @@ func getOutputFile(args []string, sandbox *dcSyscall.Sandbox) []string {
 	if outputFile != "" && seenGcov {
 		if gcovFile, _ := outputFromSource(outputFile, ".gcno"); gcovFile != "" {
 			r = append(r, gcovFile)
-			if seenFprofileDir && seenOptionC {
+			if seenFprofileDir {
 				if !filepath.IsAbs(gcovFile) {
 					gcovFile = filepath.Join(sandbox.Dir, gcovFile)
 				}
