@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
@@ -42,7 +43,11 @@ class RemoteServiceExceptionMapper : ExceptionMapper<RemoteServiceException> {
     }
 
     override fun toResponse(exception: RemoteServiceException): Response {
-        logger.error("Failed with remote service exception: ", exception)
+        if (exception.httpStatus >= HTTP_500) {
+            logger.error("Failed with remote service exception: ", exception)
+        } else {
+            logger.warn("remote service exception: ", exception)
+        }
         return Response.status(exception.httpStatus).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result<Void>(exception.errorCode ?: exception.httpStatus, exception.errorMessage)).build()
     }

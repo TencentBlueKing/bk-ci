@@ -30,15 +30,23 @@ package com.tencent.devops.stream.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.BuildStreamResource
-import com.tencent.devops.stream.service.GitCIBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
-class BuildStreamResourceImpl @Autowired constructor(
-    private val buildService: GitCIBuildService
-) : BuildStreamResource {
+class BuildStreamResourceImpl : BuildStreamResource {
+
+    @Value("\${gitci.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
+    @Value("\${devopsGateway.host:#{null}}")
+    private val gateway: String? = null
 
     override fun getUrl(projectId: String): Result<String?> {
-        return Result(buildService.getCIUrl(projectId))
+        val result = if (projectId.startsWith("git_")) {
+            v2GitUrl
+        } else {
+            gateway
+        }
+        return Result(result)
     }
 }

@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -51,18 +52,20 @@ import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
+import com.tencent.devops.process.engine.control.lock.StageMatrixLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
-import kotlin.math.min
+import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
+import com.tencent.devops.process.utils.PIPELINE_STAGE_CONTAINERS_COUNT_MAX
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import kotlin.math.min
 
 /**
  * Stage计算构建矩阵事件命令处理
@@ -84,7 +87,8 @@ class InitializeMatrixGroupStageCmd(
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val redisOperation: RedisOperation
 ) : ContainerCmd {
 
     companion object {
@@ -112,7 +116,12 @@ class InitializeMatrixGroupStageCmd(
                 executeCount = commandContext.executeCount
             )
             commandContext.buildStatus = BuildStatus.RUNNING
-            generateMatrixGroup(commandContext, parentContainer)
+            val stageLock = StageMatrixLock(redisOperation, parentContainer.buildId, parentContainer.stageId)
+            stageLock.use {
+                // #6440 只有一个stage下出现多个时需要进行并发锁
+                if (commandContext.stageMatrixCount > 1) it.lock()
+                generateMatrixGroup(commandContext, parentContainer)
+            }
         } catch (ignore: Throwable) {
             LOG.error("ENGINE|${parentContainer.buildId}|MATRIX_CONTAINER_INIT_FAILED|" +
                 "matrix(${parentContainer.containerId})|" +
@@ -359,17 +368,34 @@ class InitializeMatrixGroupStageCmd(
         matrixOption.totalCount = groupContainers.size
         matrixOption.maxConcurrency = min(
             matrixOption.maxConcurrency ?: PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT,
-            PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX
+            PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
         )
 
         LOG.info("ENGINE|${event.buildId}|${event.source}|INIT_MATRIX_CONTAINER" +
             "|${event.stageId}|${modelContainer.id}|containerHashId=" +
             "${modelContainer.containerHashId}|context=$context|" +
-            "groupContainers=$groupContainers|buildTaskList=$buildTaskList")
+            "groupJobSize=${groupContainers.size}|taskSize=${buildTaskList.size}")
 
         // 在表中增加所有分裂的矩阵和插件
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
+            // #6440 进行已有总容器数量判断，如果大于单个stage下的job数量则分裂出错
+            val currentCount = pipelineContainerService.countStageContainers(
+                transactionContext = transactionContext,
+                projectId = parentContainer.projectId,
+                buildId = parentContainer.buildId,
+                stageId = parentContainer.stageId,
+                onlyMatrixGroup = false
+            )
+            val count = currentCount + groupContainers.size - commandContext.stageMatrixCount
+            LOG.info("ENGINE|${event.buildId}|${event.source}|CHECK_CONTAINER_COUNT" +
+                "|${event.stageId}|${modelContainer.id}|containerHashId=" +
+                "${modelContainer.containerHashId}|currentCount=$currentCount|" +
+                "countResult=$count")
+            if (count > PIPELINE_STAGE_CONTAINERS_COUNT_MAX) {
+                throw InvalidParamException("The number of containers($count) in stage(${parentContainer.stageId})" +
+                    " exceeds the limit[$PIPELINE_STAGE_CONTAINERS_COUNT_MAX]")
+            }
             pipelineContainerService.batchSave(transactionContext, buildContainerList)
             pipelineTaskService.batchSave(transactionContext, buildTaskList)
         }
@@ -574,9 +600,9 @@ class InitializeMatrixGroupStageCmd(
 
     private fun checkAndFetchOption(option: MatrixControlOption?): MatrixControlOption {
         if (option == null) throw DependNotFoundException("matrix option not found")
-        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX) {
+        if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException("matrix maxConcurrency(${option.maxConcurrency}) " +
-                "is larger than $PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_MAX")
+                "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX")
         }
         return option
     }

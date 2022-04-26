@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext

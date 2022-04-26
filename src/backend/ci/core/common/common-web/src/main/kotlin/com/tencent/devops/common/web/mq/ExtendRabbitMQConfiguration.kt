@@ -28,7 +28,6 @@
 package com.tencent.devops.common.web.mq
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.web.mq.property.ExtendRabbitMQProperties
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
@@ -51,25 +50,18 @@ class ExtendRabbitMQConfiguration {
 
     @Value("\${spring.rabbitmq.extend.virtual-host}")
     private val virtualHost: String? = null
-
     @Value("\${spring.rabbitmq.extend.username}")
     private val username: String? = null
-
     @Value("\${spring.rabbitmq.extend.password}")
     private val password: String? = null
-
     @Value("\${spring.rabbitmq.extend.addresses}")
     private val addresses: String? = null
-
     @Value("\${spring.rabbitmq.extend.listener.simple.concurrency:#{null}}")
     private var concurrency: Int? = null
-
     @Value("\${spring.rabbitmq.extend.listener.simple.max-concurrency:#{null}}")
     private var maxConcurrency: Int? = null
-
     @Value("\${spring.rabbitmq.extend.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
-
     @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
     private val preFetchCount: Int? = null
 

@@ -666,7 +666,7 @@
         position: relative;
     }
     ::-webkit-input-placeholder{
-        color: $fontLigtherColor;
+        color: $fontLighterColor;
     }
     .bk-sideslider-wrapper {
         top: 0;
@@ -714,7 +714,7 @@
                     height: 36px;
                     padding: 0 12px;
                     line-height: 36px;
-                    border: 1px solid $fontLigtherColor;
+                    border: 1px solid $fontLighterColor;
                     border-radius: 2px;
                     outline: none;
                     font-size: 14px;
@@ -794,7 +794,7 @@
                 font-size: 0;
                 .devops-icon {
                     font-size: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                 }
                 .group-card-icon,
                 .group-card-edit-icon {
@@ -923,7 +923,7 @@
             }
             .icon-more {
                 margin-left: -6px;
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
                 vertical-align: middle;
             }
         }

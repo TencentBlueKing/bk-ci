@@ -53,5 +53,7 @@ data class IndexAppInfoVO(
     @ApiModelProperty("上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
     @ApiModelProperty("外部链接", required = false)
-    val externalUrl: String
+    val externalUrl: String,
+    @ApiModelProperty("版本体验版本号", required = true)
+    val version: String
 )

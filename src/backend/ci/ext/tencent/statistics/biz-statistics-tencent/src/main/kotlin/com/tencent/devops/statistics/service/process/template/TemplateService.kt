@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -65,7 +66,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class TemplateService @Autowired constructor(
@@ -192,7 +192,6 @@ class TemplateService @Autowired constructor(
      * 从listTemplate与listTemplateByProjectIds中抽取出的公共方法
      * 填充基础模板的其他附加信息
      */
-    @Suppress("NestedBlockDepth")
     fun fillResult(
         context: DSLContext,
         templates: Result<out Record>?,
@@ -203,22 +202,28 @@ class TemplateService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         keywords: String? = null,
-        result: ArrayList<TemplateModel>
+        result: ArrayList<TemplateModel>,
+        projectId: String? = null
     ) {
         if (templates == null || templates.isEmpty()) {
             // 如果查询模板列表为空，则不再执行后续逻辑
             return
         }
         val templateIdList = mutableSetOf<String>()
-        val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, context)
+        val srcTemplates = getConstrainedSrcTemplates(context, templates, templateIdList)
 
-        val settings = pipelineSettingDao.getSettings(context, templateIdList).map { it.pipelineId to it }.toMap()
+        val settings = pipelineSettingDao.getSettings(
+            dslContext = context,
+            pipelineIds = templateIdList,
+            projectId = projectId
+        ).map { it.pipelineId to it }.toMap()
         templates.forEach { record ->
-            val templateId = record["templateId"] as String
-            val type = record["templateType"] as String
+            val tTemplate = TTemplate.T_TEMPLATE
+            val templateId = record[tTemplate.ID]
+            val type = record[tTemplate.TYPE]
 
             val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
-                val srcTemplateId = record["srcTemplateId"] as String
+                val srcTemplateId = record[tTemplate.SRC_TEMPLATE_ID]
                 srcTemplates?.get(srcTemplateId)
             } else {
                 record
@@ -230,23 +235,24 @@ class TemplateService @Autowired constructor(
                     defaultMessage = "模板不存在"
                 )
             } else {
-                val modelStr = templateRecord["template"] as String
-                val version = templateRecord["version"] as Long
-                val createdTime = templateRecord["createdTime"] as LocalDateTime
+                val modelStr = templateRecord[tTemplate.TEMPLATE] as String
+                val version = templateRecord[tTemplate.VERSION] as Long
                 val model: Model = objectMapper.readValue(modelStr)
 
                 val setting = settings[templateId]
                 val templateName = setting?.name ?: model.name
 
                 // 根据keywords搜索过滤
-                if (!keywords.isNullOrBlank() && !templateName.contains(keywords!!)) return@forEach
-
-                val associateCodes = listAssociateCodes(record["projectId"] as String, model)
+                if (!keywords.isNullOrBlank() && !templateName.contains(keywords)) return@forEach
+                val templateProjectId = record[tTemplate.PROJECT_ID] as String
+                val associateCodes = listAssociateCodes(templateProjectId, model)
                 val associatePipeline =
                     templatePipelineDao.listPipeline(
-                        context,
-                        PipelineInstanceTypeEnum.CONSTRAINT.type,
-                        setOf(templateId)
+                        dslContext = context,
+                        projectId = templateProjectId,
+                        instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
+                        templateIds = setOf(templateId),
+                        deleteFlag = false
                     )
 
                 val pipelineIds = associatePipeline.map { PipelineId(it.pipelineId) }
@@ -255,7 +261,7 @@ class TemplateService @Autowired constructor(
 
                 run lit@{
                     associatePipeline.forEach {
-                        if (it.createdTime < createdTime) {
+                        if (it.version != version) {
                             logger.info("The pipeline ${it.pipelineId} need to upgrade from ${it.version} to $version")
                             hasInstances2Upgrade = true
                             return@lit
@@ -263,17 +269,17 @@ class TemplateService @Autowired constructor(
                     }
                 }
 
-                val logoUrl = record["logoUrl"] as? String
+                val logoUrl = record[tTemplate.LOGO_URL]
                 result.add(
                     TemplateModel(
                         name = templateName,
                         templateId = templateId,
                         version = version,
-                        versionName = templateRecord["versionName"] as String,
+                        versionName = templateRecord[tTemplate.VERSION_NAME],
                         templateType = type,
                         templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
                         logoUrl = logoUrl ?: "",
-                        storeFlag = record["storeFlag"] as Boolean,
+                        storeFlag = record[tTemplate.STORE_FLAG],
                         associateCodes = associateCodes,
                         associatePipelines = pipelineIds,
                         hasInstance2Upgrade = hasInstances2Upgrade,
@@ -294,7 +300,14 @@ class TemplateService @Autowired constructor(
     ): OptionalTemplateList {
         logger.info("[$projectId|$templateType|$page|$pageSize] List template")
         val result = mutableMapOf<String, OptionalTemplate>()
-        val templateCount = templateDao.countTemplate(dslContext, projectId, true, templateType, null, null)
+        val templateCount = templateDao.countTemplate(
+            dslContext = dslContext,
+            projectId = projectId,
+            includePublicFlag = true,
+            templateType = templateType,
+            templateName = null,
+            storeFlag = null
+        )
         val templates = templateDao.listTemplate(
             dslContext = dslContext,
             projectId = projectId,
@@ -303,7 +316,8 @@ class TemplateService @Autowired constructor(
             templateIdList = templateIds,
             storeFlag = null,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            queryModelFlag = true
         )
         if (templates == null || templates.isEmpty()) {
             // 如果查询模板列表为空，则不再执行后续逻辑
@@ -315,35 +329,44 @@ class TemplateService @Autowired constructor(
             )
         }
         val templateIdList = mutableSetOf<String>()
-        val srcTemplates = getConstrainedSrcTemplates(templates, templateIdList, dslContext)
+        val srcTemplates = getConstrainedSrcTemplates(
+            context = dslContext,
+            templates = templates,
+            templateIdList = templateIdList,
+            queryModelFlag = true
+        )
 
-        val settings = pipelineSettingDao.getSettings(dslContext, templateIdList).map { it.pipelineId to it }.toMap()
+        val settings = pipelineSettingDao.getSettings(
+            dslContext = dslContext,
+            pipelineIds = templateIdList,
+            projectId = projectId
+        ).map { it.pipelineId to it }.toMap()
+        val tTemplate = TTemplate.T_TEMPLATE
         templates.forEach { record ->
-            val templateId = record["templateId"] as String
-            val type = record["templateType"] as String
-
+            val templateId = record[tTemplate.ID]
+            val type = record[tTemplate.TYPE]
+            val srcTemplateId = record[tTemplate.SRC_TEMPLATE_ID]
             val templateRecord = if (type == TemplateType.CONSTRAINT.name) {
-                val srcTemplateId = record["srcTemplateId"] as String
                 srcTemplates?.get(srcTemplateId)
             } else {
                 record
             }
 
             if (templateRecord != null) {
-                val modelStr = templateRecord["template"] as String
-                val version = templateRecord["version"] as Long
+                val modelStr = templateRecord[tTemplate.TEMPLATE]
+                val version = templateRecord[tTemplate.VERSION] as Long
 
                 val model: Model = objectMapper.readValue(modelStr)
                 val setting = settings[templateId]
-                val logoUrl = record["logoUrl"] as? String
-                val categoryStr = record["category"] as? String
-                val key = if (type == TemplateType.CONSTRAINT.name) record["srcTemplateId"] as String else templateId
+                val logoUrl = record[tTemplate.LOGO_URL]
+                val categoryStr = record[tTemplate.CATEGORY]
+                val key = if (type == TemplateType.CONSTRAINT.name) srcTemplateId else templateId
                 result[key] = OptionalTemplate(
                     name = setting?.name ?: model.name,
                     templateId = templateId,
-                    projectId = templateRecord["projectId"] as String,
+                    projectId = templateRecord[tTemplate.PROJECT_ID],
                     version = version,
-                    versionName = templateRecord["versionName"] as String,
+                    versionName = templateRecord[tTemplate.VERSION_NAME],
                     templateType = type,
                     templateTypeDesc = TemplateType.getTemplateTypeDesc(type),
                     logoUrl = logoUrl ?: "",
@@ -363,16 +386,18 @@ class TemplateService @Autowired constructor(
     }
 
     private fun getConstrainedSrcTemplates(
+        context: DSLContext,
         templates: Result<out Record>?,
         templateIdList: MutableSet<String>,
-        context: DSLContext
+        queryModelFlag: Boolean = true
     ): Map<String, Record>? {
         val constrainedTemplateList = mutableListOf<String>()
+        val tTemplate = TTemplate.T_TEMPLATE
         templates?.forEach { template ->
-            if ((template["templateType"] as String) == TemplateType.CONSTRAINT.name) {
-                constrainedTemplateList.add(template["srcTemplateId"] as String)
+            if (template[tTemplate.TYPE] == TemplateType.CONSTRAINT.name) {
+                constrainedTemplateList.add(template[tTemplate.SRC_TEMPLATE_ID])
             }
-            templateIdList.add(template["templateId"] as String)
+            templateIdList.add(template[tTemplate.ID])
         }
         val srcTemplateRecords = if (constrainedTemplateList.isNotEmpty()) templateDao.listTemplate(
             dslContext = context,
@@ -382,9 +407,10 @@ class TemplateService @Autowired constructor(
             templateIdList = constrainedTemplateList,
             storeFlag = null,
             page = null,
-            pageSize = null
+            pageSize = null,
+            queryModelFlag = queryModelFlag
         ) else null
-        return srcTemplateRecords?.associateBy { it["templateId"] as String }
+        return srcTemplateRecords?.associateBy { it[tTemplate.ID] }
     }
 
     /**

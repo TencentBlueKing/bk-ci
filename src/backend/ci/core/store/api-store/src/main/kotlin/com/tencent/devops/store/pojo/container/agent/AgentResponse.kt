@@ -27,12 +27,21 @@
 
 package com.tencent.devops.store.pojo.container.agent
 
+import io.swagger.annotations.ApiModelProperty
+
 /**
  * deng
  * 2019-04-10
  */
 data class AgentResponse(
+    @ApiModelProperty("env hash id", required = true)
     val id: String, // env hash id
+    @ApiModelProperty("env name", required = true)
     val name: String, // env name
-    val label: String // 正常: xx个，异常: xx个 | (agent status)
+    @ApiModelProperty("agent status", required = true)
+    val label: String, // 正常: xx个，异常: xx个 | (agent status)
+    @ApiModelProperty("源项目", required = false)
+    val sharedProjectId: String? = null,
+    @ApiModelProperty("分享人", required = false)
+    val sharedUserId: String? = null
 )

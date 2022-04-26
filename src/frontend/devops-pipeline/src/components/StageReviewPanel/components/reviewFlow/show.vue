@@ -20,7 +20,7 @@
         },
 
         methods: {
-            getReviewItem (item, index) {
+            getReviewItem (item) {
                 const typeMap = {
                     PROCESS: 'success',
                     ABORT: 'danger',

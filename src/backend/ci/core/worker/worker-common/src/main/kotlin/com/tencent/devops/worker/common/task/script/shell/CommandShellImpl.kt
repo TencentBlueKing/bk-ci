@@ -44,6 +44,7 @@ class CommandShellImpl : ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean,
         errorMessage: String?,
+        jobId: String?,
         stepId: String?,
         charsetType: String?,
         taskId: String?
@@ -57,6 +58,7 @@ class CommandShellImpl : ICommand {
             runtimeVariables = runtimeVariables,
             continueNoneZero = continueNoneZero,
             errorMessage = errorMessage,
+            jobId = jobId,
             stepId = stepId
         )
     }

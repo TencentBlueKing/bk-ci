@@ -89,7 +89,7 @@ class StreamGitPermissionServiceImpl @Autowired constructor(
     private fun checkDeveloper(gitUserId: String, gitProjectId: String): Boolean {
         return try {
             val checkResult = client.getScm(ServiceGitCiResource::class)
-                .checkUserGitAuth(gitUserId, gitProjectId).data ?: false
+                .checkUserGitAuth(userId = gitUserId, gitProjectId = gitProjectId, accessLevel = 30).data ?: false
             if (!checkResult) {
                 logger.warn("$gitUserId not $gitProjectId developerUp")
             }

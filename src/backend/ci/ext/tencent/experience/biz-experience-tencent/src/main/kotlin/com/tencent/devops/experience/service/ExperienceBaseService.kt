@@ -35,10 +35,12 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
@@ -47,10 +49,10 @@ import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
-import com.tencent.devops.experience.dao.ExperienceDownloadDetailDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.util.DateUtil
+import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
@@ -76,7 +78,8 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceDownloadDetailDao: ExperienceDownloadDetailDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceBaseService::class.java)
@@ -120,8 +123,26 @@ class ExperienceBaseService @Autowired constructor(
         // 同步图片
         syncIcon(records)
 
+        val result = toAppExperiences(userId, records)
+
+        val hasNext = if (result.size < limit) {
+            false
+        } else {
+            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
+        }
+
+        return Pagination(hasNext, result)
+    }
+
+    fun toAppExperiences(
+        userId: String,
+        records: List<TExperienceRecord>
+    ): List<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
+        val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
+        val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
+            .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
 
         val result = records.map {
             AppExperience(
@@ -137,21 +158,17 @@ class ExperienceBaseService @Autowired constructor(
                 categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
                 productOwner = objectMapper.readValue(it.productOwner),
                 size = it.size,
-                createDate = it.createTime.timestampmilli(),
+                createDate = it.updateTime.timestampmilli(),
                 appScheme = it.scheme,
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-                expired = now.isAfter(it.endDate)
+                expired = now.isAfter(it.endDate),
+                subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") ||
+                        userId == it.creator,
+                redPointEnabled = redPointIds.contains(it.id.toString())
             )
         }
-
-        val hasNext = if (result.size < limit) {
-            false
-        } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
-        }
-
-        return Pagination(hasNext, result)
+        return result
     }
 
     /**
@@ -181,6 +198,7 @@ class ExperienceBaseService @Autowired constructor(
             recordIds.addAll(experienceOuterDao.listRecordIdsByOuter(dslContext, userId).map { it.value1() }.toSet())
         } else {
             recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+            recordIds.addAll(experienceDao.listIdsByCreator(dslContext, userId))
         }
         return recordIds
     }
@@ -196,14 +214,16 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun isPublic(experienceId: Long, isOuter: Boolean) = !isOuter &&
-            (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1()
-                ?: 0) > 0
+            (experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())) > 0
 
-    fun isPrivate(experienceId: Long, isOuter: Boolean = false): Boolean {
-        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
+    fun isPrivate(experience: TExperienceRecord, isOuter: Boolean = false, userId: String): Boolean {
+        if (experience.creator == userId) {
+            return true
+        }
+        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experience.id)
             .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.isNotEmpty() ||
-                (if (isOuter) experienceOuterDao.countByRecordId(dslContext, experienceId)
-                else experienceInnerDao.countByRecordId(dslContext, experienceId)) > 0
+                (if (isOuter) experienceOuterDao.countByRecordId(dslContext, experience.id)
+                else experienceInnerDao.countByRecordId(dslContext, experience.id)) > 0
     }
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
@@ -352,7 +372,8 @@ class ExperienceBaseService @Autowired constructor(
      */
     fun getInnerReceivers(
         dslContext: DSLContext,
-        experienceId: Long
+        experienceId: Long,
+        userId: String
     ): MutableSet<String> {
         val innerReceivers = mutableSetOf<String>()
         val extraUsers =
@@ -362,6 +383,7 @@ class ExperienceBaseService @Autowired constructor(
         )
         innerReceivers.addAll(extraUsers)
         innerReceivers.addAll(groupIdToUserIdsMap.values.flatMap { it.asIterable() }.toSet())
+        innerReceivers.add(userId)
         return innerReceivers
     }
 
@@ -438,7 +460,7 @@ class ExperienceBaseService @Autowired constructor(
         }
     }
 
-    fun getNewestRecordId(projectId: String, bundleIdentifier: String, platform: String): Long? {
-        return experiencePublicDao.getNewestRecordId(dslContext, projectId, bundleIdentifier, platform)
+    fun getNewestPublic(projectId: String, bundleIdentifier: String, platform: String): TExperiencePublicRecord? {
+        return experiencePublicDao.getNewestRecord(dslContext, projectId, bundleIdentifier, platform)
     }
 }

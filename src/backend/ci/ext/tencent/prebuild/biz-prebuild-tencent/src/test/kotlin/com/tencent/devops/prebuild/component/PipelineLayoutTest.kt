@@ -2,8 +2,6 @@ package com.tencent.devops.prebuild.component
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientErrorDecoder
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -17,6 +15,8 @@ import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
 import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull

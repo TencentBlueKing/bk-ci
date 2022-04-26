@@ -110,6 +110,28 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun listCustomFiles(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        fullPath: String,
+        includeFolder: Boolean?,
+        deep: Boolean?,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<FileInfo>> {
+        return client.get(ServiceArtifactoryResource::class).listCustomFiles(
+            userId = userId,
+            projectId = projectId,
+            fullPath = fullPath,
+            includeFolder = includeFolder,
+            deep = deep,
+            page = page,
+            pageSize = pageSize
+        )
+    }
+
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
             client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data

@@ -41,6 +41,7 @@ import com.tencent.devops.experience.pojo.DownloadUrl
 import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
+import com.tencent.devops.experience.pojo.ExperienceList
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.annotations.Api
@@ -77,7 +78,7 @@ interface AppExperienceResource {
         pageSize: Int?
     ): Result<List<AppExperience>>
 
-    @ApiOperation("获取体验列表--新版")
+    @ApiOperation("获取体验列表--v2")
     @Path("/v2/list")
     @GET
     fun listV2(
@@ -98,6 +99,21 @@ interface AppExperienceResource {
         pageSize: Int
     ): Result<Pagination<AppExperience>>
 
+    @ApiOperation("获取体验列表--v3")
+    @Path("/v3/list")
+    @GET
+    fun listV3(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+        @ApiParam("组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null
+    ): Result<ExperienceList>
+
     @ApiOperation("获取体验详情")
     @Path("/{experienceHashId}/detail")
     @GET
@@ -116,7 +132,10 @@ interface AppExperienceResource {
         organization: String? = null,
         @ApiParam("体验ID", required = true)
         @PathParam("experienceHashId")
-        experienceHashId: String
+        experienceHashId: String,
+        @ApiParam("强制最新版本", required = false)
+        @QueryParam("forceNew")
+        forceNew: Boolean = true
     ): Result<AppExperienceDetail>
 
     @ApiOperation("历史版本")
@@ -137,7 +156,10 @@ interface AppExperienceResource {
         page: Int,
         @ApiParam("每页数目", required = true)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否展示所有版本", required = false)
+        @QueryParam("showAll")
+        showAll: Boolean?
     ): Result<Pagination<ExperienceChangeLog>>
 
     @ApiOperation("创建外部直接下载链接")

@@ -72,4 +72,20 @@ object ContainerUtils {
 
         container.name = "$mutexPrefix${container.name}"
     }
+
+    private const val queuePrefix = "排队中(Queuing)"
+
+    fun clearQueueContainerName(container: Container) {
+        if (container.name.startsWith(queuePrefix)) {
+            container.name = container.name.substring(queuePrefix.length)
+        }
+    }
+
+    fun setQueuingWaitName(container: Container) {
+        if (container.name.startsWith(queuePrefix)) {
+            return
+        }
+
+        container.name = "$queuePrefix${container.name}"
+    }
 }

@@ -71,7 +71,7 @@ class PipelineContextService @Autowired constructor(
                 if (stage.finally && stage.id?.let { it == stageId } == true) {
                     contextMap["ci.build_status"] = previousStageStatus.name
                     contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
-                } else if (!stage.status.isNullOrBlank()) {
+                } else if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
                 }
                 stage.containers.forEach nextContainer@{ container ->
@@ -132,7 +132,7 @@ class PipelineContextService @Autowired constructor(
                 if (stage.finally) {
                     return@forEach
                 }
-                if (!stage.status.isNullOrBlank()) {
+                if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
                 }
                 stage.containers.forEach nextContainer@{ container ->
@@ -172,6 +172,9 @@ class PipelineContextService @Autowired constructor(
     fun getBuildVarName(contextName: String): String? {
         return PipelineVarUtil.fetchVarName(contextName)
     }
+
+    private fun checkBuildStatus(status: String?): Boolean =
+        status == BuildStatus.SUCCEED.name || status == BuildStatus.CANCELED.name || status == BuildStatus.FAILED.name
 
     private fun buildCiContext(
         varMap: MutableMap<String, String>,

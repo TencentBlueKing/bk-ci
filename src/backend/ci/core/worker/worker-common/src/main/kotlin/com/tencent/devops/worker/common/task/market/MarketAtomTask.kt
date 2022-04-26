@@ -365,6 +365,7 @@ open class MarketAtomTask : ITask() {
                             dir = atomTmpSpace,
                             workspace = workspace,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -378,6 +379,7 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = environment,
                             systemEnvVariables = systemEnvVariables,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -629,6 +631,16 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 添加插件对接平台错误码信息
+        val platformCode = atomResult?.platformCode
+        if (!platformCode.isNullOrBlank()) {
+            addPlatformCode(platformCode)
+            atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
+        }
+        val platformErrorCode = atomResult?.platformErrorCode
+        if (platformErrorCode != null) {
+            addPlatformErrorCode(platformErrorCode)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
@@ -687,10 +699,17 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                // 如果定义了插件上下文标识ID，才做outputs输出，即使没有jobId也以containerId前缀输出
-                buildTask.stepId?.let {
-                    val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
-                    env["$jobPrefix.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
+                // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
+                // 即使没有jobId也以containerId前缀输出
+                val value = env[key] ?: ""
+                if (!buildTask.stepId.isNullOrBlank() &&
+                    !buildVariables.jobId.isNullOrBlank() &&
+                    !key.startsWith("variables.")
+                ) {
+                    val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
+                    env[contextKey] = value
+                    // TODO 待定：是否进行原变量名输出，暂时保留
+                    // env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
@@ -700,10 +719,10 @@ open class MarketAtomTask : ITask() {
                     if (sensitiveFlag) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
-                        LoggerService.addNormalLine("output(normal): $key=${env[key]}")
+                        LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=${env[key]}")
+                    LoggerService.addWarnLine("output(except): $key=$value")
                 }
             }
 

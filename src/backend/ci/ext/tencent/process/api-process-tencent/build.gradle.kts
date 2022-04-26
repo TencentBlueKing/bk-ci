@@ -33,7 +33,7 @@ dependencies {
     api(project(":core:process:api-process"))
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:store:api-store-service"))
-    api(project(":ext:tencent:common:common-pipeline-tencent"))
+    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
 }
 
 plugins {

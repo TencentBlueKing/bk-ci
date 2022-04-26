@@ -633,6 +633,12 @@
         }
     },
     "editPage": {
+        "invalidValue": "插件表单参数{0}非法 ",
+        "shareEnvInfo": "来自{0}项目，由{1}分享",
+        "environment": "环境",
+        "envProjectId": "所属项目英文名",
+        "envProjectTips": "默认为当前项目，当跨项目引用环境时填写对应的项目英文名",
+        "envProjectPlaceholder": "默认为当前项目",
         "tipError": "Tip组件返回值需要是字符串",
         "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
@@ -897,6 +903,7 @@
         "jobLimit": "单个stage下的job数量不能大于",
         "atomLimit": "单个job下的插件数量不能大于",
         "correctPipeline": "请输入正确的流水线",
+        "PleaseSelectAtom": "请先选择插件",
         "oneCodecc": "只允许一个代码扫描插件",
         "oneManualTrigger": "流水线不允许超过一个手动触发插件",
         "oneTimerTrigger": "流水线不允许超过一个定时触发插件",
@@ -939,6 +946,7 @@
         "dependOnNamePlaceholder": "多个Job ID之間请用英文逗号分隔",
         "enableJob": "启用本Job",
         "jobTimeout": "Job执行超时时间(单位分钟)",
+        "prepareTimeout": "Job排队超时时间(单位分钟)",
         "jobRunCondition": "何时运行本Job",
         "stageRunning": "Stage开始运行时",
         "strategy": "矩阵",

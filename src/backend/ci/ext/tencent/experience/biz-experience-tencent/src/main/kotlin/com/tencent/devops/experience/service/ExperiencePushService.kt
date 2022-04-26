@@ -31,14 +31,15 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.experience.dao.ExperiencePublicDao
-import com.tencent.devops.experience.dao.ExperiencePushTokenDao
 import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
+import com.tencent.devops.experience.dao.ExperiencePushTokenDao
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 import com.tencent.devops.experience.pojo.enums.PushStatus
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import com.tencent.devops.model.experience.tables.records.TExperiencePushTokenRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -259,7 +260,12 @@ class ExperiencePushService @Autowired constructor(
             dslContext = dslContext,
             userId = userId
         ) ?: return Result("该用户未绑定设备", false)
+
         val platform = userTokenRecord.platform
+        if (platform != appNotifyMessage.platform) {
+            return Result("绑定平台与包平台不一致", false)
+        }
+
         // 创建推送消息记录，此时状态发送中
         val messageId =
             experiencePushHistoryDao.createPushHistory(
@@ -272,7 +278,16 @@ class ExperiencePushService @Autowired constructor(
                 platform = platform
             )
         val message =
-            createAppNotifyMessage(messageId, userTokenRecord.token, content, title, platform, userId, url)
+            createAppNotifyMessage(
+                messageId = messageId,
+                token = userTokenRecord.token,
+                content = content,
+                title = title,
+                platform = platform,
+                userId = userId,
+                url = url,
+                experienceHashId = appNotifyMessage.experienceHashId
+            )
         experienceNotifyService.sendMqMsg(message)
         return Result(true)
     }
@@ -284,7 +299,8 @@ class ExperiencePushService @Autowired constructor(
         title: String,
         platform: String,
         userId: String,
-        url: String
+        url: String,
+        experienceHashId: String
     ): AppNotifyMessage {
         val appNotifyMessage = AppNotifyMessage()
         appNotifyMessage.messageId = messageId
@@ -294,6 +310,11 @@ class ExperiencePushService @Autowired constructor(
         appNotifyMessage.platform = platform
         appNotifyMessage.receiver = userId
         appNotifyMessage.url = url
+        appNotifyMessage.experienceHashId = experienceHashId
         return appNotifyMessage
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceService::class.java)
     }
 }
