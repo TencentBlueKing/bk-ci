@@ -5,6 +5,6 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("节点创建回调数据")
 data class NodeCreatedEventPayload(
-    val user: String,
+    val user: Map<String, String>,
     val node: NodeDetail
 )
