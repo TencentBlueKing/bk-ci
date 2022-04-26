@@ -536,30 +536,4 @@ class TaskBuildDetailService(
             operation = "updateElementWhenPauseContinue#$taskId"
         )
     }
-
-    private val atomCache = Caffeine.newBuilder()
-        .maximumSize(20000)
-        .expireAfterAccess(6, TimeUnit.HOURS)
-        .build<String/*projectCode VS atomCode VS atomVersion*/, String/*true version*/> { mix ->
-            val keys = mix.split(" VS ")
-            client.get(ServiceAtomResource::class)
-                .getAtomRealVersion(projectCode = keys[0], atomCode = keys[1], version = keys[2]).data
-        }
-
-    fun findTaskVersion(
-        projectId: String,
-        atomCode: String,
-        atomVersion: String,
-        atomClass: String
-    ): String {
-        // 只有是研发商店插件,获取插件的版本信息
-        if (atomClass != MarketBuildAtomElement.classType && atomClass != MarketBuildLessAtomElement.classType) {
-            return atomVersion
-        }
-        return if (atomVersion.contains("*")) {
-            atomCache.get("$projectId VS $atomCode VS $atomVersion") ?: atomVersion
-        } else {
-            atomVersion
-        }
-    }
 }
