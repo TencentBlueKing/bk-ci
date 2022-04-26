@@ -33,6 +33,7 @@ import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import java.util.Base64
 
+@Suppress("ALL")
 object CredentialContextUtils {
 
     fun getCredentialKey(key: String): String {
