@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.dao
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.project.tables.TNotice
 import com.tencent.devops.model.project.tables.records.TNoticeRecord
 import com.tencent.devops.project.pojo.NoticeRequest
