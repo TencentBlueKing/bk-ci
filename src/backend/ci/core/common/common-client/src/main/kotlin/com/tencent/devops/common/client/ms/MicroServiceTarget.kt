@@ -97,9 +97,14 @@ class MicroServiceTarget<T> constructor(
      * 判断是否在集群中
      */
     private fun inNamespace(metadata: Map<String, String>, namespace: String): Boolean {
-        return metadata["k8s_namespace"] == namespace ||
-                metadata["helm.sh/release-namespace"] == namespace ||
-                metadata["io.tencent.bcs.namespace"] == namespace
+        for (entry in metadata) {
+            if (entry.key.contains("namespace")) {
+                if (entry.value == namespace) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     override fun apply(input: RequestTemplate?): Request {

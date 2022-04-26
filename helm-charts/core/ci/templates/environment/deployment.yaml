@@ -85,7 +85,7 @@ spec:
               mkdir -p {{ .Values.config.bkCiHome }};
               ln -s /data/workspace/agent-package {{ .Values.config.bkCiHome }}/agent-package;
               /bin/bash backend.bkci.sh;
-          {{- end -}}
+          {{ end }}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState

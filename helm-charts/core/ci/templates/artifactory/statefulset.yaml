@@ -90,7 +90,7 @@ spec:
               mkdir -p {{ .Values.config.bkCiDataDir }};
               ln -s {{ .Values.persistence.mountPath }}/artifactory {{ .Values.config.bkCiDataDir }}/artifactory;
               /bin/bash backend.bkci.sh;
-          {{- end -}}
+          {{ end }}
           livenessProbe:
             httpGet:
               path: /management/health/livenessState
