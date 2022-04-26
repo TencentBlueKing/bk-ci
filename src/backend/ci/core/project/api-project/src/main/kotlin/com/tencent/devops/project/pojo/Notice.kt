@@ -46,5 +46,7 @@ data class Notice(
     @ApiModelProperty("跳转地址")
     val redirectUrl: String = "",
     @ApiModelProperty("公告类型：0 弹框 1跑马灯")
-    val noticeType: Int = 0
+    val noticeType: Int = 0,
+    @ApiModelProperty("公告服务")
+    val noticeService: List<String>?
 )

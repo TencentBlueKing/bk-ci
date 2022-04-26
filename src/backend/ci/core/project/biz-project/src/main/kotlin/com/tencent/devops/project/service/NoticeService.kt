@@ -69,7 +69,8 @@ class NoticeService @Autowired constructor(
                     updateDate = it.updateDate.timestampmilli(),
                     noticeContent = it.noticeContent,
                     redirectUrl = it.redirectUrl,
-                    noticeType = it.noticeType.toInt()
+                    noticeType = it.noticeType.toInt(),
+                    noticeService = it.serviceName?.split(",")
                 )
             )
         }
@@ -110,7 +111,8 @@ class NoticeService @Autowired constructor(
             updateDate = noticeRecord.updateDate.timestampmilli(),
             noticeContent = noticeRecord.noticeContent,
             redirectUrl = noticeRecord.redirectUrl,
-            noticeType = noticeRecord.noticeType.toInt()
+            noticeType = noticeRecord.noticeType.toInt(),
+            noticeService = noticeRecord.serviceName?.split(",")
         )
     }
 }
