@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -53,10 +52,8 @@ import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.service.QuotaService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
-import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
-import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
@@ -165,7 +162,7 @@ object Runner {
         var waitCount = 0
         loop@ while (true) {
             logger.info("Start to claim the task")
-            val buildTask = EngineService.claimTask().parseCredentials()
+            val buildTask = EngineService.claimTask()
             logger.info("Start to execute the task($buildTask)")
             when (buildTask.status) {
                 BuildTaskStatus.DO -> {
@@ -213,31 +210,6 @@ object Runner {
         }
 
         return failed
-    }
-
-    private fun BuildTask.parseCredentials(): BuildTask {
-        with(this) {
-            // 解析跨项目模板信息
-            val acrossTargetProjectId by lazy {
-                TemplateAcrossInfoUtil.getAcrossInfo(
-                    variables = buildVariable ?: mapOf(),
-                    taskId = taskId
-                )?.targetProjectId
-            }
-            val parsedVariables = mutableMapOf<String, String>()
-            buildVariable?.forEach { (key, value) ->
-                parsedVariables[key] = if (value.contains("settings.")) {
-                    ReplacementUtils.replace(value, object : ReplacementUtils.KeyReplacement {
-                        override fun getReplacement(key: String): String? = try {
-                            CredentialUtils.getCredentialContextValue(key)
-                        } catch (ignore: Exception) {
-                            CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-                        }
-                    })
-                } else value
-            }
-            return this.copy(buildVariable = parsedVariables)
-        }
     }
 
     private fun finally(workspacePathFile: File?, failed: Boolean) {

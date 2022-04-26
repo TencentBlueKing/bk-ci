@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
+import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.SensitiveApiUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -75,6 +77,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.util.TaskUtils
@@ -84,10 +87,13 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.utils.CredentialContextUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Base64
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
@@ -203,10 +209,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType中
-                            c.customBuildEnv?.map { (t, u) ->
+                            c.customBuildEnv?.map { (key, value) ->
                                 BuildParameters(
-                                    key = t,
-                                    value = EnvUtils.parseEnv(u, contextMap),
+                                    key = key,
+                                    value = value.parseValue(buildInfo.projectId, contextMap),
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
                                 )
@@ -861,5 +867,28 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 )
             }
         }
+    }
+
+    private fun String.parseValue(projectId: String, context: MutableMap<String, String>): String {
+        return ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                val credentialKey = CredentialContextUtils.getCredentialKey(key)
+                // 如果不是凭据上下文则直接返回原value值
+                if (credentialKey == key) return key
+                val pair = DHUtil.initKey()
+                val encoder = Base64.getEncoder()
+                val credentialInfo = client.get(ServiceCredentialResource::class).get(
+                    projectId = projectId,
+                    credentialId = credentialKey,
+                    publicKey = encoder.encodeToString(pair.publicKey)
+                ).data ?: return key
+                val valueList = CredentialContextUtils.getDecodedCredentialList(credentialInfo, pair)
+                return CredentialContextUtils.getCredentialValue(
+                    valueList = valueList,
+                    type = credentialInfo.credentialType,
+                    key = key
+                )
+            }
+        }, context)
     }
 }

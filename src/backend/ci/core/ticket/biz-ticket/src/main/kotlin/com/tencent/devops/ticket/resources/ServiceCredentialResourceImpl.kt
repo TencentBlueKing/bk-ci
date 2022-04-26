@@ -110,6 +110,21 @@ class ServiceCredentialResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun getAcrossProject(
+        projectId: String,
+        credentialId: String,
+        targetProjectId: String,
+        publicKey: String
+    ): Result<CredentialInfo?> {
+        if (projectId.isBlank()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (credentialId.isBlank()) {
+            throw ParamBlankException("Invalid credentialId")
+        }
+        return Result(credentialService.serviceGetAcrossProject(targetProjectId, credentialId, publicKey))
+    }
+
     override fun check(projectId: String, credentialId: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException("Invalid projectId")
