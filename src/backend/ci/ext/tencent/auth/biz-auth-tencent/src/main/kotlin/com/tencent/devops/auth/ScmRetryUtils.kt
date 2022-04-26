@@ -32,7 +32,7 @@ import java.lang.RuntimeException
 import java.util.concurrent.TimeoutException
 
 object ScmRetryUtils {
-    fun <T> callScm (
+    fun <T> callScm(
         retryCount: Int,
         logger: Logger,
         action: () -> T
@@ -42,8 +42,7 @@ object ScmRetryUtils {
         } catch (re: RuntimeException) {
             // 非项目成员，scm会直接报RuntimeException 无需重试
             throw re
-        }
-        catch (e: Exception) {
+        } catch (e: Exception) {
             if (retryCount < 3) {
                 callScm(retryCount + 1, logger, action)
             } else {
