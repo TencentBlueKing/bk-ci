@@ -24,6 +24,7 @@
                                 name="name"
                                 class="codelib-credential-selector"
                                 :placeholder="$t('codelib.codelibUrlPlaceholder')"
+                                :remote-method="handleSearchCodeLib"
                             >
                                 <bk-option v-for="(option, index) in oAuth.project"
                                     :key="index"
@@ -336,8 +337,8 @@
             },
             urlPlaceholder () {
                 return (
-                    this.placeholders['url'][this.codelibConfig.label]
-                    || this.placeholders['url'][this.codelib.authType]
+                    this.placeholders.url[this.codelibConfig.label]
+                    || this.placeholders.url[this.codelib.authType]
                 )
             },
             credentialPlaceholder () {
@@ -464,6 +465,15 @@
                 } finally {
                     this.$nextTick(() => (this.loading = false))
                 }
+            },
+
+            handleSearchCodeLib (keyword) {
+                const { projectId, codelibTypeConstants } = this
+                this.checkOAuth({
+                    projectId,
+                    type: codelibTypeConstants,
+                    keyword
+                })
             },
 
             async openValidate () {
