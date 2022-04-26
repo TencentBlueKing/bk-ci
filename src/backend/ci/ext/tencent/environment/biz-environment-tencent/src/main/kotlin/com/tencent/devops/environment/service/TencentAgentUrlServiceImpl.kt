@@ -49,7 +49,15 @@ open class TencentAgentUrlServiceImpl constructor(
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "http://$gw/external/agents/$agentHashId/agent"
+        // --story=869226483 蓝盾网站启用woa及https  原因： woa切换后的过渡的临时方案
+        // 1、目前已经全面https + woa，但windows需要在页面上下载，如果非https，则会被浏览器限制不安全内容而无法下载
+        // 2、公司devnet区域有的Linux/Mac构建机无法访问 https协议 的域名, 等解决。。。
+        return if (agentRecord.os == OS.WINDOWS.name) {
+            val wUrl = gw.replace(".oa.", ".woa.")
+            "https://$wUrl/external/agents/$agentHashId/agent"
+        } else {
+            "http://$gw/external/agents/$agentHashId/agent"
+        }
     }
 
     override fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
