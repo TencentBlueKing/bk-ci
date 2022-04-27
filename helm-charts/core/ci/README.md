@@ -353,7 +353,7 @@ HPA设置
 您可以通过`--set key=value[,key=value]`来指定参数进行安装。例如，
 
 ```shell
-$ helm install bkci bkee/bkci \
+$ helm install bkci . \
   --set global.imageRegistry=your.registry.com \
   --set gateway.host=your.bkci.com
 ```
@@ -362,16 +362,13 @@ $ helm install bkci bkee/bkci \
 另外，也可以通过指定`YAML`文件的方式来提供参数，
 
 ```shell
-$ helm install bkci bkee/bkci -f values
+$ helm install bkci . -f values
 ```
 
 可以使用`helm show values`来获取默认配置，
 
 ```shell
 # 查看默认配置
-$ helm show values bkee/bkci
-
-# 保存默认配置到文件values.yaml
-$ helm show values bkee/bkci > values.yaml
+$ helm show values .
 ```
 
