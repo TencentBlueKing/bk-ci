@@ -50,7 +50,6 @@ import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.service.QuotaService
-import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
@@ -76,7 +75,7 @@ object Runner {
         try {
             // 上报agent启动给quota
             QuotaService.addRunningAgent(buildVariables)
-            SensitiveValueService.addSensitiveValues(buildVariables.sensitiveList)
+
             BuildEnv.setBuildId(buildVariables.buildId)
 
             workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
