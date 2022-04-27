@@ -114,7 +114,6 @@ class StreamTriggerRequestService @Autowired constructor(
 
         // 跨项目触发的逻辑不需要当前项目也可以使用
         if (repoTriggerPipelineList.isNotEmpty()) {
-            action.data.context.repoTrigger = RepoTrigger("", repoTriggerPipelineList)
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)
             action.data.context.requestEventId = requestEventId
 
@@ -233,7 +232,7 @@ class StreamTriggerRequestService @Autowired constructor(
                 enabled = true,
                 creator = action.data.getUserId()
             )
-            // 远程仓库触发不需要新建流水线
+            // 远程仓库触发时，主库不需要新建流水线
             if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
                 return@forEach
             }
