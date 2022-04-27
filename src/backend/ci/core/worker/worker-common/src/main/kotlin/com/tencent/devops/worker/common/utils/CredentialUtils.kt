@@ -88,15 +88,21 @@ object CredentialUtils {
         }
     }
 
-    fun String.parseCredentialValue(context: Map<String, String>? = null) =
-        ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
-                // 支持嵌套的二次替换
-                context?.get(key)?.let { return it }
-                // 如果不是凭据上下文则直接返回原value值
-                return getCredentialContextValue(key)
+    fun String.parseCredentialValue(
+        context: Map<String, String>? = null,
+        acrossProjectId: String? = null
+    ) = ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
+        override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+            // 支持嵌套的二次替换
+            context?.get(key)?.let { return it }
+            // 如果不是凭据上下文则直接返回原value值
+            return getCredentialContextValue(key, acrossProjectId) ?: if (doubleCurlyBraces) {
+                "\${{$key}}"
+            } else {
+                "\${$key}"
             }
-        }, context)
+        }
+    }, context)
 
     private fun requestCredential(
         credentialId: String,
