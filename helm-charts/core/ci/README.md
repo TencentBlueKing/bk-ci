@@ -3,11 +3,11 @@
 此Chart用于在Kubernetes集群中通过helm部署bkci
 
 ## 环境要求
-- Kubernetes 1.12+
+- Kubernetes 1.16+
 - Helm 3+
 
 ## 生成Chart
-- 执行命令 : `./build_chart.py ${GATEWAY_DOCKER_IMAGE_VERSION} ${BACKEND_DOCKER_IMAGE_VERSION} ${CHART_VERSION} ${APP_VERSION}`
+- 执行命令 : `./build_chart.py ${GATEWAY_DOCKER_IMAGE_VERSION} ${BACKEND_DOCKER_IMAGE_VERSION}` *(注:GATEWAY_DOCKER_IMAGE_VERSION , BACKEND_DOCKER_IMAGE_VERSION 为镜像的version , 具体查看bk-ci/docker-images/core/ci/README.md)*
 - 可选项:
   - 在`./build/values.json`中配置默认项 (配置项参考[服务配置](#服务配置)) , 如:
     ```
@@ -17,17 +17,12 @@
       "bkCiPublicHostIp": "127.0.0.1"
     }
     ```
-  - 设置环境变量来设置chart上传的地址:
-    - `bkrepo_helm_bkce` : 仓库账号
-    - `bkrepo_helm_pass` : 仓库密码
-    - `bkrepo_helm_url` : 上传链接
 
 ## 安装Chart
-使用以下命令安装名称为`bkci`的release, 其中`<bkci helm repo url>`代表helm仓库地址:
+使用以下命令安装名称为`bkci`的release:
 
 ```shell
-$ helm repo add bkee <bkci helm repo url>
-$ helm install bkci bkee/bkrepo
+$ helm install bkci .
 ```
 
 上述命令将使用默认配置在Kubernetes集群中部署bkci, 并输出访问指引。
@@ -39,7 +34,9 @@ $ helm install bkci bkee/bkrepo
 $ helm uninstall bkci
 ```
 
-上述命令将移除所有和bkrepo相关的Kubernetes组件，并删除release。
+上述命令将移除所有和bkci相关的Kubernetes组件，并删除release。
+
+*注: helm现在不会主动删除pvc, 所以在使用内置数据存储的时候, 要想彻底删除所有数据, 需要手动清理, 如: kubectl get pvc|awk '{print $1}'|grep -v 'NAME'|xargs kubectl delete pvc*
 
 ## Chart依赖
 - [bitnami/nginx-ingress-controller](https://github.com/bitnami/charts/tree/master/bitnami/nginx-ingress-controller)
@@ -258,6 +255,7 @@ HPA设置
 
 ### 服务配置
 *以下host如果使用k8s的service name , 请使用全限定名称 , 如 bkssm-web.default.svc.cluster.local*
+*详情以build_chart.py生成的values.yaml为准*
 
 |参数|描述|默认值 |
 |---|---|---|
