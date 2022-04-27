@@ -369,7 +369,7 @@ open class GitApi {
                 }
                 JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
             }
-        } catch (err : Exception){
+        } catch (err: Exception) {
             exceptionClass = err.javaClass.simpleName
             throw err
         } finally {
