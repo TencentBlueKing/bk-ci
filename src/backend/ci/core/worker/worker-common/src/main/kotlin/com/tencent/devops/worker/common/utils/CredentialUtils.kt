@@ -98,7 +98,6 @@ object CredentialUtils {
             }
         }, context)
 
-
     private fun requestCredential(
         credentialId: String,
         pair: DHKeyPair,
