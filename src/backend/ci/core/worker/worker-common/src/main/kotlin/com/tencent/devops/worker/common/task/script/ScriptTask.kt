@@ -101,7 +101,9 @@ open class ScriptTask : ITask() {
                 stepId = buildTask.stepId,
                 script = script,
                 taskParam = taskParams,
-                runtimeVariables = runtimeVariables.plus(TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)),
+                runtimeVariables = runtimeVariables.plus(
+                    TaskUtil.getTaskEnvVariables(buildVariables, buildTask.taskId)
+                ),
                 projectId = projectId,
                 dir = workspace,
                 buildEnvs = takeBuildEnvs(buildTask, buildVariables),
