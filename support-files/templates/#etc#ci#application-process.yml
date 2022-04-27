@@ -90,3 +90,6 @@ sharding:
   databaseShardingStrategy:
     algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
+
+stream:
+  scmType: __BK_CI_STREAM_SCM_TYPE__

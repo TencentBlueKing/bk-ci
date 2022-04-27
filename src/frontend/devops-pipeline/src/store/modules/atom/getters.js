@@ -211,11 +211,15 @@ export default {
             const allElements = getters.getAllElements(stages)
 
             const elementValid = allElements.some(ele => {
-                ele['@type'] === 'linuxPaasCodeCCScript' && codeccCount++
-                ele.atomCode === 'CodeccCheckAtom' && codeccCount++
-                ele['@type'] === 'manualTrigger' && manualTriggerCount++
-                ele['@type'] === 'timerTrigger' && timerTriggerCount++
-                ele['@type'] === 'remoteTrigger' && remoteTriggerCount++
+                const atomCode = ele.atomCode || ele['@type']
+                if (!atomCode) {
+                    throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.PleaseSelectAtom'))
+                }
+                atomCode === 'linuxPaasCodeCCScript' && codeccCount++
+                atomCode === 'CodeccCheckAtom' && codeccCount++
+                atomCode === 'manualTrigger' && manualTriggerCount++
+                atomCode === 'timerTrigger' && timerTriggerCount++
+                atomCode === 'remoteTrigger' && remoteTriggerCount++
 
                 return codeccCount > 1 || manualTriggerCount > 1 || timerTriggerCount > 1 || remoteTriggerCount > 1 || ele.isError
             })

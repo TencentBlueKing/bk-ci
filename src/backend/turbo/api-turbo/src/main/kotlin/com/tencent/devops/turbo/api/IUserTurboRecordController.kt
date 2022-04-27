@@ -2,6 +2,8 @@ package com.tencent.devops.turbo.api
 
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.util.constants.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.turbo.pojo.TurboRecordModel
 import com.tencent.devops.turbo.vo.TurboListSelectVO
 import com.tencent.devops.turbo.vo.TurboRecordDisplayVO
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 
@@ -44,7 +47,13 @@ interface IUserTurboRecordController {
 
         @ApiParam(value = "编译加速历史请求数据信息", required = true)
         @RequestBody
-        turboRecordModel: TurboRecordModel
+        turboRecordModel: TurboRecordModel,
+        @ApiParam(value = "蓝盾项目id", required = true)
+        @RequestHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
+        user: String
     ): Response<Page<TurboRecordHistoryVO>>
 
     @ApiOperation("加速历史,获取搜索条件数据")
@@ -77,6 +86,12 @@ interface IUserTurboRecordController {
     fun getTurboDisplayInfoById(
         @ApiParam(value = "编译加速记录id", required = true)
         @PathVariable("turboRecordId")
-        turboRecordId: String
+        turboRecordId: String,
+        @ApiParam(value = "蓝盾项目id", required = true)
+        @RequestHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
+        user: String
     ): Response<TurboRecordDisplayVO>
 }

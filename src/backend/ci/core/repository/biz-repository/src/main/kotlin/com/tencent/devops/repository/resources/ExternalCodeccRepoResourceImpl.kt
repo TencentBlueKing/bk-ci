@@ -33,7 +33,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalCodeccRepoResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.service.CommonRepoFileService
 import com.tencent.devops.repository.service.RepoFileService
 import org.springframework.beans.factory.annotation.Autowired

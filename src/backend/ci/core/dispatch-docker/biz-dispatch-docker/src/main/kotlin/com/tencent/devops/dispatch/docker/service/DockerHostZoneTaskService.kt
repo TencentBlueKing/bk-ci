@@ -101,7 +101,6 @@ class DockerHostZoneTaskService @Autowired constructor(
                             redisUtils.setSpecialProjectList(it + "," + specialDockerHostVO.projectId)
                         }
                     }
-
                 }
             }
 

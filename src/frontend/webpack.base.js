@@ -36,9 +36,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     test: /\.js$/,
                     include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
                     use: [
-                        {
-                            loader: 'babel-loader'
-                        }
+                        { loader: 'babel-loader' }
                     ]
                 },
                 {

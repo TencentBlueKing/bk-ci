@@ -219,4 +219,24 @@ class ReportService @Autowired constructor(
             Report(info.name, info.indexFile, info.type)
         }
     }
+
+    fun listNoApiHost(userId: String, projectId: String, pipelineId: String, buildId: String): List<Report> {
+        val reportRecordList = reportDao.list(dslContext, projectId, pipelineId, buildId)
+
+        val reportList = mutableListOf<Report>()
+        reportRecordList.forEach {
+            if (it.type == ReportTypeEnum.INTERNAL.name) {
+                val indexFile = Paths.get(it.indexFile).normalize().toString()
+                val urlPrefix = getRootUrlNoApiHost(projectId, pipelineId, buildId, it.elementId)
+                reportList.add(Report(it.name, "$urlPrefix$indexFile", it.type))
+            } else {
+                reportList.add(Report(it.name, it.indexFile, it.type))
+            }
+        }
+        return reportList
+    }
+
+    private fun getRootUrlNoApiHost(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
+        return "/$projectId/report/$pipelineId/$buildId/$taskId/"
+    }
 }
