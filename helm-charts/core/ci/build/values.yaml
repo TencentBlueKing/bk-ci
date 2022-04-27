@@ -2,6 +2,10 @@
 rbac:
   enabled: true
   serviceAccount: bkci
+  clusterRole:
+    enabled: false
+  clusterRoleBinding:
+    enabled: false
 
 ## Add labels to all the deployed resources
 commonLabels: {}
