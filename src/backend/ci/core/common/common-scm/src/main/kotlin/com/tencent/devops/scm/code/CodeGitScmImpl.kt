@@ -162,6 +162,7 @@ class CodeGitScmImpl constructor(
             )
         }
     }
+
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
             throw ScmException(
