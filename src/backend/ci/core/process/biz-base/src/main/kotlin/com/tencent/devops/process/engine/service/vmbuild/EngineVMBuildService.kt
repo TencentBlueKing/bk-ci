@@ -32,11 +32,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.SensitiveApiUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -87,13 +85,10 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import com.tencent.devops.ticket.api.ServiceCredentialResource
-import com.tencent.devops.ticket.utils.CredentialContextUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.Base64
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
 
@@ -166,8 +161,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // var表中获取环境变量，并对老版本变量进行兼容
         val variables = buildVariableService.getAllVariable(projectId, buildId)
 
-        var variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
-        val sensitiveList = mutableListOf<String>()
+        val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
         Preconditions.checkNotNull(model, NotFoundException("Build Model ($buildId) is not exist"))
         var vmId = 1
@@ -202,7 +196,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             val envList = mutableListOf<BuildEnv>()
                             val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
-
+                            fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext)
                             c.buildEnv?.forEach { env ->
                                 containerAppResource.getBuildEnv(
                                     name = env.key, version = env.value, os = c.baseOS.name.toLowerCase()
@@ -210,18 +204,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                             }
 
                             // 设置Job环境变量customBuildEnv到variablesWithType中
-                            val parsedCustomEnv = c.customBuildEnv?.map { (key, value) ->
-                                val parsedValue = value.parseValue(buildInfo.projectId, contextMap, sensitiveList)
-                                variablesWithType.add(BuildParameters(
-                                    key = key,
-                                    value = parsedValue,
+                            c.customBuildEnv?.map { (t, u) ->
+                                BuildParameters(
+                                    key = t,
+                                    value = EnvUtils.parseEnv(u, contextMap),
                                     valueType = BuildFormPropertyType.STRING,
                                     readOnly = true
-                                ))
-                                key to parsedValue
-                            }?.toMap()
-                            // 追加env上下文和matrix上下文
-                            fillContainerContext(contextMap, parsedCustomEnv, c.matrixContext)
+                                )
+                            }?.let { self -> variablesWithType.addAll(self) }
 
                             Triple(envList, contextMap, timeoutMills)
                         }
@@ -258,8 +248,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         jobId = c.jobId,
                         variablesWithType = variablesWithType,
                         timeoutMills = timeoutMills,
-                        containerType = c.getClassType(),
-                        sensitiveList = sensitiveList
+                        containerType = c.getClassType()
                     )
                 }
                 vmId++
@@ -877,36 +866,5 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 )
             }
         }
-    }
-
-    private fun String.parseValue(
-        projectId: String,
-        context: Map<String, String>,
-        sensitiveList: MutableList<String>
-    ): String {
-        return ReplacementUtils.replace(this, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? {
-                // 支持嵌套的二次替换
-                context[key]?.let { return it }
-                // 如果不是凭据上下文则直接返回原value值
-                val credentialKey = CredentialContextUtils.getCredentialKey(key)
-                if (credentialKey == key) return null
-                val pair = DHUtil.initKey()
-                val encoder = Base64.getEncoder()
-                val credentialInfo = client.get(ServiceCredentialResource::class).get(
-                    projectId = projectId,
-                    credentialId = credentialKey,
-                    publicKey = encoder.encodeToString(pair.publicKey)
-                ).data ?: return null
-                return CredentialContextUtils.getCredentialValue(
-                    valueList = CredentialContextUtils.getDecodedCredentialList(credentialInfo, pair),
-                    type = credentialInfo.credentialType,
-                    key = key
-                )?.let {
-                    sensitiveList.add(it)
-                    it
-                }
-            }
-        }, context)
     }
 }
