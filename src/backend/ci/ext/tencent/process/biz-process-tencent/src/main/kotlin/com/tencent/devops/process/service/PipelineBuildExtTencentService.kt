@@ -53,9 +53,6 @@ class PipelineBuildExtTencentService @Autowired constructor(
     private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
 
-    @Value("\${gitci.v2GitUrl:#{null}}")
-    private val v2GitUrl: String? = null
-
     override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
         val extMap = mutableMapOf<String, String>()
@@ -73,20 +70,10 @@ class PipelineBuildExtTencentService @Autowired constructor(
             taskId = null,
             variables = variable
         ))
-        extMap["ci.build_url"] = getGitCiUrl(variable)
         return extMap
     }
 
     override fun endBuild(task: PipelineBuildTask) = Unit
-
-    fun getGitCiUrl(variable: Map<String, String>): String {
-        return if (v2GitUrl != null) {
-            "$v2GitUrl/pipeline/${variable[PIPELINE_ID]}/detail/${variable[PIPELINE_BUILD_ID]}" +
-                "/#${variable[PROJECT_NAME]}"
-        } else {
-            ""
-        }
-    }
 
     fun getTurboTask(projectId: String, pipelineId: String, elementId: String): String {
         try {
