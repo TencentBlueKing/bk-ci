@@ -1,0 +1,6 @@
+parameters:
+  - name: VAR2
+    type: string
+    default: local-VAR2
+  - name: VAR3
+    type: string

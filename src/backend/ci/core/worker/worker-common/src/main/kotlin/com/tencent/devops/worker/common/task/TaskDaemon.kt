@@ -130,6 +130,8 @@ class TaskDaemon(
             type = buildTask.type,
             errorType = errorType,
             errorCode = errorCode,
+            platformCode = task.getPlatformCode(),
+            platformErrorCode = task.getPlatformErrorCode(),
             monitorData = getMonitorData(),
             buildTaskErrorMessage = getTaskErrorMessage().let {
                 BuildTaskErrorMessage(

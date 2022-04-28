@@ -1,0 +1,37 @@
+# ..ci/templates/covPreInfo.yml
+
+parameters:
+  - name: id
+    type: string
+    default: ""
+  - name: fileBothFilterBlack
+    type: string
+    default: ${{ ci.workspace }}/cov.blacklist
+
+steps:
+  - name: 覆盖率-前置信息采集
+    id: ${{ parameters.id }}
+    uses: covPreInfo@5.*
+    with:
+      baseCommitEnv: ""
+      baseCommitPlugSel: lastcommit
+      baseCommitType: plugSel
+      chooseConfigType: pluginConfigFilter
+      codePath: ${{ ci.workspace }}
+      covProductId: ""
+      epBranchName: ""
+      epCheck: true
+      epMonthFlag: ${{ ep_month_flag }}
+      fileBothFilterBlack: ${{ parameters.fileBothFilterBlack }}
+      fileBothFilterWhite: ""
+      fileSuffix: .go
+      gitMrNumber: ${{ git_mr_number }}
+      gitPullFromType: ""
+      gitSubmodule: false
+      haveCgiTest: 0
+      isReplay: false
+      multiGitFlagSwitch: false
+      pathBothFilterBlack: ""
+      pathBothFilterWhite: ""
+      pathFilterType: pathBothFilter
+      preMRCheck: false
