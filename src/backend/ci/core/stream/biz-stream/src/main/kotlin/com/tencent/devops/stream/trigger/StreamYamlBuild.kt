@@ -89,7 +89,6 @@ class StreamYamlBuild @Autowired constructor(
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamGitConfig: StreamGitConfig,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val modelCreate: ModelCreate
 ) {
@@ -384,8 +383,7 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData,
-            streamUrl = streamGitConfig.streamUrl
+            yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(
