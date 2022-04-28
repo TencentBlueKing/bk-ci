@@ -626,7 +626,7 @@ class PipelineTaskService @Autowired constructor(
         redisOperation.set(
             key = PauseRedisUtils.getPauseRedisKey(buildId = task.buildId, taskId = task.taskId),
             value = "true",
-            expiredInSecond = Timeout.transMinuteTimeoutToSec(task.additionalOptions?.timeout?.toInt())
+            expiredInSecond = Timeout.CONTAINER_MAX_MILLS / 1000
         )
     }
 
