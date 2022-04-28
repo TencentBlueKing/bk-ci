@@ -1,6 +1,6 @@
 package com.tencent.devops.artifactory.api.service
 
-import com.tencent.devops.artifactory.pojo.NodeCreatedEventPayload
+import com.tencent.bkrepo.webhook.pojo.payload.node.NodeCreatedEventPayload
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

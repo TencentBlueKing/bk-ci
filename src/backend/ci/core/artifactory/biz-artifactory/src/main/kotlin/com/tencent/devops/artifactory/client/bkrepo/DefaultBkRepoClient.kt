@@ -43,8 +43,7 @@ import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
-import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
-import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
+import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.UserRepoCreateRequest
@@ -429,13 +428,12 @@ class DefaultBkRepoClient constructor(
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/move"
         val url = "${getBkRepoUrl()}/repository/api/node/move"
-        val requestData = UserNodeMoveRequest(
+        val requestData = UserNodeMoveCopyRequest(
             srcProjectId = projectId,
             srcRepoName = repoName,
             srcFullPath = fromPath,
             destProjectId = projectId,
             destRepoName = repoName,
-            destPath = toPath,
             destFullPath = toPath,
             overwrite = true
         )
@@ -471,14 +469,13 @@ class DefaultBkRepoClient constructor(
     ) {
         // val url = "${getBkRepoUrl()}/bkrepo/api/service/repository/api/node/copy"
         val url = "${getBkRepoUrl()}/repository/api/node/copy"
-        val requestData = UserNodeCopyRequest(
+        val requestData = UserNodeMoveCopyRequest(
             srcProjectId = fromProject,
             srcRepoName = fromRepo,
             srcFullPath = fromPath,
             destProjectId = toProject,
             destRepoName = toRepo,
             destFullPath = toPath,
-            destPath = toPath,
             overwrite = true
         )
         val request = Request.Builder()

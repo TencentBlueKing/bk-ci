@@ -59,9 +59,10 @@ allprojects {
                 entry("docker-java")
                 entry("docker-java-transport-okhttp")
             }
-            dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
+            dependencySet("com.tencent.bk.repo:${Versions.TencentBkRepo}") {
                 entry("api-generic")
                 entry("api-repository")
+                entry("api-webhook")
             }
             dependencySet("org.apache.poi:${Versions.Poi}") {
                 entry("poi")

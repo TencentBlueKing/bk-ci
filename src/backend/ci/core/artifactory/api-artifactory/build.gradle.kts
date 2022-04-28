@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
-    api("com.tencent.bkrepo:api-repository")
+    api("com.tencent.bk.repo:api-webhook")
 }
 
 plugins {
