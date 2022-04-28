@@ -800,8 +800,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 val overview = MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.ERROR_TASK_LOG_OVERVIEW,
                     params = arrayOf(
-                        errorCode.toString(),
-                        MessageCodeUtil.getMessageByLocale(errorType.typeName, errorType.name)
+                        MessageCodeUtil.getMessageByLocale(errorType.typeName, errorType.name),
+                        errorCode.toString()
                     )
                 )
                 val typeMessage = when (errorType) {
@@ -827,7 +827,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 } ?: ""
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "$overview $typeMessage \n$errorMsg. \n$codeMessage",
+                    message = "$typeMessage\n$overview \n$errorMsg \n",
+                    tag = taskId,
+                    jobId = containerHashId,
+                    executeCount = executeCount ?: 1
+                )
+                buildLogPrinter.addLine(
+                    buildId = buildId,
+                    message = codeMessage,
                     tag = taskId,
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
