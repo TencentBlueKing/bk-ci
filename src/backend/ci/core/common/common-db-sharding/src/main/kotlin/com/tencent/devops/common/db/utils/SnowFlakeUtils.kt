@@ -6,8 +6,9 @@ import java.util.Properties
 
 object SnowFlakeUtils {
 
-    fun  getId(workerId: String): Long {
-        val keyGenerator = SnowflakeKeyGenerateAlgorithm()
+    private val keyGenerator = SnowflakeKeyGenerateAlgorithm()
+
+    fun getId(workerId: String): Long {
         val properties = Properties()
         properties.setProperty("worker-id", workerId)
         keyGenerator.props = properties

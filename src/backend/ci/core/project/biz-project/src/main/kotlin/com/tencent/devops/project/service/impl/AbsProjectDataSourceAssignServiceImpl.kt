@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.DataSourceDao
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -39,7 +41,6 @@ import com.tencent.devops.project.service.ShardingRoutingRuleService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 
 abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -48,15 +49,6 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
 ) : ProjectDataSourceAssignService {
 
     private val logger = LoggerFactory.getLogger(AbsProjectDataSourceAssignServiceImpl::class.java)
-
-    @Value("\${tag.prod:prod}")
-    private val prodTag: String = "prod"
-
-    @Value("\${tag.auto:auto}")
-    private val autoTag: String = "auto"
-
-    @Value("\${tag.stream:stream}")
-    private val streamTag: String = "stream"
 
     /**
      * 为项目分配数据源
@@ -70,23 +62,14 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
         projectId: String,
         moduleCodes: List<SystemModuleEnum>
     ): Boolean {
-        // 根据channelCode获取集群名称
-        val clusterName = if (channelCode == ProjectChannelCode.BS || channelCode == ProjectChannelCode.PREBUILD) {
-            prodTag
-        } else if (channelCode == ProjectChannelCode.CODECC || channelCode == ProjectChannelCode.AUTO) {
-            autoTag
-        } else if (channelCode == ProjectChannelCode.GITCI) {
-            streamTag
-        } else {
-            // 其他渠道的项目的接口请求默认路由到正式集群
-            prodTag
-        }
+        // 获取集群名称
+        val clusterName = CommonUtils.getDbClusterName()
         moduleCodes.forEach { moduleCode ->
             // 根据模块查找还有还有空余容量的数据源
             val dataSourceNames = dataSourceDao.listByModule(
                 dslContext = dslContext,
                 clusterName = clusterName,
-                moduleCode = moduleCode.name,
+                moduleCode = moduleCode,
                 fullFlag = false
             )?.map { it.dataSourceName }
             if (dataSourceNames.isNullOrEmpty()) {
@@ -96,7 +79,13 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
             }
             // 获取可用数据源名称
             val dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
-            val shardingRoutingRule = ShardingRoutingRule(projectId, dataSourceName)
+            val shardingRoutingRule = ShardingRoutingRule(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                type = ShardingRuleTypeEnum.DB,
+                routingName = projectId,
+                routingRule = dataSourceName
+            )
             shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, shardingRoutingRule)
         }
         return true

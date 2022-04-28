@@ -24,27 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceShardingRoutingRuleResource
-import com.tencent.devops.common.api.pojo.ShardingRoutingRule
-import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
-import com.tencent.devops.project.service.ShardingRoutingRuleService
-import org.springframework.beans.factory.annotation.Autowired
+package com.tencent.devops.common.api.pojo
 
-@RestResource
-class ServiceShardingRoutingRuleResourceImpl @Autowired constructor(
-    private val shardingRoutingRuleService: ShardingRoutingRuleService
-) : ServiceShardingRoutingRuleResource {
-
-    override fun getShardingRoutingRuleByName(
-        routingName: String,
-        moduleCode: SystemModuleEnum,
-        ruleType: ShardingRuleTypeEnum
-    ): Result<ShardingRoutingRule?> {
-        return Result(shardingRoutingRuleService.getShardingRoutingRuleByName(moduleCode, ruleType, routingName))
-    }
+enum class ShardingRuleTypeEnum {
+    DB,
+    TABLE
 }

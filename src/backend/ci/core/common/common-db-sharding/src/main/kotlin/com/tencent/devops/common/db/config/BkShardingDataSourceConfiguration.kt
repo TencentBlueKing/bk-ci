@@ -84,7 +84,7 @@ class BkShardingDataSourceConfiguration {
                 datasourceUsername = dataSourceConfig.username,
                 datasourcePassword = dataSourceConfig.password,
                 datasourceInitSql = dataSourceConfig.initSql,
-                datasouceLeakDetectionThreshold = dataSourceConfig.leakDetectionThreshold
+                datasourceLeakDetectionThreshold = dataSourceConfig.leakDetectionThreshold
             )
         }
         return dataSourceMap
@@ -96,7 +96,7 @@ class BkShardingDataSourceConfiguration {
         datasourceUsername: String,
         datasourcePassword: String,
         datasourceInitSql: String?,
-        datasouceLeakDetectionThreshold: Long
+        datasourceLeakDetectionThreshold: Long
     ): HikariDataSource {
         return HikariDataSource().apply {
             poolName = datasourcePoolName
@@ -108,7 +108,7 @@ class BkShardingDataSourceConfiguration {
             maximumPoolSize = 50
             idleTimeout = 60000
             connectionInitSql = datasourceInitSql
-            leakDetectionThreshold = datasouceLeakDetectionThreshold
+            leakDetectionThreshold = datasourceLeakDetectionThreshold
         }
     }
 
