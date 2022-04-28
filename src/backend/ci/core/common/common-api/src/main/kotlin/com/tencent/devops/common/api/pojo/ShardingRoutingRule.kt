@@ -25,11 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.tencent.devops.common.api.pojo
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("DB分片路由规则")
 data class ShardingRoutingRule(
+    @ApiModelProperty("集群名称")
+    val clusterName: String,
+    @ApiModelProperty("模块标识")
+    val moduleCode: SystemModuleEnum,
+    @ApiModelProperty("规则类型")
+    val type: ShardingRuleTypeEnum,
     @ApiModelProperty("路由规则名称")
     val routingName: String,
     @ApiModelProperty("路由规则值")

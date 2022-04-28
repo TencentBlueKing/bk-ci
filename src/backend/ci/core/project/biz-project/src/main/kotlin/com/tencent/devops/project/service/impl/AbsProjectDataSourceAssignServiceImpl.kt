@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.constant.SYSTEM
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.DataSourceDao
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
@@ -52,15 +54,6 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
         private const val DEFAULT_DATA_SOURCE_NAME = "ds_0"
     }
 
-    @Value("\${tag.prod:prod}")
-    private val prodTag: String = "prod"
-
-    @Value("\${tag.auto:auto}")
-    private val autoTag: String = "auto"
-
-    @Value("\${tag.stream:stream}")
-    private val streamTag: String = "stream"
-
     @Value("\${sharding.database.assign.fusibleSwitch:true}")
     private val assignDbFusibleSwitch: Boolean = true
 
@@ -76,24 +69,15 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
         projectId: String,
         moduleCodes: List<SystemModuleEnum>
     ): Boolean {
-        // 根据channelCode获取集群名称
-        val clusterName = if (channelCode == ProjectChannelCode.BS || channelCode == ProjectChannelCode.PREBUILD) {
-            prodTag
-        } else if (channelCode == ProjectChannelCode.CODECC || channelCode == ProjectChannelCode.AUTO) {
-            autoTag
-        } else if (channelCode == ProjectChannelCode.GITCI) {
-            streamTag
-        } else {
-            // 其他渠道的项目的接口请求默认路由到正式集群
-            prodTag
-        }
+        // 获取集群名称
+        val clusterName = CommonUtils.getDbClusterName()
         moduleCodes.forEach { moduleCode ->
             var dataSourceName = DEFAULT_DATA_SOURCE_NAME
             // 根据模块查找还有空余容量的数据源
             val dataSourceNames = dataSourceDao.listByModule(
                 dslContext = dslContext,
                 clusterName = clusterName,
-                moduleCode = moduleCode.name,
+                moduleCode = moduleCode,
                 fullFlag = false
             )?.map { it.dataSourceName }
 
@@ -107,8 +91,14 @@ abstract class AbsProjectDataSourceAssignServiceImpl @Autowired constructor(
                 // 获取可用数据源名称
                 dataSourceName = getValidDataSourceName(clusterName, dataSourceNames)
             }
+            val shardingRoutingRule = ShardingRoutingRule(
+                clusterName = clusterName,
+                moduleCode = moduleCode,
+                type = ShardingRuleTypeEnum.DB,
+                routingName = projectId,
+                routingRule = dataSourceName
+            )
             // 保存分片规则
-            val shardingRoutingRule = ShardingRoutingRule(projectId, dataSourceName)
             shardingRoutingRuleService.addShardingRoutingRule(SYSTEM, shardingRoutingRule)
         }
         return true

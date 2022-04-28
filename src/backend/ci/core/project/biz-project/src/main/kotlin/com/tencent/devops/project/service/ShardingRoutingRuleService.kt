@@ -27,7 +27,9 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
 
 interface ShardingRoutingRuleService {
 
@@ -65,8 +67,14 @@ interface ShardingRoutingRuleService {
 
     /**
      * 根据规则名称查找分片路由规则
+     * @param moduleCode 模块标识
+     * @param ruleType 规则类型
      * @param routingName 规则名称
      * @return 分片路由规则信息
      */
-    fun getShardingRoutingRuleByName(routingName: String): ShardingRoutingRule?
+    fun getShardingRoutingRuleByName(
+        moduleCode: SystemModuleEnum,
+        ruleType: ShardingRuleTypeEnum,
+        routingName: String
+    ): ShardingRoutingRule?
 }

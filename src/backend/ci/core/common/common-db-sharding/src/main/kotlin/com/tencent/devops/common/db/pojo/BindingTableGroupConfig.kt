@@ -27,11 +27,7 @@
 
 package com.tencent.devops.common.db.pojo
 
-data class DataSourceConfig(
+data class BindingTableGroupConfig(
     val index: Int, // 序号
-    val url: String, // 数据源url
-    val username: String, // 用户名
-    val password: String, // 密码
-    val initSql: String? = null, // 初始化sql
-    val leakDetectionThreshold: Long = 0 // 连接被占用的超时时间
+    val rule: String // 绑定规则
 )
