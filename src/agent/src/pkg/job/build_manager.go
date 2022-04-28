@@ -65,9 +65,11 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))
 	b.instances[processId] = buildInfo
 	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
-	_ = fileutil.WriteString(systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId),
+	errorMsgFile := systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
+	_ = fileutil.WriteString(errorMsgFile,
 		"业务构建进程异常退出，可能被操作系统或其他程序杀掉，需自查并降低负载后重试，"+
 			"或解压 agent.zip 还原安装后重启agent再重试。(Builder process was killed.)")
+	_ = systemutil.Chmod(errorMsgFile, os.ModePerm)
 	go b.waitProcessDone(processId)
 }
 

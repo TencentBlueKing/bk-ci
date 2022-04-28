@@ -30,8 +30,8 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
@@ -51,6 +51,7 @@ func main() {
 		fmt.Println(config.AgentVersion)
 		systemutil.ExitProcess(0)
 	}
+	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 	runtime.GOMAXPROCS(4)
 
 	workDir := systemutil.GetExecutableDir()
