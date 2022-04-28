@@ -65,6 +65,10 @@ class RedisUtils @Autowired constructor(
         return redisOperation.get("dispatchdocker:special_project_list_key")
     }
 
+    fun setSpecialProjectList(projectList: String) {
+        redisOperation.set("dispatchdocker:special_project_list_key", projectList)
+    }
+
     private fun dockerBuildKey(id: Long, secretKey: String) =
         "docker_build_key_${HashUtil.encodeLongId(id)}_$secretKey"
 
