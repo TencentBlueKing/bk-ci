@@ -39,8 +39,27 @@
         "ymlNamePlaceholder": "Please enter yml name，such as build.yml",
         "commitMsg": "Commit Message",
         "commitMsgPlaceholder": "Please enter commit message",
+        "yamlExample": "YAML Examples",
         "branch": "Branch",
-        "branchPlaceholder": "Please enter branch"
+        "branchPlaceholder": "Please enter branch",
+        "disabled": "Disabled",
+        "enablePipeline": "Enable pipeline",
+        "disablePipeline": "Disable pipeline",
+        "triggerBuild": "Trigger build",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": "",
+        "": ""
     },
     "exception": {
         "systemErrTips": "'System error, please try again later!'",
@@ -64,7 +83,7 @@
         "tips520": "Stream 服务可以在主流的操作系统上持续快速地编译、测试、部署你的服务。"
     },
     "dashboard": {
-        "recentProject": "Recent Projects",
+        "recentProjects": "Recent Projects",
         "emptyCommit": "'Empty commit messages'",
         "noProject": "No Project",
         "emptyDesc": "Empty project description"

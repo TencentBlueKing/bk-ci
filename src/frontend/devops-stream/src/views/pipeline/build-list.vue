@@ -7,7 +7,7 @@
                     <span v-bk-overflow-tips>{{ curPipeline.filePath }}</span>
                     <icon name="cc-jump-link" size="16"></icon>
                 </span>
-                <span class="pipeline-status" v-if="!curPipeline.enabled">Disabled</span>
+                <span class="pipeline-status" v-if="!curPipeline.enabled">{{$t('pipeline.disabled')}}</span>
             </span>
 
             <section v-if="curPipeline.pipelineId" class="head-options">
@@ -16,13 +16,13 @@
                         :disabled="!curPipeline.enabled || !permission"
                         size="small"
                         class="options-btn"
-                    >Trigger build</bk-button>
+                    >{{$t('pipeline.triggerBuild')}}</bk-button>
                 </div>
                 <opt-menu>
                     <li @click="togglePipelineEnable"
                         :class="{ disabled: !permission }"
-                        v-bk-tooltips="{ content: 'Permission denied', disabled: permission }"
-                    >{{ curPipeline.enabled ? 'Disable pipeline' : 'Enable pipeline' }}</li>
+                        v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
+                    >{{ curPipeline.enabled ? $t('pipeline.disablePipeline') : $t('pipeline.enablePipeline') }}</li>
                 </opt-menu>
             </section>
         </header>
