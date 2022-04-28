@@ -71,10 +71,6 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.monitoring.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.monitoring.env.jvmXmx }}
           workingDir: /data/workspace/monitoring
           livenessProbe:
             httpGet:

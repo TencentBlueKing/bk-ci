@@ -75,15 +75,10 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.lambda.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.lambda.env.jvmXmx }}
           workingDir: /data/workspace/lambda
           volumeMounts:
             - mountPath: /data1/certificate/
               name: secret-volume
-          
           livenessProbe:
             httpGet:
               path: /management/health/livenessState

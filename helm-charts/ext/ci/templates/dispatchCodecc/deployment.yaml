@@ -71,19 +71,7 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.dispatchCodecc.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.dispatchCodecc.env.jvmXmx }}
           workingDir: /data/workspace/dispatch-codecc
-          # command:
-          #   - "/bin/bash"
-          #   - "-c"
-          #   - |
-          #     cp /data/workspace/backend.bkci.sh .;
-          #     mkdir -p {{ .Values.config.bkCiHome }};
-          #     ln -s /data/workspace/agent-package {{ .Values.config.bkCiHome }}/agent-package;
-          #     /bin/bash backend.bkci.sh;
           livenessProbe:
             httpGet:
               path: /management/health/livenessState

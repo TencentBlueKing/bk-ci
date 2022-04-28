@@ -71,10 +71,6 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.prebuild.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.prebuild.env.jvmXmx }}
           workingDir: /data/workspace/prebuild
           livenessProbe:
             httpGet:
