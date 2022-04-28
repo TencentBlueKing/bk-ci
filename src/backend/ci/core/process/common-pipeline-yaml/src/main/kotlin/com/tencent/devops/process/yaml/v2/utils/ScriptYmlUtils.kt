@@ -438,6 +438,7 @@ object ScriptYmlUtils {
                     retryTimes = preStep.retryTimes,
                     env = preStep.env,
                     run = preStep.run,
+                    runAdditionalOptions = mapOf("shell" to preStep.shell),
                     checkout = preStep.checkout,
                     taskId = taskId
                 )
