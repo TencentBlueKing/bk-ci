@@ -41,4 +41,5 @@ dependencies {
     api("com.tencent.bk.devops.turbo:api-turbo:0.0.2-RELEASE") {
         isTransitive = false
     }
+    api(project(":core:dispatch-docker:api-dispatch-docker"))
 }
