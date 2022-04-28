@@ -24,20 +24,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v4
 
-package com.tencent.devops.dispatch.docker.pojo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
+import com.tencent.devops.openapi.api.apigw.v4.ApigwDispatchResourceV4
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+@RestResource
+class ApigwDispatchResourceV4Impl @Autowired constructor(
+    private val client: Client
+) : ApigwDispatchResourceV4 {
 
-@ApiModel("专机配置返回模型")
-data class SpecialDockerHostVO(
-    @ApiModelProperty("项目id")
-    val projectId: String,
-    @ApiModelProperty("主机ip")
-    val hostIp: String,
-    @ApiModelProperty("备注")
-    val remark: String?,
-    @ApiModelProperty("是否开启共享挂载")
-    val nfsShare: Boolean? = false
-)
+    override fun createSpecialDockerHost(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        specialDockerHostVOs: List<SpecialDockerHostVO>
+    ): Result<Boolean> {
+        logger.info("$userId add special dockerhost: ${JsonUtil.toJson(specialDockerHostVOs)}")
+        client.get(ServiceDockerHostResource::class).createSpecialDockerHost(
+            userId = userId,
+            specialDockerHostVOs = specialDockerHostVOs
+        )
+
+        return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwDispatchResourceV4Impl::class.java)
+    }
+}
