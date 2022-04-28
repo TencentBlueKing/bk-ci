@@ -24,81 +24,43 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v4
 
-package com.tencent.devops.dispatch.docker.api.service
-
-import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
-import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
-import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_DOCKER_HOST"], description = "服务-获取构建容器信息")
-@Path("/service/dockerhost")
+@Api(tags = ["OPENAPI_DISPATCH_V4"], description = "OPENAPI-调度资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/dispatch")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("dispatch-docker") // 指明接入到哪个微服务
-interface ServiceDockerHostResource {
-
-    @ApiOperation("获取dockerhost列表")
-    @GET
-    @Path("/list")
-    fun list(
-        @ApiParam("第几页", required = false)
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页条数", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int?
-    ): Page<DockerHostZone>
-
-    @ApiOperation("更新构建信息")
-    @PUT
-    @Path("/builds/{buildId}/vmseqs/{vmSeqId}")
-    fun updateContainerId(
-        @ApiParam("buildId", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("vmSeqId", required = true)
-        @PathParam("vmSeqId")
-        vmSeqId: Int,
-        @ApiParam("容器信息", required = true)
-        @QueryParam("containerId")
-        containerId: String
-    ): Result<Boolean>
+@Suppress("ALL")
+interface ApigwDispatchResourceV4 {
 
     @POST
-    @Path("/dockerIp/{dockerIp}/refresh")
-    @ApiOperation("刷新Docker构建机状态")
-    fun refresh(
-        @ApiParam("构建机信息", required = true)
-        @PathParam("dockerIp")
-        dockerIp: String,
-        @ApiParam("构建机信息", required = true)
-        dockerIpInfoVO: DockerIpInfoVO
-    ): Result<Boolean>
-
-    @POST
-    @Path("/specialDockerHost/add")
-    @ApiOperation("批量新增专机配置")
+    @Path("/special_dockerhost/add")
+    @ApiOperation("批量新增专机配置", tags = ["v4_user_dispatch_special_add"])
     fun createSpecialDockerHost(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam("专机配置列表", required = true)

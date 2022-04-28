@@ -36,6 +36,7 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.actions.data.context.RepoTrigger
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamRepoTriggerAction
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
@@ -77,6 +78,8 @@ class StreamTriggerRequestRepoService @Autowired constructor(
             actionContext = objectMapper.readValue(actionContext),
             actionSetting = null
         )!!
+
+        action.data.context.repoTrigger = RepoTrigger("", triggerPipelineList)
 
         logger.info("|${action.data.context.requestEventId}|repoTriggerBuild|")
 
