@@ -50,4 +50,5 @@ dependencies {
     api("org.apache.lucene:lucene-core")
     api("org.apache.commons:commons-csv")
     api("com.github.ben-manes.caffeine:caffeine")
+    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
