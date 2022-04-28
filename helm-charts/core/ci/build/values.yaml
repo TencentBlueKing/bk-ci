@@ -229,10 +229,6 @@ entrypoint:
 # Log Deployment
 log:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -271,10 +267,6 @@ log:
 # Auth Deployment
 auth:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -313,10 +305,6 @@ auth:
 # agentless Deployment
 agentless:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -355,10 +343,6 @@ agentless:
 # dockerhost Deployment
 dockerhost:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -397,10 +381,6 @@ dockerhost:
 # artifactory Deployment
 artifactory:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -439,10 +419,6 @@ artifactory:
 # dispatch Deployment
 dispatch:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -481,10 +457,6 @@ dispatch:
 # dispatchDocker Deployment
 dispatchDocker:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -523,10 +495,6 @@ dispatchDocker:
 # dispatchKubernetes Deployment
 dispatchKubernetes:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -565,10 +533,6 @@ dispatchKubernetes:
 # environment Deployment
 environment:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -607,10 +571,6 @@ environment:
 # image Deployment
 image:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -648,11 +608,7 @@ image:
 
 # misc Deployment
 misc:
-  env:
-    enabled: true
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
+  enabled: true
   replicas: 1
   podLabels: {}
   resources:
@@ -691,10 +647,6 @@ misc:
 # monitoring Deployment
 monitoring:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -733,10 +685,6 @@ monitoring:
 # notify Deployment
 notify:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -775,10 +723,6 @@ notify:
 # openapi Deployment
 openapi:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -817,10 +761,6 @@ openapi:
 # plugin Deployment
 plugin:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -859,10 +799,6 @@ plugin:
 # process Deployment
 process:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -901,10 +837,6 @@ process:
 # project Deployment
 project:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -943,10 +875,6 @@ project:
 # quality Deployment
 quality:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -985,10 +913,6 @@ quality:
 # repository Deployment
 repository:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1027,10 +951,6 @@ repository:
 # sign Deployment
 sign:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1069,10 +989,6 @@ sign:
 # store Deployment
 store:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1111,10 +1027,6 @@ store:
 # ticket Deployment
 ticket:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1153,10 +1065,6 @@ ticket:
 # websocket Deployment
 websocket:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:
@@ -1195,10 +1103,6 @@ websocket:
 # angetless Deployment
 angetless:
   enabled: true
-  env:
-    jvmXms: 512m
-    # JVM的-xmx , 不能大于 limits.memory
-    jvmXmx: 1024m
   replicas: 1
   podLabels: {}
   resources:

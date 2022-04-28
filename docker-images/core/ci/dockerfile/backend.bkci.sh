@@ -1,9 +1,7 @@
 #!/bin/bash
 echo "source env files..."
 source service.env
-XMS=${JVM_XMS:-"512m"}
-XMX=${JVM_XMX:-"1024m"}
-MEM_OPTS="-Xms${XMS} -Xmx${XMX}"
+MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:-UseAdaptiveSizePolicy"
 API_PORT=80
 
 echo "create log dir"

@@ -71,10 +71,6 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.quality.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.quality.env.jvmXmx }}
           workingDir: /data/workspace/quality
           {{ if .Values.entrypoint.override }}
           command:
