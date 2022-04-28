@@ -133,9 +133,8 @@ open class ScriptTask : ITask() {
                     LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
                 }
             }
-            val errorMsg = ""
             throw TaskExecuteException(
-                errorMsg = errorMsg,
+                errorMsg = "",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_SCRIPT_TASK_FAIL
             )
