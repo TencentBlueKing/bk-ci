@@ -596,7 +596,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
             projectId = projectId, buildId = buildId, taskId = result.elementId,
             buildStatus = buildStatus, errorType = errorType, errorCode = result.errorCode,
-            errorMsg = result.message
+            errorMsg = result.message, taskVersion = result.elementVersion
         )
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             val updateTaskInfo = UpdateTaskInfo(
