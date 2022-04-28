@@ -71,10 +71,6 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.dispatch.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.dispatch.env.jvmXmx }}
           workingDir: /data/workspace/dispatch
           {{ if .Values.entrypoint.override }}
           command:

@@ -71,10 +71,6 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.log.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.log.env.jvmXmx }}
           workingDir: /data/workspace/log
           {{ if .Values.entrypoint.override }}
           command:

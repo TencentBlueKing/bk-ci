@@ -72,10 +72,6 @@ spec:
               value: {{ .Release.Namespace }}
             - name: SERVICE_PREFIX
               value: {{ include "common.names.fullname" . }}
-            - name: JVM_XMS
-              value: {{ .Values.artifactory.env.jvmXms }}
-            - name: JVM_XMX
-              value: {{ .Values.artifactory.env.jvmXmx }}
           workingDir: /data/workspace/artifactory
           {{ if .Values.entrypoint.override }}
           command:
