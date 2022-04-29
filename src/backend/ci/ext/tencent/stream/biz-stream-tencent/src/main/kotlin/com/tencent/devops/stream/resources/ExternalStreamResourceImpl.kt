@@ -31,15 +31,15 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.stream.api.ExternalStreamResource
-import com.tencent.devops.stream.v2.service.StreamBasicSettingService
-import com.tencent.devops.stream.v2.service.StreamPipelineBadgeService
+import com.tencent.devops.stream.service.StreamPipelineBadgeService
+import com.tencent.devops.stream.service.TXStreamBasicSettingService
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalStreamResourceImpl(
     private val streamPipelineBadgeService: StreamPipelineBadgeService,
-    private val basicSettingService: StreamBasicSettingService,
+    private val basicSettingService: TXStreamBasicSettingService,
     private val client: Client
 ) : ExternalStreamResource {
     override fun getPipelineBadge(

@@ -168,8 +168,24 @@ object LoggerService {
     }
 
     fun start() {
-        logger.info("Start the log service")
-        future = executorService.submit(loggerThread)
+        if (future == null) {
+            logger.info("Start the log service")
+            future = executorService.submit(loggerThread)
+            addStopHook(loggerService = this)
+        }
+    }
+
+    /**
+     *  防止进程关闭时忘记停止，导致被hold住
+     */
+    private fun addStopHook(loggerService: LoggerService) {
+        try {
+            Runtime.getRuntime().addShutdownHook(object : Thread() {
+                override fun run() = loggerService.stop()
+            })
+        } catch (t: Throwable) {
+            logger.warn("Fail to add shutdown hook", t)
+        }
     }
 
     fun flush(): Int {
