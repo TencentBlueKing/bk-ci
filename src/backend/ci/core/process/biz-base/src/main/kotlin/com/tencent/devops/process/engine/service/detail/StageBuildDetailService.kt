@@ -190,10 +190,12 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
-        val buildStatus = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+        val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
-            BuildStatus.REVIEWING
-        } else BuildStatus.RUNNING
+            Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+        } else {
+            Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
+        }
         var allStageStatus: List<BuildStageStatus>? = null
         update(projectId, buildId, object : ModelInterface {
             var update = false
@@ -213,7 +215,8 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, buildStatus, operation = "stageCheckQuality#$stageId")
+        }, newBuildStatus, operation = "stageCheckQuality#$stageId")
+        pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
         return allStageStatus ?: emptyList()
     }
 
