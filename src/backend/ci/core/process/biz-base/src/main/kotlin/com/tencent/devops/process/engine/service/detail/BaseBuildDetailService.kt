@@ -39,11 +39,14 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -51,9 +54,9 @@ open class BaseBuildDetailService constructor(
     val dslContext: DSLContext,
     val pipelineBuildDao: PipelineBuildDao,
     val buildDetailDao: BuildDetailDao,
+    private val stageTagService: StageTagService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     val redisOperation: RedisOperation
-
 ) {
     val logger = LoggerFactory.getLogger(BaseBuildDetailService::class.java)!!
 
@@ -129,6 +132,27 @@ open class BaseBuildDetailService constructor(
             watcher.stop()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
             LogUtils.printCostTimeWE(watcher)
+        }
+    }
+
+    protected fun fetchHistoryStageStatus(model: Model, statusMessage: String): List<BuildStageStatus> {
+        val stageTagMap: Map<String, String>
+            by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
+        // 更新Stage状态至BuildHistory
+        return model.stages.map {
+            BuildStageStatus(
+                stageId = it.id!!,
+                name = it.name ?: it.id!!,
+                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
+                status = if (it.id == STATUS_STAGE) {
+                    MessageCodeUtil.getCodeLanMessage(statusMessage)
+                } else it.status,
+                startEpoch = it.startEpoch,
+                elapsed = it.elapsed,
+                tag = it.tag?.map { _it ->
+                    stageTagMap.getOrDefault(_it, "null")
+                }
+            )
         }
     }
 

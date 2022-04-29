@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.constant.BUILD_CANCELED
+import com.tencent.devops.common.api.constant.BUILD_COMPLETED
+import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -64,16 +67,17 @@ import java.util.concurrent.TimeUnit
 class PipelineBuildDetailService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
-    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     redisOperation: RedisOperation,
+    stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -284,6 +288,13 @@ class PipelineBuildDetailService @Autowired constructor(
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus|cancelUser=$cancelUser")
         var allStageStatus: List<BuildStageStatus> = emptyList()
+        val statusMessage = if (buildStatus.isFailure()) {
+            BUILD_FAILED
+        } else if (buildStatus.isCancel()) {
+            BUILD_CANCELED
+        } else {
+            BUILD_COMPLETED
+        }
         update(projectId = projectId, buildId = buildId, modelInterface = object : ModelInterface {
             var update = false
 
@@ -302,7 +313,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
             override fun onFindStage(stage: Stage, model: Model): Traverse {
                 if (allStageStatus.isEmpty()) {
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, statusMessage)
                 }
                 if (stage.id.isNullOrBlank()) {
                     return Traverse.BREAK
@@ -356,24 +367,6 @@ class PipelineBuildDetailService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
-    }
-
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } ?: emptyMap() }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {

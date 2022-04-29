@@ -48,6 +48,7 @@ import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import org.jooq.DSLContext
@@ -63,11 +64,13 @@ class TaskBuildDetailService(
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
+    stageTagService: StageTagService,
     redisOperation: RedisOperation
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {

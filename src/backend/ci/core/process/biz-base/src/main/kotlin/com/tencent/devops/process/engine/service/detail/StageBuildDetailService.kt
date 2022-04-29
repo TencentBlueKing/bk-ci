@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
@@ -47,16 +46,17 @@ import org.springframework.stereotype.Service
 @Suppress("LongParameterList", "MagicNumber")
 @Service
 class StageBuildDetailService(
-    private val stageTagService: StageTagService,
     dslContext: DSLContext,
     pipelineBuildDao: PipelineBuildDao,
     buildDetailDao: BuildDetailDao,
+    stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher,
     redisOperation: RedisOperation
 ) : BaseBuildDetailService(
     dslContext,
     pipelineBuildDao,
     buildDetailDao,
+    stageTagService,
     pipelineEventDispatcher,
     redisOperation
 ) {
@@ -193,11 +193,11 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
-        val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+        val (oldBuildStatus, newBuildStatus, statusMessage) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
-            Pair(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+            Triple(BuildStatus.RUNNING, BuildStatus.REVIEWING, BUILD_REVIEWING)
         } else {
-            Pair(BuildStatus.REVIEWING, BuildStatus.RUNNING)
+            Triple(BuildStatus.REVIEWING, BuildStatus.RUNNING, BUILD_RUNNING)
         }
         var allStageStatus: List<BuildStageStatus>? = null
         update(projectId, buildId, object : ModelInterface {
@@ -209,7 +209,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, statusMessage)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -272,7 +272,7 @@ class StageBuildDetailService(
                     stage.stageControlOption = controlOption.stageControlOption
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, BUILD_RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -285,24 +285,5 @@ class StageBuildDetailService(
         return allStageStatus ?: emptyList()
     }
 
-    private fun fetchHistoryStageStatus(model: Model, statusMessage: String): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
-        // 更新Stage状态至BuildHistory
-        return model.stages.map {
-            BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                status = if (it.id == STATUS_STAGE) {
-                    MessageCodeUtil.getCodeLanMessage(statusMessage)
-                } else it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
-                }
-            )
-        }
-    }
+
 }
