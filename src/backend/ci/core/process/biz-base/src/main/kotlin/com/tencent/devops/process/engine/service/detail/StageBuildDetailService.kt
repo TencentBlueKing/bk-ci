@@ -190,6 +190,10 @@ class StageBuildDetailService(
         checkOut: StagePauseCheck?
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
+        val buildStatus = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
+            checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) {
+            BuildStatus.REVIEWING
+        } else BuildStatus.RUNNING
         var allStageStatus: List<BuildStageStatus>? = null
         update(projectId, buildId, object : ModelInterface {
             var update = false
@@ -209,7 +213,7 @@ class StageBuildDetailService(
             override fun needUpdate(): Boolean {
                 return update
             }
-        }, BuildStatus.RUNNING, operation = "stageCheckQuality#$stageId")
+        }, buildStatus, operation = "stageCheckQuality#$stageId")
         return allStageStatus ?: emptyList()
     }
 
