@@ -39,7 +39,7 @@ import java.io.File
 
 interface ICommand {
 
-    @Suppress("ALL")
+    @Suppress("LongParameterList")
     fun execute(
         buildId: String,
         script: String,
@@ -69,10 +69,14 @@ interface ICommand {
         }
 
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = data[key] ?: try {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String = data[key] ?: try {
                 CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
             } catch (ignore: Exception) {
-                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
+                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId) ?: if (doubleCurlyBraces) {
+                    "\${{$key}}"
+                } else {
+                    "\${$key}"
+                }
             }
         }, mapOf(
             WORKSPACE_CONTEXT to dir.absolutePath,

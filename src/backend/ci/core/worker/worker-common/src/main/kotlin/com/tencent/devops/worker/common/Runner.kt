@@ -73,6 +73,9 @@ object Runner {
         val buildVariables = EngineService.setStarted()
         var failed = false
         try {
+            // 上报agent启动给quota
+            QuotaService.addRunningAgent(buildVariables)
+
             BuildEnv.setBuildId(buildVariables.buildId)
 
             workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
