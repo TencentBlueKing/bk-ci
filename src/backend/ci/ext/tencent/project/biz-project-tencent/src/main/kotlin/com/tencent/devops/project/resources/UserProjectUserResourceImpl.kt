@@ -57,7 +57,7 @@ class UserProjectUserResourceImpl @Autowired constructor(
         return Result(
             ProjectUser(
                 chineseName = staff.ChineseName,
-                avatarUrl = avatarUrl?.replace("{{UserId}}", userId) ?: "",
+                avatarUrl = avatarUrl?.replace("##UserId##", userId) ?: "",
                 username = userId
             )
         )
