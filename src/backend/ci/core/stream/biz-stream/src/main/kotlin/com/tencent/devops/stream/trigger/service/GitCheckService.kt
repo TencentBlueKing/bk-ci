@@ -31,15 +31,18 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.repository.api.ServiceRepositoryGitCheckResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.ExecuteSource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
+import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.slf4j.LoggerFactory
@@ -49,7 +52,8 @@ import org.springframework.stereotype.Service
 @Service
 class GitCheckService @Autowired constructor(
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val streamEventDispatcher: MQEventDispatcher
 ) {
 
     companion object {
@@ -78,6 +82,7 @@ class GitCheckService @Autowired constructor(
         targetUrl: String,
         description: String,
         mrId: Long?,
+        manualUnlock: Boolean? = false,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
         logger.info(
@@ -125,6 +130,7 @@ class GitCheckService @Autowired constructor(
             targetUrl = targetUrl,
             description = description,
             mrId = mrId,
+            manualUnlock = manualUnlock,
             buildNum = buildNum,
             reportData = reportData
         )
@@ -145,6 +151,7 @@ class GitCheckService @Autowired constructor(
         targetUrl: String,
         description: String,
         mrId: Long?,
+        manualUnlock: Boolean?,
         buildNum: String,
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
     ) {
@@ -223,10 +230,33 @@ class GitCheckService @Autowired constructor(
                         logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
                     }
                 }
+                // mr锁定并且状态为pending并且需要解webhook锁时才需要解锁hook锁
+                if (needUnlockWebhook(
+                        block = block,
+                        state = state,
+                        mrId = mrId,
+                        manualUnlock = manualUnlock
+                    )
+                ) {
+                    streamEventDispatcher.dispatch(
+                        GitWebhookUnlockEvent(
+                            repoName = gitProjectId,
+                            mrId = mrId!!
+                        )
+                    )
+                }
                 return
             }
         }
     }
+
+    private fun needUnlockWebhook(
+        block: Boolean,
+        state: String,
+        mrId: Long?,
+        manualUnlock: Boolean?
+    ) =
+        block && state == GIT_COMMIT_CHECK_STATE_PENDING && manualUnlock == true && mrId != null
 
     fun addCommitCheck(
         gitProjectId: String,
@@ -273,5 +303,13 @@ class GitCheckService @Autowired constructor(
         } catch (e: java.lang.Exception) {
             name
         }
+    }
+
+    fun sendUnlockWebhook(gitProjectId: String, mrId: Long, delayMills: Int) {
+        GitWebhookUnlockEvent(
+            repoName = gitProjectId,
+            mrId = mrId,
+            delayMills = delayMills
+        )
     }
 }

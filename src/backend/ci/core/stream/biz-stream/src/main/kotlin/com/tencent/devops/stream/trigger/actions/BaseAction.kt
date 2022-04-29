@@ -129,6 +129,8 @@ interface BaseAction {
         reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
     )
 
+    fun sendUnlockWebhook() = Unit
+
     /**
      * 远程仓库校验凭据信息
      */
