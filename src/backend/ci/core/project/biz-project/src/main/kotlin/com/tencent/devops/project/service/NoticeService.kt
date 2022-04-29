@@ -70,7 +70,7 @@ class NoticeService @Autowired constructor(
                     noticeContent = it.noticeContent,
                     redirectUrl = it.redirectUrl,
                     noticeType = it.noticeType.toInt(),
-                    noticeService = it.serviceName?.split(",")
+                    noticeService = if (it.serviceName.isNullOrBlank()) null else it.serviceName?.split(",")
                 )
             )
         }
@@ -112,7 +112,8 @@ class NoticeService @Autowired constructor(
             noticeContent = noticeRecord.noticeContent,
             redirectUrl = noticeRecord.redirectUrl,
             noticeType = noticeRecord.noticeType.toInt(),
-            noticeService = noticeRecord.serviceName?.split(",")
+            noticeService = if (noticeRecord.serviceName.isNullOrBlank()) null
+            else noticeRecord.serviceName?.split(",")
         )
     }
 }
