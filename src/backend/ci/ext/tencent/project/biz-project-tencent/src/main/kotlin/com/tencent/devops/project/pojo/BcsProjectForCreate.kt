@@ -27,10 +27,14 @@
 
 package com.tencent.devops.project.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-// 文档地址：https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-project/proto/bcsproject/bcsproject.swagger.json#L171
+/**
+ * 文档地址：
+ * https://github.com/Tencent/bk-bcs/blob/master/bcs-services/bcs-project/proto/bcsproject/bcsproject.swagger.json#L171
+ */
 @ApiModel("创建BCS项目实体类")
 data class BcsProjectForCreate(
     @ApiModelProperty("创建时间")
@@ -60,9 +64,11 @@ data class BcsProjectForCreate(
     @ApiModelProperty("业务部署类型, 保留字段, 1:物理机部署, 2:容器部署")
     val deployType: Int? = null,
     @ApiModelProperty("事业群ID, 保留字段, 默认为0")
-    val BGID: String? = "",
+    @JsonProperty("BGID")
+    val bgId: String? = "",
     @ApiModelProperty("事业群名称, 保留字段, 默认为空")
-    val BGName: String? = "",
+    @JsonProperty("BGName")
+    val bgName: String? = "",
     @ApiModelProperty("部门ID, 保留字段, 默认为0")
     val deptID: String? = "",
     @ApiModelProperty("部门名称, 保留字段, 默认为空")
