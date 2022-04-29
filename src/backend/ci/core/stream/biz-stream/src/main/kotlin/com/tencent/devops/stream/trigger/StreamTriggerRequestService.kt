@@ -254,6 +254,8 @@ class StreamTriggerRequestService @Autowired constructor(
                 checkAndTrigger(buildPipeline = buildPipeline, action = action)
             }
         }
+        // 流水线启动后，发送解锁webhook锁请求
+        action.sendUnlockWebhook()
         return true
     }
 
