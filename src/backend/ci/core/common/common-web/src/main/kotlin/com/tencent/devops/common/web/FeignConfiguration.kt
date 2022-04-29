@@ -57,6 +57,30 @@ class FeignConfiguration @Autowired constructor(
     fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
             requestTemplate.decodeSlash(false)
+
+            // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
+            val tag = if (!DiscoveryTag.get().isNullOrEmpty()) {
+                DiscoveryTag.get()
+            } else {
+                bkTag.getTag()
+            }
+            requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
+            logger.debug("gateway tag is : $tag")
+
+            // 设置traceId
+            requestTemplate.header(
+                TraceTag.X_DEVOPS_RID,
+                MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() } ?: TraceTag.buildBiz()
+            )
+
+            // 增加X-DEVOPS-JWT验证头部
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT_TOKEN)) {
+                // 只有jwt验证发送启动的时候才设置头部
+                if (jwtManager.isSendEnable()) {
+                    requestTemplate.header(AUTH_HEADER_DEVOPS_JWT_TOKEN, jwtManager.getToken() ?: "")
+                }
+            }
+
             val attributes =
                 RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes ?: return@RequestInterceptor
             val request = attributes.request
@@ -66,11 +90,6 @@ class FeignConfiguration @Autowired constructor(
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
             }
 
-            // 设置traceId
-            requestTemplate.header(
-                TraceTag.X_DEVOPS_RID,
-                MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() } ?: TraceTag.buildBiz()
-            )
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()
@@ -78,20 +97,6 @@ class FeignConfiguration @Autowired constructor(
                     cookieBuilder.append(it.name).append("=").append(it.value).append(";")
                 }
                 requestTemplate.header("Cookie", cookieBuilder.toString()) // 设置cookie信息
-            }
-            // 增加X-DEVOPS-JWT验证头部
-            if (!requestTemplate.headers().containsKey(AUTH_HEADER_DEVOPS_JWT_TOKEN)) {
-                // 只有jwt验证发送启动的时候才设置头部
-                if (jwtManager.isSendEnable()) {
-                    requestTemplate.header(AUTH_HEADER_DEVOPS_JWT_TOKEN, jwtManager.getToken() ?: "")
-                }
-            }
-
-            // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
-            if (!DiscoveryTag.get().isNullOrEmpty()) {
-                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, DiscoveryTag.get())
-            } else {
-                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, bkTag.getTag())
             }
         }
     }
