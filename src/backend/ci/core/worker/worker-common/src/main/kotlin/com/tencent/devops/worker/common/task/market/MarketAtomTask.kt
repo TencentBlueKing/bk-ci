@@ -45,7 +45,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -85,7 +84,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
-import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -150,12 +149,14 @@ open class MarketAtomTask : ITask() {
 
         cleanOutput(atomTmpSpace)
 
-        val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-        var runtimeVariables = if (buildTask.buildVariable != null) {
-            variablesMap.plus(buildTask.buildVariable!!)
-        } else {
-            variablesMap
-        }
+        // 解析跨项目模板信息
+        val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
+        var runtimeVariables = buildVariables.variablesWithType.associate {
+            it.key to it.value.toString().parseCredentialValue(
+                context = buildTask.buildVariable,
+                acrossProjectId = acrossInfo?.targetProjectId
+            )
+        }.plus(buildTask.buildVariable ?: mapOf())
 
         // 解析输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -170,22 +171,13 @@ open class MarketAtomTask : ITask() {
 
         val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
 
-        // 解析跨项目模板信息
-        val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId)
-
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
             inputMap?.forEach { (name, value) ->
-                var valueStr = JsonUtil.toJson(value)
-                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String? {
-                        return CredentialUtils.getCredentialContextValue(key, acrossInfo?.targetProjectId)
-                    }
-                })
                 // 修复插件input环境变量替换问题 #5682
                 atomParams[name] = EnvUtils.parseEnv(
-                    command = valueStr,
+                    command = JsonUtil.toJson(value),
                     data = buildVariables.variables,
                     contextMap = if (buildTask.containerType == VMBuildContainer.classType) {
                         // 只有构建环境下运行的插件才有workspace变量
@@ -199,7 +191,7 @@ open class MarketAtomTask : ITask() {
                     } else {
                         emptyMap()
                     }
-                )
+                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
