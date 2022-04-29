@@ -244,14 +244,14 @@ const actions = {
     }, {
         projectId,
         repositoryHashId,
-        keyword = '',
+        aliasName = '',
         type = 'git'
     }) {
         try {
             const query = {
                 projectId,
                 repositoryHashId,
-                keyword
+                aliasName
             }
             const queryStr = Object.keys(query).filter(key => query[key]).map(key => `${key}=${query[key]}`).join('&')
             const res = await vue.$ajax.get(`/repository/api/user/${type}/getProject?${queryStr}`)
