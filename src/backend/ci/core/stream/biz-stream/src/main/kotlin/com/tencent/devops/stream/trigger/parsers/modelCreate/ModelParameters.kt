@@ -61,7 +61,7 @@ object ModelParameters {
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData? = null,
+        yamlTransferData: YamlTransferData? = null
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
