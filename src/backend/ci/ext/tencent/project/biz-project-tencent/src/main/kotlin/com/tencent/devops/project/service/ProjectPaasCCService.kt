@@ -34,9 +34,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.project.pojo.BcsProjectForCreate
 import com.tencent.devops.project.pojo.BcsProjectForUpdate
 import com.tencent.devops.project.pojo.BcsProjectInfo
-import com.tencent.devops.project.pojo.PaasCCProjectForCreate
-import com.tencent.devops.project.pojo.PaasCCProjectForUpdate
-import com.tencent.devops.project.pojo.PaasCCProjectInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
@@ -57,7 +54,8 @@ class ProjectPaasCCService @Autowired constructor(
     @Value("\${paas_cc.new_url}")
     private lateinit var ccUrl: String
 
-    private var token = "otCUXfReVrAS0ApM2AYP3pzBHLRPzODZ"
+    @Value("\${bcs.token}")
+    private lateinit var bcsToken: String
 
     fun createPaasCCProject(
         userId: String,
@@ -66,45 +64,30 @@ class ProjectPaasCCService @Autowired constructor(
         projectId: String
     ) {
         logger.info("Create the bcs project $projectCreateInfo by user $userId with token $accessToken")
-        val paasCCProject = PaasCCProjectForCreate(
-            project_name = projectCreateInfo.projectName,
-            english_name = projectCreateInfo.englishName,
-            project_type = projectCreateInfo.projectType,
-            description = projectCreateInfo.description,
-            bg_id = projectCreateInfo.bgId,
-            bg_name = projectCreateInfo.bgName,
-            dept_id = projectCreateInfo.deptId,
-            dept_name = projectCreateInfo.deptName,
-            center_id = projectCreateInfo.centerId,
-            center_name = projectCreateInfo.centerName,
-            is_secrecy = projectCreateInfo.secrecy,
-            kind = projectCreateInfo.kind,
-            project_id = projectId,
-            creator = userId
-        )
-
         val bscProject = BcsProjectForCreate(
             projectCode = projectCreateInfo.englishName,
             name = projectCreateInfo.projectName,
             projectType = projectCreateInfo.projectType,
             description = projectCreateInfo.description,
-            BGID = projectCreateInfo.bgId.toInt(),
+            BGID = projectCreateInfo.bgId.toString(),
             BGName = projectCreateInfo.bgName,
-            deptID = projectCreateInfo.deptId.toInt(),
+            deptID = projectCreateInfo.deptId.toString(),
             deptName = projectCreateInfo.deptName,
-            centerID = projectCreateInfo.centerId.toInt(),
+            centerID = projectCreateInfo.centerId.toString(),
             centerName = projectCreateInfo.centerName,
             isSecret = projectCreateInfo.secrecy,
-            creator = userId
+            creator = userId,
+            projectID = projectId
         )
 
-        val url = "$ccUrl/?access_token=$token"
+        val url = "$ccUrl"
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val param = objectMapper.writeValueAsString(bscProject)
         val requestBody = RequestBody.create(mediaType, param)
         logger.info("createBcsProject url:$url, body:$requestBody")
         val request = Request.Builder().url(url)
-            .addHeader("Authorization","Bearer $token")
+            .addHeader("Authorization", "Bearer $bcsToken")
+            .addHeader("X-Project-Username", userId)
             .post(requestBody).build()
         val responseContent = request(request, "调用BSC接口创建项目失败")
         val result = objectMapper.readValue<Result<Map<String, Any>>>(responseContent)
@@ -121,33 +104,15 @@ class ProjectPaasCCService @Autowired constructor(
         projectId: String
     ) {
         logger.info("Update the bcs project $projectUpdateInfo by user $userId with token $accessToken")
-        val paasCCProjectForUpdate = PaasCCProjectForUpdate(
-            project_name = projectUpdateInfo.projectName,
-            project_code = projectUpdateInfo.englishName,
-            project_type = projectUpdateInfo.projectType,
-            bg_id = projectUpdateInfo.bgId,
-            bg_name = projectUpdateInfo.bgName,
-            center_id = projectUpdateInfo.centerId,
-            center_name = projectUpdateInfo.centerName,
-            dept_id = projectUpdateInfo.deptId,
-            dept_name = projectUpdateInfo.deptName,
-            description = projectUpdateInfo.description,
-            english_name = projectUpdateInfo.englishName,
-            updator = userId,
-            cc_app_id = projectUpdateInfo.ccAppId,
-            cc_app_name = projectUpdateInfo.ccAppName,
-            kind = projectUpdateInfo.kind,
-            secrecy = projectUpdateInfo.secrecy
-        )
         val bscProjectUpdate = BcsProjectForUpdate(
             updater = userId,
-            name = paasCCProjectForUpdate.project_name,
+            name = projectUpdateInfo.projectName,
             projectType = projectUpdateInfo.projectType,
-            BGID = projectUpdateInfo.bgId.toInt(),
+            BGID = projectUpdateInfo.bgId.toString(),
             BGName = projectUpdateInfo.bgName,
-            deptID = projectUpdateInfo.deptId.toInt(),
+            deptID = projectUpdateInfo.deptId.toString(),
             deptName = projectUpdateInfo.deptName,
-            centerID = projectUpdateInfo.centerId.toInt(),
+            centerID = projectUpdateInfo.centerId.toString(),
             centerName = projectUpdateInfo.centerName,
             isSecret = projectUpdateInfo.secrecy,
             description = projectUpdateInfo.description
@@ -158,7 +123,8 @@ class ProjectPaasCCService @Autowired constructor(
         val requestBody = RequestBody.create(mediaType, param)
         logger.info("updateBcsProject url:$url, body:$requestBody")
         val request = Request.Builder().url(url)
-            .addHeader("Authorization","Bearer $token")
+            .addHeader("Authorization", "Bearer $bcsToken")
+            .addHeader("X-Project-Username", userId)
             .put(requestBody).build()
         val responseContent = request(request, "更新bcs的项目信息失败")
         logger.info("Success to update the project with response $responseContent")
@@ -178,12 +144,13 @@ class ProjectPaasCCService @Autowired constructor(
     ) {
         logger.info("Update the bcs projectLogo $projectUpdateLogoInfo by user $userId with token $accessToken")
 
-        val url = "$ccUrl/$projectId?access_token=$token"
+        val url = "$ccUrl/$projectId"
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val param = objectMapper.writeValueAsString(projectUpdateLogoInfo)
         val requestBody = RequestBody.create(mediaType, param)
         val request = Request.Builder().url(url)
-            .addHeader("Authorization","Bearer $token")
+            .addHeader("Authorization", "Bearer $bcsToken")
+            .addHeader("X-Project-Username", userId)
             .put(requestBody).build()
         val responseContent = request(request, "更新bcs的项目LOGO信息失败")
         logger.info("Success to update the projectLogo with response $responseContent")
@@ -197,10 +164,10 @@ class ProjectPaasCCService @Autowired constructor(
 
     fun getPaasCCProjectInfo(projectCode: String, accessToken: String): BcsProjectInfo? {
         logger.info("get the bsc projectInfo $projectCode with token $accessToken")
-        val url = "$ccUrl/$projectCode?access_token=$token"
+        val url = "$ccUrl/$projectCode"
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val request = Request.Builder().url(url)
-            .addHeader("Authorization","Bearer $token")
+            .addHeader("Authorization", "Bearer $bcsToken")
             .get().build()
         val responseContent = request(request, "获取PAASCC项目信息失败")
         val result = objectMapper.readValue<Result<BcsProjectInfo>>(responseContent)
@@ -219,6 +186,7 @@ class ProjectPaasCCService @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             //        httpClient.newCall(request).execute().use { response ->
             val responseContent = response.body()!!.string()
+            logger.info("bcs: $responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)

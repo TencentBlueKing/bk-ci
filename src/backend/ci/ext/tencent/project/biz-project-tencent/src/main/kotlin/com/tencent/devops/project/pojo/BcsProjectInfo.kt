@@ -57,21 +57,21 @@ data class BcsProjectInfo(
     @ApiModelProperty("项目绑定的蓝鲸CMDB中业务ID信息")
     val businessID: String? = null,
     @ApiModelProperty("是否为保密项目, 默认为false")
-    val isSecret: Boolean ?= false,
+    val isSecret: Boolean? = false,
     @ApiModelProperty("项目类型, 保留字段, 默认为0, 可选 1:手游, 2:端游, 3:页游, 4:平台产品, 5:支撑产品")
     val projectType: Int,
     @ApiModelProperty("业务部署类型, 保留字段, 1:物理机部署, 2:容器部署")
     val deployType: Int? = null,
     @ApiModelProperty("事业群ID, 保留字段, 默认为0")
-    val BGID: Int? = 0,
+    val BGID: String? = "",
     @ApiModelProperty("事业群名称, 保留字段, 默认为空")
     val BGName: String? = "",
     @ApiModelProperty("部门ID, 保留字段, 默认为0")
-    val deptID: Int? = 0,
+    val deptID: String? = "",
     @ApiModelProperty("部门名称, 保留字段, 默认为空")
     val deptName: String? = "",
     @ApiModelProperty("中心ID, 保留字段, 默认为0")
-    val centerID: Int? = 0,
+    val centerID: String? = "",
     @ApiModelProperty("中心名称, 保留字段, 默认为空")
     val centerName: String? = ""
 )
