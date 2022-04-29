@@ -59,6 +59,7 @@ open class BaseBuildDetailService constructor(
 
     companion object {
         private const val ExpiredTimeInSeconds: Long = 10
+        const val STATUS_STAGE = "stage-1"
     }
 
     fun getBuildModel(projectId: String, buildId: String): Model? {

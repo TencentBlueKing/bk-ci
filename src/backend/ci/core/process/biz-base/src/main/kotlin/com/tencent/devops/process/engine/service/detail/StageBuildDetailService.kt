@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.engine.service.detail
 
+import com.tencent.devops.common.api.constant.BUILD_REVIEWING
+import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
@@ -78,7 +81,7 @@ class StageBuildDetailService(
                     } else if (buildStatus.isFinish() && stage.startEpoch != null) {
                         stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
                     }
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, BUILD_RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -104,7 +107,7 @@ class StageBuildDetailService(
                     stage.containers.forEach {
                         it.status = BuildStatus.SKIP.name
                     }
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, BUILD_RUNNING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -138,7 +141,7 @@ class StageBuildDetailService(
                     stage.startEpoch = System.currentTimeMillis()
                     stage.checkIn = checkIn
                     stage.checkOut = checkOut
-                    allStageStatus = fetchHistoryStageStatus(model)
+                    allStageStatus = fetchHistoryStageStatus(model, BUILD_REVIEWING)
                     return Traverse.BREAK
                 }
                 return Traverse.CONTINUE
@@ -275,7 +278,7 @@ class StageBuildDetailService(
         return allStageStatus ?: emptyList()
     }
 
-    private fun fetchHistoryStageStatus(model: Model): List<BuildStageStatus> {
+    private fun fetchHistoryStageStatus(model: Model, statusMessage: String): List<BuildStageStatus> {
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data?.associate { it.id to it.stageTagName } ?: emptyMap() }
         // 更新Stage状态至BuildHistory
@@ -283,7 +286,10 @@ class StageBuildDetailService(
             BuildStageStatus(
                 stageId = it.id!!,
                 name = it.name ?: it.id!!,
-                status = it.status,
+                // #6655 利用stageStatus中的第一个stage传递构建的状态信息
+                status = if (it.id == STATUS_STAGE) {
+                    MessageCodeUtil.getCodeLanMessage(statusMessage)
+                } else it.status,
                 startEpoch = it.startEpoch,
                 elapsed = it.elapsed,
                 tag = it.tag?.map { _it ->
