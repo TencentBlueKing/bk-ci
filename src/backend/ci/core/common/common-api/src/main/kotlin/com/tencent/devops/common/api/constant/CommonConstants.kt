@@ -109,8 +109,8 @@ const val BUILD_RUNNING = "buildRunning" // 运行中
 const val BUILD_QUEUE = "buildQueue" // 构建排队中
 const val BUILD_REVIEWING = "buildReviewing" // 构建待审核
 const val BUILD_COMPLETED = "buildCompleted" // 运行成功
-const val BUILD_CANCELED = "buildCanceled" // 构建待审核
-const val BUILD_FAILED = "buildFailed" // 构建待审核
+const val BUILD_CANCELED = "buildCanceled" // 构建已取消
+const val BUILD_FAILED = "buildFailed" // 构建失败
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
