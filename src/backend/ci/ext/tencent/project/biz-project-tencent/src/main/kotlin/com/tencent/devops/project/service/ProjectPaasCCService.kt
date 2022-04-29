@@ -80,7 +80,7 @@ class ProjectPaasCCService @Autowired constructor(
             projectID = projectId
         )
 
-        val url = "$ccUrl"
+        val url = ccUrl
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val param = objectMapper.writeValueAsString(bscProject)
         val requestBody = RequestBody.create(mediaType, param)
@@ -171,7 +171,7 @@ class ProjectPaasCCService @Autowired constructor(
             .get().build()
         val responseContent = request(request, "获取PAASCC项目信息失败")
         val result = objectMapper.readValue<Result<BcsProjectInfo>>(responseContent)
-        if (result.code.toInt() != 0) {
+        if (result.code != 0) {
             if (result.code == 2001600) {
                 logger.warn("Fail to get Project in bcs with: ${result.message}")
                 return result.data
@@ -188,7 +188,8 @@ class ProjectPaasCCService @Autowired constructor(
             val responseContent = response.body()!!.string()
             logger.info("bcs: $responseContent")
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code()} " +
+                                ", message ${response.message()} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
