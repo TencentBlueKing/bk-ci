@@ -162,47 +162,39 @@ class GitService @Autowired constructor(
 
         val startEpoch = System.currentTimeMillis()
         try {
-            var page = 1
+            val projectUrl = if (name.isNullOrBlank()) {
+                "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=1&per_page=100"
+            } else {
+                "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=1&per_page=100&search=$name"
+            }
+
+            val request = Request.Builder()
+                .url(projectUrl)
+                .get()
+                .build()
 
             val result = mutableListOf<Project>()
-            while (true) {
-                val projectUrl = if (name.isNullOrBlank()) {
-                    "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=$page&per_page=100"
-                } else {
-                    "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=$page&per_page=100&search=$name"
-                }
-                page++
-
-                val request = Request.Builder()
-                    .url(projectUrl)
-                    .get()
-                    .build()
-
-                OkhttpUtils.doHttp(request).use { response ->
-                    val data = response.body()!!.string()
-                    val repoList = JsonParser().parse(data).asJsonArray
-                    repoList.forEach {
-                        val obj = it.asJsonObject
-                        val lastActivityTime = obj["last_activity_at"].asString.removeSuffix("+0000")
-                        result.add(
-                            Project(
-                                obj["id"].asString,
-                                obj["name"].asString,
-                                obj["name_with_namespace"].asString,
-                                obj["ssh_url_to_repo"].asString,
-                                obj["http_url_to_repo"].asString,
-                                DateTimeUtil.convertLocalDateTimeToTimestamp(
-                                    LocalDateTime.parse(lastActivityTime)
-                                ) * 1000L
-                            )
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body()!!.string()
+                val repoList = JsonParser().parse(data).asJsonArray
+                repoList.forEach {
+                    val obj = it.asJsonObject
+                    val lastActivityTime = obj["last_activity_at"].asString.removeSuffix("+0000")
+                    result.add(
+                        Project(
+                            obj["id"].asString,
+                            obj["name"].asString,
+                            obj["name_with_namespace"].asString,
+                            obj["ssh_url_to_repo"].asString,
+                            obj["http_url_to_repo"].asString,
+                            DateTimeUtil.convertLocalDateTimeToTimestamp(
+                                LocalDateTime.parse(lastActivityTime)
+                            ) * 1000L
                         )
-                    }
-                    if (repoList.size() < 100) {
-                        logger.info("Finish get the project by user with size ${result.size}")
-                        return result.sortedBy { 0 - it.lastActivity }
-                    } // 倒序排序
+                    )
                 }
             }
+            return result.sortedBy { 0 - it.lastActivity }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the project")
         }
