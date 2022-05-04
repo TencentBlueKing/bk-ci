@@ -65,7 +65,10 @@ interface UserGitResource {
         projectId: String,
         @ApiParam(value = "repo hash iD", required = false)
         @QueryParam("repoHashId")
-        repoHashId: String?
+        repoHashId: String?,
+        @ApiParam(value = "工蜂代码库名字", required = false)
+        @QueryParam("name")
+        name: String?
     ): Result<AuthorizeResult>
 
     @ApiOperation("根据用户ID, 通过oauth方式获取项目")
