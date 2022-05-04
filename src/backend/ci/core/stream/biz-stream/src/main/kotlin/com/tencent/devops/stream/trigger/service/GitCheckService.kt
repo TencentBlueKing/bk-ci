@@ -306,10 +306,12 @@ class GitCheckService @Autowired constructor(
     }
 
     fun sendUnlockWebhook(gitProjectId: String, mrId: Long, delayMills: Int) {
-        GitWebhookUnlockEvent(
-            repoName = gitProjectId,
-            mrId = mrId,
-            delayMills = delayMills
+        streamEventDispatcher.dispatch(
+            GitWebhookUnlockEvent(
+                repoName = gitProjectId,
+                mrId = mrId,
+                delayMills = delayMills
+            )
         )
     }
 }
