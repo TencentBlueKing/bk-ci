@@ -133,7 +133,7 @@ class GitService @Autowired constructor(
 
     private val executorService = Executors.newFixedThreadPool(2)
 
-    override fun getProject(accessToken: String, userId: String): List<Project> {
+    override fun getProject(accessToken: String, userId: String, name: String?): List<Project> {
 
         logger.info("Start to get the projects by user $userId")
         val startEpoch = System.currentTimeMillis()
@@ -142,7 +142,11 @@ class GitService @Autowired constructor(
 
             val result = mutableListOf<Project>()
             while (true) {
-                val projectUrl = "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=$page&per_page=100"
+                val projectUrl = if (name.isNullOrBlank()) {
+                    "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=$page&per_page=100"
+                } else {
+                    "${gitConfig.gitApiUrl}/projects?access_token=$accessToken&page=$page&per_page=100&search=$name"
+                }
                 page++
                 val request = Request.Builder()
                     .url(projectUrl)

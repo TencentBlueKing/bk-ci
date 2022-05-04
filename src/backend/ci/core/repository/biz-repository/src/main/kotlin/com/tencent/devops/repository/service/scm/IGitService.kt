@@ -63,7 +63,7 @@ import javax.servlet.http.HttpServletResponse
 
 @Suppress("ALL")
 interface IGitService {
-    fun getProject(accessToken: String, userId: String): List<Project>
+    fun getProject(accessToken: String, userId: String, name: String?): List<Project>
     fun getBranch(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>
     fun getTag(accessToken: String, userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
     fun refreshToken(userId: String, accessToken: GitToken): GitToken

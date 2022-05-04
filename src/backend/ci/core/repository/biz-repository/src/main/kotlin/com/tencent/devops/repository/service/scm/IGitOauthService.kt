@@ -37,7 +37,7 @@ import com.tencent.devops.scm.pojo.Project
 
 @Suppress("ALL")
 interface IGitOauthService {
-    fun getProject(userId: String, projectId: String, repoHashId: String?): AuthorizeResult
+    fun getProject(userId: String, projectId: String, repoHashId: String?, name: String?): AuthorizeResult
     fun getProjectList(userId: String, page: Int?, pageSize: Int?): List<Project>
     fun getBranch(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitBranch>
     fun getTag(userId: String, repository: String, page: Int?, pageSize: Int?): List<GitTag>
