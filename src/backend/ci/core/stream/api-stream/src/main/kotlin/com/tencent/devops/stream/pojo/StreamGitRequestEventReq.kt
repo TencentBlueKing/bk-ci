@@ -168,7 +168,7 @@ data class StreamGitRequestEventReq(
             }
             else -> {
                 when (objectKind) {
-                    TGitObjectKind.SCHEDULE.value -> {
+                    TGitObjectKind.SCHEDULE.value, TGitObjectKind.OPENAPI.value -> {
                         buildSource = commitId.take(9)
                     }
                     else -> {}
