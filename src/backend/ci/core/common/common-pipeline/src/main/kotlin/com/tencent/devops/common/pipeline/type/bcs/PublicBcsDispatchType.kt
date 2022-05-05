@@ -7,7 +7,7 @@ import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 
-data class PublicBcsDispathcType(
+data class PublicBcsDispatchType(
     @JsonProperty("value") var image: String?,
     var performanceConfigId: String?,
     override var imageType: ImageType? = ImageType.BKDEVOPS,
