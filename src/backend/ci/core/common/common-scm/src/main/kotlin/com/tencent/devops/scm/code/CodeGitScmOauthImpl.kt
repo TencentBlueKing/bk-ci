@@ -75,12 +75,18 @@ class CodeGitScmOauthImpl constructor(
         )
     }
 
-    override fun getBranches(search: String?) =
+    override fun getBranches(
+        search: String?,
+        page: Int,
+        pageSize: Int
+    ) =
         gitOauthApi.listBranches(
             host = gitConfig.gitApiUrl,
             token = token,
             projectName = projectName,
-            search = search
+            search = search,
+            page = page,
+            pageSize = pageSize
         )
 
     override fun getTags(search: String?) =
