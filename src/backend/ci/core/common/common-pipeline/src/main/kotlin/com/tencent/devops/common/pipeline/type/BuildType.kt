@@ -63,5 +63,4 @@ enum class BuildType(
         KubernetesUtils.notInContainer()
     ),
     STREAM("stream", listOf(OS.LINUX), false, false, false),
-    AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)
 }
