@@ -37,6 +37,7 @@ import org.springframework.stereotype.Component
 @Component
 class BuildLogListenerService @Autowired constructor(
     private val logService: LogService,
+    private val indexService: IndexService,
     private val buildLogPrintService: BuildLogPrintService
 ) {
 
@@ -88,6 +89,10 @@ class BuildLogListenerService @Autowired constructor(
         var result = false
         try {
             logService.updateLogStatus(event)
+            // #3089 当收到构建级别的状态刷新时，清理缓存并保存行数
+            if (event.jobId.isBlank() && event.tag.isBlank()) {
+                indexService.flushLineNum2DB(event.buildId)
+            }
             result = true
         } catch (ignored: Throwable) {
             logger.warn("Fail to add the multi lines [${event.buildId}|${event.retryTime}]", ignored)
