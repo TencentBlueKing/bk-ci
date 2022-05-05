@@ -102,7 +102,7 @@ object MessageCodeUtil {
         checkUrlDecoder: Boolean = false
     ): String {
         return getCodeMessage(messageCode, params = params)
-            .let { if (checkUrlDecoder && it != null) URLDecoder.decode(it, "UTF-8") else it }
+            ?.let { if (checkUrlDecoder) URLDecoder.decode(it, "UTF-8") else it }
             ?: defaultMessage ?: messageCode
     }
 
