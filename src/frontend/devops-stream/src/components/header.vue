@@ -66,24 +66,24 @@
             menuList () {
                 return [
                     {
-                        name: 'Dashboard',
+                        name: this.$t('dashboardNav'),
                         active: this.$route.name === 'dashboard',
                         routeName: 'dashboard'
                     },
                     {
-                        name: 'ChangeLog',
+                        name: this.$t('changeLog'),
                         active: false,
                         type: 'url',
                         url: LINK_CONFIG.CHANGE_LOG
                     },
                     {
-                        name: 'Documentation',
+                        name: this.$t('documentation'),
                         active: false,
                         type: 'url',
                         url: LINK_CONFIG.STREAM
                     },
                     {
-                        name: 'Issue',
+                        name: this.$t('issue'),
                         active: false,
                         type: 'url',
                         url: LINK_CONFIG.ISSUE

@@ -1,6 +1,6 @@
 <template>
     <section>
-        <span class="review-subtitle">Approval Flow</span>
+        <span class="review-subtitle">{{$t('pipeline.approveFlow')}}</span>
         <bk-timeline :list="computedReviewGroups"></bk-timeline>
     </section>
 </template>

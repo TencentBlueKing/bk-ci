@@ -2,7 +2,7 @@
     <article class="build-detail-home">
         <section class="section-box build-detail-header">
             <bk-breadcrumb class="build-detail-crumb" separator-class="bk-icon icon-angle-right">
-                <bk-breadcrumb-item v-if="!menuPipelineId" :to="{ name: 'buildList', params: {}, query: $route.query }">All pipelines</bk-breadcrumb-item>
+                <bk-breadcrumb-item v-if="!menuPipelineId" :to="{ name: 'buildList', params: {}, query: $route.query }">{{$t('pipeline.allPipelines')}}</bk-breadcrumb-item>
                 <bk-breadcrumb-item :to="{ name: 'buildList', params: { pipelineId }, query: $route.query }" @click.native="handleClickRoute">{{yml}}</bk-breadcrumb-item>
                 <bk-breadcrumb-item>
                     <span class="build-num">
@@ -37,9 +37,9 @@
         data () {
             return {
                 panels: [
-                    { label: 'Build detail', name: 'buildDetail' },
-                    { label: 'Reports', name: 'buildReports' },
-                    { label: 'Configuration', name: 'buildConfig' }
+                    { label: this.$t('pipeline.buildDetail'), name: 'buildDetail' },
+                    { label: this.$t('pipeline.buildReport'), name: 'buildReports' },
+                    { label: this.$t('pipeline.buildConfig'), name: 'buildConfig' }
                 ],
                 active: 'buildDetail',
                 buildNum: '',
