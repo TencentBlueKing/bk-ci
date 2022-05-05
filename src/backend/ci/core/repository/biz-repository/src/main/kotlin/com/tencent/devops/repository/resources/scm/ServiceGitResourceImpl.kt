@@ -123,7 +123,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         userId: String,
         repository: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        search: String?
     ): Result<List<GitBranch>> {
         return Result(
             gitService.getBranch(
@@ -131,7 +132,8 @@ class ServiceGitResourceImpl @Autowired constructor(
                 accessToken = accessToken,
                 repository = repository,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                search = search
             )
         )
     }

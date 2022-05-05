@@ -122,7 +122,8 @@ class GitOauthService @Autowired constructor(
             userId = userId,
             repository = repository,
             page = pageNotNull,
-            pageSize = pageSizeNotNull
+            pageSize = pageSizeNotNull,
+            search = null
         )
     }
 
