@@ -464,9 +464,6 @@ include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
 include(":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent")
 
 include(":ext:tencent:dispatch-bcs")
-include(":ext:tencent:dispatch-bcs:api-dispatch-bcs-tencent")
-include(":ext:tencent:dispatch-bcs:biz-dispatch-bcs-tencent")
-include(":ext:tencent:dispatch-bcs:model-dispatch-bcs-tencent")
 include(":ext:tencent:dispatch-bcs:boot-dispatch-bcs-tencent")
 
 include(":ext:tencent:sign")

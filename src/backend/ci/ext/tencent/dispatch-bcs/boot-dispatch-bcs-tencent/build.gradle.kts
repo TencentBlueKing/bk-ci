@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:dispatch-bcs:biz-dispatch-bcs-tencent"))
+    api(project(":core:dispatch-bcs:biz-dispatch-bcs"))
     api(project(":core:common:common-auth:common-auth-mock"))
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))
