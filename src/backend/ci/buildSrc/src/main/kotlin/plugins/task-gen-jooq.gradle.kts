@@ -54,7 +54,7 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     else -> listOf(moduleName)
 }
 
-if (name == "model-dispatch-bcs-tencent") {
+if (name == "model-dispatch-bcs") {
     moduleNames = listOf("dispatch_bcs")
 }
 
