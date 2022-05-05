@@ -29,11 +29,11 @@
 
         <section class="main-body section-box">
             <section class="build-filter">
-                <bk-input v-model="filterData.commitMsg" class="filter-item w300" placeholder="Commit message"></bk-input>
-                <bk-input v-model="filterData.triggerUser" class="filter-item w300" placeholder="Actor"></bk-input>
+                <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
+                <bk-input v-model="filterData.triggerUser" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
                 <bk-select v-model="filterData.branch"
                     class="filter-item"
-                    placeholder="Branch"
+                    :placeholder="$t('pipeline.branch')"
                     multiple
                     searchable
                     :loading="isLoadingBranch"
@@ -48,7 +48,7 @@
                 </bk-select>
                  <bk-select v-model="filterData.event"
                     class="filter-item"
-                    placeholder="Event"
+                    :placeholder="$t('pipeline.event')"
                     multiple
                     searchable
                     :loading="isLoadingEvent"
@@ -69,7 +69,7 @@
                 </bk-select>
                 <bk-select
                     class="filter-item"
-                    placeholder="Pipeline"
+                    :placeholder="$t('pipeline.pipeline')"
                     multiple
                     searchable
                     v-model="filterData.pipelineIds"
@@ -84,7 +84,7 @@
                         :name="option.displayName">
                     </bk-option>
                 </bk-select>
-                <bk-button @click="resetFilter">Reset</bk-button>
+                <bk-button @click="resetFilter">{{$t('reset')}}</bk-button>
             </section>
 
             <bk-table :data="buildList"
@@ -96,7 +96,7 @@
                 class="build-table"
                 size="large"
             >
-                <bk-table-column label="Commit message">
+                <bk-table-column :label="$t('pipeline.commitMsg')">
                     <template slot-scope="props">
                         <section class="commit-message">
                             <i :class="getIconClass(props.row.buildHistory.status)"></i>
@@ -107,12 +107,12 @@
                         </section>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="Branch" width="200">
+                <bk-table-column :label="$t('pipeline.branch')" width="200">
                     <template slot-scope="props">
                         <span>{{ props.row.gitRequestEvent.branch }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column label="Consume" width="200">
+                <bk-table-column :label="$t('pipeline.consume')" width="200">
                     <template slot-scope="props">
                         <p class="consume">
                             <span class="consume-item"><i class="bk-icon icon-clock"></i>{{ props.row.buildHistory.executeTime | totalFliter }}</span>
@@ -127,8 +127,8 @@
                                 v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING'].includes(props.row.buildHistory.status)"
                                 v-bk-tooltips="computedOptToolTip"
                                 :class="{ disabled: !curPipeline.enabled || !permission }"
-                            >Cancel build</li>
-                            <li @click="rebuild(props.row)" v-else :class="{ disabled: !curPipeline.enabled || !permission }" v-bk-tooltips="computedOptToolTip">Re-build</li>
+                            >{{$t('pipeline.cancelBuild')}}</li>
+                            <li @click="rebuild(props.row)" v-else :class="{ disabled: !curPipeline.enabled || !permission }" v-bk-tooltips="computedOptToolTip">{{$t('pipeline.rebuild')}}</li>
                         </opt-menu>
                     </template>
                 </bk-table-column>
@@ -143,9 +143,9 @@
             />
         </section>
 
-        <bk-sideslider @hidden="hidden" :is-show.sync="showTriggle" :width="622" :quick-close="true" title="Trigger a custom build">
+        <bk-sideslider @hidden="hidden" :is-show.sync="showTriggle" :width="622" :quick-close="true" :title="$t('pipeline.triggerTitle')">
             <bk-form :model="formData" ref="triggleForm" :label-width="500" slot="content" class="triggle-form" form-type="vertical">
-                <bk-form-item label="Branch" :required="true" :rules="[requireRule('Branch')]" property="branch" error-display-type="normal">
+                <bk-form-item :label="$t('pipeline.branch')" :required="true" :rules="[requireRule($t('pipeline.branch'))]" property="branch" error-display-type="normal">
                     <bk-select v-model="formData.branch"
                         :clearable="false"
                         :loading="isLoadingBranch"
@@ -153,7 +153,7 @@
                         searchable
                         @toggle="toggleFilterBranch"
                         @selected="selectBranch"
-                        placeholder="Select a Branch"
+                        :placeholder="$t('pipeline.branchSelectPlaceholder')"
                     >
                         <bk-option v-for="option in branchList"
                             :key="option"
@@ -163,10 +163,10 @@
                     </bk-select>
                 </bk-form-item>
                 <bk-form-item class="mt15">
-                    <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">Use a commit history to trigger this build</bk-checkbox>
+                    <bk-checkbox v-model="formData.useCommitId" @change="getPipelineBranchYaml">{{$t('pipeline.commitTriggerTips')}}</bk-checkbox>
                 </bk-form-item>
-                <bk-form-item label="Commit" :required="true" :rules="[requireRule('Commit')]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
-                    <bk-tag-input placeholder="Select a Commit"
+                <bk-form-item :label="$t('pipeline.commit')" :required="true" :rules="[requireRule($t('pipeline.commit'))]" property="commitId" error-display-type="normal" v-if="formData.useCommitId">
+                    <bk-tag-input :placeholder="$t('pipeline.commitPlaceholder')"
                         v-model="formData.commitId"
                         @change="getPipelineBranchYaml"
                         :max-data="1"
@@ -182,8 +182,8 @@
                     >
                     </bk-tag-input>
                 </bk-form-item>
-                <bk-form-item label="Custom Build Message" :required="true" :rules="[requireRule('Message')]" property="customCommitMsg" desc="Custom build message will not affect your commit history." error-display-type="normal">
-                    <bk-input v-model="formData.customCommitMsg" placeholder="Please enter build message"></bk-input>
+                <bk-form-item :label="$t('pipeline.buildMsg')" :required="true" :rules="[requireRule($t('pipeline.buildMsg'))]" property="customCommitMsg" :desc="$t('pipeline.buildMsgTips')" error-display-type="normal">
+                    <bk-input v-model="formData.customCommitMsg" :placeholder="$t('pipeline.buildMsgPlaceholder')"></bk-input>
                 </bk-form-item>
                 <bk-form-item label="Yaml" ref="codeSection" property="yaml" :required="true" :rules="[requireRule('yaml'), checkYaml]" error-display-type="normal" v-bkloading="{ isLoading: isLoadingYaml }">
                     <code-section @blur="$refs.codeSection.validate('blur')"
@@ -195,8 +195,8 @@
                     />
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button ext-cls="mr5" theme="primary" title="Submit" @click.stop.prevent="submitData" :loading="isTriggering">Submit</bk-button>
-                    <bk-button ext-cls="mr5" title="Cancel" @click="hidden" :disabled="isTriggering">Cancel</bk-button>
+                    <bk-button ext-cls="mr5" theme="primary" @click.stop.prevent="submitData" :loading="isTriggering">{{$t('submit')}}</bk-button>
+                    <bk-button ext-cls="mr5" @click="hidden" :disabled="isTriggering">{{$t('cancel')}}</bk-button>
                 </bk-form-item>
             </bk-form>
         </bk-sideslider>
@@ -255,11 +255,11 @@
                 filterList: [
                     {
                         id: 'status',
-                        placeholder: 'Status',
+                        placeholder: this.$t('status'),
                         data: [
-                            { name: 'Succeed', id: 'SUCCEED' },
-                            { name: 'Failed', id: 'FAILED' },
-                            { name: 'Canceled', id: 'CANCELED' }
+                            { name: this.$t('pipeline.succeed'), id: 'SUCCEED' },
+                            { name: this.$t('pipeline.failed'), id: 'FAILED' },
+                            { name: this.$t('pipeline.canceled'), id: 'CANCELED' }
                         ]
                     }
                 ],
@@ -290,7 +290,7 @@
 
             computedOptToolTip () {
                 return {
-                    content: !this.curPipeline.enabled ? 'Pipeline disabled' : 'Permission denied',
+                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.pemissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
             }

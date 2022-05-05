@@ -48,9 +48,9 @@
                         520: 'login'
                     },
                     titleMap: {
-                        403: this.$t('exception.title403'),
+                        403: this.$t('exception.noPermission'),
                         404: this.$t('exception.title404'),
-                        418: this.$t('exception.title418'),
+                        418: this.$t('exception.noPermission'),
                         419: this.$t('exception.title419'),
                         499: this.$t('exception.title499'),
                         500: this.$t('exception.title500'),

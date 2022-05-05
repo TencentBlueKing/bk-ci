@@ -1,6 +1,6 @@
 <template>
     <section v-if="computedShowParam">
-        <span class="review-subtitle">Custom Variables</span>
+        <span class="review-subtitle">{{$t('pipeline.customVariable')}}</span>
         <ul>
             <li v-for="(param, index) in params" :key="index" class="review-params">
                 <bk-input disabled :value="getParamKey(param)" class="review-param-item"></bk-input>
@@ -74,7 +74,7 @@
                             }
                         }
                     })
-                    if (errorKeys.length) this.errMessage = `${errorKeys.join(',')} is require，Please modify and try again`
+                    if (errorKeys.length) this.errMessage = `${errorKeys.join(',')} ` + this.$t('pipeline.requireTips')
                     else this.errMessage = ''
 
                     if (this.errMessage && !this.$parent.$refs.flowApprove.isCancel) reject(new Error(this.errMessage))

@@ -23,18 +23,18 @@
                 <ul>
                     <li v-if="$route.hash">
                         <span class="user-menu-item" @click.stop="goToNotifications">
-                            Notifications
+                            {{$t('notifications')}}
                             <span v-if="messageNum > 0" class="user-hint" />
                         </span>
                     </li>
                     <li>
                         <span class="user-menu-item" @click.stop="changeLanguage">
-                            Change Lang
+                            {{$t('changeLang')}}
                         </span>
                     </li>
                     <li>
                         <span class="user-menu-item" @click.stop="logout">
-                            Logout
+                            {{$t('logout')}}
                         </span>
                     </li>
                 </ul>
