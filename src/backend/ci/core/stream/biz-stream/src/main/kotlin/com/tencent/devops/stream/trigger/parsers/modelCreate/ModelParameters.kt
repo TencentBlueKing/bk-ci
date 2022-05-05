@@ -61,8 +61,7 @@ object ModelParameters {
         yaml: ScriptBuildYaml,
         streamGitProjectInfo: StreamGitProjectCache,
         webhookParams: Map<String, String> = mapOf(),
-        yamlTransferData: YamlTransferData? = null,
-        streamUrl: String?
+        yamlTransferData: YamlTransferData? = null
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
 
@@ -72,7 +71,6 @@ object ModelParameters {
 
         // 通用参数
         startParams[CommonVariables.CI_PIPELINE_NAME] = yaml.name ?: ""
-        startParams[CommonVariables.CI_BUILD_URL] = streamUrl ?: ""
         startParams[BK_CI_RUN] = "true"
         startParams[CommonVariables.CI_ACTOR] = if (action.metaData.streamObjectKind == StreamObjectKind.SCHEDULE) {
             "system"

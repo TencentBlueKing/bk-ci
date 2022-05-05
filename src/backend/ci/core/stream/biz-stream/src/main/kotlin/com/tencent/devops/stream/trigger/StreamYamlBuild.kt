@@ -54,7 +54,6 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -89,7 +88,6 @@ class StreamYamlBuild @Autowired constructor(
     private val deleteEventService: DeleteEventService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
-    private val streamGitConfig: StreamGitConfig,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val modelCreate: ModelCreate
 ) {
@@ -384,8 +382,7 @@ class StreamYamlBuild @Autowired constructor(
             yaml = yaml,
             streamGitProjectInfo = streamGitProjectInfo,
             webhookParams = webhookParams,
-            yamlTransferData = yamlTransferData,
-            streamUrl = streamGitConfig.streamUrl
+            yamlTransferData = yamlTransferData
         )
 
         val modelCreateEvent = ModelCreateEvent(

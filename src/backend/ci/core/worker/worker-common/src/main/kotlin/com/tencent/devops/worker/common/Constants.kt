@@ -41,6 +41,8 @@ const val WORKSPACE_CONTEXT = "ci.workspace"
 
 const val CI_TOKEN_CONTEXT = "ci.token"
 
+const val CI_BUILD_URL = "ci.build_url"
+
 const val JOB_OS_CONTEXT = "job.os"
 
 const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
