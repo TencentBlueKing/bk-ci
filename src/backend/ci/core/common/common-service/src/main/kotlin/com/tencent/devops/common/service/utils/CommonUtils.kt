@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.config.CommonConfig
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -175,7 +176,10 @@ object CommonUtils {
         return when {
             simpleCnLanList.contains(locale.toUpperCase()) -> ZH_CN // 简体中文
             twCnLanList.contains(locale.toUpperCase()) -> ZH_TW // 繁体中文
-            else -> EN // 英文描述
+            else -> {
+                val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+                commonConfig.bkLocale ?: "EN"
+            }
         }
     }
 
