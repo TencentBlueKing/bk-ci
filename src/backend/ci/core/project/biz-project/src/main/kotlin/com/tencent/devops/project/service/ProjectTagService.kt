@@ -314,7 +314,7 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun projectClusterCheck(routerTag: String?): Boolean {
-        val tag = bkTag.getTag()
+        val tag = bkTag.getLocalTag()
         // 默认集群是不会有routerTag的信息
         if (routerTag.isNullOrBlank()) {
             // 只有默认集群在routerTag为空的时候才返回true

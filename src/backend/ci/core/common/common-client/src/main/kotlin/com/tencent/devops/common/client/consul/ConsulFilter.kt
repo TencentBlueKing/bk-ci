@@ -29,6 +29,8 @@
 package com.tencent.devops.common.client.consul
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
+import com.tencent.devops.common.service.BkTag
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -38,7 +40,9 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 
 @Component
-class ConsulFilter : Filter {
+class ConsulFilter @Autowired constructor(
+    private val bkTag: BkTag
+) : Filter {
 
     override fun init(p0: FilterConfig?) {
         return
@@ -48,10 +52,10 @@ class ConsulFilter : Filter {
         val httpServletRequest = request as HttpServletRequest
         val consulTag = httpServletRequest.getHeader(AUTH_HEADER_GATEWAY_TAG)
         if (consulTag != null) {
-            DiscoveryTag.set(consulTag)
+            bkTag.setGatewayTag(consulTag)
         }
         chain?.doFilter(request, response)
-        DiscoveryTag.remove()
+        bkTag.removeGatewayTag()
     }
 
     override fun destroy() {

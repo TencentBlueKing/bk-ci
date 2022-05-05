@@ -205,8 +205,8 @@ class Client @Autowired constructor(
                     findServiceName(clz),
                     clz.java,
                     compositeDiscoveryClient!!,
-                    bkTag.getTag(),
-                    colour
+                    colour,
+                    bkTag
                 )
             )
     }
@@ -230,7 +230,7 @@ class Client @Autowired constructor(
                     throw e
                 }
             })
-            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, bkTag.getTag(), colour))
+            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, colour, bkTag))
     }
 
     /**
@@ -289,14 +289,20 @@ class Client @Autowired constructor(
                     findServiceName(clz),
                     clz.java,
                     compositeDiscoveryClient!!,
-                    bkTag.getTag(),
-                    colour
+                    colour,
+                    bkTag
                 )
             )
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
-        return MicroServiceTarget(findServiceName(clz), clz.java, compositeDiscoveryClient!!, bkTag.getTag(),colour).url()
+        return MicroServiceTarget(
+            findServiceName(clz),
+            clz.java,
+            compositeDiscoveryClient!!,
+            colour,
+            bkTag
+        ).url()
     }
 
     private fun findServiceName(clz: KClass<*>): String {

@@ -44,7 +44,7 @@ class ApiGatewayUtil @Autowired constructor(
     fun isAuth() = apiGatewayAuth
 
     fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getTag()
+        val consulTag = bkTag.getLocalTag()
         return if (consulTag.contains("stream") || consulTag.contains("gitci")) {
             ChannelCode.GIT
         } else if (consulTag.contains("auto")) {

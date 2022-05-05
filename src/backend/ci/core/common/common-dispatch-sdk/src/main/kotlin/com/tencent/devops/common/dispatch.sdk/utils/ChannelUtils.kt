@@ -39,7 +39,7 @@ class ChannelUtils @Autowired constructor(
     private val bkTag: BkTag
 ) {
     fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getTag()
+        val consulTag = bkTag.getLocalTag()
         return if (consulTag.contains("stream")) {
             ChannelCode.GIT
         } else if (consulTag.contains("auto")) {

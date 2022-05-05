@@ -84,7 +84,7 @@ class DispatchClient @Autowired constructor(
     }
 
     fun isGray(): Boolean {
-        return bkTag.getTag().contains("gray")
+        return bkTag.getLocalTag().contains("gray")
     }
 
     companion object {
