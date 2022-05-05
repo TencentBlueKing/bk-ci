@@ -24,56 +24,46 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.api.apigw.v4
 
-package com.tencent.devops.process.api.service
-
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_VARIABLE"], description = "服务-构建参数")
-@Path("/service/variable")
+@Api(tags = ["OPENAPI_DISPATCH_V4"], description = "OPENAPI-调度资源")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v4/dispatch")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceVarResource {
+@Suppress("ALL")
+interface ApigwDispatchResourceV4 {
 
-    @ApiOperation("获取指定构建或指定流水线下的构建变量")
-    @Path("/get_build_variable")
-    @GET
-    fun getBuildVar(
-        @ApiParam(value = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam(value = "构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam(value = "变量名称", required = false)
-        @QueryParam("varName")
-        varName: String?
-    ): Result<Map<String, String>>
-
-    @ApiOperation("获取指定构建或指定构建下的上下文变量")
-    @Path("/get_build_context")
-    @GET
-    fun getContextVar(
-        @ApiParam(value = "项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam(value = "流水线ID", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String,
-        @ApiParam(value = "构建ID", required = true)
-        @QueryParam("buildId")
-        buildId: String,
-        @ApiParam(value = "变量名称", required = false)
-        @QueryParam("contextName")
-        contextName: String?
-    ): Result<Map<String, String>>
+    @POST
+    @Path("/special_dockerhost/add")
+    @ApiOperation("批量新增专机配置", tags = ["v4_user_dispatch_special_add"])
+    fun createSpecialDockerHost(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("专机配置列表", required = true)
+        specialDockerHostVOs: List<SpecialDockerHostVO>
+    ): Result<Boolean>
 }
