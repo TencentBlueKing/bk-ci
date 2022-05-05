@@ -154,6 +154,7 @@ object MessageCodeUtil {
      * @return 语言描述信息
      */
     fun getMessageByLocale(chinese: String, english: String?): String {
+        logger.info("getBkLocale: ${CommonUtils.getBkLocale()}")
         return when (CommonUtils.getBkLocale()) {
             CommonUtils.ZH_CN -> chinese // 简体中文描述
             CommonUtils.ZH_TW -> chinese // 繁体中文描述
