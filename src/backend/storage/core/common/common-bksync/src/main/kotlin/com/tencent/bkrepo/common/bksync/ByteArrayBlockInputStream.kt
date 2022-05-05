@@ -23,5 +23,6 @@ class ByteArrayBlockInputStream(val bytes: ByteArray, val name: String) : BlockI
     }
 
     override fun close() {
+        // nothing to close
     }
 }
