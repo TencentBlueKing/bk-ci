@@ -27,10 +27,13 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TShardingRoutingRuleRecord
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
+import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -59,10 +62,21 @@ class ShardingRoutingRuleDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, routingName: String): Int {
+    fun countByName(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        routingName: String
+    ): Int {
         with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(CLUSTER_NAME.eq(clusterName))
+            conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(TYPE.eq(type.name))
+            conditions.add(ROUTING_NAME.eq(routingName))
             return dslContext.selectCount().from(this)
-                .where(ROUTING_NAME.eq(routingName))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)!!
         }
     }

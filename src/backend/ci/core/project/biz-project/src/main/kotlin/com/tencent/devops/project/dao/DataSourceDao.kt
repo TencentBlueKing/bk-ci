@@ -27,6 +27,7 @@
 
 package com.tencent.devops.project.dao
 
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TDataSource
 import com.tencent.devops.model.project.tables.TShardingRoutingRule
@@ -101,13 +102,13 @@ class DataSourceDao {
     fun listByModule(
         dslContext: DSLContext,
         clusterName: String,
-        moduleCode: String,
+        moduleCode: SystemModuleEnum,
         fullFlag: Boolean? = false
     ): Result<TDataSourceRecord>? {
         return with(TDataSource.T_DATA_SOURCE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(CLUSTER_NAME.eq(clusterName))
-            conditions.add(MODULE_CODE.eq(moduleCode))
+            conditions.add(MODULE_CODE.eq(moduleCode.name))
             if (fullFlag != null) {
                 conditions.add(FULL_FLAG.eq(fullFlag))
             }
