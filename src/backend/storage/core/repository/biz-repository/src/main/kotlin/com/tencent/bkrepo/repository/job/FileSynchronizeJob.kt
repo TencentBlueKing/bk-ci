@@ -32,14 +32,15 @@
 package com.tencent.bkrepo.repository.job
 
 import com.tencent.bkrepo.common.api.util.executeAndMeasureTime
+import com.tencent.bkrepo.common.artifact.cluster.ClusterProperties
 import com.tencent.bkrepo.common.service.log.LoggerHolder
 import com.tencent.bkrepo.common.storage.core.StorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
+import com.tencent.bkrepo.repository.job.base.CenterNodeJob
 import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
-import org.springframework.scheduling.annotation.Async
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 /**
  * 文件同步任务
@@ -47,22 +48,25 @@ import org.springframework.stereotype.Component
 @Component
 class FileSynchronizeJob(
     private val storageService: StorageService,
-    private val storageCredentialService: StorageCredentialService
-) {
+    private val storageCredentialService: StorageCredentialService,
+    private val clusterProperties: ClusterProperties
+) : CenterNodeJob() {
 
     @Scheduled(cron = "0 0 0 ? * 6")
-    @Async
-    @SchedulerLock(name = "FileSynchronizeJob", lockAtMostFor = "P7D")
-    fun run() {
-        logger.info("Starting to synchronize file.")
-        // cleanup default storage
-        syncOnStorage()
-        // cleanup extended storage
-        storageCredentialService.list().forEach { syncOnStorage(it) }
-        logger.info("Synchronize file completed.")
+    override fun start() {
+        super.start()
     }
 
-    private fun syncOnStorage(storage: StorageCredentials? = null) {
+    override fun run() {
+        // cleanup default storage
+        syncStorage()
+        // cleanup extended storage
+        storageCredentialService.list(clusterProperties.region).forEach { syncStorage(it) }
+    }
+
+    override fun getLockAtMostFor(): Duration = Duration.ofDays(7)
+
+    private fun syncStorage(storage: StorageCredentials? = null) {
         val key = storage?.key ?: "default"
         logger.info("Starting to synchronize file on storage[$key]")
         executeAndMeasureTime {

@@ -145,6 +145,15 @@ class ArtifactContextHolder(
         }
 
         /**
+         * 在非http的上下文获取仓库信息
+         * */
+        fun getRepoDetail(repositoryId: RepositoryId): RepositoryDetail {
+            return repositoryDetailCache.get(repositoryId) {
+                queryRepoDetail(repositoryId)
+            }
+        }
+
+        /**
          * 根据请求[request]获取[RepositoryId]
          * 解析path variable得到projectId和repoName，并保存在request的attributes中
          */

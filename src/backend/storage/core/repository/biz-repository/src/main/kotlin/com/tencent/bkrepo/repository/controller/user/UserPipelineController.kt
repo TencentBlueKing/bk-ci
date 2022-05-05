@@ -66,10 +66,14 @@ class UserPipelineController(
         val nodeMap = nodeService.listNode(artifactInfo, option).associateBy { it.name }
         // 3. 内存过滤
         val pipelineNodeList = mutableListOf<NodeInfo>()
-        pipelines.forEach {
-            val node = nodeMap[it]
-            if (node != null) {
-                pipelineNodeList.add(node)
+        if (pipelines.firstOrNull().equals("*")) {
+            pipelineNodeList.addAll(nodeMap.values)
+        } else {
+            pipelines.forEach {
+                val node = nodeMap[it]
+                if (node != null) {
+                    pipelineNodeList.add(node)
+                }
             }
         }
         // 4. 返回结果

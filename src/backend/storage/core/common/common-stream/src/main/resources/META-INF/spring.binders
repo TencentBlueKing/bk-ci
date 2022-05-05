@@ -1,0 +1,4 @@
+noop:com.tencent.bkrepo.common.stream.binder.noop.NoOpBinderAutoConfiguration
+memory:com.tencent.bkrepo.common.stream.binder.memory.config.MemoryBinderAutoConfiguration
+file:com.tencent.bkrepo.common.stream.binder.file.config.FileBinderAutoConfiguration
+pulsar:com.tencent.bkrepo.common.stream.binder.pulsar.autoconfigurate.PulsarBinderAutoConfiguration
