@@ -24,48 +24,39 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.process.api.service
+package com.tencent.devops.openapi.resources.apigw.v4
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineContextService
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
+import com.tencent.devops.openapi.api.apigw.v4.ApigwDispatchResourceV4
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceVarResourceImpl @Autowired constructor(
-    private val buildVariableService: BuildVariableService,
-    private val pipelineContextService: PipelineContextService
-) : ServiceVarResource {
+class ApigwDispatchResourceV4Impl @Autowired constructor(
+    private val client: Client
+) : ApigwDispatchResourceV4 {
 
-    override fun getBuildVar(projectId: String, buildId: String, varName: String?): Result<Map<String, String>> {
-        return if (varName.isNullOrBlank()) {
-            Result(buildVariableService.getAllVariable(projectId, buildId))
-        } else {
-            Result(mapOf(varName to (buildVariableService.getVariable(projectId, buildId, varName) ?: "")))
-        }
+    override fun createSpecialDockerHost(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        specialDockerHostVOs: List<SpecialDockerHostVO>
+    ): Result<Boolean> {
+        logger.info("$userId add special dockerhost: ${JsonUtil.toJson(specialDockerHostVOs)}")
+        client.get(ServiceDockerHostResource::class).createSpecialDockerHost(
+            userId = userId,
+            specialDockerHostVOs = specialDockerHostVOs
+        )
+
+        return Result(true)
     }
 
-    override fun getContextVar(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        contextName: String?
-    ): Result<Map<String, String>> {
-        val buildVars = buildVariableService.getAllVariable(projectId, buildId)
-        return if (contextName.isNullOrBlank()) {
-            val contextVar = pipelineContextService.getAllBuildContext(buildVars).toMutableMap()
-            Result(
-                contextVar.plus(pipelineContextService.buildFinishContext(projectId, pipelineId, buildId))
-            )
-        } else {
-            val context = pipelineContextService.getBuildContext(buildVars, contextName)
-            if (context.isNullOrEmpty()) {
-                Result(emptyMap())
-            } else {
-                Result(mapOf(contextName to context))
-            }
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwDispatchResourceV4Impl::class.java)
     }
 }

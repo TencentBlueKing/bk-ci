@@ -104,14 +104,16 @@ class TencentGitServiceImpl @Autowired constructor(val client: Client) : IGitSer
         userId: String,
         repository: String,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        search: String?
     ): List<GitBranch> {
         return client.getScm(ServiceGitResource::class).getBranch(
             accessToken = accessToken,
             userId = userId,
             repository = repository,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            search = search
         ).data ?: emptyList()
     }
 
