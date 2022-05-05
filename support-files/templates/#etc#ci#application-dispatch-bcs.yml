@@ -23,3 +23,8 @@ bcs:
       cpu: 16.0
       memory: 32769
       disk: 100
+
+registry:
+  host: __BK_CI_DOCKER_REGISTRY_URL__
+  userName: __BK_CI_DOCKER_REGISTRY_USER__
+  password: __BK_CI_DOCKER_REGISTRY_PASSWORD__
