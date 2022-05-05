@@ -104,6 +104,7 @@ const val AND = "and" // 和
 const val OR = "or" // 或
 const val TIMETOSELECT = "timetoSelect" // 时必选
 const val MASTER = "master" // 主干
+const val SYSTEM = "system" // 系统
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
@@ -114,3 +115,4 @@ const val KEY_INPUT = "vuex-input"
 const val KEY_TEXTAREA = "vuex-textarea"
 const val KEY_CODE_EDITOR = "atom-ace-editor"
 const val API_ACCESS_TOKEN_PROPERTY = "access_token"
+const val TEMPLATE_ACROSS_INFO_ID = "devops_template_across_info_id"

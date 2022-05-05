@@ -555,7 +555,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = buildInfo.projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 
@@ -590,7 +591,7 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             LOG.warn("ENGINE|$buildId|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
             false
         } else {
-            buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)
+            buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId, executeCount = task.executeCount)
             pipelineRuntimeService.completeClaimBuildTask(
                 completeTask = CompleteTask(
                     projectId = task.projectId,

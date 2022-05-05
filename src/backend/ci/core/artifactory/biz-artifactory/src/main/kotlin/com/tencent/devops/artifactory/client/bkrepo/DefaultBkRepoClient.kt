@@ -29,6 +29,7 @@ package com.tencent.devops.artifactory.client.bkrepo
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
@@ -40,6 +41,7 @@ import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.bkrepo.repository.pojo.node.NodeInfo
 import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveRequest
@@ -264,6 +266,7 @@ class DefaultBkRepoClient constructor(
         }
     }
 
+    @Deprecated(message = "api已废弃", replaceWith = ReplaceWith("listFilePage"))
     fun listFile(
         userId: String,
         projectId: String,
@@ -291,6 +294,44 @@ class DefaultBkRepoClient constructor(
             }
 
             val responseData = objectMapper.readValue<Response<List<FileInfo>>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RemoteServiceException("get file info failed: ${responseData.message}", response.code())
+            }
+
+            return responseData.data!!
+        }
+    }
+
+    fun listFilePage(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String,
+        includeFolders: Boolean = false,
+        deep: Boolean = false,
+        page: Int,
+        pageSize: Int
+    ): Page<NodeInfo> {
+        val url = "${getBkRepoUrl()}/repository/api/node/page/$projectId/$repoName/$path" +
+            "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize"
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", bkRepoAuthorization)
+            .header(BK_REPO_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.warn("list file failed, request: ${request.url()}, responseContent: $responseContent")
+                if (response.code() == 404) {
+                    throw NotFoundException("list file failed: $path not found")
+                }
+                throw RemoteServiceException("get file info failed: $responseContent", response.code())
+            }
+
+            val responseData = objectMapper.readValue<Response<Page<NodeInfo>>>(responseContent)
             if (responseData.isNotOk()) {
                 throw RemoteServiceException("get file info failed: ${responseData.message}", response.code())
             }

@@ -63,7 +63,8 @@ class PipelineAtomStatisticsService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         version: Int? = null,
-        deleteFlag: Boolean = false
+        deleteFlag: Boolean = false,
+        restoreFlag: Boolean = false
     ) {
         val pipelineNumUpdateList = mutableListOf<StoreStatisticPipelineNumUpdate>()
         val currentVersionModelStr = getVersionModelString(projectId, pipelineId, version) ?: return
@@ -78,7 +79,7 @@ class PipelineAtomStatisticsService @Autowired constructor(
                 if (version == null) {
                     return
                 }
-                if (version > 1) {
+                if (version > 1 && !restoreFlag) {
                     val lastVersionModelStr = getVersionModelString(projectId, pipelineId, version - 1) ?: return
                     val lastVersionModel = JsonUtil.to(lastVersionModelStr, Model::class.java)
                     // 获取上一个流水线版本模型中插件的集合（去掉重复插件）

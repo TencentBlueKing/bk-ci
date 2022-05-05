@@ -118,17 +118,18 @@ class PipelineAgentLessDispatchService @Autowired constructor(
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
             LOG.info("[${event.buildId}]| Start to finish the pipeline build($event)")
+            val executeCount = event.executeCount
             if (event.vmSeqId.isNullOrBlank()) {
                 val records = pipelineDockerBuildDao
                     .listBuilds(dslContext, event.buildId)
                 records.forEach {
-                    finishBuild(it, event.buildResult)
+                    finishBuild(it, event.buildResult, executeCount)
                 }
             } else {
                 val record = pipelineDockerBuildDao
                     .getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
                 if (record != null) {
-                    finishBuild(record, event.buildResult)
+                    finishBuild(record, event.buildResult, executeCount)
                 }
             }
         } finally {
@@ -138,7 +139,8 @@ class PipelineAgentLessDispatchService @Autowired constructor(
 
     private fun finishBuild(
         record: TDispatchPipelineDockerBuildRecord,
-        success: Boolean
+        success: Boolean,
+        executeCount: Int? = null
     ) {
         LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
         try {
@@ -161,6 +163,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                         vmSeqId = record.vmSeqId?.toInt() ?: 0,
                         containerId = record.containerId,
                         dockerIp = record.dockerIp,
+                        poolNo = record.poolNo,
                         clusterType = DockerHostClusterType.AGENT_LESS
                     )
                 }
@@ -171,7 +174,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
                 record.vmSeqId,
                 if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
 
-            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString(), executeCount)
 
             // 无编译环境清除redisAuth
             redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))

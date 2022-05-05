@@ -60,8 +60,8 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
             }
             run(event)
             result = true
-        } catch (ignored: Throwable) {
-            logger.error("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL|e=$ignored")
+        } catch (ignored: Throwable) { // #5109 打开堆栈，追踪未知错误
+            logger.error("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL|e=$ignored", ignored)
         } finally {
             if (!result && event.retryTime > 0) {
                 event.retryTime = event.retryTime - 1

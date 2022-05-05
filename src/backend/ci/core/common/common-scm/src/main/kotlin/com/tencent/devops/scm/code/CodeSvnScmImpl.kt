@@ -101,7 +101,7 @@ class CodeSvnScmImpl constructor(
         }
     }
 
-    override fun getBranches(search: String?): List<String> {
+    override fun getBranches(search: String?, page: Int, pageSize: Int): List<String> {
         val repository = getRepository()
         val branchNames = ArrayList<String>()
         branchNames.add("trunk")
@@ -138,8 +138,10 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun addWebHook(hookUrl: String) {
-        logger.info("[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
-            "|AddWebHookSVN|repo=$projectName")
+        logger.info(
+            "[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
+                    "|AddWebHookSVN|repo=$projectName"
+        )
         try {
             val hooks = SVNApi.getWebhooks(svnConfig, url)
             val addHooks = if (hooks.isEmpty()) {

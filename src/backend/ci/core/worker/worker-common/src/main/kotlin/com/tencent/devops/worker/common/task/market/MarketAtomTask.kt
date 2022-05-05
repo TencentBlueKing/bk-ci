@@ -45,7 +45,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -85,7 +84,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
-import com.tencent.devops.worker.common.utils.CredentialUtils
+import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -150,12 +149,14 @@ open class MarketAtomTask : ITask() {
 
         cleanOutput(atomTmpSpace)
 
-        val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-        var runtimeVariables = if (buildTask.buildVariable != null) {
-            variablesMap.plus(buildTask.buildVariable!!)
-        } else {
-            variablesMap
-        }
+        // 解析跨项目模板信息
+        val acrossInfo by lazy { TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId) }
+        var runtimeVariables = buildVariables.variablesWithType.associate {
+            it.key to it.value.toString().parseCredentialValue(
+                context = buildTask.buildVariable,
+                acrossProjectId = acrossInfo?.targetProjectId
+            )
+        }.plus(buildTask.buildVariable ?: mapOf())
 
         // 解析输出字段模板
         val props = JsonUtil.toMutableMap(atomData.props!!)
@@ -170,22 +171,13 @@ open class MarketAtomTask : ITask() {
 
         val systemVariables = mapOf(WORKSPACE_ENV to workspace.absolutePath)
 
-        // 解析跨项目模板信息
-        val acrossInfo = TemplateAcrossInfoUtil.getAcrossInfo(buildVariables.variables, buildTask.taskId)
-
         val atomParams = mutableMapOf<String, String>()
         try {
             val inputMap = map["input"] as Map<String, Any>?
             inputMap?.forEach { (name, value) ->
-                var valueStr = JsonUtil.toJson(value)
-                valueStr = ReplacementUtils.replace(valueStr, object : ReplacementUtils.KeyReplacement {
-                    override fun getReplacement(key: String): String? {
-                        return CredentialUtils.getCredentialContextValue(key, acrossInfo?.targetProjectId)
-                    }
-                })
                 // 修复插件input环境变量替换问题 #5682
                 atomParams[name] = EnvUtils.parseEnv(
-                    command = valueStr,
+                    command = JsonUtil.toJson(value),
                     data = buildVariables.variables,
                     contextMap = if (buildTask.containerType == VMBuildContainer.classType) {
                         // 只有构建环境下运行的插件才有workspace变量
@@ -199,7 +191,7 @@ open class MarketAtomTask : ITask() {
                     } else {
                         emptyMap()
                     }
-                )
+                ).parseCredentialValue(null, acrossInfo?.targetProjectId)
             }
         } catch (e: Throwable) {
             logger.error("plugin input illegal! ", e)
@@ -358,6 +350,7 @@ open class MarketAtomTask : ITask() {
                             dir = atomTmpSpace,
                             workspace = workspace,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -371,6 +364,7 @@ open class MarketAtomTask : ITask() {
                             runtimeVariables = environment,
                             systemEnvVariables = systemEnvVariables,
                             errorMessage = errorMessage,
+                            jobId = buildVariables.jobId,
                             stepId = buildTask.stepId
                         )
                     }
@@ -422,7 +416,9 @@ open class MarketAtomTask : ITask() {
         when (AgentEnv.getOS()) {
             OSType.WINDOWS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\r\n${it}\r\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\r\n"
+                    ) { "\r\n$it" }
                     BatScriptUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
@@ -436,7 +432,9 @@ open class MarketAtomTask : ITask() {
             }
             OSType.LINUX, OSType.MAC_OS -> {
                 if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString { "\n${it}\n" }
+                    val preCommand = preCmds.joinToString(
+                        separator = "\n"
+                    ) { "\n$it" }
                     ShellUtil.execute(
                         buildId = buildVariables.buildId,
                         script = preCommand,
@@ -618,6 +616,16 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 添加插件对接平台错误码信息
+        val platformCode = atomResult?.platformCode
+        if (!platformCode.isNullOrBlank()) {
+            addPlatformCode(platformCode)
+            atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
+        }
+        val platformErrorCode = atomResult?.platformErrorCode
+        if (platformErrorCode != null) {
+            addPlatformErrorCode(platformErrorCode)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
@@ -676,10 +684,17 @@ open class MarketAtomTask : ITask() {
                     )
                 }
 
-                // 如果定义了插件上下文标识ID，才做outputs输出，即使没有jobId也以containerId前缀输出
-                buildTask.stepId?.let {
-                    val jobPrefix = "jobs.${buildVariables.jobId ?: buildVariables.containerId}"
-                    env["$jobPrefix.steps.${buildTask.stepId}.outputs.$key"] = env[key] ?: ""
+                // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
+                // 即使没有jobId也以containerId前缀输出
+                val value = env[key] ?: ""
+                if (!buildTask.stepId.isNullOrBlank() &&
+                    !buildVariables.jobId.isNullOrBlank() &&
+                    !key.startsWith("variables.")
+                ) {
+                    val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
+                    env[contextKey] = value
+                    // TODO 待定：是否进行原变量名输出，暂时保留
+                    // env.remove(key)
                 }
 
                 TaskUtil.removeTaskId()
@@ -689,10 +704,10 @@ open class MarketAtomTask : ITask() {
                     if (sensitiveFlag) {
                         LoggerService.addNormalLine("output(sensitive): $key=******")
                     } else {
-                        LoggerService.addNormalLine("output(normal): $key=${env[key]}")
+                        LoggerService.addNormalLine("output(normal): $key=$value")
                     }
                 } else {
-                    LoggerService.addWarnLine("output(except): $key=${env[key]}")
+                    LoggerService.addWarnLine("output(except): $key=$value")
                 }
             }
 

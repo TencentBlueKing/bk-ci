@@ -50,6 +50,7 @@ interface ICommand {
         buildEnvs: List<BuildEnv>,
         continueNoneZero: Boolean = false,
         errorMessage: String? = null,
+        jobId: String? = null,
         stepId: String? = null,
         charsetType: String? = null,
         taskId: String? = null
@@ -63,17 +64,15 @@ interface ICommand {
         taskId: String?
     ): String {
         // 解析跨项目模板信息
-        val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
+        val acrossTargetProjectId by lazy {
+            TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
+        }
 
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = if (data[key] != null) {
-                data[key]!!
-            } else {
-                try {
-                    CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-                } catch (ignore: Exception) {
-                    CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
-                }
+            override fun getReplacement(key: String): String? = data[key] ?: try {
+                CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+            } catch (ignore: Exception) {
+                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
             }
         }, mapOf(
             WORKSPACE_CONTEXT to dir.absolutePath,

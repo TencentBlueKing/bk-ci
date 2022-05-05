@@ -47,10 +47,18 @@ class ServiceVarResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getContextVar(projectId: String, buildId: String, contextName: String?): Result<Map<String, String>> {
+    override fun getContextVar(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        contextName: String?
+    ): Result<Map<String, String>> {
         val buildVars = buildVariableService.getAllVariable(projectId, buildId)
         return if (contextName.isNullOrBlank()) {
-            Result(pipelineContextService.getAllBuildContext(buildVars))
+            val contextVar = pipelineContextService.getAllBuildContext(buildVars).toMutableMap()
+            Result(
+                contextVar.plus(pipelineContextService.buildFinishContext(projectId, pipelineId, buildId))
+            )
         } else {
             val context = pipelineContextService.getBuildContext(buildVars, contextName)
             if (context.isNullOrEmpty()) {

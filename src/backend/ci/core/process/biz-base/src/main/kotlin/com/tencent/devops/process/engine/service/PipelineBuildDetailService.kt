@@ -110,7 +110,7 @@ class PipelineBuildDetailService @Autowired constructor(
             )
         ) ?: return null
 
-        val latestVersion = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId)?.version ?: -1
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, buildInfo.pipelineId) ?: return null
 
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
 
@@ -119,9 +119,8 @@ class PipelineBuildDetailService @Autowired constructor(
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         if (refreshStatus) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
-            if (checkPassDays(buildInfo.startTime) &&
-                (buildInfo.status.isFailure() || buildInfo.status.isCancel())
-            ) {
+            // #6400 无需流水线是终态就可以进行task重试
+            if (checkPassDays(buildInfo.startTime)) {
                 ModelUtils.refreshCanRetry(model)
             }
         }
@@ -164,8 +163,9 @@ class PipelineBuildDetailService @Autowired constructor(
             buildNum = buildInfo.buildNum,
             cancelUserId = record.cancelUser ?: "",
             curVersion = buildInfo.version,
-            latestVersion = latestVersion,
+            latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
+            lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime
         )
     }

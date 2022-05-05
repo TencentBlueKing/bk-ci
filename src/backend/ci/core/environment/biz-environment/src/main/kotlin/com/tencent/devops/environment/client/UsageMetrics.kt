@@ -86,8 +86,8 @@ interface UsageMetrics {
 
         // private const val TIME_RANGE_DAY = "DAY"
         private const val TIME_RANGE_WEEK = "WEEK"
-        private const val TIME_PART_HOUR = "time >= now() - 1h and time <= now() - 30s GROUP BY time(10s)"
-        private const val TIME_PART_DAY = "time >= now() - 24h and time <= now() - 30s GROUP BY time(2m)"
+        private const val TIME_PART_HOUR = "time >= now() - 1h and time <= now() - 30s GROUP BY time(1m)"
+        private const val TIME_PART_DAY = "time >= now() - 24h and time <= now() - 30s GROUP BY time(1m)"
         private const val TIME_PART_WEEK = "time >= now() - 7d and time <= now() - 30s GROUP BY time(10m)"
         private const val TIME_GROUP_BY_HOUR = "10s"
         private const val TIME_GROUP_BY_DAY = "2m"

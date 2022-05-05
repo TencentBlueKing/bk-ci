@@ -81,7 +81,7 @@ interface ApigwBuildResourceV3 {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("启动参数", required = true)
+        @ApiParam("启动参数：map<变量名(string),变量值(string)>", required = true)
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
@@ -196,7 +196,7 @@ interface ApigwBuildResourceV3 {
         pageSize: Int?,
         @ApiParam(
             value = "利用updateTime进行排序，True为降序，False为升序，null时以Build number 降序",
-            required = false, defaultValue = "20"
+            required = false, defaultValue = "null"
         )
         @QueryParam("updateTimeDesc")
         updateTimeDesc: Boolean? = null

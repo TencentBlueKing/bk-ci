@@ -51,6 +51,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
+import org.jooq.Record2
 
 @Suppress("ALL")
 @Repository
@@ -80,7 +81,8 @@ class PipelineBuildDao {
         webhookType: String?,
         webhookInfo: String?,
         buildMsg: String?,
-        buildNumAlias: String? = null
+        buildNumAlias: String? = null,
+        concurrencyGroup: String? = null
     ) {
         try {
             with(T_PIPELINE_BUILD_HISTORY) {
@@ -106,7 +108,8 @@ class PipelineBuildDao {
                     WEBHOOK_TYPE,
                     WEBHOOK_INFO,
                     BUILD_MSG,
-                    BUILD_NUM_ALIAS
+                    BUILD_NUM_ALIAS,
+                    CONCURRENCY_GROUP
                 ).values(
                     buildId,
                     buildNum,
@@ -128,7 +131,8 @@ class PipelineBuildDao {
                     webhookType,
                     webhookInfo,
                     buildMsg,
-                    buildNumAlias
+                    buildNumAlias,
+                    concurrencyGroup
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -161,6 +165,21 @@ class PipelineBuildDao {
                 where.and(STATUS.`in`(statusIntSet))
             }
             where.fetch()
+        }
+    }
+
+    fun getBuildTasksByConcurrencyGroup(
+        dslContext: DSLContext,
+        projectId: String,
+        concurrencyGroup: String,
+        statusSet: List<BuildStatus>
+    ): List<Record2<String, String>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .fetch()
         }
     }
 
@@ -478,6 +497,7 @@ class PipelineBuildDao {
                 status = BuildStatus.values()[t.status],
                 queueTime = t.queueTime?.timestampmilli() ?: 0L,
                 startUser = t.startUser,
+                triggerUser = t.triggerUser,
                 startTime = t.startTime?.timestampmilli() ?: 0L,
                 endTime = t.endTime?.timestampmilli() ?: 0L,
                 taskCount = t.taskCount,
@@ -496,7 +516,8 @@ class PipelineBuildDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
                 retryFlag = t.isRetry,
-                executeTime = t.executeTime ?: 0
+                executeTime = t.executeTime ?: 0,
+                concurrencyGroup = t.concurrencyGroup
             )
         }
     }

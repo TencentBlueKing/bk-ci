@@ -89,7 +89,15 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         projectCode: String,
         resourceType: String
     ): List<String> {
-        // stream场景下不会使用到此场景. 做默认实现
+        // 校验项目权限， 有就返回全部
+        if (validateUserResourcePermission(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType
+        )) {
+            return arrayListOf("*")
+        }
         return emptyList()
     }
 
@@ -99,8 +107,12 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
-        // stream场景下不会使用到此场景. 做默认实现
-        return emptyMap()
+        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        actions.forEach {
+            val actionList = getUserResourceByAction(userId, it, projectCode, resourceType)
+            instanceMap[AuthPermission.get(it)] = actionList
+        }
+        return instanceMap
     }
 
     /**

@@ -492,6 +492,9 @@ interface ServiceBuildResource {
         @ApiParam("Container序列号", required = true)
         @PathParam("vmSeqId")
         vmSeqId: String,
+        @ApiParam("构建机节点ID（不是AgentID)", required = true)
+        @QueryParam("nodeHashId")
+        nodeHashId: String? = null,
         @ApiParam("结果状态", required = true)
         simpleResult: SimpleResult
     ): Result<Boolean>
