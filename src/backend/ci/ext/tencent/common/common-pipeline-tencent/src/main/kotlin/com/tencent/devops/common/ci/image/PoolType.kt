@@ -32,7 +32,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispathcType
+import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -79,7 +79,7 @@ enum class PoolType {
 
     DockerOnBcs {
         override fun transfer(pool: Pool): DispatchType {
-            return PublicBcsDispathcType(
+            return PublicBcsDispatchType(
                 pool.container!!,
                 "0",
                 imageType = ImageType.THIRD,

@@ -40,7 +40,7 @@ import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.SampleDispatchInfo
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispathcType
+import com.tencent.devops.common.pipeline.type.bcs.PublicBcsDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
@@ -103,7 +103,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         // 在商店发布的蓝盾源镜像，无需凭证
                         val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
-                    } else if (dispatchType is PublicBcsDispathcType) {
+                    } else if (dispatchType is PublicBcsDispatchType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
                         val pool = Pool(dispatchType.value.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
@@ -115,7 +115,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的第三方源镜像，带凭证
                         genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
-                    } else if (dispatchType is PublicBcsDispathcType) {
+                    } else if (dispatchType is PublicBcsDispatchType) {
                         // 在商店发布的第三方源镜像，带凭证
                         genThirdBcsDispatchMessage(dispatchType, projectId, buildId)
                     } else if (dispatchType is IDCDispatchType) {
@@ -145,7 +145,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 // 第三方镜像 DevCloud
                 if (dispatchType is PublicDevCloudDispathcType) {
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
-                } else if (dispatchType is PublicBcsDispathcType) {
+                } else if (dispatchType is PublicBcsDispatchType) {
                     // 在商店发布的第三方源镜像，带凭证
                     genThirdBcsDispatchMessage(dispatchType, projectId, buildId)
                 }
@@ -233,7 +233,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
     }
 
     private fun genThirdBcsDispatchMessage(
-        dispatchType: PublicBcsDispathcType,
+        dispatchType: PublicBcsDispatchType,
         projectId: String,
         buildId: String
     ) {
