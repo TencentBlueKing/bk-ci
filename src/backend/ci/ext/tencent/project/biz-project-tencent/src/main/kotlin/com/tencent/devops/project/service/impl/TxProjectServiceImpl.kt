@@ -59,15 +59,18 @@ import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectDataSourceAssignService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
@@ -98,14 +101,15 @@ class TxProjectServiceImpl @Autowired constructor(
     gray: Gray,
     client: Client,
     private val projectDispatcher: ProjectDispatcher,
-    private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val projectDataSourceAssignService: ProjectDataSourceAssignService,
+    authPermissionApi: AuthPermissionApi,
+    projectAuthServiceCode: ProjectAuthServiceCode,
+    projectDataSourceAssignService: ProjectDataSourceAssignService,
     private val managerService: ManagerService,
     private val projectIamV0Service: ProjectIamV0Service,
     private val tokenService: ClientTokenService,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val projectExtPermissionService: ProjectExtPermissionService
+    private val projectExtPermissionService: ProjectExtPermissionService,
+    private val projectTagService: ProjectTagService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -125,6 +129,15 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
+
+    @Value("\${tag.auto:#{null}}")
+    private val autoTag: String? = null
+
+    @Value("\${tag.stream:#{null}}")
+    private val streamTag: String = "stream"
+
+    @Value("\${tag.prod:#{null}}")
+    private val prodTag: String? = null
 
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
@@ -149,7 +162,7 @@ class TxProjectServiceImpl @Autowired constructor(
         if (englishNames.isEmpty()) {
             return null
         }
-        if (!englishNames.contains(projectVO!!.englishName)) {
+        if (!englishNames.contains(projectVO.englishName)) {
             logger.warn("The user don't have the permission to get the project $englishName")
             return null
         }
@@ -199,13 +212,13 @@ class TxProjectServiceImpl @Autowired constructor(
         projectId: String,
         accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
-        projectCreateExtInfo: ProjectCreateExtInfo
+        createExtInfo: ProjectCreateExtInfo
     ) {
         // 添加repo项目
         val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
         logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
 
-        if (projectCreateExtInfo.needAuth!!) {
+        if (createExtInfo.needAuth!!) {
             val newAccessToken = if (accessToken.isNullOrBlank()) {
                 bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
             } else accessToken
@@ -213,7 +226,7 @@ class TxProjectServiceImpl @Autowired constructor(
             projectPaasCCService.createPaasCCProject(
                 userId = userId,
                 projectId = projectId,
-                accessToken = newAccessToken!!,
+                accessToken = newAccessToken,
                 projectCreateInfo = projectCreateInfo
             )
         }
@@ -328,6 +341,39 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun hasCreatePermission(userId: String): Boolean {
         return true
+    }
+
+    override fun createExtProject(
+        userId: String,
+        projectCode: String,
+        projectCreateInfo: ProjectCreateInfo,
+        needAuth: Boolean,
+        needValidate: Boolean,
+        channel: ProjectChannelCode
+    ): ProjectVO? {
+        val projectVO = super.createExtProject(userId, projectCode, projectCreateInfo, needAuth, needValidate, channel)
+        val routerTag = if (channel == ProjectChannelCode.GITCI) {
+            streamTag
+        } else if (channel == ProjectChannelCode.CODECC) {
+            autoTag
+        } else if (channel != ProjectChannelCode.AUTO) {
+            autoTag
+        } else {
+            prodTag
+        }
+        // 根据项目channel路由项目
+        val projectTagUpdate = ProjectTagUpdateDTO(
+            routerTag = routerTag!!,
+            projectCodeList = arrayListOf(projectCode),
+            bgId = null,
+            centerId = null,
+            deptId = null,
+            channel = null
+        )
+        projectTagService.updateTagByProject(
+            projectTagUpdate
+        )
+        return projectVO
     }
 
     override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {

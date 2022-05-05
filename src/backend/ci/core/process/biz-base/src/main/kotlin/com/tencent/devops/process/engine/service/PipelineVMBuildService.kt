@@ -555,7 +555,8 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
             completeTask = CompleteTask(
                 projectId = buildInfo.projectId, buildId = buildId, taskId = result.taskId,
                 userId = buildInfo.startUser, buildStatus = buildStatus,
-                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message
+                errorType = errorType, errorCode = result.errorCode, errorMsg = result.message,
+                platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
 

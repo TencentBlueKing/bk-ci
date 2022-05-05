@@ -47,6 +47,7 @@ dependencies {
     api("com.squareup.okhttp3:okhttp")
     api("com.fasterxml.jackson.module:jackson-module-jsonSchema")
 
+    api(project(":ext:tencent:process:common-pipeline-yaml-tencent"))
 
     api(project(":core:common:common-service"))
     api(project(":core:common:common-web"))

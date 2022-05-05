@@ -36,14 +36,14 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.stream.api.op.OpStreamPipelineResource
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
-import com.tencent.devops.stream.trigger.GitCIEventService
-import com.tencent.devops.stream.v2.service.StreamPipelineBranchService
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import com.tencent.devops.stream.service.StreamPipelineBranchService
+import com.tencent.devops.stream.trigger.service.StreamEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @RestResource
 class OpStreamPipelineResourceImpl @Autowired constructor(
@@ -51,7 +51,7 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
-    private val gitCIEventService: GitCIEventService,
+    private val streamEventService: StreamEventService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao
 ) : OpStreamPipelineResource {
 
@@ -69,7 +69,7 @@ class OpStreamPipelineResourceImpl @Autowired constructor(
             channelCode = ChannelCode.GIT
         )
         // 删除相关的构建记录
-        gitCIEventService.deletePipelineBuildHistory(setOf(pipelineId))
+        streamEventService.deletePipelineBuildHistory(setOf(pipelineId))
         return Result(true)
     }
 

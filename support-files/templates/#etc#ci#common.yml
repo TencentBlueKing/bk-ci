@@ -11,6 +11,28 @@ spring:
       discovery:
         tags: __BK_CI_CONSUL_DISCOVERY_TAG__
         instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
+# spring cloud stream 配置，common-stream
+    stream:
+      binders:
+        extend-rabbit:
+          type: rabbit
+          environment:
+            spring:
+              rabbitmq:
+                virtual-host: __BK_CI_RABBITMQ_VHOST__
+                username: __BK_CI_RABBITMQ_VHOST__
+                password: __BK_CI_RABBITMQ_PASSWORD__
+                addresses: __BK_CI_RABBITMQ_ADDR__
+#        extend-pulsar:
+#          type: pulsar
+#          environment:
+#            spring:
+#              pulsar:
+#                serviceUrl: __BK_CI_PULSAR_URL__
+#                tokenAuthValue: __BK_CI_PULSAR_TOKEN__
+#                tenant: __BK_CI_PULSAR_TENANT__
+#                namespace: __BK_CI_PULSAR_NAMESPACE__
+      default-binder: extend-rabbit
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置

@@ -631,6 +631,16 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
+        // 添加插件对接平台错误码信息
+        val platformCode = atomResult?.platformCode
+        if (!platformCode.isNullOrBlank()) {
+            addPlatformCode(platformCode)
+            atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
+        }
+        val platformErrorCode = atomResult?.platformErrorCode
+        if (platformErrorCode != null) {
+            addPlatformErrorCode(platformErrorCode)
+        }
         deletePluginFile(atomTmpSpace)
         val success: Boolean
         if (atomResult == null) {
@@ -692,7 +702,10 @@ open class MarketAtomTask : ITask() {
                 // #4518 如果定义了插件上下文标识ID，进行上下文outputs输出
                 // 即使没有jobId也以containerId前缀输出
                 val value = env[key] ?: ""
-                if (!buildTask.stepId.isNullOrBlank() && !buildVariables.jobId.isNullOrBlank()) {
+                if (!buildTask.stepId.isNullOrBlank() &&
+                    !buildVariables.jobId.isNullOrBlank() &&
+                    !key.startsWith("variables.")
+                ) {
                     val contextKey = "jobs.${buildVariables.jobId}.steps.${buildTask.stepId}.outputs.$key"
                     env[contextKey] = value
                     // TODO 待定：是否进行原变量名输出，暂时保留
