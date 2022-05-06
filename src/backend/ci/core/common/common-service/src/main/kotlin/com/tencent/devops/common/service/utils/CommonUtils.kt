@@ -61,6 +61,15 @@ object CommonUtils {
 
     private const val ZH_HK = "ZH_HK" // 香港繁体中文
 
+    private var defaultLocale: String? = null
+        get() {
+            if (field == null) {
+                val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+                field = commonConfig.bkLocale ?: "EN"
+            }
+            return field
+        }
+
     private val simpleCnLanList = listOf(ZH_CN, "ZH-CN")
 
     private val twCnLanList = listOf(ZH_TW, "ZH-TW", ZH_HK, "ZH-HK")
@@ -161,7 +170,8 @@ object CommonUtils {
         return if (null != attributes) {
             val request = attributes.request
             val cookieLan = CookieUtil.getCookieValue(request, "blueking_language")
-            cookieLan ?: LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
+            // 获取字符集（与http请求头中的Accept-Language有关）
+            cookieLan ?: defaultLocale ?: LocaleContextHolder.getLocale().toString()
         } else {
             ZH_CN // 取不到语言信息默认为中文
         }
@@ -176,10 +186,7 @@ object CommonUtils {
         return when {
             simpleCnLanList.contains(locale.toUpperCase()) -> ZH_CN // 简体中文
             twCnLanList.contains(locale.toUpperCase()) -> ZH_TW // 繁体中文
-            else -> {
-                val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-                commonConfig.bkLocale ?: "EN"
-            }
+            else -> "EN"
         }
     }
 
