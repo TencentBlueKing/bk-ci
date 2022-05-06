@@ -1,9 +1,12 @@
 package com.tencent.devops.dispatch.kubernetes.pojo
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class KubernetesJobStatusResp(
     val deleted: Boolean,
     val status: String,
-    val pod_result: List<PodResult>?
+    @JsonProperty("pod_result")
+    val podResult: List<PodResult>?
 ) {
     data class PodResult(
         val ip: String?,
