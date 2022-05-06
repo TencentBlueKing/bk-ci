@@ -70,6 +70,8 @@ class BkShardingDataSourceConfiguration {
         private const val CLASS_BASED = "CLASS_BASED"
     }
 
+    @Value("\${sharding.log.switch:false}")
+    private val shardingLogSwitch: Boolean = false
     @Value("\${sharding.databaseShardingStrategy.algorithmClassName:#{null}}")
     private val databaseAlgorithmClassName: String? = null
     @Value("\${sharding.databaseShardingStrategy.shardingField:#{null}}")
@@ -148,29 +150,34 @@ class BkShardingDataSourceConfiguration {
             }
         }
         // 生成db分片算法配置
-        val dbShardingAlgorithmProps = Properties()
-        dbShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
-        dbShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, databaseAlgorithmClassName)
-        shardingRuleConfig.shardingAlgorithms[DB_SHARDING_ALGORITHM_NAME] =
-            ShardingSphereAlgorithmConfiguration(CLASS_BASED, dbShardingAlgorithmProps)
+        if (!databaseAlgorithmClassName.isNullOrBlank()) {
+            val dbShardingAlgorithmProps = Properties()
+            dbShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
+            dbShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, databaseAlgorithmClassName)
+            shardingRuleConfig.shardingAlgorithms[DB_SHARDING_ALGORITHM_NAME] =
+                ShardingSphereAlgorithmConfiguration(CLASS_BASED, dbShardingAlgorithmProps)
+            // 设置分库默认策略
+            shardingRuleConfig.defaultDatabaseShardingStrategy =
+                StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
+        }
         // 生成table分片算法配置
-        val tableShardingAlgorithmProps = Properties()
-        tableShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
-        tableShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, tableAlgorithmClassName)
-        shardingRuleConfig.shardingAlgorithms[TABLE_SHARDING_ALGORITHM_NAME] =
-            ShardingSphereAlgorithmConfiguration(CLASS_BASED, tableShardingAlgorithmProps)
-        // 设置分库分表默认策略
-        shardingRuleConfig.defaultDatabaseShardingStrategy =
-            StandardShardingStrategyConfiguration(databaseShardingField, DB_SHARDING_ALGORITHM_NAME)
-        shardingRuleConfig.defaultTableShardingStrategy =
-            StandardShardingStrategyConfiguration(tableShardingField, TABLE_SHARDING_ALGORITHM_NAME)
-        val properties = Properties()
+        if (!tableAlgorithmClassName.isNullOrBlank()) {
+            val tableShardingAlgorithmProps = Properties()
+            tableShardingAlgorithmProps.setProperty(STRATEGY, STANDARD)
+            tableShardingAlgorithmProps.setProperty(ALGORITHM_CLASS_NAME, tableAlgorithmClassName)
+            shardingRuleConfig.shardingAlgorithms[TABLE_SHARDING_ALGORITHM_NAME] =
+                ShardingSphereAlgorithmConfiguration(CLASS_BASED, tableShardingAlgorithmProps)
+            // 设置分表默认策略
+            shardingRuleConfig.defaultTableShardingStrategy =
+                StandardShardingStrategyConfiguration(tableShardingField, TABLE_SHARDING_ALGORITHM_NAME)
+        }
+        val dataSourceProperties = Properties()
         // 是否打印SQL解析和改写日志
-        properties.setProperty("sql-show", "false")
+        dataSourceProperties.setProperty("sql-show", shardingLogSwitch.toString())
         return ShardingSphereDataSourceFactory.createDataSource(
             dataSourceMap(config),
             listOf(shardingRuleConfig),
-            properties
+            dataSourceProperties
         )
     }
 
