@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.trigger
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -51,17 +50,16 @@ import javax.ws.rs.core.Response
 @SuppressWarnings("LongParameterList", "ThrowsCount")
 class ManualTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val objectMapper: ObjectMapper,
     private val actionFactory: EventActionFactory,
-    private val streamGitConfig: StreamGitConfig,
-    private val streamEventService: StreamEventService,
-    private val streamBasicSettingService: StreamBasicSettingService,
-    private val streamYamlTrigger: StreamYamlTrigger,
-    private val streamBasicSettingDao: StreamBasicSettingDao,
+    streamGitConfig: StreamGitConfig,
+    streamEventService: StreamEventService,
+    streamBasicSettingService: StreamBasicSettingService,
+    streamYamlTrigger: StreamYamlTrigger,
+    streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val streamYamlBuild: StreamYamlBuild
+    gitPipelineResourceDao: GitPipelineResourceDao,
+    gitRequestEventBuildDao: GitRequestEventBuildDao,
+    streamYamlBuild: StreamYamlBuild
 ) : BaseManualTriggerService(
     dslContext = dslContext,
     streamGitConfig = streamGitConfig,
@@ -94,5 +92,9 @@ class ManualTriggerService @Autowired constructor(
         action.data.context.requestEventId = id
 
         return action
+    }
+
+    override fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String> {
+        return emptyMap()
     }
 }

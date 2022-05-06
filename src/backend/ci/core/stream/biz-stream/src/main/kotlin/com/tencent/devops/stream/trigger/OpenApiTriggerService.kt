@@ -45,6 +45,7 @@ import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
@@ -60,14 +61,14 @@ class OpenApiTriggerService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val actionFactory: EventActionFactory,
     private val streamGitConfig: StreamGitConfig,
-    private val streamEventService: StreamEventService,
-    private val streamBasicSettingService: StreamBasicSettingService,
-    private val streamYamlTrigger: StreamYamlTrigger,
-    private val streamBasicSettingDao: StreamBasicSettingDao,
+    streamEventService: StreamEventService,
+    streamBasicSettingService: StreamBasicSettingService,
+    streamYamlTrigger: StreamYamlTrigger,
+    streamBasicSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitPipelineResourceDao: GitPipelineResourceDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val streamYamlBuild: StreamYamlBuild
+    gitPipelineResourceDao: GitPipelineResourceDao,
+    gitRequestEventBuildDao: GitRequestEventBuildDao,
+    streamYamlBuild: StreamYamlBuild
 ) : BaseManualTriggerService(
     dslContext = dslContext,
     streamGitConfig = streamGitConfig,
@@ -100,6 +101,17 @@ class OpenApiTriggerService @Autowired constructor(
                 userId = userId,
                 triggerBuildReq = triggerBuildReq
             )
+        }
+    }
+
+    override fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String> {
+        return if (!triggerBuildReq.payload.isNullOrBlank()) {
+            (action as StreamOpenApiAction).getStartParams(
+                triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind),
+                scmType = streamGitConfig.getScmType()
+            )
+        } else {
+            emptyMap()
         }
     }
 
