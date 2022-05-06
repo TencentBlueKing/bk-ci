@@ -76,7 +76,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BaseManualTriggerService::class.java)
     }
 
-    fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
+    open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
         logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
 
         val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
