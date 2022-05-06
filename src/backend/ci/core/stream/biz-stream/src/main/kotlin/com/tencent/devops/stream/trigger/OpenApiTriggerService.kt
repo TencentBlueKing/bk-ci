@@ -28,7 +28,11 @@
 package com.tencent.devops.stream.trigger
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -39,17 +43,19 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
 @SuppressWarnings("LongParameterList", "ThrowsCount")
-class ManualTriggerService @Autowired constructor(
+class OpenApiTriggerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val actionFactory: EventActionFactory,
@@ -73,17 +79,102 @@ class ManualTriggerService @Autowired constructor(
     gitRequestEventBuildDao = gitRequestEventBuildDao,
     streamYamlBuild = streamYamlBuild
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(OpenApiTriggerService::class.java)
+    }
+
     override fun loadAction(
         streamTriggerSetting: StreamTriggerSetting,
         userId: String,
         triggerBuildReq: TriggerBuildReq
     ): BaseAction {
-        val action = actionFactory.loadManualAction(
-            setting = streamTriggerSetting,
-            event = StreamManualEvent(
-                userId = userId,
-                gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId).toString(),
+        return if (!triggerBuildReq.payload.isNullOrBlank()) {
+            loadPayloadOpenApiAction(
+                streamTriggerSetting = streamTriggerSetting,
                 triggerBuildReq = triggerBuildReq
+            )
+        } else {
+            loadManualOpenApiAction(
+                streamTriggerSetting = streamTriggerSetting,
+                userId = userId,
+                triggerBuildReq = triggerBuildReq
+            )
+        }
+    }
+
+    private fun loadPayloadOpenApiAction(
+        streamTriggerSetting: StreamTriggerSetting,
+        triggerBuildReq: TriggerBuildReq
+    ): StreamOpenApiAction {
+
+        val event = mockWebhookTrigger(triggerBuildReq)
+        val action = StreamOpenApiAction(
+            actionFactory.load(event) ?: throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "can not load action"
+            )
+        )
+
+        // 仅支持当前仓库下的 event
+        if (action.data.getGitProjectId() != GitCommonUtils.getGitProjectId(triggerBuildReq.projectId).toString()) {
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "Only events in the current repository [${triggerBuildReq.projectId}] are supported"
+            )
+        }
+
+        val request = action.buildRequestEvent(triggerBuildReq.payload!!) ?: throw CustomException(
+            status = Response.Status.BAD_REQUEST,
+            message = "event invalid"
+        )
+        val id = gitRequestEventDao.saveGitRequest(dslContext, request)
+        action.data.context.requestEventId = id
+
+        action.data.setting = streamTriggerSetting
+
+        return action
+    }
+
+    private fun mockWebhookTrigger(triggerBuildReq: TriggerBuildReq): CodeWebhookEvent {
+        // 这里使用eventType做判断，防止有些事件无法直接通过mapper得到，例如stream 的review
+        if (triggerBuildReq.eventType.isNullOrBlank()) {
+            throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "eventType can't be empty"
+            )
+        }
+
+        return when (streamGitConfig.getScmType()) {
+            ScmType.CODE_GIT -> try {
+                objectMapper.readValue<GitEvent>(triggerBuildReq.payload!!)
+            } catch (ignore: Exception) {
+                logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
+                throw CustomException(
+                    status = Response.Status.BAD_REQUEST,
+                    message = "Fail to parse the git web hook commit event, errMsg: ${ignore.message}"
+                )
+            }
+            else -> throw CustomException(
+                status = Response.Status.BAD_REQUEST,
+                message = "event not support"
+            )
+        }
+    }
+
+    private fun loadManualOpenApiAction(
+        streamTriggerSetting: StreamTriggerSetting,
+        userId: String,
+        triggerBuildReq: TriggerBuildReq
+    ): StreamOpenApiAction {
+        val action = StreamOpenApiAction(
+            actionFactory.loadManualAction(
+                setting = streamTriggerSetting,
+                event = StreamManualEvent(
+                    userId = userId,
+                    gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId).toString(),
+                    triggerBuildReq = triggerBuildReq
+                )
             )
         )
         val request = action.buildRequestEvent("") ?: throw CustomException(
