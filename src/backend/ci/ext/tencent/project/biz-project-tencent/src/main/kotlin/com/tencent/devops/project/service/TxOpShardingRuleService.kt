@@ -65,7 +65,7 @@ class TxOpShardingRuleService @Autowired constructor(
                 )
                 shardingRoutingRuleRecords?.forEach { shardingRoutingRuleRecord ->
                     val routingName = shardingRoutingRuleRecord.routingName
-                    val projectRecord = projectDao.get(dslContext, routingName) ?: return@forEach
+                    val projectRecord = projectDao.getByEnglishName(dslContext, routingName) ?: return@forEach
                     val channelCode = ProjectChannelCode.valueOf(projectRecord.channel)
                     val clusterName = if (channelCode == ProjectChannelCode.BS ||
                         channelCode == ProjectChannelCode.PREBUILD) {
