@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_BCS"], description = "SERVICE_DISPATCH_BCS")
 @Path("/service/dispatch-bcs")
+@ServiceInterface("dispatch-bcs") // 指明接入到哪个微服务
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceBcsDebugResource {
