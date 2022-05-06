@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -47,11 +46,9 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandlerUtil
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
-import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBuilder
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.StreamPipelineUtils
@@ -182,6 +179,8 @@ abstract class BaseManualTriggerService @Autowired constructor(
         triggerBuildReq: TriggerBuildReq
     ): BaseAction
 
+    abstract fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>
+
     fun handleTrigger(
         action: BaseAction,
         originYaml: String,
@@ -217,14 +216,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
         streamBasicSettingService.updateProjectInfo(action.data.getUserId(), gitProjectInfo)
         action.data.setting = action.data.setting.copy(gitHttpUrl = gitProjectInfo.gitHttpUrl)
 
-        var params = emptyMap<String, String>()
-        // open api 模拟真实git触发
-        if (action.metaData.streamObjectKind == StreamObjectKind.OPENAPI) {
-            params = (action as StreamOpenApiAction).getStartParams(
-                triggerOn = TriggerBuilder.buildManualTriggerOn(action.metaData.streamObjectKind),
-                scmType = streamGitConfig.getScmType()
-            )
-        }
+        val params = getStartParams(action = action, triggerBuildReq = triggerBuildReq)
 
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
