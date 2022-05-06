@@ -1,0 +1,61 @@
+USE devops_ci_project;
+SET NAMES utf8mb4;
+
+DROP PROCEDURE IF EXISTS ci_project_schema_update;
+
+DELIMITER <CI_UBF>
+
+CREATE PROCEDURE ci_project_schema_update()
+BEGIN
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+    SELECT DATABASE() INTO db;
+
+    IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+                        AND COLUMN_NAME = 'CLUSTER_NAME') THEN
+        ALTER TABLE T_SHARDING_ROUTING_RULE
+            ADD `CLUSTER_NAME` varchar(64) NOT NULL DEFAULT 'prod' COMMENT '集群名称' ;
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+                        AND COLUMN_NAME = 'MODULE_CODE') THEN
+        ALTER TABLE T_SHARDING_ROUTING_RULE
+            ADD `MODULE_CODE` varchar(64) NOT NULL DEFAULT 'PROCESS' COMMENT '模块标识' ;
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                    FROM information_schema.COLUMNS
+                    WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+                        AND COLUMN_NAME = 'TYPE') THEN
+        ALTER TABLE T_SHARDING_ROUTING_RULE
+            ADD `TYPE` varchar(32) NOT NULL DEFAULT 'DB' COMMENT '路由类型，DB:数据库，TABLE:数据库表' ;
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+			  FROM information_schema.statistics
+			  WHERE TABLE_SCHEMA = db
+				 AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+				 AND INDEX_NAME = 'UNI_INX_TSRR_CLUSTER_MODULE_TYPE_NAME') THEN
+		ALTER TABLE T_SHARDING_ROUTING_RULE ADD UNIQUE INDEX `UNI_INX_TSRR_CLUSTER_MODULE_TYPE_NAME` (`CLUSTER_NAME`,`MODULE_CODE`,`TYPE`, `ROUTING_NAME`);
+	END IF;
+	
+	IF EXISTS(SELECT 1
+			  FROM information_schema.statistics
+			  WHERE TABLE_SCHEMA = db
+				 AND TABLE_NAME = 'T_SHARDING_ROUTING_RULE'
+				 AND INDEX_NAME = 'uni_inx_tsrr_routting_name') THEN
+		ALTER TABLE T_SHARDING_ROUTING_RULE DROP INDEX `uni_inx_tsrr_routting_name`;
+	END IF;
+
+    COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+CALL ci_project_schema_update();

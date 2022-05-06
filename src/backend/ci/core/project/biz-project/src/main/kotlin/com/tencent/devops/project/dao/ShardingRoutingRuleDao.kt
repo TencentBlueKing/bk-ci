@@ -89,6 +89,25 @@ class ShardingRoutingRuleDao {
         }
     }
 
+    fun get(
+        dslContext: DSLContext,
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        type: ShardingRuleTypeEnum,
+        routingName: String
+    ): TShardingRoutingRuleRecord? {
+        with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(CLUSTER_NAME.eq(clusterName))
+            conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(TYPE.eq(type.name))
+            conditions.add(ROUTING_NAME.eq(routingName))
+            return dslContext.selectFrom(this)
+                .where(conditions)
+                .fetchOne()
+        }
+    }
+
     fun getById(dslContext: DSLContext, id: String): TShardingRoutingRuleRecord? {
         return with(TShardingRoutingRule.T_SHARDING_ROUTING_RULE) {
             dslContext.selectFrom(this)
