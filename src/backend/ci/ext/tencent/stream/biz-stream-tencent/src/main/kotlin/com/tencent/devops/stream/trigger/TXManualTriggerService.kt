@@ -70,7 +70,6 @@ import javax.ws.rs.core.Response
 @Service
 @SuppressWarnings("LongParameterList")
 class TXManualTriggerService @Autowired constructor(
-    objectMapper: ObjectMapper,
     actionFactory: EventActionFactory,
     streamGitConfig: StreamGitConfig,
     streamEventService: StreamEventService,
@@ -85,11 +84,9 @@ class TXManualTriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIEventService: V1GitCIEventService,
     private val yamlBuild: V1YamlBuild,
-    private val streamYamlService: V1StreamYamlService,
-    private val manualTriggerService: ManualTriggerService
+    private val streamYamlService: V1StreamYamlService
 ) : ManualTriggerService(
     dslContext = dslContext,
-    objectMapper = objectMapper,
     actionFactory = actionFactory,
     streamGitConfig = streamGitConfig,
     streamEventService = streamEventService,
@@ -161,7 +158,7 @@ class TXManualTriggerService @Autowired constructor(
                 v1TriggerBuildReq = v1TriggerBuildReq
             )
         } else {
-            manualTriggerService.triggerBuild(
+            super.triggerBuild(
                 userId = userId,
                 pipelineId = pipelineId,
                 triggerBuildReq = TriggerBuildReq(
