@@ -25,31 +25,58 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.dispatch.docker.service.debug.impl
 
-interface ExtDebugService {
-    fun startDebug(
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.dispatch.bcs.api.service.ServiceBcsDebugResource
+import com.tencent.devops.dispatch.docker.service.debug.DebugInterface
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class BcsDebugServiceImpl @Autowired constructor(
+    private val client: Client
+) : DebugInterface {
+    override fun startDebug(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String?,
         vmSeqId: String
-    ): String?
+    ): String {
+        val bcsDebugResult = client.get(ServiceBcsDebugResource::class).startDebug(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            buildId = buildId
+        )
 
-    fun getWebsocketUrl(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String?,
-        vmSeqId: String,
-        containerId: String
-    ): String?
+        logger.info("$userId $pipelineId| bcs debug response: ${JsonUtil.toJson(bcsDebugResult.data ?: "")}")
+        return bcsDebugResult.data?.websocketUrl ?: throw ErrorCodeException(
+            errorCode = "2103503",
+            defaultMessage = "Can not found debug container.",
+            params = arrayOf(pipelineId)
+        )
+    }
 
-    fun stopDebug(
+    override fun stopDebug(
         userId: String,
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
         containerName: String
-    ): Boolean
+    ): Boolean {
+        logger.info("$userId $pipelineId| stop bcs debug.")
+        return client.get(ServiceBcsDebugResource::class).stopDebug(
+            userId, pipelineId, vmSeqId, containerName
+        ).data ?: false
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BcsDebugServiceImpl::class.java)
+    }
 }
