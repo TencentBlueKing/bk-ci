@@ -45,7 +45,7 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
     private val bkTag: BkTag
 ) : ProjectProxyService {
     override fun checkProject(projectId: String, userId: String): Boolean {
-        val tag = bkTag.getTag()
+        val tag = bkTag.getLocalTag()
         if (tag.isNotBlank() && tag.contains(IGNORETAG)) {
             return true
         }

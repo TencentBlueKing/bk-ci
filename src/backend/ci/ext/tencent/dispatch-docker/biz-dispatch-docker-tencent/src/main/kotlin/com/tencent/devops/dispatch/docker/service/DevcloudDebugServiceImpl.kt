@@ -64,7 +64,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
-            .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getTag())
+            .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getLocalTag())
             .post(RequestBody.create(MediaType.parse("application/json"), ""))
             .build()
 
@@ -105,7 +105,7 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
-            .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getTag())
+            .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getLocalTag())
             .post(RequestBody.create(MediaType.parse("application/json"), ""))
             .build()
 

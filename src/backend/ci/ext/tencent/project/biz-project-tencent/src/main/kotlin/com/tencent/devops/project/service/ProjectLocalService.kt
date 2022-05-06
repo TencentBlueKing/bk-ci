@@ -45,11 +45,10 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.consul.DiscoveryTag
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -67,6 +66,7 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.impl.TxProjectServiceImpl
 import com.tencent.devops.project.util.ProjectUtils
+import com.tencent.devops.stream.api.service.ServiceGitForAppResource
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -98,7 +98,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val txProjectServiceImpl: TxProjectServiceImpl,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val projectIamV0Service: ProjectIamV0Service
+    private val projectIamV0Service: ProjectIamV0Service,
+    private val bkTag: BkTag
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -116,7 +117,7 @@ class ProjectLocalService @Autowired constructor(
 
         // 先查询GITCI的项目
         if (page == 1) {
-            val gitCIProjectList = DiscoveryTag.invokeByTag(streamTag) {
+            val gitCIProjectList = bkTag.invokeByTag(streamTag) {
                 try {
                     client.get(ServiceGitForAppResource::class).getGitCIProjectList(userId, 1, 100, searchName)
                 } catch (e: Exception) {

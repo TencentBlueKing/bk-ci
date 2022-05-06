@@ -52,7 +52,6 @@ import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNAUTHORIZED
 import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_UNPROCESSABLE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
@@ -129,7 +128,7 @@ class ScmMonitorService @Autowired constructor(
     }
 
     private fun getChannelCode(): ChannelCode {
-        val consulTag = bkTag.getTag()
+        val consulTag = bkTag.getLocalTag()
         return when {
             consulTag.contains("stream") -> {
                 ChannelCode.GIT

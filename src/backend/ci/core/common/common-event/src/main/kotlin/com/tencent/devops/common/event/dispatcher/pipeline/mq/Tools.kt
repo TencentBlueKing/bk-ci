@@ -29,7 +29,6 @@ package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.service.utils.KubernetesUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
