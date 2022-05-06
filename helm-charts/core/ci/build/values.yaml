@@ -62,6 +62,7 @@ init:
   sql: true
   iam: true
   turbo: true
+  bkrepo: true
 
 # 内部数据源配置
 mysql:
