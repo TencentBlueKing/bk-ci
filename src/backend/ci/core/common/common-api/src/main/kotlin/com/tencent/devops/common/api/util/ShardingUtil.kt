@@ -1,6 +1,5 @@
 package com.tencent.devops.common.api.util
 
-
 object ShardingUtil {
 
     private const val SHARDING_ROUTING_RULE_KEY_PREFIX = "SHARDING_ROUTING_RULE"

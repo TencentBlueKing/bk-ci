@@ -162,7 +162,7 @@ class TGitTagPushActionGit(
         val isMatch = TriggerMatcher.isTagPushMatch(
             triggerOn,
             TGitActionCommon.getTriggerBranch(event.ref),
-            data.eventCommon.userId,
+            data.getUserId(),
             event.create_from
         )
         val params = TGitActionCommon.getStartParams(

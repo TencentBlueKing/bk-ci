@@ -42,7 +42,6 @@ import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.data.context.RepoTrigger
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -111,9 +110,6 @@ class StreamTriggerRequestService @Autowired constructor(
         val repoTriggerPipelineList = repoTriggerEventService.getTargetPipelines(
             eventCommon.gitProjectName
         )
-        if (repoTriggerPipelineList.isNotEmpty()) {
-            action.data.context.repoTrigger = RepoTrigger("", repoTriggerPipelineList)
-        }
 
         // 跨项目触发的逻辑不需要当前项目也可以使用
         if (repoTriggerPipelineList.isNotEmpty()) {
@@ -233,9 +229,9 @@ class StreamTriggerRequestService @Autowired constructor(
                 pipelineId = "", // 留空用于是否创建判断
                 filePath = filePath,
                 enabled = true,
-                creator = action.data.eventCommon.userId
+                creator = action.data.getUserId()
             )
-            // 远程仓库触发不需要新建流水线
+            // 远程仓库触发时，主库不需要新建流水线
             if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
                 return@forEach
             }

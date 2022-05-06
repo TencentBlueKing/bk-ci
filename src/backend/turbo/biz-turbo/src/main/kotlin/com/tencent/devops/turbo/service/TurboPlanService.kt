@@ -29,6 +29,7 @@ import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Suppress("MaxLineLength", "ComplexMethod", "NestedBlockDepth", "SpringJavaInjectionPointsAutowiringInspection")
@@ -586,5 +587,45 @@ class TurboPlanService @Autowired constructor(
         projectId: String
     ): List<TTurboPlanEntity>? {
         return turboPlanRepository.findByProjectId(projectId)
+    }
+
+    /**
+     * openApi 获取方案列表
+     */
+    fun getTurboPlanByProjectIdAndCreatedDate(projectId: String, startTime: LocalDate?, endTime: LocalDate?, pageNum: Int?, pageSize: Int?): Page<TurboPlanStatRowVO> {
+        val pageable = PageUtils.convertPageWithMultiFields(pageNum, pageSize, arrayOf("open_status", "top_status", "updated_date"), "DESC")
+
+        val turboPlanResult = turboPlanDao.getTurboPlanByProjectIdAndCreatedDate(projectId, startTime, endTime, pageable)
+        val turboPlanList = turboPlanResult.records
+
+        if (turboPlanList.isEmpty()) {
+            return Page(0, 0, 0, listOf())
+        }
+
+        val turboPlanVOList = turboPlanList.map {
+            TurboPlanStatRowVO(
+                    planId = it.id,
+                    planName = it.planName,
+                    engineCode = it.engineCode,
+                    engineName = it.engineName,
+                    instanceNum = it.instanceNum,
+                    executeCount = it.executeCount,
+                    estimateTimeHour = if (it.executeCount <= 0) "0.0" else MathUtil.roundToTwoDigits(it.estimateTimeHour / it.executeCount),
+                    executeTimeHour = if (it.executeCount <= 0) "0.0" else MathUtil.roundToTwoDigits(it.executeTimeHour / it.executeCount),
+                    topStatus = it.topStatus,
+                    turboRatio = if (it.estimateTimeHour <= 0.0) "--" else "${MathUtil.roundToTwoDigits(
+                            (
+                                    it.estimateTimeHour -
+                                            it.executeTimeHour
+                                    ) * 100 / it.estimateTimeHour
+                    )}%",
+                    openStatus = it.openStatus
+            )
+        }
+
+        return Page(
+            turboPlanResult.count, turboPlanResult.page, turboPlanResult.pageSize, turboPlanResult.totalPages,
+            turboPlanVOList
+        )
     }
 }

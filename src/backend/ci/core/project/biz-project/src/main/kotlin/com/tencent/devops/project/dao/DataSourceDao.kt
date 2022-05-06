@@ -30,13 +30,11 @@ package com.tencent.devops.project.dao
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TDataSource
-import com.tencent.devops.model.project.tables.TShardingRoutingRule
 import com.tencent.devops.model.project.tables.records.TDataSourceRecord
 import com.tencent.devops.project.pojo.DataSource
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.jooq.Record1
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -130,24 +128,15 @@ class DataSourceDao {
         }
     }
 
-    fun getRoutingRule(dslContext: DSLContext, projectId: String): Record1<String>? {
-        val tr = TShardingRoutingRule.T_SHARDING_ROUTING_RULE
-        return dslContext
-            .select(tr.ROUTING_RULE)
-            .from(tr)
-            .where(tr.ROUTING_NAME.eq(projectId))
-            .fetchOne()
-    }
-
     fun getDataBasePiecewiseById(
         dslContext: DSLContext,
-        moduleCode: String,
+        moduleCode: SystemModuleEnum,
         clusterName: String,
         routingRule: String
     ): TDataSourceRecord? {
         with(TDataSource.T_DATA_SOURCE) {
             return dslContext.selectFrom(this)
-                .where(MODULE_CODE.eq(moduleCode))
+                .where(MODULE_CODE.eq(moduleCode.name))
                 .and(DATA_SOURCE_NAME.eq(routingRule))
                 .and(CLUSTER_NAME.eq(clusterName)).fetchOne()
         }

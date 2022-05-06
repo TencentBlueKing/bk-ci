@@ -264,10 +264,11 @@ class StreamTGitTransferService @Autowired constructor(
     ): List<String>? {
         return client.get(ServiceGitResource::class).getBranch(
             accessToken = getAndCheckOauthToken(userId).accessToken,
-            userId,
-            gitProjectId,
-            page,
-            pageSize
+            userId = userId,
+            repository = gitProjectId,
+            page = page,
+            pageSize = pageSize,
+            search = search
         ).data?.map { it.name }
     }
 

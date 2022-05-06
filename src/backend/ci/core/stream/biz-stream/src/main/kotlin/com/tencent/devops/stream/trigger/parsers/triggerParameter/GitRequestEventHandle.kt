@@ -124,7 +124,7 @@ object GitRequestEventHandle {
             null
         } else {
             getLatestCommit(
-                gitTagPushEvent.after,
+                null,
                 gitTagPushEvent.commits
             )
         }

@@ -34,3 +34,4 @@ out
 .codecc
 build.yml
 *.ipa
+build/

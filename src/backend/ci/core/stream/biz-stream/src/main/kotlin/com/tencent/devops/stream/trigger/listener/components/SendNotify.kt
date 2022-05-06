@@ -89,9 +89,12 @@ class SendNotify @Autowired constructor(
     private fun sendNotifyV2(action: BaseAction, build: BuildHistory) {
         // 获取需要进行替换的variables
         val finishData = action.data.context.finishData!!
-        val projectId = finishData.projectId
-        val variables = client.get(ServiceVarResource::class)
-            .getContextVar(projectId = projectId, buildId = build.id, contextName = null).data
+        val variables = client.get(ServiceVarResource::class).getContextVar(
+            projectId = finishData.projectId,
+            pipelineId = finishData.pipelineId,
+            buildId = build.id,
+            contextName = null
+        ).data
         val notices = YamlUtil.getObjectMapper().readValue(
             finishData.normalizedYaml, ScriptBuildYaml::class.java
         ).notices
@@ -238,7 +241,7 @@ class SendNotify @Autowired constructor(
     }
 
     // 替换variables变量
-    private fun replaceVar(value: String?, variables: Map<String, String>?): String? {
+    protected fun replaceVar(value: String?, variables: Map<String, String>?): String? {
         if (value.isNullOrBlank()) {
             return value
         }
@@ -248,7 +251,7 @@ class SendNotify @Autowired constructor(
         return EnvUtils.parseEnv(value, variables)
     }
 
-    private fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
+    protected fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
         if (value.isNullOrEmpty()) {
             return value
         }
@@ -279,7 +282,7 @@ class SendNotify @Autowired constructor(
     }
 
     // 使用启动参数替换接收人
-    private fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
+    protected fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
         if (receivers == null || receivers.isEmpty()) {
             return mutableSetOf()
         }

@@ -145,7 +145,8 @@ class StreamYamlBaseBuild @Autowired constructor(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
                 pipelineName = modelAndSetting.model.name
-            )
+            ),
+            updateLastModifyUser = updateLastModifyUser
         )
     }
 
@@ -157,7 +158,7 @@ class StreamYamlBaseBuild @Autowired constructor(
     ) {
         // 【ID92537607】 stream 流水线标签不生效
         client.get(UserPipelineGroupResource::class).updatePipelineLabel(
-            userId = action.data.eventCommon.userId,
+            userId = action.data.getUserId(),
             projectId = action.getProjectCode(),
             pipelineId = pipeline.pipelineId,
             labelIds = model.labels
@@ -166,7 +167,7 @@ class StreamYamlBaseBuild @Autowired constructor(
         // 添加模板跨项目信息
         if (yamlTransferData != null && yamlTransferData.templateData.transferDataMap.isNotEmpty()) {
             client.get(ServiceTemplateAcrossResource::class).batchCreate(
-                userId = action.data.eventCommon.userId,
+                userId = action.data.getUserId(),
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 templateAcrossInfos = yamlTransferData.getTemplateAcrossInfo(action)
@@ -207,14 +208,14 @@ class StreamYamlBaseBuild @Autowired constructor(
             )
             savePipeline(
                 pipeline = pipeline,
-                userId = action.data.eventCommon.userId,
+                userId = action.data.getUserId(),
                 gitProjectId = action.data.getGitProjectId().toLong(),
                 projectCode = action.getProjectCode(),
                 modelAndSetting = modelAndSetting,
                 updateLastModifyUser = updateLastModifyUser
             )
             buildId = client.get(ServiceBuildResource::class).manualStartupNew(
-                userId = action.data.eventCommon.userId,
+                userId = action.data.getUserId(),
                 projectId = action.getProjectCode(),
                 pipelineId = pipeline.pipelineId,
                 values = mapOf(PIPELINE_NAME to pipeline.displayName),
