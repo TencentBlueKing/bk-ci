@@ -81,7 +81,7 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
 
         // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
         if (!projectRouteTag.isNullOrEmpty()) {
-            ConsulContent.setConsulContent(projectRouteTag!!)
+            ConsulContent.setConsulContent(projectRouteTag)
         }
         return Result(client.get(ServiceTxProjectResource::class).create(
             userId = userId,
@@ -140,7 +140,11 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
-        return Result(apigwProjectService.createProjectUserByUser(createUserId, createInfo))
+        return Result(apigwProjectService.createProjectUser(
+            createUserId = createUserId,
+            checkManager = true,
+            createInfo = createInfo
+        ))
     }
 
     override fun createProjectUser(
@@ -151,7 +155,11 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
     ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
-        return Result(apigwProjectService.createProjectUser(createUserId, createInfo))
+        return Result(apigwProjectService.createProjectUser(
+            createUserId = createUserId,
+            checkManager = true,
+            createInfo = createInfo
+        ))
     }
 
     override fun createProjectaUserByApp(
@@ -164,9 +172,9 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
         return Result(
-            apigwProjectService.createProjectUserByApp(
-                organizationType = organizationType,
-                organizationId = organizationId,
+            apigwProjectService.createProjectUser(
+                createUserId = "",
+                checkManager = false,
                 createInfo = createInfo
             )
         )

@@ -90,42 +90,53 @@ class ApigwProjectService(
         ).data
     }
 
-    fun createProjectUserByUser(
-        createUserId: String,
-        createInfo: ProjectCreateUserDTO
-    ): Boolean? {
-        logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
-        val info = ProjectCreateUserDTO(
-            userId = createInfo.userId,
-            roleId = createInfo.roleId,
-            roleName = createInfo.roleName,
-            projectId = createInfo.projectId,
-            userIds = arrayListOf(createInfo.userId!!)
-        )
-        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, info).data
-    }
-
     fun createProjectUser(
         createUserId: String,
+        checkManager: Boolean,
         createInfo: ProjectCreateUserDTO
     ): Boolean? {
         logger.info("createProjectUser:createUserId[$createUserId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, createInfo).data
-    }
-
-    fun createProjectUserByApp(
-        organizationType: String,
-        organizationId: Long,
-        createInfo: ProjectCreateUserDTO
-    ): Boolean? {
-        logger.info("createProjectUserByApp:organizationType[" +
-            "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createProjectUserByApp(
-            organizationType = organizationType,
-            organizationId = organizationId,
+        return client.get(ServiceTxProjectResource::class).createProjectUser(
+            createUser = createUserId,
+            checkManager = checkManager,
             createInfo = createInfo
         ).data
     }
+//
+//    fun createProjectUserByUser(
+//        createUserId: String,
+//        createInfo: ProjectCreateUserDTO
+//    ): Boolean? {
+//        logger.info("createProjectUserByUser:createUserId[$createUserId],createInfo[$createInfo]")
+//        val info = ProjectCreateUserDTO(
+//            userId = createInfo.userId,
+//            roleId = createInfo.roleId,
+//            roleName = createInfo.roleName,
+//            projectId = createInfo.projectId,
+//            userIds = arrayListOf(createInfo.userId!!)
+//        )
+//        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, true, info).data
+//    }
+//
+//    fun createProjectUser(
+//        createUserId: String,
+//        createInfo: ProjectCreateUserDTO
+//    ): Boolean? {
+//        logger.info("createProjectUser:createUserId[$createUserId],createInfo[$createInfo]")
+//        return client.get(ServiceTxProjectResource::class).createProjectUser(createUserId, true, createInfo).data
+//    }
+//
+//    fun createProjectUserByApp(
+//        createInfo: ProjectCreateUserDTO
+//    ): Boolean? {
+//        logger.info("createProjectUserByApp:organizationType[" +
+//            "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
+//        return client.get(ServiceTxProjectResource::class).createProjectUser(
+//            createUser = "",
+//            createInfo = createInfo,
+//            checkManager = false
+//        ).data
+//    }
 
     fun createPipelinePermissionByUser(
         createUserId: String,
@@ -134,11 +145,16 @@ class ApigwProjectService(
     ): Boolean? {
         logger.info("createPipelinePermission:createUserId[" +
             "$createUserId],accessToken[$accessToken],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByUser(
-            accessToken = createUserId,
-            createUser = accessToken,
+        return client.get(ServiceTxProjectResource::class).createPipelinePermission(
+            createUser = createUserId,
+            checkManager = true,
             createInfo = createInfo
         ).data
+//        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByUser(
+//            accessToken = createUserId,
+//            createUser = accessToken,
+//            createInfo = createInfo
+//        ).data
     }
 
     fun createPipelinePermissionByApp(
@@ -148,11 +164,16 @@ class ApigwProjectService(
     ): Boolean? {
         logger.info("createPipelinePermission:organizationType[" +
             "$organizationType],organizationId[$organizationId],createInfo[$createInfo]")
-        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(
-            organizationType = organizationType,
-            organizationId = organizationId,
+        return client.get(ServiceTxProjectResource::class).createPipelinePermission(
+            createUser = "",
+            checkManager = false,
             createInfo = createInfo
         ).data
+//        return client.get(ServiceTxProjectResource::class).createUserPipelinePermissionByApp(
+//            organizationType = organizationType,
+//            organizationId = organizationId,
+//            createInfo = createInfo
+//        ).data
     }
 
     fun getProjectRoles(
@@ -163,9 +184,7 @@ class ApigwProjectService(
         logger.info("createPipelinePermission:organizationType[" +
             "$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
         return client.get(ServiceTxProjectResource::class).getProjectRoles(
-            projectCode = projectCode,
-            organizationType = organizationType,
-            organizationId = organizationId
+            projectCode = projectCode
         ).data
     }
 

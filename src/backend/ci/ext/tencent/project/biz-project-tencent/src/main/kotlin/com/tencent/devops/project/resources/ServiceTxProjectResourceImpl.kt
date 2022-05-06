@@ -53,7 +53,6 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectTxInfoService
-import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.util.ProjectUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -66,7 +65,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
     private val projectMemberService: ProjectMemberService,
-    private val projectIamV0Service: ProjectIamV0Service,
     private val projectTagService: ProjectTagService,
     private val projectTxService: ProjectTxInfoService
 ) : ServiceTxProjectResource {
@@ -289,49 +287,42 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(
-        createUser: String,
-        createInfo: ProjectCreateUserDTO
+        createUser: String?,
+        checkManager: Boolean,
+        createInfo: ProjectCreateUserDTO,
     ): Result<Boolean> {
         return Result(
             projectExtPermissionService.createUser2Project(
-                createUser = createUser,
+                createUser = createUser ?: "",
                 userIds = createInfo.userIds ?: emptyList(),
                 projectCode = createInfo.projectId,
                 roleId = createInfo.roleId,
                 roleName = createInfo.roleName,
-                checkManager = true
+                checkManager = checkManager
             )
         )
     }
 
-    override fun createProjectUserByApp(
-        organizationType: String,
-        organizationId: Long,
-        createInfo: ProjectCreateUserDTO
+    override fun createPipelinePermission(
+        createUser: String,
+        checkManager: Boolean,
+        createInfo: PipelinePermissionInfo,
     ): Result<Boolean> {
-        return Result(projectLocalService.createUser2ProjectByApp(
-            organizationType = organizationType,
-            organizationId = organizationId,
-            userId = createInfo.userId!!,
-            projectCode = createInfo.projectId,
-            roleId = createInfo.roleId,
-            roleName = createInfo.roleName
+        return Result(projectLocalService.grantInstancePermission(
+            userId = createUser,
+            projectId = createInfo.projectId,
+            resourceType = createInfo.resourceType,
+            resourceCode = createInfo.resourceTypeCode,
+            permission = createInfo.permission,
+            createUserList = arrayListOf(createInfo.userId),
+            checkManager = checkManager
         ))
     }
 
     override fun createUserPipelinePermissionByUser(
-        accessToken: String,
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-//        return Result(projectIamV0Service.createPipelinePermission(
-//            createUser = createUser,
-//            projectId = createInfo.projectId,
-//            userId = createInfo.userId,
-//            permission = createInfo.permission,
-//            resourceType = createInfo.resourceType,
-//            resourceTypeCode = createInfo.resourceTypeCode
-//        ))
         return Result(projectLocalService.grantInstancePermission(
             userId = createUser,
             projectId = createInfo.projectId,
@@ -343,29 +334,23 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun createUserPipelinePermissionByApp(
-        organizationType: String,
-        organizationId: Long,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
         // TODO:此处先临时支持流水线的权限
-        return Result(projectLocalService.createPipelinePermissionByApp(
-            organizationType = organizationType,
-            organizationId = organizationId,
-            userId = createInfo.userId,
+        return Result(projectLocalService.grantInstancePermission(
+            userId = "",
             projectId = createInfo.projectId,
+            resourceType = createInfo.resourceType,
+            resourceCode = createInfo.resourceTypeCode,
             permission = createInfo.permission,
-            resourceType = "pipeline",
-            resourceTypeCode = createInfo.resourceTypeCode
+            createUserList = arrayListOf(createInfo.userId),
+            checkManager = false // 应用态不做管理员校验,信任授权app
         ))
     }
     override fun getProjectRoles(
-        projectCode: String,
-        organizationType: String,
-        organizationId: Long
+        projectCode: String
     ): Result<List<BKAuthProjectRolesResources>> {
         return Result(projectLocalService.getProjectRole(
-            organizationType = organizationType,
-            organizationId = organizationId,
             projectId = projectCode
         ))
     }
