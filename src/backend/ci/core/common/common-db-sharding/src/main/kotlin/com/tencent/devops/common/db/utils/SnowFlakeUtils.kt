@@ -3,7 +3,6 @@ package com.tencent.devops.common.db.utils
 import org.apache.shardingsphere.sharding.algorithm.keygen.SnowflakeKeyGenerateAlgorithm
 import java.util.Properties
 
-
 object SnowFlakeUtils {
 
     private val keyGenerator = SnowflakeKeyGenerateAlgorithm()

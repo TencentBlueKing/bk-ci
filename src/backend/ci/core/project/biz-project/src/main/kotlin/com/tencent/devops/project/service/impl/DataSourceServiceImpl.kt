@@ -39,7 +39,6 @@ import com.tencent.devops.project.service.DataSourceService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import org.springframework.util.StringUtils
 
 @Service
 class DataSourceServiceImpl @Autowired constructor(

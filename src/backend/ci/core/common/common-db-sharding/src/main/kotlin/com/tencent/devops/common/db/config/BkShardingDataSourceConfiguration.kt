@@ -208,7 +208,7 @@ class BkShardingDataSourceConfiguration {
         } else if (databaseShardingStrategy != null && tableShardingStrategy != TableShardingStrategyEnum.SHARDING) {
             // 生成分库场景下的节点规则
             if (databaseShardingStrategy == DatabaseShardingStrategyEnum.SPECIFY) {
-                "${DATA_SOURCE_NAME_PREFIX}0.${tableName}"
+                "${DATA_SOURCE_NAME_PREFIX}0.$tableName"
             } else {
                 "$DATA_SOURCE_NAME_PREFIX\${0..$lastDsIndex}.$tableName"
             }
@@ -216,7 +216,7 @@ class BkShardingDataSourceConfiguration {
             // 生成分表场景下的节点规则
             "${DATA_SOURCE_NAME_PREFIX}0.${tableName}_\${0..$lastTableIndex}"
         } else {
-            "${DATA_SOURCE_NAME_PREFIX}0.${tableName}"
+            "${DATA_SOURCE_NAME_PREFIX}0.$tableName"
         }
         val shardingTableRuleConfig = ShardingTableRuleConfiguration(tableName, actualDataNodes)
         // 设置表的分库策略
