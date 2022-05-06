@@ -28,8 +28,6 @@ package com.tencent.devops.dispatch.kubernetes
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import io.kubernetes.client.openapi.Configuration
-import io.kubernetes.client.util.Config
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService

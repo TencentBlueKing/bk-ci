@@ -85,7 +85,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【${discoveryTag}】服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【$discoveryTag】服务提供者")
         }
         return instances[RandomUtils.nextInt(0, instances.size)]
     }

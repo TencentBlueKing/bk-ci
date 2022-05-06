@@ -17,7 +17,6 @@ class BkTag constructor(
         return gatewayTag
     }
 
-
     fun getLocalTag(): String {
         if (KubernetesUtils.inContainer()) {
             return "kubernetes-" + KubernetesUtils.getNamespace()
@@ -30,7 +29,6 @@ class BkTag constructor(
     fun setGatewayTag(consulTag: String) = gatewayTag.set(consulTag)
 
     fun removeGatewayTag() = gatewayTag.remove()
-
 
     fun <T> invokeByTag(tag: String?, action: () -> T): T {
         try {
