@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAtomDisplayConfigResourceImpl @Autowired constructor(
-    private val aomDisplayConfigManageService: AtomDisplayConfigManageService
+    private val atomDisplayConfigManageService: AtomDisplayConfigManageService
 ) : UserAtomDisplayConfigResource {
 
     override fun saveAtomDisplayConfig(
@@ -46,7 +46,7 @@ class UserAtomDisplayConfigResourceImpl @Autowired constructor(
         saveAtomDisplayConfigVO: SaveAtomDisplayConfigVO
     ): Result<Boolean> {
         return Result(
-            aomDisplayConfigManageService.saveAtomDisplayConfig(
+            atomDisplayConfigManageService.saveAtomDisplayConfig(
                 SaveAtomDisplayConfigDTO(
                     projectId = projectId,
                     userId = userId,
