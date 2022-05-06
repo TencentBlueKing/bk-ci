@@ -102,6 +102,7 @@ class LambdaDataService @Autowired constructor(
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
+        Thread.sleep(1000)
         val history = lambdaPipelineBuildDao.getBuildHistory(
             dslContext = dslContext,
             projectId = event.projectId,
