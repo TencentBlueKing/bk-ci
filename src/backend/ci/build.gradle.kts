@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.6-SNAPSHOT"
+    id("com.tencent.devops.boot") version "0.0.5"
     detektCheck
 }
 
@@ -9,7 +9,7 @@ allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"
     // 版本
-    version = (System.getProperty("ci_version") ?: "1.8.0") +
+    version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
     // 版本管理

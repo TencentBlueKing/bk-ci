@@ -25,7 +25,7 @@ class ClientTokenService constructor(
     }
 
     private fun getTokenRedisKey(appCode: String): String {
-        return "BK:AUTH:TOKEN:${bkTag.getTag()}:$appCode:"
+        return "BK:AUTH:TOKEN:${bkTag.getLocalTag()}:$appCode:"
     }
 
     companion object {

@@ -31,7 +31,7 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
-import com.tencent.devops.common.client.consul.DiscoveryTag
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
@@ -48,8 +48,8 @@ class MicroServiceTarget<T> constructor(
     private val serviceName: String,
     private val type: Class<T>,
     private val compositeDiscoveryClient: CompositeDiscoveryClient,
-    private val tag: String,
-    private val colour: Boolean
+    private val colour: Boolean,
+    private val bkTag: BkTag
 ) : FeignTarget<T> {
     private val msCache =
         CacheBuilder.newBuilder()
@@ -68,10 +68,7 @@ class MicroServiceTarget<T> constructor(
     private val serviceSuffix = System.getenv("SERVICE_PREFIX")
 
     private fun choose(serviceName: String): ServiceInstance {
-        val discoveryTag = if (DiscoveryTag.get() == null) {
-            logger.info("discoverTag is null, use local tag : $tag")
-            tag
-        } else DiscoveryTag.get()!!
+        val discoveryTag = bkTag.getFinalTag()
 
         val instances = if (KubernetesUtils.inContainer()) {
             val namespace = discoveryTag.replace("kubernetes-", "")
@@ -88,7 +85,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【${discoveryTag}】服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【$discoveryTag】服务提供者")
         }
         return instances[RandomUtils.nextInt(0, instances.size)]
     }

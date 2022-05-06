@@ -23,32 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
+package com.tencent.devops.openapi.resources.apigw.v4
 
-package com.tencent.devops.common.client.consul
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.api.service.ServiceDockerHostResource
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
+import com.tencent.devops.openapi.api.apigw.v4.ApigwDispatchResourceV4
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-object DiscoveryTag {
-    private val discoveryThreadLocal = ThreadLocal<String>()
+@RestResource
+class ApigwDispatchResourceV4Impl @Autowired constructor(
+    private val client: Client
+) : ApigwDispatchResourceV4 {
 
-    fun get(): String? {
-        return discoveryThreadLocal.get()
+    override fun createSpecialDockerHost(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        specialDockerHostVOs: List<SpecialDockerHostVO>
+    ): Result<Boolean> {
+        logger.info("$userId add special dockerhost: ${JsonUtil.toJson(specialDockerHostVOs)}")
+        client.get(ServiceDockerHostResource::class).createSpecialDockerHost(
+            userId = userId,
+            specialDockerHostVOs = specialDockerHostVOs
+        )
+
+        return Result(true)
     }
 
-    fun set(consulTag: String) {
-        discoveryThreadLocal.set(consulTag)
-    }
-
-    fun remove() {
-        discoveryThreadLocal.remove()
-    }
-
-    fun <T> invokeByTag(tag: String?, action: () -> T): T {
-        try {
-            tag?.let { set(it) }
-            return action()
-        } finally {
-            tag?.let { remove() }
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwDispatchResourceV4Impl::class.java)
     }
 }

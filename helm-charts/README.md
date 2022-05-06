@@ -97,9 +97,8 @@ dependencies:
 ## If your etcd is not deployed as a pod, specify IPs it can be found on
 ##
 endpoints: []
-# - 10.141.4.22
-# - 10.141.4.23
-# - 10.141.4.24
+# - 10.1.1.1
+# - 10.1.1.2
 
 ## Enable persistence using Persistent Volume Claims
 ## ref: https://kubernetes.io/docs/user-guide/persistent-volumes/

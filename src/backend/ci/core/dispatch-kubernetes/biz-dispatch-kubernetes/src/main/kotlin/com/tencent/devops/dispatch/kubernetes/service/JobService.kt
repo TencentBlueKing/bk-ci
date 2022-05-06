@@ -53,7 +53,7 @@ class JobService @Autowired constructor(
             return KubernetesJobStatusResp(
                 deleted = false,
                 status = PodStatus.FAILED.value,
-                pod_result = null
+                podResult = null
             )
         }
 
@@ -70,7 +70,7 @@ class JobService @Autowired constructor(
         return KubernetesJobStatusResp(
             deleted = false,
             status = PodStatus.getStatusFromK8s(podStatus?.phase).value,
-            pod_result = listOf(
+            podResult = listOf(
                 KubernetesJobStatusResp.PodResult(
                     ip = podStatus?.podIP,
                     events = podEvents

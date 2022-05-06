@@ -39,7 +39,7 @@ import java.io.File
 
 interface ICommand {
 
-    @Suppress("LongParameterList")
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,
@@ -64,21 +64,15 @@ interface ICommand {
         taskId: String?
     ): String {
         // 解析跨项目模板信息
-        val acrossTargetProjectId = TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
+        val acrossTargetProjectId by lazy {
+            TemplateAcrossInfoUtil.getAcrossInfo(data, taskId)?.targetProjectId
+        }
 
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
-                data[key]!!
-            } else {
-                try {
-                    CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
-                } catch (ignored: Exception) {
-                    CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId) ?: if (doubleCurlyBraces) {
-                        "\${{$key}}"
-                    } else {
-                        "\${$key}"
-                    }
-                }
+            override fun getReplacement(key: String): String? = data[key] ?: try {
+                CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+            } catch (ignore: Exception) {
+                CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
             }
         }, mapOf(
             WORKSPACE_CONTEXT to dir.absolutePath,

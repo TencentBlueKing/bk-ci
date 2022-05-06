@@ -217,7 +217,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
     private fun checkPermission(userId: String, projectId: String, pipelineId: String, vmSeqId: String) {
         checkParam(userId, projectId, pipelineId, vmSeqId)
 
-        val consulTag = bkTag.getTag()
+        val consulTag = bkTag.getLocalTag()
 
         if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
             validPipelinePermission(

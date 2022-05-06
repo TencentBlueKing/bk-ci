@@ -78,7 +78,7 @@ class ClientAutoConfiguration {
     ) = Client(compositeDiscoveryClient, clientErrorDecoder, commonConfig, bkTag, objectMapper)
 
     @Bean
-    fun consulFilter() = ConsulFilter()
+    fun consulFilter(bkTag: BkTag) = ConsulFilter(bkTag)
 
     @Bean
     fun clientTokenService(redisOperation: RedisOperation, bkTag: BkTag) = ClientTokenService(redisOperation, bkTag)
