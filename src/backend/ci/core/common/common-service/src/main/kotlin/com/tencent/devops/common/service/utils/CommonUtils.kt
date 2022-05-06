@@ -65,7 +65,7 @@ object CommonUtils {
         get() {
             if (field == null) {
                 val commonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-                field = commonConfig.bkLocale ?: "EN"
+                field = commonConfig.bkLocale ?: EN
             }
             return field
         }
