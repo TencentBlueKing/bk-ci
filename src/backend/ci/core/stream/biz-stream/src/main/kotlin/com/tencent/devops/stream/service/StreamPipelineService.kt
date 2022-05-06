@@ -128,7 +128,7 @@ class StreamPipelineService @Autowired constructor(
             currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
             allPath = allPipeline.map { it.value1() }.distinct().mapNotNull {
                 if (it == CIDir) return@mapNotNull null
-                AllPathPair(path = it, name = it.removePrefix(CIDir))
+                AllPathPair(path = it, name = it.removePrefix(CIDir).removeSuffix("/"))
             }
         )
     }
