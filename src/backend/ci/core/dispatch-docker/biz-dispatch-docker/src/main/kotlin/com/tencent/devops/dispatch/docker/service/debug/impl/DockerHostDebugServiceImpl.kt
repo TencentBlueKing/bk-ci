@@ -186,7 +186,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             }
         }
 
-        return Result(0, "success")
+        return Result(true)
     }
 
     fun checkContainerStatus(
