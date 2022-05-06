@@ -35,13 +35,9 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
-import com.tencent.devops.process.utils.PROJECT_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import org.springframework.stereotype.Service
@@ -52,9 +48,6 @@ class PipelineBuildExtTencentService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
     private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
-
-    @Value("\${gitci.v2GitUrl:#{null}}")
-    private val v2GitUrl: String? = null
 
     override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
@@ -73,20 +66,10 @@ class PipelineBuildExtTencentService @Autowired constructor(
             taskId = null,
             variables = variable
         ))
-        extMap["ci.build_url"] = getGitCiUrl(variable)
         return extMap
     }
 
     override fun endBuild(task: PipelineBuildTask) = Unit
-
-    fun getGitCiUrl(variable: Map<String, String>): String {
-        return if (v2GitUrl != null) {
-            "$v2GitUrl/pipeline/${variable[PIPELINE_ID]}/detail/${variable[PIPELINE_BUILD_ID]}" +
-                "/#${variable[PROJECT_NAME]}"
-        } else {
-            ""
-        }
-    }
 
     fun getTurboTask(projectId: String, pipelineId: String, elementId: String): String {
         try {

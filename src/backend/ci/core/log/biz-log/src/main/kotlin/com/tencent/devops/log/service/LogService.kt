@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.service
 
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.log.event.LogStorageEvent
 import com.tencent.devops.log.event.LogOriginEvent
@@ -39,8 +38,6 @@ import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")
 interface LogService {
-
-    fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent)
 
     fun addLogEvent(event: LogOriginEvent)
 

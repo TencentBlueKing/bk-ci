@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
@@ -174,6 +175,7 @@ object PipelineVarUtil {
         "ci.head_ref" to PIPELINE_GIT_HEAD_REF,
         "ci.base_ref" to PIPELINE_GIT_BASE_REF,
         "ci.repo" to PIPELINE_GIT_REPO,
+        "ci.repo_id" to PIPELINE_GIT_REPO_ID,
         "ci.repo_name" to PIPELINE_GIT_REPO_NAME,
         "ci.repo_group" to PIPELINE_GIT_REPO_GROUP,
         "ci.event_content" to PIPELINE_GIT_EVENT_CONTENT,
