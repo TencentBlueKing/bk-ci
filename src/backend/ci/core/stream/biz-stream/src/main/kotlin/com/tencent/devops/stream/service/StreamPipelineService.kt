@@ -39,6 +39,7 @@ import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.pojo.AllPathPair
 import com.tencent.devops.stream.pojo.StreamGitPipelineDir
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import org.jooq.DSLContext
@@ -125,7 +126,10 @@ class StreamPipelineService @Autowired constructor(
         )
         return StreamGitPipelineDir(
             currentPath = allPipeline.find { it.value2() == pipelineId }?.value1(),
-            allPath = allPipeline.map { it.value1() }.distinct().filterNot { it == CIDir }
+            allPath = allPipeline.map { it.value1() }.distinct().mapNotNull {
+                if (it == CIDir) return@mapNotNull null
+                AllPathPair(path = it, name = it.removePrefix(CIDir))
+            }
         )
     }
 
