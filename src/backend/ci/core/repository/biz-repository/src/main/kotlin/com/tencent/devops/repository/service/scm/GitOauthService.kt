@@ -79,7 +79,7 @@ class GitOauthService @Autowired constructor(
         val logger = LoggerFactory.getLogger(GitOauthService::class.java)
     }
 
-    override fun getProject(userId: String, projectId: String, repoHashId: String?, name: String?): AuthorizeResult {
+    override fun getProject(userId: String, projectId: String, repoHashId: String?, search: String?): AuthorizeResult {
         logger.info("start to get project: userId:$userId")
         // 1. 获取accessToken，没有就返回403
         val authParams = mapOf(
@@ -95,7 +95,7 @@ class GitOauthService @Autowired constructor(
                 gitService.getProject(
                     accessToken = accessToken.accessToken,
                     userId = userId,
-                    name = name
+                    search = search
                 )
             )
             authResult

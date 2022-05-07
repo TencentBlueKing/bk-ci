@@ -88,8 +88,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         return gitService.updateGitProjectInfo(projectName, updateGitProjectInfo, token, tokenType)
     }
 
-    override fun getProject(accessToken: String, userId: String, name: String?): Result<List<Project>> {
-        return Result(gitService.getProject(accessToken, userId, name))
+    override fun getProject(accessToken: String, userId: String, search: String?): Result<List<Project>> {
+        return Result(gitService.getProject(accessToken, userId, search))
     }
 
     override fun getProjectList(
