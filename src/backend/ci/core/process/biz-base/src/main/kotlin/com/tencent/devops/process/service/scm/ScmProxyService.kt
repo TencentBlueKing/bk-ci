@@ -289,6 +289,34 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     search = search
                 )
             }
+            is GithubRepository -> {
+                val token = getGithubAccessToken(repo.userName)
+                return client.get(ServiceScmOauthResource::class).listBranches(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.GITHUB,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = token,
+                    region = null,
+                    userName = repo.userName,
+                    search = search
+                )
+            }
+            is CodeTGitRepository -> {
+                val credInfo = getCredential(projectId, repo)
+                return client.get(ServiceScmResource::class).listBranches(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = ScmType.CODE_GIT,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = credInfo.privateKey,
+                    region = null,
+                    userName = credInfo.username,
+                    search = search
+                )
+            }
             else -> {
                 throw IllegalArgumentException("Unknown repo($repo)")
             }
