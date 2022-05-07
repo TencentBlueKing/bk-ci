@@ -93,4 +93,12 @@ class ServiceGithubResourceImpl @Autowired constructor(
     override fun getGithubTag(accessToken: String, projectName: String, tag: String): Result<GithubTag?> {
         return Result(githubService.getTag(accessToken, projectName, tag))
     }
+
+    override fun listBranches(accessToken: String, projectName: String): Result<List<String>> {
+        return Result(githubService.listBranches(accessToken, projectName))
+    }
+
+    override fun listTags(accessToken: String, projectName: String): Result<List<String>> {
+        return Result(githubService.listTags(accessToken, projectName))
+    }
 }

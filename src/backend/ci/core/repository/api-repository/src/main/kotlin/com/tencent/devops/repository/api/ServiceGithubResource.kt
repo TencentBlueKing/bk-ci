@@ -156,4 +156,28 @@ interface ServiceGithubResource {
         @QueryParam("tag")
         tag: String
     ): Result<GithubTag?>
+
+    @ApiOperation("List all the branches of github")
+    @GET
+    @Path("/branches")
+    fun listBranches(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("projectName", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<List<String>>
+
+    @ApiOperation("List all the branches of github")
+    @GET
+    @Path("/tags")
+    fun listTags(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("projectName", required = true)
+        @QueryParam("projectName")
+        projectName: String
+    ): Result<List<String>>
 }

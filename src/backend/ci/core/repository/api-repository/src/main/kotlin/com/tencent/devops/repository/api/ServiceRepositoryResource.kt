@@ -131,7 +131,7 @@ interface ServiceRepositoryResource {
         projectId: String,
         @ApiParam("仓库类型", required = false)
         @QueryParam("repositoryType")
-        repositoryType: ScmType?,
+        repositoryType: String?,
         @ApiParam("对应权限", required = true, defaultValue = "")
         @QueryParam("permission")
         permission: Permission,
