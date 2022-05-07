@@ -141,6 +141,9 @@ interface ServiceRepositoryResource {
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int? = null,
+        @ApiParam("别名", required = false)
+        @QueryParam("aliasName")
+        aliasName: String? = null
     ): Result<Page<RepositoryInfo>>
 
     @ApiOperation("获取项目代码库列表")
