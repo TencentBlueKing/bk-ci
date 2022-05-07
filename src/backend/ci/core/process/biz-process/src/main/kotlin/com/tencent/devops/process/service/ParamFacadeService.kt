@@ -149,9 +149,9 @@ class ParamFacadeService @Autowired constructor(
             val codeAliasName = codeService.listRepository(projectId, codelibFormProperty.scmType!!)
             codeAliasName.map { BuildFormValue(it.aliasName, it.aliasName) }
         }
-        val searchUrl = "/ms/repository/api/user/repositories/$projectId/hasPermissionList?" +
+        val searchUrl = "/ms/process/api/user/buildForm/repository/$projectId/hasPermissionList?" +
             "repositoryType=${codelibFormProperty.scmType!!}&&permission=${Permission.LIST.name}" +
-            "&&aliasName={words}&&page=1&&pageSize=1000"
+            "&&aliasName={words}&&page=1&&pageSize=500"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = codelibFormProperty,
@@ -173,7 +173,7 @@ class ParamFacadeService @Autowired constructor(
             }
             val containerType = property.containerType!!
             val containers = client.get(ServiceContainerResource::class)
-                .getContainers(userId!!, projectId, containerType.buildType, containerType.os)
+                .getContainers(userId, projectId, containerType.buildType, containerType.os)
             if (containers.data == null || containers.data!!.resources == null) {
                 logger.warn("[$userId|$projectId|$property] Fail to get the container properties")
                 return property
@@ -280,7 +280,7 @@ class ParamFacadeService @Autowired constructor(
                 permission = Permission.LIST,
                 repositoryType = scmType,
                 page = 1,
-                pageSize = 1000
+                pageSize = 500
             ).data?.records ?: emptyList()
         } catch (e: RuntimeException) {
             logger.warn("[$userId|$projectId] Fail to get the permission code lib list", e)
