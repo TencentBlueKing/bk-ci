@@ -926,6 +926,7 @@
         "retryCountPlaceholder": "1-5之间的整数，默认为1",
         "atomTimeout": "插件执行超时时间(单位分钟)",
         "timeoutDesc": "10080之间的整数，0表示系统允许的最大超时时间",
+        "prepareTimeoutDesc": "当构建机繁忙时，排队等待的超时时间。默认10分钟，不超过Job允许的最大耗时，超时后失败退出",
         "timeoutPlaceholder": "10080之间的整数，0表示系统允许的最大超时时间",
         "atomRunCondition": "何时运行本插件",
         "atomPreSuc": "所有前置插件运行成功时运行（包括失败时继续）",

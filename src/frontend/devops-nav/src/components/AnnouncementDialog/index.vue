@@ -88,6 +88,9 @@
             .content-detail img {
                 width: 100%;
             }
+            p {
+                text-align: left;
+            }
         }
         .announcement-footer {
             padding: 20px 0;
