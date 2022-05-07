@@ -37,6 +37,7 @@ import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
@@ -51,7 +52,8 @@ class PipelineDelete @Autowired constructor(
     private val client: Client,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
-    private val streamEventService: StreamEventService
+    private val streamEventService: StreamEventService,
+    private val repoTriggerEventService: RepoTriggerEventService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDelete::class.java)
@@ -106,6 +108,8 @@ class PipelineDelete @Autowired constructor(
                 branch = action.data.eventCommon.branch
             )
 
+            repoTriggerEventService.deleteRepoTriggerEvent(pipelineId)
+
             val isFileEmpty = if (null != filePath) {
                 checkFileEmpty(
                     action,
@@ -130,7 +134,7 @@ class PipelineDelete @Autowired constructor(
                 )
                 if (pipelineInfoResult.data != null) {
                     processClient.delete(
-                        userId = action.data.eventCommon.userId,
+                        userId = action.data.getUserId(),
                         projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
                         pipelineId = pipelineId,
                         channelCode = channelCode

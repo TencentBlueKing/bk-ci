@@ -28,15 +28,19 @@
 package com.tencent.devops.dispatch.docker.api.service
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.DockerHostZone
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.SpecialDockerHostVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -88,5 +92,16 @@ interface ServiceDockerHostResource {
         dockerIp: String,
         @ApiParam("构建机信息", required = true)
         dockerIpInfoVO: DockerIpInfoVO
+    ): Result<Boolean>
+
+    @POST
+    @Path("/specialDockerHost/add")
+    @ApiOperation("批量新增专机配置")
+    fun createSpecialDockerHost(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("专机配置列表", required = true)
+        specialDockerHostVOs: List<SpecialDockerHostVO>
     ): Result<Boolean>
 }

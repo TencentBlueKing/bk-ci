@@ -152,13 +152,17 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         val path = getRequestUrl(path = "api/build/builds/detail_url")
         val request = buildGet(path)
         val errorMessage = "构建超时结束请求失败"
-        val responseContent = request(
-            request = request,
-            connectTimeoutInSec = 5L,
-            errorMessage = errorMessage,
-            readTimeoutInSec = 30L,
-            writeTimeoutInSec = 30L
-        )
+        val responseContent = try {
+            request(
+                request = request,
+                connectTimeoutInSec = 5L,
+                errorMessage = errorMessage,
+                readTimeoutInSec = 30L,
+                writeTimeoutInSec = 30L
+            )
+        } catch (ignore: Throwable) {
+            return ""
+        }
         return objectMapper.readValue(responseContent)
     }
 
