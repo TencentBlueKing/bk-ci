@@ -54,13 +54,4 @@ interface UserTapdOauthResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Response
-
-    @ApiOperation("tapd 回调")
-    @GET
-    @Path("/callback")
-    fun callback(
-        code: String,
-        state: String,
-        resource: String
-    ): Response
 }

@@ -157,6 +157,7 @@ include(":core:repository:biz-repository")
 include(":core:repository:biz-repository-sample")
 include(":core:repository:boot-repository")
 include(":core:repository:model-repository")
+include(":core:repository:plugin-tapd")
 
 include(":core:ticket")
 include(":core:ticket:api-ticket")

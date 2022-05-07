@@ -27,39 +27,20 @@
 
 package com.tencent.devops.repository.resources.tapd
 
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.sdk.tapd.DefaultTapdClient
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.tapd.UserTapdOauthResource
-import com.tencent.devops.repository.config.TapdProperties
+import com.tencent.devops.repository.tapd.service.ITapdOauthService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class UserTapdOauthResourceImpl @Autowired constructor(
-    val defaultTapdClient: DefaultTapdClient,
-    val tapdProperties: TapdProperties
+    val tapdService: ITapdOauthService
 ) : UserTapdOauthResource {
 
     override fun appInstall(userId: String): Response {
-        val state = mapOf(
-            "userId" to userId,
-            "redirectUrl" to tapdProperties.redirectUrl
-        )
-        val uri = UriBuilder.fromUri(
-            defaultTapdClient.appInstallUrl(
-                cb = tapdProperties.callbackUrl,
-                state = JsonUtil.toJson(state),
-                test = 1,
-                showInstalled = 1
-            )
-        ).build()
-        return Response.temporaryRedirect(uri).build()
-    }
-
-    override fun callback(code: String, state: String, resource: String): Response {
-        val uri = UriBuilder.fromUri(tapdProperties.redirectUrl).build()
+        val uri = UriBuilder.fromUri(tapdService.appInstallUrl(userId = userId)).build()
         return Response.temporaryRedirect(uri).build()
     }
 }

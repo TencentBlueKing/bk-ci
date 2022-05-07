@@ -25,18 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.config
+package com.tencent.devops.repository.tapd.service
 
-import org.springframework.boot.context.properties.ConfigurationProperties
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.sdk.tapd.DefaultTapdClient
+import com.tencent.devops.repository.tapd.config.TapdProperties
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@ConfigurationProperties(prefix = "tapd")
-data class TapdProperties(
-    val serverUrl: String,
-    val apiUrl: String,
-    val clientId: String,
-    val clientSecret: String,
-    // tapd回调地址
-    val callbackUrl: String,
-    // tapd授权后跳转页面
-    val redirectUrl: String
-)
+@Service
+class TapdOauthService @Autowired constructor(
+    val defaultTapdClient: DefaultTapdClient,
+    val tapdProperties: TapdProperties
+) : ITapdOauthService {
+
+    override fun appInstallUrl(userId: String): String {
+        val state = mapOf(
+            "userId" to userId,
+            "redirectUrl" to tapdProperties.redirectUrl
+        )
+        return defaultTapdClient.appInstallUrl(
+            cb = tapdProperties.callbackUrl,
+            state = JsonUtil.toJson(state),
+            test = 1,
+            showInstalled = 1
+        )
+    }
+
+    override fun callbackUrl(code: String, state: String, resource: String): String {
+        return tapdProperties.redirectUrl
+    }
+}

@@ -25,26 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.config
-
-import com.tencent.devops.common.sdk.tapd.DefaultTapdClient
-import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-
-@Configuration
-@EnableConfigurationProperties(TapdProperties::class)
-class TapdConfig {
-
-    @Bean
-    fun defaultTapdClient(properties: TapdProperties) {
-        return with(properties) {
-            DefaultTapdClient(
-                serverUrl = serverUrl,
-                apiUrl = apiUrl,
-                clientId = clientId,
-                clientSecret
-            )
-        }
-    }
+dependencies {
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-third-sdk:common-tapd-sdk"))
 }
