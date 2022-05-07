@@ -80,25 +80,28 @@ class BcsBuilderClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 logger.info("[$buildId]|[$vmSeqId] builderName: $name response: $responseContent")
-                if (!response.isSuccessful) {
-                    if (retryTime > 0) {
-                        val retryTimeLocal = retryTime - 1
-                        return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
-                    }
-                    throw BuildFailureException(
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
-                            "（Fail to get builder detail, http response code: ${response.code()}"
-                    )
+                if (response.isSuccessful) {
+                    return objectMapper.readValue(responseContent)
                 }
-                return objectMapper.readValue(responseContent)
+
+                if (retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
+                }
+
+                throw BuildFailureException(
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
+                            "（Fail to get builder detail, http response code: ${response.code()}"
+                )
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
             if (retryTime > 0) {
-                logger.info("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException. retry:$retryTime")
+                logger.info("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail SocketTimeoutException." +
+                        " retry:$retryTime")
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
                 logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)

@@ -37,6 +37,7 @@ object CommonUtils {
 
     fun getOnlyName(userId: String) = "bcs-${userId}${System.currentTimeMillis()}"
 
+    @Suppress("ALL")
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")
@@ -56,7 +57,12 @@ object CommonUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(
+                            str[0],
+                            imageNameStr.substringAfter(str[0] + "/")
+                                .substringBefore(":" + nameTag[1]),
+                            nameTag[1]
+                        )
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }

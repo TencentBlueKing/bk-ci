@@ -30,8 +30,17 @@ package com.tencent.devops.dispatch.bcs.actions
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.dispatch.bcs.client.BcsJobClient
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.bcs.pojo.*
-import com.tencent.devops.dispatch.bcs.pojo.bcs.*
+import com.tencent.devops.dispatch.bcs.pojo.DispatchBuildStatusEnum
+import com.tencent.devops.dispatch.bcs.pojo.DispatchBuildStatusResp
+import com.tencent.devops.dispatch.bcs.pojo.DispatchJobLogResp
+import com.tencent.devops.dispatch.bcs.pojo.DispatchJobReq
+import com.tencent.devops.dispatch.bcs.pojo.DispatchTaskResp
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsJob
+import com.tencent.devops.dispatch.bcs.pojo.bcs.BcsJobStatusEnum
+import com.tencent.devops.dispatch.bcs.pojo.bcs.NfsConfig
+import com.tencent.devops.dispatch.bcs.pojo.bcs.isFailed
+import com.tencent.devops.dispatch.bcs.pojo.bcs.isRunning
+import com.tencent.devops.dispatch.bcs.pojo.bcs.isSuccess
 import com.tencent.devops.dispatch.bcs.utils.BcsJobRedisUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +78,7 @@ class JobAction @Autowired constructor(
         logger.info("projectId: $projectId, buildId: $buildId create bcs jobContainer. userId: $userId")
 
         // 检查job数量是否超出限制
-        if (bcsJobRedisUtils.getJobCount(buildId,  jobReq.podNameSelector) > 10) {
+        if (bcsJobRedisUtils.getJobCount(buildId, jobReq.podNameSelector) > 10) {
             throw ErrorCodeException(
                 statusCode = 500,
                 errorCode = ErrorCodeEnum.CREATE_JOB_LIMIT_ERROR.errorCode.toString(),

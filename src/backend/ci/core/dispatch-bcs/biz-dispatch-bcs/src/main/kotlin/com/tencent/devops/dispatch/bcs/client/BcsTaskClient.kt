@@ -68,30 +68,17 @@ class BcsTaskClient @Autowired constructor(
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                if (!response.isSuccessful) {
-                    logger.error("Get task status failed, responseCode: ${response.code()}")
-
-                    // 接口请求失败时，sleep 5s，再查一次
-                    Thread.sleep(5 * 1000)
-                    OkhttpUtils.doHttp(request).use {
-                        val retryResponseContent = it.body()!!.string()
-                        if (!it.isSuccessful) {
-                            // 没机会了，只能失败
-                            logger.error("$taskId retry get task status failed, retry responseCode: ${it.code()}")
-                            throw BuildFailureException(
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                                "获取BCS TASK状态接口异常：http response code: ${response.code()}"
-                            )
-                        }
-
-                        logger.info("retry response: $retryResponseContent")
-                        return objectMapper.readValue(retryResponseContent)
-                    }
+                if (response.isSuccessful) {
+                    return objectMapper.readValue(responseContent)
                 }
 
-                return objectMapper.readValue(responseContent)
+                logger.error("Get task status failed, responseCode: ${response.code()}")
+                throw BuildFailureException(
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    "获取BCS TASK状态接口异常：http response code: ${response.code()}"
+                )
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次

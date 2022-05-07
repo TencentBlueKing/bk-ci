@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.bcs.common
 
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 
 enum class ErrorCodeEnum(
     val errorType: ErrorType,
